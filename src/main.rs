@@ -113,7 +113,7 @@ async fn main() {
     };
     let token = match data.secrets.discord_token.clone() {
         Some(t) => t,
-        None => std::env::var("DISCORD_TOKEN").expect("Congrats, you didn't set either DISCORD_TOKEN or include the token in the config. Terminating on your sheer stupidity.")
+        None => std::env::var("LURO_TOKEN").expect("Congrats, you didn't set either LURO_TOKEN or include the token in the config. Terminating on your sheer stupidity.")
     };
     env::set_var("RUST_LOG", "info,poise_basic_queue=trace,poise=debug,serenity=debug");
 
