@@ -1,0 +1,46 @@
+[package]
+name = "luro"
+version = "0.1.0"
+authors = ["Nurah Wolfo <nurah@wolfo.tech>"]
+edition = "2021"
+
+
+[dependencies]
+### Dependencies that have a real reason to exist
+uwuify = "0.2.2" # Used for the uwuify command
+itertools = "0.10" # Used for iterating through a bunch of loops
+tracing = "0.1" # Useful for logs and I should use it some more. It's required by a bunch of dependencies, so might as well make use of it.
+chrono = "0.4" # TODO: Ideally to be replaced with by time, but lastfm, serenity, poise and songbird depend on it
+reqwest = { version = "0.11", features = [
+    "json",
+] } # Used by serenity, poise and lastfm. Useful for making requests to APIs
+serde = { version = "1", default-features = false, features = [
+    "derive",
+] } # Used by a bunch of dependencies to serialise data, useful for my own structs
+serde_json = "1" # Decoding JSON payloads
+rand = "0.8" # Random choice, also used by poise and songbird
+urlencoding = "2.1" # Zero subdependencies, used for formatting URL strings in the `e621` commands because URL encoding is a bitch
+futures = { version = "0.3.13", default-features = false } # For Discord autocomplete
+
+### Dependencies that should be reviewed
+# tracing-subscriber = "0.3" # See notes
+toml = "0.5" # TODO: Currently used for saving and formatting the toml config file, consider if this is worth it
+# lastfm-rs   = "0.5" # Add this one LastFM is used
+
+### Dependencies that have a real reason to exist
+[dependencies.tokio]
+version = "1"
+features = ["macros", "rt-multi-thread", "signal"]
+
+[dependencies.serenity]
+default-features = false
+features = ["rustls_backend", "voice", "unstable_discord_api"]
+version = "0.11"
+
+[dependencies.poise]
+features = ["cache"]
+version = "0.5"
+
+[dependencies.songbird]
+features = ["builtin-queue"]
+version = "0.3"

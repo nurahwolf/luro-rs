@@ -1,0 +1,16 @@
+# Rust Stuff
+/target/
+
+# IDE tools
+.fleet
+.vscode
+
+# Luro Specific
+/testing/
+/data/fursona
+/data/quotes
+/data/config.toml
+/data/heck.toml
+/data/quotes.toml
+/data/secrets.toml
+/data/stories.toml
