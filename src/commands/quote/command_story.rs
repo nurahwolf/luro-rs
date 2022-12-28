@@ -17,7 +17,7 @@ pub async fn story(
     plain_text: bool,
     #[description = "The number story to get"] story: Option<usize>
 ) -> Result<(), Error> {
-    let stories = &ctx.data().stories.stories;
+    let stories = &ctx.data().stories.lock().unwrap().stories.clone();
     let random_number = rand::thread_rng().gen_range(0..stories.len());
 
     // Try to get the specified quote
@@ -28,7 +28,7 @@ pub async fn story(
                 b.embed(|b| {
                     b.title(&story_result[0])
                         .description(story_shortened)
-                        .color(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()))
+                        .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
                         .footer(|f| f.text(format!("Story ID: {story}")))
                 })
             })
@@ -47,7 +47,7 @@ pub async fn story(
                 b.embed(|b| {
                     b.title(&story[0])
                         .description(story_shortened)
-                        .color(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()))
+                        .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
                         .footer(|f| f.text(format!("Story ID: {random_number}")))
                 })
             })

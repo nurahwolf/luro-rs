@@ -4,7 +4,7 @@ use rand::seq::SliceRandom;
 use crate::{config::Heck, Context, Error, HECK_FILE_PATH};
 
 async fn heck_function(ctx: Context<'_>, user: User) -> Result<(), Error> {
-    let heck = ctx.data().heck.heck.choose(&mut rand::thread_rng()).unwrap();
+    let heck = ctx.data().heck.lock().unwrap().heck.choose(&mut rand::thread_rng()).unwrap().clone();
     let heck_format_once = heck.as_str().replace("<user>", user.to_string().as_str());
     let heck_format_twice = heck_format_once.replace("<author>", ctx.author().to_string().as_str());
     ctx.say(heck_format_twice).await?;
@@ -22,7 +22,7 @@ pub async fn heck(
     if let Some(add_heck) = add_heck {
         if add_heck.contains("<user>") && add_heck.contains("<author>") {
             let mut new_heck = vec![add_heck.clone()];
-            let hecks = &mut ctx.data().heck.clone();
+            let hecks = &mut ctx.data().heck.lock().unwrap().clone();
             hecks.heck.append(&mut new_heck);
             let heck_format_once = add_heck.as_str().replace("<user>", user.to_string().as_str());
             let heck_format_twice = heck_format_once.replace("<author>", ctx.author().to_string().as_str());
@@ -32,7 +32,7 @@ pub async fn heck(
                 ctx.http().get_user(ctx.framework().bot_id.0).await?
             ))
             .await?;
-            Heck::write(&ctx.data().heck, HECK_FILE_PATH);
+            Heck::write(&ctx.data().heck.lock().unwrap(), HECK_FILE_PATH);
         } else {
             ctx.say(format!(
                 "Your heck was `{add_heck}` but the format was wrong. Make sure you include `<author>` and `<user>`!\n\nFor example: `<author> topped <user>!`"

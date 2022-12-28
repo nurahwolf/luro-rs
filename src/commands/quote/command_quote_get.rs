@@ -5,7 +5,7 @@ use crate::{commands::quote::function_sendquote::send_quote, Context, Error};
 /// Get random shit that someone has said, or get exactly what they said by quote ID
 #[poise::command(slash_command, prefix_command, category = "Quotes")]
 pub async fn get(ctx: Context<'_>, #[description = "Get a quote by ID"] quote: Option<usize>) -> Result<(), Error> {
-    let quotes = &ctx.data().quotes.quotes;
+    let quotes = &ctx.data().quotes.lock().unwrap().quotes.clone();
     let random_number = rand::thread_rng().gen_range(0..quotes.len());
 
     // Try to get the specified quote

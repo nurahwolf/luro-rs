@@ -6,7 +6,7 @@ use crate::{commands::quote::function_sendquote::send_quote, Context, Error};
 /// Get random shit a user has said ;)
 #[poise::command(slash_command, category = "Quotes")]
 pub async fn user(ctx: Context<'_>, #[description = "User to get a random quote from"] user: User) -> Result<(), Error> {
-    let quotes = &ctx.data().quotes.quotes;
+    let quotes = &ctx.data().quotes.lock().unwrap().quotes.clone();
 
     let quotes_by_user = quotes.iter().enumerate().filter(|(_, quote)| quote.user_id == user.id.0).collect::<Vec<_>>();
     if quotes_by_user.is_empty() {
@@ -29,7 +29,7 @@ pub async fn user(ctx: Context<'_>, #[description = "User to get a random quote 
 /// Get random shit a user has said - User context edition
 #[poise::command(context_menu_command = "User quotes", slash_command, category = "Quotes")]
 pub async fn quote_user_context(ctx: Context<'_>, #[description = "User to get a random quote from"] user: User) -> Result<(), Error> {
-    let quotes = &ctx.data().quotes.quotes;
+    let quotes = &ctx.data().quotes.lock().unwrap().quotes.clone();
 
     let quotes_by_user = quotes.iter().enumerate().filter(|(_, quote)| quote.user_id == user.id.0).collect::<Vec<_>>();
     if quotes_by_user.is_empty() {

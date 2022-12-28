@@ -25,7 +25,7 @@ pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
             embed
                 .title(format!("{name} Invite URL"))
                 .thumbnail(avatar)
-                .color(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()))
+                .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
                 .description(format!("Click [here]({url}) to add {name} to your Discord server."))
         })
     })

@@ -63,7 +63,7 @@ pub async fn punish(
         b.embed(|b| {
             b.title(title)
                 .description(description)
-                .color(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()))
+                .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
                 .thumbnail(user_avatar)
         })
     })

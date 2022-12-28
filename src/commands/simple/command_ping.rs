@@ -34,7 +34,7 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     ping.edit(ctx, |message| {
         message.content("");
         message.embed(|embed| {
-            embed.colour(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()));
+            embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()));
             embed.title("Discord Latency Information");
             embed.description(response)
         })

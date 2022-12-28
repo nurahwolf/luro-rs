@@ -1,7 +1,7 @@
 use crate::{commands::testing, Context, Error, DATA_PATH};
 
 use futures::{Stream, StreamExt};
-use poise::serenity_prelude::{AttachmentType, CacheHttp, Cache};
+use poise::serenity_prelude::{AttachmentType, Cache, CacheHttp};
 use rand::seq::SliceRandom;
 use std::fmt::Write;
 use std::sync::Arc;
@@ -65,11 +65,13 @@ fn folders(dir: &Path) -> Result<Vec<PathBuf>, std::io::Error> {
         .collect())
 }
 
-fn nsfw_check (ctx: Context) -> bool {
+fn nsfw_check(ctx: Context) -> bool {
     if let Some(cache) = ctx.cache() {
         if let Some(channel) = cache.channel(ctx.channel_id()) {
             channel.is_nsfw()
-        } else { false }
+        } else {
+            false
+        }
     } else {
         false
     }
@@ -90,7 +92,7 @@ pub async fn fursona(
 
     if nsfw_toggle && nsfw_toggle != nsfw_check(ctx) {
         ctx.say("SMH. Are you really after NSFW art in a SFW channel you fucking degenerate? Reconsider your life choices.\nYes, I did just call you out in public.")
-        .await?;
+            .await?;
         return Ok(());
     }
 
@@ -107,7 +109,8 @@ pub async fn fursona(
             files.push(entry)
         }
     } else {
-        ctx.say("Looks like that fursona does not have any art of that type. Sorry! (Usually happens on SFW only fursonas)").await?;
+        ctx.say("Looks like that fursona does not have any art of that type. Sorry! (Usually happens on SFW only fursonas)")
+            .await?;
         return Ok(());
     };
 
@@ -136,15 +139,18 @@ pub async fn fursona(
         return Ok(());
     };
 
-    if ctx.send(|builder| {
-        builder
-            .attachment(AttachmentType::File {
-                file: (&file_tokio),
-                filename: file_name.clone()
-            })
-            .content(file_name.clone())
-    })
-    .await.is_ok() {
+    if ctx
+        .send(|builder| {
+            builder
+                .attachment(AttachmentType::File {
+                    file: (&file_tokio),
+                    filename: file_name.clone()
+                })
+                .content(file_name.clone())
+        })
+        .await
+        .is_ok()
+    {
         Ok(())
     } else {
         ctx.say(format!("Failed to send the image (This is usually because of Discord's bullshit 8MB filesize limit for bots. Just run me again and I shouldn't fail.)\nThe file I failed on was {file_name}")).await?;

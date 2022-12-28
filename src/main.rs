@@ -27,11 +27,11 @@ const STORIES_FILE_PATH: &str = "data/stories.toml";
 
 // Structs
 pub struct Data {
-    config: config::Config,
-    heck: config::Heck,
-    quotes: config::Quotes,
+    config: Mutex<config::Config>,
+    heck: Mutex<config::Heck>,
+    quotes: Mutex<config::Quotes>,
     secrets: config::Secrets,
-    stories: config::Stories,
+    stories: Mutex<config::Stories>,
     songbird: Arc<Songbird>,
     votes: Mutex<HashMap<String, u32>>
 }
@@ -102,15 +102,16 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
 #[tokio::main]
 async fn main() {
     let songbird = songbird::Songbird::serenity();
-    let data = Data {
-        config: Config::get(CONFIG_FILE_PATH),
-        heck: Heck::get(HECK_FILE_PATH),
-        quotes: Quotes::get(QUOTES_FILE_PATH),
+    let mut data = Data {
+        config: Mutex::new(Config::get(CONFIG_FILE_PATH)),
+        heck: Mutex::new(Heck::get(HECK_FILE_PATH)),
+        quotes: Mutex::new(Quotes::get(QUOTES_FILE_PATH)),
         secrets: Secrets::get(SECRETS_FILE_PATH),
-        stories: Stories::get(STORIES_FILE_PATH),
+        stories: Mutex::new(Stories::get(STORIES_FILE_PATH)),
         songbird: songbird.clone(),
         votes: Mutex::new(HashMap::new())
     };
+
     let token = match data.secrets.discord_token.clone() {
         Some(t) => t,
         None => std::env::var("LURO_TOKEN").expect("Congrats, you didn't set either LURO_TOKEN or include the token in the config. Terminating on your sheer stupidity.")

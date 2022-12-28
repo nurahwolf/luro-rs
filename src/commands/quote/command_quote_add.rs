@@ -19,12 +19,12 @@ pub async fn addquote(ctx: Context<'_>, #[description = "The quote which you wis
             b.author(|a| a.name(&message.author.name).icon_url(&message.author.face()))
                 .title("Quote Added!")
                 .description(&message.content)
-                .color(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()))
-                .footer(|f| f.text(format!("Quote ID: {}", ctx.data().quotes.quotes.len())))
+                .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
+                .footer(|f| f.text(format!("Quote ID: {}", ctx.data().quotes.lock().unwrap().quotes.len())))
         })
     })
     .await?;
-    let quotes = &mut ctx.data().quotes.clone();
+    let quotes = &mut ctx.data().quotes.lock().unwrap().clone();
     quotes.quotes.append(&mut new_quote);
 
     Quotes::write(quotes, QUOTES_FILE_PATH);

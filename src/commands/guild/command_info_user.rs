@@ -203,13 +203,13 @@ async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result
             embed.field("User's colour", format!("#{}", colour.hex()), false);
             embed.colour(colour);
         } else {
-            embed.color(guild_accent_colour(ctx.data().config.accent_colour, Some(guild)));
+            embed.color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, Some(guild)));
         };
     } else {
         // We are not in a guild or a guild has not been specified, so print some basic information.
 
         // Set accent colour
-        embed.color(accent_colour(ctx.data().config.accent_colour));
+        embed.color(accent_colour(ctx.data().config.lock().unwrap().accent_colour));
 
         // Set avatar as thumbnail
         if !track_art.is_empty() {

@@ -41,7 +41,7 @@ pub async fn e621_tiled(
 
     let mut query = search.clone();
     if disable_blacklist {
-        query.push_str(ctx.data().config.e621_blacklist.as_str())
+        query.push_str(ctx.data().config.lock().unwrap().e621_blacklist.clone().as_str())
     }
 
     let response = {

@@ -16,7 +16,12 @@ pub async fn twitter(
     let tweet_fields = [("max_results", "5"), ("exclude", "retweets,replies")];
     let client = reqwest::Client::builder().user_agent("Luro/1.0 (nurah@wolfo.tech)").build()?;
     let mut endpoint = format!("https://api.twitter.com/2/users/by/username/{user}");
-    let mut request = client.get(&endpoint).bearer_auth(ctx.data().secrets.twitter_api.clone().unwrap()).query(&user_fields).send().await?;
+    let mut request = client
+        .get(&endpoint)
+        .bearer_auth(ctx.data().secrets.twitter_api.clone().unwrap())
+        .query(&user_fields)
+        .send()
+        .await?;
 
     let user = request.json::<User>().await?.data;
     let id = &user.id;
@@ -33,7 +38,12 @@ pub async fn twitter(
     let tweets = format_int(user.public_metrics.tweet_count);
 
     endpoint = format!("https://api.twitter.com/2/users/{id}/tweets");
-    request = client.get(&endpoint).bearer_auth(ctx.data().secrets.twitter_api.clone().unwrap()).query(&tweet_fields).send().await?;
+    request = client
+        .get(&endpoint)
+        .bearer_auth(ctx.data().secrets.twitter_api.clone().unwrap())
+        .query(&tweet_fields)
+        .send()
+        .await?;
 
     let tweets_response: UserTweets = request.json().await?;
     let latest_tweet = match tweets_response.data {
@@ -47,7 +57,7 @@ pub async fn twitter(
                 .title(format!("{name}{verified}", verified = if user.verified { " \\✔️" } else { "" }))
                 .url(url)
                 .thumbnail(avatar)
-                .color(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()))
+                .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
                 .description(description)
                 .fields(vec![
                     ("Username", handle, true),

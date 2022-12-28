@@ -14,12 +14,22 @@ pub async fn embed(
         channel
             .unwrap()
             .send_message(ctx, |f| {
-                f.embed(|e| e.title(title).description(content).color(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild())))
+                f.embed(|e| {
+                    e.title(title)
+                        .description(content)
+                        .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
+                })
             })
             .await?;
     } else {
-        ctx.send(|b| b.embed(|b| b.title(title).description(content).color(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()))))
-            .await?;
+        ctx.send(|b| {
+            b.embed(|b| {
+                b.title(title)
+                    .description(content)
+                    .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
+            })
+        })
+        .await?;
     }
 
     ctx.send(|builder| builder.content("Done!").ephemeral(true)).await?;

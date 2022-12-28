@@ -13,7 +13,7 @@ use tracing::log::info;
 pub struct Config {
     pub accent_colour: [u8; 3],
     pub e621_blacklist: String,
-    pub e621_useragent: String,
+    pub e621_useragent: String
 }
 
 impl Config {
@@ -49,6 +49,13 @@ impl Config {
             Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
             Err(err) => panic!("Error writing toml file: {err}")
         }
+    }
+
+    /// Mutate the struct
+    pub fn reload(&mut self, new_data: &Config) {
+        self.accent_colour = new_data.accent_colour;
+        self.e621_blacklist = new_data.e621_blacklist.clone();
+        self.e621_useragent = new_data.e621_useragent.clone();
     }
 }
 /// Structure for `heck.toml`
@@ -90,6 +97,11 @@ impl Heck {
             Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
             Err(err) => panic!("Error writing toml file: {err}")
         }
+    }
+
+    /// Mutate the struct
+    pub fn reload(&mut self, new_data: &Heck) {
+        self.heck = new_data.heck.clone();
     }
 }
 
@@ -139,6 +151,11 @@ impl Quotes {
             Err(err) => panic!("Error writing toml file: {err}")
         }
     }
+
+    /// Mutate the struct
+    pub fn reload(&mut self, new_data: &Quotes) {
+        self.quotes = new_data.quotes.clone();
+    }
 }
 
 /// Structure for `secrets.toml`
@@ -147,7 +164,6 @@ pub struct Secrets {
     pub discord_token: Option<String>,
     pub e621_token: Option<String>,
     pub twitter_api: Option<String>
-
 }
 
 impl Secrets {
@@ -183,6 +199,13 @@ impl Secrets {
             Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
             Err(err) => panic!("Error writing toml file: {err}")
         }
+    }
+
+    /// Mutate the struct
+    pub fn reload(&mut self, new_data: &Secrets) {
+        self.discord_token = new_data.discord_token.clone();
+        self.e621_token = new_data.e621_token.clone();
+        self.twitter_api = new_data.twitter_api.clone();
     }
 }
 
@@ -225,5 +248,10 @@ impl Stories {
             Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
             Err(err) => panic!("Error writing toml file: {err}")
         }
+    }
+
+    /// Mutate the struct
+    pub fn reload(&mut self, new_data: &Stories) {
+        self.stories = new_data.stories.clone();
     }
 }

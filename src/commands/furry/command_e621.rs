@@ -34,7 +34,7 @@ pub async fn e621(
     }
 
     let blacklist_string = "-gore -scat ";
-    let client = reqwest::Client::builder().user_agent(ctx.data().config.e621_useragent.clone()).build()?;
+    let client = reqwest::Client::builder().user_agent(ctx.data().config.lock().unwrap().e621_useragent.clone()).build()?;
     let token = ctx.data().secrets.e621_token.clone();
 
     // TODO: Create request builder
@@ -160,7 +160,7 @@ pub async fn e621(
             .embed(|embed| {
                 embed
                     .title(&search)
-                    .color(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()))
+                    .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
                     .image(&random.file.url)
                     .description(description)
                     .footer(|f| f.text(format!("{}\nRatings: {}", random.description, rating)))

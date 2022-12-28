@@ -48,7 +48,7 @@ pub async fn urban(ctx: Context<'_>, #[description = "Search Term"] search: Stri
     ctx.send(|message| {
         message.embed(|embed| {
             embed.author(|a| a.name(word).url(permalink));
-            embed.colour(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()));
+            embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()));
             embed.description(format!("*{description}*\n\n{example}\n\n**Ratings**: {rating}"));
             embed.footer(|f| f.text("Powered by the Urban Dictionary."))
         })
@@ -77,7 +77,7 @@ pub async fn random_urban(ctx: Context<'_>) -> Result<(), Error> {
     ctx.send(|message| {
         message.embed(|embed| {
             embed.author(|a| a.name(word).url(permalink));
-            embed.colour(guild_accent_colour(ctx.data().config.accent_colour, ctx.guild()));
+            embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()));
             embed.description(format!("*{description}*\n\n{example}\n\n**Ratings**: {rating}"));
             embed.footer(|f| f.text("Powered by the Urban Dictionary."))
         })
