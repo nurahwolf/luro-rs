@@ -96,7 +96,7 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
         }
         poise::Event::PresenceUpdate { new_data: _ } => {}
         poise::Event::Message { new_message } => match add_discord_message(&_user_data.database, new_message.clone()) {
-            Ok(_) => println!("Added message ID {} to database: {}",new_message.id.0  , new_message.content),
+            Ok(_) => println!("Added message ID {} to database: {}", new_message.id.0, new_message.content),
             Err(err) => println!("Error while saving message to database: {err}")
         },
 
@@ -127,11 +127,8 @@ async fn main() {
         None => std::env::var("LURO_TOKEN").expect("Congrats, you didn't set either LURO_TOKEN or include the token in the config. Terminating on your sheer stupidity.")
     };
 
-
     env::set_var("RUST_LOG", "info,poise_basic_queue=trace,poise=debug,serenity=debug");
-    let subscriber = FmtSubscriber::builder()
-    .with_target(false)
-    .finish();
+    let subscriber = FmtSubscriber::builder().with_target(false).finish();
 
     tracing::subscriber::set_global_default(subscriber);
 
