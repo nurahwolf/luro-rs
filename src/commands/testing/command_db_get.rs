@@ -10,7 +10,6 @@ pub async fn db_get(ctx: Context<'_>, #[description = "Message ID to get"] messa
             let luro_message = get_discord_message(&ctx.data().database, parsed_message_id);
 
             if let Ok(user) = ctx.http().get_user(luro_message.user_id).await {
-
                 ctx.send(|builder| {
                     builder.embed(|embed| {
                         embed
@@ -21,7 +20,11 @@ pub async fn db_get(ctx: Context<'_>, #[description = "Message ID to get"] messa
                 })
                 .await?;
             } else {
-                ctx.say(format!("I found that message, but failed to resolve their user.\n**Channel ID:** {}\n**Message ID:** {}\n**User ID:** {}\n**Message Content:** {}",luro_message.channel_id, luro_message.message_id, luro_message.user_id, luro_message.message_content)).await?;
+                ctx.say(format!(
+                    "I found that message, but failed to resolve their user.\n**Channel ID:** {}\n**Message ID:** {}\n**User ID:** {}\n**Message Content:** {}",
+                    luro_message.channel_id, luro_message.message_id, luro_message.user_id, luro_message.message_content
+                ))
+                .await?;
             };
         }
         Err(err) => {
