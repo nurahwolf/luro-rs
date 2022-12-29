@@ -54,12 +54,12 @@ pub fn get_discord_message(db: &sled::Db, id: u64) -> LuroMessage {
 
     let messages_vec = match messages_tree.get(id.as_bytes()) {
         Ok(result) => result,
-        Err(_) => todo!()
+        Err(_) => panic!("Failed to find anything with that key")
     };
 
     let messages_vec_resolved = match messages_vec {
         Some(result) => result,
-        None => todo!()
+        None => panic!("Failed to resolve the vec for that key")
     };
 
     let luro_message = unsafe { rkyv::archived_root::<LuroMessage>(messages_vec_resolved.as_bytes()) };
@@ -79,9 +79,8 @@ pub fn total_messages_by_user(db: &sled::Db, user_id: u64) -> u64 {
 
     for message in messages.iter().flatten() {
         let luro_message = unsafe { rkyv::archived_root::<LuroMessage>(message.1.as_bytes()) };
-        let deserialized: LuroMessage = luro_message.deserialize(&mut rkyv::Infallible).unwrap();
 
-        if deserialized.user_id == user_id {
+        if luro_message.user_id == user_id {
             total_messages += 1;
         }
     }
