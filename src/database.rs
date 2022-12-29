@@ -76,15 +76,10 @@ pub fn total_messages_by_user(db: &sled::Db, user_id: u64) -> u64 {
     };
 
     let mut total_messages = u64::default();
-    println!("Attempting to get data from the database!");
 
     for message in messages.iter().flatten() {
-        println!("Entered loop!");
         let luro_message = unsafe { rkyv::archived_root::<LuroMessage>(message.1.as_bytes()) };
-        println!("Message to luro message hit!");
         let deserialized: LuroMessage = luro_message.deserialize(&mut rkyv::Infallible).unwrap();
-        println!("Deserialized!");
-        println!("Printing loop var: {}", deserialized.user_id);
 
         if deserialized.user_id == user_id {
             total_messages += 1;
