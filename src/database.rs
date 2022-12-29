@@ -12,7 +12,7 @@ pub struct LuroMessage {
 }
 
 pub fn add_discord_message(db: &sled::Db, message: Message) -> sled::Result<()> {
-    let messages = if let Ok(messages) = db.open_tree(b"luromessage:") {
+    let messages = if let Ok(messages) = db.open_tree(b"luromessage") {
         messages
     } else {
         panic!("Failed to get database messages");
@@ -35,7 +35,7 @@ pub fn add_discord_message(db: &sled::Db, message: Message) -> sled::Result<()> 
         }
     };
 
-    let bytes = rkyv::to_bytes::<_, 256>(&luro_message).unwrap();
+    let bytes = rkyv::to_bytes::<_, 1024>(&luro_message).unwrap();
 
     if let Ok(_result) = messages.insert(message.id.0.as_bytes(), bytes.as_bytes()) {
     } else {
@@ -74,7 +74,6 @@ pub fn total_messages_by_user(db: &sled::Db, user_id: u64) -> u64 {
     } else {
         panic!("Failed to get database messages");
     };
-
     let mut total_messages = u64::default();
 
     for message in messages.iter().flatten() {
