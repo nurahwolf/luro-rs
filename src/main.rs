@@ -8,7 +8,9 @@ use std::{
 };
 
 use config::{Config, Heck, Quotes, Secrets, Stories};
+use database::add_discord_message;
 use poise::serenity_prelude::{self as serenity, Activity, OnlineStatus};
+use sled::Db;
 use songbird::Songbird;
 
 // Types
@@ -20,6 +22,7 @@ type Command = poise::Command<Data, Error>;
 // TODO: A way to do these progmatically
 const DATA_PATH: &str = "data/"; // Consider setting this to XDG_DATA_HOME on a production system
 const CONFIG_FILE_PATH: &str = "data/config.toml";
+const DATABASE_FILE_PATH: &str = "data/database";
 const HECK_FILE_PATH: &str = "data/heck.toml";
 const QUOTES_FILE_PATH: &str = "data/quotes.toml";
 const SECRETS_FILE_PATH: &str = "data/secrets.toml";
@@ -28,6 +31,7 @@ const STORIES_FILE_PATH: &str = "data/stories.toml";
 // Structs
 pub struct Data {
     config: Mutex<config::Config>,
+    database: Db,
     heck: Mutex<config::Heck>,
     quotes: Mutex<config::Quotes>,
     secrets: config::Secrets,
@@ -39,6 +43,7 @@ pub struct Data {
 // Other modules
 mod commands;
 mod config;
+mod database;
 mod utils;
 
 // Finally at Luro!
@@ -69,7 +74,6 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
     match event {
         poise::Event::Ready { data_about_bot } => {
             let http = &_ctx.http;
-
             let api_version = data_about_bot.version;
             let bot_gateway = http.get_bot_gateway().await.unwrap();
             let t_sessions = bot_gateway.session_start_limit.total;
@@ -90,6 +94,10 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
             _ctx.set_presence(Some(Activity::playing(&presence_string)), OnlineStatus::Online).await;
         }
         poise::Event::PresenceUpdate { new_data: _ } => {}
+        poise::Event::Message { new_message } => match add_discord_message(&_user_data.database, new_message.clone()) {
+            Ok(_) => println!("Added message to database"),
+            Err(err) => println!("Error while saving message to database: {err}")
+        },
 
         _ => {
             println!("Got an event in listener: {:?}", event.name());
@@ -102,8 +110,9 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
 #[tokio::main]
 async fn main() {
     let songbird = songbird::Songbird::serenity();
-    let mut data = Data {
+    let data = Data {
         config: Mutex::new(Config::get(CONFIG_FILE_PATH)),
+        database: sled::open(DATABASE_FILE_PATH).expect("Could not open / create database"),
         heck: Mutex::new(Heck::get(HECK_FILE_PATH)),
         quotes: Mutex::new(Quotes::get(QUOTES_FILE_PATH)),
         secrets: Secrets::get(SECRETS_FILE_PATH),

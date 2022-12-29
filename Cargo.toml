@@ -21,6 +21,10 @@ serde_json = "1" # Decoding JSON payloads
 rand = "0.8" # Random choice, also used by poise and songbird
 urlencoding = "2.1" # Zero subdependencies, used for formatting URL strings in the `e621` commands because URL encoding is a bitch
 futures = { version = "0.3.13", default-features = false } # For Discord autocomplete
+sled = "0.34" # Database
+zerocopy = "0.6.0" # Dependencies for Database
+byteorder = "1.4.3" # Dependencies for Database
+rkyv = "0.7" # Dependencies for Database
 
 ### Dependencies that should be reviewed
 # tracing-subscriber = "0.3" # See notes
