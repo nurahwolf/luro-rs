@@ -5,20 +5,58 @@ use std::sync::{
 
 use poise::{
     async_trait,
-    serenity_prelude::{ChannelId, Http}
+    serenity_prelude::{ChannelId, Http, Guild, User}
 };
 use songbird::{Event, EventContext, EventHandler as VoiceEventHandler};
 
-pub struct TrackEndNotifier {
+use crate::{utils::guild_accent_colour, config::Config};
+
+pub struct TrackStartNotifier {
     pub chan_id: ChannelId,
-    pub http: Arc<Http>
+    pub http: Arc<Http>,
+    pub config: Config,
+    pub guild: Guild,
+    pub user: User
 }
 
 #[async_trait]
-impl VoiceEventHandler for TrackEndNotifier {
+impl VoiceEventHandler for TrackStartNotifier {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         if let EventContext::Track(track_list) = ctx {
-            self.chan_id.say(&self.http, &format!("Tracks ended: {}.", track_list.len())).await.ok();
+            let metadata = track_list.last().unwrap().1.metadata();
+            self.chan_id.send_message(&self.http, |builder| {
+                builder
+                    .embed(|embed| {
+                        embed.title("Now Playing");
+                        embed.color(guild_accent_colour(self.config.accent_colour, Some(self.guild.clone())));
+                        embed.field("Requested By", self.user.clone(), false);
+                        if let Some(title) = &metadata.title {
+                            embed.title(title);
+                        }
+                        if let Some(artist) = &metadata.artist {
+                            embed.field("Arist", artist, false);
+                        }
+                        if let Some(date) = &metadata.date {
+                            embed.field("Date", date, false);
+                        }
+                        if let Some(duration) = &metadata.duration {
+                            embed.field("Duration", duration.as_secs(), false);
+                        }
+                        if let Some(source) = &metadata.source_url {
+                            embed.field("Source", source, false);
+                        }
+                        if let Some(start_time) = &metadata.start_time {
+                            embed.field("Start Time", start_time.as_secs(), false);
+                        }
+                        if let Some(track) = &metadata.track {
+                            embed.field("Track", track, false);
+                        }
+                        if let Some(thumbnail) = &metadata.thumbnail {
+                            embed.thumbnail(thumbnail);
+                        }
+                        embed
+                    })
+            }).await.ok();
         }
 
         None

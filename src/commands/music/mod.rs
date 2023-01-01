@@ -11,9 +11,10 @@ mod command_stop;
 mod command_undeafen;
 mod command_unmute;
 mod command_volume;
+mod command_nowplaying;
 mod struct_music;
 
-pub fn commands() -> [Command; 11] {
+pub fn commands() -> [Command; 12] {
     [
         command_deafen::deafen(),
         command_join::join(),
@@ -25,6 +26,7 @@ pub fn commands() -> [Command; 11] {
         command_stop::stop(),
         command_undeafen::undeafen(),
         command_unmute::unmute(),
-        command_volume::volume()
+        command_volume::volume(),
+        command_nowplaying::nowplaying()
     ]
 }

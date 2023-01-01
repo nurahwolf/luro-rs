@@ -1,9 +1,9 @@
 use std::time::Duration;
 
-use songbird::{Event, TrackEvent};
+use songbird::{Event};
 
 use crate::{
-    commands::music::struct_music::{ChannelDurationNotifier, TrackEndNotifier},
+    commands::music::struct_music::{ChannelDurationNotifier},
     Context, Error
 };
 /// Join a VC channel.
@@ -21,10 +21,7 @@ pub async fn join(ctx: Context<'_>, #[description = "Announce how long the bot h
                     ctx.say(&format!("Joined {}", channel.channel_id.unwrap())).await?;
 
                     let chan_id = ctx.channel_id();
-                    let send_http = ctx.serenity_context().http.clone();
                     let mut handle = handle_lock.lock().await;
-
-                    handle.add_global_event(Event::Track(TrackEvent::End), TrackEndNotifier { chan_id, http: send_http });
 
                     if announce.is_some() {
                         let send_http = ctx.serenity_context().http.clone();

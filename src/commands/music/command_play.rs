@@ -1,4 +1,6 @@
-use crate::{Context, Error};
+use songbird::{TrackEvent, Event};
+
+use crate::{Context, Error, commands::music::struct_music::TrackStartNotifier};
 /// Queue up a song to play!
 #[poise::command(slash_command, prefix_command, guild_only, category = "Music")]
 pub async fn play(ctx: Context<'_>, song: String, volume: Option<f32>) -> Result<(), Error> {
@@ -7,6 +9,8 @@ pub async fn play(ctx: Context<'_>, song: String, volume: Option<f32>) -> Result
 
         if let Some(handler_lock) = ctx.data().songbird.get(guild_id) {
             let mut handler = handler_lock.lock().await;
+            let send_http = ctx.serenity_context().http.clone();
+            let config = ctx.data().config.lock().unwrap().clone();
 
             let source = if song.starts_with("http") {
                 match songbird::input::ytdl(song).await {
@@ -28,13 +32,16 @@ pub async fn play(ctx: Context<'_>, song: String, volume: Option<f32>) -> Result
                 }
             };
 
+            let track_handler = handler.enqueue_source(source);
+            track_handler.add_event(Event::Track(TrackEvent::Play), TrackStartNotifier { chan_id: ctx.channel_id(), http: send_http, config, guild: ctx.guild().unwrap(), user: ctx.author().clone() })?;
+
             match volume {
                 Some(mut vol) => {
                     vol /= 100.0;
-                    handler.enqueue_source(source).set_volume(vol)?;
+                    track_handler.set_volume(vol)?;
                 }
                 None => {
-                    handler.enqueue_source(source).set_volume(0.2)?;
+                    track_handler.set_volume(0.2)?;
                 }
             }
 
