@@ -1,6 +1,6 @@
 use crate::{
-    config::{Config, Heck, Quotes, Stories},
-    Context, Error, CONFIG_FILE_PATH, HECK_FILE_PATH, QUOTES_FILE_PATH, STORIES_FILE_PATH
+    config::{Config, Heck, Quotes},
+    Context, Error, CONFIG_FILE_PATH, HECK_FILE_PATH, QUOTES_FILE_PATH
 };
 
 // TODO: Write a function for this
@@ -29,12 +29,6 @@ pub async fn save(ctx: Context<'_>) -> Result<(), Error> {
         false
     };
 
-    let stories = if let Ok(lock) = ctx.data().stories.lock() {
-        Stories::write(&lock, STORIES_FILE_PATH);
-        true
-    } else {
-        false
-    };
 
     if !config {
         ctx.say("Failed to lock config mutex").await?;
@@ -46,10 +40,6 @@ pub async fn save(ctx: Context<'_>) -> Result<(), Error> {
 
     if !quotes {
         ctx.say("Failed to lock quotes mutex").await?;
-    }
-
-    if !stories {
-        ctx.say("Failed to lock stories mutex").await?;
     }
 
     ctx.say("Done!").await?;

@@ -1,4 +1,4 @@
-use crate::{utils::guild_accent_colour, Context, Error};
+use crate::{config::Stories, utils::guild_accent_colour, Context, Error, STORIES_FILE_PATH};
 use rand::Rng;
 
 fn truncate(s: &str, max_chars: usize) -> &str {
@@ -17,50 +17,46 @@ pub async fn story(
     plain_text: bool,
     #[description = "The number story to get"] story: Option<usize>
 ) -> Result<(), Error> {
-    let stories = &ctx.data().stories.lock().unwrap().stories.clone();
-    let random_number = rand::thread_rng().gen_range(0..stories.len());
-
-    // Try to get the specified quote
-    if let Some(story) = story {
-        if let Some(story_result) = stories.get(story) {
-            let story_shortened = truncate(&story_result[1], 4096);
-            ctx.send(|b| {
-                b.embed(|b| {
-                    b.title(&story_result[0])
-                        .description(story_shortened)
-                        .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
-                        .footer(|f| f.text(format!("Story ID: {story}")))
-                })
-            })
-            .await?;
-            return Ok(());
-        } else {
-            ctx.say("Failed to get that story! Sure you got the right ID?").await?;
-            return Ok(());
-        }
+    // Load the story mutex, reload from config if its empty
+    let mut stories_mutex = ctx.data().stories.lock().await;
+    if stories_mutex.stories.is_empty() {
+        ctx.say("Out of random stories to get, so reloading config...").await?;
+        stories_mutex.reload(&Stories::get(STORIES_FILE_PATH));
     }
+    // Generate a random number based on the length of the stories vec
+    let random_number = rand::thread_rng().gen_range(0..stories_mutex.stories.len());
 
-    if let Some(story) = stories.get(random_number) {
-        if !plain_text {
-            let story_shortened = truncate(&story[1], 4096);
-            ctx.send(|b| {
-                b.embed(|b| {
-                    b.title(&story[0])
-                        .description(story_shortened)
-                        .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
-                        .footer(|f| f.text(format!("Story ID: {random_number}")))
-                })
-            })
-            .await?;
-        } else if story[1].len() > 2048 {
-            let (split1, split2) = story[1].split_at(2000);
-            ctx.say(split1).await?;
-            ctx.say(split2).await?;
-        } else {
-            ctx.say(&story[1]).await?;
+    // If the user specified a story, get it.
+    let story_resolved = if let Some(index) = story {
+        let stories = Stories::get(STORIES_FILE_PATH).stories;
+        match stories.get(index) {
+            Some(story) => story.clone(),
+            None => {
+                ctx.say("Failed to find that quote!").await?;
+                return Ok(());
+            }
         }
     } else {
-        ctx.say("Failed to find a story ;c").await?;
+        stories_mutex.stories.remove(random_number)
+    };
+
+    if !plain_text {
+        let story_shortened = truncate(&story_resolved[1], 4096);
+        ctx.send(|b| {
+            b.embed(|b| {
+                b.title(&story_resolved[0])
+                    .description(story_shortened)
+                    .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
+                    .footer(|f| f.text(format!("Story ID: {}", story.unwrap_or(random_number))))
+            })
+        })
+        .await?;
+    } else if story_resolved[1].len() > 2048 {
+        let (split1, split2) = story_resolved[1].split_at(2000);
+        ctx.say(split1).await?;
+        ctx.say(split2).await?;
+    } else {
+        ctx.say(&story_resolved[1]).await?;
     }
 
     Ok(())

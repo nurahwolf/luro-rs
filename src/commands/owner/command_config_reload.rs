@@ -1,6 +1,6 @@
 use crate::{
-    config::{Config, Heck, Quotes, Secrets, Stories},
-    Context, Error, CONFIG_FILE_PATH, HECK_FILE_PATH, QUOTES_FILE_PATH, SECRETS_FILE_PATH, STORIES_FILE_PATH
+    config::{Config, Heck, Quotes},
+    Context, Error, CONFIG_FILE_PATH, HECK_FILE_PATH, QUOTES_FILE_PATH
 };
 
 /// Load variables from disk(Owner Only)
@@ -27,13 +27,6 @@ pub async fn reload(ctx: Context<'_>) -> Result<(), Error> {
         false
     };
 
-    let stories = if let Ok(mut lock) = ctx.data().stories.lock() {
-        lock.reload(&Stories::get(STORIES_FILE_PATH));
-        true
-    } else {
-        false
-    };
-
     if !config {
         ctx.say("Failed to lock config mutex").await?;
     }
@@ -44,10 +37,6 @@ pub async fn reload(ctx: Context<'_>) -> Result<(), Error> {
 
     if !quotes {
         ctx.say("Failed to lock quotes mutex").await?;
-    }
-
-    if !stories {
-        ctx.say("Failed to lock stories mutex").await?;
     }
 
     ctx.say("Done!").await?;

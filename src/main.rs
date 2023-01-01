@@ -36,7 +36,7 @@ pub struct Data {
     heck: Mutex<config::Heck>,
     quotes: Mutex<config::Quotes>,
     secrets: config::Secrets,
-    stories: Mutex<config::Stories>,
+    stories: tokio::sync::Mutex<config::Stories>,
     songbird: Arc<Songbird>,
     votes: Mutex<HashMap<String, u32>>
 }
@@ -117,7 +117,7 @@ async fn main() {
         heck: Mutex::new(Heck::get(HECK_FILE_PATH)),
         quotes: Mutex::new(Quotes::get(QUOTES_FILE_PATH)),
         secrets: Secrets::get(SECRETS_FILE_PATH),
-        stories: Mutex::new(Stories::get(STORIES_FILE_PATH)),
+        stories: tokio::sync::Mutex::new(Stories::get(STORIES_FILE_PATH)),
         songbird: songbird.clone(),
         votes: Mutex::new(HashMap::new())
     };
@@ -130,7 +130,10 @@ async fn main() {
     env::set_var("RUST_LOG", "info,poise_basic_queue=trace,poise=debug,serenity=debug");
     let subscriber = FmtSubscriber::builder().with_target(false).finish();
 
-    tracing::subscriber::set_global_default(subscriber);
+    match tracing::subscriber::set_global_default(subscriber) {
+        Ok(_) => println!("Loaded tracing subscriber"),
+        Err(_) => panic!("Failed to load tracing subscriber!"),
+    };
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
