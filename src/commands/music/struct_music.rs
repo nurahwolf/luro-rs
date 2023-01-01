@@ -9,7 +9,9 @@ use poise::{
 };
 use songbird::{Event, EventContext, EventHandler as VoiceEventHandler};
 
-use crate::{utils::guild_accent_colour, config::Config};
+use crate::{config::Config};
+
+use super::function_nowplaying::now_playing;
 
 pub struct TrackStartNotifier {
     pub chan_id: ChannelId,
@@ -24,39 +26,12 @@ impl VoiceEventHandler for TrackStartNotifier {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         if let EventContext::Track(track_list) = ctx {
             let metadata = track_list.last().unwrap().1.metadata();
-            self.chan_id.send_message(&self.http, |builder| {
-                builder
-                    .embed(|embed| {
-                        embed.title("Now Playing");
-                        embed.color(guild_accent_colour(self.config.accent_colour, Some(self.guild.clone())));
-                        embed.field("Requested By", self.user.clone(), false);
-                        if let Some(title) = &metadata.title {
-                            embed.title(title);
-                        }
-                        if let Some(artist) = &metadata.artist {
-                            embed.field("Arist", artist, false);
-                        }
-                        if let Some(date) = &metadata.date {
-                            embed.field("Date", date, false);
-                        }
-                        if let Some(duration) = &metadata.duration {
-                            embed.field("Duration", duration.as_secs(), false);
-                        }
-                        if let Some(source) = &metadata.source_url {
-                            embed.field("Source", source, false);
-                        }
-                        if let Some(start_time) = &metadata.start_time {
-                            embed.field("Start Time", start_time.as_secs(), false);
-                        }
-                        if let Some(track) = &metadata.track {
-                            embed.field("Track", track, false);
-                        }
-                        if let Some(thumbnail) = &metadata.thumbnail {
-                            embed.thumbnail(thumbnail);
-                        }
-                        embed
-                    })
-            }).await.ok();
+            self.chan_id.send_message(&self.http, |builder|
+                builder.embed(|embed|{
+                    *embed = now_playing(self.config.accent_colour, self.guild.clone(), Some(self.user.clone()), metadata);
+                    embed
+                })
+            ).await.ok();
         }
 
         None

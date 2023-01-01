@@ -12,6 +12,7 @@ mod command_undeafen;
 mod command_unmute;
 mod command_volume;
 mod command_nowplaying;
+mod function_nowplaying;
 mod struct_music;
 
 pub fn commands() -> [Command; 12] {
