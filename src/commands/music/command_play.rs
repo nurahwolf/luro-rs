@@ -3,7 +3,7 @@ use songbird::{TrackEvent, Event};
 use crate::{Context, Error, commands::music::struct_music::TrackStartNotifier};
 /// Queue up a song to play!
 #[poise::command(slash_command, prefix_command, guild_only, category = "Music")]
-pub async fn play(ctx: Context<'_>, song: String, volume: Option<f32>) -> Result<(), Error> {
+pub async fn play(ctx: Context<'_>, song: String, volume: Option<f32>, #[description = "Loop this song until it is skipped"] #[flag] play_looped: bool) -> Result<(), Error> {
     if let Some(guild) = ctx.guild() {
         let guild_id = guild.id;
 
@@ -33,6 +33,9 @@ pub async fn play(ctx: Context<'_>, song: String, volume: Option<f32>) -> Result
             };
 
             let track_handler = handler.enqueue_source(source);
+            if play_looped {
+                track_handler.enable_loop()?;
+            }
             track_handler.add_event(Event::Track(TrackEvent::Play), TrackStartNotifier { chan_id: ctx.channel_id(), http: send_http, config, guild: ctx.guild().unwrap(), user: ctx.author().clone() })?;
 
             match volume {
