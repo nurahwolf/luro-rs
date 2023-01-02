@@ -18,3 +18,9 @@ This project is offered as is, with no warranty under the expectation that thing
 Copy ALL files, including the folders from `data/sample` to `/data`. Pretty much all of them are self explanatory. Note that any keys not specified in `secrets.toml` will cause that plugin to be disabled. If you opt to drop `bot_token`, you can pass in the environment variable `LURO_TOKEN`.
 
 Note: There are a bunch of hard coded constants in `main.rs` which are intended to be modified by the user. These primarily relate to where config files are stored. It is recommended to store data in `XDG_DATA_HOME` on a production system. `secrets.toml` can also be specified to a different, safer path.
+
+## Contribution and development
+
+Refer to the document below for what is actively being worked on. Pull requests and such should be accepted, or if I did something wrong, please reach out via Discord and I'll it sorted. Note that the code has a bunch of comments with `TODO:`, which is intended to notify code functionality that needs to be worked on. This may relate to one of the project goals below, or may not.
+
+![[TODO]]
