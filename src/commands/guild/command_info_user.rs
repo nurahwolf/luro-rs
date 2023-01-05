@@ -226,7 +226,7 @@ async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result
     embed.field("Account Type", if user.bot { "Bot" } else { "User" }, false);
     embed.description(format!("**User:** {} (ID: {})", &user, user.id.0));
 
-    // Apparently can only get a banner over the rest API, awesome...
+    // Apparently can only get some information over the rest API, awesome...
     if let Ok(user_rest) = ctx.http().get_user(user.id.0).await {
         if let Some(banner_url) = user_rest.banner_url() {
             embed.image(banner_url);
