@@ -23,4 +23,4 @@ Note: There are a bunch of hard coded constants in `main.rs` which are intended 
 
 Refer to the document below for what is actively being worked on. Pull requests and such should be accepted, or if I did something wrong, please reach out via Discord and I'll it sorted. Note that the code has a bunch of comments with `TODO:`, which is intended to notify code functionality that needs to be worked on. This may relate to one of the project goals below, or may not.
 
-![[TODO]]
+[[TODO]]
