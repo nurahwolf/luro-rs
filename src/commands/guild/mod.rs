@@ -1,5 +1,5 @@
 use crate::{
-    commands::guild::{command_info_channel::channel, command_info_guild::guild, command_info_user::user},
+    commands::guild::{command_info_channel::channel, command_info_guild::guild, command_info_user::user, command_info_message::message},
     Command, Context, Error
 };
 
@@ -9,10 +9,11 @@ mod command_guilds;
 mod command_info_channel;
 mod command_info_guild;
 mod command_info_user;
+mod command_info_message;
 mod function_sortuserroles;
 
 /// Get some information on things, like guilds and users.
-#[poise::command(slash_command, category = "Guild", subcommands("user", "guild", "channel"))]
+#[poise::command(slash_command, category = "Guild", subcommands("user", "guild", "channel", "message"))]
 pub async fn info(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("This command only has subcommands I'm afraid :)").await?;
     Ok(())
