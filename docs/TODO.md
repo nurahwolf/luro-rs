@@ -29,7 +29,10 @@ Things that are nice to have. Primarily a shopping list of ideas.
 - [ ] Website
     - [ ] Website Landing PAge
     - [ ] Website Dashboard
-- [ ] Modular Database - For the moment it is hardcoded to use one provider, but this requires me to learn and understand rust's feature flags better
+- [ ] Modularity
+    - [ ] Modular Database - For the moment it is hardcoded to use one provider, but this requires me to learn and understand rust's feature flags better
+    - [ ] Modular Interaction Database - Allow for easier modification of emotes used in the bot
+    - [ ] Modular Commands - Allow a guild owner to enable and disable subcomponents 
 - [ ] Proper audit logs - Debug information and context
 - [ ] Error handling improvements
 - [ ] Discord support server
