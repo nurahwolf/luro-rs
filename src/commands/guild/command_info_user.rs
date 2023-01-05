@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use poise::serenity_prelude::{ActivityType, CacheHttp, CreateEmbed, Guild, OnlineStatus, User};
+use poise::serenity_prelude::{ActivityType, CacheHttp, CreateEmbed, Guild, OnlineStatus, User, user, UserPublicFlags};
 use std::fmt::Write;
 
 use crate::{
@@ -231,7 +231,39 @@ async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result
         if let Some(banner_url) = user_rest.banner_url() {
             embed.image(banner_url);
         }
+
+        if let Some(accent_colour) = user_rest.accent_colour {
+            embed.field("Banner Accent Colour", accent_colour.hex(), false);
+        }
+
+
+        if let Some(flags) = user_rest.public_flags {
+            embed.field(
+                "User Flags",
+                match flags {
+                    UserPublicFlags::BOT_HTTP_INTERACTIONS => "BOT_HTTP_INTERACTIONS",
+                    UserPublicFlags::BUG_HUNTER_LEVEL_1 => "BUG_HUNTER_LEVEL_1",
+                    UserPublicFlags::BUG_HUNTER_LEVEL_2 => "BUG_HUNTER_LEVEL_2",
+                    UserPublicFlags::DISCORD_CERTIFIED_MODERATOR => "DISCORD_CERTIFIED_MODERATOR",
+                    UserPublicFlags::DISCORD_EMPLOYEE => "DISCORD_EMPLOYEE",
+                    UserPublicFlags::EARLY_SUPPORTER => "EARLY_SUPPORTER",
+                    UserPublicFlags::EARLY_VERIFIED_BOT_DEVELOPER => "EARLY_VERIFIED_BOT_DEVELOPER",
+                    UserPublicFlags::HOUSE_BALANCE => "HOUSE_BALANCE",
+                    UserPublicFlags::HOUSE_BRAVERY => "HOUSE_BRAVERY",
+                    UserPublicFlags::HOUSE_BRILLIANCE => "HOUSE_BRILLIANCE",
+                    UserPublicFlags::HYPESQUAD_EVENTS => "HYPESQUAD_EVENTS",
+                    UserPublicFlags::PARTNERED_SERVER_OWNER => "PARTNERED_SERVER_OWNER",
+                    UserPublicFlags::SYSTEM => "SYSTEM",
+                    UserPublicFlags::TEAM_USER => "TEAM_USER",
+                    UserPublicFlags::VERIFIED_BOT => "VERIFIED_BOT",
+                    _ => "Unknown"
+                },
+                false
+            );
+        }
     }
+
+    
 
     // Send the embed
     match ctx
