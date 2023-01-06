@@ -7,6 +7,7 @@ use std::{
     sync::{Arc, Mutex}
 };
 
+use commands::furry::function_fa::event_furaffinity;
 use config::{Config, Heck, Quotes, Secrets, Stories};
 use database::add_discord_message;
 use poise::serenity_prelude::{self as serenity, Activity, OnlineStatus};
@@ -28,6 +29,9 @@ const HECK_FILE_PATH: &str = "data/heck.toml";
 const QUOTES_FILE_PATH: &str = "data/quotes.toml";
 const SECRETS_FILE_PATH: &str = "data/secrets.toml";
 const STORIES_FILE_PATH: &str = "data/stories.toml";
+
+// Other Constants that will probably be changed to environment variables / config options
+const FURAFFINITY_REGEX: &str = r"(?:https://)?(?:www\.)?furaffinity\.net/(?:view|full)/(?P<submission_id>\d+)/?|https://d\.(?:facdn|furaffinity).net/art/(?P<author>[\w\-.~:?#\[\]@!$&'()*+,;=%]+)/(?P<cdn_id>\d+)/(?P<original_cdn_id>\d*).\S*(?:gif|jpe?g|tiff?|png|webp|bmp)";
 
 // Structs
 pub struct Data {
@@ -95,10 +99,21 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
             _ctx.set_presence(Some(Activity::playing(&presence_string)), OnlineStatus::Online).await;
         }
         poise::Event::PresenceUpdate { new_data: _ } => {}
-        poise::Event::Message { new_message } => match add_discord_message(&_user_data.database, new_message.clone()) {
-            Ok(_) => println!("Added message ID {} to database: {}", new_message.id.0, new_message.content),
-            Err(err) => println!("Error while saving message to database: {err}")
-        },
+        poise::Event::Message { new_message } => {
+            match add_discord_message(&_user_data.database, new_message.clone()) {
+                Ok(_) => println!("Added message ID {} to database: {}", new_message.id.0, new_message.content),
+                Err(err) => println!("Error while saving message to database: {err}")
+            };
+
+            if new_message.content.contains("https://furaffinity.net/view/") || new_message.content.contains("https://www.furaffinity.net/view/") {
+                match event_furaffinity(_ctx, _framework, new_message).await {
+                    Ok(_) => {},
+                    Err(err) => println!("Error while checking message for FA link: {err}")
+                }
+            };
+
+
+        }
 
         _ => {
             println!("Got an event in listener: {:?}", event.name());
@@ -132,7 +147,7 @@ async fn main() {
 
     match tracing::subscriber::set_global_default(subscriber) {
         Ok(_) => println!("Loaded tracing subscriber"),
-        Err(_) => panic!("Failed to load tracing subscriber!"),
+        Err(_) => panic!("Failed to load tracing subscriber!")
     };
 
     let framework = poise::Framework::builder()

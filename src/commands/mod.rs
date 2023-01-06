@@ -2,7 +2,7 @@ use crate::Command;
 
 mod api;
 mod dice;
-mod furry;
+pub mod furry;
 mod guild;
 mod moderator;
 mod music;
