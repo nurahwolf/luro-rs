@@ -1,13 +1,9 @@
 use crate::commands::furry::function_fa::{fa_reply, furaffinity_client};
-use crate::commands::furry::struct_furaffinity::FurAffinity;
 use crate::utils::guild_accent_colour;
-use crate::{Context, Error, FURAFFINITY_REGEX};
+use crate::{Context, Error};
 
 use futures::StreamExt;
-use poise::serenity_prelude::{ButtonStyle, Colour, CreateEmbed, InteractionResponseType};
-use poise::CreateReply;
-use regex::Regex;
-use serde::{Deserialize, Serialize};
+use poise::serenity_prelude::{InteractionResponseType};
 use std::time::Duration;
 use std::vec;
 
