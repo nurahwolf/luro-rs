@@ -1,10 +1,6 @@
-use crate::{
-    utils::{guild_accent_colour, sort_roles},
-    Context, Error
-};
-use itertools::Itertools;
-use poise::serenity_prelude::{CacheHttp, Channel, ChannelType, CreateEmbed, Guild, NsfwLevel};
-use std::{f32::consts::E, fmt::Write};
+use crate::{utils::guild_accent_colour, Context, Error};
+
+use poise::serenity_prelude::{CacheHttp, Channel, CreateEmbed};
 
 /// Get a message. Note, this gets the message directly, NOT from the database!
 #[poise::command(prefix_command, slash_command, category = "Guild")]

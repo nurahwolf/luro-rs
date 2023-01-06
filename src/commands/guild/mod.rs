@@ -1,5 +1,5 @@
 use crate::{
-    commands::guild::{command_info_channel::channel, command_info_guild::guild, command_info_user::user, command_info_message::message},
+    commands::guild::{command_info_channel::channel, command_info_guild::guild, command_info_message::message, command_info_user::user},
     Command, Context, Error
 };
 
@@ -8,8 +8,8 @@ mod command_firstmessage;
 mod command_guilds;
 mod command_info_channel;
 mod command_info_guild;
-mod command_info_user;
 mod command_info_message;
+mod command_info_user;
 mod function_sortuserroles;
 
 /// Get some information on things, like guilds and users.

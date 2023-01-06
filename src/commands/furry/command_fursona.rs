@@ -1,15 +1,14 @@
-use crate::{commands::testing, Context, Error, DATA_PATH};
+use crate::{Context, Error, DATA_PATH};
 
 use futures::{Stream, StreamExt};
-use poise::serenity_prelude::{AttachmentType, Cache, CacheHttp};
+use poise::serenity_prelude::{AttachmentType, CacheHttp};
 use rand::seq::SliceRandom;
-use std::fmt::Write;
-use std::sync::Arc;
+
 use std::{
     path::{Path, PathBuf},
     vec
 };
-use tokio::fs::{DirEntry, ReadDir};
+use tokio::fs::DirEntry;
 
 async fn get_fursonas() -> Vec<String> {
     let mut fursona_names = vec![];

@@ -4,15 +4,15 @@ mod command_deafen;
 mod command_join;
 mod command_leave;
 mod command_mute;
+mod command_nowplaying;
 mod command_play;
 mod command_playfaded;
+mod command_shuffle;
 mod command_skip;
 mod command_stop;
 mod command_undeafen;
 mod command_unmute;
 mod command_volume;
-mod command_nowplaying;
-mod command_shuffle;
 mod function_nowplaying;
 mod struct_music;
 

@@ -107,12 +107,10 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
 
             if new_message.content.contains("https://furaffinity.net/view/") || new_message.content.contains("https://www.furaffinity.net/view/") {
                 match event_furaffinity(_ctx, _framework, new_message).await {
-                    Ok(_) => {},
+                    Ok(_) => {}
                     Err(err) => println!("Error while checking message for FA link: {err}")
                 }
             };
-
-
         }
 
         _ => {

@@ -1,11 +1,8 @@
 use std::time::Duration;
 
-use songbird::{Event};
+use songbird::Event;
 
-use crate::{
-    commands::music::struct_music::{ChannelDurationNotifier},
-    Context, Error
-};
+use crate::{commands::music::struct_music::ChannelDurationNotifier, Context, Error};
 /// Join a VC channel.
 #[poise::command(slash_command, prefix_command, guild_only, ephemeral, category = "Music")]
 pub async fn join(ctx: Context<'_>, #[description = "Announce how long the bot has been in the voice channel"] announce: Option<bool>) -> Result<(), Error> {

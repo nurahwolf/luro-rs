@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use poise::serenity_prelude::{ActivityType, CacheHttp, CreateEmbed, Guild, OnlineStatus, User, user, UserPublicFlags};
+use poise::serenity_prelude::{ActivityType, CacheHttp, CreateEmbed, Guild, OnlineStatus, User, UserPublicFlags};
 use std::fmt::Write;
 
 use crate::{
@@ -236,7 +236,6 @@ async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result
             embed.field("Banner Accent Colour", accent_colour.hex(), false);
         }
 
-
         if let Some(flags) = user_rest.public_flags {
             embed.field(
                 "User Flags",
@@ -262,8 +261,6 @@ async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result
             );
         }
     }
-
-    
 
     // Send the embed
     match ctx

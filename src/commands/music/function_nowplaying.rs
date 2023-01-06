@@ -19,8 +19,8 @@ pub fn now_playing(accent_colour: [u8; 3], guild: Guild, user: Option<User>, met
     }
     if let Some(date) = &metadata.date {
         match DateTime::parse_from_str(date, "%Y%m%d") {
-            Ok(date_parsed) => embed.field("Date", format!("<t:{}:D>",date_parsed.timestamp()), false),
-            Err(_) => embed.field("Date", date, false),
+            Ok(date_parsed) => embed.field("Date", format!("<t:{}:D>", date_parsed.timestamp()), false),
+            Err(_) => embed.field("Date", date, false)
         };
     }
     if let Some(duration) = &metadata.duration {

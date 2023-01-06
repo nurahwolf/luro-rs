@@ -5,11 +5,11 @@ use std::sync::{
 
 use poise::{
     async_trait,
-    serenity_prelude::{ChannelId, Http, Guild, User}
+    serenity_prelude::{ChannelId, Guild, Http, User}
 };
 use songbird::{Event, EventContext, EventHandler as VoiceEventHandler};
 
-use crate::{config::Config};
+use crate::config::Config;
 
 use super::function_nowplaying::now_playing;
 
@@ -26,12 +26,15 @@ impl VoiceEventHandler for TrackStartNotifier {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         if let EventContext::Track(track_list) = ctx {
             let metadata = track_list.last().unwrap().1.metadata();
-            self.chan_id.send_message(&self.http, |builder|
-                builder.embed(|embed|{
-                    *embed = now_playing(self.config.accent_colour, self.guild.clone(), Some(self.user.clone()), metadata);
-                    embed
+            self.chan_id
+                .send_message(&self.http, |builder| {
+                    builder.embed(|embed| {
+                        *embed = now_playing(self.config.accent_colour, self.guild.clone(), Some(self.user.clone()), metadata);
+                        embed
+                    })
                 })
-            ).await.ok();
+                .await
+                .ok();
         }
 
         None

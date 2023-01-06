@@ -10,9 +10,7 @@ pub async fn shuffle(ctx: Context<'_>) -> Result<(), Error> {
         if let Some(handler_lock) = ctx.data().songbird.get(guild_id) {
             let handler = handler_lock.lock().await;
             let handler_queue = handler.queue();
-            handler_queue.modify_queue(|queue|
-                queue.make_contiguous().shuffle(&mut rand::thread_rng())
-            );
+            handler_queue.modify_queue(|queue| queue.make_contiguous().shuffle(&mut rand::thread_rng()));
             ctx.say("Shuffled!").await?;
         } else {
             ctx.say("Not in a voice channel").await?;

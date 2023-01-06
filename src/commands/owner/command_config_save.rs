@@ -29,7 +29,6 @@ pub async fn save(ctx: Context<'_>) -> Result<(), Error> {
         false
     };
 
-
     if !config {
         ctx.say("Failed to lock config mutex").await?;
     }

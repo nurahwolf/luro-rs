@@ -2,16 +2,15 @@ use crate::commands::furry::struct_furaffinity::FurAffinity;
 use crate::utils::guild_accent_colour;
 use crate::{Data, Error, FURAFFINITY_REGEX};
 
-use poise::serenity_prelude::{ButtonStyle, CreateEmbed, Message, CreateMessage, EditMessage, CreateComponents};
+use futures::StreamExt;
+use poise::serenity_prelude::{ButtonStyle, CreateComponents, CreateEmbed, CreateMessage, EditMessage, Message};
+use poise::serenity_prelude::{Colour, InteractionResponseType};
+use poise::CreateReply;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serenity::client::Context;
-use std::vec;
-use futures::StreamExt;
-use poise::CreateReply;
-use poise::serenity_prelude::{Colour, InteractionResponseType};
 use std::time::Duration;
-
+use std::vec;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Cookies {
@@ -76,13 +75,15 @@ pub async fn fa_message_edit(furaffinity: &FurAffinity, embed_colour: Option<Col
     let components = components(furaffinity);
     let mut edit_message = EditMessage::default();
 
-    edit_message.embed(|e| {
-        *e = embed;
-        e
-    }).components(|c|{
-        *c = components;
-        c
-    });
+    edit_message
+        .embed(|e| {
+            *e = embed;
+            e
+        })
+        .components(|c| {
+            *c = components;
+            c
+        });
 
     edit_message
 }
@@ -92,13 +93,15 @@ pub async fn fa_message(furaffinity: &FurAffinity, embed_colour: Option<Colour>)
     let components = components(furaffinity);
     let mut create_message = CreateMessage::default();
 
-    create_message.embed(|e| {
-        *e = embed;
-        e
-    }).components(|c|{
-        *c = components;
-        c
-    });
+    create_message
+        .embed(|e| {
+            *e = embed;
+            e
+        })
+        .components(|c| {
+            *c = components;
+            c
+        });
 
     create_message
 }
@@ -108,13 +111,15 @@ pub async fn fa_reply(furaffinity: &FurAffinity, embed_colour: Option<Colour>) -
     let components = components(furaffinity);
     let mut create_reply = CreateReply::default();
 
-    create_reply.embed(|e| {
-        *e = embed;
-        e
-    }).components(|c|{
-        *c = components;
-        c
-    });
+    create_reply
+        .embed(|e| {
+            *e = embed;
+            e
+        })
+        .components(|c| {
+            *c = components;
+            c
+        });
 
     create_reply
 }
@@ -133,7 +138,6 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
     ];
 
     let body = RequestBody { cookies, bbcode: false };
-
 
     let request_url = if let Some(url) = url {
         let regex = Regex::new(FURAFFINITY_REGEX).unwrap();
@@ -171,79 +175,86 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
     Ok(furaffinity)
 }
 
-
 /// Get a post from FA and send an embed response.
 pub async fn event_furaffinity(ctx: &Context, framework: poise::FrameworkContext<'_, Data, Error>, message: &Message) -> Result<(), reqwest::Error> {
     let url = &message.content;
     let fa_client = furaffinity_client(Some(url), None, &framework.user_data.secrets.furaffinity_cookies).await; // Get a FA client, build it on the url input
     let colour = guild_accent_colour(framework.user_data.config.lock().unwrap().accent_colour, message.guild(ctx));
 
-    let mut fa = match fa_client { // Make sure it is valid
+    let mut fa = match fa_client {
+        // Make sure it is valid
         Ok(fa) => fa,
         Err(_) => {
             return Ok(());
-        },
+        }
     };
 
     // Build a message based on our response, setting it up for interaction
     let furaffinity_message = fa_message(&fa, Some(colour)).await;
-    let reply = message.channel_id.send_message(ctx.http.clone(), |builder|{
-        *builder = furaffinity_message;
-        builder
-    }).await;
+    let reply = message
+        .channel_id
+        .send_message(ctx.http.clone(), |builder| {
+            *builder = furaffinity_message;
+            builder
+        })
+        .await;
 
     let mut reply_handle = match reply {
-        Ok(message) => {
-            message
-        },
+        Ok(message) => message,
         Err(err) => panic!("Furaffinity: Failed to send message to channel! {err}")
-
     };
 
     let mut interaction_stream = reply_handle.await_component_interactions(ctx).timeout(Duration::from_secs(60 * 3)).build();
 
     // Act on our interaction context
     while let Some(interaction) = interaction_stream.next().await {
-        match interaction.create_interaction_response(ctx, |f|
-        f.kind(InteractionResponseType::UpdateMessage)).await {
-            Ok(_) => {},
+        match interaction.create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage)).await {
+            Ok(_) => {}
             Err(err) => panic!("Furaffinity: Had a fuckywucky: {err}")
         }
 
         if interaction.data.custom_id.contains("prev") {
-            fa = match furaffinity_client(None, Some(fa.prev.unwrap()), &framework.user_data.secrets.furaffinity_cookies).await { // Make sure it is valid
+            fa = match furaffinity_client(None, Some(fa.prev.unwrap()), &framework.user_data.secrets.furaffinity_cookies).await {
+                // Make sure it is valid
                 Ok(fa) => fa,
                 Err(err) => {
                     panic!("Furaffinity: Failed to send message to channel! {err}")
-                },
+                }
             };
-        
+
             // Build a message based on our response, setting it up for interaction
             let message = fa_message_edit(&fa, Some(colour)).await;
-            match reply_handle.edit(ctx, |builder|{
-                *builder = message;
-                builder
-            }).await {
-                Ok(_) => {},
+            match reply_handle
+                .edit(ctx, |builder| {
+                    *builder = message;
+                    builder
+                })
+                .await
+            {
+                Ok(_) => {}
                 Err(err) => panic!("Furaffinity: Had a fuckywucky: {err}")
             }
         }
 
         if interaction.data.custom_id.contains("next") {
-            fa = match furaffinity_client(None, Some(fa.next.unwrap()), &framework.user_data.secrets.furaffinity_cookies ).await { // Make sure it is valid
+            fa = match furaffinity_client(None, Some(fa.next.unwrap()), &framework.user_data.secrets.furaffinity_cookies).await {
+                // Make sure it is valid
                 Ok(fa) => fa,
                 Err(err) => {
                     panic!("Furaffinity: Failed to send message to channel! {err}")
-                },
+                }
             };
-        
+
             // Build a message based on our response, setting it up for interaction
             let message = fa_message_edit(&fa, Some(colour)).await;
-            match reply_handle.edit(ctx, |builder|{
-                *builder = message;
-                builder
-            }).await {
-                Ok(_) => {},
+            match reply_handle
+                .edit(ctx, |builder| {
+                    *builder = message;
+                    builder
+                })
+                .await
+            {
+                Ok(_) => {}
                 Err(err) => panic!("Furaffinity: Had a fuckywucky: {err}")
             }
         }
