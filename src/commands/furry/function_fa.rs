@@ -54,16 +54,16 @@ fn embed(furaffinity: &FurAffinity, embed_colour: Option<Colour>) -> CreateEmbed
     embed
 }
 
-fn components(furaffinity: &FurAffinity) -> CreateComponents {
+pub fn components(furaffinity: &FurAffinity, disabled: bool) -> CreateComponents {
     let mut components = CreateComponents::default();
     components.create_action_row(|row| {
         row.create_button(|button| button.url(&furaffinity.file_url).label("View on FA").style(ButtonStyle::Link));
         if let Some(_prev) = furaffinity.prev {
-            row.create_button(|button| button.custom_id("prev").label("Previous Post").style(ButtonStyle::Primary));
+            row.create_button(|button| button.custom_id("prev").label("Previous Post").style(ButtonStyle::Primary).disabled(disabled));
         }
 
         if let Some(_next) = furaffinity.next {
-            row.create_button(|button| button.custom_id("next").label("Next Post").style(ButtonStyle::Primary));
+            row.create_button(|button| button.custom_id("next").label("Next Post").style(ButtonStyle::Primary).disabled(disabled));
         }
         row
     });
@@ -72,7 +72,7 @@ fn components(furaffinity: &FurAffinity) -> CreateComponents {
 
 pub async fn fa_message_edit(furaffinity: &FurAffinity, embed_colour: Option<Colour>) -> EditMessage<'static> {
     let embed = embed(furaffinity, embed_colour);
-    let components = components(furaffinity);
+    let components = components(furaffinity, false);
     let mut edit_message = EditMessage::default();
 
     edit_message
@@ -88,9 +88,9 @@ pub async fn fa_message_edit(furaffinity: &FurAffinity, embed_colour: Option<Col
     edit_message
 }
 
-pub async fn fa_message(furaffinity: &FurAffinity, embed_colour: Option<Colour>) -> CreateMessage<'static> {
+pub async fn fa_message(furaffinity: &FurAffinity, embed_colour: Option<Colour>, message: &Message) -> CreateMessage<'static> {
     let embed = embed(furaffinity, embed_colour);
-    let components = components(furaffinity);
+    let components = components(furaffinity, false);
     let mut create_message = CreateMessage::default();
 
     create_message
@@ -101,14 +101,14 @@ pub async fn fa_message(furaffinity: &FurAffinity, embed_colour: Option<Colour>)
         .components(|c| {
             *c = components;
             c
-        });
+        }).reference_message(message);
 
     create_message
 }
 
 pub async fn fa_reply(furaffinity: &FurAffinity, embed_colour: Option<Colour>) -> CreateReply<'static> {
     let embed = embed(furaffinity, embed_colour);
-    let components = components(furaffinity);
+    let components = components(furaffinity, false);
     let mut create_reply = CreateReply::default();
 
     create_reply
@@ -190,7 +190,7 @@ pub async fn event_furaffinity(ctx: &Context, framework: poise::FrameworkContext
     };
 
     // Build a message based on our response, setting it up for interaction
-    let furaffinity_message = fa_message(&fa, Some(colour)).await;
+    let furaffinity_message = fa_message(&fa, Some(colour), message).await;
     let reply = message
         .channel_id
         .send_message(ctx.http.clone(), |builder| {
@@ -258,6 +258,16 @@ pub async fn event_furaffinity(ctx: &Context, framework: poise::FrameworkContext
                 Err(err) => panic!("Furaffinity: Had a fuckywucky: {err}")
             }
         }
+    }
+
+    match reply_handle.edit(ctx, |builder|
+    builder.components(|c|{
+        let components = components(&fa, true);
+        *c = components;
+        c
+    })).await {
+        Ok(_) => {}
+        Err(err) => panic!("Furaffinity: Had a fuckywucky: {err}")
     }
 
     Ok(())

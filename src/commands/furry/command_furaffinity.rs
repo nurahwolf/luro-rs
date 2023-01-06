@@ -7,6 +7,8 @@ use poise::serenity_prelude::{InteractionResponseType};
 use std::time::Duration;
 use std::vec;
 
+use super::function_fa::components;
+
 /// Turn a FurAffinity link into a fancy embed!
 #[poise::command(slash_command, prefix_command, nsfw_only, category = "Furry")]
 pub async fn fa(
@@ -81,6 +83,13 @@ pub async fn fa(
                 .await?;
         }
     }
+    
+    reply_handle.edit(ctx, |builder|
+    builder.components(|c|{
+        let components = components(&fa, true);
+        *c = components;
+        c
+    })).await?;
 
     Ok(())
 }
