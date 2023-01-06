@@ -25,6 +25,7 @@ sled = "0.34" # Database
 zerocopy = "0.6.0" # Dependencies for Database
 byteorder = "1.4.3" # Dependencies for Database
 rkyv = "0.7" # Dependencies for Database
+regex = "1" # REGEX checking throughout Luro
 
 ### Dependencies that should be reviewed
 tracing-subscriber = "0.3" # See notes
