@@ -10,13 +10,23 @@ pub struct Author {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct Replies {
+    pub id: i64,
+    pub author: Author,
+    pub date: String,
+    pub text: String,
+    pub replies: Vec<Replies>
+
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Comments {
     pub author: Author,
     pub date: String,
     pub edited: bool,
     pub hidden: bool,
     pub id: i64,
-    pub replies: Vec<String>,
+    pub replies: Vec<Replies>,
     pub reply_to: Option<i64>,
     pub text: String
 }
