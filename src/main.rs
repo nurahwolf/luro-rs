@@ -29,6 +29,7 @@ const HECK_FILE_PATH: &str = "data/heck.toml";
 const QUOTES_FILE_PATH: &str = "data/quotes.toml";
 const SECRETS_FILE_PATH: &str = "data/secrets.toml";
 const STORIES_FILE_PATH: &str = "data/stories.toml";
+const FURSONA_FILE_PATH: &str = "data/fursona";
 
 // Other Constants that will probably be changed to environment variables / config options
 const FURAFFINITY_REGEX: &str = r"(?:https://)?(?:www\.)?furaffinity\.net/(?:view|full)/(?P<submission_id>\d+)/?|https://d\.(?:facdn|furaffinity).net/art/(?P<author>[\w\-.~:?#\[\]@!$&'()*+,;=%]+)/(?P<cdn_id>\d+)/(?P<original_cdn_id>\d*).\S*(?:gif|jpe?g|tiff?|png|webp|bmp)";

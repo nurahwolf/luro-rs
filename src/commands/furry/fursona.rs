@@ -1,67 +1,50 @@
-use crate::{Context, Error, DATA_PATH};
+use crate::{Context, Error, DATA_PATH, FURSONA_FILE_PATH};
 
 use futures::{Stream, StreamExt};
 use poise::serenity_prelude::{AttachmentType, CacheHttp};
 use rand::seq::SliceRandom;
 
 use std::{
-    path::{Path, PathBuf},
+    path::{Path},
     vec
 };
 use tokio::fs::DirEntry;
 
-async fn get_fursonas() -> Vec<String> {
+async fn get_fursonas() -> Result<Vec<String>, Error> {
     let mut fursona_names = vec![];
-
-    if let Ok(mut dir) = tokio::fs::read_dir(Path::new("data/fursona/")).await {
-        while let Ok(entry) = dir.next_entry().await {
-            if let Some(directory) = entry {
-                let test = directory.path();
-
-                if test.is_dir() {
-                    if let Ok(directory_name_string) = directory.file_name().into_string() {
-                        fursona_names.push(directory_name_string.clone());
-                    }
-                }
-            }
-        }
+    let mut dir = match tokio::fs::read_dir(Path::new(FURSONA_FILE_PATH)).await {
+        Ok(dir) => dir,
+        Err(_) => panic!("Failed to read fursona directory (does it exist?)")
     };
 
-    if fursona_names.is_empty() {
-        panic!("We fucked up, sorry");
+    while let Some(entry) = dir.next_entry().await? {
+        let directory_path = entry.path();
+
+        if directory_path.is_dir() {
+            let directory_name = match entry.file_name().into_string() {
+                Ok(name) => name,
+                Err(_) => panic!("Failed to read directory into string")
+            };
+            fursona_names.push(directory_name);
+        }
     }
 
-    fursona_names
+    if fursona_names.is_empty() {
+        panic!("Failed to get the names within the fursona directory (does it exist?)");
+    }
+
+    Ok(fursona_names)
 }
 
 async fn autocomplete_fursona<'a>(_ctx: Context<'_>, partial: &'a str) -> impl Stream<Item = String> + 'a {
-    let fursona_directories = if let Ok(test) = folders(Path::new("data/fursona/")) {
-        test
-    } else {
-        panic!("It's fucked!");
+    let fursonas = match get_fursonas().await {
+        Ok(fursonas) => fursonas,
+        Err(err) => panic!("Fursona: Failed to get fursonas - {err}")
     };
 
-    let test = directory(fursona_directories);
-
-    futures::stream::iter(test).filter(move |name| futures::future::ready(name.starts_with(partial))).map(|name| name)
-}
-
-fn directory(fursona_directories: Vec<PathBuf>) -> Vec<String> {
-    let mut fursona_names = vec![];
-    for directory in fursona_directories {
-        let filename = directory.file_name().unwrap().to_str().unwrap().to_string();
-        fursona_names.push(filename.clone());
-    }
-    fursona_names
-}
-
-fn folders(dir: &Path) -> Result<Vec<PathBuf>, std::io::Error> {
-    Ok(std::fs::read_dir(dir)?
-        .into_iter()
-        .filter(|r| r.is_ok()) // Get rid of Err variants for Result<DirEntry>
-        .map(|r| r.unwrap().path()) // This is safe, since we only have the Ok variants
-        .filter(|r| r.is_dir()) // Filter out non-folders
-        .collect())
+    futures::stream::iter(fursonas)
+        .filter(move |name| futures::future::ready(name.starts_with(partial)))
+        .map(|name| name)
 }
 
 fn nsfw_check(ctx: Context) -> bool {
