@@ -158,7 +158,7 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
 
     println!("Furaffinity: Attempting to get post: {request_url}");
 
-    let response = client.post(request_url).json(&body).send().await;
+    let response = client.post(&request_url).json(&body).send().await;
 
     let response_resolved = match response {
         Ok(response) => response.json::<FurAffinity>().await,
@@ -170,7 +170,15 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
     let furaffinity = match response_resolved {
         Ok(furaffinity) => furaffinity,
         Err(err) => {
-            return Err(err);
+            println!("Furaffinity: Failed to decode to JSON object, reason following... {err}");
+            let failed_response_raw = client.post(&request_url).json(&body).send().await.unwrap().text().await.unwrap();
+            match serde_json::from_str::<FurAffinity>(failed_response_raw.as_str()) {
+                Ok(ok) => ok,
+                Err(err) => {
+                    panic!("Error decoding - {err}\n{failed_response_raw}");
+                },
+            }
+            
         }
     };
 
@@ -186,8 +194,8 @@ pub async fn event_furaffinity(ctx: &Context, framework: poise::FrameworkContext
     let mut fa = match fa_client {
         // Make sure it is valid
         Ok(fa) => fa,
-        Err(_) => {
-            return Ok(());
+        Err(err) => {
+            panic!("Furaffinity: Error in request client - {err}");
         }
     };
 

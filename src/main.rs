@@ -11,6 +11,7 @@ use config::{Config, Heck, Quotes, Secrets, Stories};
 use database::add_discord_message;
 use functions::furaffinity::event_furaffinity;
 use poise::serenity_prelude::{self as serenity, Activity, OnlineStatus};
+use regex::Regex;
 use sled::Db;
 use songbird::Songbird;
 use tracing_subscriber::FmtSubscriber;
@@ -107,12 +108,13 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
                 Err(err) => println!("Error while saving message to database: {err}")
             };
 
-            if new_message.content.contains("https://furaffinity.net/view/") || new_message.content.contains("https://www.furaffinity.net/view/") {
+            let regex = Regex::new(FURAFFINITY_REGEX).unwrap();
+            if let Some(fa_match) = regex.find(&new_message.content) {
                 match event_furaffinity(_ctx, _framework, new_message).await {
-                    Ok(_) => {}
-                    Err(err) => println!("Error while checking message for FA link: {err}")
+                    Ok(_) => println!("Furaffinity: Regex matched - {}", fa_match.as_str()),
+                    Err(err) => println!("Furaffinity: Regex failed with the following message - {err}")
                 }
-            };
+            }
         }
 
         _ => {
