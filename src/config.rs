@@ -7,6 +7,7 @@ use tracing::log::info;
 
 // TODO: Can I have one impl for all of these?
 // TODO: Create a baseline template via code (Such as if the toml file does not exist)
+// TODO: Commented out functions are not used yet!
 
 /// Structure for `config.toml`
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -189,25 +190,23 @@ impl Secrets {
         };
     }
 
-    /// Write the struct to a toml file
-    pub fn write(new_data: &Secrets, path: &str) {
-        let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
-            Ok(string) => string,
-            Err(err) => panic!("Error serialising struct to toml string: {err}")
-        };
+    // pub fn write(new_data: &Secrets, path: &str) {
+    //     let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
+    //         Ok(string) => string,
+    //         Err(err) => panic!("Error serialising struct to toml string: {err}")
+    //     };
 
-        match fs::write(path, struct_to_toml_string) {
-            Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
-            Err(err) => panic!("Error writing toml file: {err}")
-        }
-    }
+    //     match fs::write(path, struct_to_toml_string) {
+    //         Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
+    //         Err(err) => panic!("Error writing toml file: {err}")
+    //     }
+    // }
 
-    /// Mutate the struct
-    pub fn reload(&mut self, new_data: &Secrets) {
-        self.discord_token = new_data.discord_token.clone();
-        self.e621_token = new_data.e621_token.clone();
-        self.twitter_api = new_data.twitter_api.clone();
-    }
+    // pub fn reload(&mut self, new_data: &Secrets) {
+    //     self.discord_token = new_data.discord_token.clone();
+    //     self.e621_token = new_data.e621_token.clone();
+    //     self.twitter_api = new_data.twitter_api.clone();
+    // }
 }
 
 /// Structure for `stories.toml`
@@ -239,17 +238,17 @@ impl Stories {
     }
 
     /// Write the struct to a toml file
-    pub fn write(new_data: &Stories, path: &str) {
-        let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
-            Ok(string) => string,
-            Err(err) => panic!("Error serialising struct to toml string: {err}")
-        };
+    // pub fn write(new_data: &Stories, path: &str) {
+    //     let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
+    //         Ok(string) => string,
+    //         Err(err) => panic!("Error serialising struct to toml string: {err}")
+    //     };
 
-        match fs::write(path, struct_to_toml_string) {
-            Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
-            Err(err) => panic!("Error writing toml file: {err}")
-        }
-    }
+    //     match fs::write(path, struct_to_toml_string) {
+    //         Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
+    //         Err(err) => panic!("Error writing toml file: {err}")
+    //     }
+    // }
 
     /// Mutate the struct
     pub fn reload(&mut self, new_data: &Stories) {
