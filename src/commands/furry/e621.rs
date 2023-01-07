@@ -11,39 +11,37 @@ use std::time::Duration;
 use std::vec;
 use urlencoding::encode;
 
-fn e621_description(e621_post: &E621Post, disable_blacklist: bool, blacklist: String, search: String) -> String {
+fn e621_description(e621_post: &E621Post, disable_blacklist: bool, blacklist: String) -> Result<String, Error> {
     let mut description = String::new();
-    let rating = format!("{} 👍 {} 👎 {} ❤️", e621_post.score.up, e621_post.score.down, e621_post.fav_count);
-
 
     // Create detailed description for the response
     if e621_post.comment_count.is_positive() {
-        writeln!(description, "**Comment count**: {}", e621_post.comment_count);
+        writeln!(description, "**Comment count**: {}", e621_post.comment_count)?;
     }
     if !e621_post.created_at.is_empty() {
         let time = DateTime::parse_from_rfc3339(&e621_post.created_at).unwrap();
-        writeln!(description, "**Created at**: <t:{}>", time.timestamp());
+        writeln!(description, "**Created at**: <t:{}>", time.timestamp())?;
     }
     if !e621_post.updated_at.is_empty() {
         let time = DateTime::parse_from_rfc3339(&e621_post.updated_at).unwrap();
-        writeln!(description, "**Uploaded at**: <t:{}>", time.timestamp());
+        writeln!(description, "**Uploaded at**: <t:{}>", time.timestamp())?;
     }
     if e621_post.has_notes {
-        writeln!(description, "**Has notes**: {}", e621_post.has_notes);
+        writeln!(description, "**Has notes**: {}", e621_post.has_notes)?;
     }
-    writeln!(description, "**Artist**: {}", e621_post.tags.artist.join(", "));
-    writeln!(description, "**Character**: {}", e621_post.tags.character.join(", "));
-    writeln!(description, "**General tags**: {}", e621_post.tags.general.join(", "));
-    writeln!(description, "**Species**: {}", e621_post.tags.species.join(", "));
+    writeln!(description, "**Artist**: {}", e621_post.tags.artist.join(", "))?;
+    writeln!(description, "**Character**: {}", e621_post.tags.character.join(", "))?;
+    writeln!(description, "**General tags**: {}", e621_post.tags.general.join(", "))?;
+    writeln!(description, "**Species**: {}", e621_post.tags.species.join(", "))?;
     if !e621_post.tags.lore.is_empty() {
-        writeln!(description, "**Lore**: {}", e621_post.tags.lore.join(", "));
+        writeln!(description, "**Lore**: {}", e621_post.tags.lore.join(", "))?;
     }
-    writeln!(description, "**Meta**: {}", e621_post.tags.meta.join(", "));
+    writeln!(description, "**Meta**: {}", e621_post.tags.meta.join(", "))?;
     if disable_blacklist {
-        writeln!(description, "**Blacklisted tags**: {}", blacklist);
+        writeln!(description, "**Blacklisted tags**: {blacklist}")?;
     }
 
-    description
+    Ok(description)
 }
 
 async fn e621_client(user_agent_string: String, token: Option<String>, disable_blacklist: bool, mut search: String, blacklist: String) -> Result<E621Posts, reqwest::Error> {
@@ -120,7 +118,7 @@ pub async fn e621(
     let mut e621_component_data = E621ComponentData { e621_post_link: String::new(), e621_search_tags_link: String::new(), sources: vec![String::new()]};
 
     if disable_blacklist {
-        writeln!(content_description, "**Blacklist set:** {}", config.e621_blacklist.clone());
+        writeln!(content_description, "**Blacklist set:** {}", config.e621_blacklist.clone())?;
     }
 
 
@@ -142,11 +140,15 @@ pub async fn e621(
             e621_component_data = E621ComponentData { e621_post_link: e621_link, e621_search_tags_link: search_tags, sources: post.sources.clone() };
             comp = components(false, e621_component_data.clone());
 
-            let description = e621_description(&post, disable_blacklist, config.e621_blacklist.clone(), search.clone());
-            let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string);
+            let description = match e621_description(&post, disable_blacklist, config.e621_blacklist.clone()) {
+                Ok(ok) => ok,
+                Err(err) => panic!("E621: Failed to create description - {err}"),
+            };
+
+            let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string, &post);
             embeds.push(embed);
             
-            writeln!(content_description, "{}", post.file.url);
+            writeln!(content_description, "{}", post.file.url)?;
         }
     }
 
@@ -188,11 +190,15 @@ pub async fn e621(
                         let e621_component_data = E621ComponentData { e621_post_link: e621_link, e621_search_tags_link: search_tags, sources: post.sources.clone() };
                         comp = components(false, e621_component_data.clone());
 
-                        let description = e621_description(&post, disable_blacklist, config.e621_blacklist.clone(), search.clone());
-                        let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string);
+                        let description = match e621_description(&post, disable_blacklist, config.e621_blacklist.clone()) {
+                            Ok(ok) => ok,
+                            Err(err) => panic!("E621: Failed to create description - {err}"),
+                        };
+                        
+                        let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string, &post);
                         embeds.push(embed);
                         
-                        writeln!(content_description, "{}", post.file.url);
+                        writeln!(content_description, "{}", post.file.url)?;
                     }
                 }
 
@@ -230,7 +236,7 @@ pub async fn e621(
     Ok(())
 }
 
-fn embed(title: &String, description: &String, colour: Colour, file_url: &String, no_description: bool, search_terms: &String) -> CreateEmbed {
+fn embed(title: &String, description: &String, colour: Colour, file_url: &String, no_description: bool, search_terms: &String, e621_post: &E621Post) -> CreateEmbed {
     let mut embed = CreateEmbed::default();
     embed.title(title);
     embed.url(format!("https://e621.net/posts?tags={search_terms}"));
@@ -239,6 +245,7 @@ fn embed(title: &String, description: &String, colour: Colour, file_url: &String
     if !no_description {
         embed.description(description);
     }
+    embed.footer(|footer|footer.text(format!("{} 👍 {} 👎 {} ❤️", e621_post.score.up, e621_post.score.down, e621_post.fav_count)));
     embed
 }
 
