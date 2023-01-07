@@ -49,8 +49,8 @@ pub struct Data {
 mod commands;
 mod config;
 mod database;
-mod structs;
 mod functions;
+mod structs;
 
 // Finally at Luro!
 // ===============

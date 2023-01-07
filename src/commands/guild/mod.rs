@@ -19,11 +19,5 @@ pub async fn info(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 pub fn commands() -> [Command; 5] {
-    [
-        botnick::botnick(),
-        firstmessage::firstmessage(),
-        guilds::guilds(),
-        info(),
-        info_user::userinfo_context()
-    ]
+    [botnick::botnick(), firstmessage::firstmessage(), guilds::guilds(), info(), info_user::userinfo_context()]
 }

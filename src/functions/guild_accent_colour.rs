@@ -1,4 +1,4 @@
-use poise::serenity_prelude::{Guild, Colour};
+use poise::serenity_prelude::{Colour, Guild};
 
 use super::sort_roles::sort_roles;
 

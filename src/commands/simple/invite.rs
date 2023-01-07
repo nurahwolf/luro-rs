@@ -1,6 +1,6 @@
 use poise::serenity_prelude::CacheHttp;
 
-use crate::{Context, Error, functions::guild_accent_colour::guild_accent_colour};
+use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error};
 use poise::serenity_prelude::Permissions;
 use tracing::log::error;
 

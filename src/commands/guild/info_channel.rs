@@ -2,7 +2,8 @@ use poise::serenity_prelude::{Channel, ChannelType, CreateEmbed, Guild};
 use std::fmt::Write;
 
 use crate::{
-    Context, Error, functions::{accent_colour::accent_colour, guild_accent_colour::guild_accent_colour}
+    functions::{accent_colour::accent_colour, guild_accent_colour::guild_accent_colour},
+    Context, Error
 };
 
 /// Get information on a channel in a guild

@@ -102,7 +102,8 @@ pub async fn fa_message(furaffinity: &FurAffinity, embed_colour: Option<Colour>,
         .components(|c| {
             *c = components;
             c
-        }).reference_message(message);
+        })
+        .reference_message(message);
 
     create_message
 }
@@ -261,12 +262,16 @@ pub async fn event_furaffinity(ctx: &Context, framework: poise::FrameworkContext
         }
     }
 
-    match reply_handle.edit(ctx, |builder|
-    builder.components(|c|{
-        let components = components(&fa, true);
-        *c = components;
-        c
-    })).await {
+    match reply_handle
+        .edit(ctx, |builder| {
+            builder.components(|c| {
+                let components = components(&fa, true);
+                *c = components;
+                c
+            })
+        })
+        .await
+    {
         Ok(_) => {}
         Err(err) => panic!("Furaffinity: Had a fuckywucky: {err}")
     }

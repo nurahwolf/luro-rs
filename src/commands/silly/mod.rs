@@ -6,11 +6,5 @@ mod oracle;
 mod vote;
 
 pub fn commands() -> [Command; 5] {
-    [
-        boop::boop(),
-        filedetails::file_details(),
-        oracle::oracle(),
-        vote::vote(),
-        vote::getvotes()
-    ]
+    [boop::boop(), filedetails::file_details(), oracle::oracle(), vote::vote(), vote::getvotes()]
 }

@@ -3,7 +3,8 @@ use poise::serenity_prelude::{ActivityType, CacheHttp, CreateEmbed, Guild, Onlin
 use std::fmt::Write;
 
 use crate::{
-    Context, Error, functions::{guild_accent_colour::guild_accent_colour, accent_colour::accent_colour}
+    functions::{accent_colour::accent_colour, guild_accent_colour::guild_accent_colour},
+    Context, Error
 };
 
 async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result<(), Error> {

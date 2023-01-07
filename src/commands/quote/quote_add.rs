@@ -2,7 +2,8 @@ use poise::serenity_prelude::Message;
 
 use crate::{
     config::{Quote, Quotes},
-    Context, Error, QUOTES_FILE_PATH, functions::guild_accent_colour::guild_accent_colour
+    functions::guild_accent_colour::guild_accent_colour,
+    Context, Error, QUOTES_FILE_PATH
 };
 
 /// Save the random shit a user has said;)

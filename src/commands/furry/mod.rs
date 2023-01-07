@@ -6,11 +6,5 @@ mod fursona;
 mod uwuify;
 
 pub fn commands() -> [Command; 5] {
-    [
-        e621::e621(),
-        fursona::fursona(),
-        uwuify::uwu(),
-        uwuify::uwuify(),
-        furaffinity::fa()
-    ]
+    [e621::e621(), fursona::fursona(), uwuify::uwu(), uwuify::uwuify(), furaffinity::fa()]
 }

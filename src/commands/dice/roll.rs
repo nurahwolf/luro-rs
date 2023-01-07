@@ -1,11 +1,7 @@
 use crate::{
-    commands::dice::{
-        roll_dice::dice,
-        roll_direction::direction,
-        roll_help::help,
-        roll_stats::stats,
-    },
-    Context, Error, functions::diceroller::{roll_inline, RollResult, Value}
+    commands::dice::{roll_dice::dice, roll_direction::direction, roll_help::help, roll_stats::stats},
+    functions::diceroller::{roll_inline, RollResult, Value},
+    Context, Error
 };
 
 /// Roll those dice nerd

@@ -1,6 +1,7 @@
 use crate::{
+    functions::{formatint::format_int, guild_accent_colour::guild_accent_colour},
     structs::twitter::{User, UserTweets},
-    Context, Error, functions::{formatint::format_int, guild_accent_colour::guild_accent_colour}
+    Context, Error
 };
 
 /// Display information on a twitter user

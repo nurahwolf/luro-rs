@@ -1,4 +1,4 @@
-use crate::{config::Stories, Context, Error, STORIES_FILE_PATH, functions::guild_accent_colour::guild_accent_colour};
+use crate::{config::Stories, functions::guild_accent_colour::guild_accent_colour, Context, Error, STORIES_FILE_PATH};
 use rand::Rng;
 
 fn truncate(s: &str, max_chars: usize) -> &str {

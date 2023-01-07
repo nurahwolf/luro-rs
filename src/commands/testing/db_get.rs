@@ -1,6 +1,6 @@
 use poise::serenity_prelude::CacheHttp;
 
-use crate::{database::get_discord_message, Context, Error, functions::guild_accent_colour::guild_accent_colour};
+use crate::{database::get_discord_message, functions::guild_accent_colour::guild_accent_colour, Context, Error};
 
 /// Get a message from the database
 #[poise::command(prefix_command, slash_command, category = "General")]

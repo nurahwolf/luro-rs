@@ -1,5 +1,6 @@
 use crate::{
-    Context, Error, functions::{guild_accent_colour::guild_accent_colour, sort_roles::sort_roles}
+    functions::{guild_accent_colour::guild_accent_colour, sort_roles::sort_roles},
+    Context, Error
 };
 use itertools::Itertools;
 use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel};

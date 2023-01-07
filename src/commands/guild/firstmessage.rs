@@ -1,6 +1,6 @@
 use poise::serenity_prelude::Channel;
 
-use crate::{Context, Error, functions::guild_accent_colour::guild_accent_colour};
+use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error};
 
 /// Retrieves the first message ever sent to a channel.
 #[poise::command(slash_command, prefix_command, guild_only, required_permissions = "READ_MESSAGE_HISTORY")]

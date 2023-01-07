@@ -4,8 +4,8 @@ mod lights;
 mod lodestonenews;
 mod printerfacts;
 mod twitter;
-mod xkcd;
 mod urban;
+mod xkcd;
 
 pub fn commands() -> [Command; 7] {
     [

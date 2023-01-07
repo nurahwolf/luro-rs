@@ -1,7 +1,7 @@
 use chrono::Utc;
 use poise::serenity_prelude::ShardId;
 
-use crate::{Context, Error, functions::guild_accent_colour::guild_accent_colour};
+use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error};
 
 /// Shows current latency of the bot
 #[poise::command(prefix_command, slash_command, category = "General")]
