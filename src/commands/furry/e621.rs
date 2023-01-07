@@ -4,10 +4,10 @@ use crate::structs::e621::{E621Posts, E621Post};
 use crate::{Context, Error};
 
 use chrono::DateTime;
-use poise::serenity_prelude::{ButtonStyle, Colour, CreateActionRow, CreateButton, CreateComponents, CreateEmbed};
-use rand::seq::SliceRandom;
-use reqwest::Response;
+use poise::serenity_prelude::{ButtonStyle, Colour, CreateComponents, CreateEmbed, InteractionResponseType};
+use futures::StreamExt;
 use std::fmt::Write;
+use std::time::Duration;
 use std::vec;
 use urlencoding::encode;
 
@@ -117,6 +117,7 @@ pub async fn e621(
     let mut embeds = vec![];
     let mut content_description = String::new();
     let mut comp = CreateComponents::default();
+    let mut e621_component_data = E621ComponentData { e621_post_link: String::new(), e621_search_tags_link: String::new(), sources: vec![String::new()]};
 
     if disable_blacklist {
         writeln!(content_description, "**Blacklist set:** {}", config.e621_blacklist.clone());
@@ -132,47 +133,107 @@ pub async fn e621(
 
     for _ in 0..posts_selected {
         if let Some(post) = random_remove(&mut e621_posts.posts) {
-            let description = e621_description(&post, disable_blacklist, config.e621_blacklist.clone(), search.clone());
-            let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description);
-            embeds.push(embed);
+
 
             let e621_link = format!("https://e621.net/posts/{}", post.id);
             let search_encoded = encode(&search);
             let search_string = &search_encoded.replace(' ', "+");
             let search_tags = format!("https://e621.net/posts?tags={}", &search_string);
-            let e621_component_data = E621ComponentData { e621_post_link: e621_link, e621_search_tags_link: search_tags, sources: post.sources.clone() };
-            comp = components(false, e621_component_data);
+            e621_component_data = E621ComponentData { e621_post_link: e621_link, e621_search_tags_link: search_tags, sources: post.sources.clone() };
+            comp = components(false, e621_component_data.clone());
+
+            let description = e621_description(&post, disable_blacklist, config.e621_blacklist.clone(), search.clone());
+            let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string);
+            embeds.push(embed);
             
             writeln!(content_description, "{}", post.file.url);
         }
     }
 
-    ctx.send(|builder|{
+    let reply_handle = ctx.send(|builder|{
         builder.components(|c|{
-            *c = comp;
+            *c = comp.clone();
             c
         });
 
         if just_image {
-            builder.content(content_description);
+            builder.content(content_description.clone());
         } else {
-            for embed in embeds {
+            for embed in embeds.clone() {
                 builder.embed(|f| {
                     *f = embed;
                     f
                 });
             }
         }
-        builder
+        builder 
     }).await?;
+
+    let mut interaction_stream = reply_handle.message().await?.await_component_interactions(ctx).timeout(Duration::from_secs(60 * 3)).build();
+
+        // Act on our interaction context
+        while let Some(interaction) = interaction_stream.next().await {
+            interaction.create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage)).await?;
+    
+            if interaction.data.custom_id.contains("random") {
+                embeds.clear();
+                for _ in 0..posts_selected {
+                    if let Some(post) = random_remove(&mut e621_posts.posts) {
+
+            
+                        let e621_link = format!("https://e621.net/posts/{}", post.id);
+                        let search_encoded = encode(&search);
+                        let search_string = &search_encoded.replace(' ', "+");
+                        let search_tags = format!("https://e621.net/posts?tags={}", &search_string);
+                        let e621_component_data = E621ComponentData { e621_post_link: e621_link, e621_search_tags_link: search_tags, sources: post.sources.clone() };
+                        comp = components(false, e621_component_data.clone());
+
+                        let description = e621_description(&post, disable_blacklist, config.e621_blacklist.clone(), search.clone());
+                        let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string);
+                        embeds.push(embed);
+                        
+                        writeln!(content_description, "{}", post.file.url);
+                    }
+                }
+
+                reply_handle.edit(ctx, |builder|{
+                    builder.components(|c|{
+                        *c = comp.clone();
+                        c
+                    });
+            
+                    if just_image {
+                        builder.content(content_description.clone());
+                    } else {
+                        for embed in embeds.clone() {
+                            builder.embed(|f| {
+                                *f = embed;
+                                f
+                            });
+                        }
+                    }
+                    builder 
+                }).await?;
+            }
+        }
+    
+        reply_handle
+            .edit(ctx, |builder| {
+                builder.components(|c| {
+                    comp = components(true, e621_component_data.clone());
+                    *c = comp.clone();
+                    c
+                })
+            })
+            .await?;
 
     Ok(())
 }
 
-fn embed(title: &String, description: &String, colour: Colour, file_url: &String, no_description: bool) -> CreateEmbed {
+fn embed(title: &String, description: &String, colour: Colour, file_url: &String, no_description: bool, search_terms: &String) -> CreateEmbed {
     let mut embed = CreateEmbed::default();
     embed.title(title);
-    embed.url("https://e621.net/posts/");
+    embed.url(format!("https://e621.net/posts?tags={search_terms}"));
     embed.colour(colour);
     embed.image(file_url);
     if !no_description {
@@ -181,6 +242,7 @@ fn embed(title: &String, description: &String, colour: Colour, file_url: &String
     embed
 }
 
+#[derive (Clone)]
 pub struct E621ComponentData {
     e621_post_link: String,
     e621_search_tags_link: String,
@@ -190,16 +252,18 @@ pub struct E621ComponentData {
 pub fn components(disabled: bool, mut e621_component_data: E621ComponentData) -> CreateComponents {
     let mut components = CreateComponents::default();
     components.create_action_row(|row| {
-        row.create_button(|button| button.label("Previous Image").style(ButtonStyle::Primary).custom_id("prev").disabled(disabled));
-
-        row.create_button(|button| button.label("Next Image").style(ButtonStyle::Primary).custom_id("next").disabled(disabled));
+        row.create_button(|button| button.label("Another random image").style(ButtonStyle::Primary).custom_id("random").disabled(disabled));
 
         row.create_button(|button| button.label("View on E621").style(ButtonStyle::Link).url(e621_component_data.e621_post_link));
 
         row.create_button(|button| button.label("Search E621").style(ButtonStyle::Link).url(e621_component_data.e621_search_tags_link));
 
         if !e621_component_data.sources.is_empty() {
-            row.create_button(|button| button.label("Source 0").style(ButtonStyle::Link).url(e621_component_data.sources.pop().unwrap()));
+            for n in 0..2 {
+                if !e621_component_data.sources.is_empty() {
+                    row.create_button(|button| button.label(format!("Source {}", n + 1)).style(ButtonStyle::Link).url(e621_component_data.sources.pop().unwrap()));
+                }
+            }
         }
 
         row
