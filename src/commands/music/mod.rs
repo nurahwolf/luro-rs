@@ -1,35 +1,33 @@
 use crate::Command;
 
-mod command_deafen;
-mod command_join;
-mod command_leave;
-mod command_mute;
-mod command_nowplaying;
-mod command_play;
-mod command_playfaded;
-mod command_shuffle;
-mod command_skip;
-mod command_stop;
-mod command_undeafen;
-mod command_unmute;
-mod command_volume;
-mod function_nowplaying;
-mod struct_music;
+mod deafen;
+mod join;
+mod leave;
+mod mute;
+mod nowplaying;
+mod play;
+mod playfaded;
+mod shuffle;
+mod skip;
+mod stop;
+mod undeafen;
+mod unmute;
+mod volume;
 
 pub fn commands() -> [Command; 13] {
     [
-        command_deafen::deafen(),
-        command_join::join(),
-        command_leave::leave(),
-        command_mute::mute(),
-        command_play::play(),
-        command_playfaded::playfaded(),
-        command_skip::skip(),
-        command_stop::stop(),
-        command_undeafen::undeafen(),
-        command_unmute::unmute(),
-        command_volume::volume(),
-        command_nowplaying::nowplaying(),
-        command_shuffle::shuffle()
+        deafen::deafen(),
+        join::join(),
+        leave::leave(),
+        mute::mute(),
+        play::play(),
+        playfaded::playfaded(),
+        skip::skip(),
+        stop::stop(),
+        undeafen::undeafen(),
+        unmute::unmute(),
+        volume::volume(),
+        nowplaying::nowplaying(),
+        shuffle::shuffle()
     ]
 }

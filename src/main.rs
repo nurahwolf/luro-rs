@@ -7,9 +7,9 @@ use std::{
     sync::{Arc, Mutex}
 };
 
-use commands::furry::function_fa::event_furaffinity;
 use config::{Config, Heck, Quotes, Secrets, Stories};
 use database::add_discord_message;
+use functions::furaffinity::event_furaffinity;
 use poise::serenity_prelude::{self as serenity, Activity, OnlineStatus};
 use sled::Db;
 use songbird::Songbird;
@@ -49,7 +49,8 @@ pub struct Data {
 mod commands;
 mod config;
 mod database;
-mod utils;
+mod structs;
+mod functions;
 
 // Finally at Luro!
 // ===============

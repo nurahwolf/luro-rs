@@ -1,13 +1,13 @@
 use crate::{
-    commands::owner::{command_config_reload::reload, command_config_save::save},
+    commands::owner::{config_reload::reload, config_save::save},
     Command, Context, Error
 };
 
-mod command_adminabuse;
-mod command_config_reload;
-mod command_config_save;
-mod command_register;
-mod command_shutdown;
+mod adminabuse;
+mod config_reload;
+mod config_save;
+mod register;
+mod shutdown;
 
 #[poise::command(owners_only, slash_command, category = "Owner", subcommands("reload", "save"))]
 pub async fn config(ctx: Context<'_>) -> Result<(), Error> {
@@ -16,5 +16,5 @@ pub async fn config(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 pub fn commands() -> [Command; 4] {
-    [command_adminabuse::adminabuse(), command_register::register(), config(), command_shutdown::shutdown()]
+    [adminabuse::adminabuse(), register::register(), config(), shutdown::shutdown()]
 }
