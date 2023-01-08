@@ -1,4 +1,4 @@
-use rand::{thread_rng, seq::IteratorRandom};
+use rand::{seq::IteratorRandom, thread_rng};
 
 use crate::structs::e621::E621Post;
 

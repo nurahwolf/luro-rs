@@ -1,11 +1,11 @@
 use crate::functions::guild_accent_colour::guild_accent_colour;
 use crate::functions::random_remove::random_remove;
-use crate::structs::e621::{E621Posts, E621Post};
+use crate::structs::e621::{E621Post, E621Posts};
 use crate::{Context, Error};
 
 use chrono::DateTime;
-use poise::serenity_prelude::{ButtonStyle, Colour, CreateComponents, CreateEmbed, InteractionResponseType};
 use futures::StreamExt;
+use poise::serenity_prelude::{ButtonStyle, Colour, CreateComponents, CreateEmbed, InteractionResponseType};
 use std::fmt::Write;
 use std::time::Duration;
 use std::vec;
@@ -98,7 +98,15 @@ pub async fn e621(
     let config = ctx.data().config.lock().unwrap().clone();
     let colour = guild_accent_colour(config.accent_colour, ctx.guild());
 
-    let mut e621_posts = match e621_client(config.e621_useragent, ctx.data().secrets.e621_token.clone(), disable_blacklist, search.clone(), config.e621_blacklist.clone()).await {
+    let mut e621_posts = match e621_client(
+        config.e621_useragent,
+        ctx.data().secrets.e621_token.clone(),
+        disable_blacklist,
+        search.clone(),
+        config.e621_blacklist.clone()
+    )
+    .await
+    {
         Ok(e621_posts) => e621_posts,
         Err(err) => {
             ctx.say(format!("Failed to resolve posts because of the following reason - {err}")).await?;
@@ -115,99 +123,104 @@ pub async fn e621(
     let mut embeds = vec![];
     let mut content_description = String::new();
     let mut comp = CreateComponents::default();
-    let mut e621_component_data = E621ComponentData { e621_post_link: String::new(), e621_search_tags_link: String::new(), sources: vec![String::new()]};
+    let mut e621_component_data = E621ComponentData {
+        e621_post_link: String::new(),
+        e621_search_tags_link: String::new(),
+        sources: vec![String::new()]
+    };
 
     if disable_blacklist {
         writeln!(content_description, "**Blacklist set:** {}", config.e621_blacklist.clone())?;
     }
 
-
-
-    let posts_selected = if tiled {
-        4
-    } else {
-        1
-    };
+    let posts_selected = if tiled { 4 } else { 1 };
 
     for _ in 0..posts_selected {
         if let Some(post) = random_remove(&mut e621_posts.posts) {
-
-
             let e621_link = format!("https://e621.net/posts/{}", post.id);
             let search_encoded = encode(&search);
             let search_string = &search_encoded.replace(' ', "+");
             let search_tags = format!("https://e621.net/posts?tags={}", &search_string);
-            e621_component_data = E621ComponentData { e621_post_link: e621_link, e621_search_tags_link: search_tags, sources: post.sources.clone() };
+            e621_component_data = E621ComponentData {
+                e621_post_link: e621_link,
+                e621_search_tags_link: search_tags,
+                sources: post.sources.clone()
+            };
             comp = components(false, e621_component_data.clone());
 
             let description = match e621_description(&post, disable_blacklist, config.e621_blacklist.clone()) {
                 Ok(ok) => ok,
-                Err(err) => panic!("E621: Failed to create description - {err}"),
+                Err(err) => panic!("E621: Failed to create description - {err}")
             };
 
             let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string, &post);
             embeds.push(embed);
-            
+
             writeln!(content_description, "{}", post.file.url)?;
         }
     }
 
-    let reply_handle = ctx.send(|builder|{
-        builder.components(|c|{
-            *c = comp.clone();
-            c
-        });
+    let reply_handle = ctx
+        .send(|builder| {
+            builder.components(|c| {
+                *c = comp.clone();
+                c
+            });
 
-        if just_image {
-            builder.content(content_description.clone());
-        } else {
-            for embed in embeds.clone() {
-                builder.embed(|f| {
-                    *f = embed;
-                    f
-                });
+            if just_image {
+                builder.content(content_description.clone());
+            } else {
+                for embed in embeds.clone() {
+                    builder.embed(|f| {
+                        *f = embed;
+                        f
+                    });
+                }
             }
-        }
-        builder 
-    }).await?;
+            builder
+        })
+        .await?;
 
     let mut interaction_stream = reply_handle.message().await?.await_component_interactions(ctx).timeout(Duration::from_secs(60 * 3)).build();
 
-        // Act on our interaction context
-        while let Some(interaction) = interaction_stream.next().await {
-            interaction.create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage)).await?;
-    
-            if interaction.data.custom_id.contains("random") {
-                embeds.clear();
-                for _ in 0..posts_selected {
-                    if let Some(post) = random_remove(&mut e621_posts.posts) {
+    // Act on our interaction context
+    while let Some(interaction) = interaction_stream.next().await {
+        interaction.create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage)).await?;
 
-            
-                        let e621_link = format!("https://e621.net/posts/{}", post.id);
-                        let search_encoded = encode(&search);
-                        let search_string = &search_encoded.replace(' ', "+");
-                        let search_tags = format!("https://e621.net/posts?tags={}", &search_string);
-                        let e621_component_data = E621ComponentData { e621_post_link: e621_link, e621_search_tags_link: search_tags, sources: post.sources.clone() };
-                        comp = components(false, e621_component_data.clone());
+        if interaction.data.custom_id.contains("random") {
+            embeds.clear();
+            for _ in 0..posts_selected {
+                if let Some(post) = random_remove(&mut e621_posts.posts) {
+                    let e621_link = format!("https://e621.net/posts/{}", post.id);
+                    let search_encoded = encode(&search);
+                    let search_string = &search_encoded.replace(' ', "+");
+                    let search_tags = format!("https://e621.net/posts?tags={}", &search_string);
+                    let e621_component_data = E621ComponentData {
+                        e621_post_link: e621_link,
+                        e621_search_tags_link: search_tags,
+                        sources: post.sources.clone()
+                    };
+                    comp = components(false, e621_component_data.clone());
 
-                        let description = match e621_description(&post, disable_blacklist, config.e621_blacklist.clone()) {
-                            Ok(ok) => ok,
-                            Err(err) => panic!("E621: Failed to create description - {err}"),
-                        };
-                        
-                        let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string, &post);
-                        embeds.push(embed);
-                        
-                        writeln!(content_description, "{}", post.file.url)?;
-                    }
+                    let description = match e621_description(&post, disable_blacklist, config.e621_blacklist.clone()) {
+                        Ok(ok) => ok,
+                        Err(err) => panic!("E621: Failed to create description - {err}")
+                    };
+
+                    let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string, &post);
+                    embeds.push(embed);
+
+                    writeln!(content_description, "{}", post.file.url)?;
                 }
+            }
 
-                reply_handle.edit(ctx, |builder|{
-                    builder.components(|c|{
+            reply_handle
+                .edit(ctx, |builder| {
+                    builder.components(|c| {
                         *c = comp.clone();
                         c
                     });
-            
+
                     if just_image {
                         builder.content(content_description.clone());
                     } else {
@@ -218,20 +231,21 @@ pub async fn e621(
                             });
                         }
                     }
-                    builder 
-                }).await?;
-            }
-        }
-    
-        reply_handle
-            .edit(ctx, |builder| {
-                builder.components(|c| {
-                    comp = components(true, e621_component_data.clone());
-                    *c = comp.clone();
-                    c
+                    builder
                 })
+                .await?;
+        }
+    }
+
+    reply_handle
+        .edit(ctx, |builder| {
+            builder.components(|c| {
+                comp = components(true, e621_component_data.clone());
+                *c = comp.clone();
+                c
             })
-            .await?;
+        })
+        .await?;
 
     Ok(())
 }
@@ -245,11 +259,11 @@ fn embed(title: &String, description: &String, colour: Colour, file_url: &String
     if !no_description {
         embed.description(description);
     }
-    embed.footer(|footer|footer.text(format!("{} 👍 {} 👎 {} ❤️", e621_post.score.up, e621_post.score.down, e621_post.fav_count)));
+    embed.footer(|footer| footer.text(format!("{} 👍 {} 👎 {} ❤️", e621_post.score.up, e621_post.score.down, e621_post.fav_count)));
     embed
 }
 
-#[derive (Clone)]
+#[derive(Clone)]
 pub struct E621ComponentData {
     e621_post_link: String,
     e621_search_tags_link: String,

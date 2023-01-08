@@ -35,7 +35,12 @@ pub async fn fa(
             builder
         })
         .await?;
-    let mut interaction_stream = reply_handle.message().await?.await_component_interactions(ctx).timeout(Duration::from_secs(TIMEOUT_DURIATION)).build();
+    let mut interaction_stream = reply_handle
+        .message()
+        .await?
+        .await_component_interactions(ctx)
+        .timeout(Duration::from_secs(TIMEOUT_DURIATION))
+        .build();
 
     // Act on our interaction context
     while let Some(interaction) = interaction_stream.next().await {

@@ -1,12 +1,11 @@
-use crate::{Context, Error, SOURCE_FINDER_REGEX, TIMEOUT_DURIATION, structs::saucenao::SauceNAO};
-use futures::{future, StreamExt};
+use crate::{structs::saucenao::SauceNAO, Context, TIMEOUT_DURIATION};
+use futures::StreamExt;
 use poise::{
-    serenity_prelude::{ButtonStyle, CreateComponents, InteractionResponseType, Message},
+    serenity_prelude::{ButtonStyle, CreateComponents, InteractionResponseType},
     ReplyHandle
 };
-use regex::Regex;
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::Duration};
+
+use std::time::Duration;
 
 async fn reverse_client(url: &String, api_key: &String) -> Result<SauceNAO, reqwest::Error> {
     let client = reqwest::Client::builder().build()?;

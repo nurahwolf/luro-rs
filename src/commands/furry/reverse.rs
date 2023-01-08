@@ -1,12 +1,7 @@
-use crate::{Context, Error, SOURCE_FINDER_REGEX, TIMEOUT_DURIATION, structs::saucenao::SauceNAO, functions::saucenao::interactive_response};
+use crate::{functions::saucenao::interactive_response, Context, Error, SOURCE_FINDER_REGEX};
 use futures::{future, StreamExt};
-use poise::{
-    serenity_prelude::{ButtonStyle, CreateComponents, InteractionResponseType, Message},
-    ReplyHandle
-};
+use poise::serenity_prelude::Message;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::Duration};
 
 /// Reverse lookup an image via SauceNAO / FuzzySearch!
 #[poise::command(prefix_command, slash_command, category = "Furry")]

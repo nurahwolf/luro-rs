@@ -16,7 +16,6 @@ pub struct Replies {
     pub date: String,
     pub text: String,
     pub replies: Vec<Replies>
-
 }
 
 #[derive(Serialize, Deserialize)]

@@ -178,9 +178,8 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
                 Ok(ok) => ok,
                 Err(err) => {
                     panic!("Error decoding - {err}\n{failed_response_raw}");
-                },
+                }
             }
-            
         }
     };
 

@@ -4,10 +4,7 @@ use futures::{Stream, StreamExt};
 use poise::serenity_prelude::{AttachmentType, CacheHttp};
 use rand::seq::SliceRandom;
 
-use std::{
-    path::{Path},
-    vec
-};
+use std::{path::Path, vec};
 use tokio::fs::DirEntry;
 
 async fn get_fursonas() -> Result<Vec<String>, Error> {
