@@ -145,7 +145,9 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
         let regex = Regex::new(FURAFFINITY_REGEX).unwrap();
         let mut post_id = Vec::new();
         for cap in regex.captures_iter(url) {
-            post_id.push(cap[1].to_string())
+            if !cap["submission_id"].is_empty() {
+                post_id.push(cap["submission_id"].to_string());
+            }
         }
         let temp = format!("https://furaffinity-api.herokuapp.com/submission/{}/", post_id.first().unwrap());
         temp
