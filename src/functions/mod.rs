@@ -5,6 +5,7 @@ pub mod furaffinity;
 pub mod guild_accent_colour;
 pub mod nowplaying;
 pub mod random_remove;
+pub mod saucenao;
 pub mod sendquote;
 // pub mod sort_channels;
 pub mod sort_roles;
