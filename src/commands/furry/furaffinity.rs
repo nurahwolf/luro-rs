@@ -1,6 +1,6 @@
 use crate::functions::furaffinity::{components, fa_reply, furaffinity_client};
 use crate::functions::guild_accent_colour::guild_accent_colour;
-use crate::{Context, Error};
+use crate::{Context, Error, TIMEOUT_DURIATION};
 
 use futures::StreamExt;
 use poise::serenity_prelude::InteractionResponseType;
@@ -35,7 +35,7 @@ pub async fn fa(
             builder
         })
         .await?;
-    let mut interaction_stream = reply_handle.message().await?.await_component_interactions(ctx).timeout(Duration::from_secs(60 * 3)).build();
+    let mut interaction_stream = reply_handle.message().await?.await_component_interactions(ctx).timeout(Duration::from_secs(TIMEOUT_DURIATION)).build();
 
     // Act on our interaction context
     while let Some(interaction) = interaction_stream.next().await {
