@@ -44,7 +44,7 @@ async fn reverse_client(url: &String, api_key: &String) -> Result<SauceNAO, reqw
 
 pub async fn interactive_response<'a>(ctx: Context<'a>, url: String, api_key: &String) -> Result<ReplyHandle<'a>, serenity::Error> {
     let mut cursor = 0;
-    let sauce = match reverse_client(&url, &api_key).await {
+    let sauce = match reverse_client(&url, api_key).await {
         Ok(saucenao) => saucenao,
         Err(err) => return ctx.say(format!("API Error: {err}")).await
     };
