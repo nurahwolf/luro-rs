@@ -1,2 +1,3 @@
 accent_colour = [218, 190, 239]
 e621_blacklist = ' -gore -scat'
+e621_useragent = 'Luro/1.0 (by nurahwolf on e621)'
