@@ -149,16 +149,18 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
                 post_id.push(capture.as_str())
             }
         }
-        let temp = format!("https://furaffinity-api.herokuapp.com/submission/{}/", post_id.first().unwrap());
-        temp
+
+        if let Some(post) = post_id.first() {
+            format!("https://furaffinity-api.herokuapp.com/submission/{post}/")
+        } else {
+            panic!("Furaffinity: no `submission_id` was found in the message!");
+        }
     } else if let Some(submission_id) = submission_id {
         let temp = format!("https://furaffinity-api.herokuapp.com/submission/{submission_id}/");
         temp
     } else {
         panic!("Furaffinity: A URL or submission ID was not passed to the furaffinity client!");
     };
-
-    println!("Furaffinity: Attempting to get post: {request_url}");
 
     let response = client.post(&request_url).json(&body).send().await;
 
@@ -172,14 +174,8 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
     let furaffinity = match response_resolved {
         Ok(furaffinity) => furaffinity,
         Err(err) => {
-            println!("Furaffinity: Failed to decode to JSON object, reason following... {err}");
-            let failed_response_raw = client.post(&request_url).json(&body).send().await.unwrap().text().await.unwrap();
-            match serde_json::from_str::<FurAffinity>(failed_response_raw.as_str()) {
-                Ok(ok) => ok,
-                Err(err) => {
-                    panic!("Error decoding - {err}\n{failed_response_raw}");
-                }
-            }
+            panic!("Furaffinity: {err}\nRequest URL: {request_url}");
+
         }
     };
 
