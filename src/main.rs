@@ -103,7 +103,10 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
             let presence_string = format!("on {guild_count} guilds | @luro help");
             _ctx.set_presence(Some(Activity::playing(&presence_string)), OnlineStatus::Online).await;
         }
-        poise::Event::PresenceUpdate { new_data: _ } => {}
+        poise::Event::PresenceUpdate { new_data: _ } => {},
+        poise::Event::InteractionCreate { interaction: _ } => {},
+        poise::Event::TypingStart { event: _ } => {},
+        poise::Event::GuildMemberUpdate { old_if_available: _, new: _ } => {},
         poise::Event::Message { new_message } => {
             if new_message.author.id == _framework.bot_id {
                 return Ok(());
