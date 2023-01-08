@@ -105,6 +105,10 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
         }
         poise::Event::PresenceUpdate { new_data: _ } => {}
         poise::Event::Message { new_message } => {
+            if new_message.author.id == _framework.bot_id {
+                return Ok(());
+            }
+
             match add_discord_message(&_user_data.database, new_message.clone()) {
                 Ok(_) => println!("Added message ID {} to database: {}", new_message.id.0, new_message.content),
                 Err(err) => println!("Error while saving message to database: {err}")
