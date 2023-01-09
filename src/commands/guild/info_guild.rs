@@ -3,7 +3,7 @@ use crate::{
     Context, Error
 };
 use itertools::Itertools;
-use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel};
+use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel, CacheHttp, invite};
 use std::fmt::Write;
 
 /// Information about the guild you are in
@@ -57,6 +57,12 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
                 .name(format!("Server Owner: {0}", guild_owner.user.tag()))
         });
     };
+
+    if let Ok(invites) = guild_resolved.invites(ctx).await {
+        if let Some(invite) = invites.first() {
+            embed.field("Invite", invite.url(), false);
+        }
+    }
 
     // Nitro Boost Information
     if guild_resolved.premium_subscription_count != 0 {
