@@ -3,6 +3,7 @@ use crate::{Command, Context, Error};
 mod cleanup;
 mod deletebotmessage;
 mod punish;
+mod purge;
 
 /// Moderator Commands :)
 #[poise::command(slash_command, category = "Guild", subcommands())]
