@@ -61,12 +61,13 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
 ```
         "
     ];
+    let accent_colour = ctx.data().config.read().await.accent_colour;
 
     ctx.send(|reply| {
         reply.embed(|embed| {
             embed
                 .title("Dice helper")
-                .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
+                .color(guild_accent_colour(accent_colour, ctx.guild()))
                 .description(description)
                 .field(shortmode_help[0], shortmode_help[1], false)
                 .field(standard_help[0], standard_help[1], false)

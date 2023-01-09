@@ -239,17 +239,17 @@ impl Stories {
     }
 
     /// Write the struct to a toml file
-    // pub fn write(new_data: &Stories, path: &str) {
-    //     let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
-    //         Ok(string) => string,
-    //         Err(err) => panic!("Error serialising struct to toml string: {err}")
-    //     };
+    pub fn write(new_data: &Stories, path: &str) {
+        let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
+            Ok(string) => string,
+            Err(err) => panic!("Error serialising struct to toml string: {err}")
+        };
 
-    //     match fs::write(path, struct_to_toml_string) {
-    //         Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
-    //         Err(err) => panic!("Error writing toml file: {err}")
-    //     }
-    // }
+        match fs::write(path, struct_to_toml_string) {
+            Ok(a) => a, // TODO: No clue what this is doing but it works soooo....
+            Err(err) => panic!("Error writing toml file: {err}")
+        }
+    }
 
     /// Mutate the struct
     pub fn reload(&mut self, new_data: &Stories) {

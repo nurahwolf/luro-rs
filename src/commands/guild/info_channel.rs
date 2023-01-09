@@ -25,7 +25,7 @@ pub async fn channel(
 
     // Create an embed that we will send and start filling it with data
     let mut embed = CreateEmbed::default();
-    embed.colour(accent_colour(ctx.data().config.lock().unwrap().accent_colour));
+    embed.colour(accent_colour(ctx.data().config.read().await.accent_colour));
     embed.title(&regular_channel);
 
     // If we can resolve this channel as a guild, add some extra stuff
@@ -38,7 +38,7 @@ pub async fn channel(
 
         // More embed info with some overrides
         embed.title(&guild_channel.name);
-        embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, Some(guild_resolved.to_owned())));
+        embed.colour(guild_accent_colour(ctx.data().config.read().await.accent_colour, Some(guild_resolved.to_owned())));
         embed.thumbnail(&guild_resolved.icon_url().unwrap_or_default());
 
         if let Some(topic) = guild_channel.topic {

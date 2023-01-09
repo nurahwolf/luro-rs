@@ -18,13 +18,14 @@ pub async fn story(
     #[description = "The number story to get"] story: Option<usize>
 ) -> Result<(), Error> {
     // Load the story mutex, reload from config if its empty
-    let mut stories_mutex = ctx.data().stories.lock().await;
-    if stories_mutex.stories.is_empty() {
+    let accent_colour = ctx.data().config.read().await.accent_colour;
+    let mut stories = ctx.data().stories.write().await;
+    if stories.stories.is_empty() {
         ctx.say("Out of random stories to get, so reloading config...").await?;
-        stories_mutex.reload(&Stories::get(STORIES_FILE_PATH));
+        stories.reload(&Stories::get(STORIES_FILE_PATH));
     }
     // Generate a random number based on the length of the stories vec
-    let random_number = rand::thread_rng().gen_range(0..stories_mutex.stories.len());
+    let random_number = rand::thread_rng().gen_range(0..stories.stories.len());
 
     // If the user specified a story, get it.
     let story_resolved = if let Some(index) = story {
@@ -37,7 +38,7 @@ pub async fn story(
             }
         }
     } else {
-        stories_mutex.stories.remove(random_number)
+        stories.stories.remove(random_number)
     };
 
     if !plain_text {
@@ -46,7 +47,7 @@ pub async fn story(
             b.embed(|b| {
                 b.title(&story_resolved[0])
                     .description(story_shortened)
-                    .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
+                    .color(guild_accent_colour(accent_colour, ctx.guild()))
                     .footer(|f| f.text(format!("Story ID: {}", story.unwrap_or(random_number))))
             })
         })

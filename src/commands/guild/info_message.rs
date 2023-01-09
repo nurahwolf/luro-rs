@@ -30,7 +30,7 @@ pub async fn message(
 
     // Create an embed for the data we wish to show, filling it with key data
     let mut embed = CreateEmbed::default();
-    embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, guild.clone()));
+    embed.colour(guild_accent_colour(ctx.data().config.read().await.accent_colour, guild.clone()));
     if message.content.is_empty() {
         embed.description("　");
     } else {

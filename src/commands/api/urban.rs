@@ -24,6 +24,7 @@ pub async fn urban(ctx: Context<'_>, #[description = "Search Term"] search: Stri
         ctx.say("You did not provide a word to look up. Please provide one.").await?;
         return Ok(());
     }
+    let accent_colour = ctx.data().config.read().await.accent_colour;
 
     let client = reqwest::Client::new();
     let request = client.get("https://api.urbandictionary.com/v0/define").query(&[("term", &search)]).send().await?;
@@ -48,7 +49,7 @@ pub async fn urban(ctx: Context<'_>, #[description = "Search Term"] search: Stri
     ctx.send(|message| {
         message.embed(|embed| {
             embed.author(|a| a.name(word).url(permalink));
-            embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()));
+            embed.colour(guild_accent_colour(accent_colour, ctx.guild()));
             embed.description(format!("*{description}*\n\n{example}\n\n**Ratings**: {rating}"));
             embed.footer(|f| f.text("Powered by the Urban Dictionary."))
         })
@@ -60,6 +61,8 @@ pub async fn urban(ctx: Context<'_>, #[description = "Search Term"] search: Stri
 
 #[poise::command(slash_command, prefix_command, category = "API")]
 pub async fn random_urban(ctx: Context<'_>) -> Result<(), Error> {
+    let accent_colour = ctx.data().config.read().await.accent_colour;
+
     let client = reqwest::Client::new();
     let request = client.get("http://api.urbandictionary.com/v0/random").send().await?;
     let response: Response = request.json().await?;
@@ -77,7 +80,7 @@ pub async fn random_urban(ctx: Context<'_>) -> Result<(), Error> {
     ctx.send(|message| {
         message.embed(|embed| {
             embed.author(|a| a.name(word).url(permalink));
-            embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()));
+            embed.colour(guild_accent_colour(accent_colour, ctx.guild()));
             embed.description(format!("*{description}*\n\n{example}\n\n**Ratings**: {rating}"));
             embed.footer(|f| f.text("Powered by the Urban Dictionary."))
         })

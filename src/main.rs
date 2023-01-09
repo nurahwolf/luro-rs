@@ -2,9 +2,9 @@
 #![feature(const_mut_refs)]
 #![feature(let_chains)]
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     env,
-    sync::{Arc, Mutex}
+    sync::{atomic::AtomicUsize, Arc}
 };
 
 use config::{Config, Heck, Quotes, Secrets, Stories};
@@ -14,6 +14,7 @@ use poise::serenity_prelude::{self as serenity, Activity, OnlineStatus};
 use regex::Regex;
 use sled::Db;
 use songbird::Songbird;
+use tokio::sync::RwLock;
 use tracing_subscriber::FmtSubscriber;
 
 // Types
@@ -38,15 +39,26 @@ const SOURCE_FINDER_REGEX: &str = r"(?P<url>http[^\s>]+)";
 const TIMEOUT_DURIATION: u64 = 12 * 60;
 
 // Structs
+
+// Trying to use best practices instead of Mutex (https://github.com/serenity-rs/serenity/blob/current/examples/e12_global_data/src/main.rs)
+// e.g. Arc<RwLock<HashMap<String, u64>>> for read/write, and Arc<AtomicUsize> for read only.
 pub struct Data {
-    config: Mutex<config::Config>,
-    database: Db,
-    heck: Mutex<config::Heck>,
-    quotes: Mutex<config::Quotes>,
-    secrets: config::Secrets,
-    stories: tokio::sync::Mutex<config::Stories>,
+    // General configuration stuffs
+    config: Arc<RwLock<Config>>,
+    // Work in progress database
+    database: Arc<Db>,
+    // Similar to stories, but aimed at users
+    heck: Arc<RwLock<Heck>>,
+    // Silly things users have said
+    quotes: Arc<RwLock<Quotes>>,
+    // Application secrets!
+    secrets: Arc<Secrets>,
+    // Stories, a bunch of silly messages effectively
+    stories: Arc<RwLock<Stories>>,
+    // Songbird instance for voice fun
     songbird: Arc<Songbird>,
-    votes: Mutex<HashMap<String, u32>>
+    // Total commands ran in this instance
+    command_total: Arc<AtomicUsize>
 }
 
 // Other modules
@@ -103,10 +115,10 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
             let presence_string = format!("on {guild_count} guilds | @luro help");
             _ctx.set_presence(Some(Activity::playing(&presence_string)), OnlineStatus::Online).await;
         }
-        poise::Event::PresenceUpdate { new_data: _ } => {},
-        poise::Event::InteractionCreate { interaction: _ } => {},
-        poise::Event::TypingStart { event: _ } => {},
-        poise::Event::GuildMemberUpdate { old_if_available: _, new: _ } => {},
+        poise::Event::PresenceUpdate { new_data: _ } => {}
+        poise::Event::InteractionCreate { interaction: _ } => {}
+        poise::Event::TypingStart { event: _ } => {}
+        poise::Event::GuildMemberUpdate { old_if_available: _, new: _ } => {}
         poise::Event::Message { new_message } => {
             if new_message.author.id == _framework.bot_id {
                 return Ok(());
@@ -138,14 +150,14 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
 async fn main() {
     let songbird = songbird::Songbird::serenity();
     let data = Data {
-        config: Mutex::new(Config::get(CONFIG_FILE_PATH)),
-        database: sled::open(DATABASE_FILE_PATH).expect("Could not open / create database"),
-        heck: Mutex::new(Heck::get(HECK_FILE_PATH)),
-        quotes: Mutex::new(Quotes::get(QUOTES_FILE_PATH)),
-        secrets: Secrets::get(SECRETS_FILE_PATH),
-        stories: tokio::sync::Mutex::new(Stories::get(STORIES_FILE_PATH)),
-        songbird: songbird.clone(),
-        votes: Mutex::new(HashMap::new())
+        config: RwLock::new(Config::get(CONFIG_FILE_PATH)).into(),
+        database: sled::open(DATABASE_FILE_PATH).expect("Could not open / create database").into(),
+        heck: RwLock::new(Heck::get(HECK_FILE_PATH)).into(),
+        quotes: RwLock::new(Quotes::get(QUOTES_FILE_PATH)).into(),
+        secrets: Secrets::get(SECRETS_FILE_PATH).into(),
+        stories: RwLock::new(Stories::get(STORIES_FILE_PATH)).into(),
+        songbird: songbird.clone().into(),
+        command_total: AtomicUsize::new(0).into() // NOTE: Resets to zero on bot restart, by design
     };
 
     let token = match data.secrets.discord_token.clone() {
@@ -180,14 +192,6 @@ async fn main() {
         .intents(
             serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT | serenity::GatewayIntents::GUILD_MEMBERS | serenity::GatewayIntents::GUILD_PRESENCES
         );
-    // .setup(move |_ctx, _ready, _framework| {
-    //     Box::pin(async move {
-    //         Ok(Data {
-    //             config: read_config("config.toml"),
-    //             songbird: songbird.clone()
-    //         })
-    //     })
-    // });
 
     framework.run().await.unwrap();
 }

@@ -9,12 +9,12 @@ use poise::{
 };
 use songbird::{Event, EventContext, EventHandler as VoiceEventHandler};
 
-use crate::{config::Config, functions::nowplaying::now_playing};
+use crate::{functions::nowplaying::now_playing};
 
 pub struct TrackStartNotifier {
     pub chan_id: ChannelId,
     pub http: Arc<Http>,
-    pub config: Config,
+    pub accent_colour: [u8; 3],
     pub guild: Guild,
     pub user: User
 }
@@ -27,7 +27,7 @@ impl VoiceEventHandler for TrackStartNotifier {
             self.chan_id
                 .send_message(&self.http, |builder| {
                     builder.embed(|embed| {
-                        *embed = now_playing(self.config.accent_colour, self.guild.clone(), Some(self.user.clone()), metadata);
+                        *embed = now_playing(self.accent_colour, self.guild.clone(), Some(self.user.clone()), metadata);
                         embed
                     })
                 })

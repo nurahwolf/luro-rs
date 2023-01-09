@@ -175,7 +175,6 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
         Ok(furaffinity) => furaffinity,
         Err(err) => {
             panic!("Furaffinity: {err}\nRequest URL: {request_url}");
-
         }
     };
 
@@ -186,7 +185,7 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
 pub async fn event_furaffinity(ctx: &Context, framework: poise::FrameworkContext<'_, Data, Error>, message: &Message) -> Result<(), reqwest::Error> {
     let url = &message.content;
     let fa_client = furaffinity_client(Some(url), None, &framework.user_data.secrets.furaffinity_cookies).await; // Get a FA client, build it on the url input
-    let colour = guild_accent_colour(framework.user_data.config.lock().unwrap().accent_colour, message.guild(ctx));
+    let colour = guild_accent_colour(framework.user_data.config.read().await.accent_colour, message.guild(ctx));
 
     let mut fa = match fa_client {
         // Make sure it is valid

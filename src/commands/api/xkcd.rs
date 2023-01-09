@@ -31,11 +31,12 @@ pub async fn xkcd(ctx: Context<'_>, #[description = "Enter the comic number you 
     let num = response.num;
     let page = format!("https://xkcd.com/{num}");
     let wiki = format!("https://explainxkcd.com/wiki/index.php/{num}");
+    let accent_colour = ctx.data().config.read().await.accent_colour;
 
     ctx.send(|message| {
         message.embed(|embed| {
             embed.title(title);
-            embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()));
+            embed.colour(guild_accent_colour(accent_colour, ctx.guild()));
             embed.description(alt);
             embed.image(response.img.as_str());
             embed.footer(|f| f.text(format!("xkcd comic no. {}", &num)));

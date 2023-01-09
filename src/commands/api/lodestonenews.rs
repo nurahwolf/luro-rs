@@ -14,6 +14,7 @@ pub struct LodestoneNews {
 
 #[poise::command(slash_command, prefix_command)]
 pub async fn lodestonenews(ctx: Context<'_>) -> Result<(), Error> {
+    let accent_colour = ctx.data().config.read().await.accent_colour;
     let client = reqwest::Client::new();
     let request = client.get("https://lodestonenews.com/news/topics?locale=gb").send().await?;
     let response: Vec<LodestoneNews> = request.json().await?;
@@ -22,7 +23,7 @@ pub async fn lodestonenews(ctx: Context<'_>) -> Result<(), Error> {
 
     ctx.send(|message| {
         message.embed(|embed| {
-            embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()));
+            embed.colour(guild_accent_colour(accent_colour, ctx.guild()));
             embed.title(&newsitem.title);
             embed.description(newsitem.description.to_string());
             embed.image(&newsitem.image);

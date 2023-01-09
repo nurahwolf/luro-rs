@@ -7,6 +7,8 @@ pub async fn nowplaying(
     #[flag]
     ephemeral: bool
 ) -> Result<(), Error> {
+    let accent_colour = ctx.data().config.read().await.accent_colour;
+
     if let Some(guild) = ctx.guild() {
         let guild_id = guild.id;
 
@@ -17,7 +19,7 @@ pub async fn nowplaying(
                 ctx.send(|builder| {
                     builder
                         .embed(|embed| {
-                            *embed = now_playing(ctx.data().config.lock().unwrap().accent_colour, ctx.guild().unwrap(), None, metadata);
+                            *embed = now_playing(accent_colour, ctx.guild().unwrap(), None, metadata);
                             embed
                         })
                         .ephemeral(ephemeral)

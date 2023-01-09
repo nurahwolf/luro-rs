@@ -59,5 +59,4 @@ pub async fn saucenao_context(ctx: Context<'_>, msg: Message) -> Result<(), Erro
     let _results = future::join_all(futures).await;
 
     Ok(())
-
 }

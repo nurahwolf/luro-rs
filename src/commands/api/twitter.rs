@@ -51,13 +51,14 @@ pub async fn twitter(
         None => "Tweet not available.".to_string()
     };
 
+    let accent_colour = ctx.data().config.read().await.accent_colour;
     ctx.send(|builder| {
         builder.embed(|embed| {
             embed
                 .title(format!("{name}{verified}", verified = if user.verified { " \\✔️" } else { "" }))
                 .url(url)
                 .thumbnail(avatar)
-                .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
+                .color(guild_accent_colour(accent_colour, ctx.guild()))
                 .description(description)
                 .fields(vec![
                     ("Username", handle, true),

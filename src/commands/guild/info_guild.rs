@@ -21,7 +21,7 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
 
     // Create an embed for the data we wish to show, filling it with key data
     let mut embed = CreateEmbed::default();
-    embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, Some(guild_resolved.to_owned())));
+    embed.colour(guild_accent_colour(ctx.data().config.read().await.accent_colour, Some(guild_resolved.to_owned())));
     embed.title(&guild_resolved.name);
     embed.thumbnail(&guild_resolved.icon_url().unwrap_or_default());
 

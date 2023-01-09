@@ -6,6 +6,7 @@ use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error}
 /// Shows current latency of the bot
 #[poise::command(prefix_command, slash_command, category = "General")]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
+    let accent_colour = ctx.data().config.read().await.accent_colour;
     let start = Utc::now();
     let start_ts = start.timestamp();
     let start_ts_ss = start.timestamp_subsec_millis() as i64;
@@ -34,7 +35,7 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     ping.edit(ctx, |message| {
         message.content("");
         message.embed(|embed| {
-            embed.colour(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()));
+            embed.colour(guild_accent_colour(accent_colour, ctx.guild()));
             embed.title("Discord Latency Information");
             embed.description(response)
         })

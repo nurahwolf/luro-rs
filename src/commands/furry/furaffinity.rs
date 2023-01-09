@@ -16,7 +16,7 @@ pub async fn fa(
     url: String
 ) -> Result<(), Error> {
     let fa_client = furaffinity_client(Some(&url), None, &ctx.data().secrets.furaffinity_cookies).await; // Get a FA client, build it on the url input
-    let colour = guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild());
+    let colour = guild_accent_colour(ctx.data().config.read().await.accent_colour, ctx.guild());
 
     let mut fa = match fa_client {
         // Make sure it is valid

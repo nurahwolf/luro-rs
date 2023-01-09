@@ -52,22 +52,21 @@ pub async fn interactive_response<'a>(ctx: Context<'a>, url: String, api_key: &S
             if let Some(status_code) = err.status() {
                 return ctx.say(format!("This API is limited to 100 requests a day because Nurah is not gonna spend 6$ a month for this... If you *really* want more requests, consider donating.\nStatus Code: {status_code}")).await;
             } else {
-                return ctx.say(format!("API Error: {err}")).await
+                return ctx.say(format!("API Error: {err}")).await;
             };
-
         }
     };
 
     if sauce.header.status == -2 {
-        return ctx.say("This API is limited to 100 requests a day because Nurah is not gonna spend 6$ a month for this... If you *really* want more requests, consider donating.".to_string()).await;
+        return ctx
+            .say("This API is limited to 100 requests a day because Nurah is not gonna spend 6$ a month for this... If you *really* want more requests, consider donating.".to_string())
+            .await;
     };
 
     let results = match &sauce.results {
-        Some(results) => {
-            match results.get(cursor) {
-                Some(result) => result,
-                None => return ctx.say("Did not find anything ;)").await
-            }
+        Some(results) => match results.get(cursor) {
+            Some(result) => result,
+            None => return ctx.say("Did not find anything ;)").await
         },
         None => return ctx.say("Did not find anything ;)").await
     };
@@ -106,20 +105,20 @@ pub async fn interactive_response<'a>(ctx: Context<'a>, url: String, api_key: &S
             if let Some(results) = &sauce.results {
                 if let Some(result) = results.get(cursor) {
                     reply_handle
-                    .edit(ctx, |builder| {
-                        builder.content(result.data.ext_urls.first().unwrap());
-                        builder.components(|c| {
-                            *c = components(&sauce, &cursor, false, false);
-                            c
-                        });
-                        builder
-                    })
-                    .await?
+                        .edit(ctx, |builder| {
+                            builder.content(result.data.ext_urls.first().unwrap());
+                            builder.components(|c| {
+                                *c = components(&sauce, &cursor, false, false);
+                                c
+                            });
+                            builder
+                        })
+                        .await?
                 } else {
-                    reply_handle.edit(ctx, |builder|builder.content("Did not find anything ;)")).await?
+                    reply_handle.edit(ctx, |builder| builder.content("Did not find anything ;)")).await?
                 }
             } else {
-                reply_handle.edit(ctx, |builder|builder.content("Did not find anything ;)")).await?
+                reply_handle.edit(ctx, |builder| builder.content("Did not find anything ;)")).await?
             };
         }
 
@@ -129,20 +128,20 @@ pub async fn interactive_response<'a>(ctx: Context<'a>, url: String, api_key: &S
             if let Some(results) = &sauce.results {
                 if let Some(result) = results.get(cursor) {
                     reply_handle
-                    .edit(ctx, |builder| {
-                        builder.content(result.data.ext_urls.first().unwrap());
-                        builder.components(|c| {
-                            *c = components(&sauce, &cursor, false, false);
-                            c
-                        });
-                        builder
-                    })
-                    .await?
+                        .edit(ctx, |builder| {
+                            builder.content(result.data.ext_urls.first().unwrap());
+                            builder.components(|c| {
+                                *c = components(&sauce, &cursor, false, false);
+                                c
+                            });
+                            builder
+                        })
+                        .await?
                 } else {
-                    reply_handle.edit(ctx, |builder|builder.content("Did not find anything ;)")).await?
+                    reply_handle.edit(ctx, |builder| builder.content("Did not find anything ;)")).await?
                 }
             } else {
-                reply_handle.edit(ctx, |builder|builder.content("Did not find anything ;)")).await?
+                reply_handle.edit(ctx, |builder| builder.content("Did not find anything ;)")).await?
             };
         }
     }

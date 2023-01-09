@@ -7,6 +7,7 @@ use tracing::log::error;
 /// Send an invite link to add me to your server!
 #[poise::command(prefix_command, slash_command, category = "General")]
 pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
+    let accent_colour = ctx.data().config.read().await.accent_colour;
     let bot_user = ctx.cache().expect("Failed to get the current bot user in cache").current_user();
     let url = match bot_user.invite_url(ctx, Permissions::ADMINISTRATOR).await {
         Ok(invite) => invite,
@@ -25,7 +26,7 @@ pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
             embed
                 .title(format!("{name} Invite URL"))
                 .thumbnail(avatar)
-                .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
+                .color(guild_accent_colour(accent_colour, ctx.guild()))
                 .description(format!("Click [here]({url}) to add {name} to your Discord server."))
         })
     })

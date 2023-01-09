@@ -58,12 +58,13 @@ pub async fn punish(
             )
         }
     };
+    let accent_colour = ctx.data().config.read().await.accent_colour;
 
     ctx.send(|b| {
         b.embed(|b| {
             b.title(title)
                 .description(description)
-                .color(guild_accent_colour(ctx.data().config.lock().unwrap().accent_colour, ctx.guild()))
+                .color(guild_accent_colour(accent_colour, ctx.guild()))
                 .thumbnail(user_avatar)
         })
     })

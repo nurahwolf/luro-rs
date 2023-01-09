@@ -95,11 +95,11 @@ pub async fn e621(
         ctx.say("You did not provide something to search.").await?;
         return Ok(());
     }
-    let config = ctx.data().config.lock().unwrap().clone();
+    let config = ctx.data().config.read().await;
     let colour = guild_accent_colour(config.accent_colour, ctx.guild());
 
     let mut e621_posts = match e621_client(
-        config.e621_useragent,
+        config.e621_useragent.clone(),
         ctx.data().secrets.e621_token.clone(),
         disable_blacklist,
         search.clone(),

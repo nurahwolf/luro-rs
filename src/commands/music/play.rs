@@ -11,13 +11,13 @@ pub async fn play(
     #[flag]
     play_looped: bool
 ) -> Result<(), Error> {
+    let accent_colour = ctx.data().config.read().await.accent_colour;
     if let Some(guild) = ctx.guild() {
         let guild_id = guild.id;
 
         if let Some(handler_lock) = ctx.data().songbird.get(guild_id) {
             let mut handler = handler_lock.lock().await;
             let send_http = ctx.serenity_context().http.clone();
-            let config = ctx.data().config.lock().unwrap().clone();
 
             let source = if song.starts_with("http") {
                 match songbird::input::ytdl(song).await {
@@ -48,7 +48,7 @@ pub async fn play(
                 TrackStartNotifier {
                     chan_id: ctx.channel_id(),
                     http: send_http,
-                    config,
+                    accent_colour,
                     guild: ctx.guild().unwrap(),
                     user: ctx.author().clone()
                 }
