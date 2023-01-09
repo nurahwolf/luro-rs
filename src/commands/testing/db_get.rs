@@ -4,7 +4,7 @@ use crate::{database::get_discord_message, functions::guild_accent_colour::guild
 
 /// Get a message from the database
 #[poise::command(prefix_command, slash_command, category = "General")]
-pub async fn db_get(ctx: Context<'_>, #[description = "Message ID to get"] message_id: String) -> Result<(), Error> {
+pub async fn db_get(ctx: Context<'_>, #[description = "Message ID to get"] message_id: String, #[description = "Hide advanced information"] #[flag] hide: bool) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;
 
     match message_id.parse::<u64>() {
@@ -26,9 +26,19 @@ pub async fn db_get(ctx: Context<'_>, #[description = "Message ID to get"] messa
                 builder.embed(|embed| {
                     embed
                         .author(|author| author.name(&message.author.name).icon_url(&message.author.avatar_url().unwrap_or_default()))
+                        .title("Message Link")
                         .url(message.link())
                         .color(guild_accent_colour(accent_colour, ctx.guild()))
                         .description(luro_message.message_content);
+                    
+                    if !hide {
+                        embed.field("Message ID", message.id, true);
+                        if let Some(guild_id) = message.guild_id {
+                            embed.field("Guild ID", guild_id, true);
+                        }
+                        embed.field("Author", format!("{} (ID: {})", message.author, message.author.id), true);
+
+                    }
 
                     if let Some(guild) = message.guild(ctx) {
                         embed.footer(|footer| footer.icon_url(guild.icon_url().unwrap_or_default()).text(guild.name));
