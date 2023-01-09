@@ -1,6 +1,6 @@
 use crate::{Context, Error};
 
-/// Make me say garbage
+/// Prints the total commands ran since the bot was last restarted!
 #[poise::command(prefix_command, slash_command, category = "General")]
 pub async fn command_usage(
     ctx: Context<'_>
