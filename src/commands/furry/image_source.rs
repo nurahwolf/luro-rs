@@ -33,10 +33,19 @@ pub async fn saucenao_context(ctx: Context<'_>, msg: Message) -> Result<(), Erro
         urls.push(cap["url"].to_string())
     }
 
+    // No URLs found, so try getting attachments.
+    // NOTE: This loop is not included in the above in case the user both sends a link AND attaches an image.
+    //       Basically, it's avoiding a scenario where a user attaches an image while providing an link reference in their message.
     if urls.is_empty() {
         for attachment in msg.attachments {
             urls.push(attachment.proxy_url)
         }
+    }
+
+    // Well we still found nothing, so let the user know and bail.
+    if urls.is_empty() {
+        ctx.say("Found no links or images to look up!").await?;
+        return Ok(());
     }
 
     let mut stream = futures::stream::iter(urls);
