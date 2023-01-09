@@ -58,7 +58,7 @@ pub struct Data {
     // Songbird instance for voice fun
     songbird: Arc<Songbird>,
     // Total commands ran in this instance
-    command_total: Arc<AtomicUsize>
+    command_total: Arc<RwLock<AtomicUsize>>
 }
 
 // Other modules
@@ -156,8 +156,8 @@ async fn main() {
         quotes: RwLock::new(Quotes::get(QUOTES_FILE_PATH)).into(),
         secrets: Secrets::get(SECRETS_FILE_PATH).into(),
         stories: RwLock::new(Stories::get(STORIES_FILE_PATH)).into(),
-        songbird: songbird.clone().into(),
-        command_total: AtomicUsize::new(0).into() // NOTE: Resets to zero on bot restart, by design
+        songbird: songbird.clone(),
+        command_total: RwLock::new(AtomicUsize::new(0)).into() // NOTE: Resets to zero on bot restart, by design
     };
 
     let token = match data.secrets.discord_token.clone() {
@@ -182,6 +182,11 @@ async fn main() {
                 Box::pin(async move {
                     event_listener(ctx, event, framework, user_data).await?;
                     Ok(())
+                })
+            },
+            pre_command: |ctx| {
+                Box::pin(async move {
+                    *ctx.data().command_total.write().await.get_mut() += 1;
                 })
             },
             ..Default::default()
