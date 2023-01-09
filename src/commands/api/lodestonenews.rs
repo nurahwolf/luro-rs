@@ -12,6 +12,7 @@ pub struct LodestoneNews {
     description: String
 }
 
+/// Fetch the latest news from the Lodestone API!
 #[poise::command(slash_command, prefix_command)]
 pub async fn lodestonenews(ctx: Context<'_>) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;

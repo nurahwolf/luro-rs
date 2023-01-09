@@ -1,6 +1,6 @@
 use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error};
 
-/// Show help for rolling dice
+/// Show help for rolling dice, such as the dice notation
 #[poise::command(slash_command, prefix_command, category = "Dice")]
 pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
     let description = "

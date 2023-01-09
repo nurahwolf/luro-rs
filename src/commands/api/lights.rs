@@ -8,7 +8,7 @@ pub struct Lights {
     success: bool
 }
 
-/// Fuck around with someones lights
+/// Fuck around with someones lights. This may or may not work, depending on if their API is running.
 #[poise::command(slash_command, prefix_command, category = "API")]
 pub async fn lights(ctx: Context<'_>, #[description = "Enter a hex code"] hex: String) -> Result<(), Error> {
     let client = reqwest::Client::builder().user_agent("Luro/1.0 (nurah@wolfo.tech)").build()?;

@@ -18,6 +18,7 @@ pub struct Definition {
     permalink: String
 }
 
+/// Facts from the Urban Dictionary
 #[poise::command(slash_command, prefix_command, category = "API")]
 pub async fn urban(ctx: Context<'_>, #[description = "Search Term"] search: String) -> Result<(), Error> {
     if search.is_empty() {
@@ -59,6 +60,7 @@ pub async fn urban(ctx: Context<'_>, #[description = "Search Term"] search: Stri
     Ok(())
 }
 
+/// Facts from the Urban Dictionary, but randomly chosen! Spooky
 #[poise::command(slash_command, prefix_command, category = "API")]
 pub async fn random_urban(ctx: Context<'_>) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;

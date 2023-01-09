@@ -23,7 +23,7 @@ pub async fn saucenao_lookup(
     }
 }
 
-/// Reverse lookup an image via SauceNAO / FuzzySearch!
+/// Reverse lookup an image via SauceNAO!
 #[poise::command(context_menu_command = "SauceNAO: Find source", category = "Furry")]
 pub async fn saucenao_context(ctx: Context<'_>, msg: Message) -> Result<(), Error> {
     let api_key = &ctx.data().secrets.saucenao_token;
