@@ -9,7 +9,7 @@ use crate::{Context, Error};
     ephemeral,
     required_permissions = "MANAGE_MESSAGES"
 )]
-pub async fn cleanup(ctx: Context<'_>, #[description = "Number of messages to delete between 1 - 100"] num: usize) -> Result<(), Error> {
+pub async fn purge(ctx: Context<'_>, #[description = "Number of messages to delete between 1 - 100"] num: usize) -> Result<(), Error> {
     if num == 0 {
         ctx.say("Select 1 to 100 ;)").await?;
     } else if num == 1 {
