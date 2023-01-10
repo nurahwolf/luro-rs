@@ -19,26 +19,29 @@ pub async fn heck(
     #[description = "Add a heck message. Format: `<author> topped <user>!"] add_heck: Option<String>
 ) -> Result<(), Error> {
     if let Some(add_heck) = add_heck {
-        if add_heck.contains("<user>") && add_heck.contains("<author>") {
-            {
-                // Open a lock to the function that adds a new heck, then close that lock at the end of this function.
-                let mut write = ctx.data().heck.write().await;
-                write.heck.append(&mut vec![add_heck.clone()]);
-                Heck::write(&write, HECK_FILE_PATH);
-            }
-            let new_heck = add_heck.replace("<user>", user.to_string().as_str()).replace("<author>", ctx.author().to_string().as_str());
-            ctx.say(format!("{new_heck}\n*Added this heck to the database!*")).await?;
+        let mut write = ctx.data().heck.write().await;
+        // First Check: If an owner is running the command, don't check to make sure the message contains both <user> and <author>.
+        // This is so you can have custom messages, and its implied the owners know what they are doing...
+        // Second Check: Make sure the input contains both <user> and <author>
+        if ctx.framework().options.owners.contains(&ctx.author().id) || add_heck.contains("<user>") && add_heck.contains("<author>") {
+            write.heck.append(&mut vec![add_heck.clone()]);
         } else {
+            // Format not allowed!
             ctx.say(format!(
                 "Your heck was `{add_heck}` but the format was wrong. Make sure you include `<author>` and `<user>`!\n\nFor example: `<author> topped <user>!`"
             ))
             .await?;
         }
-    } else {
-        let hecks = &ctx.data().heck.read().await.heck;
-        let heck = heck_function(ctx.author(), user, hecks).await;
-        ctx.say(heck).await?;
-    }
+        Heck::write(&write, HECK_FILE_PATH); // Save our new heck to the database
+        let new_heck = add_heck.replace("<user>", user.to_string().as_str()).replace("<author>", ctx.author().to_string().as_str()); // Format the heck to mention the user in this instance
+        ctx.say(format!("{new_heck}\n*Added this heck to the database!*")).await?; // send our response!
+        return Ok(()); // We can exit the function now
+    };
+
+    // User is not adding a heck, so lets get one randomly
+    let hecks = &ctx.data().heck.read().await.heck;
+    let heck = heck_function(ctx.author(), user, hecks).await;
+    ctx.say(heck).await?;
 
     Ok(())
 }
