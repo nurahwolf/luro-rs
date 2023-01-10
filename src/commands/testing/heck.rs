@@ -84,7 +84,14 @@ pub async fn heck(
     };
 
     if plaintext {
-        ctx.say(heck.0.heck).await?;
+        // Split the message if it is too big!
+        if heck.0.heck.len() > 2000 {
+            let (split1, split2) = heck.0.heck.split_at(2000);
+            ctx.say(split1).await?;
+            ctx.say(split2).await?;
+        } else {
+            ctx.say(heck.0.heck).await?;
+        }
     } else {
         let config = ctx.data.config.read().await;
         let accent_colour = guild_accent_colour(config.accent_colour, ctx.guild());
