@@ -16,7 +16,7 @@ async fn heck_function(author: &User, user: User, hecks: &Vec<HeckInt>, heck_id:
     match hecks.get(heck_id) {
         Some(heck) => (HeckInt {
             heck: heck.heck.replace("<user>", user.to_string().as_str()).replace("<author>", author.to_string().as_str()),
-            author_id: author.id.0
+            author_id: heck.author_id
         }, heck_id),
         None => (HeckInt {
             heck: "No hecks found! If you specified an ID, make sure that ID exists. If you randomly tried to get one, make sure `heck.toml` exists within the data directory.".to_string(),
@@ -89,7 +89,7 @@ pub async fn heck(
         let config = ctx.data.config.read().await;
         let accent_colour = guild_accent_colour(config.accent_colour, ctx.guild());
         let heck_author = ctx.serenity_context.http.get_user(heck.0.author_id).await;
-        let embed = embed(accent_colour, heck.0.heck.clone(), heck.1, heck_author).await;
+        let embed = embed(accent_colour, heck.0.heck.clone(), heck.1, heck_author,).await;
 
         ctx.send(|builder|
             builder.embed(|e|{
@@ -129,7 +129,7 @@ async fn embed(accent_colour: Colour, heck: String, heck_id: usize, heck_author:
     embed.description(heck);
     if let Ok(heck_author) = heck_author {
         embed.author(|embed_author|
-        embed_author.name(format!("Heck by {}", heck_author.name)).icon_url(heck_author.avatar_url().unwrap_or_default()));
+        embed_author.name(format!("Heck created by {}", heck_author.name)).icon_url(heck_author.avatar_url().unwrap_or_default()));
     };
     embed.footer(|footer|footer.text(format!("Heck ID: {heck_id}")));
 
