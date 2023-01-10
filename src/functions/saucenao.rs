@@ -15,14 +15,14 @@ async fn reverse_client(url: &String, api_key: &String) -> Result<SauceNAO, reqw
             ("api_key", api_key),
             // ("testmode","1"),
             ("output_type", &"2".to_string()), // https://saucenao.com/tools/examples/api/index_details.txt
-            ("dbs[]", &"25".to_string()), // Gelbooru
-            ("dbs[]", &"29".to_string()), // E621
-            ("dbs[]", &"34".to_string()), // DeviantArt
-            ("dbs[]", &"39".to_string()), // ArtStation
-            ("dbs[]", &"40".to_string()), // FurAffinity
-            ("dbs[]", &"41".to_string()), // Twitter
-            ("dbs[]", &"42".to_string()), // Furry Network
-            ("dbs[]", &"43".to_string()), // Kemono
+            ("dbs[]", &"25".to_string()),      // Gelbooru
+            ("dbs[]", &"29".to_string()),      // E621
+            ("dbs[]", &"34".to_string()),      // DeviantArt
+            ("dbs[]", &"39".to_string()),      // ArtStation
+            ("dbs[]", &"40".to_string()),      // FurAffinity
+            ("dbs[]", &"41".to_string()),      // Twitter
+            ("dbs[]", &"42".to_string()),      // Furry Network
+            ("dbs[]", &"43".to_string()),      // Kemono
             ("url", url)
         ])
         .send()

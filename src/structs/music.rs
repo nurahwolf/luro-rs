@@ -9,7 +9,7 @@ use poise::{
 };
 use songbird::{Event, EventContext, EventHandler as VoiceEventHandler};
 
-use crate::{functions::nowplaying::now_playing};
+use crate::functions::nowplaying::now_playing;
 
 pub struct TrackStartNotifier {
     pub chan_id: ChannelId,
