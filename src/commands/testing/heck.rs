@@ -52,7 +52,8 @@ pub async fn heck(
                 author_id: ctx.author().id.0
             },69 ) // The 69 here is not needed, it's for a laugh :)
         } else {
-            ctx.say("You need to specify something if you want to add a heck!!").await?;
+            ctx.say("Your heck was not present. Make sure you include `<user>`!\n\nFor example: `<author> topped <user>!` You can use `\\n` for a newline")
+            .await?;
             return Ok(());
         };
 
@@ -60,7 +61,7 @@ pub async fn heck(
         // First Check: If an owner is running the command, don't check to make sure the message contains both <user> and <author>.
         // This is so you can have custom messages, and its implied the owners know what they are doing...
         // Second Check: Make sure the input contains both <user> and <author>
-        if ctx.framework().options.owners.contains(&ctx.author().id) || heck.0.heck.contains("<user>") && heck.0.heck.contains("<author>") {
+        if ctx.framework().options.owners.contains(&ctx.author().id) || heck.0.heck.contains("<user>") {
             // We want to write the raw string to disk, so we update heck again AFTER it has been written.
             write.heck.append(&mut vec![heck.0.clone()]); 
             heck = (HeckInt {
@@ -70,7 +71,7 @@ pub async fn heck(
         } else {
             // Format not allowed!
             ctx.say(format!(
-                "Your heck was `{new_heck}` but the format was wrong. Make sure you include `<user>`!\n\nFor example: `<author> topped <user>!` You can use `\\n` for a newline"
+                "Your heck was `{}` but the format was wrong. Make sure you include `<user>`!\n\nFor example: `<author> topped <user>!`", heck.0.heck
             ))
             .await?;
             return Ok(()); // We can exit the function now
