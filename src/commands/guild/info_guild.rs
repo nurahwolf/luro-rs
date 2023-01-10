@@ -3,7 +3,7 @@ use crate::{
     Context, Error
 };
 use itertools::Itertools;
-use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel, CacheHttp, invite};
+use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel};
 use std::fmt::Write;
 
 /// Information about the guild you are in
