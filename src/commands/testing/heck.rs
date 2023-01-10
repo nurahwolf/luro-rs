@@ -1,13 +1,27 @@
-use poise::{serenity_prelude::User, Modal};
-use rand::seq::SliceRandom;
+use poise::{serenity_prelude::{User, CreateEmbed, Colour}, Modal};
+use rand::{Rng};
 
-use crate::{config::Heck, Context, Error, HECK_FILE_PATH};
+use crate::{config::{Heck, HeckInt}, Context, Error, HECK_FILE_PATH, functions::guild_accent_colour::guild_accent_colour};
 
-async fn heck_function(author: &User, user: User, hecks: &Vec<String>) -> String {
-    let rng = &mut rand::thread_rng();
-    match hecks.choose(rng) {
-        Some(heck) => heck.replace("<user>", user.to_string().as_str()).replace("<author>", author.to_string().as_str()),
-        None => "No hecks found! (Make sure `heck.toml` exists :)".to_string()
+async fn heck_function(author: &User, user: User, hecks: &Vec<HeckInt>, heck_id: Option<usize>) -> (HeckInt, usize) {
+
+    let heck_id = match heck_id {
+        Some(ok) => ok,
+        None => {
+            let rng = &mut rand::thread_rng();
+            rng.gen_range(0..hecks.len())
+        },
+    };
+
+    match hecks.get(heck_id) {
+        Some(heck) => (HeckInt {
+            heck: heck.heck.replace("<user>", user.to_string().as_str()).replace("<author>", author.to_string().as_str()),
+            author_id: author.id.0
+        }, heck_id),
+        None => (HeckInt {
+            heck: "No hecks found! If you specified an ID, make sure that ID exists. If you randomly tried to get one, make sure `heck.toml` exists within the data directory.".to_string(),
+            author_id: author.id.0
+        }, heck_id),
     }
 }
 
@@ -25,11 +39,18 @@ struct AddHeck {
 pub async fn heck(
     ctx: poise::ApplicationContext<'_, crate::Data, crate::Error>,
     #[description = "User to heck"] user: User,
-    #[description = "Set to true if you want to add a heck :)"] #[flag] new_heck: bool
+    #[description = "Set to true if you want to add a heck :)"] #[flag] new_heck: bool,
+    #[description = "Return the heck as plaintext"] #[flag] plaintext: bool,
+    #[description = "Get a particular heck. Random heck returned if not found"] heck_id: Option<usize>,
 ) -> Result<(), Error> {
+    let mut heck;
+    // User wants us to add a heck
     if new_heck {
-        let new_heck = if let Some(new_heck) = AddHeck::execute(ctx).await? {
-            new_heck.heck
+        heck = if let Some(new_heck) = AddHeck::execute(ctx).await? {
+            (HeckInt {
+                heck: new_heck.heck,
+                author_id: ctx.author().id.0
+            },69 ) // The 69 here is not needed, it's for a laugh :)
         } else {
             ctx.say("You need to specify something if you want to add a heck!!").await?;
             return Ok(());
@@ -39,25 +60,44 @@ pub async fn heck(
         // First Check: If an owner is running the command, don't check to make sure the message contains both <user> and <author>.
         // This is so you can have custom messages, and its implied the owners know what they are doing...
         // Second Check: Make sure the input contains both <user> and <author>
-        if ctx.framework().options.owners.contains(&ctx.author().id) || new_heck.contains("<user>") && new_heck.contains("<author>") {
-            write.heck.append(&mut vec![new_heck.clone()]);
+        if ctx.framework().options.owners.contains(&ctx.author().id) || heck.0.heck.contains("<user>") && heck.0.heck.contains("<author>") {
+            // We want to write the raw string to disk, so we update heck again AFTER it has been written.
+            write.heck.append(&mut vec![heck.0.clone()]); 
+            heck = (HeckInt {
+                heck: heck.0.heck.replace("<user>", user.to_string().as_str()).replace("<author>", ctx.author().to_string().as_str()), // Format the heck to mention the user in this instance,
+                author_id: ctx.author().id.0
+            },write.heck.len());
         } else {
             // Format not allowed!
             ctx.say(format!(
                 "Your heck was `{new_heck}` but the format was wrong. Make sure you include `<user>`!\n\nFor example: `<author> topped <user>!` You can use `\\n` for a newline"
             ))
             .await?;
+            return Ok(()); // We can exit the function now
+
         }
-        Heck::write(&write, HECK_FILE_PATH); // Save our new heck to the database
-        let new_heck = new_heck.replace("<user>", user.to_string().as_str()).replace("<author>", ctx.author().to_string().as_str()); // Format the heck to mention the user in this instance
-        ctx.say(format!("{new_heck}\n\n*Added this heck to the database!*")).await?; // send our response!
-        return Ok(()); // We can exit the function now
+        Heck::write(&write, HECK_FILE_PATH); // Save our new heck to the database, unformatted.
+    } else {
+        // Not adding a heck, so let's get one
+        let hecks = &ctx.data.heck.read().await.heck;
+        heck = heck_function(ctx.author(), user, hecks, heck_id).await;
     };
 
-    // User is not adding a heck, so lets get one randomly
-    let hecks = &ctx.data().heck.read().await.heck;
-    let heck = heck_function(ctx.author(), user, hecks).await;
-    ctx.say(heck).await?;
+    if plaintext {
+        ctx.say(heck.0.heck).await?;
+    } else {
+        let config = ctx.data.config.read().await;
+        let accent_colour = guild_accent_colour(config.accent_colour, ctx.guild());
+        let heck_author = ctx.serenity_context.http.get_user(heck.0.author_id).await;
+        let embed = embed(accent_colour, heck.0.heck.clone(), heck.1, heck_author).await;
+
+        ctx.send(|builder|
+            builder.embed(|e|{
+                *e = embed;
+                e
+            })
+        ).await?;
+    };
 
     Ok(())
 }
@@ -66,7 +106,32 @@ pub async fn heck(
 #[poise::command(category = "Testing", context_menu_command = "Heck this user :3c")]
 pub async fn heck_user(ctx: Context<'_>, #[description = "User to heck"] user: User) -> Result<(), Error> {
     let hecks = &ctx.data().heck.read().await.heck;
-    let heck = heck_function(ctx.author(), user, hecks).await;
-    ctx.say(heck).await?;
+    let heck = heck_function(ctx.author(), user, hecks, None).await;
+    
+    let config = ctx.data().config.read().await;
+    let accent_colour = guild_accent_colour(config.accent_colour, ctx.guild());
+    let heck_author = ctx.serenity_context().http.get_user(heck.0.author_id).await;
+    let embed = embed(accent_colour, heck.0.heck.clone(), heck.1, heck_author).await;
+
+    ctx.send(|builder|
+        builder.embed(|e|{
+            *e = embed;
+            e
+        })
+    ).await?;
     Ok(())
+}
+
+async fn embed(accent_colour: Colour, heck: String, heck_id: usize, heck_author: Result<User, serenity::Error>) -> CreateEmbed {
+    let mut embed = CreateEmbed::default();
+
+    embed.color(accent_colour);
+    embed.description(heck);
+    if let Ok(heck_author) = heck_author {
+        embed.author(|embed_author|
+        embed_author.name(format!("Heck by {}", heck_author.name)).icon_url(heck_author.avatar_url().unwrap_or_default()));
+    };
+    embed.footer(|footer|footer.text(format!("Heck ID: {heck_id}")));
+
+    embed
 }

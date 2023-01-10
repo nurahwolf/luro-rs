@@ -33,7 +33,7 @@ impl Config {
             Err(err) => panic!("Error reading toml file: {err}")
         }
 
-        return match toml::from_str::<Config>(&contents) {
+        return match toml_edit::easy::from_str::<Config>(&contents) {
             Ok(secrets) => secrets,
             Err(err) => panic!("Error serialising toml file: {err}")
         };
@@ -41,7 +41,7 @@ impl Config {
 
     /// Write the struct to a toml file
     pub fn write(new_data: &Config, path: &str) {
-        let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
+        let struct_to_toml_string = match toml_edit::easy::to_string(&new_data) {
             Ok(string) => string,
             Err(err) => panic!("Error serialising struct to toml string: {err}")
         };
@@ -59,10 +59,17 @@ impl Config {
         self.e621_useragent = new_data.e621_useragent.clone();
     }
 }
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct HeckInt {
+    pub heck: String,
+    pub author_id: u64
+}
+
 /// Structure for `heck.toml`
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Heck {
-    pub heck: Vec<String>
+    pub heck: Vec<HeckInt>
 }
 
 impl Heck {
@@ -81,7 +88,7 @@ impl Heck {
             Err(err) => panic!("Error reading toml file: {err}")
         }
 
-        return match toml::from_str::<Heck>(&contents) {
+        return match toml_edit::easy::from_str::<Heck>(&contents) {
             Ok(secrets) => secrets,
             Err(err) => panic!("Error serialising toml file: {err}")
         };
@@ -89,7 +96,7 @@ impl Heck {
 
     /// Write the struct to a toml file
     pub fn write(new_data: &Heck, path: &str) {
-        let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
+        let struct_to_toml_string = match toml_edit::easy::to_string(&new_data) {
             Ok(string) => string,
             Err(err) => panic!("Error serialising struct to toml string: {err}")
         };
@@ -134,7 +141,7 @@ impl Quotes {
             Err(err) => panic!("Error reading toml file: {err}")
         }
 
-        return match toml::from_str::<Quotes>(&contents) {
+        return match toml_edit::easy::from_str::<Quotes>(&contents) {
             Ok(secrets) => secrets,
             Err(err) => panic!("Error serialising toml file: {err}")
         };
@@ -142,7 +149,7 @@ impl Quotes {
 
     /// Write the struct to a toml file
     pub fn write(new_data: &Quotes, path: &str) {
-        let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
+        let struct_to_toml_string = match toml_edit::easy::to_string(&new_data) {
             Ok(string) => string,
             Err(err) => panic!("Error serialising struct to toml string: {err}")
         };
@@ -185,7 +192,7 @@ impl Secrets {
             Err(err) => panic!("Error reading toml file: {err}")
         }
 
-        return match toml::from_str::<Secrets>(&contents) {
+        return match toml_edit::easy::from_str::<Secrets>(&contents) {
             Ok(secrets) => secrets,
             Err(err) => panic!("Error serialising toml file: {err}")
         };
@@ -232,7 +239,7 @@ impl Stories {
             Err(err) => panic!("Error reading toml file: {err}")
         }
 
-        return match toml::from_str::<Stories>(&contents) {
+        return match toml_edit::easy::from_str::<Stories>(&contents) {
             Ok(secrets) => secrets,
             Err(err) => panic!("Error serialising toml file: {err}")
         };
@@ -240,7 +247,7 @@ impl Stories {
 
     /// Write the struct to a toml file
     pub fn write(new_data: &Stories, path: &str) {
-        let struct_to_toml_string = match toml::to_string_pretty(&new_data) {
+        let struct_to_toml_string = match toml_edit::easy::to_string(&new_data) {
             Ok(string) => string,
             Err(err) => panic!("Error serialising struct to toml string: {err}")
         };

@@ -29,13 +29,16 @@ regex = "1" # REGEX checking throughout Luro
 
 ### Dependencies that should be reviewed
 tracing-subscriber = "0.3" # See notes
-toml = "0.5" # TODO: Currently used for saving and formatting the toml config file, consider if this is worth it
 # lastfm-rs   = "0.5" # Add this one LastFM is used
 
 ### Dependencies that have a real reason to exist
 [dependencies.tokio]
 version = "1"
 features = ["macros", "rt-multi-thread", "signal"]
+
+[dependencies.toml_edit]
+version = "0.17"
+features = ["easy"]
 
 [dependencies.serenity]
 default-features = false
