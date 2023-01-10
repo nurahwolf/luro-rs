@@ -1,4 +1,4 @@
-use poise::serenity_prelude::{CacheHttp, User};
+use poise::serenity_prelude::User;
 use rand::seq::SliceRandom;
 
 use crate::{config::Heck, Context, Error, HECK_FILE_PATH};
@@ -18,31 +18,27 @@ pub async fn heck(
     #[description = "User to heck"] user: User,
     #[description = "Add a heck message. Format: `<author> topped <user>!"] add_heck: Option<String>
 ) -> Result<(), Error> {
-    let hecks = &ctx.data().heck.read().await.heck;
     if let Some(add_heck) = add_heck {
         if add_heck.contains("<user>") && add_heck.contains("<author>") {
+            {
+                // Open a lock to the function that adds a new heck, then close that lock at the end of this function.
+                let mut write = ctx.data().heck.write().await;
+                write.heck.append(&mut vec![add_heck.clone()]);
+                Heck::write(&write, HECK_FILE_PATH);
+            }
             let new_heck = add_heck.replace("<user>", user.to_string().as_str()).replace("<author>", ctx.author().to_string().as_str());
-
-            ctx.data().heck.write().await.heck.append(&mut vec![new_heck.clone()]);
-
-            ctx.say(format!(
-                "{}\n\n*Oh yeah, I just added that heck succesfully <3 -{}*",
-                new_heck,
-                ctx.http().get_user(ctx.framework().bot_id.0).await?
-            ))
-            .await?;
-            Heck::write(&ctx.data().heck.write().await.clone(), HECK_FILE_PATH);
+            ctx.say(format!("{new_heck}\n*Added this heck to the database!*")).await?;
         } else {
             ctx.say(format!(
                 "Your heck was `{add_heck}` but the format was wrong. Make sure you include `<author>` and `<user>`!\n\nFor example: `<author> topped <user>!`"
             ))
             .await?;
         }
-        return Ok(());
+    } else {
+        let hecks = &ctx.data().heck.read().await.heck;
+        let heck = heck_function(ctx.author(), user, hecks).await;
+        ctx.say(heck).await?;
     }
-
-    let heck = heck_function(ctx.author(), user, hecks).await;
-    ctx.say(heck).await?;
 
     Ok(())
 }
