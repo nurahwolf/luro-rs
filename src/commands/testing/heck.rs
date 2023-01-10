@@ -3,7 +3,7 @@ use rand::{Rng};
 
 use crate::{config::{Heck, HeckInt}, Context, Error, HECK_FILE_PATH, functions::guild_accent_colour::guild_accent_colour};
 
-async fn heck_function(author: &User, user: User, hecks: &Vec<HeckInt>, heck_id: Option<usize>) -> (HeckInt, usize) {
+async fn heck_function(author: &User, user: &User, hecks: &Vec<HeckInt>, heck_id: Option<usize>) -> (HeckInt, usize) {
 
     let heck_id = match heck_id {
         Some(ok) => ok,
@@ -80,7 +80,7 @@ pub async fn heck(
     } else {
         // Not adding a heck, so let's get one
         let hecks = &ctx.data.heck.read().await.heck;
-        heck = heck_function(ctx.author(), user, hecks, heck_id).await;
+        heck = heck_function(ctx.author(), &user, hecks, heck_id).await;
     };
 
     if plaintext {
@@ -95,7 +95,7 @@ pub async fn heck(
             builder.embed(|e|{
                 *e = embed;
                 e
-            })
+            }).content(&user.to_string())
         ).await?;
     };
 
@@ -106,7 +106,7 @@ pub async fn heck(
 #[poise::command(category = "Testing", context_menu_command = "Heck this user :3c")]
 pub async fn heck_user(ctx: Context<'_>, #[description = "User to heck"] user: User) -> Result<(), Error> {
     let hecks = &ctx.data().heck.read().await.heck;
-    let heck = heck_function(ctx.author(), user, hecks, None).await;
+    let heck = heck_function(ctx.author(), &user, hecks, None).await;
     
     let config = ctx.data().config.read().await;
     let accent_colour = guild_accent_colour(config.accent_colour, ctx.guild());
@@ -117,7 +117,7 @@ pub async fn heck_user(ctx: Context<'_>, #[description = "User to heck"] user: U
         builder.embed(|e|{
             *e = embed;
             e
-        })
+        }).content(&user.to_string())
     ).await?;
     Ok(())
 }
