@@ -1,4 +1,4 @@
-use crate::{structs::saucenao::SauceNAO, Context, TIMEOUT_DURIATION};
+use crate::{constants::TIMEOUT_DURIATION, structs::saucenao::SauceNAO, Context};
 use futures::StreamExt;
 use poise::{
     serenity_prelude::{ButtonStyle, CreateComponents, InteractionResponseType},

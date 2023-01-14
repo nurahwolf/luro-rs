@@ -1,4 +1,4 @@
-use crate::{functions::saucenao::interactive_response, Context, Error, SOURCE_FINDER_REGEX};
+use crate::{constants::SOURCE_FINDER_REGEX, functions::saucenao::interactive_response, Context, Error};
 use futures::{future, StreamExt};
 use poise::serenity_prelude::Message;
 use regex::Regex;

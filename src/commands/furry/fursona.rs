@@ -1,4 +1,7 @@
-use crate::{Context, Error, DATA_PATH, FURSONA_FILE_PATH};
+use crate::{
+    constants::{DATA_PATH, FURSONA_FILE_PATH},
+    Context, Error
+};
 
 use futures::{Stream, StreamExt};
 use poise::serenity_prelude::{AttachmentType, CacheHttp};

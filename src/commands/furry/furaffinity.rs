@@ -1,6 +1,7 @@
+use crate::constants::TIMEOUT_DURIATION;
 use crate::functions::furaffinity::{components, fa_reply, furaffinity_client};
 use crate::functions::guild_accent_colour::guild_accent_colour;
-use crate::{Context, Error, TIMEOUT_DURIATION};
+use crate::{Context, Error};
 
 use futures::StreamExt;
 use poise::serenity_prelude::InteractionResponseType;

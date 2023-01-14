@@ -4,7 +4,7 @@ use crate::{Data, Error, FURAFFINITY_REGEX};
 use futures::StreamExt;
 use poise::serenity_prelude::{ButtonStyle, CreateComponents, CreateEmbed, CreateMessage, EditMessage, Message};
 use poise::serenity_prelude::{Colour, InteractionResponseType};
-use poise::CreateReply;
+use poise::{CreateReply, FrameworkContext};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serenity::client::Context;
@@ -182,7 +182,7 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
 }
 
 /// Get a post from FA and send an embed response.
-pub async fn event_furaffinity(ctx: &Context, framework: poise::FrameworkContext<'_, Data, Error>, message: &Message) -> Result<(), reqwest::Error> {
+pub async fn event_furaffinity(ctx: &Context, framework: &FrameworkContext<'_, Data, Error>, message: &Message) -> Result<(), reqwest::Error> {
     let url = &message.content;
     let fa_client = furaffinity_client(Some(url), None, &framework.user_data.secrets.furaffinity_cookies).await; // Get a FA client, build it on the url input
     let colour = guild_accent_colour(framework.user_data.config.read().await.accent_colour, message.guild(ctx));

@@ -1,9 +1,6 @@
-use crate::{
-    functions::{guild_accent_colour::guild_accent_colour},
-    Context, Error
-};
+use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error};
 use poise::serenity_prelude::{CreateEmbed, Role};
-use std::fmt::{Write};
+use std::fmt::Write;
 
 /// Information about a role
 #[poise::command(prefix_command, slash_command, guild_only, category = "Guild")]

@@ -1,7 +1,7 @@
-use crate::{Context, Error, functions::guild_accent_colour::guild_accent_colour};
-use git2::{Repository, ErrorCode};
+use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error};
+use git2::{ErrorCode, Repository};
 use memory_stats::memory_stats;
-use poise::serenity_prelude::{CreateEmbed, CacheHttp};
+use poise::serenity_prelude::{CacheHttp, CreateEmbed};
 use std::fmt::Write;
 
 /// Retrieves the current git branch in a given git repository.
@@ -25,9 +25,7 @@ pub fn get_head_revision(repo: &Repository) -> String {
 
 /// Information about the bot!
 #[poise::command(prefix_command, slash_command, category = "General")]
-pub async fn about(
-    ctx: Context<'_>
-) -> Result<(), Error> {
+pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
     // Variables
     let mut embed = CreateEmbed::default();
     let accent_colour = ctx.data().config.read().await.accent_colour;
@@ -43,8 +41,8 @@ pub async fn about(
         match ctx.http().get_user(owner.0).await {
             Ok(user) => {
                 write!(framework_owners_list, "{} ({}), ", user, user.tag())?;
-            },
-            Err(_) => todo!(),
+            }
+            Err(_) => todo!()
         }
     }
 
@@ -52,7 +50,7 @@ pub async fn about(
     embed.title(&current_user.name);
     embed.color(guild_accent_colour(accent_colour, ctx.guild()));
     embed.thumbnail(&current_user.avatar_url().unwrap_or_default());
-    embed.footer(|footer|footer.text("Written with Rust & Poise (Serenity)"));
+    embed.footer(|footer| footer.text("Written with Rust & Poise (Serenity)"));
     if let Some(git_url) = &ctx.data().config.read().await.git_url {
         embed.url(git_url);
     }
@@ -78,12 +76,13 @@ pub async fn about(
     fields.push(("Users with Owner perms", framework_owners_list, false));
     embed.fields(fields);
 
-    ctx.send(|builder|
-        builder.embed(|e|{
+    ctx.send(|builder| {
+        builder.embed(|e| {
             *e = embed;
             e
         })
-    ).await?;
+    })
+    .await?;
 
     Ok(())
 }
