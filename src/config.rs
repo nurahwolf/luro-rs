@@ -14,7 +14,8 @@ use tracing::log::info;
 pub struct Config {
     pub accent_colour: [u8; 3],
     pub e621_blacklist: String,
-    pub e621_useragent: String
+    pub e621_useragent: String,
+    pub webhook_name: String
 }
 
 impl Config {
