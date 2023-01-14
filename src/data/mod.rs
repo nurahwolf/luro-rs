@@ -1,12 +1,11 @@
-use std::sync::{Arc, atomic::AtomicUsize};
+use std::sync::{atomic::AtomicUsize, Arc};
 use tokio::sync::RwLock;
 
-
 pub mod config;
-pub mod stories;
 pub mod heck;
-pub mod secrets;
 pub mod quotes;
+pub mod secrets;
+pub mod stories;
 
 // TODO: Can I have one impl for all of these?
 // TODO: Create a baseline template via code (Such as if the toml file does not exist)

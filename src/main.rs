@@ -1,12 +1,8 @@
 #![feature(option_result_contains)]
-use std::{
-    collections::HashSet,
-    env,
-    sync::{atomic::AtomicUsize}
-};
+use std::{collections::HashSet, env, sync::atomic::AtomicUsize};
 
 use constants::{BOT_TOKEN, CONFIG_FILE_PATH, DATABASE_FILE_PATH, FURAFFINITY_REGEX, HECK_FILE_PATH, QUOTES_FILE_PATH, SECRETS_FILE_PATH, STORIES_FILE_PATH};
-use data::{Data, config::Config, heck::Heck, quotes::Quotes, secrets::Secrets, stories::Stories};
+use data::{config::Config, heck::Heck, quotes::Quotes, secrets::Secrets, stories::Stories, Data};
 use poise::{
     serenity_prelude::{GatewayIntents, UserId},
     FrameworkOptions
@@ -24,8 +20,8 @@ type Command = poise::Command<Data, Error>;
 
 // Modules
 mod commands;
-mod data;
 mod constants; // **NOTE:** This file is intended to be USER EDITABLE! Please refer to it to modify key ways Luro operates!
+mod data;
 mod database;
 mod event_listener;
 mod functions;

@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use tokio::{fs::File, io::AsyncReadExt, fs::write};
+use tokio::{fs::write, fs::File, io::AsyncReadExt};
 use tracing::log::info;
 
 /// Structure for `config.toml`
