@@ -24,6 +24,7 @@ type Command = poise::Command<Data, Error>;
 
 // Important Constants, may be manually updated!
 // TODO: A way to do these progmatically
+const BOT_TOKEN: &str = "LURO_TOKEN";
 const DATA_PATH: &str = "data/"; // Consider setting this to XDG_DATA_HOME on a production system
 const CONFIG_FILE_PATH: &str = "data/config.toml";
 const DATABASE_FILE_PATH: &str = "data/database";
@@ -116,7 +117,15 @@ async fn event_listener(_ctx: &serenity::Context, event: &poise::Event<'_>, _fra
             _ctx.set_presence(Some(Activity::playing(&presence_string)), OnlineStatus::Online).await;
         }
         poise::Event::PresenceUpdate { new_data: _ } => {}
-        poise::Event::InteractionCreate { interaction: _ } => {}
+        poise::Event::InteractionCreate { interaction } => {
+            let test = interaction.clone();
+            match test.application_command() {
+                Some(interaction_command) => {
+                    println!("Event Listener: Data - {}", interaction_command.data.name)
+                }
+                None => println!("Event Listener: {}", interaction.id().0)
+            };
+        }
         poise::Event::TypingStart { event: _ } => {}
         poise::Event::GuildMemberUpdate { old_if_available: _, new: _ } => {}
         poise::Event::Message { new_message } => {
@@ -162,7 +171,10 @@ async fn main() {
 
     let token = match data.secrets.discord_token.clone() {
         Some(t) => t,
-        None => std::env::var("LURO_TOKEN").expect("Congrats, you didn't set either LURO_TOKEN or include the token in the config. Terminating on your sheer stupidity.")
+        None => match std::env::var(BOT_TOKEN) {
+            Ok(environment_token) => environment_token,
+            Err(err) => panic!("Congrats, you didn't set either {BOT_TOKEN} or include the token in the config file. Terminating on your sheer stupidity.\n{err}")
+        }
     };
 
     env::set_var("RUST_LOG", "info,poise_basic_queue=trace,poise=debug,serenity=debug");
