@@ -28,7 +28,7 @@ pub async fn addquote(ctx: Context<'_>, #[description = "The quote which you wis
     .await?;
     let quotes = &mut ctx.data().quotes.write().await;
     quotes.quotes.append(&mut new_quote);
-    Quotes::write(quotes, QUOTES_FILE_PATH);
+    Quotes::write(quotes, QUOTES_FILE_PATH).await;
 
     Ok(())
 }

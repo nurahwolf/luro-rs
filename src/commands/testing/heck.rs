@@ -100,7 +100,7 @@ pub async fn heck(
             .await?;
             return Ok(()); // We can exit the function now
         }
-        Heck::write(&write, HECK_FILE_PATH); // Save our new heck to the database, unformatted.
+        Heck::write(&write, HECK_FILE_PATH).await; // Save our new heck to the database, unformatted.
     } else {
         // Not adding a heck, so let's get one
         let hecks = &ctx.data.heck.read().await.heck;
