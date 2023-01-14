@@ -1,4 +1,4 @@
-use crate::{config::Stories, functions::guild_accent_colour::guild_accent_colour, Context, Error, STORIES_FILE_PATH};
+use crate::{data::stories::Stories, functions::guild_accent_colour::guild_accent_colour, Context, Error, STORIES_FILE_PATH};
 use rand::Rng;
 
 fn truncate(s: &str, max_chars: usize) -> &str {
@@ -22,14 +22,14 @@ pub async fn story(
     let mut stories = ctx.data().stories.write().await;
     if stories.stories.is_empty() {
         ctx.say("Out of random stories to get, so reloading config...").await?;
-        stories.reload(&Stories::get(STORIES_FILE_PATH));
+        stories.reload(&Stories::get(STORIES_FILE_PATH).await);
     }
     // Generate a random number based on the length of the stories vec
     let random_number = rand::thread_rng().gen_range(0..stories.stories.len());
 
     // If the user specified a story, get it.
     let story_resolved = if let Some(index) = story {
-        let stories = Stories::get(STORIES_FILE_PATH).stories;
+        let stories = Stories::get(STORIES_FILE_PATH).await.stories;
         match stories.get(index) {
             Some(story) => story.clone(),
             None => {

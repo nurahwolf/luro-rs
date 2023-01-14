@@ -2,17 +2,15 @@
 use std::{
     collections::HashSet,
     env,
-    sync::{atomic::AtomicUsize, Arc}
+    sync::{atomic::AtomicUsize}
 };
 
-use config::{Config, Heck, Quotes, Secrets, Stories};
 use constants::{BOT_TOKEN, CONFIG_FILE_PATH, DATABASE_FILE_PATH, FURAFFINITY_REGEX, HECK_FILE_PATH, QUOTES_FILE_PATH, SECRETS_FILE_PATH, STORIES_FILE_PATH};
+use data::{Data, config::Config, heck::Heck, quotes::Quotes, secrets::Secrets, stories::Stories};
 use poise::{
     serenity_prelude::{GatewayIntents, UserId},
     FrameworkOptions
 };
-use sled::Db;
-use songbird::Songbird;
 use tokio::sync::RwLock;
 use tracing_subscriber::FmtSubscriber;
 
@@ -26,39 +24,12 @@ type Command = poise::Command<Data, Error>;
 
 // Modules
 mod commands;
-mod config;
+mod data;
 mod constants; // **NOTE:** This file is intended to be USER EDITABLE! Please refer to it to modify key ways Luro operates!
 mod database;
 mod event_listener;
 mod functions;
 mod structs;
-
-// Structs
-
-/// **Luro's Data**
-///
-/// A struct holding all user data that makes Luro tick.
-///
-/// This structure intends to use best practices <https://github.com/serenity-rs/serenity/blob/current/examples/e12_global_data/src/main.rs>, for example `Arc<RwLock<HashMap<String, u64>>>` for read/write, and `Arc<AtomicUsize>` for read only data.
-pub struct Data {
-    /// Configuration that is got from the "config.toml" file. This is intended to be user modifiable and easy, by non-technically inclined users.
-    /// NOTE: There is "constants.rs" where a bunch of other 'config' like variables live, however these are intended for ADVANCED USERS, hence they live here.
-    config: Arc<RwLock<Config>>,
-    /// Luro's Database, which is currently a sled.rs instance.
-    database: Arc<Db>,
-    /// Heck: A bunch of silly messages to throw at a user. This refers to the "heck.toml" file on disk.
-    heck: Arc<RwLock<Heck>>,
-    /// Quotes: A bunch of silly messages that people have said. This refers to the "quotes.toml" file on disk.
-    quotes: Arc<RwLock<Quotes>>,
-    /// Application secrets got from the "secrets.toml" file on disk.
-    secrets: Arc<Secrets>,
-    /// Stories: A bunch of 'stories', which are more shitposty in nature. This refers to the "stories.toml" file on disk.
-    stories: Arc<RwLock<Stories>>,
-    /// A Songbird instance for voice fun.
-    songbird: Arc<Songbird>,
-    /// The total commands that have been ran in this instance. NOTE: This is RESET when the bot restarts! It only lives in memory.
-    command_total: Arc<RwLock<AtomicUsize>>
-}
 
 // We are finally at Luro!
 // ===============
@@ -93,12 +64,12 @@ async fn main() {
     let songbird = songbird::Songbird::serenity();
     // Luro's initialised data context
     let data = Data {
-        config: RwLock::new(Config::get(CONFIG_FILE_PATH)).into(),
+        config: RwLock::new(Config::get(CONFIG_FILE_PATH).await).into(),
         database: sled::open(DATABASE_FILE_PATH).expect("Could not open / create database").into(),
-        heck: RwLock::new(Heck::get(HECK_FILE_PATH)).into(),
-        quotes: RwLock::new(Quotes::get(QUOTES_FILE_PATH)).into(),
-        secrets: Secrets::get(SECRETS_FILE_PATH).into(),
-        stories: RwLock::new(Stories::get(STORIES_FILE_PATH)).into(),
+        heck: RwLock::new(Heck::get(HECK_FILE_PATH).await).into(),
+        quotes: RwLock::new(Quotes::get(QUOTES_FILE_PATH).await).into(),
+        secrets: Secrets::get(SECRETS_FILE_PATH).await.into(),
+        stories: RwLock::new(Stories::get(STORIES_FILE_PATH).await).into(),
         songbird: songbird.clone(),
         command_total: RwLock::new(AtomicUsize::new(0)).into() // NOTE: Resets to zero on bot restart, by design
     };

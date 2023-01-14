@@ -5,9 +5,8 @@ use poise::{
 use rand::Rng;
 
 use crate::{
-    config::{Heck, HeckInt},
     functions::guild_accent_colour::guild_accent_colour,
-    Context, Error, HECK_FILE_PATH
+    Context, Error, HECK_FILE_PATH, data::heck::{HeckInt, Heck}
 };
 
 async fn heck_function(author: &User, user: &User, hecks: &Vec<HeckInt>, heck_id: Option<usize>) -> (HeckInt, usize) {

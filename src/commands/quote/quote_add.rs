@@ -1,7 +1,7 @@
 use poise::serenity_prelude::Message;
 
 use crate::{
-    config::{Quote, Quotes},
+    data::{quotes::Quote, quotes::Quotes},
     functions::guild_accent_colour::guild_accent_colour,
     Context, Error, QUOTES_FILE_PATH
 };

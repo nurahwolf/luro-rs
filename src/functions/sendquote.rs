@@ -1,6 +1,6 @@
 use poise::serenity_prelude::CreateEmbed;
 
-use crate::{config::Quote, Context, Error};
+use crate::{ Context, Error, data::quotes::Quote};
 
 use super::guild_accent_colour::guild_accent_colour;
 
