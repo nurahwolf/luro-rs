@@ -10,7 +10,7 @@ use std::{
 use config::{Config, Heck, Quotes, Secrets, Stories};
 use database::add_discord_message;
 use functions::furaffinity::event_furaffinity;
-use poise::serenity_prelude::{self as serenity, Activity, OnlineStatus};
+use poise::{serenity_prelude::{self as serenity, Activity, OnlineStatus, UserId}, FrameworkOptions};
 use regex::Regex;
 use sled::Db;
 use songbird::Songbird;
@@ -185,24 +185,32 @@ async fn main() {
         Err(_) => panic!("Failed to load tracing subscriber!")
     };
 
+    // Framework Options
+    let mut framework_options = FrameworkOptions {
+        commands: commands::commands(),
+        on_error: |error| Box::pin(on_error(error)),
+        event_handler: |ctx, event, framework, user_data| {
+            Box::pin(async move {
+                event_listener(ctx, event, framework, user_data).await?;
+                Ok(())
+            })
+        },
+        pre_command: |ctx| {
+            Box::pin(async move {
+                *ctx.data().command_total.write().await.get_mut() += 1;
+            })
+        },
+        ..Default::default()
+    };
+
+    // If owners are configured, override the framework options with said owner
+    if let Some(owners) = &data.secrets.owners {
+        let owners_map: HashSet<UserId> = owners.iter().map(|user_id| UserId(*user_id)).collect();
+        framework_options.owners = owners_map;
+    };
+
     let framework = poise::Framework::builder()
-        .options(poise::FrameworkOptions {
-            commands: commands::commands(),
-            owners: HashSet::from([serenity::UserId(97003404601094144), serenity::UserId(203994450467225600), serenity::UserId(105716849336938496)]),
-            on_error: |error| Box::pin(on_error(error)),
-            event_handler: |ctx, event, framework, user_data| {
-                Box::pin(async move {
-                    event_listener(ctx, event, framework, user_data).await?;
-                    Ok(())
-                })
-            },
-            pre_command: |ctx| {
-                Box::pin(async move {
-                    *ctx.data().command_total.write().await.get_mut() += 1;
-                })
-            },
-            ..Default::default()
-        })
+        .options(framework_options)
         .setup(|_, _, _| Box::pin(async { Ok(data) }))
         .client_settings(move |f| f.voice_manager_arc(songbird))
         .token(token)

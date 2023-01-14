@@ -175,7 +175,8 @@ pub struct Secrets {
     pub e621_token: Option<String>,
     pub twitter_api: Option<String>,
     pub furaffinity_cookies: [String; 2],
-    pub saucenao_token: String
+    pub saucenao_token: String,
+    pub owners: Option<Vec<u64>>
 }
 
 impl Secrets {
