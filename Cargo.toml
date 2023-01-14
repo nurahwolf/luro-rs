@@ -26,6 +26,8 @@ zerocopy = "0.6.0" # Dependencies for Database
 byteorder = "1.4.3" # Dependencies for Database
 rkyv = "0.7" # Dependencies for Database
 regex = "1" # REGEX checking throughout Luro
+memory-stats = "1.0.0" #System memory information
+git2 = "0.16.0" #Git information
 
 ### Dependencies that should be reviewed
 tracing-subscriber = "0.3" # See notes
