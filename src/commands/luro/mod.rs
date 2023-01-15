@@ -3,14 +3,16 @@ use poise::serenity_prelude::Message;
 use crate::commands::luro::about::{about, about_bot};
 use crate::commands::luro::cleanup::cleanup;
 use crate::commands::luro::nickname::nickname;
+use crate::commands::luro::invite::invite;
 use crate::{Command, Context, Error};
 
 mod about;
 mod nickname;
 mod cleanup;
+mod invite;
 
 /// Luro specific commands
-#[poise::command(slash_command, category = "Luro", subcommands("cleanup", "nickname", "about"))]
+#[poise::command(slash_command, category = "Luro", subcommands("cleanup", "nickname", "about", "invite"))]
 pub async fn luro(ctx: Context<'_>) -> Result<(), Error> {
     about_bot(ctx).await?;
 

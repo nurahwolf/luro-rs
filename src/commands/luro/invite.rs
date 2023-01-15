@@ -8,10 +8,14 @@ use tracing::log::error;
 #[poise::command(prefix_command, slash_command, category = "General")]
 pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;
-    let bot_user = ctx
-        .cache()
-        .expect("Failed to get the current bot user in cache")
-        .current_user();
+    let bot_user = match ctx.cache() {
+        Some(cache) => cache.current_user(),
+        None => {
+            ctx.say("Failed to get the current bot user from the cache, sorry :(").await?;
+            return Ok(())
+        },
+    };
+
     let url = match bot_user.invite_url(ctx, Permissions::ADMINISTRATOR).await {
         Ok(invite) => invite,
         Err(why) => {
@@ -22,15 +26,18 @@ pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
     };
 
     let name = &bot_user.name;
-    let avatar = bot_user.avatar_url().unwrap_or_default();
+    let description = match &ctx.data().config.read().await.git_url {
+        Some(git_url) => format!("Click [here]({url}) to add {name} to your Discord server.\nNote! You can also get my source code from github at {git_url}"),
+        None => format!("Click [here]({url}) to add {name} to your Discord server."),
+    };
 
     ctx.send(|builder| {
         builder.embed(|embed| {
             embed
-                .title(format!("{name} Invite URL"))
-                .thumbnail(avatar)
+                .title(format!("{name}'s Invite URL"))
+                .thumbnail(bot_user.avatar_url().unwrap_or_default())
                 .color(guild_accent_colour(accent_colour, ctx.guild()))
-                .description(format!("Click [here]({url}) to add {name} to your Discord server."))
+                .description(description)
         })
     })
     .await?;
