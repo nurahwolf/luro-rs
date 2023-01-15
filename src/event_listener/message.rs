@@ -20,7 +20,13 @@ pub async fn message(message: &Message, ctx: &Context, framework: &FrameworkCont
     };
 
     // Run the furaffinity command if the message contains a link
-    let regex = Regex::new(FURAFFINITY_REGEX).unwrap();
+    let regex = match Regex::new(FURAFFINITY_REGEX) {
+        Ok(ok) => ok,
+        Err(err) => {
+            println!("Message Listner: Failed to match the regex - {err}");
+            return Ok(());
+        }
+    };
     if let Some(fa_match) = regex.find(&message.content) {
         match event_furaffinity(ctx, framework, message).await {
             Ok(_) => println!("Furaffinity: Regex matched - {}", fa_match.as_str()),

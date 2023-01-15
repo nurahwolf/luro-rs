@@ -9,12 +9,13 @@ pub async fn ready_listener(ready: &Ready, ctx: &Context) -> Result<(), Error> {
     let bot_gateway = http.get_bot_gateway().await.unwrap();
     let t_sessions = bot_gateway.session_start_limit.total;
     let r_sessions = bot_gateway.session_start_limit.remaining;
-    let bot_owner = http.get_current_application_info().await.unwrap().owner;
 
     println!("Successfully logged into Discord as the following user:");
     println!("Bot username: {}", ready.user.tag());
     println!("Bot user ID: {}", ready.user.id);
-    println!("Bot owner: {}", bot_owner.tag());
+    if let Ok(application_info) = http.get_current_application_info().await {
+        println!("Bot owner: {}", application_info.owner.tag());
+    }
 
     let guild_count = ready.guilds.len();
 

@@ -46,7 +46,12 @@ fn embed(furaffinity: &FurAffinity, embed_colour: Option<Colour>) -> CreateEmbed
     }
 
     if !furaffinity.description.is_empty() {
-        let re = Regex::new("<([^>]*)>").unwrap();
+        let re = match Regex::new("<([^>]*)>") {
+            Ok(ok) => ok,
+            Err(err) => {
+                panic!("Failed to match the regex - {err}");
+            }
+        };
         let description_modified = furaffinity.description.replace("<br>", "\n");
         let result = re.replace_all(&description_modified, "");
         embed.description(result);
@@ -142,7 +147,12 @@ pub async fn furaffinity_client(url: Option<&String>, submission_id: Option<i64>
     let body = RequestBody { cookies, bbcode: false };
 
     let request_url = if let Some(url) = url {
-        let regex = Regex::new(FURAFFINITY_REGEX).unwrap();
+        let regex = match Regex::new(FURAFFINITY_REGEX) {
+            Ok(ok) => ok,
+            Err(err) => {
+                panic!("Failed to match the regex - {err}");
+            }
+        };
         let mut post_id = Vec::new();
         for cap in regex.captures_iter(url) {
             if let Some(capture) = cap.name("submission_id") {
