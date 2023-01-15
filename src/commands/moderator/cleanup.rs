@@ -1,8 +1,17 @@
 use crate::{Context, Error};
 
 /// Purge X messages from the bot
-#[poise::command(prefix_command, slash_command, category = "Moderation", required_bot_permissions = "MANAGE_MESSAGES", ephemeral)]
-pub async fn cleanup(ctx: Context<'_>, #[description = "Number of messages to delete"] num_messages: Option<usize>) -> Result<(), Error> {
+#[poise::command(
+    prefix_command,
+    slash_command,
+    category = "Moderation",
+    required_bot_permissions = "MANAGE_MESSAGES",
+    ephemeral
+)]
+pub async fn cleanup(
+    ctx: Context<'_>,
+    #[description = "Number of messages to delete"] num_messages: Option<usize>
+) -> Result<(), Error> {
     let num_messages = num_messages.unwrap_or(5);
 
     let messages_to_delete = ctx

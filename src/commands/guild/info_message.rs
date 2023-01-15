@@ -12,7 +12,8 @@ pub async fn message(
     let message_id_resolved = match message_query.parse::<u64>() {
         Ok(parsed_message_id) => parsed_message_id,
         Err(err) => {
-            ctx.say(format!("Had a fucky wucky (you probably didn't pass just a number)\n{err}")).await?;
+            ctx.say(format!("Had a fucky wucky (you probably didn't pass just a number)\n{err}"))
+                .await?;
             return Ok(());
         }
     };
@@ -20,7 +21,8 @@ pub async fn message(
     let message = match ctx.http().get_message(channel_query.id().0, message_id_resolved).await {
         Ok(ok) => ok,
         Err(err) => {
-            ctx.say(format!("Failed to get the message for the following reason:\n{err}")).await?;
+            ctx.say(format!("Failed to get the message for the following reason:\n{err}"))
+                .await?;
             return Ok(());
         }
     };
@@ -30,7 +32,10 @@ pub async fn message(
 
     // Create an embed for the data we wish to show, filling it with key data
     let mut embed = CreateEmbed::default();
-    embed.colour(guild_accent_colour(ctx.data().config.read().await.accent_colour, guild.clone()));
+    embed.colour(guild_accent_colour(
+        ctx.data().config.read().await.accent_colour,
+        guild.clone()
+    ));
     if message.content.is_empty() {
         embed.description("　");
     } else {
@@ -46,9 +51,17 @@ pub async fn message(
 
     // Set author
     if let Ok(member) = &member {
-        embed.author(|author| author.icon_url(&member.avatar_url().unwrap_or_default()).name(&member.display_name()))
+        embed.author(|author| {
+            author
+                .icon_url(&member.avatar_url().unwrap_or_default())
+                .name(&member.display_name())
+        })
     } else {
-        embed.author(|author| author.icon_url(&message.author.avatar_url().unwrap_or_default()).name(&message.author.name))
+        embed.author(|author| {
+            author
+                .icon_url(&message.author.avatar_url().unwrap_or_default())
+                .name(&message.author.name)
+        })
     };
 
     // Set Fields

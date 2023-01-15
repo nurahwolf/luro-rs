@@ -58,10 +58,25 @@ pub fn roll_die(times: u64, sides: NonZeroU64, fm: FilterModifier<u64>, mut rng:
     }
 }
 
-const DIR: &[&str] = &["North", "North East", "East", "South East", "South", "South West", "West", "North West", "Stay"];
+const DIR: &[&str] = &[
+    "North",
+    "North East",
+    "East",
+    "South East",
+    "South",
+    "South West",
+    "West",
+    "North West",
+    "Stay"
+];
 
 pub fn roll_direction() -> String {
-    let value = roll_die(1, NonZeroU64::new(DIR.len() as u64).unwrap(), FilterModifier::None, rand::thread_rng());
+    let value = roll_die(
+        1,
+        NonZeroU64::new(DIR.len() as u64).unwrap(),
+        FilterModifier::None,
+        rand::thread_rng()
+    );
     DIR[value.total as usize - 1].to_string()
 }
 
@@ -429,7 +444,9 @@ impl Ast {
             }
 
             Ast::Dice(None, r, fm, dp) => Ast::Dice(Some(Box::new(Ast::Const("1".to_string()))), r, fm, dp).interp(rolls)?,
-            Ast::Dice(l, None, fm, dp) => Ast::Dice(l, Some(Box::new(Ast::Const(DEFAULT_SIDES.to_string()))), fm, dp).interp(rolls)?,
+            Ast::Dice(l, None, fm, dp) => {
+                Ast::Dice(l, Some(Box::new(Ast::Const(DEFAULT_SIDES.to_string()))), fm, dp).interp(rolls)?
+            }
 
             Ast::Dice(Some(l), Some(r), fm, dp) => {
                 if let (Value::Int(lv), Value::Int(rv)) = (l.interp(rolls)?, r.interp(rolls)?) {
@@ -445,7 +462,12 @@ impl Ast {
                         })
                         .swap()?;
 
-                    let roll = roll_die(lv as u64, NonZeroU64::new(rv as u64).ok_or("Can't roll zero sided die")?, fm_int, rand::thread_rng());
+                    let roll = roll_die(
+                        lv as u64,
+                        NonZeroU64::new(rv as u64).ok_or("Can't roll zero sided die")?,
+                        fm_int,
+                        rand::thread_rng()
+                    );
                     let total = roll.total;
 
                     rolls.push((dp, roll));
@@ -564,7 +586,9 @@ impl<'a> Parser<'a> {
         let result = self.parse_expr(Options::new(self.source.clone()))?;
 
         if self.expr.next().is_some() {
-            return Err(Options::new(self.source.clone()).pos(self.pos).message("unexpected trailing character(s)"));
+            return Err(Options::new(self.source.clone())
+                .pos(self.pos)
+                .message("unexpected trailing character(s)"));
         }
 
         Ok(result)
@@ -675,7 +699,8 @@ impl<'a> Parser<'a> {
 
         let rolls = if self.advanced && self.accept('(', &options).is_ok() {
             let sm = self.parse_sum(&options)?;
-            self.accept(')', &options).map_err(|e| e.message("missing closing parenthesis"))?;
+            self.accept(')', &options)
+                .map_err(|e| e.message("missing closing parenthesis"))?;
 
             Some(Box::new(sm))
         } else {
@@ -692,7 +717,8 @@ impl<'a> Parser<'a> {
         let backup = self.backup();
         let sides = if self.advanced && self.accept('(', &options).is_ok() {
             let sm = self.parse_sum(&options)?;
-            self.accept(')', &options).map_err(|e| e.message("missing closing parenthesis"))?;
+            self.accept(')', &options)
+                .map_err(|e| e.message("missing closing parenthesis"))?;
 
             Some(Box::new(sm))
         } else {
@@ -705,13 +731,21 @@ impl<'a> Parser<'a> {
         };
 
         let fm = if self.accept_string("kh", &options).is_ok() || self.accept('h', &options).is_ok() {
-            FilterModifier::KeepHighest(Box::new(self.parse_number(&options).unwrap_or_else(|_| Ast::Const("1".to_string()))))
+            FilterModifier::KeepHighest(Box::new(
+                self.parse_number(&options).unwrap_or_else(|_| Ast::Const("1".to_string()))
+            ))
         } else if self.accept_string("dl", &options).is_ok() || self.accept('l', &options).is_ok() {
-            FilterModifier::DropLowest(Box::new(self.parse_number(&options).unwrap_or_else(|_| Ast::Const("1".to_string()))))
+            FilterModifier::DropLowest(Box::new(
+                self.parse_number(&options).unwrap_or_else(|_| Ast::Const("1".to_string()))
+            ))
         } else if self.accept_string("dh", &options).is_ok() {
-            FilterModifier::DropHighest(Box::new(self.parse_number(&options).unwrap_or_else(|_| Ast::Const("1".to_string()))))
+            FilterModifier::DropHighest(Box::new(
+                self.parse_number(&options).unwrap_or_else(|_| Ast::Const("1".to_string()))
+            ))
         } else if self.accept_string("kl", &options).is_ok() {
-            FilterModifier::KeepLowest(Box::new(self.parse_number(&options).unwrap_or_else(|_| Ast::Const("1".to_string()))))
+            FilterModifier::KeepLowest(Box::new(
+                self.parse_number(&options).unwrap_or_else(|_| Ast::Const("1".to_string()))
+            ))
         } else {
             FilterModifier::None
         };
@@ -793,13 +827,34 @@ pub fn roll_inline(s: &str, advanced: bool) -> Result<RollResult, String> {
 
 fn replace_rolls(ast: Ast, lookup: &HashMap<u64, Roll>, func: fn(&Roll) -> String) -> Ast {
     return match ast {
-        Ast::Add(l, r) => Ast::Add(Box::from(replace_rolls(*l, lookup, func)), Box::from(replace_rolls(*r, lookup, func))),
-        Ast::Sub(l, r) => Ast::Sub(Box::from(replace_rolls(*l, lookup, func)), Box::from(replace_rolls(*r, lookup, func))),
-        Ast::Mul(l, r) => Ast::Mul(Box::from(replace_rolls(*l, lookup, func)), Box::from(replace_rolls(*r, lookup, func))),
-        Ast::Div(l, r) => Ast::Div(Box::from(replace_rolls(*l, lookup, func)), Box::from(replace_rolls(*r, lookup, func))),
-        Ast::Mod(l, r) => Ast::Mod(Box::from(replace_rolls(*l, lookup, func)), Box::from(replace_rolls(*r, lookup, func))),
-        Ast::IDiv(l, r) => Ast::IDiv(Box::from(replace_rolls(*l, lookup, func)), Box::from(replace_rolls(*r, lookup, func))),
-        Ast::Power(l, r) => Ast::Power(Box::from(replace_rolls(*l, lookup, func)), Box::from(replace_rolls(*r, lookup, func))),
+        Ast::Add(l, r) => Ast::Add(
+            Box::from(replace_rolls(*l, lookup, func)),
+            Box::from(replace_rolls(*r, lookup, func))
+        ),
+        Ast::Sub(l, r) => Ast::Sub(
+            Box::from(replace_rolls(*l, lookup, func)),
+            Box::from(replace_rolls(*r, lookup, func))
+        ),
+        Ast::Mul(l, r) => Ast::Mul(
+            Box::from(replace_rolls(*l, lookup, func)),
+            Box::from(replace_rolls(*r, lookup, func))
+        ),
+        Ast::Div(l, r) => Ast::Div(
+            Box::from(replace_rolls(*l, lookup, func)),
+            Box::from(replace_rolls(*r, lookup, func))
+        ),
+        Ast::Mod(l, r) => Ast::Mod(
+            Box::from(replace_rolls(*l, lookup, func)),
+            Box::from(replace_rolls(*r, lookup, func))
+        ),
+        Ast::IDiv(l, r) => Ast::IDiv(
+            Box::from(replace_rolls(*l, lookup, func)),
+            Box::from(replace_rolls(*r, lookup, func))
+        ),
+        Ast::Power(l, r) => Ast::Power(
+            Box::from(replace_rolls(*l, lookup, func)),
+            Box::from(replace_rolls(*r, lookup, func))
+        ),
         Ast::Minus(l) => Ast::Minus(Box::from(replace_rolls(*l, lookup, func))),
         Ast::Dice(_, _, _, pos) => {
             // Safety: we exhaustively add all positions to this hashmap so it must contain everything

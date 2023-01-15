@@ -39,12 +39,24 @@ pub async fn playfaded(ctx: Context<'_>, song: String) -> Result<(), Error> {
 
             // This shows how to periodically fire an event, in this case to
             // periodically make a track quieter until it can be no longer heard.
-            let _ = song.add_event(Event::Periodic(Duration::from_secs(5), Some(Duration::from_secs(7))), SongFader { chan_id, http: send_http });
+            let _ = song.add_event(
+                Event::Periodic(Duration::from_secs(5), Some(Duration::from_secs(7))),
+                SongFader {
+                    chan_id,
+                    http: send_http
+                }
+            );
 
             // This shows how to fire an event once an audio track completes,
             // either due to hitting the end of the bytestream or stopped by user code.
             let send_http = ctx.serenity_context().http.clone();
-            let _ = song.add_event(Event::Track(TrackEvent::End), SongEndNotifier { chan_id, http: send_http });
+            let _ = song.add_event(
+                Event::Track(TrackEvent::End),
+                SongEndNotifier {
+                    chan_id,
+                    http: send_http
+                }
+            );
 
             ctx.say("Playing song").await?;
         } else {

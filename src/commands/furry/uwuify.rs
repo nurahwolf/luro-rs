@@ -69,9 +69,11 @@ pub async fn execute_webhook_as_user(ctx: Context<'_>, user: &User, uwu: &String
         if webhook.name.contains(webhook_name) {
             webhook
                 .execute(ctx, false, |w| {
-                    w.content(uwu)
-                        .username(message_author.display_name())
-                        .avatar_url(message_author.avatar_url().unwrap_or(message_author.user.avatar_url().unwrap_or_default()))
+                    w.content(uwu).username(message_author.display_name()).avatar_url(
+                        message_author
+                            .avatar_url()
+                            .unwrap_or(message_author.user.avatar_url().unwrap_or_default())
+                    )
                 })
                 .await?;
         }

@@ -4,10 +4,17 @@ use poise::{
 };
 use regex::Regex;
 
-use crate::{constants::FURAFFINITY_REGEX, database::add_discord_message, functions::furaffinity::event_furaffinity, Data, Error};
+use crate::{
+    constants::FURAFFINITY_REGEX, database::add_discord_message, functions::furaffinity::event_furaffinity, Data, Error
+};
 
 /// A Serenity listener for the [Message] type
-pub async fn message(message: &Message, ctx: &Context, framework: &FrameworkContext<'_, Data, Error>, user_data: &Data) -> Result<(), Error> {
+pub async fn message(
+    message: &Message,
+    ctx: &Context,
+    framework: &FrameworkContext<'_, Data, Error>,
+    user_data: &Data
+) -> Result<(), Error> {
     // Return if the sender was actually the bot
     if message.author.id == framework.bot_id {
         return Ok(());

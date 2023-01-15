@@ -49,7 +49,13 @@ pub struct ChannelDurationNotifier {
 impl VoiceEventHandler for ChannelDurationNotifier {
     async fn act(&self, _ctx: &EventContext<'_>) -> Option<Event> {
         let count_before = self.count.fetch_add(1, Ordering::Relaxed);
-        self.chan_id.say(&self.http, &format!("I've been in this channel for {} minutes!", count_before + 1)).await.ok();
+        self.chan_id
+            .say(
+                &self.http,
+                &format!("I've been in this channel for {} minutes!", count_before + 1)
+            )
+            .await
+            .ok();
 
         None
     }

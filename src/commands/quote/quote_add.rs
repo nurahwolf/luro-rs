@@ -8,7 +8,10 @@ use crate::{
 
 /// Save the random shit a user has said;)
 #[poise::command(context_menu_command = "Save this quote", category = "Quotes")]
-pub async fn addquote(ctx: Context<'_>, #[description = "The quote which you wish to add to the database"] message: Message) -> Result<(), Error> {
+pub async fn addquote(
+    ctx: Context<'_>,
+    #[description = "The quote which you wish to add to the database"] message: Message
+) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;
     let quotes = &ctx.data().quotes.read().await.quotes;
     let mut new_quote = vec![Quote {

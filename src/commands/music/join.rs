@@ -5,7 +5,10 @@ use songbird::Event;
 use crate::{structs::music::ChannelDurationNotifier, Context, Error};
 /// Join a VC channel.
 #[poise::command(slash_command, prefix_command, guild_only, ephemeral, category = "Music")]
-pub async fn join(ctx: Context<'_>, #[description = "Announce how long the bot has been in the voice channel"] announce: Option<bool>) -> Result<(), Error> {
+pub async fn join(
+    ctx: Context<'_>,
+    #[description = "Announce how long the bot has been in the voice channel"] announce: Option<bool>
+) -> Result<(), Error> {
     if let Some(guild) = ctx.guild() {
         let guild_id = guild.id;
         let voice_channel = guild.voice_states.get(&ctx.author().id);

@@ -13,12 +13,18 @@ struct XkcdComic {
 
 /// Retrieves the latest or a given comic from xkcd.
 #[poise::command(slash_command, prefix_command, category = "API")]
-pub async fn xkcd(ctx: Context<'_>, #[description = "Enter the comic number you want, or 0 for the latest"] comic_number: u32) -> Result<(), Error> {
+pub async fn xkcd(
+    ctx: Context<'_>,
+    #[description = "Enter the comic number you want, or 0 for the latest"] comic_number: u32
+) -> Result<(), Error> {
     let latest_comic = "https://xkcd.com/info.0.json";
     let xkcd_url = format!("https://xkcd.com/{comic_number}/info.0.json");
 
     let client = reqwest::Client::new();
-    let request = client.get(if comic_number == 0 { latest_comic } else { &xkcd_url }).send().await?;
+    let request = client
+        .get(if comic_number == 0 { latest_comic } else { &xkcd_url })
+        .send()
+        .await?;
 
     if request.status() == StatusCode::NOT_FOUND {
         ctx.say("You did not provide a valid xkcd comic ID!").await?;

@@ -13,11 +13,23 @@ pub async fn embed(
     let accent_colour = ctx.data().config.read().await.accent_colour;
     if let Some(channel) = channel {
         channel
-            .send_message(ctx, |f| f.embed(|e| e.title(title).description(content).color(guild_accent_colour(accent_colour, ctx.guild()))))
+            .send_message(ctx, |f| {
+                f.embed(|e| {
+                    e.title(title)
+                        .description(content)
+                        .color(guild_accent_colour(accent_colour, ctx.guild()))
+                })
+            })
             .await?;
     } else {
-        ctx.send(|b| b.embed(|b| b.title(title).description(content).color(guild_accent_colour(accent_colour, ctx.guild()))))
-            .await?;
+        ctx.send(|b| {
+            b.embed(|b| {
+                b.title(title)
+                    .description(content)
+                    .color(guild_accent_colour(accent_colour, ctx.guild()))
+            })
+        })
+        .await?;
     }
 
     ctx.send(|builder| builder.content("Done!").ephemeral(true)).await?;

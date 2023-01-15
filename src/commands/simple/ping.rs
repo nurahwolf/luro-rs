@@ -19,7 +19,9 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
 
     let manager = shard_manager.lock().await;
     let runners = manager.runners.lock().await;
-    let runner = runners.get(&ShardId(ctx.serenity_context().shard_id)).ok_or("No shard found")?;
+    let runner = runners
+        .get(&ShardId(ctx.serenity_context().shard_id))
+        .ok_or("No shard found")?;
 
     let shard_response = match runner.latency {
         Some(latency) => format!("`{}ms`", latency.as_millis()),

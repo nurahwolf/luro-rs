@@ -8,7 +8,10 @@ use tracing::log::error;
 #[poise::command(prefix_command, slash_command, category = "General")]
 pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;
-    let bot_user = ctx.cache().expect("Failed to get the current bot user in cache").current_user();
+    let bot_user = ctx
+        .cache()
+        .expect("Failed to get the current bot user in cache")
+        .current_user();
     let url = match bot_user.invite_url(ctx, Permissions::ADMINISTRATOR).await {
         Ok(invite) => invite,
         Err(why) => {

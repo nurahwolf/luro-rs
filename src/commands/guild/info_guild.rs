@@ -11,7 +11,11 @@ use std::fmt::Write;
 pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] guild: Option<Guild>) -> Result<(), Error> {
     // Return the current guild, or the guild the user requested
     let guild_resolved = match &guild {
-        Some(guild_specified) => ctx.serenity_context().cache.guild(guild_specified).ok_or("Could not find the guild you entered")?,
+        Some(guild_specified) => ctx
+            .serenity_context()
+            .cache
+            .guild(guild_specified)
+            .ok_or("Could not find the guild you entered")?,
         None => ctx.guild().ok_or("Could not find the guild I am in")?
     };
 
@@ -21,18 +25,29 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
 
     // Create an embed for the data we wish to show, filling it with key data
     let mut embed = CreateEmbed::default();
-    embed.colour(guild_accent_colour(ctx.data().config.read().await.accent_colour, Some(guild_resolved.to_owned())));
+    embed.colour(guild_accent_colour(
+        ctx.data().config.read().await.accent_colour,
+        Some(guild_resolved.to_owned())
+    ));
     embed.title(&guild_resolved.name);
     embed.thumbnail(&guild_resolved.icon_url().unwrap_or_default());
 
     // Information that does not need its own field
     let mut description = String::new();
-    let guild_channels: Vec<_> = guild_resolved.channels.iter().filter_map(|(_, c)| c.clone().guild()).collect();
+    let guild_channels: Vec<_> = guild_resolved
+        .channels
+        .iter()
+        .filter_map(|(_, c)| c.clone().guild())
+        .collect();
     let guild_channels_all = guild_channels.len();
     let guild_channels_text = guild_channels.iter().filter(|c| c.kind == ChannelType::Text).count();
     let guild_channels_voice = guild_channels.iter().filter(|c| c.kind == ChannelType::Voice).count();
 
-    writeln!(description, "Guild Created: <t:{0}>", ctx.guild_id().expect("Guild not found").created_at().unix_timestamp())?;
+    writeln!(
+        description,
+        "Guild Created: <t:{0}>",
+        ctx.guild_id().expect("Guild not found").created_at().unix_timestamp()
+    )?;
     if guild.is_none() {
         writeln!(description, "Highest Role: {}", highest_role.1.name)?;
     } else {
@@ -40,7 +55,10 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
     };
     writeln!(description, "Online Members: {}", &guild_resolved.presences.len())?;
     writeln!(description, "Total Members: {}", &guild_resolved.members.len())?;
-    writeln!(description, "Total Channels: {guild_channels_all} ({guild_channels_text} text, {guild_channels_voice} voice)")?;
+    writeln!(
+        description,
+        "Total Channels: {guild_channels_all} ({guild_channels_text} text, {guild_channels_voice} voice)"
+    )?;
 
     embed.description(description);
 
@@ -75,7 +93,10 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
         };
         embed.field(
             "Nitro Statistics",
-            format!("**Total Boosts:** {0}\n**Boost Tier:** {guild_boost_tier}", guild_resolved.premium_subscription_count),
+            format!(
+                "**Total Boosts:** {0}\n**Boost Tier:** {guild_boost_tier}",
+                guild_resolved.premium_subscription_count
+            ),
             false
         );
     };

@@ -20,13 +20,16 @@ pub async fn botnick(
         None => {
             ctx.say("Failed to get the guild").await?;
             return Ok(());
-        }, 
+        }
     };
     let gid_u64 = gid.as_u64();
 
     match nick {
         Some(nick) => {
-            ctx.serenity_context().http.edit_nickname(*gid_u64, Some(&nick.to_owned())).await?;
+            ctx.serenity_context()
+                .http
+                .edit_nickname(*gid_u64, Some(&nick.to_owned()))
+                .await?;
             ctx.say(format!("Set my nickname to \"{nick}\".")).await?;
         }
         None => {

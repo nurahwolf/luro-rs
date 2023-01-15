@@ -8,9 +8,14 @@ use crate::{functions::sendquote::send_quote, Context, Error};
 pub async fn user(ctx: Context<'_>, #[description = "User to get a random quote from"] user: User) -> Result<(), Error> {
     let quotes = &ctx.data().quotes.read().await.quotes;
 
-    let quotes_by_user = quotes.iter().enumerate().filter(|(_, quote)| quote.user_id == user.id.0).collect::<Vec<_>>();
+    let quotes_by_user = quotes
+        .iter()
+        .enumerate()
+        .filter(|(_, quote)| quote.user_id == user.id.0)
+        .collect::<Vec<_>>();
     if quotes_by_user.is_empty() {
-        ctx.say("No quotes found for that user >:c\nTell them to shitpost more").await?;
+        ctx.say("No quotes found for that user >:c\nTell them to shitpost more")
+            .await?;
         return Ok(());
     }
 
@@ -28,12 +33,20 @@ pub async fn user(ctx: Context<'_>, #[description = "User to get a random quote 
 
 /// Get random shit a user has said - User context edition
 #[poise::command(context_menu_command = "User quotes", slash_command, category = "Quotes")]
-pub async fn quote_user_context(ctx: Context<'_>, #[description = "User to get a random quote from"] user: User) -> Result<(), Error> {
+pub async fn quote_user_context(
+    ctx: Context<'_>,
+    #[description = "User to get a random quote from"] user: User
+) -> Result<(), Error> {
     let quotes = &ctx.data().quotes.read().await.quotes;
 
-    let quotes_by_user = quotes.iter().enumerate().filter(|(_, quote)| quote.user_id == user.id.0).collect::<Vec<_>>();
+    let quotes_by_user = quotes
+        .iter()
+        .enumerate()
+        .filter(|(_, quote)| quote.user_id == user.id.0)
+        .collect::<Vec<_>>();
     if quotes_by_user.is_empty() {
-        ctx.say("No quotes found for that user >:c\nTell them to shitpost more").await?;
+        ctx.say("No quotes found for that user >:c\nTell them to shitpost more")
+            .await?;
         return Ok(());
     }
 

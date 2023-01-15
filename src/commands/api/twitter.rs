@@ -12,7 +12,10 @@ pub async fn twitter(
     #[description = "The user to get"]
     user: String
 ) -> Result<(), Error> {
-    let user_fields = [("user.fields", "created_at,protected,location,public_metrics,description,verified,profile_image_url")];
+    let user_fields = [(
+        "user.fields",
+        "created_at,protected,location,public_metrics,description,verified,profile_image_url"
+    )];
     let tweet_fields = [("max_results", "5"), ("exclude", "retweets,replies")];
     let client = reqwest::Client::builder().user_agent("Luro/1.0 (nurah@wolfo.tech)").build()?;
     let mut endpoint = format!("https://api.twitter.com/2/users/by/username/{user}");
@@ -55,7 +58,10 @@ pub async fn twitter(
     ctx.send(|builder| {
         builder.embed(|embed| {
             embed
-                .title(format!("{name}{verified}", verified = if user.verified { " \\✔️" } else { "" }))
+                .title(format!(
+                    "{name}{verified}",
+                    verified = if user.verified { " \\✔️" } else { "" }
+                ))
                 .url(url)
                 .thumbnail(avatar)
                 .color(guild_accent_colour(accent_colour, ctx.guild()))
@@ -64,7 +70,15 @@ pub async fn twitter(
                     ("Username", handle, true),
                     ("Join Date", joined, true),
                     ("Protected", protected, true),
-                    ("Location", if location.is_some() { location.unwrap() } else { "None".to_string() }, true),
+                    (
+                        "Location",
+                        if location.is_some() {
+                            location.unwrap()
+                        } else {
+                            "None".to_string()
+                        },
+                        true
+                    ),
                     ("Following", following, true),
                     ("Followers", followers, true),
                     ("Tweets", tweets, true),

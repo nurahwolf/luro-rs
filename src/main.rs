@@ -1,7 +1,10 @@
 #![feature(option_result_contains)]
 use std::{collections::HashSet, env, sync::atomic::AtomicUsize};
 
-use constants::{BOT_TOKEN, CONFIG_FILE_PATH, DATABASE_FILE_PATH, FURAFFINITY_REGEX, HECK_FILE_PATH, QUOTES_FILE_PATH, SECRETS_FILE_PATH, STORIES_FILE_PATH};
+use constants::{
+    BOT_TOKEN, CONFIG_FILE_PATH, DATABASE_FILE_PATH, FURAFFINITY_REGEX, HECK_FILE_PATH, QUOTES_FILE_PATH, SECRETS_FILE_PATH,
+    STORIES_FILE_PATH
+};
 use data::{config::Config, heck::Heck, quotes::Quotes, secrets::Secrets, stories::Stories, Data};
 use poise::{
     serenity_prelude::{GatewayIntents, UserId},
@@ -38,9 +41,13 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
         poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {error:?}"),
         poise::FrameworkError::Command { error, ctx } => {
             println!("Error in command `{}`: {:?}", ctx.command().name, error,);
-            ctx.send(|message| message.ephemeral(true).content(format!("Error in command `{}`: {:?}", ctx.command().name, error)))
-                .await
-                .expect("Could not send error to channel!");
+            ctx.send(|message| {
+                message
+                    .ephemeral(true)
+                    .content(format!("Error in command `{}`: {:?}", ctx.command().name, error))
+            })
+            .await
+            .expect("Could not send error to channel!");
         }
         // We are not interested in this particular error, so handle it by the built-in function.
         error => {
@@ -122,7 +129,12 @@ async fn main() {
         .setup(|_, _, _| Box::pin(async { Ok(data) }))
         .client_settings(move |f| f.voice_manager_arc(songbird))
         .token(token)
-        .intents(GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MEMBERS | GatewayIntents::GUILD_PRESENCES);
+        .intents(
+            GatewayIntents::non_privileged()
+                | GatewayIntents::MESSAGE_CONTENT
+                | GatewayIntents::GUILD_MEMBERS
+                | GatewayIntents::GUILD_PRESENCES
+        );
 
     match framework.run().await {
         Ok(ok) => ok,

@@ -37,7 +37,13 @@ pub async fn lodestonenews(ctx: Context<'_>) -> Result<(), Error> {
             embed.footer(|f| f.text("Powered by https://lodestonenews.com"))
         });
         message.components(|c| {
-            c.create_action_row(|row| row.create_button(|b| b.label("View lodestone").style(serenity::ButtonStyle::Link).url(&newsitem.url)));
+            c.create_action_row(|row| {
+                row.create_button(|b| {
+                    b.label("View lodestone")
+                        .style(serenity::ButtonStyle::Link)
+                        .url(&newsitem.url)
+                })
+            });
             c
         });
         message

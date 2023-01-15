@@ -32,13 +32,20 @@ pub async fn channel(
     if let Some(guild_channel) = ctx.serenity_context().cache.guild_channel(regular_channel.id()) {
         // Return the current guild, or the guild the user requested
         let guild_resolved = match &guild {
-            Some(guild_specified) => ctx.serenity_context().cache.guild(guild_specified).ok_or("Could not find the guild you entered")?,
+            Some(guild_specified) => ctx
+                .serenity_context()
+                .cache
+                .guild(guild_specified)
+                .ok_or("Could not find the guild you entered")?,
             None => ctx.guild().ok_or("Could not find the guild I am in")?
         };
 
         // More embed info with some overrides
         embed.title(&guild_channel.name);
-        embed.colour(guild_accent_colour(ctx.data().config.read().await.accent_colour, Some(guild_resolved.to_owned())));
+        embed.colour(guild_accent_colour(
+            ctx.data().config.read().await.accent_colour,
+            Some(guild_resolved.to_owned())
+        ));
         embed.thumbnail(&guild_resolved.icon_url().unwrap_or_default());
 
         if let Some(topic) = guild_channel.topic {
@@ -96,7 +103,11 @@ pub async fn channel(
         }
 
         if let Some(last_pin_timestamp) = guild_channel.last_pin_timestamp {
-            embed.field("Last Message Pinned", format!("<t:{}>", last_pin_timestamp.unix_timestamp()), false);
+            embed.field(
+                "Last Message Pinned",
+                format!("<t:{}>", last_pin_timestamp.unix_timestamp()),
+                false
+            );
         }
 
         if let Some(member_count) = guild_channel.member_count {

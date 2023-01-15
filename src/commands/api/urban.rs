@@ -28,11 +28,16 @@ pub async fn urban(ctx: Context<'_>, #[description = "Search Term"] search: Stri
     let accent_colour = ctx.data().config.read().await.accent_colour;
 
     let client = reqwest::Client::new();
-    let request = client.get("https://api.urbandictionary.com/v0/define").query(&[("term", &search)]).send().await?;
+    let request = client
+        .get("https://api.urbandictionary.com/v0/define")
+        .query(&[("term", &search)])
+        .send()
+        .await?;
     let response: Response = request.json().await?;
 
     if response.definitions.is_empty() {
-        ctx.say(format!("No definitions found for `{}`. Try a different word.", &search)).await?;
+        ctx.say(format!("No definitions found for `{}`. Try a different word.", &search))
+            .await?;
         return Ok(());
     }
 

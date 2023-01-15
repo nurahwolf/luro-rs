@@ -86,7 +86,11 @@ pub async fn heck(
             write.heck.append(&mut vec![heck.0.clone()]);
             heck = (
                 HeckInt {
-                    heck: heck.0.heck.replace("<user>", user.to_string().as_str()).replace("<author>", ctx.author().to_string().as_str()), // Format the heck to mention the user in this instance,
+                    heck: heck
+                        .0
+                        .heck
+                        .replace("<user>", user.to_string().as_str())
+                        .replace("<author>", ctx.author().to_string().as_str()), // Format the heck to mention the user in this instance,
                     author_id: ctx.author().id.0
                 },
                 write.heck.len() - 1

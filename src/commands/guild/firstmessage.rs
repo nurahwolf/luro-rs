@@ -11,14 +11,14 @@ pub async fn firstmessage(ctx: Context<'_>, #[description = "The channel"] chann
         Err(err) => {
             ctx.say(format!("Failed to get messages because `{err}`")).await?;
             return Ok(());
-        }, 
+        }
     };
     let msg = match messages.first() {
         Some(ok) => ok,
         None => {
             ctx.say("Failed to find any messages").await?;
             return Ok(());
-        }, 
+        }
     };
     let msg_link = msg.link();
     let accent_colour = ctx.data().config.read().await.accent_colour;

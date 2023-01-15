@@ -64,7 +64,8 @@ pub async fn play(
                 }
             }
 
-            ctx.say(format!("Added song to queue: position {}", handler.queue().len())).await?;
+            ctx.say(format!("Added song to queue: position {}", handler.queue().len()))
+                .await?;
         } else {
             ctx.say("Not in a voice channel to play in").await?;
         }

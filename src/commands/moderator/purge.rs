@@ -17,23 +17,35 @@ pub async fn purge(
 ) -> Result<(), Error> {
     // Delete from one particular user
     if let Some(user) = user {
-        let messages_to_delete = ctx.channel_id().messages(ctx, |m| m.limit(100)).await?.into_iter().filter(|filter| filter.author == user);
+        let messages_to_delete = ctx
+            .channel_id()
+            .messages(ctx, |m| m.limit(100))
+            .await?
+            .into_iter()
+            .filter(|filter| filter.author == user);
 
         let messages_vector: Vec<_> = messages_to_delete.clone().collect();
         if messages_vector.is_empty() {
             ctx.say("No messages found to delete, sorry").await?;
         } else if messages_vector.len() == 1 {
-            ctx.channel_id().delete_message(ctx, messages_vector.first().unwrap().id).await?;
+            ctx.channel_id()
+                .delete_message(ctx, messages_vector.first().unwrap().id)
+                .await?;
             ctx.say(format!("Deleted 1 message by user {user} 👌")).await?;
         } else {
             ctx.channel_id().delete_messages(ctx, messages_to_delete).await?;
-            ctx.say(format!("Deleted {} messages by user {} 👌", messages_vector.len(), user)).await?;
+            ctx.say(format!("Deleted {} messages by user {} 👌", messages_vector.len(), user))
+                .await?;
         }
         return Ok(());
     }
 
     let number_of_messages: u64 = num.try_into().unwrap_or(1);
-    let messages_to_delete = ctx.channel_id().messages(ctx, |m| m.limit(number_of_messages)).await?.into_iter();
+    let messages_to_delete = ctx
+        .channel_id()
+        .messages(ctx, |m| m.limit(number_of_messages))
+        .await?
+        .into_iter();
     let messages_vector: Vec<_> = messages_to_delete.clone().collect();
 
     if num == 0 || num >= 100 {

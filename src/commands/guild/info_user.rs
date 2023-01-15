@@ -117,15 +117,30 @@ async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result
                     {
                         if client_status.desktop.is_some() && client_status.mobile.is_none() && client_status.web.is_none() {
                             "Desktop"
-                        } else if client_status.mobile.is_some() && client_status.desktop.is_none() && client_status.web.is_none() {
+                        } else if client_status.mobile.is_some()
+                            && client_status.desktop.is_none()
+                            && client_status.web.is_none()
+                        {
                             "Mobile"
-                        } else if client_status.web.is_some() && client_status.desktop.is_none() && client_status.mobile.is_none() {
+                        } else if client_status.web.is_some()
+                            && client_status.desktop.is_none()
+                            && client_status.mobile.is_none()
+                        {
                             "Web"
-                        } else if client_status.desktop.is_some() && client_status.mobile.is_some() && client_status.web.is_none() {
+                        } else if client_status.desktop.is_some()
+                            && client_status.mobile.is_some()
+                            && client_status.web.is_none()
+                        {
                             "Desktop and Mobile"
-                        } else if client_status.desktop.is_some() && client_status.mobile.is_some() && client_status.web.is_some() {
+                        } else if client_status.desktop.is_some()
+                            && client_status.mobile.is_some()
+                            && client_status.web.is_some()
+                        {
                             "Desktop, Mobile, and Web"
-                        } else if client_status.mobile.is_some() && client_status.web.is_some() && client_status.desktop.is_none() {
+                        } else if client_status.mobile.is_some()
+                            && client_status.web.is_some()
+                            && client_status.desktop.is_none()
+                        {
                             "Mobile and Web"
                         } else {
                             "Desktop and Web"
@@ -156,7 +171,11 @@ async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result
         if let Some(user_roles) = guild_user.roles(ctx) {
             // Server Roles
             let mut user_roles_string = String::new();
-            let same_guild = if let Some(ctx_guild) = ctx.guild() { guild.id == ctx_guild.id } else { false };
+            let same_guild = if let Some(ctx_guild) = ctx.guild() {
+                guild.id == ctx_guild.id
+            } else {
+                false
+            };
             let sorted_roles = user_roles.iter().sorted_by_key(|r| r.position).rev();
 
             for role in sorted_roles {
@@ -193,7 +212,11 @@ async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result
         if !track_art.is_empty() {
             embed.thumbnail(track_art);
         } else {
-            embed.thumbnail(&guild_user.avatar_url().unwrap_or(guild_user.user.avatar_url().unwrap_or_default()));
+            embed.thumbnail(
+                &guild_user
+                    .avatar_url()
+                    .unwrap_or(guild_user.user.avatar_url().unwrap_or_default())
+            );
         }
 
         // Display the guild owner as the embed author

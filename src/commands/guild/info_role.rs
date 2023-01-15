@@ -26,7 +26,11 @@ pub async fn role(
     embed.field("Permissions", role.permissions, false);
 
     let mut user_list = String::new();
-    let members_with_role: Vec<_> = guild.members.iter().filter(|filter| filter.1.roles.contains(&role.id)).collect();
+    let members_with_role: Vec<_> = guild
+        .members
+        .iter()
+        .filter(|filter| filter.1.roles.contains(&role.id))
+        .collect();
     for member in &members_with_role {
         if user_list.len() <= 4000 {
             if plaintext_users {

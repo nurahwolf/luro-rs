@@ -5,7 +5,12 @@ use crate::{
 };
 
 /// Roll those dice nerd
-#[poise::command(slash_command, prefix_command, category = "Dice", subcommands("dice", "help", "stats", "direction"))]
+#[poise::command(
+    slash_command,
+    prefix_command,
+    category = "Dice",
+    subcommands("dice", "help", "stats", "direction")
+)]
 pub async fn roll(
     ctx: Context<'_>,
     #[description = "Standard Dice Notation: 6d20dl2-10 (6x d20 dice, drop lowest 2, take away 10 from result)"]

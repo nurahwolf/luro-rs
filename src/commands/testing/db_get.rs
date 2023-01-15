@@ -31,7 +31,11 @@ pub async fn db_get(
             ctx.send(|builder| {
                 builder.embed(|embed| {
                     embed
-                        .author(|author| author.name(&message.author.name).icon_url(&message.author.avatar_url().unwrap_or_default()))
+                        .author(|author| {
+                            author
+                                .name(&message.author.name)
+                                .icon_url(&message.author.avatar_url().unwrap_or_default())
+                        })
                         .title("Message Link")
                         .url(message.link())
                         .color(guild_accent_colour(accent_colour, ctx.guild()))
@@ -55,7 +59,8 @@ pub async fn db_get(
             .await?;
         }
         Err(err) => {
-            ctx.say(format!("Had a fucky wucky (you probably didn't pass just a number)\n{err}")).await?;
+            ctx.say(format!("Had a fucky wucky (you probably didn't pass just a number)\n{err}"))
+                .await?;
         }
     };
 

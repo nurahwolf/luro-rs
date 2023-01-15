@@ -44,7 +44,13 @@ fn e621_description(e621_post: &E621Post, disable_blacklist: bool, blacklist: St
     Ok(description)
 }
 
-async fn e621_client(user_agent_string: String, token: Option<String>, disable_blacklist: bool, mut search: String, blacklist: String) -> Result<E621Posts, reqwest::Error> {
+async fn e621_client(
+    user_agent_string: String,
+    token: Option<String>,
+    disable_blacklist: bool,
+    mut search: String,
+    blacklist: String
+) -> Result<E621Posts, reqwest::Error> {
     let client = match reqwest::Client::builder().user_agent(user_agent_string).build() {
         Ok(client) => client,
         Err(err) => panic!("E621: Failed to create request builder - {err}")
@@ -109,7 +115,8 @@ pub async fn e621(
     {
         Ok(e621_posts) => e621_posts,
         Err(err) => {
-            ctx.say(format!("Failed to resolve posts because of the following reason - {err}")).await?;
+            ctx.say(format!("Failed to resolve posts because of the following reason - {err}"))
+                .await?;
             return Ok(());
         }
     };
@@ -153,7 +160,15 @@ pub async fn e621(
                 Err(err) => panic!("E621: Failed to create description - {err}")
             };
 
-            let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string, &post);
+            let embed = embed(
+                &search.clone(),
+                &description,
+                colour,
+                &post.file.url,
+                no_description,
+                search_string,
+                &post
+            );
             embeds.push(embed);
 
             writeln!(content_description, "{}", post.file.url)?;
@@ -181,11 +196,18 @@ pub async fn e621(
         })
         .await?;
 
-    let mut interaction_stream = reply_handle.message().await?.await_component_interactions(ctx).timeout(Duration::from_secs(60 * 3)).build();
+    let mut interaction_stream = reply_handle
+        .message()
+        .await?
+        .await_component_interactions(ctx)
+        .timeout(Duration::from_secs(60 * 3))
+        .build();
 
     // Act on our interaction context
     while let Some(interaction) = interaction_stream.next().await {
-        interaction.create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage)).await?;
+        interaction
+            .create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage))
+            .await?;
 
         if interaction.data.custom_id.contains("random") {
             embeds.clear();
@@ -207,7 +229,15 @@ pub async fn e621(
                         Err(err) => panic!("E621: Failed to create description - {err}")
                     };
 
-                    let embed = embed(&search.clone(), &description, colour, &post.file.url, no_description, search_string, &post);
+                    let embed = embed(
+                        &search.clone(),
+                        &description,
+                        colour,
+                        &post.file.url,
+                        no_description,
+                        search_string,
+                        &post
+                    );
                     embeds.push(embed);
 
                     writeln!(content_description, "{}", post.file.url)?;
@@ -250,7 +280,15 @@ pub async fn e621(
     Ok(())
 }
 
-fn embed(title: &String, description: &String, colour: Colour, file_url: &String, no_description: bool, search_terms: &String, e621_post: &E621Post) -> CreateEmbed {
+fn embed(
+    title: &String,
+    description: &String,
+    colour: Colour,
+    file_url: &String,
+    no_description: bool,
+    search_terms: &String,
+    e621_post: &E621Post
+) -> CreateEmbed {
     let mut embed = CreateEmbed::default();
     embed.title(title);
     embed.url(format!("https://e621.net/posts?tags={search_terms}"));
@@ -259,7 +297,12 @@ fn embed(title: &String, description: &String, colour: Colour, file_url: &String
     if !no_description {
         embed.description(description);
     }
-    embed.footer(|footer| footer.text(format!("{} 👍 {} 👎 {} ❤️", e621_post.score.up, e621_post.score.down, e621_post.fav_count)));
+    embed.footer(|footer| {
+        footer.text(format!(
+            "{} 👍 {} 👎 {} ❤️",
+            e621_post.score.up, e621_post.score.down, e621_post.fav_count
+        ))
+    });
     embed
 }
 
@@ -273,16 +316,37 @@ pub struct E621ComponentData {
 pub fn components(disabled: bool, mut e621_component_data: E621ComponentData) -> CreateComponents {
     let mut components = CreateComponents::default();
     components.create_action_row(|row| {
-        row.create_button(|button| button.label("Another random image").style(ButtonStyle::Primary).custom_id("random").disabled(disabled));
+        row.create_button(|button| {
+            button
+                .label("Another random image")
+                .style(ButtonStyle::Primary)
+                .custom_id("random")
+                .disabled(disabled)
+        });
 
-        row.create_button(|button| button.label("View on E621").style(ButtonStyle::Link).url(e621_component_data.e621_post_link));
+        row.create_button(|button| {
+            button
+                .label("View on E621")
+                .style(ButtonStyle::Link)
+                .url(e621_component_data.e621_post_link)
+        });
 
-        row.create_button(|button| button.label("Search E621").style(ButtonStyle::Link).url(e621_component_data.e621_search_tags_link));
+        row.create_button(|button| {
+            button
+                .label("Search E621")
+                .style(ButtonStyle::Link)
+                .url(e621_component_data.e621_search_tags_link)
+        });
 
         if !e621_component_data.sources.is_empty() {
             for n in 0..2 {
                 if !e621_component_data.sources.is_empty() {
-                    row.create_button(|button| button.label(format!("Source {}", n + 1)).style(ButtonStyle::Link).url(e621_component_data.sources.pop().unwrap()));
+                    row.create_button(|button| {
+                        button
+                            .label(format!("Source {}", n + 1))
+                            .style(ButtonStyle::Link)
+                            .url(e621_component_data.sources.pop().unwrap())
+                    });
                 }
             }
         }
@@ -296,7 +360,12 @@ pub fn components(disabled: bool, mut e621_component_data: E621ComponentData) ->
             components.create_action_row(|row| {
                 for n in 0..5 {
                     if !e621_component_data.sources.is_empty() {
-                        row.create_button(|button| button.label(format!("Source {}", n + 1)).style(ButtonStyle::Link).url(e621_component_data.sources.pop().unwrap()));
+                        row.create_button(|button| {
+                            button
+                                .label(format!("Source {}", n + 1))
+                                .style(ButtonStyle::Link)
+                                .url(e621_component_data.sources.pop().unwrap())
+                        });
                     }
                 }
 

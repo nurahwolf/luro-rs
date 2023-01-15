@@ -97,7 +97,8 @@ pub async fn fursona(
     };
 
     if files.is_empty() {
-        ctx.say("I could not find any files in my backend. Did you specify the right fursona name?").await?;
+        ctx.say("I could not find any files in my backend. Did you specify the right fursona name?")
+            .await?;
         return Ok(());
     }
 

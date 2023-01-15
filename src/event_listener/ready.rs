@@ -23,6 +23,7 @@ pub async fn ready_listener(ready: &Ready, ctx: &Context) -> Result<(), Error> {
     println!("Connected to and serving a total of {guild_count} guild(s).");
 
     let presence_string = format!("on {guild_count} guilds | @luro help");
-    ctx.set_presence(Some(Activity::playing(&presence_string)), OnlineStatus::Online).await;
+    ctx.set_presence(Some(Activity::playing(&presence_string)), OnlineStatus::Online)
+        .await;
     Ok(())
 }

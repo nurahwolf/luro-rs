@@ -13,5 +13,11 @@ pub async fn moderator(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 pub fn commands() -> [Command; 5] {
-    [purge::purge(), cleanup::cleanup(), deletebotmessage::delete_botmessage(), punish::punish(), moderator()]
+    [
+        purge::purge(),
+        cleanup::cleanup(),
+        deletebotmessage::delete_botmessage(),
+        punish::punish(),
+        moderator()
+    ]
 }

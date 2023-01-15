@@ -59,11 +59,19 @@ pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
         ("Version", version, true),
         ("Branch", branch, true),
         ("Revision", format!("`{revision}`"), true),
-        ("Main Bot Owner", format!("{} ({})", application_info.owner, application_info.owner.tag()), true),
+        (
+            "Main Bot Owner",
+            format!("{} ({})", application_info.owner, application_info.owner.tag()),
+            true
+        ),
     ];
 
     if let Some(usage) = memory_stats() {
-        fields.push(("Physical memory usage", format!("{}MB", usage.physical_mem / 1024 / 1024), true));
+        fields.push((
+            "Physical memory usage",
+            format!("{}MB", usage.physical_mem / 1024 / 1024),
+            true
+        ));
         fields.push(("Virtual memory usage", format!("{}MB", usage.virtual_mem / 1024 / 1024), true));
     };
 

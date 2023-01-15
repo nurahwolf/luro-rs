@@ -45,7 +45,9 @@ pub async fn fa(
 
     // Act on our interaction context
     while let Some(interaction) = interaction_stream.next().await {
-        interaction.create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage)).await?;
+        interaction
+            .create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage))
+            .await?;
 
         if interaction.data.custom_id.contains("prev") {
             fa = match furaffinity_client(None, Some(fa.prev.unwrap()), &ctx.data().secrets.furaffinity_cookies).await {

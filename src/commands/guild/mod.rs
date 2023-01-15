@@ -13,12 +13,22 @@ mod info_role;
 mod info_user;
 
 /// Get some information on things, like guilds and users.
-#[poise::command(slash_command, category = "Guild", subcommands("user", "guild", "channel", "message", "role"))]
+#[poise::command(
+    slash_command,
+    category = "Guild",
+    subcommands("user", "guild", "channel", "message", "role")
+)]
 pub async fn info(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("This command only has subcommands I'm afraid :)").await?;
     Ok(())
 }
 
 pub fn commands() -> [Command; 5] {
-    [botnick::botnick(), firstmessage::firstmessage(), guilds::guilds(), info(), info_user::userinfo_context()]
+    [
+        botnick::botnick(),
+        firstmessage::firstmessage(),
+        guilds::guilds(),
+        info(),
+        info_user::userinfo_context()
+    ]
 }

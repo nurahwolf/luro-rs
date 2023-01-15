@@ -46,17 +46,27 @@ pub async fn guilds(ctx: Context<'_>) -> Result<(), Error> {
     let mut response = format!("I am currently in {} servers!\n", guild_ids.len());
     for guild in guilds {
         if guild.is_public || show_private_guilds {
-            let _ = writeln!(response, "- **{}** ({} members) `{}`", guild.name, guild.num_members, guild.guild_id);
+            let _ = writeln!(
+                response,
+                "- **{}** ({} members) `{}`",
+                guild.name, guild.num_members, guild.guild_id
+            );
         } else {
             num_private_guilds += 1;
             num_private_guild_members += guild.num_members;
         }
     }
     if num_private_guilds > 0 {
-        let _ = writeln!(response, "- [{num_private_guilds} private servers with {num_private_guild_members} members total]");
+        let _ = writeln!(
+            response,
+            "- [{num_private_guilds} private servers with {num_private_guild_members} members total]"
+        );
     }
     if num_unavailable_guilds > 0 {
-        let _ = writeln!(response, "- [{num_unavailable_guilds} unavailable servers (cache is not ready yet)]");
+        let _ = writeln!(
+            response,
+            "- [{num_unavailable_guilds} unavailable servers (cache is not ready yet)]"
+        );
     }
 
     if show_private_guilds {
@@ -67,10 +77,16 @@ pub async fn guilds(ctx: Context<'_>) -> Result<(), Error> {
 
     ctx.send(|b| {
         b.embed(|embed| {
-            embed.description(response).color(guild_accent_colour(accent_colour, ctx.guild()));
+            embed
+                .description(response)
+                .color(guild_accent_colour(accent_colour, ctx.guild()));
 
             if let Ok(bot_user) = bot_user {
-                embed.author(|author| author.name(&bot_user.name).icon_url(&bot_user.avatar_url().unwrap_or_default()));
+                embed.author(|author| {
+                    author
+                        .name(&bot_user.name)
+                        .icon_url(&bot_user.avatar_url().unwrap_or_default())
+                });
             }
             embed
         })

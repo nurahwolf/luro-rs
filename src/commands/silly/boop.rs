@@ -8,8 +8,9 @@ pub async fn boop(ctx: Context<'_>) -> Result<(), Error> {
     let uuid_boop = ctx.id();
 
     ctx.send(|m| {
-        m.content("I want some boops!")
-            .components(|c| c.create_action_row(|ar| ar.create_button(|b| b.style(ButtonStyle::Primary).label("Boop me!").custom_id(uuid_boop))))
+        m.content("I want some boops!").components(|c| {
+            c.create_action_row(|ar| ar.create_button(|b| b.style(ButtonStyle::Primary).label("Boop me!").custom_id(uuid_boop)))
+        })
     })
     .await?;
 
@@ -25,7 +26,8 @@ pub async fn boop(ctx: Context<'_>) -> Result<(), Error> {
         let mut msg = mci.message.clone();
         msg.edit(ctx, |m| m.content(format!("Boop count: {boop_count}"))).await?;
 
-        mci.create_interaction_response(ctx, |ir| ir.kind(InteractionResponseType::DeferredUpdateMessage)).await?;
+        mci.create_interaction_response(ctx, |ir| ir.kind(InteractionResponseType::DeferredUpdateMessage))
+            .await?;
     }
 
     Ok(())

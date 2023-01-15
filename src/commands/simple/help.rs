@@ -94,7 +94,11 @@ async fn help_single_command(ctx: Context<'_>, command_name: &str, config: HelpC
     embed.description(reply);
     embed.colour(guild_accent_colour(ctx.data().config.read().await.accent_colour, ctx.guild()));
     if let Ok(bot_user) = ctx.http().get_user(ctx.framework().bot_id.0).await {
-        embed.author(|author| author.name(&bot_user.name).icon_url(&bot_user.avatar_url().unwrap_or_default()));
+        embed.author(|author| {
+            author
+                .name(&bot_user.name)
+                .icon_url(&bot_user.avatar_url().unwrap_or_default())
+        });
         if !config.hide_avatar {
             embed.thumbnail(&bot_user.avatar_url().unwrap_or_default());
         };
@@ -125,7 +129,11 @@ async fn help_all_commands(ctx: Context<'_>, config: HelpConfiguration<'_>) -> R
     embed.colour(guild_accent_colour(ctx.data().config.read().await.accent_colour, ctx.guild()));
     embed.footer(|footer| footer.text(config.extra_text_at_bottom));
     if let Ok(bot_user) = ctx.http().get_user(ctx.framework().bot_id.0).await {
-        embed.author(|author| author.name(&bot_user.name).icon_url(&bot_user.avatar_url().unwrap_or_default()));
+        embed.author(|author| {
+            author
+                .name(&bot_user.name)
+                .icon_url(&bot_user.avatar_url().unwrap_or_default())
+        });
         if !config.hide_avatar {
             embed.thumbnail(&bot_user.avatar_url().unwrap_or_default());
         };

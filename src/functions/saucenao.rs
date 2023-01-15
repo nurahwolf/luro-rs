@@ -47,7 +47,11 @@ async fn reverse_client(url: &String, api_key: &String) -> Result<SauceNAO, reqw
     }
 }
 
-pub async fn interactive_response<'a>(ctx: Context<'a>, url: String, api_key: &String) -> Result<ReplyHandle<'a>, serenity::Error> {
+pub async fn interactive_response<'a>(
+    ctx: Context<'a>,
+    url: String,
+    api_key: &String
+) -> Result<ReplyHandle<'a>, serenity::Error> {
     let mut cursor = 0;
     let sauce = match reverse_client(&url, api_key).await {
         Ok(saucenao) => saucenao,
@@ -100,7 +104,9 @@ pub async fn interactive_response<'a>(ctx: Context<'a>, url: String, api_key: &S
 
     // Act on our interaction context
     while let Some(interaction) = interaction_stream.next().await {
-        interaction.create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage)).await?;
+        interaction
+            .create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage))
+            .await?;
 
         if interaction.data.custom_id.contains("prev") {
             cursor -= 1;
@@ -118,10 +124,14 @@ pub async fn interactive_response<'a>(ctx: Context<'a>, url: String, api_key: &S
                         })
                         .await?
                 } else {
-                    reply_handle.edit(ctx, |builder| builder.content("Did not find anything ;)")).await?
+                    reply_handle
+                        .edit(ctx, |builder| builder.content("Did not find anything ;)"))
+                        .await?
                 }
             } else {
-                reply_handle.edit(ctx, |builder| builder.content("Did not find anything ;)")).await?
+                reply_handle
+                    .edit(ctx, |builder| builder.content("Did not find anything ;)"))
+                    .await?
             };
         }
 
@@ -141,10 +151,14 @@ pub async fn interactive_response<'a>(ctx: Context<'a>, url: String, api_key: &S
                         })
                         .await?
                 } else {
-                    reply_handle.edit(ctx, |builder| builder.content("Did not find anything ;)")).await?
+                    reply_handle
+                        .edit(ctx, |builder| builder.content("Did not find anything ;)"))
+                        .await?
                 }
             } else {
-                reply_handle.edit(ctx, |builder| builder.content("Did not find anything ;)")).await?
+                reply_handle
+                    .edit(ctx, |builder| builder.content("Did not find anything ;)"))
+                    .await?
             };
         }
     }
@@ -168,14 +182,26 @@ fn components(saucenao: &SauceNAO, cursor: &usize, disable_left: bool, disable_r
         row.create_button(|button| {
             let disabled = if disable_left { true } else { cursor <= &0 };
 
-            button.custom_id("prev").label("Previous Source").style(ButtonStyle::Primary).disabled(disabled);
+            button
+                .custom_id("prev")
+                .label("Previous Source")
+                .style(ButtonStyle::Primary)
+                .disabled(disabled);
             button
         });
 
         row.create_button(|button| {
-            let disabled = if disable_right { true } else { cursor >= &saucenao.results.clone().unwrap().len() };
+            let disabled = if disable_right {
+                true
+            } else {
+                cursor >= &saucenao.results.clone().unwrap().len()
+            };
 
-            button.custom_id("next").label("Next Source").style(ButtonStyle::Primary).disabled(disabled);
+            button
+                .custom_id("next")
+                .label("Next Source")
+                .style(ButtonStyle::Primary)
+                .disabled(disabled);
             button
         });
         row
