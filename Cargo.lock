@@ -1033,6 +1033,14 @@ dependencies = [
  "futures",
  "git2",
  "itertools",
+ "luro_core",
+ "luro_data",
+ "luro_e621",
+ "luro_events",
+ "luro_furaffinity",
+ "luro_sled",
+ "luro_songbird",
+ "luro_utilities",
  "memory-stats",
  "poise",
  "rand",
@@ -1048,9 +1056,111 @@ dependencies = [
  "toml_edit",
  "tracing",
  "tracing-subscriber",
- "urlencoding",
  "uwuify",
  "zerocopy",
+]
+
+[[package]]
+name = "luro_commands"
+version = "0.1.0"
+
+[[package]]
+name = "luro_core"
+version = "0.1.0"
+dependencies = [
+ "luro_data",
+ "poise",
+]
+
+[[package]]
+name = "luro_data"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sled",
+ "songbird",
+ "tokio",
+ "toml_edit",
+ "tracing",
+]
+
+[[package]]
+name = "luro_e621"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "luro_core",
+ "luro_utilities",
+ "poise",
+ "rand",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "urlencoding",
+]
+
+[[package]]
+name = "luro_events"
+version = "0.1.0"
+dependencies = [
+ "luro_core",
+ "luro_data",
+ "luro_furaffinity",
+ "luro_sled",
+ "luro_utilities",
+ "poise",
+ "regex",
+]
+
+[[package]]
+name = "luro_furaffinity"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "luro_core",
+ "luro_data",
+ "luro_utilities",
+ "poise",
+ "rand",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "luro_poise"
+version = "0.1.0"
+
+[[package]]
+name = "luro_sled"
+version = "0.1.0"
+dependencies = [
+ "byteorder",
+ "poise",
+ "rkyv",
+ "sled",
+ "zerocopy",
+]
+
+[[package]]
+name = "luro_songbird"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "luro_core",
+ "luro_utilities",
+ "poise",
+ "rand",
+ "songbird",
+]
+
+[[package]]
+name = "luro_utilities"
+version = "0.1.0"
+dependencies = [
+ "itertools",
+ "poise",
 ]
 
 [[package]]

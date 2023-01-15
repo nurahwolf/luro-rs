@@ -1,6 +1,6 @@
 use poise::serenity_prelude::{ButtonStyle, CollectComponentInteraction, InteractionResponseType};
 
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Boop the bot!
 #[poise::command(prefix_command, track_edits, slash_command, category = "Silly")]

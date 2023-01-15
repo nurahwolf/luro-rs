@@ -1,4 +1,6 @@
-use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error};
+use luro_utilities::guild_accent_colour;
+
+use luro_core::{Context, Error};
 
 /// Show help for rolling dice, such as the dice notation
 #[poise::command(slash_command, prefix_command, category = "Dice")]

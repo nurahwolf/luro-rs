@@ -1,9 +1,9 @@
 use itertools::Itertools;
+use luro_utilities::{guild_accent_colour, accent_colour};
 use poise::serenity_prelude::{ActivityType, CacheHttp, CreateEmbed, Guild, OnlineStatus, User, UserPublicFlags};
 use std::fmt::Write;
 
 use crate::{
-    functions::{accent_colour::accent_colour, guild_accent_colour::guild_accent_colour},
     Context, Error
 };
 

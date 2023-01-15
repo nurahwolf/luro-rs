@@ -1,8 +1,8 @@
+use luro_utilities::{accent_colour, guild_accent_colour};
 use poise::serenity_prelude::{Channel, ChannelType, CreateEmbed, Guild};
 use std::fmt::Write;
 
 use crate::{
-    functions::{accent_colour::accent_colour, guild_accent_colour::guild_accent_colour},
     Context, Error
 };
 

@@ -1,4 +1,7 @@
-use crate::{data::stories::Stories, functions::guild_accent_colour::guild_accent_colour, Context, Error, STORIES_FILE_PATH};
+use luro_data::stories::Stories;
+use luro_utilities::guild_accent_colour;
+
+use crate::{Context, Error, STORIES_FILE_PATH};
 use rand::Rng;
 
 fn truncate(s: &str, max_chars: usize) -> &str {

@@ -1,6 +1,6 @@
 use poise::serenity_prelude::Attachment;
 
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// View the difference between two file sizes
 #[poise::command(prefix_command, slash_command, category = "Silly")]

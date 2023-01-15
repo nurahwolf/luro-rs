@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Imagine finding a hidden command. Shuts down the bot.
 #[poise::command(prefix_command, owners_only, hide_in_help, category = "Owner")]

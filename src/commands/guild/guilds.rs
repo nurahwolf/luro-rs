@@ -1,4 +1,6 @@
-use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error};
+use luro_utilities::guild_accent_colour;
+
+use luro_core::{Context, Error};
 
 /// Print information of the guilds I'm in!
 #[poise::command(slash_command, prefix_command, category = "Owner")]

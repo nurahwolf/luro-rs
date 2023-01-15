@@ -1,6 +1,6 @@
 use poise::serenity_prelude::User;
 
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Purge X messages. Note that up to 100 messages can be got at a time! - Moderator only
 #[poise::command(

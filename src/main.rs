@@ -2,11 +2,11 @@
 #![feature(let_chains)]
 use std::{collections::HashSet, env, sync::atomic::AtomicUsize};
 
-use constants::{
-    BOT_TOKEN, CONFIG_FILE_PATH, DATABASE_FILE_PATH, FURAFFINITY_REGEX, HECK_FILE_PATH, QUOTES_FILE_PATH, SECRETS_FILE_PATH,
-    STORIES_FILE_PATH
-};
-use data::{config::Config, heck::Heck, quotes::Quotes, secrets::Secrets, stories::Stories, Data};
+use luro_core::{CONFIG_FILE_PATH, HECK_FILE_PATH, QUOTES_FILE_PATH, SECRETS_FILE_PATH, STORIES_FILE_PATH};
+use luro_core::BOT_TOKEN;
+use luro_core::DATABASE_FILE_PATH;
+use luro_data::{Data, config::Config, heck::Heck, quotes::Quotes, secrets::Secrets, stories::Stories};
+use luro_events::event_listener;
 use poise::{
     serenity_prelude::{GatewayIntents, UserId},
     FrameworkOptions
@@ -24,12 +24,9 @@ type Command = poise::Command<Data, Error>;
 
 // Modules
 mod commands;
-mod constants; // **NOTE:** This file is intended to be USER EDITABLE! Please refer to it to modify key ways Luro operates!
-mod data;
-mod database;
-mod event_listener;
 mod functions;
 mod structs;
+
 
 // We are finally at Luro!
 // ===============
@@ -106,7 +103,7 @@ async fn main() {
         on_error: |error| Box::pin(on_error(error)),
         event_handler: |ctx, event, framework, user_data| {
             Box::pin(async move {
-                event_listener::event_listener(ctx, event, framework, user_data).await?;
+                event_listener(ctx, event, framework, user_data).await?;
                 Ok(())
             })
         },

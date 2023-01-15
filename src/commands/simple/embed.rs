@@ -1,6 +1,7 @@
+use luro_utilities::guild_accent_colour;
 use poise::serenity_prelude::GuildChannel;
 
-use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Error};
+use luro_core::{Context, Error};
 
 /// Create an Embed
 #[poise::command(slash_command, prefix_command, category = "General")]

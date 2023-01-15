@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Prints the total commands ran since the bot was last restarted!
 #[poise::command(prefix_command, slash_command, category = "General")]

@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Purge X messages from the bot
 #[poise::command(

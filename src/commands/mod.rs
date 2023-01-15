@@ -1,3 +1,6 @@
+use luro_e621::e621_commands;
+use luro_songbird::commands::songbird_commands;
+
 use crate::Command;
 
 mod api;
@@ -6,7 +9,6 @@ pub mod furry;
 mod guild;
 mod luro;
 mod moderator;
-mod music;
 mod owner;
 mod quote;
 mod silly;
@@ -16,7 +18,8 @@ mod testing;
 pub fn commands() -> Vec<Command> {
     owner::commands()
         .into_iter()
-        .chain(music::commands())
+        .chain(songbird_commands())
+        .chain(e621_commands())
         .chain(simple::commands())
         .chain(moderator::commands())
         .chain(guild::commands())

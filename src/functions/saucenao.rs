@@ -1,5 +1,6 @@
-use crate::{constants::TIMEOUT_DURIATION, structs::saucenao::SauceNAO, Context};
+use crate::{structs::saucenao::SauceNAO, Context};
 use futures::StreamExt;
+use luro_core::TIMEOUT_DURIATION;
 use poise::{
     serenity_prelude::{ButtonStyle, CreateComponents, InteractionResponseType},
     ReplyHandle

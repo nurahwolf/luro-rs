@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Set bot nickname
 #[poise::command(slash_command, prefix_command, guild_only, category = "Guild")]

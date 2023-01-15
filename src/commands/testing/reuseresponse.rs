@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 use poise::serenity_prelude::{self as serenity};
 
 #[poise::command(slash_command, prefix_command, reuse_response)]

@@ -1,3 +1,5 @@
+use luro_data::heck::{HeckInt, Heck};
+use luro_utilities::guild_accent_colour;
 use poise::{
     serenity_prelude::{CacheHttp, Colour, CreateEmbed, User},
     Modal
@@ -5,12 +7,10 @@ use poise::{
 use rand::{seq::SliceRandom, Rng};
 
 use crate::{
-    data::heck::{Heck, HeckInt},
-    functions::guild_accent_colour::guild_accent_colour,
     Context, Error, HECK_FILE_PATH
 };
 
-async fn heck_function(author: &User, user: &User, hecks: &Vec<HeckInt>, heck_id: Option<usize>) -> (HeckInt, usize) {
+fn heck_function(author: &User, user: &User, hecks: &Vec<HeckInt>, heck_id: Option<usize>) -> (HeckInt, usize) {
     let heck_id = match heck_id {
         Some(ok) => ok,
         None => {
@@ -118,14 +118,14 @@ pub async fn heck(
             let random_member = members.choose(&mut rand::thread_rng());
             if let Some(random_member_matched) = random_member {
                 heck_user = random_member_matched.user.clone();
-                heck = heck_function(ctx.author(), &random_member_matched.user, hecks, heck_id).await;
+                heck = heck_function(ctx.author(), &random_member_matched.user, hecks, heck_id);
             } else {
                 // Failed to find a random user to heck, so fall back...
-                heck = heck_function(ctx.author(), &heck_user, hecks, heck_id).await;
+                heck = heck_function(ctx.author(), &heck_user, hecks, heck_id);
             }
         } else {
             // Heck the user specified
-            heck = heck_function(ctx.author(), &heck_user, hecks, heck_id).await;
+            heck = heck_function(ctx.author(), &heck_user, hecks, heck_id);
         }
     };
 
@@ -170,7 +170,7 @@ pub async fn heck(
 #[poise::command(category = "Testing", context_menu_command = "Heck this user :3c")]
 pub async fn heck_user(ctx: Context<'_>, #[description = "User to heck"] user: User) -> Result<(), Error> {
     let hecks = &ctx.data().heck.read().await.heck;
-    let heck = heck_function(ctx.author(), &user, hecks, None).await;
+    let heck = heck_function(ctx.author(), &user, hecks, None);
 
     let config = ctx.data().config.read().await;
     let accent_colour = guild_accent_colour(config.accent_colour, ctx.guild());

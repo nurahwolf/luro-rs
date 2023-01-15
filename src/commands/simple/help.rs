@@ -1,4 +1,5 @@
-use crate::{functions::guild_accent_colour::guild_accent_colour, Context, Data, Error};
+use crate::{Context, Data, Error};
+use luro_utilities::guild_accent_colour;
 use poise::{
     serenity_prelude::{CacheHttp, CreateEmbed},
     ContextMenuCommandAction, PartialContext

@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Register Slash Commands (Owner Only)
 #[poise::command(owners_only, slash_command, prefix_command, ephemeral, category = "Owner")]

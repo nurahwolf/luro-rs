@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Make me say garbage
 #[poise::command(prefix_command, slash_command, category = "General")]

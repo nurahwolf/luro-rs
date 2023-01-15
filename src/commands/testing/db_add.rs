@@ -1,6 +1,7 @@
+use luro_sled::add_discord_message;
 use poise::serenity_prelude::Message;
 
-use crate::{database::add_discord_message, Context, Error};
+use luro_core::{Context, Error};
 
 /// Add a message to the database
 #[poise::command(prefix_command, slash_command, category = "General")]

@@ -1,0 +1,13 @@
+[package]
+name = "luro_sled"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sled = "0.34" # Database
+zerocopy = "0.6.0" # Dependencies for Database
+byteorder = "1.4.3" # Dependencies for Database
+rkyv = "0.7" # Dependencies for Database
+poise = "0.5"

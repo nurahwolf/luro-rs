@@ -1,6 +1,8 @@
+use luro_sled::total_messages_by_user;
+use luro_utilities::guild_accent_colour;
 use poise::serenity_prelude::User;
 
-use crate::{database::total_messages_by_user, functions::guild_accent_colour::guild_accent_colour, Context, Error};
+use luro_core::{Context, Error};
 
 /// Total messages sent by a user
 #[poise::command(prefix_command, slash_command, category = "Database")]

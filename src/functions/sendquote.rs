@@ -1,8 +1,9 @@
+use luro_data::quotes::Quote;
+use luro_utilities::guild_accent_colour;
 use poise::serenity_prelude::CreateEmbed;
 
-use crate::{data::quotes::Quote, Context, Error};
+use luro_core::{Context, Error};
 
-use super::guild_accent_colour::guild_accent_colour;
 
 pub async fn send_quote(ctx: Context<'_>, quote: &Quote, quote_id: Option<usize>) -> Result<(), Error> {
     let mut embed = CreateEmbed::default();

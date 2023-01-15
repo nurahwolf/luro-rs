@@ -1,6 +1,6 @@
 use poise::serenity_prelude::User;
 
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Admin abuse
 #[poise::command(slash_command, prefix_command, owners_only, ephemeral, category = "Owner")]

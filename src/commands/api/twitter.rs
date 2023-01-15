@@ -1,5 +1,6 @@
+use luro_utilities::{format_int, guild_accent_colour};
+
 use crate::{
-    functions::{formatint::format_int, guild_accent_colour::guild_accent_colour},
     structs::twitter::{User, UserTweets},
     Context, Error
 };

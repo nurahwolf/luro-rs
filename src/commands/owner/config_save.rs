@@ -1,5 +1,6 @@
+use luro_data::{config::Config, heck::Heck, quotes::Quotes, stories::Stories};
+
 use crate::{
-    data::{config::Config, heck::Heck, quotes::Quotes, stories::Stories},
     Context, Error, CONFIG_FILE_PATH, HECK_FILE_PATH, QUOTES_FILE_PATH, STORIES_FILE_PATH
 };
 

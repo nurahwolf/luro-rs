@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 use poise::serenity_prelude::{self as serenity, ExecuteWebhook, Message, User};
 use std::vec;

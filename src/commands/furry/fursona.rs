@@ -1,9 +1,11 @@
 use crate::{
-    constants::{DATA_PATH, FURSONA_FILE_PATH},
     Context, Error
 };
 
 use futures::{Stream, StreamExt};
+use luro_core::FURSONA_FILE_PATH;
+use luro_core::DATA_PATH;
+
 use poise::serenity_prelude::{AttachmentType, CacheHttp};
 use rand::seq::SliceRandom;
 

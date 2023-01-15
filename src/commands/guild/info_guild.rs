@@ -1,8 +1,8 @@
 use crate::{
-    functions::{guild_accent_colour::guild_accent_colour, sort_roles::sort_roles},
     Context, Error
 };
 use itertools::Itertools;
+use luro_utilities::{sort_roles, guild_accent_colour};
 use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel};
 use std::fmt::Write;
 

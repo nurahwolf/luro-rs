@@ -1,4 +1,4 @@
-use crate::{Context, Error};
+use luro_core::{Context, Error};
 
 /// Random printer facts!
 #[poise::command(slash_command, prefix_command, category = "API")]
