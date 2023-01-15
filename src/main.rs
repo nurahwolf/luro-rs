@@ -1,4 +1,5 @@
 #![feature(option_result_contains)]
+#![feature(let_chains)]
 use std::{collections::HashSet, env, sync::atomic::AtomicUsize};
 
 use constants::{
