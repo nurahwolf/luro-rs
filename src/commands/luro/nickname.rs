@@ -28,7 +28,7 @@ pub async fn nickname(
                 .http
                 .edit_nickname(*gid_u64, Some(&nick.to_owned()))
                 .await?;
-            ctx.say(format!("Set my nickname to \"{nick}\".")).await?;
+            ctx.say(format!("Set my nickname to `{nick}`.")).await?;
         }
         None => {
             ctx.serenity_context().http.edit_nickname(*gid_u64, None).await?;
