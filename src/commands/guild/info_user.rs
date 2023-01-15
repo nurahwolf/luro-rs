@@ -15,20 +15,11 @@ async fn user_info(ctx: Context<'_>, user: User, guild: Option<Guild>) -> Result
     // Setup our embed
     let mut embed = CreateEmbed::default();
 
-    // If guild is specified / we are in a guild, print some extra information
+    // If guild is specified / we are in a guild, print some extra information if we can resolve their user
     if let Some(guild) = match guild {
         Some(guild_specified) => ctx.serenity_context().cache.guild(guild_specified),
         None => ctx.guild()
-    } {
-        // Now that we have a guild, check we can resolve the user. Panic if we can't.
-        let guild_user = match guild.member(ctx, &user).await {
-            Ok(member_resolved) => member_resolved,
-            Err(error) => {
-                ctx.say(format!("Failed to resolve guild user because: {error}")).await?;
-                return Ok(());
-            }
-        };
-
+    } && let Ok(guild_user) = guild.member(ctx, &user).await {
         if let Some(presence) = guild.presences.get(&guild_user.user.id) {
             for activity in &presence.activities {
                 match activity.kind {
