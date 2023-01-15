@@ -1028,15 +1028,29 @@ dependencies = [
 name = "luro"
 version = "0.1.0"
 dependencies = [
+ "futures",
+ "luro_commands",
+ "luro_core",
+ "luro_events",
+ "poise",
+ "serenity",
+ "songbird",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "luro_commands"
+version = "0.1.0"
+dependencies = [
  "byteorder",
  "chrono",
  "futures",
  "git2",
  "itertools",
  "luro_core",
- "luro_data",
  "luro_e621",
- "luro_events",
  "luro_furaffinity",
  "luro_sled",
  "luro_songbird",
@@ -1049,39 +1063,34 @@ dependencies = [
  "rkyv",
  "serde",
  "serde_json",
- "serenity",
  "sled",
- "songbird",
  "tokio",
- "toml_edit",
  "tracing",
- "tracing-subscriber",
  "uwuify",
  "zerocopy",
 ]
 
 [[package]]
-name = "luro_commands"
-version = "0.1.0"
-
-[[package]]
 name = "luro_core"
 version = "0.1.0"
 dependencies = [
- "luro_data",
  "poise",
-]
-
-[[package]]
-name = "luro_data"
-version = "0.1.0"
-dependencies = [
  "serde",
  "sled",
  "songbird",
  "tokio",
  "toml_edit",
  "tracing",
+]
+
+[[package]]
+name = "luro_dice"
+version = "0.1.0"
+dependencies = [
+ "luro_core",
+ "luro_utilities",
+ "poise",
+ "rand",
 ]
 
 [[package]]
@@ -1104,7 +1113,6 @@ name = "luro_events"
 version = "0.1.0"
 dependencies = [
  "luro_core",
- "luro_data",
  "luro_furaffinity",
  "luro_sled",
  "luro_utilities",
@@ -1118,7 +1126,6 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "luro_core",
- "luro_data",
  "luro_utilities",
  "poise",
  "rand",
@@ -1129,14 +1136,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "luro_poise"
-version = "0.1.0"
-
-[[package]]
 name = "luro_sled"
 version = "0.1.0"
 dependencies = [
  "byteorder",
+ "luro_core",
  "poise",
  "rkyv",
  "sled",

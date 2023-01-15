@@ -1,0 +1,36 @@
+[package]
+name = "luro_commands"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+poise = "0.5"
+tokio = "1"
+uwuify = "0.2.2" # Used for the uwuify command
+itertools = "0.10" # Used for iterating through a bunch of loops
+tracing = "0.1" # Useful for logs and I should use it some more. It's required by a bunch of dependencies, so might as well make use of it.
+chrono = "0.4" # TODO: Ideally to be replaced with by time, but lastfm, serenity, poise and songbird depend on it
+reqwest = { version = "0.11", features = [
+    "json",
+] } # Used by serenity, poise and lastfm. Useful for making requests to APIs
+serde = { version = "1", default-features = false, features = [
+    "derive",
+] } # Used by a bunch of dependencies to serialise data, useful for my own structs
+serde_json = "1" # Decoding JSON payloads
+rand = "0.8" # Random choice, also used by poise and songbird
+futures = { version = "0.3.13", default-features = false } # For Discord autocomplete
+sled = "0.34" # Database
+zerocopy = "0.6.0" # Dependencies for Database
+byteorder = "1.4.3" # Dependencies for Database
+rkyv = "0.7" # Dependencies for Database
+regex = "1" # REGEX checking throughout Luro
+memory-stats = "1.0.0" #System memory information
+git2 = "0.16.0" #Git information
+luro_core = { path = "../../lib/luro_core" }
+luro_sled = { path = "../../lib/luro_sled" }
+luro_e621 = { path = "../../lib/luro_e621" }
+luro_furaffinity = { path = "../../lib/luro_furaffinity" }
+luro_songbird = { path = "../../lib/luro_songbird" }
+luro_utilities = { path = "../../lib/luro_utilities" }

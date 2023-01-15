@@ -6,50 +6,24 @@ edition = "2021"
 
 
 [dependencies]
-### Dependencies that have a real reason to exist
-uwuify = "0.2.2" # Used for the uwuify command
-itertools = "0.10" # Used for iterating through a bunch of loops
 tracing = "0.1" # Useful for logs and I should use it some more. It's required by a bunch of dependencies, so might as well make use of it.
-chrono = "0.4" # TODO: Ideally to be replaced with by time, but lastfm, serenity, poise and songbird depend on it
-reqwest = { version = "0.11", features = [
-    "json",
-] } # Used by serenity, poise and lastfm. Useful for making requests to APIs
-serde = { version = "1", default-features = false, features = [
-    "derive",
-] } # Used by a bunch of dependencies to serialise data, useful for my own structs
-serde_json = "1" # Decoding JSON payloads
-rand = "0.8" # Random choice, also used by poise and songbird
+tracing-subscriber = "0.3" # See notes
 futures = { version = "0.3.13", default-features = false } # For Discord autocomplete
-sled = "0.34" # Database
-zerocopy = "0.6.0" # Dependencies for Database
-byteorder = "1.4.3" # Dependencies for Database
-rkyv = "0.7" # Dependencies for Database
-regex = "1" # REGEX checking throughout Luro
-memory-stats = "1.0.0" #System memory information
-git2 = "0.16.0" #Git information
 
 # Luro Components
-luro_data = { path = "src/lib/luro_data" }
-luro_sled = { path = "src/lib/luro_sled" }
-luro_songbird = { path = "src/lib/luro_songbird" }
-luro_utilities = { path = "src/lib/luro_utilities" }
-luro_core = { path = "src/lib/luro_core" }
-luro_e621 = { path = "src/lib/luro_e621" }
-luro_furaffinity = { path = "src/lib/luro_furaffinity" }
-luro_events = { path = "src/lib/luro_events" }
-
-### Dependencies that should be reviewed
-tracing-subscriber = "0.3" # See notes
-# lastfm-rs   = "0.5" # Add this one LastFM is used
+# luro_sled = { path = "lib/luro_sled" }
+# luro_songbird = { path = "lib/luro_songbird" }
+# luro_utilities = { path = "lib/luro_utilities" }
+luro_core = { path = "lib/luro_core" }
+# luro_e621 = { path = "lib/luro_e621" }
+# luro_furaffinity = { path = "lib/luro_furaffinity" }
+luro_events = { path = "lib/luro_events" }
+luro_commands = { path = "lib/luro_commands" }
 
 ### Dependencies that have a real reason to exist
 [dependencies.tokio]
 version = "1"
 features = ["macros", "rt-multi-thread", "signal"]
-
-[dependencies.toml_edit]
-version = "0.17"
-features = ["easy"]
 
 [dependencies.serenity]
 default-features = false
@@ -65,4 +39,4 @@ features = ["builtin-queue"]
 version = "0.3"
 
 [workspace]
-members = ["src/lib/*"]
+members = ["lib/*"]
