@@ -35,7 +35,10 @@ pub fn add_discord_message(db: &sled::Db, message: Message) -> sled::Result<()> 
         }
     };
 
-    let bytes = rkyv::to_bytes::<_, 1024>(&luro_message).unwrap();
+    let bytes = match rkyv::to_bytes::<_, 1024>(&luro_message) {
+        Ok(ok) => ok,
+        Err(err) => panic!("DB: Failed to serialize: {err}")
+    };
 
     if let Ok(_result) = messages.insert(message.id.0.as_bytes(), bytes.as_bytes()) {
     } else {
@@ -64,7 +67,10 @@ pub fn get_discord_message(db: &sled::Db, id: u64) -> LuroMessage {
 
     let luro_message = unsafe { rkyv::archived_root::<LuroMessage>(messages_vec_resolved.as_bytes()) };
 
-    let deserialized: LuroMessage = luro_message.deserialize(&mut rkyv::Infallible).unwrap();
+    let deserialized: LuroMessage = match luro_message.deserialize(&mut rkyv::Infallible) {
+        Ok(ok) => ok,
+        Err(err) => panic!("DB: Failed to deserialize: {err}")
+    };
     deserialized
 }
 

@@ -11,9 +11,8 @@ pub async fn embed(
     #[description = "Channel to send the Embed"] channel: Option<GuildChannel>
 ) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;
-    if channel.is_some() && ctx.guild_id().is_some() {
+    if let Some(channel) = channel {
         channel
-            .unwrap()
             .send_message(ctx, |f| f.embed(|e| e.title(title).description(content).color(guild_accent_colour(accent_colour, ctx.guild()))))
             .await?;
     } else {

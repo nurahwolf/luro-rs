@@ -27,7 +27,13 @@ pub async fn saucenao_lookup(
 #[poise::command(context_menu_command = "SauceNAO: Find source", category = "Furry")]
 pub async fn saucenao_context(ctx: Context<'_>, msg: Message) -> Result<(), Error> {
     let api_key = &ctx.data().secrets.saucenao_token;
-    let regex = Regex::new(SOURCE_FINDER_REGEX).unwrap();
+    let regex = match Regex::new(SOURCE_FINDER_REGEX) {
+        Ok(ok) => ok,
+        Err(err) => {
+            ctx.say(format!("Failed to match the regex - {err}")).await?;
+            return Ok(());
+        }
+    };
     let mut urls = Vec::new();
     for cap in regex.captures_iter(&msg.content) {
         urls.push(cap["url"].to_string())

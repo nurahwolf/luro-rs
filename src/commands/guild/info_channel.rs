@@ -141,7 +141,9 @@ pub async fn channel(
         writeln!(channel_category_info, "Category: {}", category.name())?;
         writeln!(channel_category_info, "Category position: {}", category.position)?;
         writeln!(channel_category_info, "Category type: {category_type}")?;
-        writeln!(channel_category_info, "Belongs to guild: {}", category.guild_id.name(ctx).unwrap())?;
+        if let Some(guild_name) = category.guild_id.name(ctx) {
+            writeln!(channel_category_info, "Belongs to guild: {guild_name}")?;
+        }
         writeln!(channel_category_info, "NSFW Category: {}", category.nsfw)?;
         embed.field("Category Information", channel_category_info, false);
     };

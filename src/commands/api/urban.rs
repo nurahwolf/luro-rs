@@ -36,7 +36,13 @@ pub async fn urban(ctx: Context<'_>, #[description = "Search Term"] search: Stri
         return Ok(());
     }
 
-    let definition = response.definitions.get(0).unwrap();
+    let definition = match response.definitions.get(0) {
+        Some(ok) => ok,
+        None => {
+            ctx.say("Failed to find any definitions! Sorry").await?;
+            return Ok(());
+        }
+    };
 
     let word = &definition.word;
     let description = &definition.description;
@@ -68,7 +74,13 @@ pub async fn random_urban(ctx: Context<'_>) -> Result<(), Error> {
     let client = reqwest::Client::new();
     let request = client.get("http://api.urbandictionary.com/v0/random").send().await?;
     let response: Response = request.json().await?;
-    let definition = response.definitions.get(0).unwrap();
+    let definition = match response.definitions.get(0) {
+        Some(ok) => ok,
+        None => {
+            ctx.say("Failed to find any definitions! Sorry").await?;
+            return Ok(());
+        }
+    };
 
     let word = &definition.word;
     let description = &definition.description;

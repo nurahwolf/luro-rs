@@ -15,7 +15,13 @@ pub async fn botnick(
     #[rest]
     nick: Option<String>
 ) -> Result<(), Error> {
-    let gid = ctx.guild_id().unwrap();
+    let gid = match ctx.guild_id() {
+        Some(ok) => ok,
+        None => {
+            ctx.say("Failed to get the guild").await?;
+            return Ok(());
+        }, 
+    };
     let gid_u64 = gid.as_u64();
 
     match nick {

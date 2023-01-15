@@ -18,7 +18,13 @@ pub async fn punish(
     #[description = "User to execute the punishment on"] user: serenity::User,
     #[description = "The reason they should be punished"] mut reason: String
 ) -> Result<(), Error> {
-    let guild = ctx.guild().unwrap();
+    let guild = match ctx.guild() {
+        Some(ok) => ok,
+        None => {
+            ctx.say("This command only works in a guild!").await?;
+            return Ok(());
+        }
+    };
     let user_id = user.id;
     let user_mention = user.mention();
     let user_avatar = user.avatar_url().unwrap_or_default();

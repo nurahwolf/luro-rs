@@ -20,7 +20,13 @@ pub async fn lodestonenews(ctx: Context<'_>) -> Result<(), Error> {
     let request = client.get("https://lodestonenews.com/news/topics?locale=gb").send().await?;
     let response: Vec<LodestoneNews> = request.json().await?;
 
-    let newsitem = response.get(1).unwrap();
+    let newsitem = match response.get(1) {
+        Some(ok) => ok,
+        None => {
+            ctx.say("Failed to get any news :(").await?;
+            return Ok(());
+        }
+    };
 
     ctx.send(|message| {
         message.embed(|embed| {

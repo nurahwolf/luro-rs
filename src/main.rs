@@ -58,10 +58,14 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 async fn main() {
     // Luro's initialised songbird context
     let songbird = songbird::Songbird::serenity();
+    let database = match sled::open(DATABASE_FILE_PATH) {
+        Ok(db) => db,
+        Err(err) => panic!("Could not open / create database for the following reason:\n{err}")
+    };
     // Luro's initialised data context
     let data = Data {
         config: RwLock::new(Config::get(CONFIG_FILE_PATH).await).into(),
-        database: sled::open(DATABASE_FILE_PATH).expect("Could not open / create database").into(),
+        database: database.into(),
         heck: RwLock::new(Heck::get(HECK_FILE_PATH).await).into(),
         quotes: RwLock::new(Quotes::get(QUOTES_FILE_PATH).await).into(),
         secrets: Secrets::get(SECRETS_FILE_PATH).await.into(),
@@ -120,5 +124,8 @@ async fn main() {
         .token(token)
         .intents(GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MEMBERS | GatewayIntents::GUILD_PRESENCES);
 
-    framework.run().await.unwrap();
+    match framework.run().await {
+        Ok(ok) => ok,
+        Err(err) => panic!("Failed to run framework!! {err}")
+    }
 }
