@@ -11,9 +11,5 @@ pub async fn moderator(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 pub fn commands() -> [Command; 3] {
-    [
-        purge::purge(),
-        punish::punish(),
-        moderator()
-    ]
+    [purge::purge(), punish::punish(), moderator()]
 }

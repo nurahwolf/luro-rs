@@ -1,12 +1,7 @@
 use crate::{Context, Error};
 
 /// Set bot nickname
-#[poise::command(
-    slash_command,
-    prefix_command,
-    guild_only,
-    category = "Guild",
-)]
+#[poise::command(slash_command, prefix_command, guild_only, category = "Guild")]
 pub async fn nickname(
     ctx: Context<'_>,
     #[description = "Nickname to set"]

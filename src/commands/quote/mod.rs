@@ -2,7 +2,10 @@ use poise::serenity_prelude::Message;
 
 use crate::{
     commands::quote::{quote_get::get, quote_user::user},
-    Command, Context, Error, functions::guild_accent_colour::guild_accent_colour, data::quotes::{Quote, Quotes}, constants::QUOTES_FILE_PATH
+    constants::QUOTES_FILE_PATH,
+    data::quotes::{Quote, Quotes},
+    functions::guild_accent_colour::guild_accent_colour,
+    Command, Context, Error
 };
 
 mod quote_get;
@@ -10,7 +13,12 @@ mod quote_user;
 mod story;
 
 /// Get some information on things, like guilds and users.
-#[poise::command(context_menu_command = "Save this quote", slash_command, category = "Guild", subcommands("get", "user"))]
+#[poise::command(
+    context_menu_command = "Save this quote",
+    slash_command,
+    category = "Guild",
+    subcommands("get", "user")
+)]
 pub async fn quote(
     ctx: Context<'_>,
     #[description = "The quote which you wish to add to the database"] message: Message

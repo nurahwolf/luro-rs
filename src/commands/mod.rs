@@ -4,6 +4,7 @@ mod api;
 mod dice;
 pub mod furry;
 mod guild;
+mod luro;
 mod moderator;
 mod music;
 mod owner;
@@ -11,7 +12,6 @@ mod quote;
 mod silly;
 mod simple;
 mod testing;
-mod luro;
 
 pub fn commands() -> Vec<Command> {
     owner::commands()

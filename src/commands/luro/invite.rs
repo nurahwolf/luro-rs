@@ -12,8 +12,8 @@ pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
         Some(cache) => cache.current_user(),
         None => {
             ctx.say("Failed to get the current bot user from the cache, sorry :(").await?;
-            return Ok(())
-        },
+            return Ok(());
+        }
     };
 
     let url = match bot_user.invite_url(ctx, Permissions::ADMINISTRATOR).await {

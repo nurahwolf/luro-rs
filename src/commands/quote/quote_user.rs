@@ -38,7 +38,10 @@ pub async fn user(ctx: Context<'_>, #[description = "User to get a random quote 
 
 /// Get random shit a user has said ;)
 #[poise::command(context_menu_command = "Quotes by this user", category = "Quotes")]
-pub async fn quote_user_context(ctx: Context<'_>, #[description = "User to get a random quote from"] user: User) -> Result<(), Error> {
+pub async fn quote_user_context(
+    ctx: Context<'_>,
+    #[description = "User to get a random quote from"] user: User
+) -> Result<(), Error> {
     get_user_quotes(ctx, user).await?;
     Ok(())
 }

@@ -2,7 +2,7 @@ use poise::{
     serenity_prelude::{CacheHttp, Colour, CreateEmbed, User},
     Modal
 };
-use rand::{Rng, seq::SliceRandom};
+use rand::{seq::SliceRandom, Rng};
 
 use crate::{
     data::heck::{Heck, HeckInt},
