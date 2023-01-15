@@ -1,7 +1,5 @@
 use crate::{Command, Context, Error};
 
-mod cleanup;
-mod deletebotmessage;
 mod punish;
 mod purge;
 
@@ -12,11 +10,9 @@ pub async fn moderator(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn commands() -> [Command; 5] {
+pub fn commands() -> [Command; 3] {
     [
         purge::purge(),
-        cleanup::cleanup(),
-        deletebotmessage::delete_botmessage(),
         punish::punish(),
         moderator()
     ]

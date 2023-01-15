@@ -3,7 +3,6 @@ use crate::{
     Command, Context, Error
 };
 
-mod botnick;
 mod firstmessage;
 mod guilds;
 mod info_channel;
@@ -23,9 +22,8 @@ pub async fn info(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn commands() -> [Command; 5] {
+pub fn commands() -> [Command; 4] {
     [
-        botnick::botnick(),
         firstmessage::firstmessage(),
         guilds::guilds(),
         info(),

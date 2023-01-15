@@ -11,6 +11,7 @@ mod quote;
 mod silly;
 mod simple;
 mod testing;
+mod luro;
 
 pub fn commands() -> Vec<Command> {
     owner::commands()
@@ -25,5 +26,6 @@ pub fn commands() -> Vec<Command> {
         .chain(api::commands())
         .chain(dice::commands())
         .chain(testing::commands())
+        .chain(luro::commands())
         .collect()
 }

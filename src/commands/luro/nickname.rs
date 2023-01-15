@@ -5,11 +5,9 @@ use crate::{Context, Error};
     slash_command,
     prefix_command,
     guild_only,
-    required_bot_permissions = "MANAGE_NICKNAMES",
     category = "Guild",
-    identifying_name = "bot nickname"
 )]
-pub async fn botnick(
+pub async fn nickname(
     ctx: Context<'_>,
     #[description = "Nickname to set"]
     #[rest]

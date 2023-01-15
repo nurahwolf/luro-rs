@@ -23,9 +23,7 @@ pub fn get_head_revision(repo: &Repository) -> String {
     revision.short_id().unwrap().as_str().unwrap().to_string()
 }
 
-/// Information about the bot!
-#[poise::command(prefix_command, slash_command, category = "General")]
-pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn about_bot(ctx: Context<'_>) -> Result<(), Error> {
     // Variables
     let mut embed = CreateEmbed::default();
     let accent_colour = ctx.data().config.read().await.accent_colour;
@@ -91,6 +89,14 @@ pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
         })
     })
     .await?;
+
+    Ok(())
+}
+
+/// Information about the bot!
+#[poise::command(prefix_command, slash_command, category = "General")]
+pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
+    about_bot(ctx).await?;
 
     Ok(())
 }
