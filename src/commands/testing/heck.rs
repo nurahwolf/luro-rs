@@ -2,7 +2,7 @@ use poise::{
     serenity_prelude::{CacheHttp, Colour, CreateEmbed, User},
     Modal
 };
-use rand::Rng;
+use rand::{Rng, seq::SliceRandom};
 
 use crate::{
     data::heck::{Heck, HeckInt},
@@ -55,12 +55,16 @@ pub async fn heck(
     #[description = "Set to true if you want to add a heck :)"]
     #[flag]
     new_heck: bool,
+    #[description = "Heck a random user EXCEPT the person you specified!"]
+    #[flag]
+    random_user: bool,
     #[description = "Return the heck as plaintext"]
     #[flag]
     plaintext: bool,
     #[description = "Get a particular heck. Random heck returned if not found"] heck_id: Option<usize>
 ) -> Result<(), Error> {
     let mut heck;
+    let mut heck_user = user;
     // User wants us to add a heck
     if new_heck {
         heck = if let Some(new_heck) = AddHeck::execute(ctx).await? {
@@ -89,7 +93,7 @@ pub async fn heck(
                     heck: heck
                         .0
                         .heck
-                        .replace("<user>", user.to_string().as_str())
+                        .replace("<user>", heck_user.to_string().as_str())
                         .replace("<author>", ctx.author().to_string().as_str()), // Format the heck to mention the user in this instance,
                     author_id: ctx.author().id.0
                 },
@@ -108,7 +112,21 @@ pub async fn heck(
     } else {
         // Not adding a heck, so let's get one
         let hecks = &ctx.data.heck.read().await.heck;
-        heck = heck_function(ctx.author(), &user, hecks, heck_id).await;
+        // Heck a random user
+
+        if random_user && let Some(guild) = ctx.guild() && let Ok(members) = guild.members(&ctx.serenity_context.http, None, None).await {
+            let random_member = members.choose(&mut rand::thread_rng());
+            if let Some(random_member_matched) = random_member {
+                heck_user = random_member_matched.user.clone();
+                heck = heck_function(ctx.author(), &random_member_matched.user, hecks, heck_id).await;
+            } else {
+                // Failed to find a random user to heck, so fall back...
+                heck = heck_function(ctx.author(), &heck_user, hecks, heck_id).await;
+            }
+        } else {
+            // Heck the user specified
+            heck = heck_function(ctx.author(), &heck_user, hecks, heck_id).await;
+        }
     };
 
     if plaintext {
@@ -140,7 +158,7 @@ pub async fn heck(
                     *e = embed;
                     e
                 })
-                .content(&user.to_string())
+                .content(&heck_user.to_string())
         })
         .await?;
     };
