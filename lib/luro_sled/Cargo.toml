@@ -12,4 +12,5 @@ byteorder = "1.4.3" # Dependencies for Database
 rkyv = "0.7" # Dependencies for Database
 poise = "0.5"
 luro_core = { path = "../../lib/luro_core" }
+luro_utilities = { path = "../../lib/luro_utilities" }
 

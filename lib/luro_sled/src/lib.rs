@@ -1,7 +1,28 @@
-use luro_core::DATABASE_FILE_PATH;
+use luro_core::{DATABASE_FILE_PATH, Context, Error, Command};
 use poise::serenity_prelude::Message;
 use rkyv::{Archive, Deserialize, Serialize};
 use zerocopy::AsBytes;
+
+use crate::commands::{get, total, add};
+
+mod commands;
+
+/// Get some information on things, like guilds and users.
+#[poise::command(
+    slash_command,
+    category = "DB",
+    subcommands("get", "total", "add")
+)]
+async fn sled(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.say("This command only has subcommands I'm afraid :)").await?;
+    Ok(())
+}
+
+pub fn sled_commands() -> [Command; 1] {
+    [
+        sled(),
+    ]
+}
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq)]
 pub struct LuroMessage {

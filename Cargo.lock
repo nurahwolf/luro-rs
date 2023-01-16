@@ -1141,6 +1141,7 @@ version = "0.1.0"
 dependencies = [
  "byteorder",
  "luro_core",
+ "luro_utilities",
  "poise",
  "rkyv",
  "sled",
