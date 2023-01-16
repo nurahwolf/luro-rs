@@ -6,15 +6,19 @@ A general todo list of things I wish to achieve with Luro, and where we stand. C
 
 Things that are pretty important to have, and hopefully will not take too much in development time
 
-- [ ] Clear up the use of `.unwrap()` where possible from the codebase
+- [ ] User favs - Like the quote feature, but personalised to recall particular messages / images
+    - Should only fetch NSFW saves in NSFW rooms
+    - DB of `User[(nsfw, item)]`
+- [ ] TODO list - Per user todo list, simple enough
+- [x] Clear up the use of `.unwrap()` where possible from the codebase
 - [ ] Music playlist support
-- [ ] Rewrite of database commands
-    - [ ] Add a message to the database
-    - [ ] Retrieve a message from the database
-- [ ] Guild Commands
-    - [ ] Get a message via the bot
+- [x] Rewrite of database commands
+    - [x] Add a message to the database
+    - [x] Retrieve a message from the database
+- [x] Guild Commands
+    - [x] Get a message via the bot
     - [ ] Better formatting of activities, such as displaying Warframe stats
-- [ ] Hot reload support
+- [x] Hot reload support
 - [ ] Interaction Database - Being able to interact with messages more expressively
     - [ ] Stickers
     - [ ] Emotes
