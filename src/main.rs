@@ -15,10 +15,9 @@ use tracing_subscriber::FmtSubscriber;
 /// This is a thread wrapped in `tokio::main` to async main, and from here sets up the rest of Luro.
 #[tokio::main]
 async fn main() {
-    let songbird = songbird::Songbird::serenity();
-
     // Luro's initialised data context
     let data = initialise_data().await;
+    let songbird = data.songbird.clone();
 
     // Attempt to get a token from `secrets.toml`. If it does not exist, try to get it from the environment variable defined by [BOT_TOKEN].
     // If that ALSO does not exist, insult the user for being incompetent.
