@@ -74,7 +74,8 @@ async fn get(
                 .title("Message Link")
                 .url(message.link())
                 .color(guild_accent_colour(accent_colour, ctx.guild()))
-                .description(&message.content);
+                .description(&message.content)
+                .footer(|footer|footer.text(format!("Fav ID: {cursor}")));
 
             if !hide {
                 embed.field("Message ID", message.id, true);
@@ -107,6 +108,21 @@ async fn get(
 async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;
 
+    // Write to disk
+    let new_fav = &mut vec![Favorite {
+        message_id: message.id.0,
+        channel_id: message.channel_id.0
+    }];
+    let favorites = &mut ctx.data().user_favorites.write().await;
+    let user_favs = match favorites.favs.entry(ctx.author().id.to_string()) {
+        Entry::Occupied(occupied) => occupied.into_mut(),
+        Entry::Vacant(vacant) => vacant.insert(new_fav.to_vec())
+    };
+
+    user_favs.append(new_fav);
+    let user_favs_length = user_favs.len();
+    Favs::write(favorites, FAVORITES_FILE_PATH).await;
+
     ctx.send(|builder| {
         builder.embed(|embed| {
             embed
@@ -118,7 +134,8 @@ async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
                 .title("Message Link")
                 .url(message.link())
                 .color(guild_accent_colour(accent_colour, ctx.guild()))
-                .description(&message.content);
+                .description(&message.content)
+                .footer(|footer|footer.text(format!("Fav ID: {}",user_favs_length)));
 
             if !message.attachments.is_empty() {
                 if let Some(attachment) = message.attachments.first() {
@@ -140,21 +157,6 @@ async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
         })
     })
     .await?;
-
-    // Write to disk
-    let new_fav = &mut vec![Favorite {
-        message_id: message.id.0,
-        channel_id: message.channel_id.0
-    }];
-    let favorites = &mut ctx.data().user_favorites.write().await;
-    let user_favs = match favorites.favs.entry(ctx.author().id.to_string()) {
-        Entry::Occupied(occupied) => occupied.into_mut(),
-        Entry::Vacant(vacant) => vacant.insert(new_fav.to_vec())
-    };
-
-    user_favs.append(new_fav);
-
-    Favs::write(favorites, FAVORITES_FILE_PATH).await;
 
     Ok(())
 }
