@@ -41,13 +41,16 @@ pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
     ctx.send(|builder| {
         builder.embed(|embed| {
             embed
-                .title(format!("{name}'s Invite URL"))
+                .title(format!("Invite {name} to your server!"))
                 .thumbnail(bot_user.avatar_url().unwrap_or_default())
                 .color(guild_accent_colour(accent_colour, ctx.guild()))
                 .description(format!("**Click [here]({invite_admin}) to add {name} to your Discord server.**\nOr click [here]({invite_generic}) for an invite where you can customise my permissions!"))
-                .footer(|footer|footer.text("Use the first link where possible, the second is for those that know what they are doing."));
+                .footer(|footer|footer.text("Use the first link where possible, the second is for those that know what they are doing, as the permissions requested are needed for some commands."));
             if let Some(git_url) = git_url {
-                embed.title("Click here to view my source code!").url(git_url);
+                // Slightly customise our formatting so that it flows well.
+                embed.title("Click here to view my source code!")
+                .url(git_url)
+                .description(format!("**And click [here]({invite_admin}) to add {name} to your Discord server!**\nYou can click [here]({invite_generic}) for an invite where you can customise my permissions."));
             };
             embed
         })
