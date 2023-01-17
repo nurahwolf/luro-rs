@@ -1,3 +1,11 @@
+use std::sync::{atomic::AtomicUsize, Arc};
+use config::Config;
+use heck::Heck;
+use quotes::Quotes;
+use secrets::Secrets;
+use stories::Stories;
+use tokio::sync::RwLock;
+
 // THESE CONSTANTS ARE INTENDED TO BE MODIFIABLE BY THE USER! THEY SHOULD NOT BREAK THINGS!!
 // Please feel free to change them, and if they break in unexpected ways, raise an issue.
 
@@ -34,14 +42,6 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 /// A wrapped around the Poise command context, for ease of use.
 pub type Command = poise::Command<Data, Error>;
-
-use std::sync::{atomic::AtomicUsize, Arc};
-use config::Config;
-use heck::Heck;
-use quotes::Quotes;
-use secrets::Secrets;
-use stories::Stories;
-use tokio::sync::RwLock;
 
 pub mod config;
 pub mod heck;
@@ -81,7 +81,7 @@ pub struct Data {
 pub async fn initialise_data() -> Data {
     let database = match sled::open(DATABASE_FILE_PATH) {
         Ok(db) => db,
-        Err(err) => panic!("Could not open / create database for the following reason:\n{err}")
+        Err(err) => panic!("Failed to open / create database at the path: {DATABASE_FILE_PATH}\nReason: {err}")
     };
     
     Data {
