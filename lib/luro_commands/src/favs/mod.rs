@@ -110,7 +110,7 @@ async fn get(
 }
 
 /// Add a message as a 'favorite', allowing you to recall things you love!
-#[poise::command(context_menu_command = "Add to favs", slash_command, category = "Favs", subcommands())]
+#[poise::command(context_menu_command = "Add to favs", slash_command, category = "Favs", subcommands("get"))]
 async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;
 
