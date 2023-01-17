@@ -18,6 +18,7 @@ mod simple;
 mod testing;
 mod structs;
 mod functions;
+mod favs;
 
 pub fn commands() -> Vec<Command> {
     songbird_commands().into_iter()
@@ -33,5 +34,6 @@ pub fn commands() -> Vec<Command> {
         .chain(api::commands())
         .chain(testing::commands())
         .chain(luro::commands())
+        .chain(favs::fav_commands())
         .collect()
 }

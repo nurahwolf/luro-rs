@@ -7,11 +7,5 @@
 
 # Luro Specific
 /testing/
-/data/fursona
-/data/quotes
-/data/database
-/data/config.toml
-/data/heck.toml
-/data/quotes.toml
-/data/secrets.toml
-/data/stories.toml
+/data/*
+!!/data/sample

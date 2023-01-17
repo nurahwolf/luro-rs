@@ -1,5 +1,6 @@
 use std::sync::{atomic::AtomicUsize, Arc};
 use config::Config;
+use favorites::Favs;
 use heck::Heck;
 use quotes::Quotes;
 use secrets::Secrets;
@@ -22,6 +23,8 @@ pub const DATABASE_FILE_PATH: &str = "data/database";
 pub const HECK_FILE_PATH: &str = "data/heck.toml";
 /// Where the quotes toml file lives. Can be overriden elsewhere if desired.
 pub const QUOTES_FILE_PATH: &str = "data/quotes.toml";
+/// Where the user_favs toml file lives. Can be overriden elsewhere if desired.
+pub const FAVORITES_FILE_PATH: &str = "data/user_favs.toml";
 /// Where the secrets toml file lives. Make sure this is in a safe space and with strong permissions!
 pub const SECRETS_FILE_PATH: &str = "data/secrets.toml";
 /// Where the stories toml file lives. Can be overriden elsewhere if desired.
@@ -48,6 +51,7 @@ pub mod heck;
 pub mod quotes;
 pub mod secrets;
 pub mod stories;
+pub mod favorites;
 
 // TODO: Can I have one impl for all of these?
 // TODO: Create a baseline template via code (Such as if the toml file does not exist)
@@ -61,17 +65,19 @@ pub mod stories;
 pub struct Data {
     /// Configuration that is got from the "config.toml" file. This is intended to be user modifiable and easy, by non-technically inclined users.
     /// NOTE: There is "constants.rs" where a bunch of other 'config' like variables live, however these are intended for ADVANCED USERS, hence they live here.
-    pub config: Arc<RwLock<config::Config>>,
+    pub config: Arc<RwLock<Config>>,
     /// Luro's Database, which is currently a sled.rs instance.
     pub database: Arc<sled::Db>,
     /// Heck: A bunch of silly messages to throw at a user. This refers to the "heck.toml" file on disk.
-    pub heck: Arc<RwLock<heck::Heck>>,
+    pub heck: Arc<RwLock<Heck>>,
     /// Quotes: A bunch of silly messages that people have said. This refers to the "quotes.toml" file on disk.
-    pub quotes: Arc<RwLock<quotes::Quotes>>,
+    pub quotes: Arc<RwLock<Quotes>>,
+    /// User Favs: Messages that a user has favorited. This refers to the "user_favs.toml" file on disk.
+    pub user_favorites: Arc<RwLock<Favs>>,
     /// Application secrets got from the "secrets.toml" file on disk.
     pub secrets: Arc<secrets::Secrets>,
     /// Stories: A bunch of 'stories', which are more shitposty in nature. This refers to the "stories.toml" file on disk.
-    pub stories: Arc<RwLock<stories::Stories>>,
+    pub stories: Arc<RwLock<Stories>>,
     /// A Songbird instance for voice fun.
     pub songbird: Arc<songbird::Songbird>,
     /// The total commands that have been ran in this instance. NOTE: This is RESET when the bot restarts! It only lives in memory.
@@ -89,6 +95,7 @@ pub async fn initialise_data() -> Data {
         database: database.into(),
         heck: RwLock::new(Heck::get(HECK_FILE_PATH).await).into(),
         quotes: RwLock::new(Quotes::get(QUOTES_FILE_PATH).await).into(),
+        user_favorites: RwLock::new(Favs::get(FAVORITES_FILE_PATH).await).into(),
         secrets: Secrets::get(SECRETS_FILE_PATH).await.into(),
         stories: RwLock::new(Stories::get(STORIES_FILE_PATH).await).into(),
         songbird: songbird::Songbird::serenity(),
