@@ -1,5 +1,7 @@
+use std::collections::{hash_map::Entry};
+
 use luro_core::{
-    favorites::{Favorite, Favs, UserFavorites},
+    favorites::{Favorite, Favs},
     Context, Error, FAVORITES_FILE_PATH
 };
 use luro_utilities::guild_accent_colour;
@@ -21,17 +23,8 @@ async fn get(
     let favorites = &ctx.data().user_favorites.read().await.favs;
     let accent_colour = ctx.data().config.read().await.accent_colour;
 
-    // Map the user's ID to a usize
-    let author_id_as_usize = match usize::try_from(ctx.author().id.0) {
-        Ok(ok) => ok,
-        Err(err) => {
-            ctx.say(format!("Failed to change the author's ID to a usize: {err}")).await?;
-            return Ok(());
-        }
-    };
-
-    // Now resolve the favorites from the message author
-    let user_favorites = match favorites.get(author_id_as_usize) {
+    // Get favorites from author
+    let user_favorites = match favorites.get(&ctx.author().id.to_string()) {
         Some(user_favorites) => user_favorites,
         None => {
             ctx.say("Looks like you don't have any favorites saved yet!").await?;
@@ -42,9 +35,9 @@ async fn get(
     // If a favorite is specified, get it, otherwise get a random one
     let cursor = match id {
         Some(fav_id) => fav_id,
-        None => rand::thread_rng().gen_range(0..user_favorites.favorites.len())
+        None => rand::thread_rng().gen_range(0..user_favorites.len())
     };
-    let favorite = match user_favorites.favorites.get(cursor) {
+    let favorite = match user_favorites.get(cursor) {
         Some(user_favorites) => user_favorites,
         None => {
             ctx.say("Seems there is no favorite with that ID, sorry!").await?;
@@ -114,16 +107,6 @@ async fn get(
 async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;
 
-    let mut new_favorite = Favs {
-        favs: vec![UserFavorites {
-            user_id: ctx.author().id.0,
-            favorites: vec![Favorite {
-                message_id: message.id.0,
-                channel_id: message.channel_id.0
-            }]
-        }]
-    };
-
     ctx.send(|builder| {
         builder.embed(|embed| {
             embed
@@ -159,8 +142,18 @@ async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
     .await?;
 
     // Write to disk
-    let favorites = &mut ctx.data().user_favorites.write().await.clone();
-    favorites.favs.append(&mut new_favorite.favs);
+    let new_fav = &mut vec![Favorite {
+        message_id: message.id.0,
+        channel_id: message.channel_id.0
+    }];
+    let favorites = &mut ctx.data().user_favorites.write().await;
+    let user_favs = match favorites.favs.entry(ctx.author().id.to_string()) {
+        Entry::Occupied(occupied) => occupied.into_mut(),
+        Entry::Vacant(vacant) => vacant.insert(new_fav.to_vec())
+    };
+
+    user_favs.append(new_fav);
+
     Favs::write(favorites, FAVORITES_FILE_PATH).await;
 
     Ok(())

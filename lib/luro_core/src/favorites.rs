@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use tokio::{fs::write, fs::File, io::AsyncReadExt};
 use tracing::log::info;
@@ -9,16 +11,10 @@ pub struct Favorite {
     pub message_id: u64
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct UserFavorites {
-    pub user_id: u64,
-    pub favorites: Vec<Favorite>
-}
-
 /// Structure for `user_favs.toml`
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Favs {
-    pub favs: Vec<UserFavorites>
+    pub favs: HashMap<String, Vec<Favorite>>
 }
 
 impl Favs {
