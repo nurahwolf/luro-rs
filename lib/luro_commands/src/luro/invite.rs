@@ -17,7 +17,16 @@ pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
         }
     };
 
-    let url = match bot_user.invite_url(ctx, Permissions::ADMINISTRATOR).await {
+    let invite_admin = match bot_user.invite_url(ctx, Permissions::ADMINISTRATOR).await {
+        Ok(invite) => invite,
+        Err(why) => {
+            error!("Encountered an error while trying to generate an invite: {}", why);
+            ctx.say("Failed to generate an invite {why}").await?;
+            return Ok(());
+        }
+    };
+
+    let invite_generic = match bot_user.invite_url(ctx, Permissions::ADD_REACTIONS | Permissions::ATTACH_FILES | Permissions::BAN_MEMBERS  | Permissions::CHANGE_NICKNAME | Permissions::CONNECT | Permissions::CREATE_INSTANT_INVITE | Permissions::CREATE_PRIVATE_THREADS | Permissions::CREATE_PUBLIC_THREADS | Permissions::DEAFEN_MEMBERS | Permissions::EMBED_LINKS | Permissions::KICK_MEMBERS | Permissions::MANAGE_CHANNELS | Permissions::MANAGE_EMOJIS_AND_STICKERS | Permissions::MANAGE_EVENTS | Permissions::MANAGE_GUILD | Permissions::MANAGE_MESSAGES | Permissions::MANAGE_NICKNAMES | Permissions::MANAGE_ROLES | Permissions::MANAGE_THREADS | Permissions::MANAGE_WEBHOOKS | Permissions::MODERATE_MEMBERS | Permissions::READ_MESSAGE_HISTORY | Permissions::SEND_MESSAGES |Permissions::SEND_MESSAGES_IN_THREADS | Permissions::USE_EMBEDDED_ACTIVITIES | Permissions::USE_EXTERNAL_EMOJIS | Permissions::USE_EXTERNAL_STICKERS | Permissions::VIEW_AUDIT_LOG | Permissions::VIEW_CHANNEL).await {
         Ok(invite) => invite,
         Err(why) => {
             error!("Encountered an error while trying to generate an invite: {}", why);
@@ -27,10 +36,7 @@ pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
     };
 
     let name = &bot_user.name;
-    let description = match &ctx.data().config.read().await.git_url {
-        Some(git_url) => format!("Click [here]({url}) to add {name} to your Discord server.\nNote! You can also get my source code from github at {git_url}"),
-        None => format!("Click [here]({url}) to add {name} to your Discord server."),
-    };
+    let git_url = &ctx.data().config.read().await.git_url;
 
     ctx.send(|builder| {
         builder.embed(|embed| {
@@ -38,7 +44,12 @@ pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
                 .title(format!("{name}'s Invite URL"))
                 .thumbnail(bot_user.avatar_url().unwrap_or_default())
                 .color(guild_accent_colour(accent_colour, ctx.guild()))
-                .description(description)
+                .description(format!("**Click [here]({invite_admin}) to add {name} to your Discord server.**\nOr click [here]({invite_generic}) for an invite where you can customise my permissions!"))
+                .footer(|footer|footer.text("Use the first link where possible, the second is for those that know what they are doing."));
+            if let Some(git_url) = git_url {
+                embed.title("Click here to view my source code!").url(git_url);
+            };
+            embed
         })
     })
     .await?;
