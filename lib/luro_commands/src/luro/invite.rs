@@ -50,7 +50,7 @@ pub async fn invite(ctx: Context<'_>) -> Result<(), Error> {
                 // Slightly customise our formatting so that it flows well.
                 embed.title("Click here to view my source code!")
                 .url(git_url)
-                .description(format!("**And click [here]({invite_admin}) to add {name} to your Discord server!**\nYou can click [here]({invite_generic}) for an invite where you can customise my permissions."));
+                .description(format!("**And click [here]({invite_admin}) to add {name} to your Discord server!**\nYou can use [this link]({invite_generic}) for an invite where you can customise my permissions."));
             };
             embed
         })
