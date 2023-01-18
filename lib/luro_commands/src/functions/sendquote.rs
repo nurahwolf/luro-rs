@@ -4,7 +4,6 @@ use poise::serenity_prelude::CreateEmbed;
 
 use luro_core::{Context, Error};
 
-
 pub async fn send_quote(ctx: Context<'_>, quote: &Quote, quote_id: Option<usize>) -> Result<(), Error> {
     let mut embed = CreateEmbed::default();
     embed.description(&quote.quote);

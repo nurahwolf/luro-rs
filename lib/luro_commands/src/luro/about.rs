@@ -1,5 +1,5 @@
-use luro_core::{Context, Error};
 use git2::{ErrorCode, Repository};
+use luro_core::{Context, Error};
 use luro_utilities::guild_accent_colour;
 use memory_stats::memory_stats;
 use poise::serenity_prelude::{CacheHttp, CreateEmbed};

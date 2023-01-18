@@ -1,5 +1,8 @@
 use luro_core::FURAFFINITY_REGEX;
-use poise::{serenity_prelude::{Colour, CreateEmbed, CreateComponents, ButtonStyle, EditMessage, CreateMessage, Message}, CreateReply};
+use poise::{
+    serenity_prelude::{ButtonStyle, Colour, CreateComponents, CreateEmbed, CreateMessage, EditMessage, Message},
+    CreateReply
+};
 use regex::Regex;
 
 use crate::structs::{Cookies, FurAffinity, RequestBody};

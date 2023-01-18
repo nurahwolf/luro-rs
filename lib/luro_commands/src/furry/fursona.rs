@@ -1,8 +1,8 @@
 use futures::{Stream, StreamExt};
 use luro_core::Context;
 use luro_core::Error;
-use luro_core::FURSONA_FILE_PATH;
 use luro_core::DATA_PATH;
+use luro_core::FURSONA_FILE_PATH;
 
 use poise::serenity_prelude::{AttachmentType, CacheHttp};
 use rand::seq::SliceRandom;

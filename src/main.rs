@@ -1,5 +1,5 @@
 use luro_commands::commands;
-use luro_core::{initialise_data};
+use luro_core::initialise_data;
 use std::{collections::HashSet, env};
 
 use luro_core::BOT_TOKEN;
@@ -74,8 +74,9 @@ async fn main() {
                 | GatewayIntents::GUILD_PRESENCES
         )
         .run()
-        .await {
-            Ok(_) => println!("Luro has started!"),
-            Err(err) => panic!("Luro just crashed: {err}"),
-        };
+        .await
+    {
+        Ok(_) => println!("Luro has started!"),
+        Err(err) => panic!("Luro just crashed: {err}")
+    };
 }

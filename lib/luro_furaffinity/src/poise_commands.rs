@@ -1,16 +1,19 @@
 use std::time::Duration;
 
 use futures::StreamExt;
-use luro_core::{Error, TIMEOUT_DURIATION, Data};
+use luro_core::{Data, Error, TIMEOUT_DURIATION};
 use luro_utilities::guild_accent_colour;
-use poise::{serenity_prelude::{InteractionResponseType, Message}, FrameworkContext};
+use poise::{
+    serenity_prelude::{InteractionResponseType, Message},
+    FrameworkContext
+};
 
-use crate::functions::{fa_reply, furaffinity_client, components, fa_message, fa_message_edit};
+use crate::functions::{components, fa_message, fa_message_edit, fa_reply, furaffinity_client};
 
 /// Turn a FurAffinity link into a fancy embed!
 #[poise::command(slash_command, prefix_command, category = "Furry")]
 pub async fn furaffinity(
-    ctx: luro_core::Context<'_> ,
+    ctx: luro_core::Context<'_>,
     #[description = "The post URL to get"]
     #[rest]
     url: String

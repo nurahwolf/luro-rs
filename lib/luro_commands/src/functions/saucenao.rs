@@ -1,8 +1,8 @@
-use crate::{structs::saucenao::SauceNAO};
+use crate::structs::saucenao::SauceNAO;
 use futures::StreamExt;
-use luro_core::{TIMEOUT_DURIATION, Context};
+use luro_core::{Context, TIMEOUT_DURIATION};
 use poise::{
-    serenity_prelude::{ButtonStyle, CreateComponents, InteractionResponseType, Error},
+    serenity_prelude::{ButtonStyle, CreateComponents, Error, InteractionResponseType},
     ReplyHandle
 };
 use std::time::Duration;
@@ -48,11 +48,7 @@ async fn reverse_client(url: &String, api_key: &String) -> Result<SauceNAO, reqw
     }
 }
 
-pub async fn interactive_response<'a>(
-    ctx: Context<'a>,
-    url: String,
-    api_key: &String
-) -> Result<ReplyHandle<'a>, Error> {
+pub async fn interactive_response<'a>(ctx: Context<'a>, url: String, api_key: &String) -> Result<ReplyHandle<'a>, Error> {
     let mut cursor = 0;
     let sauce = match reverse_client(&url, api_key).await {
         Ok(saucenao) => saucenao,

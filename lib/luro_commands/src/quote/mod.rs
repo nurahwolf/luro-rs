@@ -1,11 +1,10 @@
-use luro_core::{QUOTES_FILE_PATH, Error, Context, Command};
-use luro_core::quotes::{Quotes, Quote};
+use luro_core::quotes::{Quote, Quotes};
+use luro_core::{Command, Context, Error, QUOTES_FILE_PATH};
 use luro_utilities::guild_accent_colour;
 use poise::serenity_prelude::Message;
 
 use crate::quote::quote_get::get;
 use crate::quote::quote_user::user;
-
 
 mod quote_get;
 mod quote_user;

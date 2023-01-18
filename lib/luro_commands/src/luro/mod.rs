@@ -1,9 +1,9 @@
-use luro_core::{Context, Error, Command};
-use poise::serenity_prelude::Message;
-use crate::luro::cleanup::cleanup;
-use crate::luro::nickname::nickname;
 use crate::luro::about::{about, about_bot};
+use crate::luro::cleanup::cleanup;
 use crate::luro::invite::invite;
+use crate::luro::nickname::nickname;
+use luro_core::{Command, Context, Error};
+use poise::serenity_prelude::Message;
 
 mod about;
 mod cleanup;

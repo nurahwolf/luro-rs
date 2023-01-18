@@ -1,9 +1,9 @@
-use std::sync::{atomic::AtomicUsize, Arc};
 use config::Config;
 use favorites::Favs;
 use heck::Heck;
 use quotes::Quotes;
 use secrets::Secrets;
+use std::sync::{atomic::AtomicUsize, Arc};
 use stories::Stories;
 use tokio::sync::RwLock;
 
@@ -47,11 +47,11 @@ pub type Context<'a> = poise::Context<'a, Data, Error>;
 pub type Command = poise::Command<Data, Error>;
 
 pub mod config;
+pub mod favorites;
 pub mod heck;
 pub mod quotes;
 pub mod secrets;
 pub mod stories;
-pub mod favorites;
 
 // TODO: Can I have one impl for all of these?
 // TODO: Create a baseline template via code (Such as if the toml file does not exist)
@@ -89,7 +89,7 @@ pub async fn initialise_data() -> Data {
         Ok(db) => db,
         Err(err) => panic!("Failed to open / create database at the path: {DATABASE_FILE_PATH}\nReason: {err}")
     };
-    
+
     Data {
         config: RwLock::new(Config::get(CONFIG_FILE_PATH).await).into(),
         database: database.into(),

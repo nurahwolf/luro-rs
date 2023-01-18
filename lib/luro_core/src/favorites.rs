@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use tokio::{fs::write, fs::File, io::AsyncReadExt};
 use tracing::log::info;
 
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Favorite {
     pub channel_id: u64,

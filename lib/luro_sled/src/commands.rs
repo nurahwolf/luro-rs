@@ -33,7 +33,12 @@ pub async fn get(
     match message_id.parse::<u64>() {
         Ok(parsed_message_id) => {
             let luro_message = get_discord_message(&ctx.data().database, parsed_message_id);
-            let message = match ctx.serenity_context().http.get_message(luro_message.channel_id, luro_message.message_id).await {
+            let message = match ctx
+                .serenity_context()
+                .http
+                .get_message(luro_message.channel_id, luro_message.message_id)
+                .await
+            {
                 Ok(message) => message,
                 Err(_) => {
                     ctx.say(format!(

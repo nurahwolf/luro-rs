@@ -1,5 +1,5 @@
-mod nowplaying;
 pub mod commands;
+mod nowplaying;
 
 use std::sync::{
     atomic::{AtomicUsize, Ordering},

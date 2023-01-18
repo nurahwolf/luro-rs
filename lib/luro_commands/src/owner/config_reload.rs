@@ -1,6 +1,5 @@
 use luro_core::{config::Config, heck::Heck, quotes::Quotes, stories::Stories};
 
-
 use luro_core::{Context, Error, CONFIG_FILE_PATH, HECK_FILE_PATH, QUOTES_FILE_PATH, STORIES_FILE_PATH};
 
 /// Load variables from disk(Owner Only)

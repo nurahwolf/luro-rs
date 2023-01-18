@@ -1,15 +1,18 @@
 mod e621_structs;
 mod functions;
 
+use crate::functions::e621_description;
+use crate::functions::{components, e621_client, embed, E621ComponentData};
 use e621_structs::E621Post;
-use luro_core::{Context, Error, Command};
+use luro_core::{Command, Context, Error};
 use luro_utilities::guild_accent_colour;
-use urlencoding::encode;
-use crate::functions::{e621_client, E621ComponentData, components, embed};
-use poise::{serenity_prelude::{CreateComponents, InteractionResponseType}, futures_util::StreamExt};
+use poise::{
+    futures_util::StreamExt,
+    serenity_prelude::{CreateComponents, InteractionResponseType}
+};
 use rand::{seq::IteratorRandom, thread_rng};
 use std::{fmt::Write, time::Duration};
-use crate::functions::e621_description;
+use urlencoding::encode;
 
 pub fn random_remove(input: &mut Vec<E621Post>) -> Option<E621Post> {
     let i = (0..input.len()).choose(&mut thread_rng())?;
@@ -17,9 +20,7 @@ pub fn random_remove(input: &mut Vec<E621Post>) -> Option<E621Post> {
 }
 
 pub fn e621_commands() -> [Command; 1] {
-    [
-        e621_command(),
-    ]
+    [e621_command()]
 }
 
 /// Search e621 you lewd thing

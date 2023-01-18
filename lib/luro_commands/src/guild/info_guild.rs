@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use luro_core::{Context, Error};
-use luro_utilities::{sort_roles, guild_accent_colour};
+use luro_utilities::{guild_accent_colour, sort_roles};
 use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel};
 use std::fmt::Write;
 

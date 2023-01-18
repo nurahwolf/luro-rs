@@ -1,10 +1,9 @@
 use std::time::Duration;
 
-
 use luro_core::{Context, Error};
 use songbird::{input::Restartable, Event, TrackEvent};
 
-use crate::{SongFader, SongEndNotifier};
+use crate::{SongEndNotifier, SongFader};
 /// Play a song but fade it out every few seconds
 #[poise::command(slash_command, prefix_command, guild_only, category = "Music")]
 pub async fn playfaded(ctx: Context<'_>, song: String) -> Result<(), Error> {

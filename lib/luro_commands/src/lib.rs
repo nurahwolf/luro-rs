@@ -7,6 +7,8 @@ use luro_furaffinity::furaffinity_commands;
 use luro_songbird::commands::songbird_commands;
 
 mod api;
+mod favs;
+mod functions;
 pub mod furry;
 mod guild;
 mod luro;
@@ -15,13 +17,12 @@ mod owner;
 mod quote;
 mod silly;
 mod simple;
-mod testing;
 mod structs;
-mod functions;
-mod favs;
+mod testing;
 
 pub fn commands() -> Vec<Command> {
-    songbird_commands().into_iter()
+    songbird_commands()
+        .into_iter()
         .chain(e621_commands())
         .chain(furaffinity_commands())
         .chain(owner::commands())

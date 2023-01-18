@@ -1,4 +1,4 @@
-use luro_core::{Context, Error, Command};
+use luro_core::{Command, Context, Error};
 mod punish;
 mod purge;
 

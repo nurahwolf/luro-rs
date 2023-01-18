@@ -1,8 +1,8 @@
-use crate::{functions::saucenao::interactive_response};
+use crate::functions::saucenao::interactive_response;
 use futures::{future, StreamExt};
+use luro_core::{Context, Error, SOURCE_FINDER_REGEX};
 use poise::serenity_prelude::Message;
 use regex::Regex;
-use luro_core::{SOURCE_FINDER_REGEX, Context, Error};
 
 /// Reverse lookup an image via SauceNAO / FuzzySearch!
 #[poise::command(prefix_command, slash_command, category = "Furry")]

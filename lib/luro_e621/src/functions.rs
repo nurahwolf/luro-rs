@@ -1,6 +1,6 @@
 use chrono::DateTime;
 use luro_core::Error;
-use poise::serenity_prelude::{Colour, CreateEmbed, CreateComponents, ButtonStyle};
+use poise::serenity_prelude::{ButtonStyle, Colour, CreateComponents, CreateEmbed};
 use std::fmt::Write;
 
 use crate::e621_structs::{E621Post, E621Posts};

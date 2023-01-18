@@ -1,11 +1,13 @@
-use luro_core::{heck::{HeckInt, Heck}, HECK_FILE_PATH, Error, Data, Context};
+use luro_core::{
+    heck::{Heck, HeckInt},
+    Context, Data, Error, HECK_FILE_PATH
+};
 use luro_utilities::guild_accent_colour;
 use poise::{
     serenity_prelude::{CacheHttp, Colour, CreateEmbed, User},
     Modal
 };
 use rand::{seq::SliceRandom, Rng};
-
 
 fn heck_function(author: &User, user: &User, hecks: &Vec<HeckInt>, heck_id: Option<usize>) -> (HeckInt, usize) {
     let heck_id = match heck_id {

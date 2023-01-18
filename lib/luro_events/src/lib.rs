@@ -1,8 +1,11 @@
-use luro_core::{Error, FURAFFINITY_REGEX, Data};
-use luro_sled::add_discord_message;
-use poise::{serenity_prelude::{Interaction, Message, Context, Ready, Activity, OnlineStatus}, FrameworkContext};
-use regex::Regex;
+use luro_core::{Data, Error, FURAFFINITY_REGEX};
 use luro_furaffinity::poise_commands::event_furaffinity;
+use luro_sled::add_discord_message;
+use poise::{
+    serenity_prelude::{Activity, Context, Interaction, Message, OnlineStatus, Ready},
+    FrameworkContext
+};
+use regex::Regex;
 
 /// **Luro's error handler**
 ///

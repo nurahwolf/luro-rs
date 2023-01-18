@@ -1,7 +1,8 @@
 use luro_core::{stories::Stories, STORIES_FILE_PATH};
 use luro_utilities::guild_accent_colour;
 
-use luro_core::{Context, Error};use rand::Rng;
+use luro_core::{Context, Error};
+use rand::Rng;
 
 fn truncate(s: &str, max_chars: usize) -> &str {
     match s.char_indices().nth(max_chars) {

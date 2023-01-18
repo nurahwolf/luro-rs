@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use poise::serenity_prelude::{Guild, Colour, RoleId, Role};
+use poise::serenity_prelude::{Colour, Guild, Role, RoleId};
 
 pub fn guild_accent_colour(accent: [u8; 3], guild: Option<Guild>) -> Colour {
     if let Some(guild) = &guild {

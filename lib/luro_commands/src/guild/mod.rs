@@ -1,6 +1,6 @@
-use luro_core::{Context, Error, Command};
+use luro_core::{Command, Context, Error};
 
-use crate::guild::{info_user::user, info_channel::channel, info_message::message, info_role::role, info_guild::guild};
+use crate::guild::{info_channel::channel, info_guild::guild, info_message::message, info_role::role, info_user::user};
 
 mod firstmessage;
 mod guilds;

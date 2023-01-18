@@ -1,9 +1,7 @@
-use luro_core::{Error, Context};
+use luro_core::{Context, Error};
 use luro_utilities::{format_int, guild_accent_colour};
 
-use crate::{
-    structs::twitter::{User, UserTweets},
-};
+use crate::structs::twitter::{User, UserTweets};
 
 /// Display information on a twitter user
 #[poise::command(prefix_command, slash_command, category = "API")]
