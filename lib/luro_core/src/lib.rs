@@ -1,6 +1,6 @@
 use config::Config;
 use favorites::Favs;
-use heck::Heck;
+use heck::Hecks;
 use quotes::Quotes;
 use secrets::Secrets;
 use std::sync::{atomic::AtomicUsize, Arc};
@@ -69,7 +69,7 @@ pub struct Data {
     /// Luro's Database, which is currently a sled.rs instance.
     pub database: Arc<sled::Db>,
     /// Heck: A bunch of silly messages to throw at a user. This refers to the "heck.toml" file on disk.
-    pub heck: Arc<RwLock<Heck>>,
+    pub heck: Arc<RwLock<Hecks>>,
     /// Quotes: A bunch of silly messages that people have said. This refers to the "quotes.toml" file on disk.
     pub quotes: Arc<RwLock<Quotes>>,
     /// User Favs: Messages that a user has favorited. This refers to the "user_favs.toml" file on disk.
@@ -93,7 +93,7 @@ pub async fn initialise_data() -> Data {
     Data {
         config: RwLock::new(Config::get(CONFIG_FILE_PATH).await).into(),
         database: database.into(),
-        heck: RwLock::new(Heck::get(HECK_FILE_PATH).await).into(),
+        heck: RwLock::new(Hecks::get(HECK_FILE_PATH).await).into(),
         quotes: RwLock::new(Quotes::get(QUOTES_FILE_PATH).await).into(),
         user_favorites: RwLock::new(Favs::get(FAVORITES_FILE_PATH).await).into(),
         secrets: Secrets::get(SECRETS_FILE_PATH).await.into(),
