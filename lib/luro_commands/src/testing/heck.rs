@@ -116,7 +116,7 @@ pub async fn heck(
     };
 
     heck = format_heck(&heck, ctx.author(), &user).await;
-    send_heck(heck, &random_heck_id, false, ctx, user).await?;
+    send_heck(heck, &random_heck_id, plaintext, ctx, user).await?;
 
     Ok(())
 }
