@@ -5,6 +5,7 @@ use luro_core::Command;
 use luro_e621::e621_commands;
 use luro_furaffinity::furaffinity_commands;
 use luro_songbird::commands::songbird_commands;
+use luro_sled::sled_commands;
 
 mod api;
 mod favs;
@@ -36,5 +37,7 @@ pub fn commands() -> Vec<Command> {
         .chain(testing::commands())
         .chain(luro::commands())
         .chain(favs::fav_commands())
+        .chain(sled_commands())
+
         .collect()
 }
