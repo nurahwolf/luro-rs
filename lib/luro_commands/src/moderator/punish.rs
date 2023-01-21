@@ -14,7 +14,6 @@ pub enum PunishType {
 #[poise::command(
     slash_command,
     prefix_command,
-    required_permissions = "BAN_MEMBERS",
     guild_only,
     category = "Moderation"
 )]
