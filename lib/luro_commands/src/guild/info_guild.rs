@@ -5,21 +5,46 @@ use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel};
 use std::fmt::Write;
 
 /// Information about the guild you are in
-#[poise::command(prefix_command, slash_command, guild_only, category = "Guild")]
+#[poise::command(prefix_command, slash_command, category = "Guild")]
 pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] guild: Option<Guild>) -> Result<(), Error> {
-    // Return the current guild, or the guild the user requested
-    let guild_resolved = match &guild {
-        Some(guild_specified) => ctx
-            .serenity_context()
-            .cache
-            .guild(guild_specified)
-            .ok_or("Could not find the guild you entered")?,
-        None => ctx.guild().ok_or("Could not find the guild I am in")?
-    };
+    let mut description = String::new();
+    let mut all_roles_string = String::new();
 
-    // Variables
-    let mut roles_sorted = sort_roles(&guild_resolved);
-    let highest_role = roles_sorted.next().expect("No roles in the server, somehow");
+    // Return the current guild, or the guild the user requested
+    let guild_resolved = match guild {
+        Some(guild) => {
+            // Since we are after information on an external guild, getting the role ID will make discord print a message like <@233>
+            // So instead, print the name 
+            let sorted_roles = sort_roles(&guild);
+            writeln!(description, "Highest Role: {}", sorted_roles.first().expect("No roles in the server, somehow").1.name)?;
+
+            for (_, val) in sorted_roles {
+                if all_roles_string.len() <= 1000 {
+                    write!(all_roles_string, "{0}, ", val.name)?;
+                }
+            }
+
+            guild
+        },
+        None => match ctx.guild() {
+            Some(guild) => {
+                let sorted_roles = sort_roles(&guild);
+                writeln!(description, "Highest Role: {}", sorted_roles.first().expect("No roles in the server, somehow").1)?;
+
+                for (_, val) in sorted_roles {
+                    if all_roles_string.len() <= 1000 {
+                        write!(all_roles_string, "{0}, ", val.name)?;
+                    }
+                }
+
+                guild
+            },
+            None => {
+                ctx.say("If you are running this in DMs, you need to specify the guild :)").await?;
+                return Ok(());
+            }
+        },
+    };
 
     // Create an embed for the data we wish to show, filling it with key data
     let mut embed = CreateEmbed::default();
@@ -31,7 +56,6 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
     embed.thumbnail(&guild_resolved.icon_url().unwrap_or_default());
 
     // Information that does not need its own field
-    let mut description = String::new();
     let guild_channels: Vec<_> = guild_resolved
         .channels
         .iter()
@@ -44,13 +68,8 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
     writeln!(
         description,
         "Guild Created: <t:{0}>",
-        ctx.guild_id().expect("Guild not found").created_at().unix_timestamp()
+        guild_resolved.id.created_at().unix_timestamp()
     )?;
-    if guild.is_none() {
-        writeln!(description, "Highest Role: {}", highest_role.1.name)?;
-    } else {
-        writeln!(description, "Highest Role: {}", highest_role.1)?;
-    };
     writeln!(description, "Online Members: {}", &guild_resolved.presences.len())?;
     writeln!(description, "Total Members: {}", &guild_resolved.members.len())?;
     writeln!(
@@ -186,18 +205,7 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
 
     embed.field("System Channels", system_channels, false);
 
-    // Server Roles
-    let mut all_roles_string = String::new();
-    for (_, val) in roles_sorted.clone() {
-        if all_roles_string.len() <= 1000 {
-            // Stop adding roles once we hit 1000 characters
-            if guild.is_none() {
-                write!(all_roles_string, "{val}, ")?;
-            } else {
-                write!(all_roles_string, "{0}, ", val.name)?;
-            }
-        }
-    }
+
     all_roles_string.truncate(1024); // Additional catch, just to make sure we are within the limit!
     embed.field("Server Roles", all_roles_string, false);
 
@@ -216,6 +224,17 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
             format!("**Animated Emojis:** {guild_emojis_animated}\n**Normal Emojis:** {guild_emojis_normal}\n**Total Emojis:** {guild_emojis}"),
             false
         );
+    };
+
+    // The Bot's permissions
+    println!("Attempting to get bot perms");
+    if let Ok(bot_member) = guild_resolved.member(ctx, ctx.framework().bot_id).await {
+        println!("Found the bot's user, so trying to get perms");
+        if let Ok(bot_permissions) = bot_member.permissions(ctx) {
+            println!("Perms found, so formatting embed string");
+            let field_name = format!("{}'s Permissions", bot_member.display_name());
+            embed.field(field_name, bot_permissions, false);
+        }
     };
 
     // Send the embed

@@ -76,11 +76,12 @@ pub async fn ready_listener(ready: &Ready, ctx: &Context) -> Result<(), Error> {
     }
 
     let guild_count = ready.guilds.len();
+    let bot_username = &ready.user.name;
 
     println!("Connected to the Discord API (version {api_version}) with {r_sessions}/{t_sessions} sessions remaining.");
     println!("Connected to and serving a total of {guild_count} guild(s).");
 
-    let presence_string = format!("on {guild_count} guilds | @luro help");
+    let presence_string = format!("on {guild_count} guilds | @{bot_username} help");
     ctx.set_presence(Some(Activity::playing(&presence_string)), OnlineStatus::Online)
         .await;
     Ok(())
