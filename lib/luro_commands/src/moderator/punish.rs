@@ -1,6 +1,7 @@
+use chrono::{Duration, Utc};
 use luro_core::{Context, Error};
 use luro_utilities::guild_accent_colour;
-use poise::serenity_prelude::{self as serenity, Mentionable};
+use poise::serenity_prelude::{CreateEmbed, Timestamp, User};
 
 #[derive(Debug, poise::ChoiceParameter)]
 pub enum PunishType {
@@ -22,9 +23,12 @@ pub async fn punish(
     #[description = "Punishment type"]
     #[rename = "type"]
     punish_type: PunishType,
-    #[description = "User to execute the punishment on"] user: serenity::User,
-    #[description = "The reason they should be punished"] mut reason: String
+    #[description = "User to execute the punishment on"] user: User,
+    #[description = "The reason they should be punished"] reason: String,
+    #[description = "Purge message history in days from 1 to 7, defaults to 1 if not set"] purge: Option<u8>
 ) -> Result<(), Error> {
+    let mut embed = CreateEmbed::default();
+    let accent_colour = ctx.data().config.read().await.accent_colour;
     let guild = match ctx.guild() {
         Some(ok) => ok,
         None => {
@@ -32,53 +36,170 @@ pub async fn punish(
             return Ok(());
         }
     };
-    let user_id = user.id;
-    let user_mention = user.mention();
-    let user_avatar = user.avatar_url().unwrap_or_default();
-    reason = format!("**Actioned by {}:** {}", ctx.author().mention(), reason);
 
-    let (title, description) = match punish_type {
-        PunishType::Ban => {
-            if reason.is_empty() {
-                guild.ban(ctx, user, 1).await?;
-            } else {
-                guild.ban_with_reason(ctx, user, 1, reason.as_str()).await?;
+    let bot_permissions = match guild.member(ctx, ctx.framework().bot_id).await {
+        Ok(bot_member) => match bot_member.permissions(ctx) {
+            Ok(ok) => ok,
+            Err(err) => {
+                ctx.say(format!(
+                    "Failed to get the permissions for the bot with the following reason: {err}"
+                ))
+                .await?;
+                return Ok(());
             }
-
-            (
-                "BANNED!",
-                format!("Seems like the trash known as {user_mention} (ID:`{user_id}`) has been dumped for good.\nThey were banned for the following reason:\n{reason}")
-            )
-        }
-        PunishType::Kick => {
-            if reason.is_empty() {
-                guild.kick(ctx, user).await?;
-            } else {
-                guild.kick_with_reason(ctx, user, reason.as_str()).await?;
-            }
-
-            (
-                "KICKED",
-                format!("It was about time that {user_mention} (ID:`{user_id}`) got kicked.\n\nThey were kicked for the following reason:\n{reason}")
-            )
-        }
-        PunishType::Mute => {
-            ctx.say("Currently this is not implemented... Yet.").await?;
-
-            (
-                "Muted",
-                format!("A muzzle has been placed on {user_mention} (ID:`{user_id}`).\n\nThey were muzzled for the following reason:\n{reason}")
-            )
+        },
+        Err(err) => {
+            ctx.say(format!("Failed to get the bot's user in the guild: {err}")).await?;
+            return Ok(());
         }
     };
-    let accent_colour = ctx.data().config.read().await.accent_colour;
+
+    let mut victim_member = match guild.member(ctx, user.id).await {
+        Ok(ok) => ok,
+        Err(err) => {
+            ctx.say(format!(
+                "Failed to get the member status of the author with the following reason: {err}"
+            ))
+            .await?;
+            return Ok(());
+        }
+    };
+
+    let author_member = match guild.member(ctx, ctx.author().id).await {
+        Ok(ok) => ok,
+        Err(err) => {
+            ctx.say(format!(
+                "Failed to get the member status of the author with the following reason: {err}"
+            ))
+            .await?;
+            return Ok(());
+        }
+    };
+
+    let author_permissions = match author_member.permissions(ctx) {
+        Ok(ok) => ok,
+        Err(err) => {
+            ctx.say(format!(
+                "Failed to get the permissions of the author with the following reason: {err}"
+            ))
+            .await?;
+            return Ok(());
+        }
+    };
+
+    // Set embed defaults
+    embed.color(guild_accent_colour(accent_colour, ctx.guild()));
+    embed.thumbnail(victim_member.clone().avatar.unwrap_or_default());
+    embed.field("Reason", &reason, false);
+    embed.field("User", &victim_member, true);
+    embed.field("ID", victim_member.user.id, true);
+    embed.author(|author| {
+        author
+            .name(author_member.display_name())
+            .icon_url(author_member.avatar_url().unwrap_or_default())
+    });
+
+    match punish_type {
+        PunishType::Ban => {
+            if !bot_permissions.ban_members() {
+                ctx.say("I'm afraid I'm missing `BAN_MEMBERS`, so I can't ban that user.")
+                    .await?;
+                return Ok(());
+            }
+
+            if ctx.framework().options.owners.contains(&ctx.author().id) || author_permissions.ban_members() {
+                let purge_length = match purge {
+                    Some(purge) => purge,
+                    None => 1
+                };
+
+                match victim_member.ban_with_reason(ctx, purge_length, reason).await {
+                    Ok(ok) => ok,
+                    Err(err) => {
+                        ctx.say(format!("Failed to ban the member with the following reason: {err}"))
+                            .await?;
+                        return Ok(());
+                    }
+                };
+
+                embed.title("BANNED!");
+                embed.description(format!(
+                    "Looks like {} got banned. How unfortunate.",
+                    victim_member.display_name()
+                ));
+                embed.field("Purged History", format!("{purge_length} days"), true);
+            } else {
+                ctx.say("Nice try, but you don't have permission to ban `[BAN_MEMBERS]`.")
+                    .await?;
+                return Ok(());
+            }
+        }
+        PunishType::Kick => {
+            if !bot_permissions.kick_members() {
+                ctx.say("I'm afraid I'm missing `KICK_MEMBERS`, so I can't ban that user.")
+                    .await?;
+                return Ok(());
+            }
+
+            if ctx.framework().options.owners.contains(&ctx.author().id) || author_permissions.kick_members() {
+                match victim_member.kick_with_reason(ctx, &reason).await {
+                    Ok(ok) => ok,
+                    Err(err) => {
+                        ctx.say(format!("Failed to kick the member with the following reason: {err}"))
+                            .await?;
+                        return Ok(());
+                    }
+                };
+
+                embed.title("Kicked");
+                embed.description(format!(
+                    "Looks like {} got kicked. Seems they are not wanted around these parts.",
+                    victim_member.display_name()
+                ));
+            } else {
+                ctx.say("Nice try, but you don't have permission to kick `[KICK_MEMBERS]`.")
+                    .await?;
+                return Ok(());
+            }
+        }
+        PunishType::Mute => {
+            if !bot_permissions.moderate_members() {
+                ctx.say("I'm afraid I'm missing `MODERATE_MEMBERS`, so I can't ban that user.")
+                    .await?;
+                return Ok(());
+            }
+
+            if ctx.framework().options.owners.contains(&ctx.author().id) || author_permissions.moderate_members() {
+                // Time now, add 10 minutes
+                let utc = Utc::now() + Duration::minutes(10);
+                let timestamp = Timestamp::from(utc);
+
+                match victim_member.disable_communication_until_datetime(ctx, timestamp).await {
+                    Ok(ok) => ok,
+                    Err(err) => {
+                        ctx.say(format!("Failed to muzzle that member because of the following reason: {err}"))
+                            .await?;
+                        return Ok(());
+                    }
+                };
+
+                embed.title("Muzzled");
+                embed.description(format!(
+                    "Looks like {} got muzzled. Maybe now they will learn to shut the fuck up.",
+                    victim_member.display_name()
+                ));
+            } else {
+                ctx.say("Nice try, but you don't have permission to timeout `[MODERATE_MEMBERS]`.")
+                    .await?;
+                return Ok(());
+            }
+        }
+    };
 
     ctx.send(|b| {
-        b.embed(|b| {
-            b.title(title)
-                .description(description)
-                .color(guild_accent_colour(accent_colour, ctx.guild()))
-                .thumbnail(user_avatar)
+        b.embed(|e| {
+            *e = embed;
+            e
         })
     })
     .await?;
