@@ -68,7 +68,7 @@ pub async fn get(
                 });
 
                 if let Some(guild) = message_resolved.guild(ctx) {
-                    embed.footer(|footer| footer.icon_url(guild.icon_url().unwrap_or_default()).text(format!("{} - {} - This message was fully resolved, so it still exists in Discord", guild.name, guild.id)));
+                    embed.footer(|footer| footer.icon_url(guild.icon_url().unwrap_or_default()).text(format!("{} - This message was fully resolved, so it still exists in Discord", guild.name)));
                 } else {
                     if let Some(guild_id) = &luro_message.guild_id && !hide {
                         embed.field("Guild ID", guild_id, true);
