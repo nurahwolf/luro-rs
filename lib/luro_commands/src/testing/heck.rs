@@ -8,6 +8,7 @@ use poise::{
     Modal
 };
 use rand::{seq::SliceRandom, Rng};
+use tracing::debug;
 
 /// Open the database as writable in case we need to reload the hecks
 async fn check_hecks_are_present(data: &Data) -> Result<(), Error> {
@@ -70,10 +71,12 @@ pub async fn heck(
     #[description = "Get a particular heck. Random heck returned if not found"] heck_id: Option<usize>
 ) -> Result<(), Error> {
     // Make sure that the hecks have not been fully drained from the database, if so, reload them. This opens the DB as writable for the life of the function
+    debug!("Checking to make sure we have hecks to get");
     check_hecks_are_present(ctx.data).await?;
+    debug!("Checks done");
 
     if new_heck {
-        let heck_db = &mut ctx.data.heck.write().await;
+        debug!("User wants to add a heck, so open the DB as writable");
         let new_heck = match AddHeck::execute(ctx).await{
             Ok(heck) => heck,
             Err(err) => {
@@ -81,6 +84,9 @@ pub async fn heck(
                 return Ok(());
             }
         };
+        debug!("Model responded, open the DB");
+        let heck_db = &mut ctx.data.heck.write().await;
+        debug!("Got DB as writable, let's create our heck");
 
         let (mut heck, heckid) = if let Some(new_heck) = new_heck {
             (Heck {
@@ -92,6 +98,7 @@ pub async fn heck(
                 .await?;
             return Ok(());
         };
+        println!("Rest of the function");
 
         // First Check: If an owner is running the command, don't check to make sure the message contains either <user> or <author>.
         // This is so you can have fully custom messages, and its implied the owners knows what they are doing...

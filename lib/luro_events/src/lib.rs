@@ -5,6 +5,7 @@ use functions::deleted_message_formatted;
 use luro_core::{Data, Error};
 use luro_utilities::{alert_channel_defined, guild_accent_colour};
 use poise::serenity_prelude::Context;
+use tracing::{info, debug};
 
 mod events;
 mod functions;
@@ -49,7 +50,7 @@ pub async fn event_listener(
         poise::Event::Ready { data_about_bot } => ready_listener(data_about_bot, ctx).await?,
         poise::Event::InteractionCreate { interaction } => interaction_create(interaction).await?,
         poise::Event::Message { new_message } => message(new_message, ctx, &framework, user_data).await?,
-        poise::Event::CacheReady { guilds: _ } => println!("Luro's cache is now ready!"),
+        poise::Event::CacheReady { guilds: _ } => info!("Luro's cache is now ready!"),
         poise::Event::ChannelCreate { channel } => {
             if let Some(alert_channel) = alert_channel_defined(&channel.guild_id, user_data, ctx).await {
                 alert_channel
@@ -177,7 +178,7 @@ pub async fn event_listener(
                 return Ok(());
             }
         }
-        // poise::Event::GuildCreate { guild, is_new } => todo!(),
+        poise::Event::GuildCreate { guild, is_new: _ } => info!("Loaded guild {} ({}) into cache", guild.name, guild.id),
         // poise::Event::GuildDelete { incomplete, full } => todo!(),
         // poise::Event::GuildEmojisUpdate { guild_id, current_state } => todo!(),
         // poise::Event::GuildIntegrationsUpdate { guild_id } => todo!(),
@@ -376,7 +377,7 @@ pub async fn event_listener(
         // poise::Event::ThreadMemberUpdate { thread_member } => todo!(),
         // poise::Event::ThreadMembersUpdate { thread_members_update } => todo!(),
         // poise::Event::ThreadUpdate { thread } => todo!(),
-        // poise::Event::Unknown { name, raw } => todo!(),
+        poise::Event::Unknown { name, raw } => debug!("Got an unknown event {}: {:?}", name, raw),
         // poise::Event::UserUpdate { old_data, new } => todo!(),
         // poise::Event::VoiceServerUpdate { update } => todo!(),
         // poise::Event::VoiceStateUpdate { old, new } => todo!(),
@@ -389,7 +390,7 @@ pub async fn event_listener(
         } => {} // Ignore this event
 
         _ => {
-            println!("Got an event in listener: {:?}", event.name());
+            info!("Got an event in listener: {:?}", event.name());
         }
     }
 
