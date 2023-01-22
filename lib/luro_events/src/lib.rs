@@ -175,16 +175,21 @@ pub async fn event_listener(
                 alert_channel
                     .send_message(ctx, |message| {
                         message.add_embed(|embed| {
-                            embed
-                                .title("Member Joined")
-                                .description(format!("The user {} ({}) just joined the server!", new_member, new_member.user.id.0))
+                            embed.title("Member Joined").description(format!(
+                                "The user {} ({}) just joined the server!",
+                                new_member, new_member.user.id.0
+                            ))
                         })
                     })
                     .await?;
                 return Ok(());
             }
         }
-        poise::Event::GuildMemberRemoval { guild_id, user, member_data_if_available: _ } => {
+        poise::Event::GuildMemberRemoval {
+            guild_id,
+            user,
+            member_data_if_available: _
+        } => {
             if let Some(alert_channel) = alert_channel_defined(&guild_id, user_data, ctx).await {
                 alert_channel
                     .send_message(ctx, |message| {
@@ -197,7 +202,7 @@ pub async fn event_listener(
                     .await?;
                 return Ok(());
             }
-        },
+        }
         // poise::Event::GuildMembersChunk { chunk } => todo!(),
         // poise::Event::GuildRoleCreate { new } => todo!(),
         // poise::Event::GuildRoleDelete { guild_id, removed_role_id, removed_role_data_if_available } => todo!(),
