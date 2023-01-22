@@ -1,11 +1,13 @@
-use luro_core::{Data, Error, FURAFFINITY_REGEX};
-use luro_furaffinity::poise_commands::event_furaffinity;
-use luro_sled::add_discord_message;
-use poise::{
-    serenity_prelude::{Activity, Context, Interaction, Message, OnlineStatus, Ready},
-    FrameworkContext
-};
-use regex::Regex;
+use crate::interaction_create::interaction_create;
+use crate::on_message::message;
+use crate::ready_listener::ready_listener;
+use luro_core::{Data, Error};
+
+use poise::serenity_prelude::{Context, GuildChannel, GuildId};
+
+mod interaction_create;
+mod on_message;
+mod ready_listener;
 
 /// **Luro's error handler**
 ///
@@ -45,6 +47,240 @@ pub async fn event_listener(
         poise::Event::Ready { data_about_bot } => ready_listener(data_about_bot, ctx).await?,
         poise::Event::InteractionCreate { interaction } => interaction_create(interaction).await?,
         poise::Event::Message { new_message } => message(new_message, ctx, &framework, user_data).await?,
+        poise::Event::CacheReady { guilds: _ } => println!("Luro's cache is now ready!"),
+        poise::Event::ChannelCreate { channel } => {
+            if let Some(alert_channel) = alert_channel_defined(&channel.guild_id, user_data, ctx).await {
+                alert_channel
+                    .send_message(ctx, |message| {
+                        message.add_embed(|embed| {
+                            embed
+                                .title("Channel Created")
+                                .description(format!("The channel {} just got created", channel.name()))
+                        })
+                    })
+                    .await?;
+                return Ok(());
+            }
+        }
+        poise::Event::CategoryCreate { category } => {
+            if let Some(alert_channel) = alert_channel_defined(&category.guild_id, user_data, ctx).await {
+                alert_channel
+                    .send_message(ctx, |message| {
+                        message.add_embed(|embed| {
+                            embed
+                                .title("Category Created")
+                                .description(format!("The category {} just got created", category.name()))
+                        })
+                    })
+                    .await?;
+                return Ok(());
+            }
+        }
+        poise::Event::CategoryDelete { category } => {
+            if let Some(alert_channel) = alert_channel_defined(&category.guild_id, user_data, ctx).await {
+                alert_channel
+                    .send_message(ctx, |message| {
+                        message.add_embed(|embed| {
+                            embed
+                                .title("Category Deleted")
+                                .description(format!("The category {} just got DELETED!", category.name()))
+                        })
+                    })
+                    .await?;
+                return Ok(());
+            }
+        }
+        poise::Event::ChannelDelete { channel } => {
+            if let Some(alert_channel) = alert_channel_defined(&channel.guild_id, user_data, ctx).await {
+                alert_channel
+                    .send_message(ctx, |message| {
+                        message.add_embed(|embed| {
+                            embed
+                                .title("Channel Deleted")
+                                .description(format!("The channel {} just got DELETED!", channel.name()))
+                        })
+                    })
+                    .await?;
+                return Ok(());
+            }
+        }
+        poise::Event::ChannelPinsUpdate { pin } => {
+            if let Some(guild_id) = pin.guild_id {
+                if let Some(alert_channel) = alert_channel_defined(&&guild_id, user_data, ctx).await {
+                    alert_channel
+                        .send_message(ctx, |message| {
+                            message.add_embed(|embed| {
+                                embed
+                                    .title("Pins Updated")
+                                    .description(format!("The pins in {} just got updated!", pin.channel_id))
+                            })
+                        })
+                        .await?;
+                    return Ok(());
+                }
+            }
+        }
+        poise::Event::ChannelUpdate { old: _, new } => {
+            if let Some(guild_channel) = new.clone().guild() {
+                if let Some(alert_channel) = alert_channel_defined(&guild_channel.guild_id, user_data, ctx).await {
+                    alert_channel
+                        .send_message(ctx, |message| {
+                            message.add_embed(|embed| {
+                                embed
+                                    .title("Channel Updated")
+                                    .description(format!("The channel {} just got updated!", guild_channel))
+                            })
+                        })
+                        .await?;
+                    return Ok(());
+                }
+            }
+        }
+        poise::Event::GuildBanAddition { guild_id, banned_user } => {
+            if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
+                alert_channel
+                    .send_message(ctx, |message| {
+                        message.add_embed(|embed| {
+                            embed
+                                .title("Member Banned")
+                                .description(format!("The user {} ({}) just got banned!", banned_user, banned_user.id.0))
+                        })
+                    })
+                    .await?;
+                return Ok(());
+            }
+        }
+        poise::Event::GuildBanRemoval { guild_id, unbanned_user } => {
+            if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
+                alert_channel
+                    .send_message(ctx, |message| {
+                        message.add_embed(|embed| {
+                            embed.title("Member Unbanned").description(format!(
+                                "The user {} ({}) just got unbanned!",
+                                unbanned_user, unbanned_user.id.0
+                            ))
+                        })
+                    })
+                    .await?;
+                return Ok(());
+            }
+        }
+        // poise::Event::GuildCreate { guild, is_new } => todo!(),
+        // poise::Event::GuildDelete { incomplete, full } => todo!(),
+        // poise::Event::GuildEmojisUpdate { guild_id, current_state } => todo!(),
+        // poise::Event::GuildIntegrationsUpdate { guild_id } => todo!(),
+        // poise::Event::GuildMemberAddition { new_member } => todo!(),
+        // poise::Event::GuildMemberRemoval { guild_id, user, member_data_if_available } => todo!(),
+        // poise::Event::GuildMembersChunk { chunk } => todo!(),
+        // poise::Event::GuildRoleCreate { new } => todo!(),
+        // poise::Event::GuildRoleDelete { guild_id, removed_role_id, removed_role_data_if_available } => todo!(),
+        // poise::Event::GuildRoleUpdate { old_data_if_available, new } => todo!(),
+        // poise::Event::GuildStickersUpdate { guild_id, current_state } => todo!(),
+        // poise::Event::GuildUnavailable { guild_id } => todo!(),
+        // poise::Event::GuildUpdate { old_data_if_available, new_but_incomplete } => todo!(),
+        // poise::Event::IntegrationCreate { integration } => todo!(),
+        // poise::Event::IntegrationUpdate { integration } => todo!(),
+        // poise::Event::IntegrationDelete { integration_id, guild_id, application_id } => todo!(),
+        poise::Event::InviteCreate { data } => {
+            if let Some(guild_id) = data.guild_id {
+                if let Some(alert_channel) = alert_channel_defined(&guild_id, user_data, ctx).await {
+                    let description = match &data.inviter {
+                        Some(inviter) => format!("The invite {} just got created by user {}!", data.code, inviter),
+                        None => format!("The invite {} just got created by an unknown user!", data.code)
+                    };
+                    alert_channel
+                        .send_message(ctx, |message| {
+                            message.add_embed(|embed| {
+                                embed
+                                    .title("Invite Created")
+                                    .description(format!("The invite {} just got created by user {}!", data.code, description))
+                            })
+                        })
+                        .await?;
+                    return Ok(());
+                }
+            }
+        }
+        poise::Event::InviteDelete { data } => {
+            if let Some(guild_id) = data.guild_id {
+                if let Some(alert_channel) = alert_channel_defined(&guild_id, user_data, ctx).await {
+                    alert_channel
+                        .send_message(ctx, |message| {
+                            message.add_embed(|embed| {
+                                embed
+                                    .title("Invite Deleted")
+                                    .description(format!("The invite {} just got created by an unknown user!", data.code))
+                            })
+                        })
+                        .await?;
+                    return Ok(());
+                }
+            }
+        }
+        poise::Event::MessageDelete {
+            channel_id,
+            deleted_message_id,
+            guild_id
+        } => {
+            if let Some(guild_id) = guild_id {
+                if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
+                    alert_channel
+                        .send_message(ctx, |message| {
+                            message.add_embed(|embed| {
+                                embed.title("Message Deleted").description(format!(
+                                    "The message with ID {} just got deleted in channel {}!",
+                                    deleted_message_id, channel_id
+                                ))
+                            })
+                        })
+                        .await?;
+                    return Ok(());
+                }
+            }
+        }
+        poise::Event::MessageDeleteBulk {
+            channel_id,
+            multiple_deleted_messages_ids,
+            guild_id
+        } => {
+            if let Some(guild_id) = guild_id {
+                if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
+                    alert_channel
+                        .send_message(ctx, |message| {
+                            message.add_embed(|embed| {
+                                embed.title("Bulk Messages Deleted").description(format!(
+                                    "A total of {} just got deleted in channel {}!",
+                                    multiple_deleted_messages_ids.len(),
+                                    channel_id
+                                ))
+                            })
+                        })
+                        .await?;
+                    return Ok(());
+                }
+            }
+        }
+        // poise::Event::MessageUpdate { old_if_available, new, event } => todo!(),
+        // poise::Event::ReactionAdd { add_reaction } => todo!(),
+        // poise::Event::ReactionRemove { removed_reaction } => todo!(),
+        // poise::Event::ReactionRemoveAll { channel_id, removed_from_message_id } => todo!(),
+        // poise::Event::PresenceReplace { new_presences } => todo!(),
+        // poise::Event::Resume { event } => todo!(),
+        // poise::Event::ShardStageUpdate { update } => todo!(),
+        // poise::Event::StageInstanceCreate { stage_instance } => todo!(),
+        // poise::Event::StageInstanceDelete { stage_instance } => todo!(),
+        // poise::Event::StageInstanceUpdate { stage_instance } => todo!(),
+        // poise::Event::ThreadCreate { thread } => todo!(),
+        // poise::Event::ThreadDelete { thread } => todo!(),
+        // poise::Event::ThreadListSync { thread_list_sync } => todo!(),
+        // poise::Event::ThreadMemberUpdate { thread_member } => todo!(),
+        // poise::Event::ThreadMembersUpdate { thread_members_update } => todo!(),
+        // poise::Event::ThreadUpdate { thread } => todo!(),
+        // poise::Event::Unknown { name, raw } => todo!(),
+        // poise::Event::UserUpdate { old_data, new } => todo!(),
+        // poise::Event::VoiceServerUpdate { update } => todo!(),
+        // poise::Event::VoiceStateUpdate { old, new } => todo!(),
+        // poise::Event::WebhookUpdate { guild_id, belongs_to_channel_id } => todo!(),
         poise::Event::PresenceUpdate { new_data: _ } => {} // Ignore this event
         poise::Event::TypingStart { event: _ } => {}       // Ignore this event
         poise::Event::GuildMemberUpdate {
@@ -60,75 +296,20 @@ pub async fn event_listener(
     Ok(())
 }
 
-/// A Serenity listener for the [Ready] type
-pub async fn ready_listener(ready: &Ready, ctx: &Context) -> Result<(), Error> {
-    let http = &ctx.http;
-    let api_version = ready.version;
-    let bot_gateway = http.get_bot_gateway().await.unwrap();
-    let t_sessions = bot_gateway.session_start_limit.total;
-    let r_sessions = bot_gateway.session_start_limit.remaining;
-
-    println!("Successfully logged into Discord as the following user:");
-    println!("Bot username: {}", ready.user.tag());
-    println!("Bot user ID: {}", ready.user.id);
-    if let Ok(application_info) = http.get_current_application_info().await {
-        println!("Bot owner: {}", application_info.owner.tag());
-    }
-
-    let guild_count = ready.guilds.len();
-    let bot_username = &ready.user.name;
-
-    println!("Connected to the Discord API (version {api_version}) with {r_sessions}/{t_sessions} sessions remaining.");
-    println!("Connected to and serving a total of {guild_count} guild(s).");
-
-    let presence_string = format!("on {guild_count} guilds | @{bot_username} help");
-    ctx.set_presence(Some(Activity::playing(&presence_string)), OnlineStatus::Online)
-        .await;
-    Ok(())
-}
-
-/// A Serenity listener for the [poise::Event::InteractionCreate] type
-pub async fn interaction_create(interaction: &Interaction) -> Result<(), Error> {
-    match interaction.clone().application_command() {
-        Some(interaction_command) => {
-            println!("Event Listener: Data - {}", interaction_command.data.name)
-        }
-        None => println!("Event Listener: {}", interaction.id().0)
-    };
-    Ok(())
-}
-
-/// A Serenity listener for the [Message] type
-pub async fn message(
-    message: &Message,
-    ctx: &Context,
-    framework: &FrameworkContext<'_, Data, Error>,
-    user_data: &Data
-) -> Result<(), Error> {
-    // Return if the sender was actually the bot
-    if message.author.id == framework.bot_id {
-        return Ok(());
-    }
-
-    // Add the message to the database
-    match add_discord_message(&user_data.database, message.clone()) {
-        Ok(_) => println!("Added message ID {} to database: {}", message.id.0, message.content),
-        Err(err) => println!("Error while saving message to database: {err}")
-    };
-
-    // Run the furaffinity command if the message contains a link
-    let regex = match Regex::new(FURAFFINITY_REGEX) {
-        Ok(ok) => ok,
-        Err(err) => {
-            println!("Message Listner: Failed to match the regex - {err}");
-            return Ok(());
-        }
-    };
-    if let Some(fa_match) = regex.find(&message.content) {
-        match event_furaffinity(ctx, framework, message).await {
-            Ok(_) => println!("Furaffinity: Regex matched - {}", fa_match.as_str()),
-            Err(err) => println!("Furaffinity: Regex failed with the following message - {err}")
+/// If an alert channel is defined in this guild, this function returns that channel. If not, then it returns none.
+async fn alert_channel_defined(guild_id: &GuildId, user_data: &Data, ctx: &Context) -> Option<GuildChannel> {
+    // Check to see if we have settings for this guild
+    if let Some(guild_settings) = user_data.guild_settings.read().await.guilds.get(&guild_id) {
+        // Looks like we do, so do we have a channel defined?
+        if let Some(alert_channel) = guild_settings.moderator_logs_channel {
+            if let Ok(guild) = ctx.http.get_guild(guild_id.0).await {
+                if let Ok(guild_channels) = guild.channels(ctx).await {
+                    if let Some(alert_channel) = guild_channels.get(&alert_channel) {
+                        return Some(alert_channel.clone());
+                    }
+                }
+            }
         }
     }
-    Ok(())
+    return None;
 }

@@ -1,5 +1,6 @@
 use config::Config;
 use favorites::Favs;
+use guild_settings::LuroGuilds;
 use heck::Hecks;
 use quotes::Quotes;
 use secrets::Secrets;
@@ -29,6 +30,8 @@ pub const FAVORITES_FILE_PATH: &str = "data/user_favs.toml";
 pub const SECRETS_FILE_PATH: &str = "data/secrets.toml";
 /// Where the stories toml file lives. Can be overriden elsewhere if desired.
 pub const STORIES_FILE_PATH: &str = "data/stories.toml";
+/// Where the guild_settings toml file lives. Can be overriden elsewhere if desired.
+pub const GUILDSETTINGS_FILE_PATH: &str = "data/guild_settings.toml";
 /// Where the fursona folder lives. Can be overriden elsewhere if desired.
 pub const FURSONA_FILE_PATH: &str = "data/fursona";
 /// The regex used to match furaffinity posts.
@@ -48,6 +51,7 @@ pub type Command = poise::Command<Data, Error>;
 
 pub mod config;
 pub mod favorites;
+pub mod guild_settings;
 pub mod heck;
 pub mod quotes;
 pub mod secrets;
@@ -81,7 +85,8 @@ pub struct Data {
     /// A Songbird instance for voice fun.
     pub songbird: Arc<songbird::Songbird>,
     /// The total commands that have been ran in this instance. NOTE: This is RESET when the bot restarts! It only lives in memory.
-    pub command_total: Arc<RwLock<AtomicUsize>>
+    pub command_total: Arc<RwLock<AtomicUsize>>,
+    pub guild_settings: Arc<RwLock<LuroGuilds>>
 }
 
 pub async fn initialise_data() -> Data {
@@ -99,6 +104,7 @@ pub async fn initialise_data() -> Data {
         secrets: Secrets::get(SECRETS_FILE_PATH).await.into(),
         stories: RwLock::new(Stories::get(STORIES_FILE_PATH).await).into(),
         songbird: songbird::Songbird::serenity(),
-        command_total: RwLock::new(AtomicUsize::new(0)).into() // NOTE: Resets to zero on bot restart, by design
+        command_total: RwLock::new(AtomicUsize::new(0)).into(), // NOTE: Resets to zero on bot restart, by design
+        guild_settings: RwLock::new(LuroGuilds::get(GUILDSETTINGS_FILE_PATH).await).into()
     }
 }
