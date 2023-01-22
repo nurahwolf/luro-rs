@@ -1173,7 +1173,9 @@ name = "luro_utilities"
 version = "0.1.0"
 dependencies = [
  "itertools",
+ "luro_core",
  "poise",
+ "tracing",
 ]
 
 [[package]]

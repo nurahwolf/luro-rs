@@ -1,17 +1,13 @@
 #![feature(let_chains)]
-use crate::interaction_create::interaction_create;
-use crate::on_message::message;
-use crate::ready_listener::ready_listener;
-use functions::format_message;
+
+use events::{interaction_create::interaction_create, on_message::message, ready_listener::ready_listener};
+use functions::deleted_message_formatted;
 use luro_core::{Data, Error};
+use luro_utilities::{alert_channel_defined, guild_accent_colour};
+use poise::serenity_prelude::Context;
 
-use poise::serenity_prelude::{Context, GuildChannel, GuildId};
-use tracing::{debug, error, info};
-
+mod events;
 mod functions;
-mod interaction_create;
-mod on_message;
-mod ready_listener;
 
 /// **Luro's error handler**
 ///
@@ -47,6 +43,8 @@ pub async fn event_listener(
     framework: poise::FrameworkContext<'_, Data, Error>,
     user_data: &Data
 ) -> Result<(), Error> {
+    let accent_colour = user_data.config.read().await.accent_colour;
+
     match event {
         poise::Event::Ready { data_about_bot } => ready_listener(data_about_bot, ctx).await?,
         poise::Event::InteractionCreate { interaction } => interaction_create(interaction).await?,
@@ -60,6 +58,7 @@ pub async fn event_listener(
                             embed
                                 .title("Channel Created")
                                 .description(format!("The channel {} just got created", channel.name()))
+                                .color(guild_accent_colour(accent_colour, channel.guild(ctx)))
                         })
                     })
                     .await?;
@@ -74,6 +73,7 @@ pub async fn event_listener(
                             embed
                                 .title("Category Created")
                                 .description(format!("The category {} just got created", category.name()))
+                                .color(guild_accent_colour(accent_colour, category.guild_id.to_guild_cached(ctx)))
                         })
                     })
                     .await?;
@@ -88,6 +88,7 @@ pub async fn event_listener(
                             embed
                                 .title("Category Deleted")
                                 .description(format!("The category {} just got DELETED!", category.name()))
+                                .color(guild_accent_colour(accent_colour, category.guild_id.to_guild_cached(ctx)))
                         })
                     })
                     .await?;
@@ -102,6 +103,7 @@ pub async fn event_listener(
                             embed
                                 .title("Channel Deleted")
                                 .description(format!("The channel {} just got DELETED!", channel.name()))
+                                .color(guild_accent_colour(accent_colour, channel.guild(ctx)))
                         })
                     })
                     .await?;
@@ -117,6 +119,7 @@ pub async fn event_listener(
                                 embed
                                     .title("Pins Updated")
                                     .description(format!("The pins in {} just got updated!", pin.channel_id))
+                                    .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                             })
                         })
                         .await?;
@@ -133,6 +136,7 @@ pub async fn event_listener(
                                 embed
                                     .title("Channel Updated")
                                     .description(format!("The channel {} just got updated!", guild_channel))
+                                    .color(guild_accent_colour(accent_colour, guild_channel.guild(ctx)))
                             })
                         })
                         .await?;
@@ -148,6 +152,9 @@ pub async fn event_listener(
                             embed
                                 .title("Member Banned")
                                 .description(format!("The user {} ({}) just got banned!", banned_user, banned_user.id.0))
+                                .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
+                                
+                                
                         })
                     })
                     .await?;
@@ -163,6 +170,7 @@ pub async fn event_listener(
                                 "The user {} ({}) just got unbanned!",
                                 unbanned_user, unbanned_user.id.0
                             ))
+                            .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                         })
                     })
                     .await?;
@@ -182,6 +190,7 @@ pub async fn event_listener(
                                 "The user {} ({}) just joined the server!",
                                 new_member, new_member.user.id.0
                             ))
+                            .color(guild_accent_colour(accent_colour, new_member.guild_id.to_guild_cached(ctx)))
                         })
                     })
                     .await?;
@@ -200,6 +209,7 @@ pub async fn event_listener(
                             embed
                                 .title("Member Left")
                                 .description(format!("The user {} ({}) just left the server!", user, user.id.0))
+                                .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                         })
                     })
                     .await?;
@@ -229,6 +239,7 @@ pub async fn event_listener(
                                 embed
                                     .title("Invite Created")
                                     .description(format!("The invite {} just got created by user {}!", data.code, description))
+                                    .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                             })
                         })
                         .await?;
@@ -245,6 +256,7 @@ pub async fn event_listener(
                                 embed
                                     .title("Invite Deleted")
                                     .description(format!("The invite {} just got created by an unknown user!", data.code))
+                                    .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                             })
                         })
                         .await?;
@@ -259,7 +271,7 @@ pub async fn event_listener(
         } => {
             if let Some(guild_id) = guild_id {
                 if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
-                    let message = format_message(ctx, &alert_channel, user_data, deleted_message_id.0, channel_id, false).await;
+                    let message = deleted_message_formatted(ctx, &alert_channel, user_data, deleted_message_id.0, channel_id, false).await;
 
                     alert_channel
                         .send_message(ctx, |m| {
@@ -286,6 +298,7 @@ pub async fn event_listener(
                                     multiple_deleted_messages_ids.len(),
                                     channel_id
                                 ))
+                                .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                             })
                         })
                         .await?;
@@ -327,28 +340,4 @@ pub async fn event_listener(
     }
 
     Ok(())
-}
-
-/// If an alert channel is defined in this guild, this function returns that channel. If not, then it returns none.
-async fn alert_channel_defined(guild_id: &GuildId, user_data: &Data, ctx: &Context) -> Option<GuildChannel> {
-    // Check to see if we have settings for this guild
-    match user_data.guild_settings.read().await.guilds.get(&guild_id.to_string()) {
-        Some(guild_settings) => match guild_settings.moderator_logs_channel {
-            Some(alert_channel) => match ctx.http.get_guild(guild_id.0).await {
-                Ok(guild) => match guild.channels(ctx).await {
-                    Ok(guild_channels) => match guild_channels.get(&alert_channel) {
-                        Some(alert_channel) => return Some(alert_channel.clone()),
-                        None => info!("Event Listener: Got a list of channels, but could not find the configured alert channel")
-                    },
-                    Err(err) => {
-                        error!("Event Listener: Failed to get the channels in the guild with the following error\n{err}")
-                    }
-                },
-                Err(err) => error!("Event Listener: Failed to resolve the guild ID to a guild with the following error\n{err}")
-            },
-            None => debug!("Event Listener: Guild settings defined, but there is no alert channel configured")
-        },
-        None => debug!("Event Listener: No guild settings are available for this guild")
-    }
-    return None;
 }

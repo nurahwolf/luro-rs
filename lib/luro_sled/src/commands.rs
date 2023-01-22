@@ -3,7 +3,7 @@ use poise::serenity_prelude::{Message, User};
 
 use luro_core::{Context, Error};
 
-use crate::{add_discord_message, total_messages_by_user, get_message_formatted};
+use crate::{add_discord_message, get_message_formatted, total_messages_by_user};
 
 /// Add a message to the database
 #[poise::command(prefix_command, slash_command, category = "General")]

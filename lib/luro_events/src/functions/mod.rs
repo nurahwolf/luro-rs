@@ -3,7 +3,7 @@ use luro_sled::get_discord_message;
 use luro_utilities::guild_accent_colour;
 use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, CreateMessage, GuildChannel};
 
-pub async fn format_message<'a>(
+pub async fn deleted_message_formatted<'a>(
     ctx: &'a Context,
     alert_channel: &'a GuildChannel,
     data: &'a Data,
@@ -19,6 +19,7 @@ pub async fn format_message<'a>(
             let message_resolved = ctx.http.get_message(luro_message.channel_id, luro_message.message_id).await;
             let mut embed = CreateEmbed::default();
 
+            embed.title("Message Deleted");
             embed.description(&luro_message.message_content);
             embed.color(guild_accent_colour(accent_colour, alert_channel.guild(&ctx)));
             embed.footer(|footer| footer.text("This message was fetched from the database, so most likely no longer exists"));
@@ -40,29 +41,6 @@ pub async fn format_message<'a>(
                 embed.field("Guild ID", guild_id, true);
             }
             }
-
-            if let Ok(message_resolved) = message_resolved {
-                embed.footer(|footer| footer.text("This message was fully resolved, so it still exists in Discord"));
-                embed.author(|author| {
-                    author
-                        .name(&message_resolved.author.name)
-                        .icon_url(&message_resolved.author.avatar_url().unwrap_or_default())
-                        .url(&message_resolved.link())
-                });
-
-                if let Some(guild) = message_resolved.guild(ctx) {
-                    embed.footer(|footer| {
-                        footer.icon_url(guild.icon_url().unwrap_or_default()).text(format!(
-                            "{} - This message was fully resolved, so it still exists in Discord",
-                            guild.name
-                        ))
-                    });
-                } else {
-                    if let Some(guild_id) = &luro_message.guild_id && !hide {
-                    embed.field("Guild ID", guild_id, true);
-                }
-                }
-            };
 
             let mut message = CreateMessage::default();
             message.add_embed(|e| {

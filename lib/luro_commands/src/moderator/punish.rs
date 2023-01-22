@@ -1,6 +1,6 @@
 use chrono::{Duration, Utc};
 use luro_core::{Context, Error};
-use luro_utilities::guild_accent_colour;
+use luro_utilities::{alert_channel_defined, guild_accent_colour};
 use poise::serenity_prelude::{CreateEmbed, Timestamp, User};
 
 #[derive(Debug, poise::ChoiceParameter)]
@@ -192,11 +192,22 @@ pub async fn punish(
 
     ctx.send(|b| {
         b.embed(|e| {
-            *e = embed;
+            *e = embed.clone();
             e
         })
     })
     .await?;
+
+    if let Some(alert_channel) = alert_channel_defined(&guild.id, ctx.data(), ctx.serenity_context()).await {
+        alert_channel
+            .send_message(ctx, |message| {
+                message.embed(|e| {
+                    *e = embed;
+                    e
+                })
+            })
+            .await?;
+    }
 
     Ok(())
 }
