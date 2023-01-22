@@ -21,7 +21,7 @@ pub async fn message(
 
     // Add the message to the database
     match add_discord_message(&user_data.database, message.clone()) {
-        Ok(_) => println!("Added message ID {} to database: {}", message.id.0, message.content),
+        Ok(_) => println!("DB ADD: {} - {}\nMessage ID: {}\n", message.author.name, message.content, message.id.0),
         Err(err) => println!("Error while saving message to database: {err}")
     };
 
