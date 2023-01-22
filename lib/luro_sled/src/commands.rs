@@ -43,7 +43,7 @@ pub async fn get(
             if let Ok(message_user) = ctx.http().get_user(luro_message.user_id).await {
                 embed.author(|author| {
                     author
-                        .name(format!("{} - {}", &message_user.name, &message_user.id))
+                        .name(&message_user.name)
                         .icon_url(&message_user.avatar_url().unwrap_or_default())
                 });
             }
@@ -62,8 +62,8 @@ pub async fn get(
                 embed.footer(|footer| footer.text("This message was fully resolved, so it still exists in Discord"));
                 embed.author(|author| {
                     author
-                        .name(format!("{} - {}", &message_resolved.author.name, &message_resolved.author.id))
-                        .icon_url(&message_resolved.author.avatar_url().unwrap_or_default())
+                    .name(&message_resolved.author.name)
+                    .icon_url(&message_resolved.author.avatar_url().unwrap_or_default())
                         .url(&message_resolved.link())
                 });
 
