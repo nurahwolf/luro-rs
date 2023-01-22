@@ -1,7 +1,7 @@
 #![feature(let_chains)]
 
 use itertools::Itertools;
-use poise::serenity_prelude::{Colour, Guild, RoleId, Role};
+use poise::serenity_prelude::{Colour, Guild, Role, RoleId};
 
 /// Get the guild accent colour. If no guild is specified, or we fail to get the highest role, fall back to our defined accent colour
 pub fn guild_accent_colour(accent: [u8; 3], guild: Option<Guild>) -> Colour {

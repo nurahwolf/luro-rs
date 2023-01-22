@@ -11,12 +11,7 @@ pub enum PunishType {
 }
 
 /// Ban, kick or muzzle someone for being bad
-#[poise::command(
-    slash_command,
-    prefix_command,
-    guild_only,
-    category = "Moderation"
-)]
+#[poise::command(slash_command, prefix_command, guild_only, category = "Moderation")]
 pub async fn punish(
     ctx: Context<'_>,
     #[description = "Punishment type"]
