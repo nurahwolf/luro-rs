@@ -32,8 +32,18 @@ pub async fn get(
 
     match message_id.parse::<u64>() {
         Ok(parsed_message_id) => {
-            let luro_message = get_discord_message(&ctx.data().database, parsed_message_id);
-            let message_resolved = ctx.serenity_context().http.get_message(luro_message.channel_id, luro_message.message_id).await;
+            let luro_message = match get_discord_message(&ctx.data().database, parsed_message_id) {
+                Ok(ok) => ok,
+                Err(err) => {
+                    ctx.say(err).await?;
+                    return Ok(());
+                }
+            };
+            let message_resolved = ctx
+                .serenity_context()
+                .http
+                .get_message(luro_message.channel_id, luro_message.message_id)
+                .await;
             let mut embed = CreateEmbed::default();
 
             embed.description(&luro_message.message_content);
@@ -62,13 +72,18 @@ pub async fn get(
                 embed.footer(|footer| footer.text("This message was fully resolved, so it still exists in Discord"));
                 embed.author(|author| {
                     author
-                    .name(&message_resolved.author.name)
-                    .icon_url(&message_resolved.author.avatar_url().unwrap_or_default())
+                        .name(&message_resolved.author.name)
+                        .icon_url(&message_resolved.author.avatar_url().unwrap_or_default())
                         .url(&message_resolved.link())
                 });
 
                 if let Some(guild) = message_resolved.guild(ctx) {
-                    embed.footer(|footer| footer.icon_url(guild.icon_url().unwrap_or_default()).text(format!("{} - This message was fully resolved, so it still exists in Discord", guild.name)));
+                    embed.footer(|footer| {
+                        footer.icon_url(guild.icon_url().unwrap_or_default()).text(format!(
+                            "{} - This message was fully resolved, so it still exists in Discord",
+                            guild.name
+                        ))
+                    });
                 } else {
                     if let Some(guild_id) = &luro_message.guild_id && !hide {
                         embed.field("Guild ID", guild_id, true);

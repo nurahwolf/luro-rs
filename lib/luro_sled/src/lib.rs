@@ -69,30 +69,29 @@ pub fn add_discord_message(db: &sled::Db, message: Message) -> sled::Result<()> 
     Ok(())
 }
 
-pub fn get_discord_message(db: &sled::Db, id: u64) -> LuroMessage {
+pub fn get_discord_message(db: &sled::Db, id: u64) -> Result<LuroMessage, String> {
     let messages_tree = if let Ok(messages) = db.open_tree(b"luromessage") {
         messages
     } else {
-        panic!("Failed to get database messages");
+        return Err("DB: Failed to open the database".to_string());
     };
 
     let messages_vec = match messages_tree.get(id.as_bytes()) {
         Ok(result) => result,
-        Err(_) => panic!("Failed to find anything with that key")
+        Err(_) => return Err("DB: Failed to get anything from the database".to_string())
     };
 
     let messages_vec_resolved = match messages_vec {
         Some(result) => result,
-        None => panic!("Failed to resolve the vec for that key")
+        None => return Err("No message was returned from the database. Sure that is the right message ID?".to_string())
     };
 
     let luro_message = unsafe { rkyv::archived_root::<LuroMessage>(messages_vec_resolved.as_bytes()) };
 
-    let deserialized: LuroMessage = match luro_message.deserialize(&mut rkyv::Infallible) {
-        Ok(ok) => ok,
-        Err(err) => panic!("DB: Failed to deserialize: {err}")
+    match luro_message.deserialize(&mut rkyv::Infallible) {
+        Ok(luro_message) => return Ok(luro_message),
+        Err(err) => return Err(format!("DB: Failed to deserialize: {err}"))
     };
-    deserialized
 }
 
 pub fn total_messages_by_user(db: &sled::Db, user_id: u64) -> u64 {
