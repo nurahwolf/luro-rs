@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use tokio::{fs::write, fs::File, io::AsyncReadExt};
 use tracing::log::info;
 
+use crate::GUILDSETTINGS_FILE_PATH;
+
 /// A struct holding specific guild settings
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct LuroGuildSettings {
@@ -58,8 +60,9 @@ impl LuroGuilds {
     }
 
     /// Reload just one guild, and return it's settings. Errors if it cannot find the guild.
-    pub fn reload_guild(&mut self, guild_id: GuildId, new_data: LuroGuildSettings) -> LuroGuildSettings {
+    pub async fn reload_guild(&mut self, guild_id: GuildId, new_data: LuroGuildSettings) -> LuroGuildSettings {
         self.guilds.insert(guild_id, new_data.clone());
+        LuroGuilds::write(self, GUILDSETTINGS_FILE_PATH).await;
         new_data
     }
 
