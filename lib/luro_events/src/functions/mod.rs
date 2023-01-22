@@ -3,14 +3,14 @@ use luro_sled::get_discord_message;
 use luro_utilities::guild_accent_colour;
 use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, CreateMessage, GuildChannel};
 
-pub async fn format_message(
-    ctx: &Context,
-    alert_channel: &GuildChannel,
-    data: &Data,
+pub async fn format_message<'a>(
+    ctx: &'a Context,
+    alert_channel: &'a GuildChannel,
+    data: &'a Data,
     message_id: u64,
-    channel_id: &ChannelId,
+    channel_id: &'a ChannelId,
     hide: bool
-) -> CreateMessage {
+) -> CreateMessage<'a> {
     let accent_colour = data.config.read().await.accent_colour;
     let mut embed = CreateEmbed::default();
 
