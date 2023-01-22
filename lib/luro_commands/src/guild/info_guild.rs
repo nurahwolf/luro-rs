@@ -14,9 +14,13 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
     let guild_resolved = match guild {
         Some(guild) => {
             // Since we are after information on an external guild, getting the role ID will make discord print a message like <@233>
-            // So instead, print the name 
+            // So instead, print the name
             let sorted_roles = sort_roles(&guild);
-            writeln!(description, "Highest Role: {}", sorted_roles.first().expect("No roles in the server, somehow").1.name)?;
+            writeln!(
+                description,
+                "Highest Role: {}",
+                sorted_roles.first().expect("No roles in the server, somehow").1.name
+            )?;
 
             for (_, val) in sorted_roles {
                 if all_roles_string.len() <= 1000 {
@@ -25,11 +29,15 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
             }
 
             guild
-        },
+        }
         None => match ctx.guild() {
             Some(guild) => {
                 let sorted_roles = sort_roles(&guild);
-                writeln!(description, "Highest Role: {}", sorted_roles.first().expect("No roles in the server, somehow").1)?;
+                writeln!(
+                    description,
+                    "Highest Role: {}",
+                    sorted_roles.first().expect("No roles in the server, somehow").1
+                )?;
 
                 for (_, val) in sorted_roles {
                     if all_roles_string.len() <= 1000 {
@@ -38,12 +46,13 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
                 }
 
                 guild
-            },
+            }
             None => {
-                ctx.say("If you are running this in DMs, you need to specify the guild :)").await?;
+                ctx.say("If you are running this in DMs, you need to specify the guild :)")
+                    .await?;
                 return Ok(());
             }
-        },
+        }
     };
 
     // Create an embed for the data we wish to show, filling it with key data
@@ -204,7 +213,6 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
     };
 
     embed.field("System Channels", system_channels, false);
-
 
     all_roles_string.truncate(1024); // Additional catch, just to make sure we are within the limit!
     embed.field("Server Roles", all_roles_string, false);

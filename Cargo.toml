@@ -9,6 +9,7 @@ edition = "2021"
 tracing = "0.1" # Useful for logs and I should use it some more. It's required by a bunch of dependencies, so might as well make use of it.
 tracing-subscriber = "0.3" # See notes
 futures = { version = "0.3.13", default-features = false } # For Discord autocomplete
+chrono = { version = "0.4.23", default-features = false, features = ["clock"] }
 
 # Luro Components
 # luro_sled = { path = "lib/luro_sled" }

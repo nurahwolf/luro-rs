@@ -30,6 +30,7 @@ Things that are pretty important to have, and hopefully will not take too much i
 
 Things that are nice to have. Primarily a shopping list of ideas.
 
+- [] Guild Settings in DB instead of TOML file
 - [ ] Website
     - [ ] Website Landing PAge
     - [ ] Website Dashboard

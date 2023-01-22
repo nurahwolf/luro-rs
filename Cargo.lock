@@ -1034,6 +1034,7 @@ dependencies = [
 name = "luro"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "futures",
  "luro_commands",
  "luro_core",
@@ -1124,6 +1125,7 @@ dependencies = [
  "luro_utilities",
  "poise",
  "regex",
+ "tracing",
 ]
 
 [[package]]
@@ -1171,7 +1173,9 @@ name = "luro_utilities"
 version = "0.1.0"
 dependencies = [
  "itertools",
+ "luro_core",
  "poise",
+ "tracing",
 ]
 
 [[package]]

@@ -3,6 +3,7 @@ use luro_core::{Command, Context, Error};
 use crate::guild::{info_channel::channel, info_guild::guild, info_message::message, info_role::role, info_user::user};
 
 mod firstmessage;
+mod guild_settings;
 mod guilds;
 mod info_channel;
 mod info_guild;
@@ -21,11 +22,12 @@ pub async fn info(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn commands() -> [Command; 4] {
+pub fn commands() -> [Command; 5] {
     [
         firstmessage::firstmessage(),
         guilds::guilds(),
         info(),
-        info_user::userinfo_context()
+        info_user::userinfo_context(),
+        guild_settings::settings()
     ]
 }

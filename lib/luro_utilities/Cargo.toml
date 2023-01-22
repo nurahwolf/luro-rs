@@ -7,4 +7,6 @@ edition = "2021"
 
 [dependencies]
 poise = "0.5"
+tracing = "0.1"
 itertools = "0.10"
+luro_core = { path = "../../lib/luro_core" }

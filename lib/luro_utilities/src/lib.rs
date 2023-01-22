@@ -1,7 +1,9 @@
 #![feature(let_chains)]
 
 use itertools::Itertools;
-use poise::serenity_prelude::{Colour, Guild, RoleId, Role};
+use luro_core::Data;
+use poise::serenity_prelude::{Colour, Guild, Role, RoleId, GuildId, GuildChannel, Context};
+use tracing::{info, error, debug};
 
 /// Get the guild accent colour. If no guild is specified, or we fail to get the highest role, fall back to our defined accent colour
 pub fn guild_accent_colour(accent: [u8; 3], guild: Option<Guild>) -> Colour {
@@ -35,4 +37,28 @@ pub fn format_int(int: u64) -> String {
         string.insert(0, val);
     }
     string
+}
+
+/// If an alert channel is defined in this guild, this function returns that channel. If not, then it returns none.
+pub async fn alert_channel_defined(guild_id: &GuildId, user_data: &Data, ctx: &Context) -> Option<GuildChannel> {
+    // Check to see if we have settings for this guild
+    match user_data.guild_settings.read().await.guilds.get(&guild_id.to_string()) {
+        Some(guild_settings) => match guild_settings.moderator_logs_channel {
+            Some(alert_channel) => match ctx.http.get_guild(guild_id.0).await {
+                Ok(guild) => match guild.channels(ctx).await {
+                    Ok(guild_channels) => match guild_channels.get(&alert_channel) {
+                        Some(alert_channel) => return Some(alert_channel.clone()),
+                        None => info!("Event Listener: Got a list of channels, but could not find the configured alert channel")
+                    },
+                    Err(err) => {
+                        error!("Event Listener: Failed to get the channels in the guild with the following error\n{err}")
+                    }
+                },
+                Err(err) => error!("Event Listener: Failed to resolve the guild ID to a guild with the following error\n{err}")
+            },
+            None => debug!("Event Listener: Guild settings defined, but there is no alert channel configured")
+        },
+        None => debug!("Event Listener: No guild settings are available for this guild")
+    }
+    return None;
 }
