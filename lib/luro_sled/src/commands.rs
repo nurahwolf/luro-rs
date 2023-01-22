@@ -1,5 +1,5 @@
 use luro_utilities::guild_accent_colour;
-use poise::serenity_prelude::{Message, User};
+use poise::serenity_prelude::{CacheHttp, CreateEmbed, Message, User};
 
 use luro_core::{Context, Error};
 
@@ -33,49 +33,53 @@ pub async fn get(
     match message_id.parse::<u64>() {
         Ok(parsed_message_id) => {
             let luro_message = get_discord_message(&ctx.data().database, parsed_message_id);
-            let message = match ctx
-                .serenity_context()
-                .http
-                .get_message(luro_message.channel_id, luro_message.message_id)
-                .await
-            {
-                Ok(message) => message,
-                Err(_) => {
-                    ctx.say(format!(
-                        "I found that message, but failed to resolve their user.\n**Channel ID:** {}\n**Message ID:** {}\n**User ID:** {}\n**Message Content:** {}",
-                        luro_message.channel_id, luro_message.message_id, luro_message.user_id, luro_message.message_content
-                    ))
-                    .await?;
-                    return Ok(());
+            let message_resolved = ctx.serenity_context().http.get_message(luro_message.channel_id, luro_message.message_id).await;
+            let mut embed = CreateEmbed::default();
+
+            embed.description(&luro_message.message_content);
+            embed.color(guild_accent_colour(accent_colour, ctx.guild()));
+            embed.footer(|footer| footer.text("This message was fetched from the database, so most likely no longer exists"));
+
+            if let Ok(message_user) = ctx.http().get_user(luro_message.user_id).await {
+                embed.author(|author| {
+                    author
+                        .name(format!("{} - {}", &message_user.name, &message_user.id))
+                        .icon_url(&message_user.avatar_url().unwrap_or_default())
+                });
+            }
+
+            if !hide {
+                embed.field("Message ID", &luro_message.message_id, true);
+                embed.field("Channel ID", &luro_message.channel_id, true);
+                embed.field("User ID", &luro_message.user_id, true);
+
+                if let Some(guild_id) = &luro_message.guild_id && message_resolved.is_err() {
+                    embed.field("Guild ID", guild_id, true);
+                }
+            }
+
+            if let Ok(message_resolved) = message_resolved {
+                embed.footer(|footer| footer.text("This message was fully resolved, so it still exists in Discord"));
+                embed.author(|author| {
+                    author
+                        .name(format!("{} - {}", &message_resolved.author.name, &message_resolved.author.id))
+                        .icon_url(&message_resolved.author.avatar_url().unwrap_or_default())
+                        .url(&message_resolved.link())
+                });
+
+                if let Some(guild) = message_resolved.guild(ctx) {
+                    embed.footer(|footer| footer.icon_url(guild.icon_url().unwrap_or_default()).text(format!("{} - {} - This message was fully resolved, so it still exists in Discord", guild.name, guild.id)));
+                } else {
+                    if let Some(guild_id) = &luro_message.guild_id && !hide {
+                        embed.field("Guild ID", guild_id, true);
+                    }
                 }
             };
 
             ctx.send(|builder| {
-                builder.embed(|embed| {
-                    embed
-                        .author(|author| {
-                            author
-                                .name(&message.author.name)
-                                .icon_url(&message.author.avatar_url().unwrap_or_default())
-                        })
-                        .title("Message Link")
-                        .url(message.link())
-                        .color(guild_accent_colour(accent_colour, ctx.guild()))
-                        .description(luro_message.message_content);
-
-                    if !hide {
-                        embed.field("Message ID", message.id, true);
-                        if let Some(guild_id) = message.guild_id {
-                            embed.field("Guild ID", guild_id, true);
-                        }
-                        embed.field("Author", format!("{} (ID: {})", message.author, message.author.id), true);
-                    }
-
-                    if let Some(guild) = message.guild(ctx) {
-                        embed.footer(|footer| footer.icon_url(guild.icon_url().unwrap_or_default()).text(guild.name));
-                    };
-
-                    embed
+                builder.embed(|e| {
+                    *e = embed;
+                    e
                 })
             })
             .await?;

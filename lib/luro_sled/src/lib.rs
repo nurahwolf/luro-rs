@@ -1,3 +1,4 @@
+#![feature(let_chains)]
 use luro_core::{Command, Context, Error, DATABASE_FILE_PATH};
 use poise::serenity_prelude::Message;
 use rkyv::{Archive, Deserialize, Serialize};
