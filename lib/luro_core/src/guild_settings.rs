@@ -20,8 +20,8 @@ pub struct LuroGuildSettings {
 /// This file is checked for some commands, and allows some overrides such as a channel to report bans or who can execute commands
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LuroGuilds {
-    /// A hashmap containing all the guilds, and their settings
-    pub guilds: HashMap<GuildId, LuroGuildSettings>
+    /// A hashmap containing all the guilds, and their settings. Key is GuildId
+    pub guilds: HashMap<String, LuroGuildSettings>
 }
 
 impl LuroGuilds {
@@ -61,7 +61,7 @@ impl LuroGuilds {
 
     /// Reload just one guild, and return it's settings. Errors if it cannot find the guild.
     pub async fn reload_guild(&mut self, guild_id: GuildId, new_data: LuroGuildSettings) -> LuroGuildSettings {
-        self.guilds.insert(guild_id, new_data.clone());
+        self.guilds.insert(guild_id.to_string(), new_data.clone());
         LuroGuilds::write(self, GUILDSETTINGS_FILE_PATH).await;
         new_data
     }

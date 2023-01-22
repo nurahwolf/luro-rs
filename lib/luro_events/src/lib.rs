@@ -170,8 +170,34 @@ pub async fn event_listener(
         // poise::Event::GuildDelete { incomplete, full } => todo!(),
         // poise::Event::GuildEmojisUpdate { guild_id, current_state } => todo!(),
         // poise::Event::GuildIntegrationsUpdate { guild_id } => todo!(),
-        // poise::Event::GuildMemberAddition { new_member } => todo!(),
-        // poise::Event::GuildMemberRemoval { guild_id, user, member_data_if_available } => todo!(),
+        poise::Event::GuildMemberAddition { new_member } => {
+            if let Some(alert_channel) = alert_channel_defined(&new_member.guild_id, user_data, ctx).await {
+                alert_channel
+                    .send_message(ctx, |message| {
+                        message.add_embed(|embed| {
+                            embed
+                                .title("Member Joined")
+                                .description(format!("The user {} ({}) just joined the server!", new_member, new_member.user.id.0))
+                        })
+                    })
+                    .await?;
+                return Ok(());
+            }
+        }
+        poise::Event::GuildMemberRemoval { guild_id, user, member_data_if_available: _ } => {
+            if let Some(alert_channel) = alert_channel_defined(&guild_id, user_data, ctx).await {
+                alert_channel
+                    .send_message(ctx, |message| {
+                        message.add_embed(|embed| {
+                            embed
+                                .title("Member Left")
+                                .description(format!("The user {} ({}) just left the server!", user, user.id.0))
+                        })
+                    })
+                    .await?;
+                return Ok(());
+            }
+        },
         // poise::Event::GuildMembersChunk { chunk } => todo!(),
         // poise::Event::GuildRoleCreate { new } => todo!(),
         // poise::Event::GuildRoleDelete { guild_id, removed_role_id, removed_role_data_if_available } => todo!(),
@@ -300,7 +326,7 @@ pub async fn event_listener(
 /// If an alert channel is defined in this guild, this function returns that channel. If not, then it returns none.
 async fn alert_channel_defined(guild_id: &GuildId, user_data: &Data, ctx: &Context) -> Option<GuildChannel> {
     // Check to see if we have settings for this guild
-    match user_data.guild_settings.read().await.guilds.get(&guild_id) {
+    match user_data.guild_settings.read().await.guilds.get(&guild_id.to_string()) {
         Some(guild_settings) => match guild_settings.moderator_logs_channel {
             Some(alert_channel) => match ctx.http.get_guild(guild_id.0).await {
                 Ok(guild) => match guild.channels(ctx).await {
