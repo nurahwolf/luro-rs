@@ -27,7 +27,7 @@ pub async fn settings(
 
     // Safe to unwrap since we know we are in a guild
     let mut guild_settings_db = ctx.data().guild_settings.write().await;
-    guild_settings_db.reload_guild(ctx.guild_id().unwrap(), guild_settings.clone());
+    guild_settings_db.reload_guild(ctx.guild_id().unwrap(), guild_settings.clone()).await;
     ctx.say(format!("Your Guild settings are as follows:\n{:?}", guild_settings))
         .await?;
 
