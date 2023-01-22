@@ -241,7 +241,7 @@ pub async fn event_listener(
                             message.add_embed(|embed| {
                                 embed
                                     .title("Invite Created")
-                                    .description(format!("The invite {} just got created by user {}!", data.code, description))
+                                    .description(format!("{}", description))
                                     .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                             })
                         })
