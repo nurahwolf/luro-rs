@@ -4,6 +4,7 @@ use crate::ready_listener::ready_listener;
 use luro_core::{Data, Error};
 
 use poise::serenity_prelude::{Context, GuildChannel, GuildId};
+use tracing::{debug, error, info};
 
 mod interaction_create;
 mod on_message;
@@ -299,17 +300,23 @@ pub async fn event_listener(
 /// If an alert channel is defined in this guild, this function returns that channel. If not, then it returns none.
 async fn alert_channel_defined(guild_id: &GuildId, user_data: &Data, ctx: &Context) -> Option<GuildChannel> {
     // Check to see if we have settings for this guild
-    if let Some(guild_settings) = user_data.guild_settings.read().await.guilds.get(&guild_id) {
-        // Looks like we do, so do we have a channel defined?
-        if let Some(alert_channel) = guild_settings.moderator_logs_channel {
-            if let Ok(guild) = ctx.http.get_guild(guild_id.0).await {
-                if let Ok(guild_channels) = guild.channels(ctx).await {
-                    if let Some(alert_channel) = guild_channels.get(&alert_channel) {
-                        return Some(alert_channel.clone());
+    match user_data.guild_settings.read().await.guilds.get(&guild_id) {
+        Some(guild_settings) => match guild_settings.moderator_logs_channel {
+            Some(alert_channel) => match ctx.http.get_guild(guild_id.0).await {
+                Ok(guild) => match guild.channels(ctx).await {
+                    Ok(guild_channels) => match guild_channels.get(&alert_channel) {
+                        Some(alert_channel) => return Some(alert_channel.clone()),
+                        None => info!("Event Listener: Got a list of channels, but could not find the configured alert channel")
+                    },
+                    Err(err) => {
+                        error!("Event Listener: Failed to get the channels in the guild with the following error\n{err}")
                     }
-                }
-            }
-        }
+                },
+                Err(err) => error!("Event Listener: Failed to resolve the guild ID to a guild with the following error\n{err}")
+            },
+            None => debug!("Event Listener: Guild settings defined, but there is no alert channel configured")
+        },
+        None => debug!("Event Listener: No guild settings are available for this guild")
     }
     return None;
 }
