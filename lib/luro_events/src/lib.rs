@@ -1,11 +1,14 @@
+#![feature(let_chains)]
 use crate::interaction_create::interaction_create;
 use crate::on_message::message;
 use crate::ready_listener::ready_listener;
+use functions::format_message;
 use luro_core::{Data, Error};
 
 use poise::serenity_prelude::{Context, GuildChannel, GuildId};
 use tracing::{debug, error, info};
 
+mod functions;
 mod interaction_create;
 mod on_message;
 mod ready_listener;
@@ -256,14 +259,12 @@ pub async fn event_listener(
         } => {
             if let Some(guild_id) = guild_id {
                 if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
+                    let message = format_message(ctx, &alert_channel, user_data, deleted_message_id.0, channel_id, false).await;
+
                     alert_channel
-                        .send_message(ctx, |message| {
-                            message.add_embed(|embed| {
-                                embed.title("Message Deleted").description(format!(
-                                    "The message with ID {} just got deleted in channel {}!",
-                                    deleted_message_id, channel_id
-                                ))
-                            })
+                        .send_message(ctx, |m| {
+                            *m = message;
+                            m
                         })
                         .await?;
                     return Ok(());

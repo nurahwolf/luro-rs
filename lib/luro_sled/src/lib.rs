@@ -1,6 +1,7 @@
 #![feature(let_chains)]
 use luro_core::{Command, Context, Error, DATABASE_FILE_PATH};
-use poise::serenity_prelude::Message;
+use luro_utilities::guild_accent_colour;
+use poise::serenity_prelude::{Message, CreateEmbed, CacheHttp};
 use rkyv::{Archive, Deserialize, Serialize};
 use zerocopy::AsBytes;
 
@@ -110,4 +111,66 @@ pub fn total_messages_by_user(db: &sled::Db, user_id: u64) -> u64 {
         }
     }
     total_messages
+}
+
+pub async fn get_message_formatted(ctx: Context<'_>, message_id: u64, hide: bool) -> Result<CreateEmbed, Error> {
+    let accent_colour = ctx.data().config.read().await.accent_colour;
+    let luro_message = match get_discord_message(&ctx.data().database, message_id) {
+        Ok(ok) => ok,
+        Err(err) => {
+            return Err(err.into());
+        }
+    };
+    let message_resolved = ctx
+        .serenity_context()
+        .http
+        .get_message(luro_message.channel_id, luro_message.message_id)
+        .await;
+    let mut embed = CreateEmbed::default();
+
+    embed.description(&luro_message.message_content);
+    embed.color(guild_accent_colour(accent_colour, ctx.guild()));
+    embed.footer(|footer| footer.text("This message was fetched from the database, so most likely no longer exists"));
+
+    if let Ok(message_user) = ctx.http().get_user(luro_message.user_id).await {
+        embed.author(|author| {
+            author
+                .name(&message_user.name)
+                .icon_url(&message_user.avatar_url().unwrap_or_default())
+        });
+    }
+
+    if !hide {
+        embed.field("Message ID", &luro_message.message_id, true);
+        embed.field("Channel ID", &luro_message.channel_id, true);
+        embed.field("User ID", &luro_message.user_id, true);
+
+        if let Some(guild_id) = &luro_message.guild_id && message_resolved.is_err() {
+            embed.field("Guild ID", guild_id, true);
+        }
+    }
+
+    if let Ok(message_resolved) = message_resolved {
+        embed.footer(|footer| footer.text("This message was fully resolved, so it still exists in Discord"));
+        embed.author(|author| {
+            author
+                .name(&message_resolved.author.name)
+                .icon_url(&message_resolved.author.avatar_url().unwrap_or_default())
+                .url(&message_resolved.link())
+        });
+
+        if let Some(guild) = message_resolved.guild(ctx) {
+            embed.footer(|footer| {
+                footer.icon_url(guild.icon_url().unwrap_or_default()).text(format!(
+                    "{} - This message was fully resolved, so it still exists in Discord",
+                    guild.name
+                ))
+            });
+        } else {
+            if let Some(guild_id) = &luro_message.guild_id && !hide {
+                embed.field("Guild ID", guild_id, true);
+            }
+        }
+    };
+    Ok(embed)
 }
