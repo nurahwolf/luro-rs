@@ -1,9 +1,11 @@
 #![feature(let_chains)]
 
+use std::sync::Arc;
+
 use itertools::Itertools;
 use luro_core::Data;
-use poise::serenity_prelude::{Colour, Context, Guild, GuildChannel, GuildId, Role, RoleId};
-use tracing::{debug, error, info};
+use poise::serenity_prelude::{Cache, ChannelId, Colour, Context, Guild, GuildChannel, GuildId, Role, RoleId};
+use tracing::{debug, error, info, log::warn};
 
 /// Get the guild accent colour. If no guild is specified, or we fail to get the highest role, fall back to our defined accent colour
 pub fn guild_accent_colour(accent: [u8; 3], guild: Option<Guild>) -> Colour {
@@ -39,6 +41,23 @@ pub fn format_int(int: u64) -> String {
     string
 }
 
+/// Check to see if the guild is NSFW or not
+pub fn nsfw_check(cache: Option<&Arc<Cache>>, channel_id: ChannelId) -> bool {
+    match cache {
+        Some(cache) => match cache.channel(channel_id) {
+            Some(channel) => return channel.is_nsfw(),
+            None => {
+                warn!("Failed to find the channel in cache");
+                return false;
+            }
+        },
+        None => {
+            warn!("Failed to resolve the cache");
+            return false;
+        }
+    }
+}
+
 /// If an alert channel is defined in this guild, this function returns that channel. If not, then it returns none.
 pub async fn alert_channel_defined(guild_id: &GuildId, user_data: &Data, ctx: &Context) -> Option<GuildChannel> {
     // Check to see if we have settings for this guild
@@ -60,5 +79,5 @@ pub async fn alert_channel_defined(guild_id: &GuildId, user_data: &Data, ctx: &C
         },
         None => debug!("Event Listener: No guild settings are available for this guild")
     }
-    return None;
+    None
 }

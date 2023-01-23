@@ -9,7 +9,7 @@ use poise::{
     FrameworkOptions
 };
 
-extern crate tracing;
+pub const LURO_GIT: &str = env!("CARGO_MANIFEST_DIR");
 
 /// **Luro's entry function**
 ///

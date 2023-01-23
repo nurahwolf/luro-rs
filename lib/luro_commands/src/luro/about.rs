@@ -3,7 +3,7 @@ use luro_core::{Context, Error};
 use luro_utilities::guild_accent_colour;
 use memory_stats::memory_stats;
 use poise::serenity_prelude::{CacheHttp, CreateEmbed};
-use std::fmt::Write;
+use std::{fmt::Write, path::Path};
 
 /// Retrieves the current git branch in a given git repository.
 pub fn get_current_branch(repo: &Repository) -> String {
@@ -29,7 +29,7 @@ pub async fn about_bot(ctx: Context<'_>) -> Result<(), Error> {
     let mut embed = CreateEmbed::default();
     let accent_colour = ctx.data().config.read().await.accent_colour;
     let current_user = ctx.serenity_context().cache.current_user();
-    let repo = Repository::open(env!("CARGO_MANIFEST_DIR"))?;
+    let repo = Repository::open(Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."))?;
     let version = env!("CARGO_PKG_VERSION").to_string();
     let branch = get_current_branch(&repo);
     let revision = get_head_revision(&repo);

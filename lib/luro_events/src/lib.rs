@@ -5,7 +5,7 @@ use functions::deleted_message_formatted;
 use luro_core::{Data, Error};
 use luro_utilities::{alert_channel_defined, guild_accent_colour};
 use poise::serenity_prelude::Context;
-use tracing::{info, debug};
+use tracing::{debug, info};
 
 mod events;
 mod functions;
@@ -332,6 +332,7 @@ pub async fn event_listener(
                                     if new_message.content.is_empty() {
                                         embed.description("<THE NEW MESSAGE DOES NOT HAVE A BODY>");
                                     } else {
+                                        embed.field("New Message", &new_message.content, false);
                                         embed.description(&new_message.content);
                                     };
                                     embed.url(new_message.link());
@@ -341,11 +342,13 @@ pub async fn event_listener(
                                     if old_message.content.is_empty() {
                                         embed.description("<THE OLD MESSAGE DOES NOT HAVE A BODY>");
                                     } else {
+                                        embed.field("Old Message", &old_message.content, false);
                                         embed.description(&old_message.content);
                                     }
                                 }
                                 embed.color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)));
                                 embed.field("Channel", event.channel_id, true);
+                                embed.field("Message ID", event.id, true);
                                 if let Some(message_user) = &event.author {
                                     embed.field("User", message_user, true);
                                     embed.author(|author| {

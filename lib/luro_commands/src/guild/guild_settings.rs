@@ -4,7 +4,7 @@ use poise::serenity_prelude::{Channel, Role};
 use luro_core::{guild_settings::LuroGuildSettings, Context, Error};
 
 /// Sets the guild's settings
-#[poise::command(slash_command, guild_only, required_permissions="MANAGE_GUILD")]
+#[poise::command(slash_command, guild_only, required_permissions = "MANAGE_GUILD")]
 pub async fn settings(
     ctx: Context<'_>,
     #[description = "The channel to output discord event logs"] moderator_logs_channel: Option<Channel>,
@@ -34,12 +34,23 @@ pub async fn settings(
 
     ctx.send(|message| {
         message.embed(|embed| {
-            embed.author(|a| a.name(ctx.author().tag()).icon_url(ctx.author().avatar_url().unwrap_or_default()));
+            embed.author(|a| {
+                a.name(ctx.author().tag())
+                    .icon_url(ctx.author().avatar_url().unwrap_or_default())
+            });
             embed.colour(guild_accent_colour(accent_colour, ctx.guild()));
             embed.thumbnail(ctx.author().avatar_url().unwrap_or_default());
             embed.description("Your guild settings are now as follows:");
-            embed.field("Moderation Logging Channel", &guild_settings.moderator_logs_channel.is_some(), true);
-            embed.field("Moderation Role Override", &guild_settings.moderator_role_override.is_some(), true);
+            embed.field(
+                "Moderation Logging Channel",
+                &guild_settings.moderator_logs_channel.is_some(),
+                true
+            );
+            embed.field(
+                "Moderation Role Override",
+                &guild_settings.moderator_role_override.is_some(),
+                true
+            );
             embed.footer(|f| f.text("Contact Nurah#5103 if you have any troubles"));
             embed
         })

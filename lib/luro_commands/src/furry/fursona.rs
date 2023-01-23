@@ -4,7 +4,9 @@ use luro_core::Error;
 use luro_core::DATA_PATH;
 use luro_core::FURSONA_FILE_PATH;
 
-use poise::serenity_prelude::{AttachmentType, CacheHttp};
+use luro_utilities::nsfw_check;
+use poise::serenity_prelude::AttachmentType;
+use poise::serenity_prelude::CacheHttp;
 use rand::seq::SliceRandom;
 
 use std::{path::Path, vec};
@@ -47,18 +49,6 @@ async fn autocomplete_fursona<'a>(_ctx: Context<'_>, partial: &'a str) -> impl S
         .map(|name| name)
 }
 
-fn nsfw_check(ctx: Context) -> bool {
-    if let Some(cache) = ctx.cache() {
-        if let Some(channel) = cache.channel(ctx.channel_id()) {
-            channel.is_nsfw()
-        } else {
-            false
-        }
-    } else {
-        false
-    }
-}
-
 /// Random images of someones fursona! Try out `nurah`!
 #[poise::command(slash_command, prefix_command, category = "Furry")]
 pub async fn fursona(
@@ -72,7 +62,7 @@ pub async fn fursona(
 ) -> Result<(), Error> {
     // Someone is being naughty and trying to get NSFW in a SFW room... smh.
 
-    if nsfw_toggle && nsfw_toggle != nsfw_check(ctx) {
+    if nsfw_toggle && nsfw_toggle != nsfw_check(ctx.cache(), ctx.channel_id()) {
         ctx.say("SMH. Are you really after NSFW art in a SFW channel you fucking degenerate? Reconsider your life choices.\nYes, I did just call you out in public.")
             .await?;
         return Ok(());
