@@ -50,10 +50,13 @@ pub async fn deleted_message_formatted<'a>(
             message
         }
         Err(_) => {
-            embed.title("Message Deleted").description(format!(
-                "The message with ID {} just got deleted in channel {}!",
-                message_id, channel_id
-            ));
+            embed
+                .title("Message Deleted")
+                .description(format!(
+                    "The message with ID {} just got deleted in channel {}!",
+                    message_id, channel_id
+                ))
+                .color(guild_accent_colour(accent_colour, alert_channel.guild(&ctx)));
             let mut message = CreateMessage::default();
             message.add_embed(|e| {
                 *e = embed;

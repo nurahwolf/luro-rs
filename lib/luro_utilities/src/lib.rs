@@ -2,8 +2,8 @@
 
 use itertools::Itertools;
 use luro_core::Data;
-use poise::serenity_prelude::{Colour, Guild, Role, RoleId, GuildId, GuildChannel, Context};
-use tracing::{info, error, debug};
+use poise::serenity_prelude::{Colour, Context, Guild, GuildChannel, GuildId, Role, RoleId};
+use tracing::{debug, error, info};
 
 /// Get the guild accent colour. If no guild is specified, or we fail to get the highest role, fall back to our defined accent colour
 pub fn guild_accent_colour(accent: [u8; 3], guild: Option<Guild>) -> Colour {

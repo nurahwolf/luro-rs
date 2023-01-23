@@ -5,6 +5,7 @@ use functions::deleted_message_formatted;
 use luro_core::{Data, Error};
 use luro_utilities::{alert_channel_defined, guild_accent_colour};
 use poise::serenity_prelude::Context;
+use tracing::{info, debug};
 
 mod events;
 mod functions;
@@ -49,7 +50,7 @@ pub async fn event_listener(
         poise::Event::Ready { data_about_bot } => ready_listener(data_about_bot, ctx).await?,
         poise::Event::InteractionCreate { interaction } => interaction_create(interaction).await?,
         poise::Event::Message { new_message } => message(new_message, ctx, &framework, user_data).await?,
-        poise::Event::CacheReady { guilds: _ } => println!("Luro's cache is now ready!"),
+        poise::Event::CacheReady { guilds: _ } => info!("Luro's cache is now ready!"),
         poise::Event::ChannelCreate { channel } => {
             if let Some(alert_channel) = alert_channel_defined(&channel.guild_id, user_data, ctx).await {
                 alert_channel
@@ -153,8 +154,6 @@ pub async fn event_listener(
                                 .title("Member Banned")
                                 .description(format!("The user {} ({}) just got banned!", banned_user, banned_user.id.0))
                                 .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
-                                
-                                
                         })
                     })
                     .await?;
@@ -166,18 +165,20 @@ pub async fn event_listener(
                 alert_channel
                     .send_message(ctx, |message| {
                         message.add_embed(|embed| {
-                            embed.title("Member Unbanned").description(format!(
-                                "The user {} ({}) just got unbanned!",
-                                unbanned_user, unbanned_user.id.0
-                            ))
-                            .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
+                            embed
+                                .title("Member Unbanned")
+                                .description(format!(
+                                    "The user {} ({}) just got unbanned!",
+                                    unbanned_user, unbanned_user.id.0
+                                ))
+                                .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                         })
                     })
                     .await?;
                 return Ok(());
             }
         }
-        // poise::Event::GuildCreate { guild, is_new } => todo!(),
+        poise::Event::GuildCreate { guild, is_new: _ } => info!("Loaded guild {} ({}) into cache", guild.name, guild.id),
         // poise::Event::GuildDelete { incomplete, full } => todo!(),
         // poise::Event::GuildEmojisUpdate { guild_id, current_state } => todo!(),
         // poise::Event::GuildIntegrationsUpdate { guild_id } => todo!(),
@@ -186,11 +187,13 @@ pub async fn event_listener(
                 alert_channel
                     .send_message(ctx, |message| {
                         message.add_embed(|embed| {
-                            embed.title("Member Joined").description(format!(
-                                "The user {} ({}) just joined the server!",
-                                new_member, new_member.user.id.0
-                            ))
-                            .color(guild_accent_colour(accent_colour, new_member.guild_id.to_guild_cached(ctx)))
+                            embed
+                                .title("Member Joined")
+                                .description(format!(
+                                    "The user {} ({}) just joined the server!",
+                                    new_member, new_member.user.id.0
+                                ))
+                                .color(guild_accent_colour(accent_colour, new_member.guild_id.to_guild_cached(ctx)))
                         })
                     })
                     .await?;
@@ -238,7 +241,7 @@ pub async fn event_listener(
                             message.add_embed(|embed| {
                                 embed
                                     .title("Invite Created")
-                                    .description(format!("The invite {} just got created by user {}!", data.code, description))
+                                    .description(format!("{}", description))
                                     .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                             })
                         })
@@ -271,7 +274,9 @@ pub async fn event_listener(
         } => {
             if let Some(guild_id) = guild_id {
                 if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
-                    let message = deleted_message_formatted(ctx, &alert_channel, user_data, deleted_message_id.0, channel_id, false).await;
+                    let message =
+                        deleted_message_formatted(ctx, &alert_channel, user_data, deleted_message_id.0, channel_id, false)
+                            .await;
 
                     alert_channel
                         .send_message(ctx, |m| {
@@ -293,12 +298,14 @@ pub async fn event_listener(
                     alert_channel
                         .send_message(ctx, |message| {
                             message.add_embed(|embed| {
-                                embed.title("Bulk Messages Deleted").description(format!(
-                                    "A total of {} just got deleted in channel {}!",
-                                    multiple_deleted_messages_ids.len(),
-                                    channel_id
-                                ))
-                                .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
+                                embed
+                                    .title("Bulk Messages Deleted")
+                                    .description(format!(
+                                        "A total of {} just got deleted in channel {}!",
+                                        multiple_deleted_messages_ids.len(),
+                                        channel_id
+                                    ))
+                                    .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                             })
                         })
                         .await?;
@@ -306,7 +313,55 @@ pub async fn event_listener(
                 }
             }
         }
-        // poise::Event::MessageUpdate { old_if_available, new, event } => todo!(),
+        poise::Event::MessageUpdate {
+            old_if_available,
+            new,
+            event
+        } => {
+            if let Some(guild_id) = event.guild_id {
+                if let Some(alert_channel) = alert_channel_defined(&guild_id, user_data, ctx).await {
+                    alert_channel
+                        .send_message(ctx, |message| {
+                            message.add_embed(|embed| {
+                                embed.title("Message Edited");
+                                if let Some(message_content) = &event.content {
+                                    embed.description(message_content);
+                                }
+
+                                if let Some(new_message) = new {
+                                    if new_message.content.is_empty() {
+                                        embed.description("<THE NEW MESSAGE DOES NOT HAVE A BODY>");
+                                    } else {
+                                        embed.description(&new_message.content);
+                                    };
+                                    embed.url(new_message.link());
+                                }
+
+                                if let Some(old_message) = old_if_available {
+                                    if old_message.content.is_empty() {
+                                        embed.description("<THE OLD MESSAGE DOES NOT HAVE A BODY>");
+                                    } else {
+                                        embed.description(&old_message.content);
+                                    }
+                                }
+                                embed.color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)));
+                                embed.field("Channel", event.channel_id, true);
+                                if let Some(message_user) = &event.author {
+                                    embed.field("User", message_user, true);
+                                    embed.author(|author| {
+                                        author
+                                            .name(&message_user.name)
+                                            .icon_url(&message_user.avatar_url().unwrap_or_default())
+                                    });
+                                };
+                                embed
+                            })
+                        })
+                        .await?;
+                    return Ok(());
+                }
+            }
+        }
         // poise::Event::ReactionAdd { add_reaction } => todo!(),
         // poise::Event::ReactionRemove { removed_reaction } => todo!(),
         // poise::Event::ReactionRemoveAll { channel_id, removed_from_message_id } => todo!(),
@@ -322,7 +377,7 @@ pub async fn event_listener(
         // poise::Event::ThreadMemberUpdate { thread_member } => todo!(),
         // poise::Event::ThreadMembersUpdate { thread_members_update } => todo!(),
         // poise::Event::ThreadUpdate { thread } => todo!(),
-        // poise::Event::Unknown { name, raw } => todo!(),
+        poise::Event::Unknown { name, raw } => debug!("Got an unknown event {}: {:?}", name, raw),
         // poise::Event::UserUpdate { old_data, new } => todo!(),
         // poise::Event::VoiceServerUpdate { update } => todo!(),
         // poise::Event::VoiceStateUpdate { old, new } => todo!(),
@@ -335,7 +390,7 @@ pub async fn event_listener(
         } => {} // Ignore this event
 
         _ => {
-            println!("Got an event in listener: {:?}", event.name());
+            info!("Got an event in listener: {:?}", event.name());
         }
     }
 

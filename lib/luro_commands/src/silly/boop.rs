@@ -21,13 +21,13 @@ pub async fn boop(ctx: Context<'_>) -> Result<(), Error> {
         .filter(move |mci| mci.data.custom_id == uuid_boop.to_string())
         .await
     {
+        mci.create_interaction_response(ctx, |ir| ir.kind(InteractionResponseType::DeferredUpdateMessage))
+            .await?;
+
         boop_count += 1;
 
         let mut msg = mci.message.clone();
         msg.edit(ctx, |m| m.content(format!("Boop count: {boop_count}"))).await?;
-
-        mci.create_interaction_response(ctx, |ir| ir.kind(InteractionResponseType::DeferredUpdateMessage))
-            .await?;
     }
 
     Ok(())

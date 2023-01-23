@@ -6,6 +6,7 @@ use poise::{
     FrameworkContext
 };
 use regex::Regex;
+use tracing::{info, error};
 
 /// A Serenity listener for the [Message] type
 pub async fn message(
@@ -21,22 +22,22 @@ pub async fn message(
 
     // Add the message to the database
     match add_discord_message(&user_data.database, message.clone()) {
-        Ok(_) => println!("Added message ID {} to database: {}", message.id.0, message.content),
-        Err(err) => println!("Error while saving message to database: {err}")
+        Ok(_) => info!("{} ({}) - Message ID: {}\n{}", message.author.name, message.author.id, message.id.0, message.content),
+        Err(err) => error!("Error while saving message to database: {err}")
     };
 
     // Run the furaffinity command if the message contains a link
     let regex = match Regex::new(FURAFFINITY_REGEX) {
         Ok(ok) => ok,
         Err(err) => {
-            println!("Message Listner: Failed to match the regex - {err}");
+            error!("Message Listner: Failed to match the regex - {err}");
             return Ok(());
         }
     };
     if let Some(fa_match) = regex.find(&message.content) {
         match event_furaffinity(ctx, framework, message).await {
-            Ok(_) => println!("Furaffinity: Regex matched - {}", fa_match.as_str()),
-            Err(err) => println!("Furaffinity: Regex failed with the following message - {err}")
+            Ok(_) => info!("Furaffinity: Regex matched - {}", fa_match.as_str()),
+            Err(err) => error!("Furaffinity: Regex failed with the following message - {err}")
         }
     }
     Ok(())

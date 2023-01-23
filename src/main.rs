@@ -8,7 +8,8 @@ use poise::{
     serenity_prelude::{GatewayIntents, UserId},
     FrameworkOptions
 };
-use tracing_subscriber::FmtSubscriber;
+
+extern crate tracing;
 
 /// **Luro's entry function**
 ///
@@ -30,8 +31,8 @@ async fn main() {
         };
 
     // Extra logging, honestly no clue what it does lol
-    env::set_var("RUST_LOG", "info,poise_basic_queue=trace,poise=debug,serenity=debug");
-    let subscriber = FmtSubscriber::builder().with_target(false).finish();
+    env::set_var("RUST_LOG", "debug,poise_basic_queue=trace,poise=debug,serenity=debug");
+    let subscriber = tracing_subscriber::FmtSubscriber::new();
     match tracing::subscriber::set_global_default(subscriber) {
         Ok(_) => println!("Loaded tracing subscriber"),
         Err(_) => panic!("Failed to load tracing subscriber!")
