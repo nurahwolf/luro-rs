@@ -135,7 +135,7 @@ async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
                 .url(message.link())
                 .color(guild_accent_colour(accent_colour, ctx.guild()))
                 .description(&message.content)
-                .footer(|footer| footer.text(format!("Fav ID: {}", user_favs_length)));
+                .footer(|footer| footer.text(format!("Fav ID: {user_favs_length}")));
 
             if !message.attachments.is_empty() {
                 if let Some(attachment) = message.attachments.first() {

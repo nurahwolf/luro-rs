@@ -44,7 +44,7 @@ async fn get_nsfw_heck(data: &Data, heck_id: Option<usize>) -> Result<(Heck, usi
         }
     };
 
-    return heck;
+    heck
 }
 
 async fn create_heck(data: &Data, heck_message: String, author_id: u64, nsfw: bool) -> (Heck, usize) {
@@ -82,7 +82,7 @@ async fn get_sfw_heck(data: &Data, heck_id: Option<usize>) -> Result<(Heck, usiz
         }
     };
 
-    return heck;
+    heck
 }
 
 #[derive(Debug, Modal)]
@@ -150,7 +150,7 @@ pub async fn heck(
             };
 
             // Save our new heck to the database, unformatted.
-            Hecks::write(&heck_db, HECK_FILE_PATH).await;
+            Hecks::write(heck_db, HECK_FILE_PATH).await;
             // Format our heck then send it!
             heck = format_heck(&heck, ctx.author(), &user).await;
             send_heck(heck, &heckid, plaintext, ctx, user).await?;
