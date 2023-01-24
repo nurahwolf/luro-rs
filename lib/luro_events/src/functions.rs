@@ -38,7 +38,6 @@ pub async fn deleted_message_formatted<'a>(
 ) -> CreateMessage<'a> {
     match get_discord_message(&data.database, message_id) {
         Ok(luro_message) => {
-            let message_resolved = ctx.http.get_message(luro_message.channel_id, luro_message.message_id).await;
             let mut embed = match &ctx.http.get_user(luro_message.user_id).await {
                 Ok(user) => event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), Some(user), None).await,
                 Err(_) => event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), None, None).await
