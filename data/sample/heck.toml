@@ -1,46 +1,39 @@
-heck = [
-    { heck = "Get hecked <user>", author_id = 97003404601094144 },
-    { heck = "Oh shit, <user> got hecked by <author>", author_id = 97003404601094144 },
-    { heck = "Your mom gay <user>", author_id = 97003404601094144 },
-    { heck = "Your dad homosexual <user>", author_id = 97003404601094144 },
-    { heck = "Your sister bisexual <user>", author_id = 97003404601094144 },
-    { heck = "Nurah says you are gay, <user>", author_id = 97003404601094144 },
-    { heck = "Did you know that <user> is an apache attack helicopter? Well now you do!", author_id = 97003404601094144 },
-    { heck = "<author> topped <user>!", author_id = 97003404601094144 },
-    { heck = "Imagine getting hecked, non scremmer", author_id = 97003404601094144 },
-    { heck = "<user> has a skill issue", author_id = 203994450467225600 },
-    { heck = "<user> has a massive lack of foos icecream", author_id = 203994450467225600 },
-    { heck = "<user> has a significant deficit of mint icecream", author_id = 203994450467225600 },
-    { heck = "<author> has once again shown that <user> has not just a skill issue, but also no paw hoes", author_id = 203994450467225600 },
-    { heck = "Sometimes <author> is nice when warrented, however, in this instance it looks like <user> had it coming. Gay ass dickshit", author_id = 203994450467225600 },
-    { heck = "<author> just destroyed <user>'s mom.", author_id = 97003404601094144 },
-    { heck = "Is this selfcest? <author> just hecked <user>!", author_id = 192603973977505792 },
-    { heck = "Please pay £6.90 to my patreon in order to unlock this heck. ***This message is sponsored by EA***", author_id = 97003404601094144 },
-    { heck = "<author> throws racial slurs at <user>. It was super effective!", author_id = 97003404601094144 },
-    { heck = "<author> collared <author>. It hurt itself in its confusion!", author_id = 97003404601094144 },
-    { heck = "<user> got mad that they were pinged by <author>.", author_id = 97003404601094144 },
-    { heck = "<author> collared <user>", author_id = 97003404601094144 },
-    { heck = "<author> made <user> their bitch!", author_id = 97003404601094144 },
-    { heck = "<author> gave a few too many pets to <user> and now they're fried.", author_id = 97003404601094144 },
-    { heck = "<author> wants to practice cock and ball torture with <user>!", author_id = 342061429891006465 },
-    { heck = "<author> just made <user> say unspeakable things by making them into a bot.", author_id = 97003404601094144 },
-    { heck = "You can't heck <user>, they're too busy making piss!", author_id = 97003404601094144 },
-    { heck = "<user> just got genderbent by <author>. Looks like they are the opposite gender for the day...", author_id = 97003404601094144 },
-    { heck = "<user> just found out they are <author>'s bitch.", author_id = 97003404601094144 },
-    { heck = "OH SHIT!! <user> is part of the **homosexual agenda**", author_id = 97003404601094144 },
-    { heck = "According to <user>, the frogs are indeed gay.", author_id = 97003404601094144 },
-    { heck = "heck you <user>, you hecking hecker.", author_id = 97003404601094144 },
-    { heck = "I swear if you genderbend <user> again, I'm calling the FBI.", author_id = 97003404601094144 },
-    { heck = "<user> i swear it was not me! It was ONLY my weed farm upstairs!", author_id = 97003404601094144 },
-    { heck = "According to all known laws of aviation, <user> is a cunt.", author_id = 97003404601094144 },
-    { heck = "Remember <user>, it's only racist if you are caught.", author_id = 97003404601094144 },
-    { heck = "<author> is part of the homosexual agenda and is trying to recruit <user>!", author_id = 97003404601094144 },
-    { heck = "<author> just found out that <user> is actually an undercover FBI agent!", author_id = 97003404601094144 },
-    { heck = "It's not gay if it is with <user>!!", author_id = 97003404601094144 },
-    { heck = "Finally, <user> is the server's communal use cumdumpster.", author_id = 97003404601094144 },
-    { heck = "You know what? Fuck you <user>", author_id = 97003404601094144 },
-    { heck = "<author> is no longer gay because they are now in a relationship with <user>", author_id = 97003404601094144 },
-    { heck = """
+sfw_hecks = [
+    { heck_message = "Get hecked <user>!", author_id = 97003404601094144 },
+    { heck_message = "The FBI have just raised an alert to say that <user> has been hecked by <author>!", author_id = 97003404601094144 },
+    { heck_message = "Oh shit, <user> just got hecked by <author>!", author_id = 97003404601094144 },
+    { heck_message = "Awww! <user> just got headpats from <author>! So cute~", author_id = 97003404601094144 },
+    { heck_message = "Your mom gay <user>", author_id = 97003404601094144 },
+    { heck_message = "Your dad homosexual <user>", author_id = 97003404601094144 },
+    { heck_message = "Your sister bisexual <user>", author_id = 97003404601094144 },
+    { heck_message = "Nurah says you are gay, <user>", author_id = 97003404601094144 },
+    { heck_message = "<user> is actually an apache attack helicopter.", author_id = 97003404601094144 },
+    { heck_message = "<user> has a skill issue", author_id = 203994450467225600 },
+    { heck_message = "<user> has a massive lack of foos icecream", author_id = 203994450467225600 },
+    { heck_message = "<user> has a significant deficit of mint icecream", author_id = 203994450467225600 },
+    { heck_message = "Sometimes <author> is nice when warrented, however, in this instance it looks like <user> had it coming. Gay ass dickshit", author_id = 203994450467225600 },
+    { heck_message = "<author> just destroyed <user>'s mom.", author_id = 97003404601094144 },
+    { heck_message = "Please pay £6.90 to my patreon in order to unlock this heck. ***This message is sponsored by EA***", author_id = 97003404601094144 },
+    { heck_message = "<user> got mad that they were pinged by <author>.", author_id = 97003404601094144 },
+    { heck_message = "<author> gave a few too many pets to <user> and now they're fried.", author_id = 97003404601094144 },
+    { heck_message = "<author> just made <user> say unspeakable things by making them into a bot.", author_id = 97003404601094144 },
+    { heck_message = "According to <user>, the frogs are indeed gay.", author_id = 97003404601094144 },
+    { heck_message = "heck you <user>, you hecking hecker.", author_id = 242070396587737098 },
+    { heck_message = "<user> i swear it was not me! It was ONLY my weed farm upstairs!", author_id = 97003404601094144 },
+    { heck_message = "According to all known laws of aviation, <user> is a cunt.", author_id = 97003404601094144 },
+    { heck_message = "<author> is part of the homosexual agenda and is trying to recruit <user>!", author_id = 97003404601094144 },
+    { heck_message = "<author> just found out that <user> is actually an undercover FBI agent!", author_id = 97003404601094144 },
+    { heck_message = "You know what? Fuck you <user>", author_id = 97003404601094144 },
+    { heck_message = "<author> is no longer gay because they are now in a relationship with <user>", author_id = 97003404601094144 },
+    { heck_message = "<user> just drank acid thanks to <author>!", author_id = 97003404601094144 },
+    { heck_message = "<user> just mixed bleach and ammonia!", author_id = 97003404601094144 },
+    { heck_message = "<author> just yeeted <user>!", author_id = 97003404601094144 },
+    { heck_message = "<author> called <user> gae", author_id = 468251651044671488 },
+    { heck_message = """
+**Hey <author>!**
+
+<user> loves you! <:NurahAwe:882886965513576468>""", author_id = 97003404601094144 },
+    { heck_message = """
 🟨🟨🟨🟨🟨🟨🟨🟨
 🟨🟨🟨🟨🟨🟨🟨🟨
 🟨🟨🟨🟨🟨🟨🟨🟨
@@ -50,14 +43,87 @@ heck = [
 🟨🟨🟨🟫🟫🟨🟨🟨
 🟨🟨⬛🟫🟫⬛🟨🟨
 🟨🟨🟨🟫🟫🟨🟨🟨
-<user>
     """, author_id = 97003404601094144 },
-    { heck = "**Hey <user>**, did you know that the critically acclaimed MMORPG Final Fantasy XIV has a free trial, and includes the entirety of A Realm Reborn AND the award-winning Heavensward expansion up to level 60 with no restrictions on playtime? Sign up, and enjoy Eorzea today! https://secure.square-enix.com/account/app/svc/ffxivregister - *Note that <author> is not sponsored by Square Enix.*", author_id = 97003404601094144 },
-    { heck = """
+    { heck_message = """
+**Hey <user>!!!**
+Did you know that the critically acclaimed MMORPG Final Fantasy XIV has a free trial, and includes the entirety of A Realm Reborn AND the award-winning Heavensward expansion up to level 60 with no restrictions on playtime? *Sign up, and enjoy Eorzea today!* https://secure.square-enix.com/account/app/svc/ffxivregister
+
+__Note that <author> is not sponsored by Square Enix.__
+    """, author_id = 97003404601094144 },
+    { heck_message = """
+***Oh shit!***
+<user> is part of __The Homosexual Agenda__!""", author_id = 97003404601094144 },
+]
+nsfw_hecks = [
+    { heck_message = "<author> topped <user>!", author_id = 97003404601094144 },
+    { heck_message = "<author> commands that <user> touches themselves!", author_id = 97003404601094144 },
+    { heck_message = "<author> just stuffed their paws in <user>'s face!", author_id = 97003404601094144 },
+    { heck_message = "<author> is rubbing their paws all over <user>...", author_id = 97003404601094144 },
+    { heck_message = "<author> just slapped a chastity device on <user>!! It's time locked for 24 hours...", author_id = 97003404601094144 },
+    { heck_message = "<author> commanded that <user> sit like a good puppy!", author_id = 97003404601094144 },
+    { heck_message = "<user>'s ass just got violated by <author>!", author_id = 97003404601094144 },
+    { heck_message = "<author> just attempted to steal <user>'s penis!", author_id = 97003404601094144 },
+    { heck_message = "<author> SUCCESSFULLY stolen <user>'s penis!", author_id = 97003404601094144 },
+    { heck_message = "Is this selfcest? <author> just hecked <user>!", author_id = 192603973977505792 },
+    { heck_message = "<author> throws racial slurs at <user>. It was super effective!", author_id = 97003404601094144 },
+    { heck_message = "<author> collared <author>. It hurt itself in its confusion!", author_id = 97003404601094144 },
+    { heck_message = "<author> managed to successfully collar <user>!!", author_id = 97003404601094144 },
+    { heck_message = "<author> made <user> their BITCH!", author_id = 97003404601094144 },
+    { heck_message = "<author> wants to practice cock and ball torture with <user>!", author_id = 342061429891006465 },
+    { heck_message = "You can't heck <user>, they're too busy making piss!", author_id = 192603973977505792 },
+    { heck_message = "<user> just got genderbent by <author>. Looks like they are the opposite gender for the day...", author_id = 97003404601094144 },
+    { heck_message = "<user> just found out they are <author>'s bitch.", author_id = 97003404601094144 },
+    { heck_message = "I swear if you genderbend <user> again, I'm calling the FBI.", author_id = 97003404601094144 },
+    { heck_message = "Remember <user>, it's only racist if you are caught.", author_id = 97003404601094144 },
+    { heck_message = "It's not gay if it is with <user>!!", author_id = 97003404601094144 },
+    { heck_message = "Finally, <user> is the server's communal use cumdumpster.", author_id = 97003404601094144 },
+    { heck_message = "<author> is no longer gay because they are now in a relationship with <user>", author_id = 97003404601094144 },
+    { heck_message = "<author> forces <user> to listen to Trahearne jokes.", author_id = 118813684435910656 },
+    { heck_message = "<author> bit <user> on the tail", author_id = 816005138522308648 },
+    { heck_message = "<author> leashed up <user> to keep them in their place <:raiosmug:649275403424235541> ", author_id = 780747335860748298 },
+    { heck_message = " You though this was a normal heck SIKE <author> Is now the opposite gender <:shibekek:646876236735447061> Now <user> has you all to themselves <:blushcat:1054940071251415112>", author_id = 780747335860748298 },
+    { heck_message = "<author> tried to paddle <user> but they where too submissive and got paddled instead. <:sweatdrops2:269546542912897024>", author_id = 780747335860748298 },
+    { heck_message = "<author> paddled <user> until there red. <:blushcat:1054940071251415112>", author_id = 780747335860748298 },
+    { heck_message = """
+**Hey <user>!!**
+
+<author> says to take a FUCKING SHOWER, YOU MUSKY HUSKY!""", author_id = 97003404601094144 },
+    { heck_message = """
 Did <author> really just turn <user> into a cboy!?
 Oh darn. They did.
     """, author_id = 97003404601094144 },
-    { heck = "<user> just drank acid thanks to <author>!", author_id = 97003404601094144 },
-    { heck = "<user> just mixed bleach and ammonia!", author_id = 97003404601094144 },
-    { heck = "<author> just yeeted <user>!", author_id = 97003404601094144 },
+    { heck_message = """
+**Dear <user>.**
+
+Your PP rights have been revoked by <author>. We thank you for your understanding.
+
+__*Have a pleasant day!*__""", author_id = 97003404601094144 },
+    { heck_message = """
+**Trap Card!**
+
+<author> is now a certified cutie for trying to heck <user>!
+*<user> can now collar <author> for attempting this if they would like!*""", author_id = 468251651044671488 },
+    { heck_message = """
+**SIKE!**
+<author> went to make <user> their bitch, but they just flipped it around!
+
+*Now <author> is <user>'s bitch for the day...*""", author_id = 97003404601094144 },
+    { heck_message = """
+**Congratulations!**
+<user> is getting married to <author>.""", author_id = 97003404601094144 },
+    { heck_message = """
+Hey <user>!
+
+Apparently <author> wants to own you. They even have a collar and everything. Wait.
+
+That's not a collar.
+
+***THAT'S A SHOCK COLLAR!***""", author_id = 97003404601094144 },
+    { heck_message = """
+**Hey <user>!!**
+
+<author> says to take a FUCKING SHOWER, YOU MUSKY HUSKY!""", author_id = 97003404601094144 },
+    { heck_message = "<author> bans <user> from life. Explosively.", author_id = 118813684435910656 },
 ]
+sfw_heck_ids = [] #Progmatically generated, but must exist
+nsfw_heck_ids = [] #Progmatically generated, but must exist
