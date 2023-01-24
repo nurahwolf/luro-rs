@@ -1,6 +1,6 @@
 use chrono::{Duration, Utc};
 use luro_core::{Context, Error};
-use luro_utilities::{alert_channel_defined, guild_accent_colour};
+use luro_utilities::{guild_accent_colour, moderator_actions_log_channel_defined};
 use poise::serenity_prelude::{CreateEmbed, Timestamp, User};
 
 #[derive(Debug, poise::ChoiceParameter)]
@@ -81,9 +81,29 @@ pub async fn punish(
         }
     };
 
+    let mut moderator_override = false;
+    if let Some(guild_settings) = ctx.data().guild_settings.read().await.guilds.get(&guild.id.to_string()) {
+        if let Some(roles) = &guild_settings.moderator_role_override {
+            for role in roles {
+                if author_member.roles.contains(role) {
+                    moderator_override = true;
+                    break;
+                }
+            }
+        }
+    };
+
     // Set embed defaults
     embed.color(guild_accent_colour(accent_colour, ctx.guild()));
     embed.thumbnail(victim_member.clone().avatar.unwrap_or_default());
+    embed.footer(|footer| {
+        footer
+            .text(format!(
+                "Action by: {}#{}",
+                author_member.user.name, author_member.user.discriminator
+            ))
+            .icon_url(author_member.avatar_url().unwrap_or_default())
+    });
     embed.field("Reason", &reason, false);
     embed.field("User", &victim_member, true);
     embed.field("ID", victim_member.user.id, true);
@@ -101,11 +121,11 @@ pub async fn punish(
                 return Ok(());
             }
 
-            if ctx.framework().options.owners.contains(&ctx.author().id) || author_permissions.ban_members() {
-                let purge_length = match purge {
-                    Some(purge) => purge,
-                    None => 1
-                };
+            if ctx.framework().options.owners.contains(&ctx.author().id)
+                || author_permissions.ban_members()
+                || moderator_override
+            {
+                let purge_length = purge.unwrap_or(1);
 
                 match victim_member.ban_with_reason(ctx, purge_length, reason).await {
                     Ok(ok) => ok,
@@ -135,7 +155,10 @@ pub async fn punish(
                 return Ok(());
             }
 
-            if ctx.framework().options.owners.contains(&ctx.author().id) || author_permissions.kick_members() {
+            if ctx.framework().options.owners.contains(&ctx.author().id)
+                || author_permissions.kick_members()
+                || moderator_override
+            {
                 match victim_member.kick_with_reason(ctx, &reason).await {
                     Ok(ok) => ok,
                     Err(err) => {
@@ -163,7 +186,10 @@ pub async fn punish(
                 return Ok(());
             }
 
-            if ctx.framework().options.owners.contains(&ctx.author().id) || author_permissions.moderate_members() {
+            if ctx.framework().options.owners.contains(&ctx.author().id)
+                || author_permissions.moderate_members()
+                || moderator_override
+            {
                 // Time now, add 10 minutes
                 let utc = Utc::now() + Duration::minutes(10);
                 let timestamp = Timestamp::from(utc);
@@ -198,7 +224,7 @@ pub async fn punish(
     })
     .await?;
 
-    if let Some(alert_channel) = alert_channel_defined(&guild.id, ctx.data(), ctx.serenity_context()).await {
+    if let Some(alert_channel) = moderator_actions_log_channel_defined(&guild.id, ctx.data(), ctx.serenity_context()).await {
         alert_channel
             .send_message(ctx, |message| {
                 message.embed(|e| {
