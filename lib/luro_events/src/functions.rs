@@ -53,10 +53,6 @@ pub async fn deleted_message_formatted<'a>(
                 embed.field("Message ID", luro_message.message_id, true);
                 embed.field("Channel ID", luro_message.channel_id, true);
                 embed.field("User ID", luro_message.user_id, true);
-
-                if let Some(guild_id) = &luro_message.guild_id && message_resolved.is_err() {
-                embed.field("Guild ID", guild_id, true);
-            }
             }
 
             let mut message = CreateMessage::default();
