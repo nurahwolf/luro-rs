@@ -13,7 +13,6 @@ use poise::serenity_prelude::Context;
 use tracing::{debug, info};
 
 mod events;
-mod functions;
 pub mod on_error;
 
 /// **Luro's event listener**

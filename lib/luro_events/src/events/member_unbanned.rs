@@ -1,6 +1,5 @@
-use crate::functions::event_embed;
 use luro_core::{Data, Error};
-use luro_utilities::{guild_accent_colour, moderator_actions_log_channel_defined};
+use luro_utilities::{guild_accent_colour, event_embed, moderator_actions_log_channel_defined};
 use poise::serenity_prelude::{Context, GuildId, User};
 
 /// A Serenity listener for the [poise::Event::GuildBanRemoval] type

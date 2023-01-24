@@ -1,6 +1,5 @@
-use crate::functions::event_embed;
 use luro_core::{Data, Error};
-use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour};
+use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour, event_embed};
 use poise::serenity_prelude::{Context, InviteDeleteEvent};
 
 /// A Serenity listener for the [poise::Event::InviteCreate] type

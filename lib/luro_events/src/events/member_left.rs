@@ -1,6 +1,5 @@
-use crate::functions::event_embed;
 use luro_core::{Data, Error};
-use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour};
+use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour, event_embed};
 use poise::serenity_prelude::{Context, GuildId, User};
 
 /// A Serenity listener for the [poise::Event::GuildMemberRemoval] type
@@ -12,7 +11,7 @@ pub async fn member_left(
     user: &User
 ) -> Result<(), Error> {
     if let Some(alert_channel) = discod_event_log_channel_defined(guild_id, user_data, ctx).await {
-        let mut embed = event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), Some(user), None).await;
+        let mut embed = event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), None, Some(user)).await;
         embed
             .title("Member Left")
             .description(format!("The user {} ({}) just left the server!", user, user.id.0));

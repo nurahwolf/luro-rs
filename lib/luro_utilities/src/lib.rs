@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 use luro_core::Data;
-use poise::serenity_prelude::{Cache, ChannelId, Colour, Context, Guild, GuildChannel, GuildId, Role, RoleId};
+use poise::serenity_prelude::{Cache, ChannelId, Colour, Context, Guild, GuildChannel, GuildId, Role, RoleId, CreateEmbed, User};
 use tracing::{debug, error, info, log::warn};
 
 /// Get the guild accent colour. If no guild is specified, or we fail to get the highest role, fall back to our defined accent colour
@@ -72,6 +72,31 @@ pub async fn discod_event_log_channel_defined(guild_id: &GuildId, user_data: &Da
         None => debug!("Event Listener: No guild settings are available for this guild")
     }
     None
+}
+
+/// Some baseline formatting for event handler embeds
+pub async fn event_embed(accent_colour: Colour, event_author: Option<&User>, modified_user: Option<&User>) -> CreateEmbed {
+    let mut embed = CreateEmbed::default();
+    embed.colour(accent_colour);
+
+    if let Some(event_author) = event_author {
+        embed.footer(|footer| {
+            footer
+                .text(format!("Action by: {}#{}", event_author.name, event_author.discriminator))
+                .icon_url(event_author.avatar_url().unwrap_or_default())
+        });
+    };
+
+    if let Some(modified_user) = modified_user {
+        embed.author(|author| {
+            author
+                .name(format!("{}#{}", modified_user.name, modified_user.discriminator))
+                .icon_url(modified_user.avatar_url().unwrap_or_default())
+        });
+        embed.thumbnail(modified_user.avatar_url().unwrap_or_default());
+    };
+
+    embed
 }
 
 /// Get the Moderator action log channel, if it is defined

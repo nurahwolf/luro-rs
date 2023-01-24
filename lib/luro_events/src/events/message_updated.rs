@@ -1,6 +1,5 @@
-use crate::functions::event_embed;
 use luro_core::{Data, Error};
-use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour};
+use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour, event_embed};
 use poise::serenity_prelude::{Context, Mentionable, Message, MessageUpdateEvent};
 
 /// A Serenity listener for the [poise::Event::MessageUpdate] type
@@ -52,6 +51,12 @@ pub async fn message_updated(
             embed.field("Message ID", event.id, true);
             if let Some(message_content) = &event.content {
                 embed.description(message_content);
+            }
+
+            if let Some(attachments) = &event.attachments {
+                if let Some(first_attachment) = attachments.first() {
+                    embed.image(&first_attachment.url);
+                }
             }
 
             alert_channel
