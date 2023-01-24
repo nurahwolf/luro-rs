@@ -1,7 +1,7 @@
 use crate::functions::event_embed;
 use luro_core::{Data, Error};
 use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour};
-use poise::serenity_prelude::{Context, GuildChannel};
+use poise::serenity_prelude::{Context, GuildChannel, Mentionable};
 
 /// A Serenity listener for the [poise::Event::ChannelCreate] type
 pub async fn channel_delete(
@@ -13,7 +13,7 @@ pub async fn channel_delete(
     let mut embed = event_embed(guild_accent_colour(accent_colour, channel.guild(ctx)), None, None).await;
     embed
         .title("Channel Deleted")
-        .description(format!("The channel {} just got DELETED!", channel.name()));
+        .description(format!("The channel {} just got DELETED!", channel.mention()));
 
     if let Some(alert_channel) = discod_event_log_channel_defined(&channel.guild_id, user_data, ctx).await {
         alert_channel

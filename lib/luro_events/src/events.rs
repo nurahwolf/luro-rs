@@ -9,6 +9,7 @@ pub mod member_banned;
 pub mod member_joined;
 pub mod member_left;
 pub mod member_unbanned;
+pub mod message_deleted;
 pub mod message_updated;
 pub mod on_message;
 pub mod ready_listener;

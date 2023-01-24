@@ -1,7 +1,7 @@
 use crate::functions::event_embed;
 use luro_core::{Data, Error};
 use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour};
-use poise::serenity_prelude::{Context, Message, MessageUpdateEvent};
+use poise::serenity_prelude::{Context, Mentionable, Message, MessageUpdateEvent};
 
 /// A Serenity listener for the [poise::Event::MessageUpdate] type
 pub async fn message_updated(
@@ -12,7 +12,7 @@ pub async fn message_updated(
     new: &Option<Message>,
     event: &MessageUpdateEvent
 ) -> Result<(), Error> {
-    if let Some(guild_id) = event.guild_id {
+    if let Some(guild_id) = event.guild_id && event.content.is_some() {
         if let Some(alert_channel) = discod_event_log_channel_defined(&guild_id, user_data, ctx).await {
             let guild = guild_id.to_guild_cached(ctx);
             let mut embed = if let Some(new_message) = new {
@@ -48,7 +48,7 @@ pub async fn message_updated(
             };
 
             embed.title("Message Edited");
-            embed.field("Channel", event.channel_id, true);
+            embed.field("Channel", event.channel_id.mention(), true);
             embed.field("Message ID", event.id, true);
             if let Some(message_content) = &event.content {
                 embed.description(message_content);

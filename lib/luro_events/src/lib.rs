@@ -3,10 +3,10 @@
 use events::{
     category_created::category_create, category_deleted::category_delete, channel_create::channel_create,
     channel_delete::channel_delete, interaction_create::interaction_create, invite_created::invite_create,
-    invite_deleted::invite_deleted, member_banned::member_banned, member_joined::member_joined,
-    member_unbanned::member_unbanned, message_updated::message_updated, on_message::message, ready_listener::ready_listener, member_left::member_left
+    invite_deleted::invite_deleted, member_banned::member_banned, member_joined::member_joined, member_left::member_left,
+    member_unbanned::member_unbanned, message_deleted::message_deleted, message_updated::message_updated, on_message::message,
+    ready_listener::ready_listener
 };
-use functions::deleted_message_formatted;
 use luro_core::{Data, Error};
 use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour, moderator_actions_log_channel_defined};
 use poise::serenity_prelude::Context;
@@ -102,23 +102,7 @@ pub async fn event_listener(
             channel_id,
             deleted_message_id,
             guild_id
-        } => {
-            if let Some(guild_id) = guild_id {
-                if let Some(alert_channel) = discod_event_log_channel_defined(guild_id, user_data, ctx).await {
-                    let message =
-                        deleted_message_formatted(ctx, &alert_channel, user_data, deleted_message_id.0, channel_id, false)
-                            .await;
-
-                    alert_channel
-                        .send_message(ctx, |m| {
-                            *m = message;
-                            m
-                        })
-                        .await?;
-                    return Ok(());
-                }
-            }
-        }
+        } => message_deleted(ctx, user_data, accent_colour, channel_id, deleted_message_id, guild_id).await?,
         poise::Event::MessageDeleteBulk {
             channel_id,
             multiple_deleted_messages_ids,

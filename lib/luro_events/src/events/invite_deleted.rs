@@ -13,8 +13,8 @@ pub async fn invite_deleted(
     if let Some(guild_id) = invite.guild_id {
         let guild = guild_id.to_guild_cached(ctx);
         let mut embed = event_embed(guild_accent_colour(accent_colour, guild), None, None).await;
-        embed.title("Invite Created");
-        embed.description(format!("The invite {} just got created by an unknown user!", invite.code));
+        embed.title("Invite Deleted");
+        embed.description(format!("The invite {} just got deleted!", invite.code));
 
         if let Some(alert_channel) = discod_event_log_channel_defined(&guild_id, user_data, ctx).await {
             alert_channel

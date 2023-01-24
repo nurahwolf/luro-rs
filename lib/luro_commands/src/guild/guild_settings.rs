@@ -1,5 +1,5 @@
 use luro_utilities::guild_accent_colour;
-use poise::serenity_prelude::{Channel, Role};
+use poise::serenity_prelude::{Channel, CreateEmbed, Mentionable, Role};
 
 use luro_core::{guild_settings::LuroGuildSettings, Context, Error};
 
@@ -34,32 +34,35 @@ pub async fn settings(
         .reload_guild(ctx.guild_id().unwrap(), guild_settings.clone())
         .await;
 
+    let mut embed = CreateEmbed::default();
+    embed.author(|a| {
+        a.name(ctx.author().tag())
+            .icon_url(ctx.author().avatar_url().unwrap_or_default())
+    });
+    embed.colour(guild_accent_colour(accent_colour, ctx.guild()));
+    embed.thumbnail(ctx.author().avatar_url().unwrap_or_default());
+    embed.description("Your guild settings are now as follows:");
+    embed.footer(|f| f.text("Contact Nurah#5103 if you have any troubles"));
+    if let Some(discord_events) = guild_settings.discord_events_log_channel {
+        embed.field("Discord Events Logging Channel", discord_events.mention(), true);
+    }
+
+    if let Some(moderation_actions) = guild_settings.moderator_actions_log_channel {
+        embed.field("Moderator Actions Logging Channel", moderation_actions.mention(), true);
+    }
+
+    if let Some(moderator_role_override) = guild_settings.moderator_role_override {
+        let mut description = "".to_string();
+        for role in moderator_role_override {
+            description.push_str(&format!("{}, ", &role.mention()).to_string());
+        }
+        embed.field("Discord Events Logging Channel", description, true);
+    }
+
     ctx.send(|message| {
-        message.embed(|embed| {
-            embed.author(|a| {
-                a.name(ctx.author().tag())
-                    .icon_url(ctx.author().avatar_url().unwrap_or_default())
-            });
-            embed.colour(guild_accent_colour(accent_colour, ctx.guild()));
-            embed.thumbnail(ctx.author().avatar_url().unwrap_or_default());
-            embed.description("Your guild settings are now as follows:");
-            embed.field(
-                "Discord Events Logging Channel",
-                guild_settings.discord_events_log_channel.is_some(),
-                true
-            );
-            embed.field(
-                "Moderation Actions Logging Channel",
-                guild_settings.moderator_actions_log_channel.is_some(),
-                true
-            );
-            embed.field(
-                "Moderation Role Override",
-                guild_settings.moderator_role_override.is_some(),
-                true
-            );
-            embed.footer(|f| f.text("Contact Nurah#5103 if you have any troubles"));
-            embed
+        message.embed(|e| {
+            *e = embed;
+            e
         })
     })
     .await?;

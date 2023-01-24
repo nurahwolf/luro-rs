@@ -29,32 +29,25 @@ pub async fn event_embed(accent_colour: Colour, event_author: Option<&User>, mod
 
 pub async fn deleted_message_formatted<'a>(
     ctx: &'a Context,
+    accent_colour: [u8; 3],
     alert_channel: &'a GuildChannel,
     data: &'a Data,
     message_id: u64,
     channel_id: &'a ChannelId,
     hide: bool
 ) -> CreateMessage<'a> {
-    let accent_colour = data.config.read().await.accent_colour;
-    let mut embed = CreateEmbed::default();
-
     match get_discord_message(&data.database, message_id) {
         Ok(luro_message) => {
             let message_resolved = ctx.http.get_message(luro_message.channel_id, luro_message.message_id).await;
-            let mut embed = CreateEmbed::default();
+            let mut embed = match &ctx.http.get_user(luro_message.user_id).await {
+                Ok(user) => event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), Some(user), None).await,
+                Err(_) => event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), None, None).await
+            };
 
             embed.title("Message Deleted");
             embed.description(&luro_message.message_content);
             embed.color(guild_accent_colour(accent_colour, alert_channel.guild(ctx)));
             embed.footer(|footer| footer.text("This message was fetched from the database, so most likely no longer exists"));
-
-            if let Ok(message_user) = &ctx.http.get_user(luro_message.user_id).await {
-                embed.author(|author| {
-                    author
-                        .name(&message_user.name)
-                        .icon_url(&message_user.avatar_url().unwrap_or_default())
-                });
-            }
 
             if !hide {
                 embed.field("Message ID", luro_message.message_id, true);
@@ -74,6 +67,7 @@ pub async fn deleted_message_formatted<'a>(
             message
         }
         Err(_) => {
+            let mut embed = CreateEmbed::default();
             embed
                 .title("Message Deleted")
                 .description(format!(
