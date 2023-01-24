@@ -7,36 +7,16 @@ use luro_furaffinity::furaffinity_commands;
 use luro_sled::sled_commands;
 use luro_songbird::commands::songbird_commands;
 
-mod api;
-mod favs;
+mod commands;
 mod functions;
-pub mod furry;
-mod guild;
-mod luro;
-mod moderator;
-mod owner;
-mod quote;
-mod silly;
-mod simple;
 mod structs;
-mod testing;
 
 pub fn commands() -> Vec<Command> {
-    songbird_commands()
+    commands::commands()
         .into_iter()
+        .chain(songbird_commands())
         .chain(e621_commands())
         .chain(furaffinity_commands())
-        .chain(owner::commands())
-        .chain(simple::commands())
-        .chain(moderator::commands())
-        .chain(guild::commands())
-        .chain(quote::commands())
-        .chain(furry::commands())
-        .chain(silly::commands())
-        .chain(api::commands())
-        .chain(testing::commands())
-        .chain(luro::commands())
-        .chain(favs::fav_commands())
         .chain(sled_commands())
         .collect()
 }

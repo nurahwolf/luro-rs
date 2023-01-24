@@ -4,29 +4,9 @@ use luro_core::{Context, Error, SOURCE_FINDER_REGEX};
 use poise::serenity_prelude::Message;
 use regex::Regex;
 
-/// Reverse lookup an image via SauceNAO / FuzzySearch!
-#[poise::command(prefix_command, slash_command, category = "Furry")]
-pub async fn saucenao_lookup(
-    ctx: Context<'_>,
-    #[rest]
-    #[description = "URL to lookup"]
-    url: String
-) -> Result<(), Error> {
-    let api_key = &ctx.data().secrets.saucenao_token;
-    let response = interactive_response(ctx, url, api_key).await;
-
-    match response {
-        Ok(_) => Ok(()),
-        Err(err) => {
-            ctx.say(format!("Find Source: Had an error - {err}")).await?;
-            Ok(())
-        }
-    }
-}
-
 /// Reverse lookup an image via SauceNAO!
 #[poise::command(context_menu_command = "SauceNAO: Find source", category = "Furry")]
-pub async fn saucenao_context(ctx: Context<'_>, msg: Message) -> Result<(), Error> {
+pub async fn saucenao(ctx: Context<'_>, msg: Message) -> Result<(), Error> {
     let api_key = &ctx.data().secrets.saucenao_token;
     let regex = match Regex::new(SOURCE_FINDER_REGEX) {
         Ok(ok) => ok,

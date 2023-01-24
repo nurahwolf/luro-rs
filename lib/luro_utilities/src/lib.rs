@@ -4,7 +4,9 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 use luro_core::Data;
-use poise::serenity_prelude::{Cache, ChannelId, Colour, Context, Guild, GuildChannel, GuildId, Role, RoleId, CreateEmbed, User};
+use poise::serenity_prelude::{
+    Cache, ChannelId, Colour, Context, CreateEmbed, Guild, GuildChannel, GuildId, Role, RoleId, User
+};
 use tracing::{debug, error, info, log::warn};
 
 /// Get the guild accent colour. If no guild is specified, or we fail to get the highest role, fall back to our defined accent colour

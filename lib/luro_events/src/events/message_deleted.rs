@@ -1,7 +1,7 @@
 use luro_core::{Data, Error};
 use luro_sled::get_discord_message;
-use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour, event_embed};
-use poise::serenity_prelude::{ChannelId, Context, GuildId, MessageId, CreateEmbed};
+use luro_utilities::{discod_event_log_channel_defined, event_embed, guild_accent_colour};
+use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, GuildId, MessageId};
 
 /// A Serenity listener for the [poise::Event::MessageDelete] type
 pub async fn message_deleted(
@@ -22,14 +22,18 @@ pub async fn message_deleted(
                     };
 
                     let mut embed = match &ctx.http.get_user(luro_message.user_id).await {
-                        Ok(user) => event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), Some(user), None).await,
+                        Ok(user) => {
+                            event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), Some(user), None).await
+                        }
                         Err(_) => event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), None, None).await
                     };
-        
+
                     embed.title("Message Deleted");
                     embed.description(&luro_message.message_content);
                     embed.color(guild_accent_colour(accent_colour, alert_channel.guild(ctx)));
-                    embed.footer(|footer| footer.text("This message was fetched from the database, so most likely no longer exists"));
+                    embed.footer(|footer| {
+                        footer.text("This message was fetched from the database, so most likely no longer exists")
+                    });
                     embed.field("Message ID", luro_message.message_id, true);
                     embed.field("Channel ID", luro_message.channel_id, true);
                     embed.field("User ID", luro_message.user_id, true);
@@ -43,15 +47,17 @@ pub async fn message_deleted(
                             "The message with ID {deleted_message_id} just got deleted in channel {channel_id}!"
                         ))
                         .color(guild_accent_colour(accent_colour, alert_channel.guild(ctx)));
-                        embed
+                    embed
                 }
             };
 
             alert_channel
-                .send_message(ctx, |m| m.embed(|e|{
-                    *e = embed;
-                    e
-                }))
+                .send_message(ctx, |m| {
+                    m.embed(|e| {
+                        *e = embed;
+                        e
+                    })
+                })
                 .await?;
             return Ok(());
         }

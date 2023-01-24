@@ -1,14 +1,13 @@
 use luro_core::quotes::{Quote, Quotes};
-use luro_core::{Command, Context, Error, QUOTES_FILE_PATH};
+use luro_core::{Context, Error, QUOTES_FILE_PATH};
 use luro_utilities::guild_accent_colour;
 use poise::serenity_prelude::Message;
 
-use crate::quote::quote_get::get;
-use crate::quote::quote_user::user;
+use crate::commands::quote::get::get;
+use crate::commands::quote::user::user;
 
-mod quote_get;
-mod quote_user;
-mod story;
+mod get;
+mod user;
 
 /// Get some information on things, like guilds and users.
 #[poise::command(
@@ -43,8 +42,4 @@ pub async fn quote(
     Quotes::write(quotes, QUOTES_FILE_PATH).await;
 
     Ok(())
-}
-
-pub fn commands() -> [Command; 3] {
-    [quote(), story::story(), quote_user::quote_user_context()]
 }

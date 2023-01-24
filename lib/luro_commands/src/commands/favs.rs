@@ -8,8 +8,6 @@ use luro_utilities::guild_accent_colour;
 use poise::serenity_prelude::Message;
 use rand::Rng;
 
-use crate::Command;
-
 /// Get a message from your favorites.
 #[poise::command(slash_command, category = "Favs")]
 async fn get(
@@ -105,7 +103,7 @@ async fn get(
 
 /// Add a message as a 'favorite', allowing you to recall things you love!
 #[poise::command(context_menu_command = "Add to favs", slash_command, category = "Favs", subcommands("get"))]
-async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
+pub async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
     let accent_colour = ctx.data().config.read().await.accent_colour;
 
     // Write to disk
@@ -159,8 +157,4 @@ async fn fav(ctx: Context<'_>, message: Message) -> Result<(), Error> {
     .await?;
 
     Ok(())
-}
-
-pub fn fav_commands() -> [Command; 1] {
-    [fav()]
 }

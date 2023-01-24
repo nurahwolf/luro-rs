@@ -1,5 +1,5 @@
 use luro_core::{Data, Error};
-use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour, event_embed};
+use luro_utilities::{discod_event_log_channel_defined, event_embed, guild_accent_colour};
 use poise::serenity_prelude::{Context, GuildId, User};
 
 /// A Serenity listener for the [poise::Event::GuildMemberRemoval] type
