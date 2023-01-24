@@ -1,3 +1,15 @@
+pub mod category_created;
+pub mod category_deleted;
+pub mod channel_create;
+pub mod channel_delete;
 pub mod interaction_create;
+pub mod invite_created;
+pub mod invite_deleted;
+pub mod member_banned;
+pub mod member_joined;
+pub mod member_left;
+pub mod member_unbanned;
+pub mod message_deleted;
+pub mod message_updated;
 pub mod on_message;
 pub mod ready_listener;

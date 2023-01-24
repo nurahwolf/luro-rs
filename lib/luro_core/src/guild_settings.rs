@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use poise::serenity_prelude::{ChannelId, GuildId, Role};
+use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
 use serde::{Deserialize, Serialize};
 use tokio::{fs::write, fs::File, io::AsyncReadExt};
 use tracing::log::info;
@@ -10,10 +10,12 @@ use crate::GUILDSETTINGS_FILE_PATH;
 /// A struct holding specific guild settings
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct LuroGuildSettings {
-    /// Moderator messages are pushed here, if defined
-    pub moderator_logs_channel: Option<ChannelId>,
+    /// Discord events are logged here, if defined
+    pub discord_events_log_channel: Option<ChannelId>,
+    /// Moderator actions are pushed here such as bans, if defined
+    pub moderator_actions_log_channel: Option<ChannelId>,
     /// An override allowing users of these role to use 'Moderator' commands like Ban and Kick, without needing the perms themselves
-    pub moderator_role_override: Option<Vec<Role>>
+    pub moderator_role_override: Option<Vec<RoleId>>
 }
 
 /// Structure for `guild_settings.toml`

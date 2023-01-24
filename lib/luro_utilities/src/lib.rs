@@ -1,9 +1,13 @@
 #![feature(let_chains)]
 
+use std::sync::Arc;
+
 use itertools::Itertools;
 use luro_core::Data;
-use poise::serenity_prelude::{Colour, Context, Guild, GuildChannel, GuildId, Role, RoleId};
-use tracing::{debug, error, info};
+use poise::serenity_prelude::{
+    Cache, ChannelId, Colour, Context, CreateEmbed, Guild, GuildChannel, GuildId, Role, RoleId, User
+};
+use tracing::{debug, error, info, log::warn};
 
 /// Get the guild accent colour. If no guild is specified, or we fail to get the highest role, fall back to our defined accent colour
 pub fn guild_accent_colour(accent: [u8; 3], guild: Option<Guild>) -> Colour {
@@ -39,26 +43,97 @@ pub fn format_int(int: u64) -> String {
     string
 }
 
-/// If an alert channel is defined in this guild, this function returns that channel. If not, then it returns none.
-pub async fn alert_channel_defined(guild_id: &GuildId, user_data: &Data, ctx: &Context) -> Option<GuildChannel> {
+/// Check to see if the guild is NSFW or not
+pub fn nsfw_check(cache: Option<&Arc<Cache>>, channel_id: ChannelId) -> bool {
+    match cache {
+        Some(cache) => match cache.channel(channel_id) {
+            Some(channel) => channel.is_nsfw(),
+            None => {
+                warn!("Failed to find the channel in cache");
+                false
+            }
+        },
+        None => {
+            warn!("Failed to resolve the cache");
+            false
+        }
+    }
+}
+
+/// Get the Discord event log channel, if it is defined
+pub async fn discod_event_log_channel_defined(guild_id: &GuildId, user_data: &Data, ctx: &Context) -> Option<GuildChannel> {
     // Check to see if we have settings for this guild
     match user_data.guild_settings.read().await.guilds.get(&guild_id.to_string()) {
-        Some(guild_settings) => match guild_settings.moderator_logs_channel {
-            Some(alert_channel) => match ctx.http.get_guild(guild_id.0).await {
-                Ok(guild) => match guild.channels(ctx).await {
-                    Ok(guild_channels) => match guild_channels.get(&alert_channel) {
-                        Some(alert_channel) => return Some(alert_channel.clone()),
-                        None => info!("Event Listener: Got a list of channels, but could not find the configured alert channel")
-                    },
-                    Err(err) => {
-                        error!("Event Listener: Failed to get the channels in the guild with the following error\n{err}")
-                    }
-                },
-                Err(err) => error!("Event Listener: Failed to resolve the guild ID to a guild with the following error\n{err}")
-            },
-            None => debug!("Event Listener: Guild settings defined, but there is no alert channel configured")
+        Some(guild_settings) => match guild_settings.discord_events_log_channel {
+            Some(alert_channel) => return alert_channel_defined(guild_id, ctx, alert_channel).await,
+            None => {
+                debug!("Event Listener: Guild settings defined, but there is no alert channel configured");
+                return None;
+            }
         },
         None => debug!("Event Listener: No guild settings are available for this guild")
     }
-    return None;
+    None
+}
+
+/// Some baseline formatting for event handler embeds
+pub async fn event_embed(accent_colour: Colour, event_author: Option<&User>, modified_user: Option<&User>) -> CreateEmbed {
+    let mut embed = CreateEmbed::default();
+    embed.colour(accent_colour);
+
+    if let Some(event_author) = event_author {
+        embed.footer(|footer| {
+            footer
+                .text(format!("Action by: {}#{}", event_author.name, event_author.discriminator))
+                .icon_url(event_author.avatar_url().unwrap_or_default())
+        });
+    };
+
+    if let Some(modified_user) = modified_user {
+        embed.author(|author| {
+            author
+                .name(format!("{}#{}", modified_user.name, modified_user.discriminator))
+                .icon_url(modified_user.avatar_url().unwrap_or_default())
+        });
+        embed.thumbnail(modified_user.avatar_url().unwrap_or_default());
+    };
+
+    embed
+}
+
+/// Get the Moderator action log channel, if it is defined
+pub async fn moderator_actions_log_channel_defined(
+    guild_id: &GuildId,
+    user_data: &Data,
+    ctx: &Context
+) -> Option<GuildChannel> {
+    // Check to see if we have settings for this guild
+    match user_data.guild_settings.read().await.guilds.get(&guild_id.to_string()) {
+        Some(guild_settings) => match guild_settings.moderator_actions_log_channel {
+            Some(alert_channel) => return alert_channel_defined(guild_id, ctx, alert_channel).await,
+            None => {
+                debug!("Event Listener: Guild settings defined, but there is no alert channel configured");
+                return None;
+            }
+        },
+        None => debug!("Event Listener: No guild settings are available for this guild")
+    }
+    None
+}
+
+/// If an alert channel is defined in this guild, this function returns that channel. If not, then it returns none.
+pub async fn alert_channel_defined(guild_id: &GuildId, ctx: &Context, alert_channel: ChannelId) -> Option<GuildChannel> {
+    match ctx.http.get_guild(guild_id.0).await {
+        Ok(guild) => match guild.channels(ctx).await {
+            Ok(guild_channels) => match guild_channels.get(&alert_channel) {
+                Some(alert_channel) => return Some(alert_channel.clone()),
+                None => info!("Event Listener: Got a list of channels, but could not find the configured alert channel")
+            },
+            Err(err) => {
+                error!("Event Listener: Failed to get the channels in the guild with the following error\n{err}")
+            }
+        },
+        Err(err) => error!("Event Listener: Failed to resolve the guild ID to a guild with the following error\n{err}")
+    }
+    None
 }

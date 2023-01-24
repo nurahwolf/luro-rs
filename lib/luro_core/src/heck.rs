@@ -12,10 +12,14 @@ pub struct Heck {
 /// We have two hecks, one that is slowly drained (so we only get a heck once) and another used to get explicit hecks.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Hecks {
-    /// A vector containing all our available hecks
-    pub hecks: Vec<Heck>,
+    /// A vector containing all SFW hecks
+    pub sfw_hecks: Vec<Heck>,
+    /// A vector containing all NSFW hecks
+    pub nsfw_hecks: Vec<Heck>,
     /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
-    pub available_heck_ids: Vec<usize>
+    pub sfw_heck_ids: Vec<usize>,
+    /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
+    pub nsfw_heck_ids: Vec<usize>
 }
 
 impl Hecks {
@@ -54,23 +58,36 @@ impl Hecks {
     }
 
     /// Reload ALL hecks
-    pub fn reload(&mut self, new_data: &Hecks) -> &mut Self {
-        self.hecks = new_data.hecks.clone();
-        // Calculate the heck_ids
-        let mut heck_ids = vec![];
-        for num in 0..self.hecks.len() {
-            heck_ids.push(num)
-        }
-        self.available_heck_ids = heck_ids;
+    pub fn reload(&mut self, new_hecks: &Hecks) -> &mut Self {
+        self.sfw_hecks = new_hecks.sfw_hecks.clone();
+        self.nsfw_hecks = new_hecks.nsfw_hecks.clone();
+        self.sfw_heck_ids = calculate_heck_ids(self.sfw_hecks.clone());
+        self.nsfw_heck_ids = calculate_heck_ids(self.nsfw_hecks.clone());
         self
     }
 
-    /// Reload just the heck IDs
-    pub fn reload_ids(&mut self) {
-        let mut heck_ids = vec![];
-        for num in 0..self.hecks.len() {
-            heck_ids.push(num)
-        }
-        self.available_heck_ids = heck_ids;
+    /// Reload all heck IDs only
+    pub fn reload_all_heck_ids(&mut self) {
+        self.sfw_heck_ids = calculate_heck_ids(self.sfw_hecks.clone());
+        self.nsfw_heck_ids = calculate_heck_ids(self.nsfw_hecks.clone());
     }
+
+    /// Reload sfw heck IDs
+    pub fn reload_sfw_heck_ids(&mut self) {
+        self.sfw_heck_ids = calculate_heck_ids(self.sfw_hecks.clone());
+    }
+
+    /// Reload nsfw heck IDs
+    pub fn reload_nsfw_heck_ids(&mut self) {
+        self.nsfw_heck_ids = calculate_heck_ids(self.nsfw_hecks.clone());
+    }
+}
+
+/// Returns a vector filled with the available heck IDs
+fn calculate_heck_ids(hecks: Vec<Heck>) -> Vec<usize> {
+    let mut heck_ids = vec![];
+    for num in 0..hecks.len() {
+        heck_ids.push(num)
+    }
+    heck_ids
 }

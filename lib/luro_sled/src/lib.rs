@@ -90,9 +90,9 @@ pub fn get_discord_message(db: &sled::Db, id: u64) -> Result<LuroMessage, String
     let luro_message = unsafe { rkyv::archived_root::<LuroMessage>(messages_vec_resolved.as_bytes()) };
 
     match luro_message.deserialize(&mut rkyv::Infallible) {
-        Ok(luro_message) => return Ok(luro_message),
-        Err(err) => return Err(format!("DB: Failed to deserialize: {err}"))
-    };
+        Ok(luro_message) => Ok(luro_message),
+        Err(err) => Err(format!("DB: Failed to deserialize: {err}"))
+    }
 }
 
 pub fn total_messages_by_user(db: &sled::Db, user_id: u64) -> u64 {
@@ -141,9 +141,9 @@ pub async fn get_message_formatted(ctx: Context<'_>, message_id: u64, hide: bool
     }
 
     if !hide {
-        embed.field("Message ID", &luro_message.message_id, true);
-        embed.field("Channel ID", &luro_message.channel_id, true);
-        embed.field("User ID", &luro_message.user_id, true);
+        embed.field("Message ID", luro_message.message_id, true);
+        embed.field("Channel ID", luro_message.channel_id, true);
+        embed.field("User ID", luro_message.user_id, true);
 
         if let Some(guild_id) = &luro_message.guild_id && message_resolved.is_err() {
             embed.field("Guild ID", guild_id, true);
@@ -166,10 +166,8 @@ pub async fn get_message_formatted(ctx: Context<'_>, message_id: u64, hide: bool
                     guild.name
                 ))
             });
-        } else {
-            if let Some(guild_id) = &luro_message.guild_id && !hide {
-                embed.field("Guild ID", guild_id, true);
-            }
+        } else if let Some(guild_id) = &luro_message.guild_id && !hide {
+            embed.field("Guild ID", guild_id, true);
         }
     };
     Ok(embed)

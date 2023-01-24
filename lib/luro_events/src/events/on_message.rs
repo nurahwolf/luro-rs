@@ -6,7 +6,7 @@ use poise::{
     FrameworkContext
 };
 use regex::Regex;
-use tracing::{info, error};
+use tracing::{error, info};
 
 /// A Serenity listener for the [Message] type
 pub async fn message(
@@ -22,7 +22,10 @@ pub async fn message(
 
     // Add the message to the database
     match add_discord_message(&user_data.database, message.clone()) {
-        Ok(_) => info!("{} ({}) - Message ID: {}\n{}", message.author.name, message.author.id, message.id.0, message.content),
+        Ok(_) => info!(
+            "{} ({}) - Message ID: {}\n{}",
+            message.author.name, message.author.id, message.id.0, message.content
+        ),
         Err(err) => error!("Error while saving message to database: {err}")
     };
 

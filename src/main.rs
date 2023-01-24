@@ -3,13 +3,13 @@ use luro_core::initialise_data;
 use std::{collections::HashSet, env};
 
 use luro_core::BOT_TOKEN;
-use luro_events::{event_listener, on_error};
+use luro_events::{event_listener, on_error::on_error};
 use poise::{
     serenity_prelude::{GatewayIntents, UserId},
     FrameworkOptions
 };
 
-extern crate tracing;
+pub const LURO_GIT: &str = env!("CARGO_MANIFEST_DIR");
 
 /// **Luro's entry function**
 ///

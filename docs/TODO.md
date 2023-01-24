@@ -6,7 +6,7 @@ A general todo list of things I wish to achieve with Luro, and where we stand. C
 
 Things that are pretty important to have, and hopefully will not take too much in development time
 
-- [ ] User favs - Like the quote feature, but personalised to recall particular messages / images
+- [x] User favs - Like the quote feature, but personalised to recall particular messages / images
     - Should only fetch NSFW saves in NSFW rooms
     - DB of `User[(nsfw, item)]`
 - [ ] TODO list - Per user todo list, simple enough
@@ -22,6 +22,7 @@ Things that are pretty important to have, and hopefully will not take too much i
 - [ ] Interaction Database - Being able to interact with messages more expressively
     - [ ] Stickers
     - [ ] Emotes
+    - [x] Hecks
 - [ ] Message Interactions
     - [ ] Ability to reload them on bot reload
     - [ ] Role menu
@@ -42,3 +43,6 @@ Things that are nice to have. Primarily a shopping list of ideas.
 - [ ] Error handling improvements
 - [ ] Discord support server
 - [ ] A support page where users can donate / support the bot
+
+## Completed Features
+

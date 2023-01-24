@@ -1,39 +1,19 @@
 #![feature(let_chains)]
 
-use events::{interaction_create::interaction_create, on_message::message, ready_listener::ready_listener};
-use functions::deleted_message_formatted;
+use events::{
+    category_created::category_create, category_deleted::category_delete, channel_create::channel_create,
+    channel_delete::channel_delete, interaction_create::interaction_create, invite_created::invite_create,
+    invite_deleted::invite_deleted, member_banned::member_banned, member_joined::member_joined, member_left::member_left,
+    member_unbanned::member_unbanned, message_deleted::message_deleted, message_updated::message_updated, on_message::message,
+    ready_listener::ready_listener
+};
 use luro_core::{Data, Error};
-use luro_utilities::{alert_channel_defined, guild_accent_colour};
+use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour, moderator_actions_log_channel_defined};
 use poise::serenity_prelude::Context;
-use tracing::{info, debug};
+use tracing::{debug, info};
 
 mod events;
-mod functions;
-
-/// **Luro's error handler**
-///
-/// This function is called every time we have an error. There are many types of errors, so we only handle the ones we are particularly interested in. The rest get forwarded to the default error handler.
-pub async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
-    match error {
-        poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {error:?}"),
-        poise::FrameworkError::Command { error, ctx } => {
-            println!("Error in command `{}`: {:?}", ctx.command().name, error,);
-            ctx.send(|message| {
-                message
-                    .ephemeral(true)
-                    .content(format!("Error in command `{}`: {:?}", ctx.command().name, error))
-            })
-            .await
-            .expect("Could not send error to channel!");
-        }
-        // We are not interested in this particular error, so handle it by the built-in function.
-        error => {
-            if let Err(e) = poise::builtins::on_error(error).await {
-                println!("Error while handling error: {e}")
-            }
-        }
-    }
-}
+pub mod on_error;
 
 /// **Luro's event listener**
 ///
@@ -51,69 +31,13 @@ pub async fn event_listener(
         poise::Event::InteractionCreate { interaction } => interaction_create(interaction).await?,
         poise::Event::Message { new_message } => message(new_message, ctx, &framework, user_data).await?,
         poise::Event::CacheReady { guilds: _ } => info!("Luro's cache is now ready!"),
-        poise::Event::ChannelCreate { channel } => {
-            if let Some(alert_channel) = alert_channel_defined(&channel.guild_id, user_data, ctx).await {
-                alert_channel
-                    .send_message(ctx, |message| {
-                        message.add_embed(|embed| {
-                            embed
-                                .title("Channel Created")
-                                .description(format!("The channel {} just got created", channel.name()))
-                                .color(guild_accent_colour(accent_colour, channel.guild(ctx)))
-                        })
-                    })
-                    .await?;
-                return Ok(());
-            }
-        }
-        poise::Event::CategoryCreate { category } => {
-            if let Some(alert_channel) = alert_channel_defined(&category.guild_id, user_data, ctx).await {
-                alert_channel
-                    .send_message(ctx, |message| {
-                        message.add_embed(|embed| {
-                            embed
-                                .title("Category Created")
-                                .description(format!("The category {} just got created", category.name()))
-                                .color(guild_accent_colour(accent_colour, category.guild_id.to_guild_cached(ctx)))
-                        })
-                    })
-                    .await?;
-                return Ok(());
-            }
-        }
-        poise::Event::CategoryDelete { category } => {
-            if let Some(alert_channel) = alert_channel_defined(&category.guild_id, user_data, ctx).await {
-                alert_channel
-                    .send_message(ctx, |message| {
-                        message.add_embed(|embed| {
-                            embed
-                                .title("Category Deleted")
-                                .description(format!("The category {} just got DELETED!", category.name()))
-                                .color(guild_accent_colour(accent_colour, category.guild_id.to_guild_cached(ctx)))
-                        })
-                    })
-                    .await?;
-                return Ok(());
-            }
-        }
-        poise::Event::ChannelDelete { channel } => {
-            if let Some(alert_channel) = alert_channel_defined(&channel.guild_id, user_data, ctx).await {
-                alert_channel
-                    .send_message(ctx, |message| {
-                        message.add_embed(|embed| {
-                            embed
-                                .title("Channel Deleted")
-                                .description(format!("The channel {} just got DELETED!", channel.name()))
-                                .color(guild_accent_colour(accent_colour, channel.guild(ctx)))
-                        })
-                    })
-                    .await?;
-                return Ok(());
-            }
-        }
+        poise::Event::ChannelCreate { channel } => channel_create(ctx, user_data, accent_colour, channel).await?,
+        poise::Event::CategoryCreate { category } => category_create(ctx, user_data, accent_colour, category).await?,
+        poise::Event::CategoryDelete { category } => category_delete(ctx, user_data, accent_colour, category).await?,
+        poise::Event::ChannelDelete { channel } => channel_delete(ctx, user_data, accent_colour, channel).await?,
         poise::Event::ChannelPinsUpdate { pin } => {
             if let Some(guild_id) = pin.guild_id {
-                if let Some(alert_channel) = alert_channel_defined(&&guild_id, user_data, ctx).await {
+                if let Some(alert_channel) = discod_event_log_channel_defined(&guild_id, user_data, ctx).await {
                     alert_channel
                         .send_message(ctx, |message| {
                             message.add_embed(|embed| {
@@ -130,13 +54,13 @@ pub async fn event_listener(
         }
         poise::Event::ChannelUpdate { old: _, new } => {
             if let Some(guild_channel) = new.clone().guild() {
-                if let Some(alert_channel) = alert_channel_defined(&guild_channel.guild_id, user_data, ctx).await {
+                if let Some(alert_channel) = discod_event_log_channel_defined(&guild_channel.guild_id, user_data, ctx).await {
                     alert_channel
                         .send_message(ctx, |message| {
                             message.add_embed(|embed| {
                                 embed
                                     .title("Channel Updated")
-                                    .description(format!("The channel {} just got updated!", guild_channel))
+                                    .description(format!("The channel {guild_channel} just got updated!"))
                                     .color(guild_accent_colour(accent_colour, guild_channel.guild(ctx)))
                             })
                         })
@@ -146,79 +70,21 @@ pub async fn event_listener(
             }
         }
         poise::Event::GuildBanAddition { guild_id, banned_user } => {
-            if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
-                alert_channel
-                    .send_message(ctx, |message| {
-                        message.add_embed(|embed| {
-                            embed
-                                .title("Member Banned")
-                                .description(format!("The user {} ({}) just got banned!", banned_user, banned_user.id.0))
-                                .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
-                        })
-                    })
-                    .await?;
-                return Ok(());
-            }
+            member_banned(ctx, user_data, accent_colour, guild_id, banned_user).await?
         }
         poise::Event::GuildBanRemoval { guild_id, unbanned_user } => {
-            if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
-                alert_channel
-                    .send_message(ctx, |message| {
-                        message.add_embed(|embed| {
-                            embed
-                                .title("Member Unbanned")
-                                .description(format!(
-                                    "The user {} ({}) just got unbanned!",
-                                    unbanned_user, unbanned_user.id.0
-                                ))
-                                .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
-                        })
-                    })
-                    .await?;
-                return Ok(());
-            }
+            member_unbanned(ctx, user_data, accent_colour, guild_id, unbanned_user).await?
         }
         poise::Event::GuildCreate { guild, is_new: _ } => info!("Loaded guild {} ({}) into cache", guild.name, guild.id),
         // poise::Event::GuildDelete { incomplete, full } => todo!(),
         // poise::Event::GuildEmojisUpdate { guild_id, current_state } => todo!(),
         // poise::Event::GuildIntegrationsUpdate { guild_id } => todo!(),
-        poise::Event::GuildMemberAddition { new_member } => {
-            if let Some(alert_channel) = alert_channel_defined(&new_member.guild_id, user_data, ctx).await {
-                alert_channel
-                    .send_message(ctx, |message| {
-                        message.add_embed(|embed| {
-                            embed
-                                .title("Member Joined")
-                                .description(format!(
-                                    "The user {} ({}) just joined the server!",
-                                    new_member, new_member.user.id.0
-                                ))
-                                .color(guild_accent_colour(accent_colour, new_member.guild_id.to_guild_cached(ctx)))
-                        })
-                    })
-                    .await?;
-                return Ok(());
-            }
-        }
+        poise::Event::GuildMemberAddition { new_member } => member_joined(ctx, user_data, accent_colour, new_member).await?,
         poise::Event::GuildMemberRemoval {
             guild_id,
             user,
             member_data_if_available: _
-        } => {
-            if let Some(alert_channel) = alert_channel_defined(&guild_id, user_data, ctx).await {
-                alert_channel
-                    .send_message(ctx, |message| {
-                        message.add_embed(|embed| {
-                            embed
-                                .title("Member Left")
-                                .description(format!("The user {} ({}) just left the server!", user, user.id.0))
-                                .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
-                        })
-                    })
-                    .await?;
-                return Ok(());
-            }
-        }
+        } => member_left(ctx, user_data, accent_colour, guild_id, user).await?,
         // poise::Event::GuildMembersChunk { chunk } => todo!(),
         // poise::Event::GuildRoleCreate { new } => todo!(),
         // poise::Event::GuildRoleDelete { guild_id, removed_role_id, removed_role_data_if_available } => todo!(),
@@ -229,72 +95,20 @@ pub async fn event_listener(
         // poise::Event::IntegrationCreate { integration } => todo!(),
         // poise::Event::IntegrationUpdate { integration } => todo!(),
         // poise::Event::IntegrationDelete { integration_id, guild_id, application_id } => todo!(),
-        poise::Event::InviteCreate { data } => {
-            if let Some(guild_id) = data.guild_id {
-                if let Some(alert_channel) = alert_channel_defined(&guild_id, user_data, ctx).await {
-                    let description = match &data.inviter {
-                        Some(inviter) => format!("The invite {} just got created by user {}!", data.code, inviter),
-                        None => format!("The invite {} just got created by an unknown user!", data.code)
-                    };
-                    alert_channel
-                        .send_message(ctx, |message| {
-                            message.add_embed(|embed| {
-                                embed
-                                    .title("Invite Created")
-                                    .description(format!("{}", description))
-                                    .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
-                            })
-                        })
-                        .await?;
-                    return Ok(());
-                }
-            }
-        }
-        poise::Event::InviteDelete { data } => {
-            if let Some(guild_id) = data.guild_id {
-                if let Some(alert_channel) = alert_channel_defined(&guild_id, user_data, ctx).await {
-                    alert_channel
-                        .send_message(ctx, |message| {
-                            message.add_embed(|embed| {
-                                embed
-                                    .title("Invite Deleted")
-                                    .description(format!("The invite {} just got created by an unknown user!", data.code))
-                                    .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
-                            })
-                        })
-                        .await?;
-                    return Ok(());
-                }
-            }
-        }
+        poise::Event::InviteCreate { data } => invite_create(ctx, user_data, accent_colour, data).await?,
+        poise::Event::InviteDelete { data } => invite_deleted(ctx, user_data, accent_colour, data).await?,
         poise::Event::MessageDelete {
             channel_id,
             deleted_message_id,
             guild_id
-        } => {
-            if let Some(guild_id) = guild_id {
-                if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
-                    let message =
-                        deleted_message_formatted(ctx, &alert_channel, user_data, deleted_message_id.0, channel_id, false)
-                            .await;
-
-                    alert_channel
-                        .send_message(ctx, |m| {
-                            *m = message;
-                            m
-                        })
-                        .await?;
-                    return Ok(());
-                }
-            }
-        }
+        } => message_deleted(ctx, user_data, accent_colour, channel_id, deleted_message_id, guild_id).await?,
         poise::Event::MessageDeleteBulk {
             channel_id,
             multiple_deleted_messages_ids,
             guild_id
         } => {
             if let Some(guild_id) = guild_id {
-                if let Some(alert_channel) = alert_channel_defined(guild_id, user_data, ctx).await {
+                if let Some(alert_channel) = moderator_actions_log_channel_defined(guild_id, user_data, ctx).await {
                     alert_channel
                         .send_message(ctx, |message| {
                             message.add_embed(|embed| {
@@ -317,51 +131,7 @@ pub async fn event_listener(
             old_if_available,
             new,
             event
-        } => {
-            if let Some(guild_id) = event.guild_id {
-                if let Some(alert_channel) = alert_channel_defined(&guild_id, user_data, ctx).await {
-                    alert_channel
-                        .send_message(ctx, |message| {
-                            message.add_embed(|embed| {
-                                embed.title("Message Edited");
-                                if let Some(message_content) = &event.content {
-                                    embed.description(message_content);
-                                }
-
-                                if let Some(new_message) = new {
-                                    if new_message.content.is_empty() {
-                                        embed.description("<THE NEW MESSAGE DOES NOT HAVE A BODY>");
-                                    } else {
-                                        embed.description(&new_message.content);
-                                    };
-                                    embed.url(new_message.link());
-                                }
-
-                                if let Some(old_message) = old_if_available {
-                                    if old_message.content.is_empty() {
-                                        embed.description("<THE OLD MESSAGE DOES NOT HAVE A BODY>");
-                                    } else {
-                                        embed.description(&old_message.content);
-                                    }
-                                }
-                                embed.color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)));
-                                embed.field("Channel", event.channel_id, true);
-                                if let Some(message_user) = &event.author {
-                                    embed.field("User", message_user, true);
-                                    embed.author(|author| {
-                                        author
-                                            .name(&message_user.name)
-                                            .icon_url(&message_user.avatar_url().unwrap_or_default())
-                                    });
-                                };
-                                embed
-                            })
-                        })
-                        .await?;
-                    return Ok(());
-                }
-            }
-        }
+        } => message_updated(ctx, user_data, accent_colour, old_if_available, new, event).await?,
         // poise::Event::ReactionAdd { add_reaction } => todo!(),
         // poise::Event::ReactionRemove { removed_reaction } => todo!(),
         // poise::Event::ReactionRemoveAll { channel_id, removed_from_message_id } => todo!(),
