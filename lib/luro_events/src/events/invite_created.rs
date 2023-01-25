@@ -12,7 +12,7 @@ pub async fn invite_create(
     if let Some(guild_id) = invite.guild_id {
         let guild = guild_id.to_guild_cached(ctx);
         let mut embed = if let Some(invite_user) = &invite.inviter {
-            let mut embed = event_embed(guild_accent_colour(accent_colour, guild), Some(invite_user), None).await;
+            let mut embed = event_embed(guild_accent_colour(accent_colour, guild), None, Some(invite_user)).await;
             embed.description(format!(
                 "The invite {} just got created by user {} - {}!",
                 invite.code, invite_user.name, invite_user.id
