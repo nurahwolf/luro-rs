@@ -10,7 +10,7 @@ pub async fn member_joined(ctx: &Context, user_data: &Data, accent_colour: [u8; 
         let mut embed = event_embed(guild_accent_colour(accent_colour, guild), None, Some(&member.user)).await;
         embed.title("Member Joined").description(format!(
             "The user {} ({}) just joined the server!",
-            member.display_name(),
+            member,
             member.user.id.0
         ));
 
