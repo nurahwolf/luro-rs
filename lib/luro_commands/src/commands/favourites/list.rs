@@ -4,9 +4,7 @@ use poise::serenity_prelude::CreateEmbed;
 
 /// List your favorites
 #[poise::command(slash_command, category = "Favourites")]
-pub async fn list(
-    ctx: Context<'_>,
-) -> Result<(), Error> {
+pub async fn list(ctx: Context<'_>) -> Result<(), Error> {
     // Get favourites and accent_colour from datastore / config
     let favourites = &ctx.data().user_favourites.read().await.favs;
     let accent_colour = ctx.data().config.read().await.accent_colour;
@@ -14,10 +12,17 @@ pub async fn list(
     embed.title("Your Favourites");
     embed.color(guild_accent_colour(accent_colour, ctx.guild()));
     match ctx.author_member().await {
-        Some(author_member) => embed.author(|author|author.name(author_member.display_name()).icon_url(author_member.avatar_url().unwrap_or_default())),
-        None => embed.author(|author|author.name(ctx.author().name.clone()).icon_url(ctx.author().avatar_url().unwrap_or_default()))
+        Some(author_member) => embed.author(|author| {
+            author
+                .name(author_member.display_name())
+                .icon_url(author_member.avatar_url().unwrap_or_default())
+        }),
+        None => embed.author(|author| {
+            author
+                .name(ctx.author().name.clone())
+                .icon_url(ctx.author().avatar_url().unwrap_or_default())
+        })
     };
-    
 
     // Get favorites from author
     let user_favourites = match favourites.get(&ctx.author().id.to_string()) {
@@ -32,7 +37,7 @@ pub async fn list(
     let mut fields = vec![];
     for (category_name, favourites) in user_favourites.iter() {
         fields.push((category_name, format!("Total: {}", favourites.len()), true))
-    };
+    }
     embed.fields(fields);
 
     // Message resolved, send it!

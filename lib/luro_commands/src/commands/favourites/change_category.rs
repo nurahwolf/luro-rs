@@ -1,7 +1,7 @@
 use std::collections::hash_map::Entry;
 
 use futures::{Stream, StreamExt};
-use luro_core::{Context, Error, favourites::Favs, FAVOURITES_FILE_PATH};
+use luro_core::{favourites::Favs, Context, Error, FAVOURITES_FILE_PATH};
 
 use crate::commands::favourites::embed::embed;
 
@@ -19,13 +19,11 @@ async fn autocomplete_category<'a>(ctx: Context<'_>, partial: &'a str) -> impl S
         .map(|(category, _)| category)
 }
 
-
 /// Move a message to a category, creating it if it does not exist
 #[poise::command(slash_command, category = "Favourites", rename = "move")]
 pub async fn change_category(
     ctx: Context<'_>,
-    #[description = "The Favourite ID of the favourite you wish to move"]
-    id: usize,
+    #[description = "The Favourite ID of the favourite you wish to move"] id: usize,
     #[description = "The category name of the ID you wish to move"]
     #[autocomplete = "autocomplete_category"]
     category_from: String,
@@ -57,10 +55,25 @@ pub async fn change_category(
 
     // Make sure the ID actually exists
     let favourite = if id < favourites_from.len() {
-        favourites_from.remove(id)
+        let favourite = favourites_from.remove(id);
+        // If that category is now empty, remove it
+        if favourites_from.is_empty() {
+            match user_favourites.remove(&category_from) {
+                Some(_) => {
+                    ctx.say("That category is now empty, so I have removed it.").await?;
+                }
+                None => {
+                    ctx.say("That category is now empty, so I have removed it.").await?;
+                }
+            };
+        }
+        favourite
     } else {
-        ctx.say(format!("No ID of {id} found in {category_from}. Make sure you are using the Favourite ID and NOT the message ID!")).await?;
-        return Ok(())
+        ctx.say(format!(
+            "No ID of {id} found in {category_from}. Make sure you are using the Favourite ID and NOT the message ID!"
+        ))
+        .await?;
+        return Ok(());
     };
 
     // Now move to the new category
@@ -69,9 +82,10 @@ pub async fn change_category(
             let vector_length = occupied.get().len();
             occupied.into_mut().append(&mut vec![favourite.clone()]);
             vector_length
-        },
+        }
         Entry::Vacant(vacant) => {
-            ctx.say(format!("The category {category_to} was created, and your favourite moved.")).await?;
+            ctx.say(format!("The category {category_to} was created, and your favourite moved."))
+                .await?;
             let inserted = vacant.insert(vec![favourite.clone()]);
             inserted.len()
         }

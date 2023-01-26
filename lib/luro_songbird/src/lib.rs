@@ -1,6 +1,6 @@
 pub mod commands;
-mod nowplaying;
 mod joinvoice;
+mod nowplaying;
 
 use std::sync::{
     atomic::{AtomicUsize, Ordering},

@@ -1,5 +1,5 @@
 use futures::{Stream, StreamExt};
-use luro_core::{Context, Error, favourites::Favs, FAVOURITES_FILE_PATH};
+use luro_core::{favourites::Favs, Context, Error, FAVOURITES_FILE_PATH};
 
 use crate::commands::favourites::embed::embed;
 
@@ -24,7 +24,7 @@ pub async fn remove(
     #[description = "The category of favourite to get. Gets 'uncategorised' if not set"]
     #[autocomplete = "autocomplete_category"]
     category: String,
-    id: usize,
+    id: usize
 ) -> Result<(), Error> {
     // Get favourites and accent_colour from datastore / config
     let favourites_db = &mut ctx.data().user_favourites.write().await;
@@ -54,15 +54,22 @@ pub async fn remove(
     let favourite = if id < favourites.len() {
         favourites.remove(id)
     } else {
-        ctx.say(format!("No ID of {id} found in {category}. Make sure you are using the Favourite ID and NOT the message ID!")).await?;
-        return Ok(())
+        ctx.say(format!(
+            "No ID of {id} found in {category}. Make sure you are using the Favourite ID and NOT the message ID!"
+        ))
+        .await?;
+        return Ok(());
     };
 
     // If that category is now empty, remove it
     if favourites.is_empty() {
         match user_favourites.remove(&category) {
-            Some(_) => {ctx.say("That category is now empty, so I have removed it.").await?;},
-            None => {ctx.say("That category is now empty, so I have removed it.").await?;}
+            Some(_) => {
+                ctx.say("That category is now empty, so I have removed it.").await?;
+            }
+            None => {
+                ctx.say("That category is now empty, so I have removed it.").await?;
+            }
         }
     };
 
@@ -76,7 +83,8 @@ pub async fn remove(
         Ok(message) => message,
         Err(_) => {
             ctx.say(format!(
-                "Looks like the original message does not exist, but I did remove the favourite {}", favourite.message_id
+                "Looks like the original message does not exist, but I did remove the favourite {}",
+                favourite.message_id
             ))
             .await?;
             return Ok(());
