@@ -60,6 +60,17 @@ async fn get(
         }
     };
 
+    // NSFW check - If the channel we are sending to is NOT nsfw, but the content is, don't send.
+    if let Ok(author_channel) = ctx.channel_id().to_channel(ctx).await {
+        if let Ok(message_channel) = message.channel(ctx).await {
+            if !author_channel.is_nsfw() && message_channel.is_nsfw() {
+                ctx.say("Stop trying to send something NSFW to a SFW channel, dork!").await?;
+                return Ok(());
+            }
+        }
+    };
+
+
     // Message resolved, send it!
     ctx.send(|builder| {
         builder.embed(|embed| {
@@ -68,12 +79,14 @@ async fn get(
                     author
                         .name(&message.author.name)
                         .icon_url(&message.author.avatar_url().unwrap_or_default())
+                        .url(message.link())
                 })
-                .title("Message Link")
-                .url(message.link())
                 .color(guild_accent_colour(accent_colour, ctx.guild()))
                 .description(&message.content)
                 .footer(|footer| footer.text(format!("Fav ID: {cursor}")));
+                if let Some(attachment) = message.attachments.first() {
+                    embed.image(&attachment.proxy_url);
+                }
 
             if !hide {
                 embed.field("Message ID", message.id, true);
@@ -81,12 +94,6 @@ async fn get(
                     embed.field("Guild ID", guild_id, true);
                 }
                 embed.field("Author", format!("{} (ID: {})", message.author, message.author.id), true);
-            }
-
-            if !message.attachments.is_empty() {
-                if let Some(attachment) = message.attachments.first() {
-                    embed.attachment(attachment.url.clone());
-                }
             }
 
             if let Some(guild) = message.guild(ctx) {
