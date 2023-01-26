@@ -1,6 +1,5 @@
 use futures::{Stream, StreamExt};
-use luro_core::{Context, Error};
-use rand::Rng;
+use luro_core::{Context, Error, favourites::Favs, FAVOURITES_FILE_PATH};
 
 use crate::commands::favourites::embed::embed;
 
@@ -18,24 +17,21 @@ async fn autocomplete_category<'a>(ctx: Context<'_>, partial: &'a str) -> impl S
         .map(|(category, _)| category)
 }
 
-/// Get a message from your favorites.
+/// Remove a message from your favorites.
 #[poise::command(slash_command, category = "Favourites")]
-pub async fn get(
+pub async fn remove(
     ctx: Context<'_>,
     #[description = "The category of favourite to get. Gets 'uncategorised' if not set"]
     #[autocomplete = "autocomplete_category"]
-    category: Option<String>,
-    id: Option<usize>,
-    #[description = "Hide advanced information in the embed"]
-    #[flag]
-    hide: bool,
+    category: String,
+    id: usize,
 ) -> Result<(), Error> {
     // Get favourites and accent_colour from datastore / config
-    let favourites = &ctx.data().user_favourites.read().await.favs;
+    let favourites_db = &mut ctx.data().user_favourites.write().await;
     let accent_colour = ctx.data().config.read().await.accent_colour;
 
     // Get favorites from author
-    let user_favourites = match favourites.get(&ctx.author().id.to_string()) {
+    let user_favourites = match favourites_db.favs.get_mut(&ctx.author().id.to_string()) {
         Some(ok) => ok,
         None => {
             ctx.say("Looks like you don't have any favorites saved yet!").await?;
@@ -43,13 +39,7 @@ pub async fn get(
         }
     };
 
-    // Get the category requested, otherwise fall back to 'uncategorised'
-    let category = match category {
-        Some(category) => category,
-        None => "uncategorised".to_string()
-    };
-
-    let favourites = match user_favourites.get(&category) {
+    let favourites = match user_favourites.get_mut(&category) {
         Some(ok) => ok,
         None => {
             ctx.say(format!(
@@ -60,21 +50,19 @@ pub async fn get(
         }
     };
 
-    if favourites.is_empty() {
-        ctx.say("You have no favourites in that category, sorry!").await?;
+    // Make sure the ID actually exists
+    let favourite = if id < favourites.len() {
+        favourites.remove(id)
+    } else {
+        ctx.say(format!("No ID of {id} found in {category}. Make sure you are using the Favourite ID and NOT the message ID!")).await?;
         return Ok(())
-    }
-
-    // If a favorite is specified, get it, otherwise get a random one
-    let cursor = match id {
-        Some(fav_id) => fav_id,
-        None => rand::thread_rng().gen_range(0..favourites.len())
     };
-    let favorite = match favourites.get(cursor) {
-        Some(user_favorites) => user_favorites,
-        None => {
-            ctx.say("Seems there is no favorite with that ID, sorry!").await?;
-            return Ok(());
+
+    // If that category is now empty, remove it
+    if favourites.is_empty() {
+        match user_favourites.remove(&category) {
+            Some(_) => {ctx.say("That category is now empty, so I have removed it.").await?;},
+            None => {ctx.say("That category is now empty, so I have removed it.").await?;}
         }
     };
 
@@ -82,37 +70,28 @@ pub async fn get(
     let message = match ctx
         .serenity_context()
         .http
-        .get_message(favorite.channel_id, favorite.message_id)
+        .get_message(favourite.channel_id, favourite.message_id)
         .await
     {
         Ok(message) => message,
-        Err(err) => {
+        Err(_) => {
             ctx.say(format!(
-                "I'm afraid I could not get the original message! This might be because the message was deleted, I don't have access to that channel or I'm no longer in the server the message was sent.\n{err}"
+                "Looks like the original message does not exist, but I did remove the favourite {}", favourite.message_id
             ))
             .await?;
             return Ok(());
         }
     };
 
-    // NSFW check - If the channel we are sending to is NOT nsfw, but the content is, don't send.
-    // if let Ok(author_channel) = ctx.channel_id().to_channel(ctx).await {
-    //     if let Ok(message_channel) = message.channel(ctx).await {
-    //         if !author_channel.is_nsfw() && message_channel.is_nsfw() {
-    //             ctx.say("Stop trying to send something NSFW to a SFW channel, dork!").await?;
-    //             return Ok(());
-    //         }
-    //     }
-    // };
-
-    let embed = embed(
+    let mut embed = embed(
         &message,
         accent_colour,
         ctx.guild(),
-        cursor,
-        hide,
+        id,
+        false,
         ctx.serenity_context().cache.clone()
     );
+    embed.title("Favourite removed");
 
     // Message resolved, send it!
     ctx.send(|builder| {
@@ -122,6 +101,8 @@ pub async fn get(
         })
     })
     .await?;
+
+    Favs::write(favourites_db, FAVOURITES_FILE_PATH).await;
 
     Ok(())
 }
