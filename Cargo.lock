@@ -1057,6 +1057,7 @@ dependencies = [
  "git2",
  "itertools",
  "luro_core",
+ "luro_dice",
  "luro_e621",
  "luro_furaffinity",
  "luro_sled",
