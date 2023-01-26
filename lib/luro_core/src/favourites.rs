@@ -13,7 +13,8 @@ pub struct Favorite {
 /// Structure for `user_favs.toml`
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Favs {
-    pub favs: HashMap<String, Vec<Favorite>>
+    /// A hashset of user IDs, containing a hashset of 'categories', which contains a vec of messages
+    pub favs: HashMap<String, HashMap<String, Vec<Favorite>>>
 }
 
 impl Favs {
