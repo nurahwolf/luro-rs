@@ -31,7 +31,7 @@ pub fn embed(
         if let Some(guild_id) = message.guild_id {
             embed.field("Guild ID", guild_id, true);
         }
-        embed.field("Author", format!("{} (ID: {})", message.author, message.author.id), true);
+        embed.field("Author", format!("{} ({})", message.author, message.author.id), true);
     }
 
     if let Some(guild) = message.guild(cache) {
