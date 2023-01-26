@@ -3,15 +3,15 @@ use poise::samples::register_application_commands_buttons;
 
 use crate::commands::owner::adminabuse::adminabuse;
 use crate::commands::owner::register::register;
-use crate::commands::owner::shutdown::shutdown;
 use crate::commands::owner::reload::reload;
 use crate::commands::owner::save::save;
+use crate::commands::owner::shutdown::shutdown;
 
 mod adminabuse;
 mod register;
-mod shutdown;
 mod reload;
 mod save;
+mod shutdown;
 
 /// Owner only commands. The bot owner can only execute these, unless you are super, mega special
 #[poise::command(

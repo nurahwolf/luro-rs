@@ -28,7 +28,7 @@ pub async fn get(
     id: Option<usize>,
     #[description = "Hide advanced information in the embed"]
     #[flag]
-    hide: bool,
+    hide: bool
 ) -> Result<(), Error> {
     // Get favourites and accent_colour from datastore / config
     let favourites = &ctx.data().user_favourites.read().await.favs;
@@ -62,7 +62,7 @@ pub async fn get(
 
     if favourites.is_empty() {
         ctx.say("You have no favourites in that category, sorry!").await?;
-        return Ok(())
+        return Ok(());
     }
 
     // If a favorite is specified, get it, otherwise get a random one
