@@ -1,5 +1,5 @@
 use config::Config;
-use favorites::Favs;
+use favourites::Favs;
 use guild_settings::LuroGuilds;
 use heck::Hecks;
 use quotes::Quotes;
@@ -25,7 +25,7 @@ pub const HECK_FILE_PATH: &str = "data/heck.toml";
 /// Where the quotes toml file lives. Can be overriden elsewhere if desired.
 pub const QUOTES_FILE_PATH: &str = "data/quotes.toml";
 /// Where the user_favs toml file lives. Can be overriden elsewhere if desired.
-pub const FAVORITES_FILE_PATH: &str = "data/user_favs.toml";
+pub const FAVOURITES_FILE_PATH: &str = "data/user_favs.toml";
 /// Where the secrets toml file lives. Make sure this is in a safe space and with strong permissions!
 pub const SECRETS_FILE_PATH: &str = "data/secrets.toml";
 /// Where the stories toml file lives. Can be overriden elsewhere if desired.
@@ -50,7 +50,7 @@ pub type Context<'a> = poise::Context<'a, Data, Error>;
 pub type Command = poise::Command<Data, Error>;
 
 pub mod config;
-pub mod favorites;
+pub mod favourites;
 pub mod guild_settings;
 pub mod heck;
 pub mod quotes;
@@ -77,7 +77,7 @@ pub struct Data {
     /// Quotes: A bunch of silly messages that people have said. This refers to the "quotes.toml" file on disk.
     pub quotes: Arc<RwLock<Quotes>>,
     /// User Favs: Messages that a user has favorited. This refers to the "user_favs.toml" file on disk.
-    pub user_favorites: Arc<RwLock<Favs>>,
+    pub user_favourites: Arc<RwLock<Favs>>,
     /// Application secrets got from the "secrets.toml" file on disk.
     pub secrets: Arc<secrets::Secrets>,
     /// Stories: A bunch of 'stories', which are more shitposty in nature. This refers to the "stories.toml" file on disk.
@@ -100,7 +100,7 @@ pub async fn initialise_data() -> Data {
         database: database.into(),
         heck: RwLock::new(Hecks::get(HECK_FILE_PATH).await).into(),
         quotes: RwLock::new(Quotes::get(QUOTES_FILE_PATH).await).into(),
-        user_favorites: RwLock::new(Favs::get(FAVORITES_FILE_PATH).await).into(),
+        user_favourites: RwLock::new(Favs::get(FAVOURITES_FILE_PATH).await).into(),
         secrets: Secrets::get(SECRETS_FILE_PATH).await.into(),
         stories: RwLock::new(Stories::get(STORIES_FILE_PATH).await).into(),
         songbird: songbird::Songbird::serenity(),
