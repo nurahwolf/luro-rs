@@ -1,8 +1,24 @@
 use std::collections::hash_map::Entry;
 
+use futures::{Stream, StreamExt};
 use luro_core::{Context, Error, favourites::Favs, FAVOURITES_FILE_PATH};
 
 use crate::commands::favourites::embed::embed;
+
+async fn autocomplete_category<'a>(ctx: Context<'_>, partial: &'a str) -> impl Stream<Item = String> + 'a {
+    // Get favourites and accent_colour from datastore / config
+    let favourites = ctx.data().user_favourites.read().await.favs.clone();
+
+    let user_favourites = match favourites.get(&ctx.author().id.to_string()) {
+        Some(ok) => ok.to_owned(),
+        None => panic!("No user favourites!")
+    };
+
+    futures::stream::iter(user_favourites)
+        .filter(move |(category, _)| futures::future::ready(category.starts_with(partial)))
+        .map(|(category, _)| category)
+}
+
 
 /// Move a message to a category, creating it if it does not exist
 #[poise::command(slash_command, category = "Favourites", rename = "move")]
@@ -10,8 +26,12 @@ pub async fn change_category(
     ctx: Context<'_>,
     #[description = "The Favourite ID of the favourite you wish to move"]
     id: usize,
-    #[description = "The category name of the ID you wish to move"] category_from: String,
-    #[description = "The category name you wish to move it to"] category_to: String
+    #[description = "The category name of the ID you wish to move"]
+    #[autocomplete = "autocomplete_category"]
+    category_from: String,
+    #[description = "The category name you wish to move it to"]
+    #[autocomplete = "autocomplete_category"]
+    category_to: String
 ) -> Result<(), Error> {
     // Get favourites and accent_colour from datastore / config
     let favourites_db = &mut ctx.data().user_favourites.write().await;
