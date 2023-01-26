@@ -38,7 +38,7 @@ pub async fn message_deleted(
 
                     embed.field("Message ID", luro_message.message_id, true);
                     embed.field("Channel ID", channel_id.mention(), true);
-                    embed.field("User ID", userid.mention(), true);
+                    embed.field("User ID", userid, true);
                     embed
                 }
                 Err(_) => {

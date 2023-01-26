@@ -1,4 +1,5 @@
 use luro_core::{Context, Error};
+use poise::serenity_prelude::Mentionable;
 use songbird::{Event, TrackEvent};
 
 use crate::TrackStartNotifier;
@@ -16,61 +17,79 @@ pub async fn play(
     let accent_colour = ctx.data().config.read().await.accent_colour;
     if let Some(guild) = ctx.guild() {
         let guild_id = guild.id;
+        let voice_channel = guild.voice_states.get(&ctx.author().id);
 
-        if let Some(handler_lock) = ctx.data().songbird.get(guild_id) {
-            let mut handler = handler_lock.lock().await;
-            let send_http = ctx.serenity_context().http.clone();
+        let handler_lock = match ctx.data().songbird.get(guild_id) {
+            Some(handler) => handler,
+            None => match voice_channel {
+                Some(channel) => {
+                    let (handle_lock, success) = ctx.data().songbird.join(guild_id, channel.channel_id.unwrap()).await;
 
-            let source = if song.starts_with("http") {
-                match songbird::input::ytdl(song).await {
-                    Ok(source) => source,
-                    Err(why) => {
-                        println!("Err starting source: {why:?}");
-                        ctx.say("Error sourcing ffmpeg").await?;
+                    if let Ok(_channel) = success {
+                        ctx.say(&format!("Joined {}", channel.channel_id.unwrap().mention())).await?;
+                        handle_lock
+                    } else {
+                        ctx.say("Error joining the channel").await?;
                         return Ok(());
                     }
-                }
-            } else {
-                match songbird::input::ytdl_search(song).await {
-                    Ok(source) => source,
-                    Err(why) => {
-                        println!("Err starting source: {why:?}");
-                        ctx.say("Error sourcing ffmpeg").await?;
-                        return Ok(());
-                    }
-                }
-            };
-
-            let track_handler = handler.enqueue_source(source);
-            if play_looped {
-                track_handler.enable_loop()?;
-            }
-            track_handler.add_event(
-                Event::Track(TrackEvent::Play),
-                TrackStartNotifier {
-                    chan_id: ctx.channel_id(),
-                    http: send_http,
-                    accent_colour,
-                    guild: ctx.guild().unwrap(),
-                    user: ctx.author().clone()
-                }
-            )?;
-
-            match volume {
-                Some(mut vol) => {
-                    vol /= 100.0;
-                    track_handler.set_volume(vol)?;
                 }
                 None => {
-                    track_handler.set_volume(0.2)?;
+                    ctx.say("Not in a voice channel").await?;
+                    return Ok(());
                 }
             }
+        };
 
-            ctx.say(format!("Added song to queue: position {}", handler.queue().len()))
-                .await?;
+        let mut handler = handler_lock.lock().await;
+        let send_http = ctx.serenity_context().http.clone();
+
+        let source = if song.starts_with("http") {
+            match songbird::input::ytdl(song).await {
+                Ok(source) => source,
+                Err(why) => {
+                    println!("Err starting source: {why:?}");
+                    ctx.say("Error sourcing ffmpeg").await?;
+                    return Ok(());
+                }
+            }
         } else {
-            ctx.say("Not in a voice channel to play in").await?;
+            match songbird::input::ytdl_search(song).await {
+                Ok(source) => source,
+                Err(why) => {
+                    println!("Err starting source: {why:?}");
+                    ctx.say("Error sourcing ffmpeg").await?;
+                    return Ok(());
+                }
+            }
+        };
+
+        let track_handler = handler.enqueue_source(source);
+        if play_looped {
+            track_handler.enable_loop()?;
         }
+        track_handler.add_event(
+            Event::Track(TrackEvent::Play),
+            TrackStartNotifier {
+                chan_id: ctx.channel_id(),
+                http: send_http,
+                accent_colour,
+                guild: ctx.guild().unwrap(),
+                user: ctx.author().clone()
+            }
+        )?;
+
+        match volume {
+            Some(mut vol) => {
+                vol /= 100.0;
+                track_handler.set_volume(vol)?;
+            }
+            None => {
+                track_handler.set_volume(0.2)?;
+            }
+        }
+
+        ctx.say(format!("Added song to queue: position {}", handler.queue().len()))
+            .await?;
     } else {
         ctx.say("You need to be in a guild for me to play music!").await?;
     }
