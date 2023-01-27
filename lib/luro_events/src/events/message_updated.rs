@@ -1,6 +1,7 @@
 use luro_core::{Data, Error};
 use luro_utilities::{discod_event_log_channel_defined, event_embed, guild_accent_colour};
 use poise::serenity_prelude::{Context, Mentionable, Message, MessageUpdateEvent};
+use tracing::debug;
 
 /// A Serenity listener for the [poise::Event::MessageUpdate] type
 pub async fn message_updated(
@@ -11,6 +12,14 @@ pub async fn message_updated(
     new: &Option<Message>,
     event: &MessageUpdateEvent
 ) -> Result<(), Error> {
+    // Discard if the message is from a bot
+    if let Some(author) = &event.author {
+        if author.bot {
+            debug!("Message edited was by a bot, so ignoring");
+            return Ok(());
+        }
+    }
+
     if let Some(guild_id) = event.guild_id && event.content.is_some() {
         if let Some(alert_channel) = discod_event_log_channel_defined(&guild_id, user_data, ctx).await {
             let guild = guild_id.to_guild_cached(ctx);
