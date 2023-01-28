@@ -114,12 +114,26 @@ pub async fn get(
         ctx.serenity_context().cache.clone()
     );
 
+
     // Message resolved, send it!
     ctx.send(|builder| {
         builder.embed(|e| {
             *e = embed;
             e
-        })
+        });
+        // This is to include other embeds in the favourite message, such as twitter embeds.
+        for embed in message.embeds {
+            // Don't attach the embed if it has no title
+            // This is usually Discord turning a link into an embed, which by default formats to a small image.
+            // Additionally, there is the check above to include the link in the primary embed.
+            if embed.title.is_some() {
+                builder.embed(|e|{
+                    *e = embed.into();
+                    e
+                });
+            }
+        }
+        builder
     })
     .await?;
 
