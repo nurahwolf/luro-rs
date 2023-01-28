@@ -20,7 +20,7 @@ async fn autocomplete_category<'a>(ctx: Context<'_>, partial: &'a str) -> impl S
 }
 
 /// Move a message to a category, creating it if it does not exist
-#[poise::command(slash_command, category = "Favourites", rename = "move")]
+#[poise::command(slash_command, category = "Favourites", rename = "move", ephemeral)]
 pub async fn change_category(
     ctx: Context<'_>,
     #[description = "The Favourite ID of the favourite you wish to move"] id: usize,
@@ -54,18 +54,13 @@ pub async fn change_category(
     };
 
     // Make sure the ID actually exists
+    let mut removed = false;
     let favourite = if id < favourites_from.len() {
         let favourite = favourites_from.remove(id);
         // If that category is now empty, remove it
         if favourites_from.is_empty() {
-            match user_favourites.remove(&category_from) {
-                Some(_) => {
-                    ctx.say("That category is now empty, so I have removed it.").await?;
-                }
-                None => {
-                    ctx.say("That category is now empty, so I have removed it.").await?;
-                }
-            };
+            user_favourites.remove(&category_from);
+            removed = true
         }
         favourite
     } else {
@@ -126,7 +121,12 @@ pub async fn change_category(
         builder.embed(|e| {
             *e = embed;
             e
-        })
+        });
+        // If that category is now empty, remove it
+        if removed {
+            builder.content("That category is now empty, so I have removed it.");
+        };
+        builder
     })
     .await?;
 
