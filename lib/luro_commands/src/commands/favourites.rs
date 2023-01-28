@@ -36,8 +36,8 @@ pub async fn favourites(ctx: Context<'_>, message: Message) -> Result<(), Error>
     let favourites = &mut ctx.data().user_favourites.write().await;
     // This is hardcoded to get to the 'uncatagorised' category
     let user_favourites = match favourites.favs.entry(ctx.author().id.to_string()) {
-        Entry::Occupied(occupied) => occupied.into_mut().entry(category),
-        Entry::Vacant(vacant) => vacant.insert(new_category).entry(category)
+        Entry::Occupied(occupied) => occupied.into_mut().entry(category.clone()),
+        Entry::Vacant(vacant) => vacant.insert(new_category).entry(category.clone())
     };
 
     // Make sure we have something in the hashset, if not add it
@@ -61,7 +61,8 @@ pub async fn favourites(ctx: Context<'_>, message: Message) -> Result<(), Error>
         ctx.guild(),
         uncategorised_favourites_length,
         false,
-        ctx.serenity_context().cache.clone()
+        ctx.serenity_context().cache.clone(),
+        category
     );
 
     ctx.send(|builder| {
