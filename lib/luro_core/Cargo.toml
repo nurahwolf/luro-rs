@@ -14,8 +14,5 @@ poise = "0.5"
 serde = { version = "1", default-features = false, features = [
     "derive",
 ] }
-
-[dependencies.toml_edit]
-version = "0.18"
-features = ["easy"]
+toml = { version = "0.7.0" }
 

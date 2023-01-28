@@ -24,7 +24,7 @@ impl Stories {
             Err(err) => panic!("Error reading toml file: {err}")
         }
 
-        return match toml_edit::easy::from_str::<Stories>(&contents) {
+        return match toml::from_str::<Stories>(&contents) {
             Ok(secrets) => secrets,
             Err(err) => panic!("Error serialising toml file: {err}")
         };
@@ -32,7 +32,7 @@ impl Stories {
 
     /// Write the struct to a toml file
     pub async fn write(new_data: &Stories, path: &str) {
-        let struct_to_toml_string = match toml_edit::easy::to_string(&new_data) {
+        let struct_to_toml_string = match toml::to_string(&new_data) {
             Ok(string) => string,
             Err(err) => panic!("Error serialising struct to toml string: {err}")
         };
