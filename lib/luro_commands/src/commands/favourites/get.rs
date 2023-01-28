@@ -126,7 +126,7 @@ pub async fn get(
             // Don't attach the embed if it has no title
             // This is usually Discord turning a link into an embed, which by default formats to a small image.
             // Additionally, there is the check above to include the link in the primary embed.
-            if embed.title.is_some() {
+            if embed.title.is_some() | embed.author.is_some() {
                 builder.embed(|e| {
                     *e = embed.into();
                     e
