@@ -3,7 +3,7 @@ use luro_utilities::guild_accent_colour;
 use poise::serenity_prelude::CreateEmbed;
 
 /// List your favorites
-#[poise::command(slash_command, category = "Favourites")]
+#[poise::command(slash_command, category = "Favourites", ephemeral)]
 pub async fn list(ctx: Context<'_>) -> Result<(), Error> {
     // Get favourites and accent_colour from datastore / config
     let favourites = &ctx.data().user_favourites.read().await.favs;

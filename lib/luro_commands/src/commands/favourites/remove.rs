@@ -18,7 +18,7 @@ async fn autocomplete_category<'a>(ctx: Context<'_>, partial: &'a str) -> impl S
 }
 
 /// Remove a message from your favorites.
-#[poise::command(slash_command, category = "Favourites")]
+#[poise::command(slash_command, category = "Favourites", ephemeral)]
 pub async fn remove(
     ctx: Context<'_>,
     #[description = "The category of favourite to get. Gets 'uncategorised' if not set"]
@@ -62,15 +62,11 @@ pub async fn remove(
     };
 
     // If that category is now empty, remove it
-    if favourites.is_empty() {
-        match user_favourites.remove(&category) {
-            Some(_) => {
-                ctx.say("That category is now empty, so I have removed it.").await?;
-            }
-            None => {
-                ctx.say("That category is now empty, so I have removed it.").await?;
-            }
-        }
+    let removed = if favourites.is_empty() {
+        user_favourites.remove(&category);
+        true
+    } else {
+        false
     };
 
     // Attempt to resolve the message
@@ -106,7 +102,12 @@ pub async fn remove(
         builder.embed(|e| {
             *e = embed;
             e
-        })
+        });
+        // If that category is now empty, remove it
+        if removed {
+            builder.content("That category is now empty, so I have removed it.");
+        };
+        builder
     })
     .await?;
 
