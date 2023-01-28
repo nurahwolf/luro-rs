@@ -10,13 +10,13 @@ pub async fn get(ctx: Context<'_>, #[description = "Get a quote by ID"] quote: O
     let quotes = &ctx.data().quotes.read().await.quotes;
     let random_number = rand::thread_rng().gen_range(0..quotes.len());
 
-    let returned_quote = match quote {
-        Some(quote_defined) => quotes.get(quote_defined),
-        None => quotes.get(random_number),
+    let (returned_quote, quote_id) = match quote {
+        Some(quote_defined) => (quotes.get(quote_defined), quote_defined),
+        None => (quotes.get(random_number), random_number),
     };
 
     match returned_quote {
-        Some(quote_resolved) => send_quote(ctx, quote_resolved, quote).await?,
+        Some(quote_resolved) => send_quote(ctx, quote_resolved, Some(quote_id)).await?,
         None => {
             ctx.say("Failed to get that quote! Sure you got the right ID?").await?;
             return Ok(());
