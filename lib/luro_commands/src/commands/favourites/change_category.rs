@@ -112,7 +112,8 @@ pub async fn change_category(
         ctx.guild(),
         new_favourite_length,
         false,
-        ctx.serenity_context().cache.clone()
+        ctx.serenity_context().cache.clone(),
+        category_from
     );
     embed.title(format!("Message moved to {}", category_to.clone()));
 

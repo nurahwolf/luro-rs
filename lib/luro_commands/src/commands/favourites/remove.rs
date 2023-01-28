@@ -93,7 +93,8 @@ pub async fn remove(
         ctx.guild(),
         id,
         false,
-        ctx.serenity_context().cache.clone()
+        ctx.serenity_context().cache.clone(),
+        category
     );
     embed.title("Favourite removed");
 

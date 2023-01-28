@@ -111,7 +111,8 @@ pub async fn get(
         ctx.guild(),
         cursor,
         hide,
-        ctx.serenity_context().cache.clone()
+        ctx.serenity_context().cache.clone(),
+        category
     );
 
 

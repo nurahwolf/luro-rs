@@ -11,7 +11,8 @@ pub fn embed(
     guild: Option<Guild>,
     cursor: usize,
     extra_info: bool,
-    cache: Arc<Cache>
+    cache: Arc<Cache>,
+    category: String
 ) -> CreateEmbed {
     let mut embed = CreateEmbed::default();
     embed
@@ -23,7 +24,7 @@ pub fn embed(
         })
         .color(guild_accent_colour(accent_colour, guild))
         .description(&message.content)
-        .footer(|footer| footer.text(format!("Fav ID: {cursor}")));
+        .footer(|footer| footer.text(format!("Fav ID: {cursor} - Category: {category}")));
     if let Some(attachment) = message.attachments.first() {
         embed.image(&attachment.proxy_url);
     }
