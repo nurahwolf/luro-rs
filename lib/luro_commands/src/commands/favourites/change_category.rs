@@ -123,6 +123,18 @@ pub async fn change_category(
             *e = embed;
             e
         });
+        // This is to include other embeds in the favourite message, such as twitter embeds.
+        for embed in message.embeds {
+            // Don't attach the embed if it has no title
+            // This is usually Discord turning a link into an embed, which by default formats to a small image.
+            // Additionally, there is the check above to include the link in the primary embed.
+            if embed.title.is_some() | embed.author.is_some() {
+                builder.embed(|e| {
+                    *e = embed.into();
+                    e
+                });
+            }
+        }
         // If that category is now empty, remove it
         if removed {
             builder.content("That category is now empty, so I have removed it.");
