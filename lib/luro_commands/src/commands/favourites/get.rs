@@ -115,7 +115,6 @@ pub async fn get(
         category
     );
 
-
     // Message resolved, send it!
     ctx.send(|builder| {
         builder.embed(|e| {
@@ -128,7 +127,7 @@ pub async fn get(
             // This is usually Discord turning a link into an embed, which by default formats to a small image.
             // Additionally, there is the check above to include the link in the primary embed.
             if embed.title.is_some() {
-                builder.embed(|e|{
+                builder.embed(|e| {
                     *e = embed.into();
                     e
                 });
