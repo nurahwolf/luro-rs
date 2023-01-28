@@ -24,7 +24,7 @@ pub fn embed(
         })
         .color(guild_accent_colour(accent_colour, guild))
         .description(&message.content)
-        .footer(|footer| footer.text(format!("Fav ID: {cursor} - Category: {category}")));
+        .footer(|footer| footer.text(format!("Fav ID: {cursor}    Category: {category}")));
     if let Some(attachment) = message.attachments.first() {
         embed.image(&attachment.proxy_url);
     }
