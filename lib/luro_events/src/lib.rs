@@ -9,7 +9,7 @@ use events::{
 };
 use luro_core::{Data, Error};
 use luro_utilities::{discod_event_log_channel_defined, guild_accent_colour, moderator_actions_log_channel_defined};
-use poise::serenity_prelude::Context;
+use poise::serenity_prelude::{Context, Mentionable};
 use tracing::{debug, info};
 
 mod events;
@@ -117,7 +117,7 @@ pub async fn event_listener(
                                     .description(format!(
                                         "A total of {} just got deleted in channel {}!",
                                         multiple_deleted_messages_ids.len(),
-                                        channel_id
+                                        channel_id.mention()
                                     ))
                                     .color(guild_accent_colour(accent_colour, guild_id.to_guild_cached(ctx)))
                             })

@@ -29,7 +29,7 @@ impl Secrets {
             Err(err) => panic!("Error reading toml file: {err}")
         }
 
-        return match toml_edit::easy::from_str::<Secrets>(&contents) {
+        return match toml::from_str::<Secrets>(&contents) {
             Ok(secrets) => secrets,
             Err(err) => panic!("Error serialising toml file: {err}")
         };

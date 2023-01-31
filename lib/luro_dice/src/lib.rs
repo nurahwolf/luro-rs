@@ -5,7 +5,7 @@ use crate::api::{roll_direction, roll_inline, roll_stats, RollResult, Value};
 
 mod api;
 
-pub fn commands() -> [Command; 1] {
+pub fn dice_commands() -> [Command; 1] {
     [roll()]
 }
 

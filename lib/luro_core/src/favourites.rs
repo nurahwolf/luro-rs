@@ -13,7 +13,8 @@ pub struct Favorite {
 /// Structure for `user_favs.toml`
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Favs {
-    pub favs: HashMap<String, Vec<Favorite>>
+    /// A hashset of user IDs, containing a hashset of 'categories', which contains a vec of messages
+    pub favs: HashMap<String, HashMap<String, Vec<Favorite>>>
 }
 
 impl Favs {
@@ -32,7 +33,7 @@ impl Favs {
             Err(err) => panic!("Error reading toml file: {err}")
         }
 
-        return match toml_edit::easy::from_str::<Favs>(&contents) {
+        return match toml::from_str::<Favs>(&contents) {
             Ok(secrets) => secrets,
             Err(err) => panic!("Error serialising toml file: {err}")
         };
@@ -40,7 +41,7 @@ impl Favs {
 
     /// Write the struct to a toml file
     pub async fn write(new_data: &Favs, path: &str) {
-        let struct_to_toml_string = match toml_edit::easy::to_string(&new_data) {
+        let struct_to_toml_string = match toml::to_string(&new_data) {
             Ok(string) => string,
             Err(err) => panic!("Error serialising struct to toml string: {err}")
         };

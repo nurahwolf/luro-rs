@@ -31,6 +31,7 @@ git2 = "0.16.1" #Git information
 luro_core = { path = "../../lib/luro_core" }
 luro_sled = { path = "../../lib/luro_sled" }
 luro_e621 = { path = "../../lib/luro_e621" }
+luro_dice = { path = "../../lib/luro_dice" }
 luro_furaffinity = { path = "../../lib/luro_furaffinity" }
 luro_songbird = { path = "../../lib/luro_songbird" }
 luro_utilities = { path = "../../lib/luro_utilities" }

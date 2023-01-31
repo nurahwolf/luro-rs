@@ -1,7 +1,7 @@
 use luro_core::{Data, Error};
 use luro_sled::get_discord_message;
 use luro_utilities::{discod_event_log_channel_defined, event_embed, guild_accent_colour};
-use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, GuildId, MessageId};
+use poise::serenity_prelude::{ChannelId, Context, CreateEmbed, GuildId, Mentionable, MessageId, UserId};
 
 /// A Serenity listener for the [poise::Event::MessageDelete] type
 pub async fn message_deleted(
@@ -23,7 +23,7 @@ pub async fn message_deleted(
 
                     let mut embed = match &ctx.http.get_user(luro_message.user_id).await {
                         Ok(user) => {
-                            event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), Some(user), None).await
+                            event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), None, Some(user)).await
                         }
                         Err(_) => event_embed(guild_accent_colour(accent_colour, alert_channel.guild(ctx)), None, None).await
                     };
@@ -34,9 +34,11 @@ pub async fn message_deleted(
                     embed.footer(|footer| {
                         footer.text("This message was fetched from the database, so most likely no longer exists")
                     });
+                    let userid = UserId::from(luro_message.user_id);
+
                     embed.field("Message ID", luro_message.message_id, true);
-                    embed.field("Channel ID", luro_message.channel_id, true);
-                    embed.field("User ID", luro_message.user_id, true);
+                    embed.field("Channel ID", channel_id.mention(), true);
+                    embed.field("User ID", userid, true);
                     embed
                 }
                 Err(_) => {

@@ -1,4 +1,5 @@
 pub mod commands;
+mod joinvoice;
 mod nowplaying;
 
 use std::sync::{

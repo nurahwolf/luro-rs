@@ -4,10 +4,9 @@ mod about;
 mod boop;
 mod cleanup;
 mod command_usage;
-mod config;
 mod context_commands;
 mod embed;
-mod favs;
+mod favourites;
 mod firstmessage;
 mod fursona;
 mod guilds;
@@ -37,7 +36,7 @@ pub fn commands() -> [Command; 31] {
         cleanup::cleanup(),
         command_usage::command_usage(),
         embed::embed(),
-        favs::fav(),
+        favourites::favourites(),
         firstmessage::firstmessage(),
         fursona::fursona(),
         guilds::guilds(),
