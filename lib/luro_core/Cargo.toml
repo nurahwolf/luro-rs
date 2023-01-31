@@ -16,6 +16,6 @@ serde = { version = "1", default-features = false, features = [
 ] }
 
 [dependencies.toml_edit]
-version = "0.17"
+version = "0.18"
 features = ["easy"]
 
