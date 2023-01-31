@@ -1,12 +1,12 @@
 use itertools::Itertools;
 use luro_core::{Context, Error};
 use luro_utilities::{guild_accent_colour, sort_roles};
-use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel};
+use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel, Mentionable};
 use std::fmt::Write;
 
 /// Information about the guild you are in
 #[poise::command(prefix_command, slash_command, category = "Guild")]
-pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] guild: Option<Guild>) -> Result<(), Error> {
+pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] guild: Option<Guild>, #[description = "Hide guild icon - Useful for showing more information in the embed"] #[flag] hide_avatar: bool) -> Result<(), Error> {
     let mut description = String::new();
     let mut all_roles_string = String::new();
 
@@ -62,7 +62,9 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
         Some(guild_resolved.to_owned())
     ));
     embed.title(&guild_resolved.name);
-    embed.thumbnail(&guild_resolved.icon_url().unwrap_or_default());
+    if !hide_avatar {
+        embed.thumbnail(&guild_resolved.icon_url().unwrap_or_default());
+    }
 
     // Information that does not need its own field
     let guild_channels: Vec<_> = guild_resolved
@@ -97,16 +99,29 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
     if let Ok(guild_owner) = &guild_resolved.member(ctx, &guild_resolved.owner_id).await {
         embed.author(|author| {
             author
-                .icon_url(guild_owner.avatar_url().unwrap_or_default())
+                .icon_url(guild_owner.avatar_url().unwrap_or(guild_owner.user.avatar_url().unwrap_or_default()))
                 .name(format!("Server Owner: {0}", guild_owner.user.tag()))
         });
+        embed.field("Guild Owner", guild_owner.mention(), true);
     };
 
     if let Ok(invites) = guild_resolved.invites(ctx).await {
         if let Some(invite) = invites.first() {
-            embed.field("Invite", invite.url(), false);
+            embed.field("Invite", invite.url(), true);
         }
     }
+
+    // Explicit Filter
+    embed.field(
+        "Explicit Filter",
+        match guild_resolved.explicit_content_filter.num() {
+            0 => "Disabled".to_owned(),
+            1 => "Media scanned from members w/o a role.".to_owned(),
+            2 => "Everyone".to_owned(),
+            _ => "Unrecognized filter setting.".to_owned()
+        },
+        true
+    );
 
     // Nitro Boost Information
     if guild_resolved.premium_subscription_count != 0 {
@@ -123,7 +138,7 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
                 "**Total Boosts:** {0}\n**Boost Tier:** {guild_boost_tier}",
                 guild_resolved.premium_subscription_count
             ),
-            false
+            true
         );
     };
 
@@ -136,7 +151,7 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
             NsfwLevel::AgeRestricted => "The guild is age restricted.",
             _ => "Unknown nsfw level."
         };
-        embed.field("NSFW Guild", nsfw_level, false);
+        embed.field("NSFW Guild", nsfw_level, true);
     };
 
     // Verification Level
@@ -150,7 +165,7 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
             4 => "┻━┻ ﾐヽ(ಠ益ಠ)/彡┻━┻) - Must have a verified phone number.",
             _ => "Unrecognized verification level."
         },
-        false
+        true
     );
 
     // MFA Level
@@ -161,19 +176,7 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
             1 => "Multi-factor authentication required.",
             _ => "Unrecognized multi-factor authentication level."
         },
-        false
-    );
-
-    // Explicit Filter
-    embed.field(
-        "Explicit Filter",
-        match guild_resolved.explicit_content_filter.num() {
-            0 => "Disabled".to_owned(),
-            1 => "Media scanned from members w/o a role.".to_owned(),
-            2 => "Everyone".to_owned(),
-            _ => "Unrecognized filter setting.".to_owned()
-        },
-        false
+        true
     );
 
     // System Channels
