@@ -36,7 +36,7 @@ pub async fn list(ctx: Context<'_>) -> Result<(), Error> {
     // For each entry, we create an embed field with the information
     let mut fields = vec![];
     for (category_name, favourites) in user_favourites.iter() {
-        fields.push((category_name, format!("Total: {}", favourites.len()), true))
+        fields.push((category_name, format!("Total: {}", favourites.len() - 1), true))
     }
     embed.fields(fields);
 
