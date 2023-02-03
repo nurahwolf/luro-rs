@@ -2,19 +2,18 @@ use luro_core::{Context, Error};
 use poise::samples::register_application_commands_buttons;
 
 use crate::commands::owner::adminabuse::adminabuse;
+use crate::commands::owner::nickname::nickname;
 use crate::commands::owner::register::register;
 use crate::commands::owner::reload::reload;
 use crate::commands::owner::save::save;
 use crate::commands::owner::shutdown::shutdown;
-use crate::commands::owner::nickname::nickname;
-
 
 mod adminabuse;
+mod nickname;
 mod register;
 mod reload;
 mod save;
 mod shutdown;
-mod nickname;
 
 /// Owner only commands. The bot owner can only execute these, unless you are super, mega special
 #[poise::command(

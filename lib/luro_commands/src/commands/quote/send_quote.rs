@@ -8,7 +8,7 @@ pub async fn send_quote(ctx: Context<'_>, message: Message, title: String, quote
         Some(quote_id_specified) => quote_id_specified,
         None => ctx.data().quotes.read().await.quotes.len()
     };
-    
+
     ctx.send(|b| {
         b.embed(|b| {
             b.author(|a| a.name(&message.author.name).icon_url(&message.author.face()))

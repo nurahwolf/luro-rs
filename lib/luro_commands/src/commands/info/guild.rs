@@ -1,12 +1,18 @@
 use itertools::Itertools;
 use luro_core::{Context, Error};
 use luro_utilities::{guild_accent_colour, sort_roles};
-use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, NsfwLevel, Mentionable};
+use poise::serenity_prelude::{ChannelType, CreateEmbed, Guild, Mentionable, NsfwLevel};
 use std::fmt::Write;
 
 /// Information about the guild you are in
 #[poise::command(prefix_command, slash_command, category = "Guild")]
-pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] guild: Option<Guild>, #[description = "Hide guild icon - Useful for showing more information in the embed"] #[flag] hide_avatar: bool) -> Result<(), Error> {
+pub async fn guild(
+    ctx: Context<'_>,
+    #[description = "The guild to look up"] guild: Option<Guild>,
+    #[description = "Hide guild icon - Useful for showing more information in the embed"]
+    #[flag]
+    hide_avatar: bool
+) -> Result<(), Error> {
     let mut description = String::new();
     let mut all_roles_string = String::new();
 
@@ -99,7 +105,11 @@ pub async fn guild(ctx: Context<'_>, #[description = "The guild to look up"] gui
     if let Ok(guild_owner) = &guild_resolved.member(ctx, &guild_resolved.owner_id).await {
         embed.author(|author| {
             author
-                .icon_url(guild_owner.avatar_url().unwrap_or(guild_owner.user.avatar_url().unwrap_or_default()))
+                .icon_url(
+                    guild_owner
+                        .avatar_url()
+                        .unwrap_or(guild_owner.user.avatar_url().unwrap_or_default())
+                )
                 .name(format!("Server Owner: {0}", guild_owner.user.tag()))
         });
         embed.field("Guild Owner", guild_owner.mention(), true);

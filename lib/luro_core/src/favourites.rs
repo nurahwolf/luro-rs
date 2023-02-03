@@ -18,6 +18,23 @@ pub struct Favs {
 }
 
 impl Favs {
+    /// Remove the favorite!
+    pub async fn remove_favourite(&mut self, author_id: &String, category: &String, id: usize) -> Result<(), String> {
+        let user_favs = match self.favs.get_mut(author_id) {
+            Some(ok) => ok,
+            None => return Err("Failed to find user's favourites!".into())
+        };
+
+        let category_favs = match user_favs.get_mut(category) {
+            Some(ok) => ok,
+            None => return Err(format!("Failed to find category {category}"))
+        };
+
+        category_favs.remove(id);
+
+        Ok(())
+    }
+
     /// Get a new structure filled with data from a toml file. Note, this panics if it cannot find the toml file!
     pub async fn get(path: &str) -> Favs {
         let mut file_opened = match File::open(path).await {

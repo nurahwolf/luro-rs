@@ -3,11 +3,14 @@ use std::{
     time::Duration
 };
 
-use crate::commands::favourites::change_category::change_category;
 use crate::commands::favourites::embed::embed;
 use crate::commands::favourites::get::get;
 use crate::commands::favourites::list::list;
 use crate::commands::favourites::remove::remove;
+use crate::commands::favourites::{
+    change_category::change_category,
+    constants::{favorite_manipulation_row, favourite_categories_row, initial_menu_row, reply_builder}
+};
 use futures::StreamExt;
 use luro_core::{
     favourites::{Favorite, Favs},
@@ -19,6 +22,7 @@ use poise::{
 };
 
 mod change_category;
+mod constants;
 mod embed;
 mod get;
 mod list;
@@ -94,16 +98,18 @@ pub async fn favourites(ctx: Context<'_>, message: Message) -> Result<(), Error>
         });
     }
 
-    let mut reply_builder = CreateReply::default();
-    reply_builder.embed(|e| {
-        *e = embed.clone();
-        e
-    });
-    reply_builder.components(|components| components.create_action_row(|row| row.add_select_menu(menu.clone())));
+    let reply_builder = reply_builder(embed.clone());
+    let favourite_categories_row = match favourite_categories_row(ctx.data(), &author_id).await {
+        Ok(ok) => ok,
+        Err(err) => {
+            ctx.say(err).await?;
+            return Ok(());
+        }
+    };
 
     let reply_handle = ctx
         .send(|b| {
-            *b = reply_builder.clone();
+            *b = reply_builder;
             b
         })
         .await?;
@@ -118,23 +124,54 @@ pub async fn favourites(ctx: Context<'_>, message: Message) -> Result<(), Error>
     // Act on our interaction context
     while let Some(interaction) = interaction_stream.next().await {
         interaction
-            .create_interaction_response(ctx, |f| f.kind(InteractionResponseType::UpdateMessage))
+            .create_interaction_response(ctx, |f| f.kind(InteractionResponseType::DeferredUpdateMessage))
             .await?;
 
-        if interaction.data.custom_id.contains("menu") {
+        // Interactor is NOT the author, so terminate
+        if &interaction.user != ctx.author() {
+            interaction
+                .create_followup_message(ctx, |message| {
+                    message
+                        .content("Can't interact with someone elses favourite!")
+                        .ephemeral(true)
+                })
+                .await?;
+            break;
+        }
+
+        if interaction.data.custom_id.contains("show_menu") {
+            reply_handle
+                .edit(ctx, |builder| {
+                    builder.components(|components| {
+                        components
+                            .add_action_row(favourite_categories_row.clone())
+                            .add_action_row(favorite_manipulation_row())
+                    })
+                })
+                .await?;
+        };
+
+        if interaction.data.custom_id.contains("close_menu") {
+            reply_handle
+                .edit(ctx, |builder| {
+                    builder.components(|c| {
+                        *c = initial_menu_row();
+                        c
+                    })
+                })
+                .await?;
+        };
+
+        if interaction.data.custom_id.contains("menu") && &interaction.user == ctx.author() {
             if let Some(new_category) = interaction.data.values.first() {
                 match move_favourite(ctx.data(), new_favourite.clone(), new_category.clone(), author_id.clone()).await {
                     Ok(cursor) => {
                         reply_handle
                             .edit(ctx, |reply| {
-                                reply
-                                    .embed(|e| {
-                                        *e = embed.clone();
-                                        e.footer(|footer| footer.text(format!("Fav ID: {cursor}    Category: {new_category}")))
-                                    })
-                                    .components(|components| {
-                                        components.create_action_row(|row| row.add_select_menu(menu.clone()))
-                                    })
+                                reply.embed(|e| {
+                                    *e = embed.clone();
+                                    e.footer(|footer| footer.text(format!("Fav ID: {cursor}    Category: {new_category}")))
+                                })
                             })
                             .await?;
                     }
@@ -143,6 +180,14 @@ pub async fn favourites(ctx: Context<'_>, message: Message) -> Result<(), Error>
                     }
                 };
             }
+        }
+
+        if interaction.data.custom_id.contains("remove") {
+            reply_handle.delete(ctx).await?;
+        }
+
+        if interaction.data.custom_id.contains("delete") {
+            ctx.say("Not implemented yet!").await?;
         }
     }
 

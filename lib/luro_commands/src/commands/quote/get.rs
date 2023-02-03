@@ -12,7 +12,7 @@ pub async fn get(ctx: Context<'_>, #[description = "Get a quote by ID"] quote: O
 
     let (returned_quote, quote_id) = match quote {
         Some(quote_defined) => (quotes.get(quote_defined), quote_defined),
-        None => (quotes.get(random_number), random_number),
+        None => (quotes.get(random_number), random_number)
     };
 
     match returned_quote {
@@ -20,7 +20,7 @@ pub async fn get(ctx: Context<'_>, #[description = "Get a quote by ID"] quote: O
         None => {
             ctx.say("Failed to get that quote! Sure you got the right ID?").await?;
             return Ok(());
-        },
+        }
     };
 
     Ok(())

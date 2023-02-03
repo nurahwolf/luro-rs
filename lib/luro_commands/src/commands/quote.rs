@@ -3,14 +3,14 @@ use luro_core::{Context, Error};
 use poise::serenity_prelude::Message;
 
 use crate::commands::quote::get::get;
-use crate::commands::quote::user::user;
-use crate::commands::quote::send_quote::send_quote;
 use crate::commands::quote::save_quote::save_quote;
+use crate::commands::quote::send_quote::send_quote;
+use crate::commands::quote::user::user;
 
 mod get;
-mod user;
 mod save_quote;
 mod send_quote;
+mod user;
 
 /// Get some information on things, like guilds and users.
 #[poise::command(
