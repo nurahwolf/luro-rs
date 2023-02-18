@@ -1,0 +1,11 @@
+# Build Artifacts
+/target
+
+# Luro Specific
+!/data
+/data/*
+
+# Lavalink
+!/lavalink/application.yml
+!/lavalink/Lavalink.jar
+/lavalink/*
