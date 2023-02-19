@@ -20,6 +20,7 @@ serde_json = { version = "1" }
 memory-stats = "1"
 git2 = "0.16"
 toml = "0.7"
+rand = "0.8"
 
 # Twilight specific
 twilight-cache-inmemory = "0.15"

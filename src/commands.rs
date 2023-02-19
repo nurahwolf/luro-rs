@@ -1,8 +1,9 @@
+use tracing::info;
 use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
 
 use crate::{
-    interactions::{about::AboutCommand, hello_world::HelloCommand, say::SayCommand},
+    interactions::{about::AboutCommand, hello_world::HelloCommand, say::SayCommand, heck::HeckCommand},
     Luro,
 };
 
@@ -23,11 +24,13 @@ pub struct LuroCommands {
 
 impl Luro {
     pub fn set_default_commands() -> LuroCommands {
+        info!("Registered default commands");
         LuroCommands {
             global_commands: vec![
                 HelloCommand::create_command().into(),
                 AboutCommand::create_command().into(),
                 SayCommand::create_command().into(),
+                HeckCommand::create_command().into()
             ],
             guild_commands: vec![],
         }

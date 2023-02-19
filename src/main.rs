@@ -1,5 +1,7 @@
+#![feature(let_chains)]
+
 use commands::LuroCommands;
-use config::LuroGuilds;
+use config::{LuroGuilds, Hecks};
 use futures::StreamExt;
 use hyper::client::{Client as HyperClient, HttpConnector};
 use tracing::warn;
@@ -36,7 +38,7 @@ pub const CONFIG_FILE_PATH: &str = "data/config.toml";
 /// Where the database folder lives. Can be overriden elsewhere if desired.
 pub const DATABASE_FILE_PATH: &str = "data/database";
 /// Where the heck toml file lives. Can be overriden elsewhere if desired.
-pub const HECK_FILE_PATH: &str = "data/heck.toml";
+pub const HECK_FILE_PATH: &str = "data/hecks.toml";
 /// Where the quotes toml file lives. Can be overriden elsewhere if desired.
 pub const QUOTES_FILE_PATH: &str = "data/quotes.toml";
 /// Where the user_favs toml file lives. Can be overriden elsewhere if desired.
@@ -66,6 +68,7 @@ pub struct Luro {
     pub standby: Standby,
     pub commands: std::sync::RwLock<LuroCommands>,
     pub guild_settings: tokio::sync::RwLock<LuroGuilds>,
+    pub hecks: tokio::sync::RwLock<Hecks>
 }
 
 #[tokio::main]

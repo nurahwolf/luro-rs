@@ -1,15 +1,10 @@
-use std::{collections::HashMap, path::Path};
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use tokio::{
-    fs::write,
-    fs::File,
-    io::{AsyncReadExt, AsyncWriteExt},
-};
-use tracing::{info, warn};
 use twilight_model::id::{marker::ChannelMarker, Id};
 
-use crate::GUILDSETTINGS_FILE_PATH;
+pub mod guild_settings;
+pub mod hecks;
 
 /// A struct holding specific guild settings
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -32,53 +27,22 @@ pub struct LuroGuilds {
     pub guilds: HashMap<String, LuroGuildSettings>,
 }
 
-impl LuroGuilds {
-    /// Get a new structure filled with data from a toml file. Note, this panics if it cannot find the toml file!
-    pub async fn get() -> Result<Self, String> {
-        let mut file;
-        let mut contents = String::new();
-        // Create a file if it does not exist
-        if !Path::new(GUILDSETTINGS_FILE_PATH).exists() {
-            warn!("guild_settings.toml does not exist, creating it...");
-            contents = r"guilds = {}".to_string();
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Heck {
+    pub heck_message: String,
+    pub author_id: u64
+}
 
-            file = match File::create(GUILDSETTINGS_FILE_PATH).await {
-                Ok(ok) => ok,
-                Err(why) => return Err(format!("Error creating guild_settings.toml - {why}")),
-            };
-
-            if let Err(why) = file.write_all(contents.as_bytes()).await {
-                warn!("Error writing toml file - {why}");
-            };
-            info!("guild_settings.toml successfully created!");
-        } else {
-            file = match File::open(GUILDSETTINGS_FILE_PATH).await {
-                Ok(file_opened) => file_opened,
-                Err(why) => return Err(format!("Error opening toml file - {why}")),
-            };
-
-            match file.read_to_string(&mut contents).await {
-                Ok(size) => info!("Read file {GUILDSETTINGS_FILE_PATH} of length {size}"),
-                Err(why) => return Err(format!("Error reading toml file - {why}")),
-            };
-        };
-
-        match toml::from_str::<LuroGuilds>(&contents) {
-            Ok(guild_settings) => Ok(guild_settings),
-            Err(why) => return Err(format!("Error serialising toml file - {why}")),
-        }
-    }
-
-    /// Write the struct to a toml file
-    pub async fn write(&self) -> Result<(), String> {
-        let struct_to_toml_string = match toml::to_string(&self.clone()) {
-            Ok(string) => string,
-            Err(err) => return Err(format!("Error serialising struct to toml string: {err}")),
-        };
-
-        match write(GUILDSETTINGS_FILE_PATH, struct_to_toml_string).await {
-            Ok(_) => Ok(()),
-            Err(err) => Err(format!("Error writing toml file: {err}")),
-        }
-    }
+/// Structure for `heck.toml`
+/// We have two hecks, one that is slowly drained (so we only get a heck once) and another used to get explicit hecks.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Hecks {
+    /// A vector containing all SFW hecks
+    pub sfw_hecks: Vec<Heck>,
+    /// A vector containing all NSFW hecks
+    pub nsfw_hecks: Vec<Heck>,
+    /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
+    pub sfw_heck_ids: Vec<usize>,
+    /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
+    pub nsfw_heck_ids: Vec<usize>
 }

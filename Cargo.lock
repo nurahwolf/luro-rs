@@ -570,6 +570,7 @@ dependencies = [
  "git2",
  "hyper",
  "memory-stats",
+ "rand",
  "serde",
  "serde_json",
  "tokio",
