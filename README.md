@@ -13,17 +13,17 @@ This project has a few goals:
 
 This is a complete project REBASE on the [Twilight](https://github.com/twilight-rs/twilight) library, instead of Serenity. This primarily comes down to more flexibility (and more things to learn), as the Poise and Serenity framework are not super well integrated. That, and the serenity branches seem to get out of sync a lot so it was difficult to actually get a project working.
 
-As a bonus, there are a bunch less libs and so the end binary is smaller. Yay!
+As a bonus, there are a bunch fewer libs and so the end binary is smaller. Yay!
 
-**Music Note**
-While I was planning to keep the project pure rust, this branch uses [LavaLink](https://github.com/freyacodes/Lavalink) for audio. I was originally planning to use Songbird, but due to it repeatedly trying to pull in old version of Twilight, eventually gave up and went the path of lease resistance.
+**Music Note**  
+While I was planning to keep the project pure rust, this branch uses [LavaLink](https://github.com/freyacodes/Lavalink) for audio. I was originally planning to use Songbird, but due to it repeatedly trying to pull in old version of Twilight, I eventually gave up and went the path of least resistance.
 
-**Database Note**
+**Database Note**  
 I'm unsure on the end result for the database, but I'm potentially considering `neo4j` considering Discord data fits a graph quite well. Any recommendations are welcome, though an embedded / semi-embedded DB would be my ideal pick.
 
 ## Disclaimer
 
-This project is offered as is, with no warranty under the expectation that things will break and there will be sudden breaking changes. Once this project has got to a reasonable place, semantic versioning will be used. This project is also being used to learn git, so things may be done in strange and unexpected ways. If you have any suggestions, please do voice them!
+This project is also being used to learn git, so things may be done in strange and unexpected ways. Once this project has got to a reasonable place, semantic versioning will be used. If you have any suggestions, please do voice them!
 
 ADDITIONALLY, this branch may become abandoned, or replace mainline Luro! I'm not sure yet as this is effectively a trial to see what lib works best for Luro's needs.
 
@@ -47,10 +47,10 @@ As the project current stands, the best way to run is as follows:
       password: "a_super_mega_secure_password_that_is_in_plaintext"
   ```
   - Rerun `java -jar Lavalink.jar`, the port should change to whatever you defined.
-  - Now declare environment variables. You can use an env file, or via the shell: `export DISCORD_TOKEN=WowThisIsMyRealToken && export LAVALINK_HOST=127.0.0.1:6969 && export LAVALINK_AUTHORIZATION=wtfthisismyproductionpassword && echo "Luro + Lavalink env set"`
+  - Now declare environment variables. You can use an env file, or via the shell: `export DISCORD_TOKEN=mydiscordtoken && export LAVALINK_HOST=127.0.0.1:1234 && export LAVALINK_AUTHORIZATION=myauthkey && echo "Luro + Lavalink env set"`
   - Run luro: `rust +nightly run` or `cargo +nightly run`
 
-Make sure you have nightly, if you don't it can be grabbed via `rustup toolchain install nightly`. I **believe** regular rust will work at the current project's state, but I might be wrong.
+Make sure you have nightly, if you don't it can be grabbed via `rustup toolchain install nightly`.
 
 Unlike mainline Luro, `cmake` is NOT required, since the `Lavalink` jar contains all dependencies.
 
