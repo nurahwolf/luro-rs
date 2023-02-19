@@ -4,10 +4,7 @@ use anyhow::Result;
 use tracing::{debug, info, warn};
 use twilight_model::gateway::payload::incoming::Ready;
 
-use crate::{
-    config::{LuroGuildSettings},
-    Luro,
-};
+use crate::{config::LuroGuildSettings, Luro};
 
 pub async fn ready_handler(luro: Arc<Luro>, ready: Box<Ready>) -> Result<()> {
     info!("Luro is now ready!");
@@ -44,7 +41,7 @@ async fn save_guild_accent_colour(luro: &Arc<Luro>, ready: Box<Ready>) -> Result
                 vacant.insert(guild_settings);
             }
         };
-    };
+    }
 
     if let Err(why) = guilds.write().await {
         warn!("Failed to save guild_settings to the toml file - {why}");

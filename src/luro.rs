@@ -1,7 +1,10 @@
 use core::fmt;
-use std::{env, net::SocketAddr, str::FromStr, sync::{Arc}};
+use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
 
-use crate::{config::{LuroGuilds, Hecks}, HyperClient, Luro};
+use crate::{
+    config::{Hecks, LuroGuilds},
+    HyperClient, Luro,
+};
 use anyhow::Error;
 use futures::Future;
 use twilight_gateway::{stream, ConfigBuilder, Intents, Shard};
@@ -90,11 +93,11 @@ impl Luro {
             Err(why) => panic!("Failed to initialise guild settings - {why}"),
         };
 
-            // Initialise our hecks settings
-            let hecks = match Hecks::get().await {
-                Ok(ok) => tokio::sync::RwLock::new(ok),
-                Err(why) => panic!("Failed to initialise guild settings - {why}"),
-            };
+        // Initialise our hecks settings
+        let hecks = match Hecks::get().await {
+            Ok(ok) => tokio::sync::RwLock::new(ok),
+            Err(why) => panic!("Failed to initialise guild settings - {why}"),
+        };
 
         Ok((
             Arc::new(Self {
@@ -106,7 +109,7 @@ impl Luro {
                 standby: Standby::new(),
                 commands: Luro::set_default_commands().into(),
                 guild_settings,
-                hecks
+                hecks,
             }),
             shards,
         ))

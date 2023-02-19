@@ -6,12 +6,12 @@ use twilight_model::application::interaction::{
 
 use crate::Luro;
 
-use self::{about::about_command, say::say_command, heck::heck_command};
+use self::{about::about_command, heck::heck_command, say::say_command};
 
 pub mod about;
+pub mod heck;
 pub mod hello_world;
 pub mod say;
-pub mod heck;
 
 /// Context to be passed through to interactions
 pub struct LuroInteraction {

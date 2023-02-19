@@ -1,8 +1,11 @@
 use std::path::Path;
 
-use tokio::{fs::File, io::{AsyncWriteExt, AsyncReadExt}};
-use tracing::{warn, info};
 use tokio::fs::write;
+use tokio::{
+    fs::File,
+    io::{AsyncReadExt, AsyncWriteExt},
+};
+use tracing::{info, warn};
 
 use crate::GUILDSETTINGS_FILE_PATH;
 

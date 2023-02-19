@@ -1,12 +1,12 @@
 #![feature(let_chains)]
 
 use commands::LuroCommands;
-use config::{LuroGuilds, Hecks};
+use config::{Hecks, LuroGuilds};
 use futures::StreamExt;
 use hyper::client::{Client as HyperClient, HttpConnector};
 use tracing::warn;
 
-use std::sync::{Arc};
+use std::sync::Arc;
 use twilight_gateway::stream::ShardEventStream;
 use twilight_http::Client;
 use twilight_lavalink::Lavalink;
@@ -19,9 +19,9 @@ use twilight_standby::Standby;
 pub mod commands;
 pub mod config;
 pub mod event_handler;
+pub mod functions;
 pub mod interactions;
 pub mod luro;
-pub mod functions;
 
 pub const ACCENT_COLOUR: u32 = 0xDABEEF;
 
@@ -68,7 +68,7 @@ pub struct Luro {
     pub standby: Standby,
     pub commands: std::sync::RwLock<LuroCommands>,
     pub guild_settings: tokio::sync::RwLock<LuroGuilds>,
-    pub hecks: tokio::sync::RwLock<Hecks>
+    pub hecks: tokio::sync::RwLock<Hecks>,
 }
 
 #[tokio::main]

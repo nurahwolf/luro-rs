@@ -30,7 +30,7 @@ pub struct LuroGuilds {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Heck {
     pub heck_message: String,
-    pub author_id: u64
+    pub author_id: u64,
 }
 
 /// Structure for `heck.toml`
@@ -44,5 +44,5 @@ pub struct Hecks {
     /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
     pub sfw_heck_ids: Vec<usize>,
     /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
-    pub nsfw_heck_ids: Vec<usize>
+    pub nsfw_heck_ids: Vec<usize>,
 }

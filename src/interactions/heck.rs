@@ -1,25 +1,24 @@
 use anyhow::Result;
 use rand::Rng;
-use tracing::{debug, warn};
+use tracing::warn;
 use twilight_interactions::command::{CommandInputData, CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
-    application::interaction::{application_command::InteractionChannel, Interaction},
+    application::interaction::Interaction,
     channel::message::{
         component::{ActionRow, TextInput, TextInputStyle},
         embed::{EmbedAuthor, EmbedFooter},
-        Component, MessageFlags,
+        Component,
     },
-    guild,
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
     id::{
-        marker::{ChannelMarker, GuildMarker, UserMarker},
+        marker::{GuildMarker, UserMarker},
         Id,
     },
     user::User,
 };
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder};
+use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{config::Heck, Luro, functions::get_guild_avatar::get_guild_avatar_url};
+use crate::{config::Heck, functions::get_guild_avatar::get_guild_avatar_url, Luro};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "heck", desc = "Send a playful, silly message at someone")]
@@ -146,7 +145,7 @@ pub async fn heck_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<
                 }
             }
         }
-        HeckCommand::Add(add_heck) => {
+        HeckCommand::Add(_add_heck) => {
             let componets = vec![Component::ActionRow(ActionRow {
                 components: vec![Component::TextInput(TextInput {
                     custom_id: "modal_input".to_string(),
@@ -447,7 +446,11 @@ async fn create_heck_embed(
         .color(luro.accent_colour(guild).await)
         .description(heck_message)
         .author(EmbedAuthor {
-            icon_url: Some(get_guild_avatar_url(&guild.unwrap(), &heck_author.id, &heck_author.avatar.unwrap())),
+            icon_url: Some(get_guild_avatar_url(
+                &guild.unwrap(),
+                &heck_author.id,
+                &heck_author.avatar.unwrap(),
+            )),
             name: format!("Heck created by {}", heck_author.name),
             proxy_icon_url: None,
             url: None,

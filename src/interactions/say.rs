@@ -3,8 +3,9 @@ use tracing::warn;
 use twilight_interactions::command::{CommandInputData, CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::{application_command::InteractionChannel, Interaction},
+    channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
-    id::{marker::ChannelMarker, Id}, channel::message::MessageFlags,
+    id::{marker::ChannelMarker, Id},
 };
 
 use crate::Luro;

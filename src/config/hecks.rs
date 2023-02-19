@@ -1,11 +1,15 @@
 use std::path::Path;
 
-use tokio::{fs::write, fs::File, io::{AsyncReadExt, AsyncWriteExt}};
+use tokio::{
+    fs::write,
+    fs::File,
+    io::{AsyncReadExt, AsyncWriteExt},
+};
 use tracing::{info, warn};
 
 use crate::HECK_FILE_PATH;
 
-use super::{Hecks, Heck};
+use super::{Heck, Hecks};
 
 impl Hecks {
     /// Get a new structure filled with data from a toml file. Note, this panics if it cannot find the toml file!
