@@ -18,7 +18,11 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{config::Heck, functions::get_guild_avatar::{get_guild_avatar_url, get_user_avatar_url}, Luro};
+use crate::{
+    config::Heck,
+    functions::get_guild_avatar::{get_guild_avatar_url, get_user_avatar_url},
+    Luro,
+};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "heck", desc = "Send a playful, silly message at someone")]
