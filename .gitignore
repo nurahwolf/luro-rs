@@ -1,3 +1,7 @@
+
+# Secret
+.env
+
 # Build Artifacts
 /target
 

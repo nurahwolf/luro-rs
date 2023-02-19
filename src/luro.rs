@@ -1,5 +1,6 @@
 use core::fmt;
 use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
+use dotenv::dotenv;
 
 use crate::{
     config::{Hecks, LuroGuilds},
@@ -15,30 +16,25 @@ use twilight_standby::Standby;
 impl Luro {
     /// Initialise and return an instance of Luro
     pub async fn init() -> Result<(Arc<Self>, Vec<Shard>), Error> {
+
+        // Loads dotenv. This allows std::env to view the variables in the file
+        dotenv().ok();
+
         // Luro's Discord token, grabbed from the "DISCORD_TOKEN" environment variabled
-        let token = match env::var("DISCORD_TOKEN") {
-            Ok(ok) => ok,
-            Err(err) => panic!("No DISCORD_TOKEN defined: {err}"),
-        };
+        let token = env::var("DISCORD_TOKEN").expect("No DISCORD_TOKEN defined");
 
         // Lavalink host, defined by the "LAVALINK_HOST" environmental
-        let lavalink_host = match env::var("LAVALINK_HOST") {
-            Ok(ok) => ok,
-            Err(err) => panic!("No LAVALINK_HOST defined: {err}"),
-        };
+        let lavalink_host = env::var("LAVALINK_HOST").expect("No LAVALINK_HOST defined");
+
+        // Lavalink authorisation, defined by the "LAVALINK_AUTHORIZATION" environmental
+        let lavalink_auth = env::var("LAVALINK_AUTHORIZATION").expect("No LAVALINK_AUTHORIZATION defined: {err}");
 
         // Lavalink host, defined by the "LAVALINK_HOST" environmental
         let lavalink_host = match SocketAddr::from_str(&lavalink_host) {
             Ok(ok) => ok,
-            Err(err) => panic!("No LAVALINK_HOST defined: {err}"),
+            Err(err) => panic!("Invaild LAVALINK_HOST defined: {err}"),
         };
-
-        // Lavalink authorisation, defined by the "LAVALINK_AUTHORIZATION" environmental
-        let lavalink_auth = match env::var("LAVALINK_AUTHORIZATION") {
-            Ok(ok) => ok,
-            Err(err) => panic!("No LAVALINK_AUTHORIZATION defined: {err}"),
-        };
-
+        
         // How many shards we should create
         let shard_count = 1u64;
 

@@ -12,6 +12,7 @@ anyhow = { version = "1.0", features = ["backtrace"] } # For errors
 futures = { default-features = false, version = "0.3"} 
 tracing = "0.1" # More helpful error messages
 tracing-subscriber = "0.3" # For the twilight runtime
+dotenv = "0.15.0"
 
 # For features
 hyper = { features = ["client", "server", "http2", "runtime"], version = "0.14" }
