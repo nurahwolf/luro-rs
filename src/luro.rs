@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
+use std::{env, net::SocketAddr, str::FromStr, sync::Arc, path::PathBuf};
 use dotenv::dotenv;
 
 use crate::{
@@ -12,6 +12,10 @@ use twilight_gateway::{stream, ConfigBuilder, Intents, Shard};
 use twilight_http::Client;
 use twilight_lavalink::Lavalink;
 use twilight_standby::Standby;
+
+// Auto gen toml folder libs
+use std::path::Path;
+use std::fs;
 
 impl Luro {
     /// Initialise and return an instance of Luro
@@ -82,6 +86,15 @@ impl Luro {
             Ok(ok) => ok.collect::<Vec<Shard>>(),
             Err(err) => panic!("Failed to start shards: {err}"),
         };
+
+        let path_to_data = PathBuf::from("./data"); //env::current_dir().expect("Invaild executing directory").join("/data");
+
+        // Initialise /data folder for toml. Otherwise it panics. 
+        if !path_to_data.exists() {
+            tracing::warn!("/data folder does not exist, creating it...");
+            fs::create_dir(path_to_data).expect("Failed to make data subfolder");
+            tracing::info!("/data folder successfully created!");
+        }
 
         // Initialise our guild settings
         let guild_settings = match LuroGuilds::get().await {

@@ -19,7 +19,7 @@ impl Hecks {
         // Create a file if it does not exist
         if !Path::new(HECK_FILE_PATH).exists() {
             warn!("guild_settings.toml does not exist, creating it...");
-            contents = r"hecks = {}".to_string();
+            contents = "hecks = {}\nsfw_hecks = []\nnsfw_hecks = []\nsfw_heck_ids = []\nnsfw_heck_ids = []".to_string();
 
             file = match File::create(HECK_FILE_PATH).await {
                 Ok(ok) => ok,
