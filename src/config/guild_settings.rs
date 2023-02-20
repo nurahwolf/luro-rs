@@ -17,7 +17,7 @@ impl LuroGuilds {
         let mut file;
         let mut contents = String::new();
         // Create a file if it does not exist
-        if !Path::new(GUILDSETTINGS_FILE_PATH.clone()).exists() {
+        if !Path::new(GUILDSETTINGS_FILE_PATH).exists() {
             warn!("guild_settings.toml does not exist, creating it...");
             contents = r"guilds = {}".to_string();
 
