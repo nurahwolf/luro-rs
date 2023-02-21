@@ -17,6 +17,17 @@ This project is offered as is, with no warranty under the expectation that thing
 
 Copy ALL files, including the folders from `data/sample` to `/data`. Pretty much all of them are self explanatory. Note that any keys not specified in `secrets.toml` will cause that plugin to be disabled. If you opt to drop `bot_token`, you can pass in the environment variable `LURO_TOKEN`.
 
+Visual Studio's (17 2022) cmake is used to build audiopus.
+
+### Running
+Once .toml's (configs) are in place, use nightly to run.
+Install: `rustup toolchain install nightly`
+Execute*: `rust +nightly run`
+
+Build is the same as execute but with `build` command instead of `run`.
+
+To set nightly as the default use `rust override set nightly` and then you can use `rust run` as usual. 
+
 Note: There are a bunch of hard coded constants in `main.rs` which are intended to be modified by the user. These primarily relate to where config files are stored. It is recommended to store data in `XDG_DATA_HOME` on a production system. `secrets.toml` can also be specified to a different, safer path.
 
 ## Contribution and development
