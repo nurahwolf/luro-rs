@@ -4,7 +4,7 @@ use twilight_model::application::command::Command;
 
 use crate::{
     interactions::{
-        about::AboutCommand, heck::HeckCommand, hello_world::HelloCommand, say::SayCommand,
+        about::AboutCommand, heck::HeckCommand, hello_world::HelloCommand, say::SayCommand, command_usage::CommandUsage,
     },
     Luro,
 };
@@ -33,6 +33,7 @@ impl Luro {
                 AboutCommand::create_command().into(),
                 SayCommand::create_command().into(),
                 HeckCommand::create_command().into(),
+                CommandUsage::create_command().into(),
             ],
             guild_commands: vec![],
         }

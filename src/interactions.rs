@@ -1,4 +1,4 @@
-use crate::{interactions::hello_world::hello_world, luro::LuroError};
+use crate::{luro::LuroError};
 use anyhow::{bail, Error, Result};
 use twilight_model::application::interaction::{
     application_command::CommandData, Interaction, InteractionData, InteractionType,
@@ -6,12 +6,13 @@ use twilight_model::application::interaction::{
 
 use crate::Luro;
 
-use self::{about::about_command, heck::heck_command, say::say_command};
+use self::{about::about_command, heck::heck_command, say::say_command, command_usage::command_usage, hello_world::hello_world,};
 
 pub mod about;
 pub mod heck;
 pub mod hello_world;
 pub mod say;
+pub mod command_usage;
 
 /// Context to be passed through to interactions
 pub struct LuroInteraction {
@@ -44,6 +45,7 @@ impl Luro {
                     Some("about") => about_command(self, &interaction).await,
                     Some("say") => say_command(self, &interaction).await,
                     Some("heck") => heck_command(self, &interaction).await,
+                    Some("usage") => command_usage(self, &interaction).await,
                     _ => Ok(()),
                 }
             }
