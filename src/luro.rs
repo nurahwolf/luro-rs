@@ -14,7 +14,6 @@ use twilight_lavalink::Lavalink;
 use twilight_standby::Standby;
 
 // Auto gen toml folder libs
-use std::path::Path;
 use std::fs;
 
 impl Luro {
@@ -137,6 +136,7 @@ impl Luro {
 pub enum LuroError {
     NoInteractionData,
     NoApplicationCommand,
+    NoMessageInteractionData
 }
 
 impl std::error::Error for LuroError {}
@@ -144,6 +144,7 @@ impl std::error::Error for LuroError {}
 impl fmt::Display for LuroError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            LuroError::NoMessageInteractionData => write!(f, "No Message Interaction Data"),
             LuroError::NoInteractionData => write!(f, "No data was found in the interaction"),
             LuroError::NoApplicationCommand => write!(
                 f,
