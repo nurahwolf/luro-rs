@@ -71,7 +71,7 @@ pub struct Luro {
     pub hecks: tokio::sync::RwLock<Hecks>,
     
     // Global Vars
-    interaction_count: Arc<tokio::sync::RwLock<u32>>,   
+    interaction_count: tokio::sync::RwLock<u32>,   
 }
 
 #[tokio::main]

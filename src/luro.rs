@@ -118,7 +118,7 @@ impl Luro {
                 commands: Luro::set_default_commands().into(),
                 guild_settings,
                 hecks,
-                interaction_count: Arc::from(tokio::sync::RwLock::new(0)),
+                interaction_count: tokio::sync::RwLock::new(0),
             }),
             shards,
         ))
