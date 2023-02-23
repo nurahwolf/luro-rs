@@ -6,7 +6,7 @@ use twilight_model::application::interaction::{
 
 use crate::Luro;
 
-use self::{about::about_command, heck::heck_command, say::say_command, command_usage::command_usage, hello_world::hello_world, boop::{boop_button, boop_command}};
+use self::{about::about_command, heck::heck_command, say::say_command, command_usage::command_usage, hello_world::hello_world, boop::{boop_button, boop_command}, roll::roll_function};
 
 pub mod about;
 pub mod heck;
@@ -14,6 +14,7 @@ pub mod hello_world;
 pub mod say;
 pub mod command_usage;
 pub mod boop;
+pub mod roll;
 
 /// Context to be passed through to interactions
 pub struct LuroInteraction {
@@ -60,6 +61,7 @@ impl Luro {
                     Some("heck") => heck_command(self, &interaction).await,
                     Some("usage") => command_usage(self, &interaction).await,
                     Some("boop") => boop_command(self, &interaction).await,
+                    Some("roll") => roll_function(self, &interaction).await,
                     _ => Ok(()),
                 }
             },
