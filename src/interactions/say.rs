@@ -15,8 +15,6 @@ use crate::Luro;
 pub struct SayCommand {
     /// Message to send
     message: String,
-    /// The channel returned in the message interaction
-    interaction_channel: InteractionChannel,
     /// The channel to send the message
     channel: Option<Id<ChannelMarker>>,
 }
@@ -41,7 +39,7 @@ pub async fn say_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<(
 
     let channel_to_send = match interaction_data.channel {
         Some(channel) => channel,
-        None => interaction_data.interaction_channel.id,
+        None => interaction.channel_id.unwrap(),
     };
 
     match luro
