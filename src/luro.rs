@@ -29,8 +29,8 @@ impl Luro {
         // Lavalink host, defined by the "LAVALINK_HOST" environmental
         let lavalink_host = env::var("LAVALINK_HOST").expect("No LAVALINK_HOST defined");
 
-        // Lavalink authorisation, defined by the "LAVALINK_AUTHORIZATION" environmental
-        let lavalink_auth = env::var("LAVALINK_AUTHORIZATION").expect("No LAVALINK_AUTHORIZATION defined: {err}");
+        // Lavalink authorisation, defined by the "LAVALINK_AUTHORISATION" environmental
+        let lavalink_auth = env::var("LAVALINK_AUTHORISATION").expect("No LAVALINK_AUTHORISATION defined: {err}");
 
         // Lavalink host, defined by the "LAVALINK_HOST" environmental
         let lavalink_host = match SocketAddr::from_str(&lavalink_host) {
@@ -118,6 +118,7 @@ impl Luro {
                 commands: Luro::set_default_commands().into(),
                 guild_settings,
                 hecks,
+                interaction_count: Arc::from(tokio::sync::RwLock::new(0)),
             }),
             shards,
         ))

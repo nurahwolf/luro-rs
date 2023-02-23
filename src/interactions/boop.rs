@@ -75,12 +75,6 @@ pub async fn boop_button<'a>(luro: &Luro, interaction: &Interaction) -> Result<(
         Err(_) => 0,
     };
 
-    /* // UPDATE MESSAGE FROM IDs
-    match luro.http.update_message(message.channel_id, message.id).content(Some(number))?.await{
-        Ok(ok) => ok,
-        Err(_) => todo!(),
-    };*/
-
     // Update message as interaction response
     let response = InteractionResponse {
         kind: InteractionResponseType::UpdateMessage,

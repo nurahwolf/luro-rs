@@ -1,3 +1,5 @@
+use std::sync::RwLockReadGuard;
+
 use anyhow::Result;
 use tracing::warn;
 use twilight_interactions::command::{CommandInputData, CommandModel, CreateCommand};
@@ -30,25 +32,25 @@ pub async fn command_usage<'a>(luro: &Luro, interaction: &Interaction) -> Result
         }
     };
 
-    unsafe{ // pub static mut interaction_count - is unsafe 
-        let response = InteractionResponse {
-            kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(InteractionResponseData {
-                content: Some(format!("**{}** Interactions since I last restarted.", event_handler::interaction_count)),
-                ..Default::default()
-            }),
-        };
+    let value = luro.interaction_count.read().await;
 
-        match luro
-            .http
-            .interaction(luro.application_id)
-            .create_response(interaction.id, &interaction.token, &response)
-            .await
-        {
-            Ok(ok) => ok,
-            Err(_) => todo!(),
-        };
-    }
+    let response = InteractionResponse {
+        kind: InteractionResponseType::ChannelMessageWithSource,
+        data: Some(InteractionResponseData {
+            content: Some(format!("**{}** Interactions since I last restarted.", value)),
+            ..Default::default()
+        }),
+    };
+
+    match luro
+        .http
+        .interaction(luro.application_id)
+        .create_response(interaction.id, &interaction.token, &response)
+        .await
+    {
+        Ok(ok) => ok,
+        Err(_) => todo!(),
+    };
 
     Ok(())
 

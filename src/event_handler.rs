@@ -16,7 +16,6 @@ use crate::{
 };
 
 use self::ready::ready_handler;
-pub static mut interaction_count: i32 = 0;
 
 mod ready;
 
@@ -35,9 +34,11 @@ impl Luro {
                 let interaction_id = interaction.id;
                 info!("Handling interaction - {interaction_id}");
 
-                unsafe{
-                    interaction_count+=1;
+                {
+                    let mut c = luro.interaction_count.write().await;
+                    *c += 1;
                 }
+                
 
                 if let Err(why) = luro.handle_interaction(interaction.0).await {
                     warn!("Failed to handle interaction - {why}")

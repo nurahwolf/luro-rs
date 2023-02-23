@@ -36,7 +36,7 @@ impl Luro {
                 CommandUsage::create_command().into(),
                 Boop::create_command().into(),
             ],
-            guild_commands: vec![],
+            guild_commands: vec![]
         }
     }
 
