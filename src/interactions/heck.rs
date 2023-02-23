@@ -20,7 +20,7 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{
     config::Heck,
-    functions::get_guild_avatar::{get_guild_avatar_url, get_user_avatar_url},
+    functions::get_guild_avatar::{get_user_avatar_url},
     Luro,
 };
 
@@ -275,6 +275,7 @@ async fn get_sfw_heck(luro: &Luro, heck_id: Option<usize>) -> Result<(Heck, usiz
     heck
 }
 
+/// Is this your code, N? - Andrew 
 // pub async fn heck() -> Result<()> {
 //     // Make sure that the hecks have not been fully drained from the database, if so, reload them. This opens the DB as writable for the life of the function
 //     debug!("Checking to make sure we have hecks to get");

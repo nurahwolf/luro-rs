@@ -34,6 +34,12 @@ impl Luro {
                 let interaction_id = interaction.id;
                 info!("Handling interaction - {interaction_id}");
 
+                {
+                    let mut c = luro.interaction_count.write().await;
+                    *c += 1;
+                }
+                
+
                 if let Err(why) = luro.handle_interaction(interaction.0).await {
                     warn!("Failed to handle interaction - {why}")
                 };

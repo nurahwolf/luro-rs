@@ -66,9 +66,12 @@ pub struct Luro {
     pub hyper: HyperClient<HttpConnector>,
     pub user: CurrentUser,
     pub standby: Standby,
-    pub commands: std::sync::RwLock<LuroCommands>,
+    pub commands: std::sync::RwLock<LuroCommands>, 
     pub guild_settings: tokio::sync::RwLock<LuroGuilds>,
     pub hecks: tokio::sync::RwLock<Hecks>,
+    
+    // Global Vars
+    interaction_count: tokio::sync::RwLock<u32>,   
 }
 
 #[tokio::main]

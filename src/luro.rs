@@ -1,5 +1,6 @@
 use core::fmt;
-use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
+use std::{env, net::SocketAddr, str::FromStr, sync::Arc, path::PathBuf};
+use dotenv::dotenv;
 
 use crate::{
     config::{Hecks, LuroGuilds},
@@ -12,33 +13,31 @@ use twilight_http::Client;
 use twilight_lavalink::Lavalink;
 use twilight_standby::Standby;
 
+// Auto gen toml folder libs
+use std::fs;
+
 impl Luro {
     /// Initialise and return an instance of Luro
     pub async fn init() -> Result<(Arc<Self>, Vec<Shard>), Error> {
+
+        // Loads dotenv. This allows std::env to view the variables in the file
+        dotenv().ok();
+
         // Luro's Discord token, grabbed from the "DISCORD_TOKEN" environment variabled
-        let token = match env::var("DISCORD_TOKEN") {
-            Ok(ok) => ok,
-            Err(err) => panic!("No DISCORD_TOKEN defined: {err}"),
-        };
+        let token = env::var("DISCORD_TOKEN").expect("No DISCORD_TOKEN defined");
 
         // Lavalink host, defined by the "LAVALINK_HOST" environmental
-        let lavalink_host = match env::var("LAVALINK_HOST") {
-            Ok(ok) => ok,
-            Err(err) => panic!("No LAVALINK_HOST defined: {err}"),
-        };
+        let lavalink_host = env::var("LAVALINK_HOST").expect("No LAVALINK_HOST defined");
+
+        // Lavalink authorisation, defined by the "LAVALINK_AUTHORISATION" environmental
+        let lavalink_auth = env::var("LAVALINK_AUTHORISATION").expect("No LAVALINK_AUTHORISATION defined: {err}");
 
         // Lavalink host, defined by the "LAVALINK_HOST" environmental
         let lavalink_host = match SocketAddr::from_str(&lavalink_host) {
             Ok(ok) => ok,
-            Err(err) => panic!("No LAVALINK_HOST defined: {err}"),
+            Err(err) => panic!("Invaild LAVALINK_HOST defined: {err}"),
         };
-
-        // Lavalink authorisation, defined by the "LAVALINK_AUTHORIZATION" environmental
-        let lavalink_auth = match env::var("LAVALINK_AUTHORIZATION") {
-            Ok(ok) => ok,
-            Err(err) => panic!("No LAVALINK_AUTHORIZATION defined: {err}"),
-        };
-
+        
         // How many shards we should create
         let shard_count = 1u64;
 
@@ -87,6 +86,15 @@ impl Luro {
             Err(err) => panic!("Failed to start shards: {err}"),
         };
 
+        let path_to_data = PathBuf::from("./data"); //env::current_dir().expect("Invaild executing directory").join("/data");
+
+        // Initialise /data folder for toml. Otherwise it panics. 
+        if !path_to_data.exists() {
+            tracing::warn!("/data folder does not exist, creating it...");
+            fs::create_dir(path_to_data).expect("Failed to make data subfolder");
+            tracing::info!("/data folder successfully created!");
+        }
+
         // Initialise our guild settings
         let guild_settings = match LuroGuilds::get().await {
             Ok(ok) => tokio::sync::RwLock::new(ok),
@@ -110,6 +118,7 @@ impl Luro {
                 commands: Luro::set_default_commands().into(),
                 guild_settings,
                 hecks,
+                interaction_count: tokio::sync::RwLock::new(0),
             }),
             shards,
         ))
@@ -128,6 +137,7 @@ impl Luro {
 pub enum LuroError {
     NoInteractionData,
     NoApplicationCommand,
+    NoMessageInteractionData
 }
 
 impl std::error::Error for LuroError {}
@@ -135,6 +145,7 @@ impl std::error::Error for LuroError {}
 impl fmt::Display for LuroError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            LuroError::NoMessageInteractionData => write!(f, "No Message Interaction Data"),
             LuroError::NoInteractionData => write!(f, "No data was found in the interaction"),
             LuroError::NoApplicationCommand => write!(
                 f,

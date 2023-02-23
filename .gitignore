@@ -1,9 +1,12 @@
+
+# Secret
+.env
+
 # Build Artifacts
 /target
 
 # Luro Specific
-!/data
-/data/*
+/data
 
 # Lavalink
 !/lavalink/application.yml
