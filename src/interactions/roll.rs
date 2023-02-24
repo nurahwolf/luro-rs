@@ -101,11 +101,13 @@ fn calculate(command: &str) -> i32 {
         }
 
         return value;
-    }else{
-        value += parse(command);
+    }
+    
+    if !command.is_empty() {
+        return parse(command);
     }
 
-    return value;
+    return 0;
 }
 
 fn parse(number: &str) -> i32{
