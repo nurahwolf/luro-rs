@@ -20,7 +20,7 @@ serde = { version = "1", default-features = false, features = [
 ] } # Used by a bunch of dependencies to serialise data, useful for my own structs
 serde_json = "1" # Decoding JSON payloads
 rand = "0.8" # Random choice, also used by poise and songbird
-futures = { version = "0.3.26", default-features = false } # For Discord autocomplete
+futures = { version = "0.3.27", default-features = false } # For Discord autocomplete
 sled = "0.34" # Database
 zerocopy = "0.6.0" # Dependencies for Database
 byteorder = "1.4.3" # Dependencies for Database
