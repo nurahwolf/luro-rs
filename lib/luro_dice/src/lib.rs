@@ -128,9 +128,10 @@ pub async fn direction(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 /// Roll those dice nerd
-#[poise::command(slash_command, prefix_command, category = "Dice")]
+#[poise::command(slash_command, category = "Dice")]
 pub async fn dice(
     ctx: Context<'_>,
+    #[description = "Add context to your role, such as for D&D"] reason: Option<String>,
     #[description = "Standard Dice Notation: 6d20dl2-10 (6x d20 dice, drop lowest 2, take away 10 from result)"]
     #[rest]
     dice: String
@@ -139,7 +140,11 @@ pub async fn dice(
         string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
         dice_total: Value::Int(69)
     });
-    let result_string = format!("**Result:** {}\n**Total:** {}", result.string_result, result.dice_total);
+    let result_string = if let Some(reason) = reason {
+        format!("{} is rolling for the reason: **{}**\n\n**Result:** {}\n**Total:** {}", ctx.author(), reason, result.string_result, result.dice_total)
+    } else {
+        format!("**Result:** {}\n**Total:** {}", result.string_result, result.dice_total)
+    };
 
     ctx.say(result_string).await?;
 
