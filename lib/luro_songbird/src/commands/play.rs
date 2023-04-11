@@ -48,7 +48,7 @@ pub async fn play(
                 Ok(source) => source,
                 Err(why) => {
                     println!("Err starting source: {why:?}");
-                    ctx.say("Error sourcing ffmpeg").await?;
+                    ctx.say(format!("Error matching YTDL input.\nReport the following error to Nurah:\n{why}")).await?;
                     return Ok(());
                 }
             }
@@ -57,7 +57,7 @@ pub async fn play(
                 Ok(source) => source,
                 Err(why) => {
                     println!("Err starting source: {why:?}");
-                    ctx.say("Error sourcing ffmpeg").await?;
+                    ctx.say(format!("Error searching YTDL.\nReport the following error to Nurah:\n{why}")).await?;
                     return Ok(());
                 }
             }

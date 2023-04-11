@@ -24,7 +24,7 @@ pub async fn playfaded(ctx: Context<'_>, song: String) -> Result<(), Error> {
                 Err(why) => {
                     println!("Err starting source: {why:?}");
 
-                    ctx.say("Error sourcing ffmpeg").await?;
+                    ctx.say(format!("Error starting YTDL restartable.\nReport the following error to Nurah:\n{why}")).await?;
 
                     return Ok(());
                 }
