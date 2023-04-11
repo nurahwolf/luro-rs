@@ -36,7 +36,7 @@ features = ["cache"]
 version = "0.5"
 
 [dependencies.songbird]
-features = ["builtin-queue"]
+features = ["builtin-queue", "yt-dlp"]
 version = "0.3"
 
 [workspace]
