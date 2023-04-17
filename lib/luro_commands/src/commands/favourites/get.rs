@@ -5,7 +5,7 @@ use luro_core::{
     favourites::{Favorite, Favs},
     Context, Data, Error, FAVOURITES_FILE_PATH, TIMEOUT_DURIATION
 };
-use poise::{serenity_prelude::InteractionResponseType};
+use poise::serenity_prelude::InteractionResponseType;
 use rand::Rng;
 
 use crate::commands::favourites::{

@@ -16,9 +16,7 @@ use luro_core::{
     favourites::{Favorite, Favs},
     Context, Data, Error, FAVOURITES_FILE_PATH, TIMEOUT_DURIATION
 };
-use poise::{
-    serenity_prelude::{CreateSelectMenu, CreateSelectMenuOption, InteractionResponseType, Message},
-};
+use poise::serenity_prelude::{CreateSelectMenu, CreateSelectMenuOption, InteractionResponseType, Message};
 
 mod change_category;
 mod constants;

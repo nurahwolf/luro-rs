@@ -141,7 +141,13 @@ pub async fn dice(
         dice_total: Value::Int(69)
     });
     let result_string = if let Some(reason) = reason {
-        format!("{} is rolling for the reason: **{}**\n\n**Result:** {}\n**Total:** {}", ctx.author(), reason, result.string_result, result.dice_total)
+        format!(
+            "{} is rolling for the reason: **{}**\n\n**Result:** {}\n**Total:** {}",
+            ctx.author(),
+            reason,
+            result.string_result,
+            result.dice_total
+        )
     } else {
         format!("**Result:** {}\n**Total:** {}", result.string_result, result.dice_total)
     };

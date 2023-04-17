@@ -1,5 +1,11 @@
 use luro_core::Data;
-use poise::{serenity_prelude::{ButtonStyle, CreateActionRow, CreateButton, CreateComponents, ReactionType, CreateSelectMenu, CreateSelectMenuOption, CreateEmbed}, CreateReply};
+use poise::{
+    serenity_prelude::{
+        ButtonStyle, CreateActionRow, CreateButton, CreateComponents, CreateEmbed, CreateSelectMenu, CreateSelectMenuOption,
+        ReactionType
+    },
+    CreateReply
+};
 
 /// Create a button that responds to "show_menu", used for opening further menus
 pub fn open_menu_button() -> CreateButton {
@@ -69,18 +75,22 @@ pub async fn create_selection_menu(data: &Data, author_id: &String) -> Result<Cr
 }
 
 pub async fn favourite_categories_row(data: &Data, author_id: &String) -> Result<CreateActionRow, String> {
-    Ok(CreateActionRow::default().add_select_menu(create_selection_menu(data, author_id).await?).to_owned())
+    Ok(CreateActionRow::default()
+        .add_select_menu(create_selection_menu(data, author_id).await?)
+        .to_owned())
 }
 
 pub fn reply_builder(embed: CreateEmbed) -> CreateReply<'static> {
     let mut reply_builder = CreateReply::default();
-    reply_builder.embed(|e| {
-        *e = embed;
-        e
-    }).components(|c|{
-        *c = initial_menu_row();
-        c
-    });
+    reply_builder
+        .embed(|e| {
+            *e = embed;
+            e
+        })
+        .components(|c| {
+            *c = initial_menu_row();
+            c
+        });
     reply_builder
 }
 
