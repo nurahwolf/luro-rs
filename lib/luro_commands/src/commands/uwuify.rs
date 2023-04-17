@@ -60,13 +60,13 @@ pub async fn execute_webhook_as_user(ctx: Context<'_>, user: &User, uwu: &String
     build_webhook.avatar_url(message_author.avatar_url().unwrap_or_default());
     let webhook_name = &ctx.data().config.read().await.webhook_name;
 
-    if !webhooks.iter().any(|w| w.name.contains(webhook_name)) || webhooks.is_empty() {
+    if !webhooks.iter().any(|w| w.name.as_ref().is_some_and(|name| name == webhook_name)) || webhooks.is_empty() {
         ctx.channel_id().create_webhook(ctx, webhook_name).await?;
         webhooks = ctx.channel_id().webhooks(ctx).await?;
     }
 
     for webhook in webhooks {
-        if webhook.name.contains(webhook_name) {
+        if webhook.name.as_ref().is_some_and(|name| name == webhook_name) {
             webhook
                 .execute(ctx, false, |w| {
                     w.content(uwu).username(message_author.display_name()).avatar_url(

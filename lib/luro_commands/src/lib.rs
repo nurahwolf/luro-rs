@@ -1,5 +1,4 @@
 #![feature(let_chains)]
-#![feature(option_result_contains)]
 
 use luro_core::Command;
 use luro_dice::dice_commands;

@@ -27,7 +27,7 @@ byteorder = "1.4.3" # Dependencies for Database
 rkyv = "0.7" # Dependencies for Database
 regex = "1" # REGEX checking throughout Luro
 memory-stats = "1.0.0" #System memory information
-git2 = "0.16.1" #Git information
+git2 = "0.17" #Git information
 luro_core = { path = "../../lib/luro_core" }
 luro_sled = { path = "../../lib/luro_sled" }
 luro_e621 = { path = "../../lib/luro_e621" }

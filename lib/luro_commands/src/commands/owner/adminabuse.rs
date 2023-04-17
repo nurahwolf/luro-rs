@@ -15,13 +15,13 @@ pub async fn adminabuse(
     let member = guild.member(ctx, &user).await?;
     let mut webhooks = ctx.channel_id().webhooks(ctx).await?;
 
-    if !webhooks.iter().any(|w| w.name.contains(&"LuroHook")) || webhooks.is_empty() {
+    if !webhooks.iter().any(|w| w.name.as_ref().is_some_and(|x| x == "LuroHook")) || webhooks.is_empty() {
         ctx.channel_id().create_webhook(ctx, "LuroHook").await?;
         webhooks = ctx.channel_id().webhooks(ctx).await?;
     }
 
     for webhook in webhooks {
-        if webhook.name.contains(&"LuroHook") {
+        if webhook.name.as_ref().is_some_and(|x| x == "LuroHook") {
             webhook
                 .execute(ctx, false, |w| {
                     w.content(&msg);
