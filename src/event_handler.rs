@@ -12,16 +12,16 @@ use crate::event_handler::stop::stop;
 use crate::event_handler::volume::volume;
 use crate::{
     commands::{join, leave, pause, play, seek, stop, volume},
-    Luro,
+    LuroContext,
 };
 
 use self::ready::ready_handler;
 
-mod ready;
+pub mod ready;
 
-impl Luro {
+impl LuroContext {
     pub async fn event_handler(
-        luro: Arc<Luro>,
+        luro: Arc<LuroContext>,
         sender: Arc<MessageSender>,
         event: Event,
     ) -> anyhow::Result<()> {
@@ -52,13 +52,13 @@ impl Luro {
                 }
 
                 match msg.content.split_whitespace().next() {
-                    Some("!join") => Luro::spawn(join(msg.0, luro, sender)),
-                    Some("!leave") => Luro::spawn(leave(msg.0, luro, sender)),
-                    Some("!play") => Luro::spawn(play(msg.0, luro)),
-                    Some("!seek") => Luro::spawn(seek(msg.0, luro)),
-                    Some("!stop") => Luro::spawn(stop(msg.0, luro)),
-                    Some("!volume") => Luro::spawn(volume(msg.0, luro)),
-                    Some("!pause") => Luro::spawn(pause(msg.0, luro)),
+                    Some("!join") => LuroContext::spawn(join(msg.0, luro, sender)),
+                    Some("!leave") => LuroContext::spawn(leave(msg.0, luro, sender)),
+                    Some("!play") => LuroContext::spawn(play(msg.0, luro)),
+                    Some("!seek") => LuroContext::spawn(seek(msg.0, luro)),
+                    Some("!stop") => LuroContext::spawn(stop(msg.0, luro)),
+                    Some("!volume") => LuroContext::spawn(volume(msg.0, luro)),
+                    Some("!pause") => LuroContext::spawn(pause(msg.0, luro)),
                     _ => return Ok(()),
                 }
 

@@ -8,7 +8,7 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id},
 };
 
-use crate::Luro;
+use crate::{Luro, State};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "say", desc = "Get Luro to say a message")]
@@ -21,7 +21,7 @@ pub struct SayCommand {
     channel: Option<Id<ChannelMarker>>,
 }
 
-pub async fn say_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<()> {
+pub async fn say_command(state: State, interaction: &Interaction) -> Result<()> {
     let command_data = match Luro::get_interaction_data(interaction).await {
         Ok(ok) => ok,
         Err(why) => {
@@ -44,8 +44,8 @@ pub async fn say_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<(
         None => interaction_data.interaction_channel.id,
     };
 
-    match luro
-        .http
+    match state
+        .twilight_client
         .create_message(channel_to_send)
         .content(&interaction_data.message)
     {
@@ -66,9 +66,9 @@ pub async fn say_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<(
         }),
     };
 
-    match luro
-        .http
-        .interaction(luro.application_id)
+    match state
+        .twilight_client
+        .interaction(state.data.application_info.id)
         .create_response(interaction.id, &interaction.token, &response)
         .await
     {

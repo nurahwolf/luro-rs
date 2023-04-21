@@ -2,11 +2,9 @@ use tracing::info;
 use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
 
-use crate::{
-    interactions::{
-        about::AboutCommand, heck::HeckCommand, hello_world::HelloCommand, say::SayCommand, command_usage::CommandUsage, boop::Boop, 
-    },
-    Luro,
+use crate::interactions::{
+    about::AboutCommand, boop::Boop, command_usage::CommandUsage, heck::HeckCommand,
+    hello_world::HelloCommand, say::SayCommand,
 };
 
 pub mod join;
@@ -24,7 +22,7 @@ pub struct LuroCommands {
     pub guild_commands: Vec<Command>,
 }
 
-impl Luro {
+impl LuroCommands {
     pub fn set_default_commands() -> LuroCommands {
         info!("Registered default commands");
         LuroCommands {
@@ -36,24 +34,8 @@ impl Luro {
                 CommandUsage::create_command().into(),
                 Boop::create_command().into(),
             ],
-            guild_commands: vec![]
+            guild_commands: vec![],
         }
-    }
-
-    pub async fn register_global_commands(&self) -> anyhow::Result<()> {
-        let global_commands = match self.commands.read() {
-            Ok(commands) => commands.global_commands.clone(),
-            Err(why) => panic!("Command Mutex is poisoned: {why}"),
-        };
-
-        self.http
-            .interaction(self.application_id)
-            .set_global_commands(&global_commands)
-            .await?
-            .model()
-            .await?;
-
-        Ok(())
     }
 
     // fn command_id(command_name: &str, commands: &[Command]) -> Option<Id<CommandMarker>> {

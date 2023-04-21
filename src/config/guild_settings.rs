@@ -44,7 +44,7 @@ impl LuroGuilds {
 
         match toml::from_str::<LuroGuilds>(&contents) {
             Ok(guild_settings) => Ok(guild_settings),
-            Err(why) => return Err(format!("Error serialising toml file - {why}")),
+            Err(why) => Err(format!("Error serialising toml file - {why}")),
         }
     }
 

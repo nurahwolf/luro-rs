@@ -1,22 +1,43 @@
-use core::fmt;
-use std::{env, net::SocketAddr, str::FromStr, sync::Arc, path::PathBuf};
-use dotenv::dotenv;
+impl LuroData {
+    /// Return a default context, usually on bot startup.
+    pub async fn init() -> Result<Self, Error> {
+        let path_to_data = PathBuf::from("./data"); //env::current_dir().expect("Invaild executing directory").join("/data");
+    
+        // Initialise /data folder for toml. Otherwise it panics. 
+        if !path_to_data.exists() {
+            tracing::warn!("/data folder does not exist, creating it...");
+            fs::create_dir(path_to_data).expect("Failed to make data subfolder");
+            tracing::info!("/data folder successfully created!");
+        }
 
-use crate::{
-    config::{Hecks, LuroGuilds},
-    HyperClient, Luro,
-};
-use anyhow::Error;
-use futures::Future;
-use twilight_gateway::{stream, ConfigBuilder, Intents, Shard};
-use twilight_http::Client;
-use twilight_lavalink::Lavalink;
-use twilight_standby::Standby;
+        // Initialise our guild settings
+        let guild_settings = match LuroGuilds::get().await {
+            Ok(ok) => RwLock::new(ok),
+            Err(why) => panic!("Failed to initialise guild settings - {why}"),
+        };
 
-// Auto gen toml folder libs
-use std::fs;
+        // Initialise our hecks settings
+        let hecks = match Hecks::get().await {
+            Ok(ok) => RwLock::new(ok),
+            Err(why) => panic!("Failed to initialise guild settings - {why}"),
+        };
 
-impl Luro {
+        let commands = RwLock::new(LuroCommands::set_default_commands());
+        let interaction_count = RwLock::new(0);
+
+        Ok(
+            Self{
+                commands,
+                guild_settings,
+                hecks,
+                interaction_count
+        })
+    }
+}
+
+
+// OLD STUFF BELOW
+impl LuroContext {
     /// Initialise and return an instance of Luro
     pub async fn init() -> Result<(Arc<Self>, Vec<Shard>), Error> {
 
@@ -115,7 +136,7 @@ impl Luro {
                 hyper: HyperClient::new(),
                 user,
                 standby: Standby::new(),
-                commands: Luro::set_default_commands().into(),
+                commands: LuroCommands::set_default_commands().into(),
                 guild_settings,
                 hecks,
                 interaction_count: tokio::sync::RwLock::new(0),

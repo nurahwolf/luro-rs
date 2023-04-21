@@ -6,7 +6,7 @@ use twilight_model::{
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
 };
 
-use crate::Luro;
+use crate::{Luro, State};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "hello", desc = "Say hello to someone")]
@@ -17,7 +17,7 @@ pub struct HelloCommand {
     user: Option<ResolvedUser>,
 }
 
-pub async fn hello_world<'a>(luro: &Luro, interaction: &Interaction) -> Result<()> {
+pub async fn hello_world(state: State, interaction: &Interaction) -> Result<()> {
     let command_data = match Luro::get_interaction_data(interaction).await {
         Ok(ok) => ok,
         Err(why) => {
@@ -55,9 +55,9 @@ pub async fn hello_world<'a>(luro: &Luro, interaction: &Interaction) -> Result<(
         }),
     };
 
-    match luro
-        .http
-        .interaction(luro.application_id)
+    match state
+        .twilight_client
+        .interaction(state.data.application_info.id)
         .create_response(interaction.id, &interaction.token, &response)
         .await
     {

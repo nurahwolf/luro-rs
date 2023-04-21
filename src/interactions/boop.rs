@@ -2,19 +2,18 @@ use anyhow::Result;
 use tracing::warn;
 use twilight_interactions::command::{CommandInputData, CommandModel, CreateCommand};
 use twilight_model::{
-    application::interaction::{Interaction},
+    application::interaction::Interaction,
+    channel::message::component::{ActionRow, Button, ButtonStyle, Component},
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
-    channel::message::component::{ActionRow, Button, ButtonStyle, Component}
 };
 
-use crate::{Luro};
+use crate::{Luro, State};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "boop", desc = "Boop the Bot!")]
-pub struct Boop {
-}
+pub struct Boop {}
 
-pub async fn boop_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<()> {
+pub async fn boop_command(state: State, interaction: &Interaction) -> Result<()> {
     let command_data = match Luro::get_interaction_data(interaction).await {
         Ok(ok) => ok,
         Err(why) => {
@@ -23,7 +22,7 @@ pub async fn boop_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<
         }
     };
 
-    let data = match Boop::from_interaction(CommandInputData::from(*command_data)) {
+    let _data = match Boop::from_interaction(CommandInputData::from(*command_data)) {
         Ok(ok) => ok,
         Err(err) => {
             warn!("Failed to parse interaction data - {err}");
@@ -49,9 +48,9 @@ pub async fn boop_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<
         }),
     };
 
-    match luro
-        .http
-        .interaction(luro.application_id)
+    match state
+        .twilight_client
+        .interaction(state.data.application_info.id)
         .create_response(interaction.id, &interaction.token, &response)
         .await
     {
@@ -60,15 +59,13 @@ pub async fn boop_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<
     };
 
     Ok(())
-
 }
 
-pub async fn boop_button<'a>(luro: &Luro, interaction: &Interaction) -> Result<()> {
-    
+pub async fn boop_button(state: State, interaction: &Interaction) -> Result<()> {
     // Get message and parse number
     let message = interaction.message.clone().unwrap();
 
-    let (text, number) = message.content.split_at(12);
+    let (_text, number) = message.content.split_at(12);
 
     let value_number = match number.parse::<i32>() {
         Ok(v) => v + 1,
@@ -84,11 +81,11 @@ pub async fn boop_button<'a>(luro: &Luro, interaction: &Interaction) -> Result<(
         }),
     };
 
-    match luro
-    .http
-    .interaction(luro.application_id)
-    .create_response(interaction.id, &interaction.token, &response)
-    .await
+    match state
+        .twilight_client
+        .interaction(state.data.application_info.id)
+        .create_response(interaction.id, &interaction.token, &response)
+        .await
     {
         Ok(ok) => ok,
         Err(_) => todo!(),

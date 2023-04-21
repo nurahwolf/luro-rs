@@ -11,7 +11,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::Luro;
+use crate::State;
 
 /// Retrieves the current git branch in a given git repository.
 fn get_current_branch(repo: &Repository) -> String {
@@ -42,14 +42,14 @@ fn get_head_revision(repo: &Repository) -> String {
 )]
 pub struct AboutCommand {}
 
-pub async fn about_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<()> {
-    let accent_colour = luro.accent_colour(interaction.guild_id).await;
+pub async fn about_command(state: State, interaction: &Interaction) -> Result<()> {
+    let accent_colour = state.accent_colour(interaction.guild_id).await;
     let repo = Repository::open(Path::new(env!("CARGO_MANIFEST_DIR")).join("."))?;
     let version = env!("CARGO_PKG_VERSION").to_string();
     let branch = get_current_branch(&repo);
     let revision = get_head_revision(&repo);
-    let application_owner = luro
-        .http
+    let application_owner = state
+        .twilight_client
         .current_user_application()
         .await
         .unwrap()
@@ -106,9 +106,9 @@ pub async fn about_command<'a>(luro: &Luro, interaction: &Interaction) -> Result
         }),
     };
 
-    match luro
-        .http
-        .interaction(luro.application_id)
+    match state
+        .twilight_client
+        .interaction(state.data.application_info.id)
         .create_response(interaction.id, &interaction.token, &response)
         .await
     {

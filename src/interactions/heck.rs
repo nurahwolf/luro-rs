@@ -18,11 +18,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{
-    config::Heck,
-    functions::get_guild_avatar::{get_user_avatar_url},
-    Luro,
-};
+use crate::{config::Heck, functions::get_guild_avatar::get_user_avatar_url, Luro, State};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "heck", desc = "Send a playful, silly message at someone")]
@@ -77,7 +73,7 @@ async fn format_heck(heck: &Heck, heck_author: &User, hecked_user: &ResolvedUser
     }
 }
 
-pub async fn heck_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<()> {
+pub async fn heck_command(state: State, interaction: &Interaction) -> Result<()> {
     let command_data = match Luro::get_interaction_data(interaction).await {
         Ok(ok) => ok,
         Err(why) => {
@@ -97,7 +93,10 @@ pub async fn heck_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<
 
     let response = match interaction_data {
         HeckCommand::User(heck_data) => {
-            let mut heck_db = luro.hecks.write().await;
+            let heck_db = &mut match state.data.hecks.write() {
+                Ok(ok) => ok,
+                Err(_) => todo!(),
+            };
 
             let author = match interaction.author() {
                 Some(ok) => ok,
@@ -125,7 +124,7 @@ pub async fn heck_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<
                     }
             } else {
                 let author_id: Id<UserMarker> = Id::new(heck.author_id);
-                let author = match luro.http.user(author_id).await {
+                let author = match state.twilight_client.user(author_id).await {
                     Ok(ok) => match ok.model().await {
                         Ok(ok) => ok,
                         Err(why) => {
@@ -138,7 +137,7 @@ pub async fn heck_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<
                         return Ok(());
                     },
                 };
-                let embed = create_heck_embed(luro, interaction.guild_id, formatted_heck.heck_message, &author, true, heck_id).await.build();
+                let embed = create_heck_embed(state.clone(), interaction.guild_id, formatted_heck.heck_message, &author, true, heck_id).await.build();
 
                 InteractionResponse {
                     kind: InteractionResponseType::ChannelMessageWithSource,
@@ -178,9 +177,9 @@ pub async fn heck_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<
         HeckCommand::Delete(_) => todo!(),
     };
 
-    match luro
-        .http
-        .interaction(luro.application_id)
+    match state
+        .twilight_client
+        .interaction(state.data.application_info.id)
         .create_response(interaction.id, &interaction.token, &response)
         .await
     {
@@ -195,8 +194,11 @@ pub async fn heck_command<'a>(luro: &Luro, interaction: &Interaction) -> Result<
 }
 
 /// Checks to see if hecks are present, if they are not then reload the database. Note that this opens the heck DB as writable!
-async fn check_hecks_are_present(luro: &Luro) -> Result<()> {
-    let heck_db = &mut luro.hecks.write().await;
+async fn check_hecks_are_present(state: State) -> Result<()> {
+    let heck_db = &mut match state.data.hecks.write() {
+        Ok(ok) => ok,
+        Err(_) => todo!(),
+    };
 
     if heck_db.sfw_heck_ids.is_empty() || heck_db.nsfw_heck_ids.is_empty() {
         heck_db.reload_all_heck_ids();
@@ -206,8 +208,11 @@ async fn check_hecks_are_present(luro: &Luro) -> Result<()> {
 }
 
 /// Open the database as writeable and remove a NSFW heck from it, returning the heck removed
-async fn get_nsfw_heck(luro: &Luro, heck_id: Option<usize>) -> Result<(Heck, usize), String> {
-    let heck_db = &mut luro.hecks.write().await;
+async fn get_nsfw_heck(state: State, heck_id: Option<usize>) -> Result<(Heck, usize), String> {
+    let heck_db = &mut match state.data.hecks.write() {
+        Ok(ok) => ok,
+        Err(_) => todo!(),
+    };
 
     let heck = match heck_id {
         Some(heck_id) => match heck_db.nsfw_hecks.get(heck_id) {
@@ -230,12 +235,15 @@ async fn get_nsfw_heck(luro: &Luro, heck_id: Option<usize>) -> Result<(Heck, usi
 }
 
 async fn create_heck(
-    luro: &Luro,
+    state: State,
     heck_message: String,
     author_id: u64,
     nsfw: bool,
 ) -> (Heck, usize) {
-    let heck_db = &mut luro.hecks.read().await;
+    let heck_db = &mut match state.data.hecks.write() {
+        Ok(ok) => ok,
+        Err(_) => todo!(),
+    };
 
     let heck = Heck {
         heck_message,
@@ -252,8 +260,11 @@ async fn create_heck(
 }
 
 /// Open the database as writeable and remove a SFW heck from it, returning the heck removed
-async fn get_sfw_heck(luro: &Luro, heck_id: Option<usize>) -> Result<(Heck, usize), String> {
-    let heck_db = &mut luro.hecks.write().await;
+async fn get_sfw_heck(state: State, heck_id: Option<usize>) -> Result<(Heck, usize), String> {
+    let heck_db = &mut match state.data.hecks.write() {
+        Ok(ok) => ok,
+        Err(_) => todo!(),
+    };
 
     let heck = match heck_id {
         Some(heck_id) => match heck_db.sfw_hecks.get(heck_id) {
@@ -275,7 +286,7 @@ async fn get_sfw_heck(luro: &Luro, heck_id: Option<usize>) -> Result<(Heck, usiz
     heck
 }
 
-/// Is this your code, N? - Andrew 
+/// Is this your code, N? - Andrew
 // pub async fn heck() -> Result<()> {
 //     // Make sure that the hecks have not been fully drained from the database, if so, reload them. This opens the DB as writable for the life of the function
 //     debug!("Checking to make sure we have hecks to get");
@@ -440,7 +451,7 @@ async fn get_sfw_heck(luro: &Luro, heck_id: Option<usize>) -> Result<(Heck, usiz
 // }
 
 async fn create_heck_embed(
-    luro: &Luro,
+    state: State,
     guild: Option<Id<GuildMarker>>,
     heck_message: String,
     heck_author: &User,
@@ -448,7 +459,7 @@ async fn create_heck_embed(
     heck_id: usize,
 ) -> EmbedBuilder {
     let embed = EmbedBuilder::default()
-        .color(luro.accent_colour(guild).await)
+        .color(state.accent_colour(guild).await)
         .description(heck_message)
         .author(EmbedAuthor {
             icon_url: Some(get_user_avatar_url(

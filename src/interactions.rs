@@ -1,24 +1,31 @@
-use crate::{luro::LuroError};
 use anyhow::{bail, Error, Result};
-use twilight_model::application::interaction::{
-    application_command::CommandData, Interaction, InteractionData, InteractionType, message_component::MessageComponentInteractionData,
+use twilight_model::{application::interaction::{
+    application_command::CommandData, message_component::MessageComponentInteractionData,
+    Interaction, InteractionData, InteractionType,
+}, gateway::payload::incoming::InteractionCreate};
+
+use crate::{Luro, LuroError, State};
+
+use self::{
+    about::about_command,
+    boop::{boop_button, boop_command},
+    command_usage::command_usage,
+    heck::heck_command,
+    hello_world::hello_world,
+    say::say_command,
 };
 
-use crate::Luro;
-
-use self::{about::about_command, heck::heck_command, say::say_command, command_usage::command_usage, hello_world::hello_world, boop::{boop_button, boop_command}};
-
 pub mod about;
+pub mod boop;
+pub mod command_usage;
 pub mod heck;
 pub mod hello_world;
 pub mod say;
-pub mod command_usage;
-pub mod boop;
 
 /// Context to be passed through to interactions
 pub struct LuroInteraction {
     pub interaction: Interaction,
-    pub luro: Luro,
+    pub luro: State,
 }
 
 impl Luro {
@@ -35,7 +42,9 @@ impl Luro {
         }
     }
 
-    pub async fn get_button_data(interaction: &Interaction) -> Result<MessageComponentInteractionData> {
+    pub async fn get_button_data(
+        interaction: &Interaction,
+    ) -> Result<MessageComponentInteractionData> {
         let interaction_data = match interaction.data.clone() {
             Some(ok) => ok,
             None => bail!(LuroError::NoInteractionData),
@@ -48,26 +57,26 @@ impl Luro {
     }
 
     /// Handle an interaction request
-    pub async fn handle_interaction(&self, interaction: Interaction) -> anyhow::Result<(), Error> {
+    pub async fn handle_interaction(state: State, interaction: Box<InteractionCreate>) -> anyhow::Result<(), Error> {
         match interaction.kind {
             InteractionType::ApplicationCommand => {
                 let data = Luro::get_interaction_data(&interaction).await?;
 
                 match data.name.split_whitespace().next() {
-                    Some("hello") => hello_world(self, &interaction).await,
-                    Some("about") => about_command(self, &interaction).await,
-                    Some("say") => say_command(self, &interaction).await,
-                    Some("heck") => heck_command(self, &interaction).await,
-                    Some("usage") => command_usage(self, &interaction).await,
-                    Some("boop") => boop_command(self, &interaction).await,
+                    Some("hello") => hello_world(state, &interaction).await,
+                    Some("about") => about_command(state, &interaction).await,
+                    Some("say") => say_command(state, &interaction).await,
+                    Some("heck") => heck_command(state, &interaction).await,
+                    Some("usage") => command_usage(state, &interaction).await,
+                    Some("boop") => boop_command(state, &interaction).await,
                     _ => Ok(()),
                 }
-            },
+            }
             InteractionType::MessageComponent => {
                 let data = Luro::get_button_data(&interaction).await?;
-                                
+
                 match data.custom_id.as_str() {
-                    "boop" => boop_button(self, &interaction).await,
+                    "boop" => boop_button(state, &interaction).await,
                     _ => Ok(()),
                 }
             }

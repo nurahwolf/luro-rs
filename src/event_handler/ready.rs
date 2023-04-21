@@ -4,7 +4,7 @@ use anyhow::Result;
 use tracing::{debug, info, warn};
 use twilight_model::gateway::payload::incoming::Ready;
 
-use crate::{config::LuroGuildSettings, Luro};
+use crate::{config::LuroGuildSettings, LuroContext, Luro};
 
 pub async fn ready_handler(luro: Arc<Luro>, ready: Box<Ready>) -> Result<()> {
     info!("Luro is now ready!");
@@ -21,7 +21,7 @@ pub async fn ready_handler(luro: Arc<Luro>, ready: Box<Ready>) -> Result<()> {
     Ok(())
 }
 
-async fn save_guild_accent_colour(luro: &Arc<Luro>, ready: Box<Ready>) -> Result<()> {
+async fn save_guild_accent_colour(luro: &Arc<LuroContext>, ready: Box<Ready>) -> Result<()> {
     let mut guilds = luro.guild_settings.write().await;
 
     debug!("Attempting to add guilds to guild_settings.toml");

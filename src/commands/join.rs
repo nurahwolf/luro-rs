@@ -1,22 +1,23 @@
 use std::sync::Arc;
 
-use twilight_gateway::MessageSender;
+use twilight_gateway::{MessageSender, stream::ShardRef};
 use twilight_model::{
     channel::Message,
     gateway::payload::{incoming::MessageCreate, outgoing::UpdateVoiceState},
 };
 
-use crate::Luro;
+use crate::State;
 
-pub async fn join(msg: Message, ctx: Arc<Luro>, shard: Arc<MessageSender>) -> anyhow::Result<()> {
-    ctx.http
+pub async fn join(msg: Box<MessageCreate>, state: State, mut shard: ShardRef<'_>) -> anyhow::Result<()> {
+    state
+        .twilight_client
         .create_message(msg.channel_id)
         .content("What's the channel ID you want me to join?")?
         .await?;
 
     let author_id = msg.author.id;
-    let msg = ctx
-        .standby
+    let msg = state
+        .twilight_standby
         .wait_for_message(msg.channel_id, move |new_msg: &MessageCreate| {
             new_msg.author.id == author_id
         })
@@ -29,9 +30,10 @@ pub async fn join(msg: Message, ctx: Arc<Luro>, shard: Arc<MessageSender>) -> an
         Some(channel_id),
         false,
         false,
-    ))?;
+    ));
 
-    ctx.http
+    state
+        .twilight_client
         .create_message(msg.channel_id)
         .content(&format!("Joined <#{channel_id}>!"))?
         .await?;

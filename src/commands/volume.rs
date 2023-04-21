@@ -1,24 +1,23 @@
-use std::sync::Arc;
-
 use twilight_lavalink::model::Volume;
 use twilight_model::{channel::Message, gateway::payload::incoming::MessageCreate};
 
-use crate::Luro;
+use crate::State;
 
-pub async fn volume(msg: Message, ctx: Arc<Luro>) -> anyhow::Result<()> {
+pub async fn volume(msg: Box<MessageCreate>, state: State) -> anyhow::Result<()> {
     tracing::debug!(
         "volume command in channel {} by {}",
         msg.channel_id,
         msg.author.name
     );
-    ctx.http
+    state
+        .twilight_client
         .create_message(msg.channel_id)
         .content("What's the volume you want to set (0-1000, 100 being the default)?")?
         .await?;
 
     let author_id = msg.author.id;
-    let msg = ctx
-        .standby
+    let msg = state
+        .twilight_standby
         .wait_for_message(msg.channel_id, move |new_msg: &MessageCreate| {
             new_msg.author.id == author_id
         })
@@ -27,7 +26,8 @@ pub async fn volume(msg: Message, ctx: Arc<Luro>) -> anyhow::Result<()> {
     let volume = msg.content.parse::<i64>()?;
 
     if !(0..=1000).contains(&volume) {
-        ctx.http
+        state
+            .twilight_client
             .create_message(msg.channel_id)
             .content("That's more than 1000")?
             .await?;
@@ -35,10 +35,11 @@ pub async fn volume(msg: Message, ctx: Arc<Luro>) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let player = ctx.lavalink.player(guild_id).await.unwrap();
+    let player = state.lavalink.player(guild_id).await.unwrap();
     player.send(Volume::from((guild_id, volume)))?;
 
-    ctx.http
+    state
+        .twilight_client
         .create_message(msg.channel_id)
         .content(&format!("Set the volume to {volume}"))?
         .await?;

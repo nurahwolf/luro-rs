@@ -19,7 +19,7 @@ hyper = { features = ["client", "server", "http2", "runtime"], version = "0.14" 
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 memory-stats = "1"
-git2 = "0.16"
+git2 = "0.17"
 toml = "0.7"
 rand = "0.8"
 
