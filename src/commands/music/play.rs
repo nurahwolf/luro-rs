@@ -1,20 +1,17 @@
 use anyhow::Error;
 
 use hyper::{Body, Request};
-use twilight_interactions::command::{CommandInputData, CommandModel, CreateCommand};
+
+use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::{http::LoadedTracks, model::Play};
-use twilight_model::application::{command::Command, interaction::Interaction};
+use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::{functions::get_interaction_data, luro::Luro};
+use crate::luro::Luro;
 
 use super::create_response;
 
-pub fn commands() -> Vec<Command> {
-    vec![PlayCommand::create_command().into()]
-}
-
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "play",
     desc = "Give me a link or something and I'll try to play it",
@@ -25,19 +22,13 @@ pub struct PlayCommand {
     song: String,
 }
 
-pub async fn play(
-    luro: &Luro,
-    interaction: &Interaction
-) -> Result<(), Error> {
+pub async fn play(luro: &Luro, interaction: &Interaction, data: PlayCommand) -> Result<(), Error> {
     tracing::debug!(
         "play command in channel {} by {}",
         interaction.channel_id.unwrap(),
         interaction.user.clone().unwrap().name
     );
 
-    let data = PlayCommand::from_interaction(CommandInputData::from(
-        *get_interaction_data(interaction).await?,
-    ))?;
     let guild_id = interaction.guild_id.unwrap();
 
     let player = luro.lavalink.player(guild_id).await.unwrap();
@@ -57,10 +48,14 @@ pub async fn play(
     if let Some(track) = loaded.tracks.first() {
         player.send(Play::from((guild_id, &track.track)))?;
 
-        let content = format!(
-            "Playing **{:#?}** by **{:#?}**",
-            track.info.title, track.info.author
-        );
+        let content = if let (Some(title), Some(author)) = (&track.info.title, &track.info.author) {
+            format!("Playing **{}** by **{}**", title, author)
+        } else {
+            format!(
+                "Playing **{:#?}** by **{:#?}**",
+                track.info.title, track.info.author
+            )
+        };
 
         response = InteractionResponseDataBuilder::new().content(content);
     } else {

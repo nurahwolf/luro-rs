@@ -4,8 +4,7 @@ use twilight_gateway::stream::ShardRef;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Destroy;
 use twilight_model::{
-    application::{command::Command, interaction::Interaction},
-    gateway::payload::outgoing::UpdateVoiceState,
+    application::interaction::Interaction, gateway::payload::outgoing::UpdateVoiceState,
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
@@ -13,11 +12,7 @@ use crate::luro::Luro;
 
 use super::create_response;
 
-pub fn commands() -> Vec<Command> {
-    vec![LeaveCommand::create_command().into()]
-}
-
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "leave", desc = "Leave voice in a guild", dm_permission = false)]
 pub struct LeaveCommand {}
 

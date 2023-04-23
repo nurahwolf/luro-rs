@@ -1,23 +1,20 @@
 use anyhow::Error;
 
 use twilight_gateway::stream::ShardRef;
-use twilight_interactions::command::{CommandInputData, CommandModel, CreateCommand};
+use twilight_interactions::command::{CommandModel, CreateCommand};
+
 use twilight_model::{
-    application::{command::Command, interaction::Interaction},
+    application::interaction::Interaction,
     gateway::payload::outgoing::UpdateVoiceState,
     id::{marker::ChannelMarker, Id},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::{functions::get_interaction_data, luro::Luro};
+use crate::luro::Luro;
 
 use super::create_response;
 
-pub fn commands() -> Vec<Command> {
-    vec![JoinCommand::create_command().into()]
-}
-
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "join",
     desc = "Get me to join a voice channel to play some music!",
@@ -33,16 +30,13 @@ pub async fn join(
     luro: &Luro,
     interaction: &Interaction,
     mut shard: ShardRef<'_>,
+    data: JoinCommand,
 ) -> Result<(), Error> {
     tracing::debug!(
         "join command in channel {} by {}",
         interaction.channel_id.unwrap(),
         interaction.user.clone().unwrap().name
     );
-
-    let data = JoinCommand::from_interaction(CommandInputData::from(
-        *get_interaction_data(interaction).await?,
-    ))?;
 
     let guild_id = interaction.guild_id.unwrap();
 

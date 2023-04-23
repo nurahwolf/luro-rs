@@ -12,16 +12,12 @@ use twilight_model::{
 use crate::luro::Luro;
 
 mod hello;
-mod join;
-mod leave;
-mod play;
+mod music;
 
 fn commands() -> Vec<Command> {
     let mut cmds = Vec::new();
     cmds.extend(hello::commands());
-    cmds.extend(join::commands());
-    cmds.extend(leave::commands());
-    cmds.extend(play::commands());
+    cmds.extend(music::commands());
     cmds
 }
 
@@ -40,9 +36,7 @@ pub async fn handle_command(
     let res = match command.name.as_str() {
         "hello" => hello::hello(luro, interaction).await,
         "hellov2" => hello::hellov2(luro, interaction).await,
-        "join" => join::join(luro, interaction, shard).await,
-        "leave" => leave::leave(luro, interaction, shard).await,
-        "play" => play::play(luro, interaction).await,
+        "music" => music::music(luro, interaction, shard).await,
         _ => Ok(()),
     };
     if let Err(e) = res {
