@@ -6,9 +6,7 @@ use twilight_model::application::{
     interaction::Interaction,
 };
 use twilight_util::builder::{
-    command::CommandBuilder,
-    embed::{EmbedBuilder, EmbedFooterBuilder},
-    InteractionResponseDataBuilder,
+    command::CommandBuilder, embed::EmbedBuilder, InteractionResponseDataBuilder,
 };
 
 use crate::{functions::get_interaction_data, luro::Luro};
@@ -65,17 +63,8 @@ pub async fn hellov2(luro: &Luro, interaction: &Interaction) -> Result<(), Error
 pub async fn hello(luro: &Luro, interaction: &Interaction) -> Result<(), Error> {
     let user = luro.twilight_cache.current_user().unwrap();
     let user_name = user.name;
-    let footer;
 
-    {
-        let mut c = luro.test.write().await;
-        *c += 1;
-        footer = EmbedFooterBuilder::new(format!("Ran {c} times!"));
-    }
-
-    let embed = EmbedBuilder::default()
-        .description(format!("Hello World! I am {user_name}"))
-        .footer(footer);
+    let embed = EmbedBuilder::default().description(format!("Hello World! I am {user_name}"));
     let data = InteractionResponseDataBuilder::new().embeds([embed.build()]);
 
     create_response(luro, interaction, data.build()).await?;

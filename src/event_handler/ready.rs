@@ -12,8 +12,9 @@ pub async fn ready_listener(luro: Arc<Luro>, ready: Box<Ready>) -> Result<(), Er
 
     let interaction = luro.twilight_client.interaction(luro.application.id);
 
-    match commands::register(&interaction).await {
-        Ok(commands) => info!("Registered {commands} global commands"),
+    match commands::register_global_commands(&interaction, luro.data.global_commands.clone()).await
+    {
+        Ok(commands) => info!("Registered {} global commands", commands.len()),
         Err(why) => warn!("Failed to register global commands - {why}"),
     };
 

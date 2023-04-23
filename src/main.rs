@@ -3,6 +3,7 @@ use luro::Luro;
 use twilight_gateway::stream::ShardEventStream;
 
 pub mod commands;
+pub mod data;
 pub mod event_handler;
 pub mod functions;
 pub mod luro;

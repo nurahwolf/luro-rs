@@ -26,11 +26,20 @@ impl Luro {
             }
             Event::InteractionCreate(interaction) => match &interaction.data {
                 Some(InteractionData::ApplicationCommand(command)) => {
+                    if let (Some(channel), Some(user)) = (interaction.channel_id, interaction.user.clone()) {
+                        tracing::info!(
+                            "{} command in channel {} by {}",
+                            command.name,
+                            channel,
+                            user.name
+                        );
+                    };
+
                     commands::handle_command(&self, &interaction, command, shard).await;
                 }
-                // Some(InteractionData::MessageComponent(component)) => {
-                //     commands::handle_component(&self, &interaction, component).await;
-                // }
+                Some(InteractionData::MessageComponent(component)) => {
+                    commands::handle_component(&self, &interaction, component).await;
+                }
                 _ => {}
             },
             _ => {}

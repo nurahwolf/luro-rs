@@ -1,8 +1,7 @@
-use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
+use std::{collections::HashMap, env, net::SocketAddr, str::FromStr, sync::Arc};
 
 use anyhow::Error;
 use hyper::client::HttpConnector;
-use tokio::sync::RwLock;
 
 use twilight_cache_inmemory::InMemoryCache;
 use twilight_gateway::{stream, ConfigBuilder, Intents, Shard};
@@ -11,6 +10,8 @@ use twilight_lavalink::Lavalink;
 use twilight_model::oauth::Application;
 use twilight_standby::Standby;
 
+use crate::{commands::commands, data::LuroData};
+
 pub struct Luro {
     pub application: Application,
     pub twilight_client: twilight_http::Client,
@@ -18,13 +19,19 @@ pub struct Luro {
     pub twilight_standby: Standby,
     pub lavalink: Lavalink,
     pub hyper_client: hyper::Client<HttpConnector>,
-    pub test: RwLock<u64>,
+    pub data: LuroData,
 }
 
 impl Luro {
     pub fn interaction(&self) -> InteractionClient<'_> {
         self.twilight_client.interaction(self.application.id)
     }
+
+    // fn command_id(command_name: &str, commands: &[Command]) -> Option<Id<CommandMarker>> {
+    //     commands
+    //         .iter()
+    //         .find_map(|command| (command.name == command_name).then_some(command.id?))
+    // }
 
     pub async fn default() -> Result<(Arc<Self>, Vec<Shard>), Error> {
         let (token, lavalink_host, lavalink_auth, intents) = (
@@ -62,7 +69,12 @@ impl Luro {
         let twilight_cache = InMemoryCache::new();
         let twilight_standby = Standby::new();
         let hyper_client = hyper::Client::new();
-        let test = RwLock::new(0);
+        let global_commands = commands();
+        let data = LuroData {
+            global_commands,
+            guild_settings: HashMap::new().into(),
+            boop: 0.into(),
+        };
 
         Ok((
             Self {
@@ -72,7 +84,7 @@ impl Luro {
                 twilight_standby,
                 lavalink,
                 hyper_client,
-                test,
+                data,
             }
             .into(),
             shards,

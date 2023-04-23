@@ -152,34 +152,4 @@ impl LuroContext {
             shards,
         ))
     }
-
-    pub fn spawn(future: impl Future<Output = anyhow::Result<()>> + Send + 'static) {
-        tokio::spawn(async move {
-            if let Err(why) = future.await {
-                tracing::warn!("handler error: {why:?}");
-            }
-        });
-    }
-}
-
-#[derive(Debug)]
-pub enum LuroError {
-    NoInteractionData,
-    NoApplicationCommand,
-    NoMessageInteractionData
-}
-
-impl std::error::Error for LuroError {}
-
-impl fmt::Display for LuroError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            LuroError::NoMessageInteractionData => write!(f, "No Message Interaction Data"),
-            LuroError::NoInteractionData => write!(f, "No data was found in the interaction"),
-            LuroError::NoApplicationCommand => write!(
-                f,
-                "No ApplicationCommand was found in the interaction's data"
-            ),
-        }
-    }
 }
