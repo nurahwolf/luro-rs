@@ -1,53 +1,84 @@
-use tracing::info;
-use twilight_interactions::command::CreateCommand;
-use twilight_model::application::command::Command;
-
-use crate::interactions::{
-    about::AboutCommand, boop::Boop, command_usage::CommandUsage, heck::HeckCommand,
-    hello_world::HelloCommand, say::SayCommand,
+use anyhow::{Error, Result};
+use twilight_gateway::stream::ShardRef;
+use twilight_http::client::InteractionClient;
+use twilight_model::{
+    application::{
+        command::Command,
+        interaction::{application_command::CommandData, Interaction},
+    },
+    http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
 };
 
-pub mod join;
-pub mod leave;
-pub mod pause;
-pub mod play;
-pub mod seek;
-pub mod stop;
-pub mod volume;
+use crate::luro::Luro;
 
-/// A structure containing all of our commands, as well as some utility functions relating to thems
-#[derive(Clone, Debug, PartialEq)]
-pub struct LuroCommands {
-    pub global_commands: Vec<Command>,
-    pub guild_commands: Vec<Command>,
+mod hello;
+mod join;
+mod leave;
+mod play;
+
+fn commands() -> Vec<Command> {
+    let mut cmds = Vec::new();
+    cmds.extend(hello::commands());
+    cmds.extend(join::commands());
+    cmds.extend(leave::commands());
+    cmds.extend(play::commands());
+    cmds
 }
 
-impl LuroCommands {
-    pub fn set_default_commands() -> LuroCommands {
-        info!("Registered default commands");
-        LuroCommands {
-            global_commands: vec![
-                HelloCommand::create_command().into(),
-                AboutCommand::create_command().into(),
-                SayCommand::create_command().into(),
-                HeckCommand::create_command().into(),
-                CommandUsage::create_command().into(),
-                Boop::create_command().into(),
-            ],
-            guild_commands: vec![],
-        }
+pub async fn register(client: &InteractionClient<'_>) -> Result<usize, Error> {
+    let commands = &commands();
+    client.set_global_commands(commands).await?;
+    Ok(commands.len())
+}
+
+pub async fn handle_command(
+    luro: &Luro,
+    interaction: &Interaction,
+    command: &CommandData,
+    shard: ShardRef<'_>,
+) {
+    let res = match command.name.as_str() {
+        "hello" => hello::hello(luro, interaction).await,
+        "hellov2" => hello::hellov2(luro, interaction).await,
+        "join" => join::join(luro, interaction, shard).await,
+        "leave" => leave::leave(luro, interaction, shard).await,
+        "play" => play::play(luro, interaction).await,
+        _ => Ok(()),
+    };
+    if let Err(e) = res {
+        tracing::error!("{e}");
     }
+}
 
-    // fn command_id(command_name: &str, commands: &[Command]) -> Option<Id<CommandMarker>> {
-    //     commands
-    //         .iter()
-    //         .find_map(|command| (command.name == command_name).then_some(command.id?))
-    // }
+// pub async fn handle_component(
+//     luro: &Luro,
+//     interaction: &Interaction,
+//     component: &MessageComponentInteractionData,
+// ) {
+//     let res = match interaction
+//         .message
+//         .as_ref()
+//         .and_then(|m| m.interaction.as_ref())
+//     {
+//         Some(msg) if msg.name == "mods" => mods::list_component(ctx, interaction, component).await,
+//         _ => Ok(()),
+//     };
+//     if let Err(e) = res {
+//         tracing::error!("{e}");
+//     }
+// }
 
-    // fn new(commands: &[Command]) -> Result<Self> {
-    //     Ok(Self {
-    //         hello: Self::command_id("hello", commands)?,
-    //         clickme: Self::command_id("clickme", commands)?,
-    //     })
-    // }
+async fn create_response(
+    luro: &Luro,
+    interaction: &Interaction,
+    data: InteractionResponseData,
+) -> Result<(), Error> {
+    let response = InteractionResponse {
+        kind: InteractionResponseType::ChannelMessageWithSource,
+        data: Some(data),
+    };
+    luro.interaction()
+        .create_response(interaction.id, &interaction.token, &response)
+        .await?;
+    Ok(())
 }

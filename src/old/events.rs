@@ -1,3 +1,4 @@
+use futures::Future;
 use tracing::{info, warn};
 use twilight_gateway::{stream::ShardRef, Event};
 
@@ -44,7 +45,7 @@ impl Luro {
                     return Ok(());
                 }
 
-                match msg.content.split_whitespace().next() {
+                let test = match msg.content.split_whitespace().next() {
                     Some("!join") => join(msg, state, shard).await,
                     Some("!leave") => leave(msg, state, shard).await,
                     Some("!play") => play(msg, state).await,
@@ -54,6 +55,23 @@ impl Luro {
                     Some("!pause") => pause(msg, state).await,
                     _ => return Ok(()),
                 };
+
+                match test {
+                    Ok(_) => info!("Success!"),
+                    Err(why) => warn!("Error! {why}"),
+                };
+
+
+                // match msg.content.split_whitespace().next() {
+                //     Some("!join") => spawn(join(msg, state, shard)),
+                //     Some("!leave") => spawn(leave(msg, state, shard)),
+                //     Some("!play") => spawn(play(msg, state)),
+                //     Some("!seek") => spawn(seek(msg, state)),
+                //     Some("!stop") => spawn(stop(msg, state)),
+                //     Some("!volume") => spawn(volume(msg, state)),
+                //     Some("!pause") => spawn(pause(msg, state)),
+                //     _ => return Ok(()),
+                // };
 
                 Ok(())
             }
@@ -68,4 +86,12 @@ impl Luro {
             }
         }
     }
+}
+
+fn spawn(fut: impl Future<Output = anyhow::Result<()>> + Send + 'static) {
+    tokio::spawn(async move {
+        if let Err(why) = fut.await {
+            tracing::debug!("handler error: {why:?}");
+        }
+    });
 }

@@ -1,41 +1,62 @@
-use std::sync::Arc;
+use anyhow::Error;
 
-use twilight_gateway::{MessageSender, stream::ShardRef};
+use twilight_gateway::stream::ShardRef;
+use twilight_interactions::command::{CommandInputData, CommandModel, CreateCommand};
 use twilight_model::{
-    channel::Message,
-    gateway::payload::{incoming::MessageCreate, outgoing::UpdateVoiceState},
+    application::{command::Command, interaction::Interaction},
+    gateway::payload::outgoing::UpdateVoiceState,
+    id::{marker::ChannelMarker, Id},
 };
+use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::State;
+use crate::{functions::get_interaction_data, luro::Luro};
 
-pub async fn join(msg: Box<MessageCreate>, state: State, mut shard: ShardRef<'_>) -> anyhow::Result<()> {
-    state
-        .twilight_client
-        .create_message(msg.channel_id)
-        .content("What's the channel ID you want me to join?")?
-        .await?;
+use super::create_response;
 
-    let author_id = msg.author.id;
-    let msg = state
-        .twilight_standby
-        .wait_for_message(msg.channel_id, move |new_msg: &MessageCreate| {
-            new_msg.author.id == author_id
-        })
-        .await?;
-    let channel_id = msg.content.parse()?;
-    let guild_id = msg.guild_id.expect("known to be present");
+pub fn commands() -> Vec<Command> {
+    vec![JoinCommand::create_command().into()]
+}
 
-    shard.command(&UpdateVoiceState::new(
-        guild_id,
-        Some(channel_id),
-        false,
-        false,
-    ));
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "join",
+    desc = "Get me to join a voice channel to play some music!",
+    dm_permission = false
+)]
+pub struct JoinCommand {
+    /// The channel to join
+    #[command(channel_types = "guild_voice guild_stage_voice")]
+    channel: Id<ChannelMarker>,
+}
 
-    state
-        .twilight_client
-        .create_message(msg.channel_id)
-        .content(&format!("Joined <#{channel_id}>!"))?
+pub async fn join(
+    luro: &Luro,
+    interaction: &Interaction,
+    mut shard: ShardRef<'_>,
+) -> Result<(), Error> {
+    tracing::debug!(
+        "join command in channel {} by {}",
+        interaction.channel_id.unwrap(),
+        interaction.user.clone().unwrap().name
+    );
+
+    let data = JoinCommand::from_interaction(CommandInputData::from(
+        *get_interaction_data(interaction).await?,
+    ))?;
+
+    let guild_id = interaction.guild_id.unwrap();
+
+    let response =
+        InteractionResponseDataBuilder::new().content(format!("Joined <#{}>!", data.channel));
+    create_response(luro, interaction, response.build()).await?;
+
+    shard
+        .command(&UpdateVoiceState::new(
+            guild_id,
+            Some(data.channel),
+            false,
+            false,
+        ))
         .await?;
 
     Ok(())

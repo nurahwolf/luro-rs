@@ -1,5 +1,5 @@
 use twilight_lavalink::model::Pause;
-use twilight_model::{channel::Message, gateway::payload::incoming::MessageCreate};
+use twilight_model::gateway::payload::incoming::MessageCreate;
 
 use crate::State;
 
