@@ -15,11 +15,7 @@ use super::create_response;
     desc = "Stop the currently playing track",
     dm_permission = false
 )]
-pub struct StopCommand {
-    /// Sets the volume between 0 and 1000! 100 is the default
-    #[command(min_value = 0, max_value = 1000)]
-    volume: i64,
-}
+pub struct StopCommand {}
 
 pub async fn stop(luro: &Luro, interaction: &Interaction) -> Result<(), Error> {
     tracing::debug!(

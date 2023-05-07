@@ -15,7 +15,9 @@ use twilight_model::{
 use crate::luro::Luro;
 
 mod boop;
+mod heck;
 mod hello;
+mod moderator;
 mod music;
 
 pub fn commands() -> Vec<Command> {
@@ -23,6 +25,8 @@ pub fn commands() -> Vec<Command> {
     cmds.extend(hello::commands());
     cmds.extend(music::commands());
     cmds.extend(boop::commands());
+    cmds.extend(heck::commands());
+    cmds.extend(moderator::commands());
     cmds
 }
 
@@ -46,6 +50,8 @@ pub async fn handle_command(
         "music" => music::music(luro, interaction, shard).await,
         "boop" => boop::boop_command(luro, interaction).await,
         "boopv2" => boop::boop_command_v2(luro, interaction).await,
+        "heck" => heck::heck(luro, interaction).await,
+        "mod" => moderator::moderator(luro, interaction).await,
         _ => Ok(()),
     };
     if let Err(e) = res {
@@ -63,12 +69,10 @@ pub async fn handle_component(
         .as_ref()
         .and_then(|m| m.interaction.as_ref())
     {
-        Some(msg) => {
-            match msg.name.as_str() {
-                "boop" => boop::boop_button(luro, interaction, component).await,
-                "boopv2" => boop::boop_button_v2(luro, interaction, component).await,
-                _ => Ok(()),
-            }
+        Some(msg) => match msg.name.as_str() {
+            "boop" => boop::boop_button(luro, interaction, component).await,
+            "boopv2" => boop::boop_button_v2(luro, interaction, component).await,
+            _ => Ok(()),
         },
         _ => Ok(()),
     };

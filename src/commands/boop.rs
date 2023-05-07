@@ -2,7 +2,10 @@ use anyhow::Result;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
-    application::{command::Command, interaction::{Interaction, message_component::MessageComponentInteractionData}},
+    application::{
+        command::Command,
+        interaction::{message_component::MessageComponentInteractionData, Interaction},
+    },
     channel::message::component::{ActionRow, Button, ButtonStyle, Component},
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
 };
@@ -12,8 +15,10 @@ use crate::luro::Luro;
 use super::create_response;
 
 pub fn commands() -> Vec<Command> {
-    vec![BoopCommand::create_command().into(),
-    BoopCommandV2::create_command().into()]
+    vec![
+        BoopCommand::create_command().into(),
+        BoopCommandV2::create_command().into(),
+    ]
 }
 
 #[derive(CommandModel, CreateCommand)]
@@ -52,7 +57,11 @@ pub async fn boop_command(luro: &Luro, interaction: &Interaction) -> Result<()> 
     Ok(())
 }
 
-pub async fn boop_button(luro: &Luro, interaction: &Interaction, component: &MessageComponentInteractionData) -> Result<()> {
+pub async fn boop_button(
+    luro: &Luro,
+    interaction: &Interaction,
+    _component: &MessageComponentInteractionData,
+) -> Result<()> {
     // Get message and parse number
     let message = interaction.message.clone().unwrap();
 
@@ -99,26 +108,30 @@ pub async fn boop_command_v2(luro: &Luro, interaction: &Interaction) -> Result<(
     }
 
     let response = InteractionResponseData {
-            components: Some(Vec::from([Component::ActionRow(ActionRow {
-                components: Vec::from([Component::Button(Button {
-                    custom_id: Some(String::from("boopv2")),
-                    disabled: false,
-                    emoji: None,
-                    label: Some(String::from("Boop Me!")),
-                    style: ButtonStyle::Primary,
-                    url: None,
-                })]),
-            })])),
-            content: Some(format!("Boop Count: {boop}")),
-            ..Default::default()
-        };
+        components: Some(Vec::from([Component::ActionRow(ActionRow {
+            components: Vec::from([Component::Button(Button {
+                custom_id: Some(String::from("boopv2")),
+                disabled: false,
+                emoji: None,
+                label: Some(String::from("Boop Me!")),
+                style: ButtonStyle::Primary,
+                url: None,
+            })]),
+        })])),
+        content: Some(format!("Boop Count: {boop}")),
+        ..Default::default()
+    };
 
     create_response(luro, interaction, response).await?;
 
     Ok(())
 }
 
-pub async fn boop_button_v2(luro: &Luro, interaction: &Interaction, component: &MessageComponentInteractionData) -> Result<()> {
+pub async fn boop_button_v2(
+    luro: &Luro,
+    interaction: &Interaction,
+    _component: &MessageComponentInteractionData,
+) -> Result<()> {
     let boop: usize;
 
     {

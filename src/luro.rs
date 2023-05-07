@@ -10,7 +10,11 @@ use twilight_lavalink::Lavalink;
 use twilight_model::oauth::Application;
 use twilight_standby::Standby;
 
-use crate::{commands::commands, data::LuroData};
+use crate::{
+    commands::commands,
+    data::{hecks::Hecks, LuroData},
+    HECK_FILE_PATH,
+};
 
 pub struct Luro {
     pub application: Application,
@@ -20,6 +24,7 @@ pub struct Luro {
     pub lavalink: Lavalink,
     pub hyper_client: hyper::Client<HttpConnector>,
     pub data: LuroData,
+    pub redis_connection: redis::aio::Connection,
 }
 
 impl Luro {
@@ -38,7 +43,10 @@ impl Luro {
             env::var("DISCORD_TOKEN").expect("No DISCORD_TOKEN defined"),
             env::var("LAVALINK_HOST").expect("No LAVALINK_HOST defined"),
             env::var("LAVALINK_AUTHORISATION").expect("No LAVALINK_AUTHORISATION defined"),
-            Intents::GUILD_MESSAGES | Intents::GUILD_VOICE_STATES | Intents::MESSAGE_CONTENT,
+            Intents::GUILD_MESSAGES
+                | Intents::GUILD_VOICE_STATES
+                | Intents::MESSAGE_CONTENT
+                | Intents::GUILD_INVITES,
         );
 
         let (twilight_client, config) = (
@@ -74,7 +82,10 @@ impl Luro {
             global_commands,
             guild_settings: HashMap::new().into(),
             boop: 0.into(),
+            hecks: Hecks::get(HECK_FILE_PATH).await?.into(),
         };
+
+        let redis_connection = Luro::get_db().await?.get_async_connection().await?;
 
         Ok((
             Self {
@@ -85,6 +96,7 @@ impl Luro {
                 lavalink,
                 hyper_client,
                 data,
+                redis_connection,
             }
             .into(),
             shards,

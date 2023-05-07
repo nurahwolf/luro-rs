@@ -1,8 +1,10 @@
+use core::fmt;
+
 #[derive(Debug)]
 pub enum LuroError {
     NoInteractionData,
     NoApplicationCommand,
-    NoMessageInteractionData
+    NoMessageInteractionData,
 }
 
 impl std::error::Error for LuroError {}
@@ -16,6 +18,7 @@ impl fmt::Display for LuroError {
                 f,
                 "No ApplicationCommand was found in the interaction's data"
             ),
+            _ => write!(f, "Error description not written yet"),
         }
     }
 }

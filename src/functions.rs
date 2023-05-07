@@ -10,3 +10,5 @@ pub async fn get_interaction_data(interaction: &Interaction) -> Result<Box<Comma
 
     Err(Error::msg("No interaction data"))
 }
+
+pub mod get_guild_avatar;
