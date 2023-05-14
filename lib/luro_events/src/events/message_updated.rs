@@ -20,7 +20,7 @@ pub async fn message_updated(
         }
     }
 
-    if &event.channel_id == 1050488569258573896 {
+    if &event.channel_id.0 == 1050488569258573896 {
         debug!("Message was sent in a private guild where we should NOT log!");
         return Ok(());
     }
