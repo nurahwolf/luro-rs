@@ -20,6 +20,11 @@ pub async fn message_updated(
         }
     }
 
+    if &event.channel_id == 1050488569258573896 {
+        debug!("Message was sent in a private guild where we should NOT log!");
+        return Ok(());
+    }
+
     if let Some(guild_id) = event.guild_id && event.content.is_some() {
         if let Some(alert_channel) = discod_event_log_channel_defined(&guild_id, user_data, ctx).await {
             let guild = guild_id.to_guild_cached(ctx);
