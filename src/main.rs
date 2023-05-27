@@ -74,7 +74,7 @@ async fn main() {
                 | GatewayIntents::GUILD_MEMBERS
                 | GatewayIntents::GUILD_PRESENCES
         )
-        .run()
+        .run_autosharded()
         .await
     {
         Ok(_) => println!("Luro has started!"),
