@@ -5,7 +5,7 @@ use twilight_lavalink::model::Volume;
 use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::luro::Luro;
+use crate::models::luro::Luro;
 
 use super::create_response;
 
@@ -28,7 +28,7 @@ pub async fn volume(
 ) -> Result<(), Error> {
     tracing::debug!(
         "volume command in channel {} by {}",
-        interaction.channel_id.unwrap(),
+        interaction.channel.clone().unwrap().name.unwrap(),
         interaction.user.clone().unwrap().name
     );
 

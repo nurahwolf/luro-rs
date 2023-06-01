@@ -5,7 +5,7 @@ use twilight_lavalink::model::Seek;
 use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::luro::Luro;
+use crate::models::luro::Luro;
 
 use super::create_response;
 
@@ -19,7 +19,7 @@ pub struct SeekCommand {
 pub async fn seek(luro: &Luro, interaction: &Interaction, data: SeekCommand) -> Result<(), Error> {
     tracing::debug!(
         "seek command in channel {} by {}",
-        interaction.channel_id.unwrap(),
+        interaction.channel.clone().unwrap().name.unwrap(),
         interaction.user.clone().unwrap().name
     );
 

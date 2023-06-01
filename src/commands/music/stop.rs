@@ -5,7 +5,7 @@ use twilight_lavalink::model::Stop;
 use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::luro::Luro;
+use crate::models::luro::Luro;
 
 use super::create_response;
 
@@ -20,7 +20,7 @@ pub struct StopCommand {}
 pub async fn stop(luro: &Luro, interaction: &Interaction) -> Result<(), Error> {
     tracing::debug!(
         "stop command in channel {} by {}",
-        interaction.channel_id.unwrap(),
+        interaction.channel.clone().unwrap().name.unwrap(),
         interaction.user.clone().unwrap().name
     );
 

@@ -1,12 +1,7 @@
 use twilight_model::{
     application::interaction::application_command::InteractionMember,
-    guild::Member,
-    id::{
-        marker::{GuildMarker, UserMarker},
-        Id,
-    },
+    id::{marker::GuildMarker, Id},
     user::User,
-    util::ImageHash,
 };
 
 pub fn assemble_user_avatar(user: &User) -> String {

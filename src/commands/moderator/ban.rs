@@ -9,7 +9,7 @@ use twilight_util::builder::{
 use crate::{
     commands::create_response,
     functions::get_guild_avatar::{get_member_avatar, get_user_avatar},
-    luro::Luro,
+    models::luro::Luro,
     ACCENT_COLOUR,
 };
 

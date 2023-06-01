@@ -1,22 +1,42 @@
 use std::sync::Arc;
 
 use anyhow::Error;
-use tracing::{info, warn};
+use tracing::info;
 use twilight_model::gateway::payload::incoming::Ready;
 
-use crate::{commands, luro::Luro};
+use crate::{event_handler::send_event_embed, models::luro::Luro};
 
 pub async fn ready_listener(luro: Arc<Luro>, ready: Box<Ready>) -> Result<(), Error> {
     info!("Luro is now ready!");
     info!("Username: {} ({})", ready.user.name, ready.user.id);
 
-    let interaction = luro.twilight_client.interaction(luro.application.id);
+    send_event_embed(
+        luro.clone(),
+        "Ready".to_string(),
+        format!("Luro is now ready: {:?}", ready),
+    )
+    .await?;
 
-    match commands::register_global_commands(&interaction, luro.data.global_commands.clone()).await
-    {
-        Ok(commands) => info!("Registered {} global commands", commands.len()),
-        Err(why) => warn!("Failed to register global commands - {why}"),
-    };
+    // match luro.application.try_read() {
+    //     Ok(application_data) => {
+    //         let interaction_client = luro.twilight_client.interaction(application_data.id);
+
+    //         match luro.global_commands.try_read() {
+    //             Ok(commands) => {
+    //                 match commands::register_global_commands(&interaction_client, commands.clone())
+    //                     .await
+    //                 {
+    //                     Ok(commands) => info!("Registered {} global commands", commands.len()),
+    //                     Err(why) => warn!("Failed to register global commands - {why}"),
+    //                 };
+    //             }
+    //             Err(why) => warn!(?why, "Failed to get the list of global commands"),
+    //         };
+    //     }
+    //     Err(why) => {
+    //         warn!("Failed to read application data, no commands were registered: {why}")
+    //     }
+    // }
 
     Ok(())
 }

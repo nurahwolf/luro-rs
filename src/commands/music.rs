@@ -1,10 +1,12 @@
 use anyhow::Error;
-use twilight_gateway::stream::ShardRef;
+use twilight_gateway::MessageSender;
+
 use twilight_interactions::command::{CommandInputData, CommandModel, CreateCommand};
 
 use twilight_model::application::{command::Command, interaction::Interaction};
 
-use crate::{functions::get_interaction_data, luro::Luro};
+use crate::functions::get_interaction_data;
+use crate::models::luro::Luro;
 
 use self::pause::PauseCommand;
 use self::seek::SeekCommand;
@@ -55,7 +57,7 @@ enum MusicCommands {
 pub async fn music(
     luro: &Luro,
     interaction: &Interaction,
-    shard: ShardRef<'_>,
+    shard: MessageSender,
 ) -> Result<(), Error> {
     let data = MusicCommands::from_interaction(CommandInputData::from(
         *get_interaction_data(interaction).await?,

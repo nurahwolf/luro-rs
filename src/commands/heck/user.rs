@@ -12,7 +12,7 @@ use crate::{
         heck::{format_heck, get_heck},
     },
     functions::get_guild_avatar::{get_member_avatar, get_user_avatar},
-    luro::Luro,
+    models::luro::Luro,
     ACCENT_COLOUR,
 };
 
@@ -30,19 +30,19 @@ pub async fn user(
 ) -> Result<(), Error> {
     tracing::debug!(
         "heck user command in channel {} by {}",
-        interaction.channel_id.unwrap(),
+        interaction.channel.clone().unwrap().name.unwrap(),
         interaction.user.clone().unwrap().name
     );
 
     let channel = luro
         .twilight_client
-        .channel(interaction.channel_id.unwrap())
+        .channel(interaction.channel.clone().unwrap().id)
         .await?
         .model()
         .await?;
     let nsfw = channel.nsfw.unwrap_or(false);
 
-    let (heck, heck_id) = get_heck(&luro.data, None, nsfw).await;
+    let (heck, heck_id) = get_heck(&luro.global_command_data, None, nsfw).await?;
     let author = luro
         .twilight_client
         .user(Id::new(heck.author_id))

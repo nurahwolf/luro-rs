@@ -3,13 +3,13 @@ use twilight_interactions::command::{CommandInputData, CommandModel, CreateComma
 
 use twilight_model::application::{command::Command, interaction::Interaction};
 
-use crate::{functions::get_interaction_data, luro::Luro};
+use crate::functions::get_interaction_data;
+use crate::models::luro::Luro;
 
 use self::ban::BanCommand;
 use self::kick::KickCommand;
 use crate::commands::moderator::ban::ban;
 use crate::commands::moderator::kick::kick;
-
 
 mod ban;
 mod kick;
@@ -35,7 +35,6 @@ pub async fn moderator(luro: &Luro, interaction: &Interaction) -> Result<(), Err
     match data {
         ModeratorCommands::Ban(data) => ban(luro, interaction, data).await,
         ModeratorCommands::Kick(data) => kick(luro, interaction, data).await,
-
     }?;
 
     Ok(())

@@ -1,6 +1,6 @@
-use std::{collections::HashMap, env, net::SocketAddr, str::FromStr, sync::Arc};
+use std::{collections::HashMap, env, net::SocketAddr, str::FromStr};
 
-use anyhow::Error;
+use anyhow::{Context, Error};
 use hyper::client::HttpConnector;
 
 use twilight_cache_inmemory::InMemoryCache;
@@ -10,12 +10,9 @@ use twilight_lavalink::Lavalink;
 use twilight_model::oauth::Application;
 use twilight_standby::Standby;
 
-use crate::{
-    commands::commands,
-    data::{hecks::Hecks, LuroData},
-    HECK_FILE_PATH,
-};
+use crate::{commands::commands, data::LuroData, models::hecks::Hecks, HECK_FILE_PATH};
 
+#[derive(Debug)]
 pub struct Luro {
     pub application: Application,
     pub twilight_client: twilight_http::Client,
@@ -24,7 +21,6 @@ pub struct Luro {
     pub lavalink: Lavalink,
     pub hyper_client: hyper::Client<HttpConnector>,
     pub data: LuroData,
-    pub redis_connection: redis::aio::Connection,
 }
 
 impl Luro {
@@ -38,11 +34,12 @@ impl Luro {
     //         .find_map(|command| (command.name == command_name).then_some(command.id?))
     // }
 
-    pub async fn default() -> Result<(Arc<Self>, Vec<Shard>), Error> {
+    pub async fn default() -> Result<(Self, Vec<Shard>), Error> {
         let (token, lavalink_host, lavalink_auth, intents) = (
-            env::var("DISCORD_TOKEN").expect("No DISCORD_TOKEN defined"),
-            env::var("LAVALINK_HOST").expect("No LAVALINK_HOST defined"),
-            env::var("LAVALINK_AUTHORISATION").expect("No LAVALINK_AUTHORISATION defined"),
+            env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
+            env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
+            env::var("LAVALINK_AUTHORISATION")
+                .context("Failed to get the variable LAVALINK_AUTHORISATION")?,
             Intents::GUILD_MESSAGES
                 | Intents::GUILD_VOICE_STATES
                 | Intents::MESSAGE_CONTENT
@@ -85,8 +82,6 @@ impl Luro {
             hecks: Hecks::get(HECK_FILE_PATH).await?.into(),
         };
 
-        let redis_connection = Luro::get_db().await?.get_async_connection().await?;
-
         Ok((
             Self {
                 application,
@@ -96,9 +91,7 @@ impl Luro {
                 lavalink,
                 hyper_client,
                 data,
-                redis_connection,
-            }
-            .into(),
+            },
             shards,
         ))
     }

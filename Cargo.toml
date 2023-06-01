@@ -7,12 +7,14 @@ edition = "2021"
 
 [dependencies]
 # Core
-tokio = { features = ["macros", "rt-multi-thread", "fs"], version = "1" } # Our multithreaded runner
+tokio = { features = ["macros", "rt-multi-thread", "sync", "time", "signal", "fs"], version = "1" } # Our multithreaded runner
 anyhow = { version = "1.0", features = ["backtrace"] } # For errors
 futures = { default-features = false, version = "0.3"} 
+futures-util = { default-features = false, version = "0.3"} 
+
 tracing = "0.1" # More helpful error messages
-tracing-subscriber = "0.3" # For the twilight runtime
-redis = { version = "0.23.0", features = ["aio", "tokio-comp"] }
+tracing-subscriber = { version = "0.3.16", features = ["std", "fmt", "ansi"], default-features = false }
+redis = { version = "0.23.0", features = ["tokio-comp"], default-features = false }
 dotenv = "0.15.0"
 
 # For features
@@ -34,3 +36,27 @@ twilight-standby = "0.15"
 twilight-lavalink = "0.15"
 twilight-util = {version = "0.15", features = ["builder"]}
 bincode = "1.3.3"
+
+###
+# ADDED
+async-trait = "0.1.58"
+
+# Models
+serde_with = "3.0.0"
+time = "0.3.15"
+url = { version = "2.3.1", features = ["serde"] }
+
+# Redis (client + serialization)
+bb8 = "0.8.0"
+bb8-redis = "0.13.0"
+# redis = { version = "0.22.1", features = ["tokio-comp"], default-features = false }
+rmp-serde = "1.1.1"
+
+# Twilight
+twilight-validate = "0.15"
+
+# Configuration
+envy = "0.4.2"
+tracing-appender = "0.2.2"
+tokio-scoped = "0.2.0"
+zephyrus = "0.9.0"

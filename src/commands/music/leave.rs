@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-use twilight_gateway::stream::ShardRef;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Destroy;
 use twilight_model::{
@@ -8,7 +8,7 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::luro::Luro;
+use crate::models::luro::Luro;
 
 use super::create_response;
 
@@ -19,11 +19,11 @@ pub struct LeaveCommand {}
 pub async fn leave(
     luro: &Luro,
     interaction: &Interaction,
-    mut shard: ShardRef<'_>,
+    shard: MessageSender,
 ) -> Result<(), Error> {
     tracing::debug!(
         "leave command in channel {} by {}",
-        interaction.channel_id.unwrap(),
+        interaction.channel.clone().unwrap().name.unwrap(),
         interaction.user.clone().unwrap().name
     );
 
@@ -34,9 +34,7 @@ pub async fn leave(
     let response = InteractionResponseDataBuilder::new().content("Left the channel. Goodbye!");
     create_response(luro, interaction, response.build()).await?;
 
-    shard
-        .command(&UpdateVoiceState::new(guild_id, None, false, false))
-        .await?;
+    shard.command(&UpdateVoiceState::new(guild_id, None, false, false))?;
 
     Ok(())
 }

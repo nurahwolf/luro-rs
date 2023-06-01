@@ -9,7 +9,7 @@ use twilight_util::builder::{
     command::CommandBuilder, embed::EmbedBuilder, InteractionResponseDataBuilder,
 };
 
-use crate::{functions::get_interaction_data, luro::Luro};
+use crate::{functions::get_interaction_data, models::luro::Luro};
 
 use super::create_response;
 

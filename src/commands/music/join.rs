@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-use twilight_gateway::stream::ShardRef;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use twilight_model::{
@@ -10,7 +10,7 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::luro::Luro;
+use crate::models::luro::Luro;
 
 use super::create_response;
 
@@ -29,12 +29,12 @@ pub struct JoinCommand {
 pub async fn join(
     luro: &Luro,
     interaction: &Interaction,
-    mut shard: ShardRef<'_>,
+    shard: MessageSender,
     data: JoinCommand,
 ) -> Result<(), Error> {
     tracing::debug!(
         "join command in channel {} by {}",
-        interaction.channel_id.unwrap(),
+        interaction.channel.clone().unwrap().name.unwrap(),
         interaction.user.clone().unwrap().name
     );
 
@@ -44,14 +44,12 @@ pub async fn join(
         InteractionResponseDataBuilder::new().content(format!("Joined <#{}>!", data.channel));
     create_response(luro, interaction, response.build()).await?;
 
-    shard
-        .command(&UpdateVoiceState::new(
-            guild_id,
-            Some(data.channel),
-            false,
-            false,
-        ))
-        .await?;
+    shard.command(&UpdateVoiceState::new(
+        guild_id,
+        Some(data.channel),
+        false,
+        false,
+    ))?;
 
     Ok(())
 }

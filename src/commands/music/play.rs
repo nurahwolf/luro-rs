@@ -7,7 +7,7 @@ use twilight_lavalink::{http::LoadedTracks, model::Play};
 use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::luro::Luro;
+use crate::models::luro::Luro;
 
 use super::create_response;
 
@@ -25,7 +25,7 @@ pub struct PlayCommand {
 pub async fn play(luro: &Luro, interaction: &Interaction, data: PlayCommand) -> Result<(), Error> {
     tracing::debug!(
         "play command in channel {} by {}",
-        interaction.channel_id.unwrap(),
+        interaction.channel.clone().unwrap().name.unwrap(),
         interaction.user.clone().unwrap().name
     );
 

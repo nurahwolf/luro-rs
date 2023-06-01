@@ -1,15 +1,19 @@
 #![feature(let_chains)]
 
 use futures::StreamExt;
-use luro::Luro;
-use twilight_gateway::stream::ShardEventStream;
+use futures_util::Future;
+use tracing::info;
+use twilight_gateway::{stream::ShardEventStream};
+
+use crate::{event_handler::handle_event, models::luro::Luro};
 
 pub mod commands;
 pub mod data;
-pub mod errors;
 pub mod event_handler;
 pub mod functions;
 pub mod luro;
+pub mod models;
+pub mod util;
 
 /// Used for setting what environment variable Luro listens for. Defaults to "LURO_TOKEN".
 pub const BOT_TOKEN: &str = "LURO_TOKEN";
@@ -46,20 +50,15 @@ pub const ACCENT_COLOUR: u32 = 0xDABEEF;
 async fn main() -> anyhow::Result<()> {
     // Initialise the tracing subscriber.
     tracing_subscriber::fmt::init();
-
     tracing::info!("Booting Luro!");
-    let (luro, mut shards) = Luro::default().await?;
 
+    let (luro, mut shards) = Luro::new().await?;
     let mut stream = ShardEventStream::new(shards.iter_mut());
 
-    while let Some((shard, event)) = stream.next().await {
-        match event {
-            Ok(event) => {
-                if let Err(why) = luro.clone().handle_event(event, shard).await {
-                    tracing::warn!(?why, "error handling event");
-                };
-            }
-            Err(source) => {
+    loop {
+        let (shard, event) = match stream.next().await {
+            Some((shard, Ok(event))) => (shard, event),
+            Some((_shard, Err(source))) => {
                 tracing::warn!(?source, "error receiving event");
 
                 if source.is_fatal() {
@@ -68,8 +67,20 @@ async fn main() -> anyhow::Result<()> {
 
                 continue;
             }
+            None => break,
         };
+
+        spawn(handle_event(luro.clone(), event, shard.sender()));
     }
 
+    info!("Shutting down!");
     Ok(())
+}
+
+fn spawn(future: impl Future<Output = anyhow::Result<()>> + Send + 'static) {
+    tokio::spawn(async move {
+        if let Err(why) = future.await {
+            tracing::warn!("handler error: {why:?}");
+        }
+    });
 }
