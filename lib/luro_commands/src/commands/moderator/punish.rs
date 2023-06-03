@@ -21,6 +21,7 @@ pub async fn punish(
     #[description = "The reason they should be punished"] reason: String,
     #[description = "Purge message history in days from 1 to 7, defaults to 1 if not set"] purge: Option<u8>
 ) -> Result<(), Error> {
+    let dm_message;
     let mut embed = CreateEmbed::default();
     let accent_colour = ctx.data().config.read().await.accent_colour;
     let guild = match ctx.guild() {
@@ -127,6 +128,24 @@ pub async fn punish(
             {
                 let purge_length = purge.unwrap_or(1);
 
+                embed.title("BANNED!");
+                embed.description(format!(
+                    "Looks like {} got banned. How unfortunate.",
+                    victim_member.display_name()
+                ));
+                embed.field("Purged History", format!("{purge_length} days"), true);
+
+                // Attempt to DM the person their punishment
+                dm_message = victim_member
+                    .user
+                    .direct_message(ctx, |message| {
+                        message.add_embed(|e| {
+                            *e = embed.clone();
+                            e
+                        })
+                    })
+                    .await;
+
                 match victim_member.ban_with_reason(ctx, purge_length, reason).await {
                     Ok(ok) => ok,
                     Err(err) => {
@@ -135,13 +154,6 @@ pub async fn punish(
                         return Ok(());
                     }
                 };
-
-                embed.title("BANNED!");
-                embed.description(format!(
-                    "Looks like {} got banned. How unfortunate.",
-                    victim_member.display_name()
-                ));
-                embed.field("Purged History", format!("{purge_length} days"), true);
             } else {
                 ctx.say("Nice try, but you don't have permission to ban `[BAN_MEMBERS]`.")
                     .await?;
@@ -159,6 +171,23 @@ pub async fn punish(
                 || author_permissions.kick_members()
                 || moderator_override
             {
+                embed.title("Kicked");
+                embed.description(format!(
+                    "Looks like {} got kicked. Seems they are not wanted around these parts.",
+                    victim_member.display_name()
+                ));
+
+                // Attempt to DM the person their punishment
+                dm_message = victim_member
+                    .user
+                    .direct_message(ctx, |message| {
+                        message.add_embed(|e| {
+                            *e = embed.clone();
+                            e
+                        })
+                    })
+                    .await;
+
                 match victim_member.kick_with_reason(ctx, &reason).await {
                     Ok(ok) => ok,
                     Err(err) => {
@@ -167,12 +196,6 @@ pub async fn punish(
                         return Ok(());
                     }
                 };
-
-                embed.title("Kicked");
-                embed.description(format!(
-                    "Looks like {} got kicked. Seems they are not wanted around these parts.",
-                    victim_member.display_name()
-                ));
             } else {
                 ctx.say("Nice try, but you don't have permission to kick `[KICK_MEMBERS]`.")
                     .await?;
@@ -208,12 +231,37 @@ pub async fn punish(
                     "Looks like {} got muzzled. Maybe now they will learn to shut the fuck up.",
                     victim_member.display_name()
                 ));
+
+                // Attempt to DM the person their punishment
+                dm_message = victim_member
+                    .user
+                    .direct_message(ctx, |message| {
+                        message.add_embed(|e| {
+                            *e = embed.clone();
+                            e
+                        })
+                    })
+                    .await;
             } else {
                 ctx.say("Nice try, but you don't have permission to timeout `[MODERATE_MEMBERS]`.")
                     .await?;
                 return Ok(());
             }
         }
+    };
+
+    // Add a success message
+    match dm_message {
+        Ok(_) => embed.field(
+            "DM Sent",
+            "The victim was successfully told their fate. Maybe they will listen now.",
+            false
+        ),
+        Err(_) => embed.field(
+            "DM Failed",
+            "The victim was not successfully told of their fate. Blame Nurah.",
+            false
+        )
     };
 
     ctx.send(|b| {
