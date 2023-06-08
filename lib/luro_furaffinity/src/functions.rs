@@ -65,6 +65,12 @@ pub fn components(furaffinity: &FurAffinity, disabled: bool) -> CreateComponents
                     .disabled(disabled)
             });
         }
+        row.create_button(|button| {
+            button
+                .custom_id("delete")
+                .label("Delete Message")
+                .style(ButtonStyle::Danger)
+        });
         row
     });
     components

@@ -200,6 +200,10 @@ pub async fn event_furaffinity(
                 Err(err) => panic!("Furaffinity: Had a fuckywucky: {err}")
             }
         }
+
+        if interaction.data.custom_id.contains("delete") && interaction.user.id == message.author.id {
+            let _ = reply_handle.delete(ctx).await;
+        }
     }
 
     match reply_handle
