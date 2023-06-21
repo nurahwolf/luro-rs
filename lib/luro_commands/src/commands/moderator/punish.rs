@@ -94,6 +94,8 @@ pub async fn punish(
         }
     };
 
+    ctx.defer().await?;
+
     // Set embed defaults
     embed.color(guild_accent_colour(accent_colour, ctx.guild()));
     embed.thumbnail(victim_member.clone().avatar.unwrap_or_default());
