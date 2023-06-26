@@ -9,7 +9,7 @@ edition = "2021"
 poise = "0.5"
 tokio = "1"
 uwuify = "0.2.2" # Used for the uwuify command
-itertools = "0.10" # Used for iterating through a bunch of loops
+itertools = "0.11" # Used for iterating through a bunch of loops
 tracing = "0.1" # Useful for logs and I should use it some more. It's required by a bunch of dependencies, so might as well make use of it.
 chrono = "0.4" # TODO: Ideally to be replaced with by time, but lastfm, serenity, poise and songbird depend on it
 reqwest = { version = "0.11", features = [
