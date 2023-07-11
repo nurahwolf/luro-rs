@@ -14,5 +14,5 @@ poise = "0.5"
 serde = { version = "1", default-features = false, features = [
     "derive",
 ] }
-toml = { version = "0.7.4" }
+toml = { version = "0.7.6" }
 
