@@ -11,7 +11,7 @@ pub struct Heck {
 
 /// Structure for `heck.toml`
 /// We have two hecks, one that is slowly drained (so we only get a heck once) and another used to get explicit hecks.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Hecks {
     /// A vector containing all SFW hecks
     pub sfw_hecks: Vec<Heck>,

@@ -1,8 +1,8 @@
 #![feature(let_chains)]
 
-use std::{env, sync::Arc};
 use anyhow::Context;
 use futures_util::StreamExt;
+use std::{env, sync::Arc};
 use twilight_gateway::{stream::ShardEventStream, Intents};
 
 use crate::{commands::Commands, framework::LuroFramework};
@@ -12,10 +12,10 @@ pub mod event_handler;
 pub mod framework;
 pub mod functions;
 pub mod guild;
+pub mod hecks;
 pub mod interactions;
 pub mod macros;
 pub mod permissions;
-pub mod hecks;
 pub mod responses;
 
 /// Luro's main accent colour
@@ -92,11 +92,15 @@ async fn main() -> anyhow::Result<()> {
                 tracing::warn!(?error, "error while receiving event");
                 continue;
             }
-            Ok(event) => event
+            Ok(event) => event,
         };
 
-        tokio::spawn(LuroFramework::handle_event(luro.clone(), event, shard.sender()));
-    };
+        tokio::spawn(LuroFramework::handle_event(
+            luro.clone(),
+            event,
+            shard.sender(),
+        ));
+    }
 
     Ok(())
 }

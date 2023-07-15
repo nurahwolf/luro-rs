@@ -11,6 +11,8 @@ impl LuroFramework {
 
         self.register_commands(self.application.id).await?;
 
+        info!("Attempting to register guild settings");
+
         // match luro.application.try_read() {
         //     Ok(application_data) => {
         //         let interaction_client = luro.twilight_client.interaction(application_data.id);

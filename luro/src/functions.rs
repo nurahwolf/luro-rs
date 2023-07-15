@@ -4,7 +4,7 @@ use std::{fmt::Display, str::FromStr};
 use anyhow::{bail, Error};
 use twilight_http::client::InteractionClient;
 use twilight_model::{
-    application::interaction::{Interaction, application_command::InteractionMember},
+    application::interaction::{application_command::InteractionMember, Interaction},
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;

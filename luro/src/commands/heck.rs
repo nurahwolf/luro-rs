@@ -1,4 +1,4 @@
-use anyhow::{Context};
+use anyhow::Context;
 use parking_lot::RwLock;
 use rand::Rng;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -11,18 +11,13 @@ use twilight_model::{
     user::User,
 };
 
-use crate::{
-    framework::{GlobalData},
-    hecks::Heck,
-    interactions::InteractionResponse,
-    LuroContext,
-};
+use crate::{framework::GlobalData, hecks::Heck, interactions::InteractionResponse, LuroContext};
 
-use self::{add::HeckAddCommand, user::HeckUserCommand, info::HeckInfo};
+use self::{add::HeckAddCommand, info::HeckInfo, user::HeckUserCommand};
 
 mod add;
-mod user;
 mod info;
+mod user;
 
 pub fn commands() -> Vec<Command> {
     vec![HeckCommands::create_command().into()]
@@ -41,7 +36,6 @@ pub enum HeckCommands {
     User(HeckUserCommand),
     #[command(name = "info")]
     Info(HeckInfo),
-
 }
 
 impl HeckCommands {

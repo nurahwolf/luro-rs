@@ -7,14 +7,23 @@ use twilight_cache_inmemory::InMemoryCache;
 use twilight_gateway::{stream, ConfigBuilder, Intents, Shard};
 use twilight_http::{client::InteractionClient, Client};
 use twilight_lavalink::Lavalink;
-use twilight_model::{application::command::Command, oauth::Application};
+use twilight_model::{
+    application::command::Command,
+    id::{marker::GuildMarker, Id},
+    oauth::Application,
+};
 
-use crate::{commands::Commands, guild::Guild, hecks::Hecks, HECK_FILE_PATH};
+use crate::{
+    commands::Commands,
+    guild::{LuroGuild, LuroGuilds},
+    hecks::Hecks,
+    HECK_FILE_PATH,
+};
 
 pub struct GlobalData {
     /// Simply used as a test to make sure that data is shared across threads
     pub count: usize,
-    pub hecks: Hecks
+    pub hecks: Hecks,
 }
 
 /// The framework used to dispatch slash commands.
@@ -32,7 +41,7 @@ pub struct LuroFramework {
     /// A map of simple commands.
     pub commands: Commands,
     /// Guild specific stuff
-    pub guilds: HashMap<&'static str, Guild>,
+    pub guilds: RwLock<HashMap<Id<GuildMarker>, LuroGuild>>,
     /// Mutable data used throughout Luro
     pub global_data: RwLock<GlobalData>,
 }
@@ -72,7 +81,7 @@ impl LuroFramework {
         };
 
         let hyper_client = hyper::Client::new();
-        let guilds = Default::default();
+        let guilds = LuroGuilds::get().await?.guilds.into();
         let hecks = Hecks::get(HECK_FILE_PATH).await?;
         let global_data = GlobalData { count: 0, hecks }.into();
 
@@ -86,7 +95,8 @@ impl LuroFramework {
                 commands,
                 guilds,
                 global_data,
-            }.into(),
+            }
+            .into(),
             shards,
         ))
     }

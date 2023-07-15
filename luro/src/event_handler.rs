@@ -14,13 +14,14 @@ use twilight_model::{
 
 use crate::{
     commands::{
-        boop::BoopCommand, count::CountCommand, hello::HelloCommand, moderator::ModeratorCommands,
-        music::MusicCommands, say::SayCommand, heck::HeckCommands,
+        boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand,
+        moderator::ModeratorCommands, music::MusicCommands, say::SayCommand,
     },
     framework::LuroFramework,
     functions::CustomId,
     interactions::{InteractionResponder, InteractionResponse},
-    responses::embeds::{internal_error::internal_error, unknown_command::unknown_command}, LuroContext,
+    responses::embeds::{internal_error::internal_error, unknown_command::unknown_command},
+    LuroContext,
 };
 
 mod message_create;
@@ -29,7 +30,11 @@ mod message_update;
 mod ready;
 
 impl LuroFramework {
-    pub async fn handle_event(ctx: LuroContext, event: Event, shard: MessageSender) -> anyhow::Result<()> {
+    pub async fn handle_event(
+        ctx: LuroContext,
+        event: Event,
+        shard: MessageSender,
+    ) -> anyhow::Result<()> {
         ctx.lavalink.process(&event).await?;
 
         match event {
@@ -58,7 +63,9 @@ impl LuroFramework {
         debug!(id = ?interaction.id, "received {} interaction", interaction.kind.kind());
 
         let response = match interaction.kind {
-            InteractionType::ApplicationCommand => self.clone().handle_command(&interaction, shard).await,
+            InteractionType::ApplicationCommand => {
+                self.clone().handle_command(&interaction, shard).await
+            }
             InteractionType::MessageComponent => self.handle_component(&interaction).await,
             // InteractionType::ModalSubmit => handle_modal(interaction, ctx).await,
             other => {
@@ -74,7 +81,10 @@ impl LuroFramework {
                 error!(error = ?error, "error while processing interaction");
 
                 responder
-                    .respond(&self, internal_error(format!("```{}```", error.to_string())))
+                    .respond(
+                        &self,
+                        internal_error(format!("```{}```", error.to_string())),
+                    )
                     .await
             }
         }
@@ -105,7 +115,13 @@ impl LuroFramework {
             "mod" => Ok(ModeratorCommands::run(interaction, &self, data).await?),
             "music" => Ok(MusicCommands::run(interaction, &self, data, shard).await?),
             "boop" => Ok(BoopCommand::run().await?),
-            "heck" => Ok(HeckCommands::run(HeckCommands::from_interaction(data.clone().into())?, self, interaction, data).await?),
+            "heck" => Ok(HeckCommands::run(
+                HeckCommands::from_interaction(data.clone().into())?,
+                self,
+                interaction,
+                data,
+            )
+            .await?),
             name => {
                 warn!(name = name, "received unknown command");
 
@@ -135,7 +151,10 @@ impl LuroFramework {
     }
 
     /// Register commands to the Discord API.
-    pub async fn register_commands(&self, application_id: Id<ApplicationMarker>) -> anyhow::Result<()>{
+    pub async fn register_commands(
+        &self,
+        application_id: Id<ApplicationMarker>,
+    ) -> anyhow::Result<()> {
         let client = self.twilight_client.interaction(application_id);
 
         if let Err(error) = client
@@ -145,9 +164,18 @@ impl LuroFramework {
             error!(error = ?error, "failed to clear guild commands");
         };
 
-        match client.set_global_commands(&self.commands.global_commands.clone().into_values().collect::<Vec<Command>>()).await {
-            Ok(command_result) =>
-            Ok(info!(
+        match client
+            .set_global_commands(
+                &self
+                    .commands
+                    .global_commands
+                    .clone()
+                    .into_values()
+                    .collect::<Vec<Command>>(),
+            )
+            .await
+        {
+            Ok(command_result) => Ok(info!(
                 "Successfully registered {} global commands!",
                 command_result.model().await?.len()
             )),

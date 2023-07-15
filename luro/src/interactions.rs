@@ -159,7 +159,12 @@ impl InteractionResponse {
                     .build(),
             ),
             Self::Raw { data, .. } => data,
-            Self::Update { content, embeds, components, ephemeral } => {
+            Self::Update {
+                content,
+                embeds,
+                components,
+                ephemeral,
+            } => {
                 let mut response = InteractionResponseDataBuilder::new();
 
                 if ephemeral {
@@ -179,8 +184,7 @@ impl InteractionResponse {
                 }
 
                 Some(response.build())
-            },
-            
+            }
         };
 
         HttpInteractionResponse { kind, data }

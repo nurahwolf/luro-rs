@@ -1,4 +1,3 @@
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::Interaction,
@@ -16,16 +15,13 @@ use crate::interactions::InteractionResponse;
 pub struct HeckAddCommand {}
 
 impl HeckAddCommand {
-    pub async fn run(
-        &self,
-        interaction: &Interaction,
-    ) -> anyhow::Result<InteractionResponse> {
+    pub async fn run(&self, interaction: &Interaction) -> anyhow::Result<InteractionResponse> {
         tracing::debug!(
             "heck user command in channel {} by {}",
             interaction.channel.clone().unwrap().name.unwrap(),
             interaction.user.clone().unwrap().name
         );
-    
+
         let action_row = Component::ActionRow(ActionRow {
             components: vec![Component::SelectMenu(SelectMenu {
                 custom_id: "class_select_1".to_owned(),
@@ -71,6 +67,10 @@ impl HeckAddCommand {
             })],
         });
 
-        Ok(InteractionResponse::Text { content: "Work in progress".to_string(), components: Some(vec![action_row]), ephemeral: false })
+        Ok(InteractionResponse::Text {
+            content: "Work in progress".to_string(),
+            components: Some(vec![action_row]),
+            ephemeral: false,
+        })
     }
 }

@@ -1,7 +1,11 @@
+use std::convert::TryInto;
+
+use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{
     CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
 };
 use twilight_model::{application::interaction::Interaction, guild::Permissions};
+use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
     framework::LuroFramework,
@@ -156,40 +160,48 @@ impl BanCommand {
             }
         };
 
-        let embeds = [embed(
+        let mut embed = embed(
             guild.clone(),
             author.clone(),
             user_to_remove.clone(),
             guild_id,
             &reason,
-            &period_string,
-        )?
-        .build()];
-        match ctx
+            &period_string
+        )?;
+
+        let victim_dm = ctx
             .twilight_client
             .create_message(user_to_ban_dm.id)
-            .embeds(&embeds)?
-            .await
-        {
-            Ok(_) => interaction_response(
-                guild,
-                author,
-                user_to_remove,
-                guild_id,
-                &reason,
-                &period_string,
-                true,
-            ),
-            Err(_) => interaction_response(
-                guild,
-                author,
-                user_to_remove,
-                guild_id,
-                &reason,
-                &period_string,
-                false,
-            ),
+            .embeds(&[embed.clone().build()])?
+            .await;
+
+        match victim_dm {
+            Ok(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline()),
+            Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline()),
         }
+
+        let mut ban = ctx.twilight_client.create_ban(guild_id, user_to_remove.id).delete_message_seconds(self.purge.value().try_into().unwrap())?;
+        if !reason.is_empty() {
+            ban = ban.reason(&reason)?
+        }
+        ban.await?;
+
+        // If an alert channel is defined, send a message there
+        let guild_settings = ctx.guilds.read().clone();
+        if let Some(guild_settings) = guild_settings.get(&guild_id) && let Some(alert_channel) = guild_settings.moderator_actions_log_channel {
+            ctx
+            .twilight_client
+            .create_message(alert_channel)
+            .embeds(&[embed.clone().build()])?
+            .await?;
+        };
+
+        // Now respond to the original interaction
+        Ok(crate::interactions::InteractionResponse::Embed {
+            embeds: vec![embed.build()],
+            components: None,
+            ephemeral: false,
+        })
     }
 }
 
