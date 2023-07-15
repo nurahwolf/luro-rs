@@ -9,8 +9,7 @@ impl LuroFramework {
         if let Some(content) = message.content && let Some(author) = message.author {
             info!("Message Updated - Author: {}\nContent: {}", author.name, content);
         };
-    
+
         Ok(())
     }
 }
-

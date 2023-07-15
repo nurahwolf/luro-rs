@@ -11,8 +11,6 @@ use twilight_model::{application::command::Command, oauth::Application};
 
 use crate::{commands::Commands, guild::Guild};
 
-
-
 /// The framework used to dispatch slash commands.
 pub struct LuroFramework {
     /// Application data returned by Discord on initial bot startup

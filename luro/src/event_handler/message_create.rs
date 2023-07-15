@@ -15,9 +15,7 @@ impl LuroFramework {
                 message.author.name, message.0.content
             );
         }
-    
+
         Ok(())
     }
 }
-
-

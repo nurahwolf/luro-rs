@@ -138,12 +138,8 @@ impl KickCommand {
             .embeds(&embeds)?
             .await
         {
-            Ok(_) => {
-                interaction_response(guild, author, user_to_remove, guild_id, &reason, true)
-            }
-            Err(_) => {
-                interaction_response(guild, author, user_to_remove, guild_id, &reason, false)
-            }
+            Ok(_) => interaction_response(guild, author, user_to_remove, guild_id, &reason, true),
+            Err(_) => interaction_response(guild, author, user_to_remove, guild_id, &reason, false),
         }
     }
 }

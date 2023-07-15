@@ -9,13 +9,13 @@ impl LuroFramework {
         info!("Luro is now ready!");
         info!("Username: {} ({})", ready.user.name, ready.user.id);
         info!("Guilds: {}", ready.guilds.len());
-    
+
         self.register_commands(self.application.id).await;
-    
+
         // match luro.application.try_read() {
         //     Ok(application_data) => {
         //         let interaction_client = luro.twilight_client.interaction(application_data.id);
-    
+
         //         match luro.global_commands.try_read() {
         //             Ok(commands) => {
         //                 match commands::register_global_commands(&interaction_client, commands.clone())
@@ -32,9 +32,9 @@ impl LuroFramework {
         //         warn!("Failed to read application data, no commands were registered: {why}")
         //     }
         // }
-    
+
         Ok(())
-    }   
+    }
 }
 
 // async fn save_guild_accent_colour(luro: &Arc<LuroContext>, ready: Box<Ready>) -> Result<()> {

@@ -29,7 +29,9 @@ impl LuroFramework {
         match event {
             Event::Ready(ready) => self.ready_listener(ready).await?,
             Event::InteractionCreate(interaction) => self.handle_interaction(interaction.0).await?,
-            Event::MessageCreate(message) => LuroFramework::message_create_listener(message).await?,
+            Event::MessageCreate(message) => {
+                LuroFramework::message_create_listener(message).await?
+            }
             Event::MessageDelete(message) => self.message_delete_listener(message).await?,
             Event::MessageUpdate(message) => LuroFramework::message_update_handler(message).await?,
             _ => (),
