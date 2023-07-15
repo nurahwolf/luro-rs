@@ -4,7 +4,7 @@ use std::{fmt::Display, str::FromStr};
 use anyhow::{bail, Error};
 use twilight_http::client::InteractionClient;
 use twilight_model::{
-    application::interaction::Interaction,
+    application::interaction::{Interaction, application_command::InteractionMember},
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
@@ -48,6 +48,24 @@ pub fn assemble_user_avatar(user: &User) -> String {
         },
         |avatar| format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png"),
     )
+}
+
+/// Return a string that is a link to the member's avatar, falling back to user avatar if it does not exist
+pub fn get_interaction_member_avatar(
+    member: Option<InteractionMember>,
+    guild_id: &Option<Id<GuildMarker>>,
+    user: &User,
+) -> String {
+    let user_id = user.id;
+
+    if let Some(member) = member && let Some(guild_id) = guild_id && let Some(member_avatar) = member.avatar {
+        match member_avatar.is_animated() {
+            true => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.gif"),
+            false => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.png"),
+        }
+    };
+
+    get_user_avatar(user)
 }
 
 /// Return a string that is a link to the member's avatar, falling back to user avatar if it does not exist

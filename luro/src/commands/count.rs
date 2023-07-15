@@ -17,10 +17,9 @@ impl CountCommand {
         let message;
 
         {
-            let mut test = ctx.test.write();
-            *test += 1;
-
-            message = format!("Here is your number: {test}");
+            let mut global_data = ctx.global_data.write();
+            global_data.count += 1;
+            message = format!("Here is your number: {}", global_data.count);
         }
 
         Ok(say(message, None, false))

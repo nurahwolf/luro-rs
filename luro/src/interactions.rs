@@ -48,6 +48,13 @@ pub enum InteractionResponse {
         kind: InteractionResponseType,
         data: Option<InteractionResponseData>,
     },
+    /// AAAAA
+    Update {
+        content: Option<String>,
+        embeds: Option<Vec<Embed>>,
+        components: Option<Vec<Component>>,
+        ephemeral: bool,
+    },
 }
 
 /// Credentials used to respond to an interaction.
@@ -96,6 +103,7 @@ impl InteractionResponse {
                 InteractionResponseType::DeferredChannelMessageWithSource
             }
             Self::Raw { kind, .. } => kind,
+            Self::Update { .. } => InteractionResponseType::UpdateMessage,
             _ => InteractionResponseType::ChannelMessageWithSource,
         };
 
@@ -151,6 +159,28 @@ impl InteractionResponse {
                     .build(),
             ),
             Self::Raw { data, .. } => data,
+            Self::Update { content, embeds, components, ephemeral } => {
+                let mut response = InteractionResponseDataBuilder::new();
+
+                if ephemeral {
+                    response = response.flags(MessageFlags::EPHEMERAL);
+                }
+
+                if let Some(content) = content {
+                    response = response.content(content);
+                }
+
+                if let Some(embeds) = embeds {
+                    response = response.embeds(embeds);
+                }
+
+                if let Some(components) = components {
+                    response = response.components(components);
+                }
+
+                Some(response.build())
+            },
+            
         };
 
         HttpInteractionResponse { kind, data }

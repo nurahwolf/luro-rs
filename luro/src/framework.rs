@@ -1,4 +1,4 @@
-use std::{collections::HashMap, convert::TryInto, net::SocketAddr, str::FromStr};
+use std::{collections::HashMap, convert::TryInto, net::SocketAddr, str::FromStr, sync::Arc};
 
 use anyhow::Error;
 use hyper::client::HttpConnector;
@@ -9,7 +9,13 @@ use twilight_http::{client::InteractionClient, Client};
 use twilight_lavalink::Lavalink;
 use twilight_model::{application::command::Command, oauth::Application};
 
-use crate::{commands::Commands, guild::Guild};
+use crate::{commands::Commands, guild::Guild, hecks::Hecks, HECK_FILE_PATH};
+
+pub struct GlobalData {
+    /// Simply used as a test to make sure that data is shared across threads
+    pub count: usize,
+    pub hecks: Hecks
+}
 
 /// The framework used to dispatch slash commands.
 pub struct LuroFramework {
@@ -27,8 +33,8 @@ pub struct LuroFramework {
     pub commands: Commands,
     /// Guild specific stuff
     pub guilds: HashMap<&'static str, Guild>,
-    /// Test lol
-    pub test: RwLock<usize>,
+    /// Mutable data used throughout Luro
+    pub global_data: RwLock<GlobalData>,
 }
 
 impl LuroFramework {
@@ -40,7 +46,7 @@ impl LuroFramework {
         lavalink_auth: String,
         lavalink_host: String,
         token: String,
-    ) -> Result<(LuroFramework, Vec<Shard>), Error> {
+    ) -> Result<(Arc<Self>, Vec<Shard>), Error> {
         let (twilight_client, twilight_cache, shard_config) = (
             twilight_http::Client::new(token.clone()),
             InMemoryCache::new(),
@@ -67,7 +73,8 @@ impl LuroFramework {
 
         let hyper_client = hyper::Client::new();
         let guilds = Default::default();
-        let test = 0.into();
+        let hecks = Hecks::get(HECK_FILE_PATH).await?;
+        let global_data = GlobalData { count: 0, hecks }.into();
 
         Ok((
             Self {
@@ -78,8 +85,8 @@ impl LuroFramework {
                 lavalink,
                 commands,
                 guilds,
-                test,
-            },
+                global_data,
+            }.into(),
             shards,
         ))
     }

@@ -1,7 +1,6 @@
 #![feature(let_chains)]
 
-use std::env;
-
+use std::{env, sync::Arc};
 use anyhow::Context;
 use futures_util::StreamExt;
 use twilight_gateway::{stream::ShardEventStream, Intents};
@@ -16,6 +15,7 @@ pub mod guild;
 pub mod interactions;
 pub mod macros;
 pub mod permissions;
+pub mod hecks;
 pub mod responses;
 
 /// Luro's main accent colour
@@ -26,6 +26,35 @@ pub const COLOUR_DANGER: u32 = 0xD35F5F;
 pub const COLOUR_TRANSPARENT: u32 = 0x2F3136;
 /// Luro's SUCCESS colour
 pub const COLOUR_SUCCESS: u32 = 0xA0D995;
+/// The core data directory for Luro. By default this is at the "data" folder within Luro.
+/// Consider setting this to XDG_DATA_HOME on a production system.
+pub const DATA_PATH: &str = "data/";
+/// Where the config toml file lives. Can be overriden elsewhere if desired.
+pub const CONFIG_FILE_PATH: &str = "data/config.toml";
+/// Where the database folder lives. Can be overriden elsewhere if desired.
+pub const DATABASE_FILE_PATH: &str = "data/database";
+/// Where the heck toml file lives. Can be overriden elsewhere if desired.
+pub const HECK_FILE_PATH: &str = "data/heck.toml";
+/// Where the quotes toml file lives. Can be overriden elsewhere if desired.
+pub const QUOTES_FILE_PATH: &str = "data/quotes.toml";
+/// Where the user_favs toml file lives. Can be overriden elsewhere if desired.
+pub const FAVOURITES_FILE_PATH: &str = "data/user_favs.toml";
+/// Where the secrets toml file lives. Make sure this is in a safe space and with strong permissions!
+pub const SECRETS_FILE_PATH: &str = "data/secrets.toml";
+/// Where the stories toml file lives. Can be overriden elsewhere if desired.
+pub const STORIES_FILE_PATH: &str = "data/stories.toml";
+/// Where the guild_settings toml file lives. Can be overriden elsewhere if desired.
+pub const GUILDSETTINGS_FILE_PATH: &str = "data/guild_settings.toml";
+/// Where the fursona folder lives. Can be overriden elsewhere if desired.
+pub const FURSONA_FILE_PATH: &str = "data/fursona";
+/// The regex used to match furaffinity posts.
+pub const FURAFFINITY_REGEX: &str = r"(?:https://)?(?:www\.)?furaffinity\.net/(?:view|full)/(?P<submission_id>\d+)/?|https://d\.(?:facdn|furaffinity).net/art/(?P<author>[\w\-.~:?#\[\]@!$&'()*+,;=%]+)/(?P<cdn_id>\d+)/(?P<original_cdn_id>\d*).\S*(?:gif|jpe?g|tiff?|png|webp|bmp)";
+/// Regex to pull out links from a message, which is then passed to the source finder commands.
+pub const SOURCE_FINDER_REGEX: &str = r"(?P<url>http[^\s>]+)";
+/// The timeout duriation for command buttons, in seconds.
+pub const TIMEOUT_DURIATION: u64 = 12 * 60;
+
+pub type LuroContext = Arc<LuroFramework>;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -53,16 +82,21 @@ async fn main() -> anyhow::Result<()> {
     let mut stream = ShardEventStream::new(shards.iter_mut());
 
     while let Some((shard, event)) = stream.next().await {
-        match event {
+        let event = match event {
             Err(error) => {
                 if error.is_fatal() {
                     eprintln!("Gateway connection fatally closed, error: {error:?}");
                     break;
                 }
+
+                tracing::warn!(?error, "error while receiving event");
+                continue;
             }
-            Ok(event) => luro.handle_event(event, shard.sender()).await?,
-        }
-    }
+            Ok(event) => event
+        };
+
+        tokio::spawn(LuroFramework::handle_event(luro.clone(), event, shard.sender()));
+    };
 
     Ok(())
 }

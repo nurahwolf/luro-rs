@@ -1,16 +1,15 @@
-use anyhow::Error;
 use tracing::info;
 use twilight_model::gateway::payload::incoming::Ready;
 
 use crate::LuroFramework;
 
 impl LuroFramework {
-    pub async fn ready_listener(&self, ready: Box<Ready>) -> Result<(), Error> {
+    pub async fn ready_listener(&self, ready: Box<Ready>) -> anyhow::Result<()> {
         info!("Luro is now ready!");
         info!("Username: {} ({})", ready.user.name, ready.user.id);
         info!("Guilds: {}", ready.guilds.len());
 
-        self.register_commands(self.application.id).await;
+        self.register_commands(self.application.id).await?;
 
         // match luro.application.try_read() {
         //     Ok(application_data) => {
