@@ -1,25 +1,18 @@
 use std::collections::HashMap;
 
-use anyhow::{bail, Error};
-use tracing::warn;
-use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::{
-    command::Command,
-    interaction::{application_command::CommandData, Interaction, InteractionData},
-};
-
-use crate::{
-    framework::LuroFramework, interactions::InteractionResponse,
-    responses::embeds::unknown_command::unknown_command,
-};
+use twilight_interactions::command::CreateCommand;
+use twilight_model::application::command::Command;
 
 use self::{
-    count::CountCommand, hello::HelloCommand, moderator::ModeratorCommands, say::SayCommand,
+    boop::BoopCommand, count::CountCommand, hello::HelloCommand, moderator::ModeratorCommands,
+    music::MusicCommands, say::SayCommand,
 };
 
+pub mod boop;
 pub mod count;
 pub mod hello;
 pub mod moderator;
+pub mod music;
 pub mod say;
 
 #[derive(Default)]
@@ -48,36 +41,12 @@ impl Commands {
             .insert("say", SayCommand::create_command().into());
         init.global_commands
             .insert("mod", ModeratorCommands::create_command().into());
+        init.global_commands
+            .insert("music", MusicCommands::create_command().into());
+        init.global_commands
+            .insert("boop", BoopCommand::create_command().into());
 
         // Return our initialised commands
         init
-    }
-}
-
-pub async fn handle_interaction(
-    data: CommandData,
-    ctx: &LuroFramework,
-    interaction: Interaction,
-) -> Result<InteractionResponse, Error> {
-    let name = match &interaction.data {
-        Some(InteractionData::ApplicationCommand(data)) => &*data.name,
-        _ => bail!("expected application command data"),
-    };
-
-    match name {
-        "say" => Ok(SayCommand::run(SayCommand::from_interaction(data.into())?).await?),
-        "hello" => Ok(HelloCommand::execute(
-            HelloCommand::from_interaction(data.into())?,
-            ctx,
-            interaction,
-        )
-        .await?),
-        "count" => Ok(CountCommand::run(CountCommand::from_interaction(data.into())?, ctx).await?),
-        "mod" => Ok(ModeratorCommands::handle(interaction, data, ctx).await?),
-        name => {
-            warn!(name = name, "received unknown command");
-
-            Ok(unknown_command())
-        }
     }
 }

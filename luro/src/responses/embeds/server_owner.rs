@@ -10,5 +10,9 @@ pub fn server_owner() -> InteractionResponse {
         .description("Congratulations moron, that's the server owner. Do you really think I'm gonna try to kick OR ban them? Holy shit, no.")
         .build();
 
-    InteractionResponse::EphemeralEmbed(embed)
+    InteractionResponse::Embed {
+        embeds: vec![embed],
+        components: None,
+        ephemeral: true,
+    }
 }

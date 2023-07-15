@@ -550,6 +550,7 @@ dependencies = [
  "futures-util",
  "hyper",
  "parking_lot",
+ "serde_json",
  "tokio",
  "tracing",
  "tracing-subscriber",

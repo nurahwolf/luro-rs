@@ -52,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
         LuroFramework::builder(commands, intents, lavalink_auth, lavalink_host, token).await?;
     let mut stream = ShardEventStream::new(shards.iter_mut());
 
-    while let Some((_, event)) = stream.next().await {
+    while let Some((shard, event)) = stream.next().await {
         match event {
             Err(error) => {
                 if error.is_fatal() {
@@ -60,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
                     break;
                 }
             }
-            Ok(event) => luro.handle_event(event).await?,
+            Ok(event) => luro.handle_event(event, shard.sender()).await?,
         }
     }
 

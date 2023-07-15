@@ -84,5 +84,9 @@ pub fn interaction_response(
         embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
     }
 
-    Ok(InteractionResponse::Embed(embed.build()))
+    Ok(InteractionResponse::Embed {
+        embeds: vec![embed.build()],
+        components: None,
+        ephemeral: false,
+    })
 }

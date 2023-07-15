@@ -23,6 +23,6 @@ impl CountCommand {
             message = format!("Here is your number: {test}");
         }
 
-        Ok(say(message, false))
+        Ok(say(message, None, false))
     }
 }

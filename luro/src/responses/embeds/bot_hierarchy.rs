@@ -10,5 +10,9 @@ pub fn bot_hierarchy(bot_username: &String) -> InteractionResponse {
         .description(format!("This member has a role above or equivalent to that of {bot_username} in the list of roles, which prevents moderation actions from being performed on them. You can correct this by placing me higher in the list of roles.\nHowever, if you are trying to action someone higher than me on purpose... ***Get fucked ;)***"))
         .build();
 
-    InteractionResponse::EphemeralEmbed(embed)
+    InteractionResponse::Embed {
+        embeds: vec![embed],
+        components: None,
+        ephemeral: true,
+    }
 }

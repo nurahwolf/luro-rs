@@ -9,5 +9,9 @@ pub fn unable_to_get_guild(reason: String) -> InteractionResponse {
         .description(format!("Can't fetch information for the guild you are in, sorry. Most likely the Discord API is having a certified `fucky wucky` moment.\n\n**Reason:**\n```{}```", reason))
         .build();
 
-    InteractionResponse::EphemeralEmbed(embed)
+    InteractionResponse::Embed {
+        embeds: vec![embed],
+        components: None,
+        ephemeral: true,
+    }
 }

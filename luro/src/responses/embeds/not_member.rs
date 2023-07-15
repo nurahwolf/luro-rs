@@ -11,5 +11,9 @@ pub fn not_member(username: String) -> InteractionResponse {
         ))
         .build();
 
-    InteractionResponse::EphemeralEmbed(embed)
+    InteractionResponse::Embed {
+        embeds: vec![embed],
+        components: None,
+        ephemeral: true,
+    }
 }

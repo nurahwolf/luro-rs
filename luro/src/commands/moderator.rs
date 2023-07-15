@@ -24,10 +24,10 @@ pub enum ModeratorCommands {
 
 impl ModeratorCommands {
     /// Handle incoming `/mod` commands.
-    pub async fn handle(
-        interaction: Interaction,
-        data: CommandData,
+    pub async fn run(
+        interaction: &Interaction,
         ctx: &LuroFramework,
+        data: CommandData,
     ) -> anyhow::Result<InteractionResponse> {
         // Parse the command data into a structure using twilight-interactions.
         let command = ModeratorCommands::from_interaction(data.into())

@@ -12,9 +12,9 @@ pub struct HelloCommand {}
 
 impl HelloCommand {
     pub async fn execute(
-        self,
+        &self,
         ctx: &LuroFramework,
-        interaction: Interaction,
+        interaction: &Interaction,
     ) -> Result<InteractionResponse, Error> {
         // return Err(Error::msg("Test of it being fucked"));
 
@@ -29,6 +29,6 @@ impl HelloCommand {
                 ctx.twilight_client.current_user().await?.model().await?.name
             ),
         };
-        Ok(say(message, false))
+        Ok(say(message, None, false))
     }
 }

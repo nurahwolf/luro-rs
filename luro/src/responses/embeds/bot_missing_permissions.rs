@@ -10,5 +10,9 @@ pub fn bot_missing_permission(permission_missing: String) -> InteractionResponse
         .description(format!("***SOME*** motherfucker failed to set me up correctly.\nI should have ***Administrator*** privileges in the server to work my best, but it seems I'm missing that. Fix it >:c\nIf you explicitly want to limit my permissions, I'm missing the {permission_missing} permisison for this command to work."))
         .build();
 
-    InteractionResponse::EphemeralEmbed(embed)
+    InteractionResponse::Embed {
+        embeds: vec![embed],
+        components: None,
+        ephemeral: true,
+    }
 }

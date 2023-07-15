@@ -10,5 +10,9 @@ pub fn unknown_command() -> InteractionResponse {
         .description("We had a fucky wucky!")
         .build();
 
-    InteractionResponse::EphemeralEmbed(embed)
+    InteractionResponse::Embed {
+        embeds: vec![embed],
+        components: None,
+        ephemeral: true,
+    }
 }

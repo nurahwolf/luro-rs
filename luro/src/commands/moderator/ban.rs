@@ -60,7 +60,7 @@ impl BanCommand {
     pub async fn run(
         self,
         ctx: &LuroFramework,
-        interaction: Interaction,
+        interaction: &Interaction,
     ) -> Result<InteractionResponse, anyhow::Error> {
         let reason = match self.reason {
             Some(reason) => reason,
@@ -87,8 +87,8 @@ impl BanCommand {
             None => return Ok(unable_to_get_guild("Failed to get guild ID".to_string())),
         };
         let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
-        let author_user = match interaction.member {
-            Some(member) => match member.user {
+        let author_user = match &interaction.member {
+            Some(member) => match &member.user {
                 Some(user) => user,
                 None => return Ok(unable_to_get_guild("Failed to get author user".to_string())),
             },

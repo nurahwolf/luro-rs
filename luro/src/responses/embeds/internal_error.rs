@@ -13,5 +13,9 @@ pub fn internal_error(error: String) -> InteractionResponse {
         ))
         .build();
 
-    InteractionResponse::EphemeralEmbed(embed)
+    InteractionResponse::Embed {
+        embeds: vec![embed],
+        components: None,
+        ephemeral: true,
+    }
 }

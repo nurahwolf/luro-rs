@@ -22,11 +22,17 @@ use crate::framework::LuroFramework;
 #[derive(Debug, Clone, PartialEq)]
 pub enum InteractionResponse {
     /// Respond with an embed.
-    Embed(Embed),
-    /// Respond with an embed sent as ephemeral message.
-    EphemeralEmbed(Embed),
+    Embed {
+        embeds: Vec<Embed>,
+        components: Option<Vec<Component>>,
+        ephemeral: bool,
+    },
     /// Respond with text.
-    Text { content: String, ephemeral: bool },
+    Text {
+        content: String,
+        components: Option<Vec<Component>>,
+        ephemeral: bool,
+    },
     /// Respond with a modal.
     Modal {
         custom_id: String,
@@ -94,17 +100,40 @@ impl InteractionResponse {
         };
 
         let data = match self {
-            Self::Embed(embed) => Some(
-                InteractionResponseDataBuilder::new()
-                    .embeds([embed])
-                    .build(),
-            ),
-            Self::EphemeralEmbed(embed) => Some(
-                InteractionResponseDataBuilder::new()
-                    .embeds([embed])
-                    .flags(MessageFlags::EPHEMERAL)
-                    .build(),
-            ),
+            Self::Embed {
+                embeds,
+                ephemeral,
+                components,
+            } => {
+                let mut response = InteractionResponseDataBuilder::new().embeds(embeds);
+
+                if ephemeral {
+                    response = response.flags(MessageFlags::EPHEMERAL);
+                }
+
+                if let Some(components) = components {
+                    response = response.components(components);
+                }
+
+                Some(response.build())
+            }
+            Self::Text {
+                content,
+                components,
+                ephemeral,
+            } => {
+                let mut response = InteractionResponseDataBuilder::new().content(content);
+
+                if ephemeral {
+                    response = response.flags(MessageFlags::EPHEMERAL);
+                }
+
+                if let Some(components) = components {
+                    response = response.components(components);
+                }
+
+                Some(response.build())
+            }
             Self::Modal {
                 custom_id,
                 title,
@@ -122,13 +151,6 @@ impl InteractionResponse {
                     .build(),
             ),
             Self::Raw { data, .. } => data,
-            InteractionResponse::Text { content, ephemeral } => {
-                let mut response = InteractionResponseDataBuilder::new().content(content);
-                if ephemeral {
-                    response = response.flags(MessageFlags::EPHEMERAL);
-                };
-                Some(response.build())
-            }
         };
 
         HttpInteractionResponse { kind, data }

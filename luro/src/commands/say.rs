@@ -20,6 +20,6 @@ impl SayCommand {
             self.message
         };
 
-        Ok(say(message, false))
+        Ok(say(message, None, false))
     }
 }
