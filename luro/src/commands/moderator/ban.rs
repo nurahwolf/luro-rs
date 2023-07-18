@@ -67,7 +67,7 @@ impl BanCommand {
         interaction: &Interaction,
     ) -> Result<InteractionResponse, anyhow::Error> {
         // Defer this interaction
-        defer_interaction(ctx, interaction);
+        defer_interaction(ctx, interaction).await?;
 
         let reason = match self.reason {
             Some(reason) => reason,
