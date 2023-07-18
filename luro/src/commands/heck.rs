@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use anyhow::Context;
 use parking_lot::RwLock;
 use rand::Rng;
@@ -11,11 +13,11 @@ use twilight_model::{
     user::User,
 };
 
-use crate::{framework::GlobalData, hecks::Heck, interactions::InteractionResponse, LuroContext};
+use crate::{framework::GlobalData, hecks::Heck, LuroContext, SlashResponse};
 
 use self::{add::HeckAddCommand, info::HeckInfo, user::HeckUserCommand};
 
-mod add;
+pub mod add;
 mod info;
 mod user;
 
@@ -32,7 +34,7 @@ pub fn commands() -> Vec<Command> {
 pub enum HeckCommands {
     #[command(name = "add")]
     Add(HeckAddCommand),
-    #[command(name = "user")]
+    #[command(name = "someone")]
     User(HeckUserCommand),
     #[command(name = "info")]
     Info(HeckInfo),
@@ -44,14 +46,14 @@ impl HeckCommands {
         ctx: LuroContext,
         interaction: &Interaction,
         data: CommandData,
-    ) -> anyhow::Result<InteractionResponse> {
+    ) -> SlashResponse {
         // Parse the command data into a structure using twilight-interactions.
         let command =
             HeckCommands::from_interaction(data.into()).context("failed to parse command data")?;
 
         // Call the appropriate subcommand.
         Ok(match command {
-            Self::Add(command) => command.run(interaction).await?,
+            Self::Add(command) => command.run(ctx, interaction).await?,
             Self::User(command) => command.run(ctx, interaction).await?,
             Self::Info(command) => command.run(ctx, interaction).await?,
         })
@@ -85,11 +87,7 @@ async fn check_hecks_are_present(global_data: &RwLock<GlobalData>) -> anyhow::Re
 }
 
 /// Open the database as writeable and remove a NSFW heck from it, returning the heck removed
-async fn get_heck(
-    ctx: LuroContext,
-    id: Option<usize>,
-    nsfw: bool,
-) -> anyhow::Result<(Heck, usize)> {
+async fn get_heck(ctx: LuroContext, id: Option<i64>, nsfw: bool) -> anyhow::Result<(Heck, usize)> {
     // Check to make sure our hecks are present, if not reload them
     check_hecks_are_present(&ctx.global_data).await?;
     let heck_id;
@@ -97,7 +95,7 @@ async fn get_heck(
         // Use our specified ID if it is present, otherwise generate a random ID
         let global_data = ctx.global_data.read();
         heck_id = match id {
-            Some(id) => id,
+            Some(id) => id.try_into()?,
             None => rand::thread_rng().gen_range(
                 0..if nsfw {
                     global_data.hecks.nsfw_heck_ids.len()
@@ -137,7 +135,7 @@ async fn get_heck(
     })
 }
 
-/// Replace <user> and <author> with the hecked user's username and author's name
+/// Replace <user> with <@hecked_user> and <author> with the caller of the heck command
 async fn format_heck(heck: &Heck, heck_author: &User, hecked_user: &User) -> Heck {
     Heck {
         heck_message: heck

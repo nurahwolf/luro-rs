@@ -14,14 +14,19 @@ use twilight_model::{
 
 use crate::{
     commands::{
-        boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand,
-        moderator::ModeratorCommands, music::MusicCommands, say::SayCommand,
+        boop::BoopCommand,
+        count::CountCommand,
+        heck::{add::handle_heck_model, HeckCommands},
+        hello::HelloCommand,
+        moderator::ModeratorCommands,
+        music::MusicCommands,
+        say::SayCommand, owner::OwnerCommands,
     },
     framework::LuroFramework,
     functions::CustomId,
     interactions::{InteractionResponder, InteractionResponse},
     responses::embeds::{internal_error::internal_error, unknown_command::unknown_command},
-    LuroContext,
+    LuroContext, SlashResponse,
 };
 
 mod message_create;
@@ -67,7 +72,7 @@ impl LuroFramework {
                 self.clone().handle_command(&interaction, shard).await
             }
             InteractionType::MessageComponent => self.handle_component(&interaction).await,
-            // InteractionType::ModalSubmit => handle_modal(interaction, ctx).await,
+            InteractionType::ModalSubmit => handle_modal(interaction, &self).await,
             other => {
                 warn!("received unexpected {} interaction", other.kind());
 
@@ -101,33 +106,38 @@ impl LuroFramework {
             _ => bail!("expected application command data"),
         };
 
-        match data.name.as_str() {
-            "say" => Ok(SayCommand::run(SayCommand::from_interaction(data.into())?).await?),
-            "hello" => Ok(HelloCommand::execute(
-                &HelloCommand::from_interaction(data.into())?,
-                &self,
-                interaction,
-            )
-            .await?),
-            "count" => {
-                Ok(CountCommand::run(CountCommand::from_interaction(data.into())?, &self).await?)
+        Ok(match data.name.as_str() {
+            "say" => SayCommand::run(SayCommand::from_interaction(data.into())?).await?,
+            "hello" => {
+                HelloCommand::execute(
+                    &HelloCommand::from_interaction(data.into())?,
+                    &self,
+                    interaction,
+                )
+                .await?
             }
-            "mod" => Ok(ModeratorCommands::run(interaction, &self, data).await?),
-            "music" => Ok(MusicCommands::run(interaction, &self, data, shard).await?),
-            "boop" => Ok(BoopCommand::run().await?),
-            "heck" => Ok(HeckCommands::run(
-                HeckCommands::from_interaction(data.clone().into())?,
-                self,
-                interaction,
-                data,
-            )
-            .await?),
+            "count" => {
+                CountCommand::run(CountCommand::from_interaction(data.into())?, &self).await?
+            }
+            "mod" => ModeratorCommands::run(interaction, &self, data).await?,
+            "music" => MusicCommands::run(interaction, &self, data, shard).await?,
+            "boop" => BoopCommand::run().await?,
+            "owner" => OwnerCommands::run(interaction, &self, data).await?,
+            "heck" => {
+                HeckCommands::run(
+                    HeckCommands::from_interaction(data.clone().into())?,
+                    self,
+                    interaction,
+                    data,
+                )
+                .await?
+            }
             name => {
                 warn!(name = name, "received unknown command");
 
-                Ok(unknown_command())
+                unknown_command()
             }
-        }
+        })
     }
 
     /// Handle incoming component interaction
@@ -184,23 +194,18 @@ impl LuroFramework {
     }
 }
 
-// /// Handle incoming modal interaction
-// async fn handle_modal(
-//     interaction: Interaction,
-//     ctx: &LuroFramework,
-// ) -> Result<InteractionResponse, anyhow::Error> {
-//     let custom_id = match &interaction.data {
-//         Some(InteractionData::ModalSubmit(data)) => CustomId::from_str(&*data.custom_id)?,
-//         _ => bail!("expected modal submit data"),
-//     };
+/// Handle incoming modal interaction
+async fn handle_modal(interaction: Interaction, _: &LuroContext) -> SlashResponse {
+    let custom_id = match &interaction.data {
+        Some(InteractionData::ModalSubmit(data)) => CustomId::from_str(&data.custom_id)?,
+        _ => bail!("expected modal submit data"),
+    };
 
-//     match &*custom_id.name {
-//         "captcha-modal" => CaptchaModal::handle(interaction, ctx).await,
-//         // "sanction" => bail!("not implemented"),
-//         name => {
-//             warn!(name = name, "received unknown modal");
-
-//             Ok(embed::error::unknown_command(interaction.lang()?))
-//         }
-//     }
-// }
+    match &*custom_id.name {
+        "heck-add" => handle_heck_model(interaction).await,
+        name => {
+            warn!(name = name, "received unknown modal");
+            Ok(unknown_command())
+        }
+    }
+}

@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use tokio::{fs::write, fs::File, io::AsyncReadExt};
 use tracing::info;
 
+use crate::{framework::LuroFramework, HECK_FILE_PATH};
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Heck {
     pub heck_message: String,
@@ -46,13 +48,13 @@ impl Hecks {
     }
 
     /// Write the struct to a toml file
-    pub async fn write(new_data: &Hecks, path: &str) -> Result<(), Error> {
-        let struct_to_toml_string = match toml::to_string(&new_data) {
+    pub async fn write(ctx: &LuroFramework) -> Result<(), Error> {
+        let struct_to_toml_string = match toml::to_string(&ctx.global_data.read().hecks) {
             Ok(string) => string,
             Err(why) => return Err(why.into()),
         };
 
-        match write(path, struct_to_toml_string).await {
+        match write(HECK_FILE_PATH, struct_to_toml_string).await {
             Ok(a) => Ok(a),
             Err(why) => Err(why.into()),
         }

@@ -2,6 +2,7 @@
 
 use anyhow::Context;
 use futures_util::StreamExt;
+use interactions::InteractionResponse;
 use std::{env, sync::Arc};
 use twilight_gateway::{stream::ShardEventStream, Intents};
 
@@ -54,7 +55,11 @@ pub const SOURCE_FINDER_REGEX: &str = r"(?P<url>http[^\s>]+)";
 /// The timeout duriation for command buttons, in seconds.
 pub const TIMEOUT_DURIATION: u64 = 12 * 60;
 
+// TYPES
+/// A shorthand to [LuroFramework] wrapped in an [Arc].
 pub type LuroContext = Arc<LuroFramework>;
+/// Luro's response type for interactions, returning an [InteractionResponse] if successful, or  [anyhow::Error] if unsuccessful
+pub type SlashResponse = Result<InteractionResponse, anyhow::Error>;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

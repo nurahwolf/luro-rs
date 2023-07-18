@@ -166,7 +166,7 @@ impl BanCommand {
             user_to_remove.clone(),
             guild_id,
             &reason,
-            &period_string
+            &period_string,
         )?;
 
         let victim_dm = ctx
@@ -180,7 +180,10 @@ impl BanCommand {
             Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline()),
         }
 
-        let mut ban = ctx.twilight_client.create_ban(guild_id, user_to_remove.id).delete_message_seconds(self.purge.value().try_into().unwrap())?;
+        let mut ban = ctx
+            .twilight_client
+            .create_ban(guild_id, user_to_remove.id)
+            .delete_message_seconds(self.purge.value().try_into().unwrap())?;
         if !reason.is_empty() {
             ban = ban.reason(&reason)?
         }

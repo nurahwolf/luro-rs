@@ -16,6 +16,7 @@ use twilight_model::{
     },
 };
 
+use crate::framework::LuroFramework;
 use crate::{hecks::Hecks, GUILDSETTINGS_FILE_PATH};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -82,8 +83,12 @@ impl LuroGuilds {
     }
 
     /// Write the struct to a toml file
-    pub async fn write(&self) -> anyhow::Result<()> {
-        let struct_to_toml_string = match toml::to_string(&self.clone()) {
+    pub async fn write(ctx: &LuroFramework) -> anyhow::Result<()> {
+        let guilds = LuroGuilds {
+            guilds: ctx.guilds.read().clone(),
+        };
+
+        let struct_to_toml_string = match toml::to_string(&guilds) {
             Ok(string) => string,
             Err(why) => {
                 return Err(Error::msg(format!(

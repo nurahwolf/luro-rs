@@ -1,13 +1,57 @@
+use anyhow::anyhow;
 use core::fmt;
-use std::{fmt::Display, str::FromStr};
+use std::{fmt::Display, mem, str::FromStr};
 
 use anyhow::{bail, Error};
 use twilight_http::client::InteractionClient;
 use twilight_model::{
-    application::interaction::{application_command::InteractionMember, Interaction},
+    application::interaction::{
+        application_command::InteractionMember, modal::ModalInteractionData, Interaction,
+        InteractionData,
+    },
+    channel::Channel,
+    guild::PartialMember,
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
+
+/// A function that takes a borred interaction, and returns a borred reference to interaction.channel and a user who invoked the interaction. Additionally it calls a debug to print where the command was executed in the logs
+pub fn interaction_context<'a>(
+    interaction: &'a Interaction,
+    command_name: &str,
+) -> anyhow::Result<(&'a Channel, &'a User, Option<&'a PartialMember>)> {
+    let invoked_channel = interaction
+        .channel
+        .as_ref()
+        .ok_or_else(|| Error::msg("Unable to get the channel this interaction was ran in"))?;
+    let interaction_member = interaction.member.as_ref();
+    let interaction_author = match interaction.member.as_ref() {
+        Some(member) => member
+            .user
+            .as_ref()
+            .ok_or_else(|| Error::msg("Unable to find the user that executed this command"))?,
+        None => interaction
+            .user
+            .as_ref()
+            .ok_or_else(|| Error::msg("Unable to find the user that executed this command"))?,
+    };
+
+    match &invoked_channel.name {
+        Some(channel_name) => tracing::debug!(
+            "'{}' interaction in channel {} by {}",
+            command_name,
+            channel_name,
+            interaction_author.name
+        ),
+        None => tracing::debug!(
+            "'{}' interaction by {}",
+            command_name,
+            interaction_author.name
+        ),
+    };
+
+    Ok((invoked_channel, interaction_author, interaction_member))
+}
 
 /// A simple function to respond with `ChannelMessageWithSource`
 pub async fn respond_to_interaction(
@@ -50,7 +94,25 @@ pub fn assemble_user_avatar(user: &User) -> String {
     )
 }
 
-/// Return a string that is a link to the member's avatar, falling back to user avatar if it does not exist
+/// Return the user's avatar fromH
+pub fn get_partial_member_avatar(
+    member: Option<&PartialMember>,
+    guild_id: &Option<Id<GuildMarker>>,
+    user: &User,
+) -> String {
+    let user_id = user.id;
+
+    if let Some(member) = member && let Some(guild_id) = guild_id && let Some(member_avatar) = member.avatar {
+        match member_avatar.is_animated() {
+            true => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.gif"),
+            false => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.png"),
+        }
+    };
+
+    get_user_avatar(user)
+}
+
+/// Return the user's avatar fromH
 pub fn get_interaction_member_avatar(
     member: Option<InteractionMember>,
     guild_id: &Option<Id<GuildMarker>>,
@@ -166,4 +228,49 @@ impl Display for CustomId {
             f.write_str(&self.name)
         }
     }
+}
+
+/// Parse incoming [`ModalSubmit`] interaction and return the inner data.
+///
+/// This takes a mutable [`Interaction`] since the inner [`ModalInteractionData`]
+/// is replaced with [`None`] to avoid useless clones.
+///
+/// [`ModalSubmit`]: twilight_model::application::interaction::InteractionType::ModalSubmit
+/// [`ModalInteractionData`]: twilight_model::application::interaction::modal::ModalInteractionData
+pub fn parse_modal_data(
+    interaction: &mut Interaction,
+) -> Result<ModalInteractionData, anyhow::Error> {
+    match mem::take(&mut interaction.data) {
+        Some(InteractionData::ModalSubmit(data)) => Ok(data),
+        _ => bail!("unable to parse modal data, received unknown data type"),
+    }
+}
+
+/// Parse a field from [`ModalInteractionData`].
+///
+/// This function try to find a field with the given name in the modal data and
+/// return its value as a string.
+pub fn parse_modal_field<'a>(
+    data: &'a ModalInteractionData,
+    name: &str,
+) -> Result<Option<&'a str>, anyhow::Error> {
+    let mut components = data.components.iter().flat_map(|c| &c.components);
+
+    match components.find(|c| &*c.custom_id == name) {
+        Some(component) => Ok(component.value.as_deref()),
+        None => bail!("missing modal field: {}", name),
+    }
+}
+
+/// Parse a required field from [`ModalInteractionData`].
+///
+/// This function is the same as [`parse_modal_field`] but returns an error if
+/// the field value is [`None`].
+pub fn parse_modal_field_required<'a>(
+    data: &'a ModalInteractionData,
+    name: &str,
+) -> Result<&'a str, anyhow::Error> {
+    let value = parse_modal_field(data, name)?;
+
+    value.ok_or_else(|| anyhow!("required modal field is empty: {}", name))
 }

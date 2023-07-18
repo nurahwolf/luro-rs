@@ -9,77 +9,55 @@ use twilight_util::builder::{
 
 use crate::{
     commands::heck::{format_heck, get_heck},
-    functions::get_user_avatar,
+    functions::{get_user_avatar, interaction_context},
     interactions::InteractionResponse,
-    responses::embeds::{internal_error::internal_error, unable_to_get_guild::unable_to_get_guild},
-    LuroContext, ACCENT_COLOUR,
+    LuroContext, SlashResponse, ACCENT_COLOUR,
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(name = "user", desc = "Heck a user", dm_permission = true)]
+#[command(name = "someone", desc = "Heck a user", dm_permission = true)]
 pub struct HeckUserCommand {
     /// The user to heck
     pub user: ResolvedUser,
+    /// Get a specific heck
+    pub id: Option<i64>,
+    /// Should the heck be sent as plaintext? (Without an embed)
+    pub plaintext: Option<bool>,
 }
 
 impl HeckUserCommand {
-    pub async fn run(
-        self,
-        ctx: LuroContext,
-        interaction: &Interaction,
-    ) -> anyhow::Result<InteractionResponse> {
-        tracing::debug!(
-            "heck user command in channel {} by {}",
-            interaction.channel.clone().unwrap().name.unwrap(),
-            interaction.user.clone().unwrap().name
-        );
+    pub async fn run(self, ctx: LuroContext, interaction: &Interaction) -> SlashResponse {
+        let (interaction_channel, interaction_author, _) =
+            interaction_context(interaction, "heck user")?;
+        // Is the channel the interaction called in NSFW?
+        let nsfw = interaction_channel.nsfw.unwrap_or(false);
 
-        let guild_id = match interaction.guild_id {
-            Some(guild_id) => guild_id,
-            None => return Ok(unable_to_get_guild("Failed to get guild ID".to_string())),
+        let (heck, heck_id) = get_heck(ctx.clone(), self.id, nsfw).await?;
+        let formatted_heck = format_heck(&heck, interaction_author, &self.user.resolved).await;
+
+        // Attempt to get the author of the heck
+        let heck_author = match ctx.twilight_cache.user(Id::new(heck.author_id)) {
+            Some(ok) => ok.clone(),
+            None => {
+                ctx.twilight_client
+                    .user(Id::new(heck.author_id))
+                    .await?
+                    .model()
+                    .await?
+            }
         };
-        let user_id = match &interaction.user {
-            Some(user) => user.id,
-            None => match &interaction.member {
-                Some(member) => member.clone().user.unwrap().id,
-                None => {
-                    return Ok(internal_error(
-                        "Failed to find the user who invoked this interaction".to_string(),
-                    ))
-                }
-            },
-        };
-
-        let author = ctx
-            .twilight_client
-            .guild_member(guild_id, user_id)
-            .await?
-            .model()
-            .await?;
-
-        let channel = ctx
-            .twilight_client
-            .channel(interaction.channel.clone().unwrap().id)
-            .await?
-            .model()
-            .await?;
-        let nsfw = channel.nsfw.unwrap_or(false);
-
-        let (heck, heck_id) = get_heck(ctx.clone(), None, nsfw).await?;
-        let heckee = ctx
-            .twilight_client
-            .user(Id::new(heck.author_id))
-            .await?
-            .model()
-            .await?;
-        let heckee_avatar: String = get_user_avatar(&heckee);
-        let heck = format_heck(&heck, &self.user.resolved, &heckee).await;
-
-        let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", author.user.name))
-            .icon_url(ImageSource::url(heckee_avatar)?)
+        let heck_author_avatar = get_user_avatar(&heck_author);
+        let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", heck_author.name))
+            .icon_url(ImageSource::url(heck_author_avatar)?)
             .build();
-        let mut embed = EmbedBuilder::default()
-            .description(heck.heck_message)
+
+        // Create our response, depending on if the user wants a plaintext heck or not
+        let mut response = InteractionResponseDataBuilder::new();
+        if let Some(plaintext) = self.plaintext && plaintext {
+            response = response.content(formatted_heck.heck_message)
+        } else {
+            let mut embed = EmbedBuilder::default()
+            .description(formatted_heck.heck_message)
             .author(embed_author)
             .color(ACCENT_COLOUR);
         if nsfw {
@@ -92,19 +70,13 @@ impl HeckUserCommand {
             )))
         }
 
-        embed = embed.footer(EmbedFooterBuilder::new(format!(
-            "Heck {} - NSFW: {}",
-            heck_id, nsfw
-        )));
-
-        let response = InteractionResponseDataBuilder::new()
-            .embeds(vec![embed.build()])
-            .content(format!("<@{}>", self.user.resolved.id))
-            .build();
+         response = response.embeds(vec![embed.build()])
+         .content(format!("<@{}>", self.user.resolved.id))
+        }
 
         Ok(InteractionResponse::Raw {
             kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(response),
+            data: Some(response.build()),
         })
     }
 }

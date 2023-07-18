@@ -41,7 +41,9 @@ impl Modal {
         };
 
         consume_map(&mut input.attrs, &mut title, |attribute, title| {
-            let Some(inner) = attr::parse_named("modal", &attribute)? else { return Ok(()) };
+            let Some(inner) = attr::parse_named("modal", &attribute)? else {
+                return Ok(());
+            };
 
             for attr in inner {
                 if attr.path.get_ident().unwrap().to_string().as_str() == "title" {
@@ -78,7 +80,9 @@ impl Field {
         };
 
         consume_map(&mut field.attrs, &mut this, |attribute, this| {
-            let Some(mut inner) = attr::parse_named("modal", &attribute)? else { return Ok(()) };
+            let Some(mut inner) = attr::parse_named("modal", &attribute)? else {
+                return Ok(());
+            };
 
             consume_map(&mut inner, this, |attribute, this| {
                 this.parse(attribute)?;

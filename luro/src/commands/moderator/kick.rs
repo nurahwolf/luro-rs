@@ -144,7 +144,9 @@ impl KickCommand {
             Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline()),
         }
 
-        ctx.twilight_client.remove_guild_member(guild_id, user_to_remove.id).await?;
+        ctx.twilight_client
+            .remove_guild_member(guild_id, user_to_remove.id)
+            .await?;
 
         // If an alert channel is defined, send a message there
         let guild_settings = ctx.guilds.read().clone();
