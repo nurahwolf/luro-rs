@@ -4,10 +4,11 @@ use twilight_model::application::interaction::{application_command::CommandData,
 
 use crate::{interactions::InteractionResponse, LuroContext};
 
-use self::{ban::BanCommand, kick::KickCommand};
+use self::{ban::BanCommand, kick::KickCommand, purge::PurgeCommand};
 
 mod ban;
 mod kick;
+mod purge;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -20,6 +21,8 @@ pub enum ModeratorCommands {
     Ban(BanCommand),
     #[command(name = "kick")]
     Kick(KickCommand),
+    #[command(name = "purge")]
+    Purge(PurgeCommand),
 }
 
 impl ModeratorCommands {
@@ -35,8 +38,9 @@ impl ModeratorCommands {
 
         // Call the appropriate subcommand.
         Ok(match command {
-            ModeratorCommands::Ban(command) => command.run(ctx, interaction).await?,
-            ModeratorCommands::Kick(command) => command.run(ctx, interaction).await?,
+            Self::Ban(command) => command.run(ctx, interaction).await?,
+            Self::Kick(command) => command.run(ctx, interaction).await?,
+            Self::Purge(command) => command.run(ctx, interaction).await?,
         })
     }
 }
