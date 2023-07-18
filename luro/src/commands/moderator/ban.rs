@@ -79,12 +79,6 @@ impl BanCommand {
             TimeToBan::ThreeDays => "Previous 3 Days".to_string(),
             TimeToBan::SevenDays => "Previous 7 Days".to_string(),
         };
-        let user_to_remove = self.user.resolved;
-        let member_to_remove = match self.user.member {
-            Some(member) => member,
-            None => return Ok(not_member(user_to_remove.name)),
-        };
-
         // Fetch the author and the bot permissions.
         let guild_id = match interaction.guild_id {
             Some(guild_id) => guild_id,
@@ -110,35 +104,42 @@ impl BanCommand {
             .await?;
         let permissions = GuildPermissions::new(&ctx.twilight_client, &guild_id).await?;
         let author_permissions = permissions.member(author.user.id, &author.roles).await?;
-        let member_permissions = permissions
-            .member(user_to_remove.id, &member_to_remove.roles)
-            .await?;
-        let bot_permissions = permissions.current_member().await?;
 
-        // Check if the author and the bot have required permissions.
-        if member_permissions.is_owner() {
-            return Ok(server_owner());
-        }
+        let user_to_remove = self.user.resolved;
+
+        let bot_permissions = permissions.current_member().await?;
 
         if !bot_permissions.guild().contains(Permissions::BAN_MEMBERS) {
             return Ok(bot_missing_permission("BAN_MEMBERS".to_string()));
         }
 
-        // Check if the role hierarchy allow the author and the bot to perform
-        // the ban.
-        let member_highest_role = member_permissions.highest_role();
+        if let Some(member_to_remove) = self.user.member {
+            // The user is a member of the server, so carry out some additional checks.
+            let member_permissions = permissions
+                .member(user_to_remove.id, &member_to_remove.roles)
+                .await?;
 
-        if member_highest_role >= author_permissions.highest_role() {
-            return Ok(user_hierarchy(
-                member_to_remove
-                    .nick
-                    .unwrap_or(user_to_remove.name.to_string()),
-            ));
-        }
+            // Check if the author and the bot have required permissions.
+            if member_permissions.is_owner() {
+                return Ok(server_owner());
+            }
 
-        if member_highest_role >= bot_permissions.highest_role() {
-            return Ok(bot_hierarchy(&ctx.application.name));
-        }
+            // Check if the role hierarchy allow the author and the bot to perform
+            // the ban.
+            let member_highest_role = member_permissions.highest_role();
+
+            if member_highest_role >= author_permissions.highest_role() {
+                return Ok(user_hierarchy(
+                    member_to_remove
+                        .nick
+                        .unwrap_or(user_to_remove.name.to_string()),
+                ));
+            }
+
+            if member_highest_role >= bot_permissions.highest_role() {
+                return Ok(bot_hierarchy(&ctx.application.name));
+            }
+        };
 
         // Checks passed, now let's action the user
         let user_to_ban_dm = match ctx
@@ -183,7 +184,7 @@ impl BanCommand {
         let mut ban = ctx
             .twilight_client
             .create_ban(guild_id, user_to_remove.id)
-            .delete_message_seconds(self.purge.value().try_into().unwrap())?;
+            .delete_message_seconds(self.purge.value().try_into()?)?;
         if !reason.is_empty() {
             ban = ban.reason(&reason)?
         }
