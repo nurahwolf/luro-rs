@@ -1,4 +1,4 @@
-use tracing::info;
+use tracing::{debug, info};
 use twilight_model::gateway::payload::incoming::Ready;
 
 use crate::LuroFramework;
@@ -6,12 +6,13 @@ use crate::LuroFramework;
 impl LuroFramework {
     pub async fn ready_listener(&self, ready: Box<Ready>) -> anyhow::Result<()> {
         info!("Luro is now ready!");
-        info!("Username: {} ({})", ready.user.name, ready.user.id);
-        info!("Guilds: {}", ready.guilds.len());
+        info!("==================");
+        info!("Username: {}", ready.user.name);
+        info!("ID:       {}", ready.user.id);
+        info!("Guilds:   {}", ready.guilds.len());
 
+        debug!("Attempting to register guild settings");
         self.register_commands(self.application.id).await?;
-
-        info!("Attempting to register guild settings");
 
         // match luro.application.try_read() {
         //     Ok(application_data) => {

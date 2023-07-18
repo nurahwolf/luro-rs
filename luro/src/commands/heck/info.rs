@@ -3,7 +3,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::{interactions::InteractionResponse, LuroContext};
+use crate::{functions::interaction_context, interactions::InteractionResponse, LuroContext};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -19,11 +19,7 @@ impl HeckInfo {
         ctx: LuroContext,
         interaction: &Interaction,
     ) -> anyhow::Result<InteractionResponse> {
-        tracing::debug!(
-            "heck user command in channel {} by {}",
-            interaction.channel.clone().unwrap().name.unwrap(),
-            interaction.user.clone().unwrap().name
-        );
+        let (_, _, _) = interaction_context(interaction, "'heck info' command invoked")?;
         let global_data = ctx.global_data.read();
 
         let mut embed = EmbedBuilder::new().title("Heck Information - Global");

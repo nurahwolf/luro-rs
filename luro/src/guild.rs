@@ -1,3 +1,4 @@
+use std::collections::hash_map::Entry;
 use std::{collections::HashMap, path::Path};
 
 use anyhow::Error;
@@ -17,6 +18,7 @@ use twilight_model::{
 };
 
 use crate::framework::LuroFramework;
+use crate::LuroContext;
 use crate::{hecks::Hecks, GUILDSETTINGS_FILE_PATH};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -101,5 +103,28 @@ impl LuroGuilds {
             Ok(_) => Ok(()),
             Err(why) => Err(Error::msg(format!("Error writing toml file: {why}"))),
         }
+    }
+
+    /// Create guild settings for a guild, if it is not present.
+    pub fn check_guild_is_present(
+        ctx: LuroContext,
+        guild_id: Id<GuildMarker>,
+    ) -> anyhow::Result<()> {
+        let mut guild_db = ctx.guilds.write();
+
+        match guild_db.entry(guild_id) {
+            Entry::Occupied(_) => (),
+            Entry::Vacant(vacant) => {
+                vacant.insert(LuroGuild {
+                    commands: Default::default(),
+                    hecks: Default::default(),
+                    accent_colour: Default::default(),
+                    accent_colour_custom: Default::default(),
+                    discord_events_log_channel: Default::default(),
+                    moderator_actions_log_channel: Default::default(),
+                });
+            }
+        };
+        Ok(())
     }
 }

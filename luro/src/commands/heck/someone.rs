@@ -1,3 +1,4 @@
+use tracing::{debug, trace};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     application::interaction::Interaction, http::interaction::InteractionResponseType, id::Id,
@@ -16,26 +17,39 @@ use crate::{
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "someone", desc = "Heck a user", dm_permission = true)]
-pub struct HeckUserCommand {
+pub struct HeckSomeoneCommand {
     /// The user to heck
     pub user: ResolvedUser,
+    /// Get a global heck, or a heck that is specific to this server
+    pub global: bool,
     /// Get a specific heck
     pub id: Option<i64>,
     /// Should the heck be sent as plaintext? (Without an embed)
     pub plaintext: Option<bool>,
 }
 
-impl HeckUserCommand {
+impl HeckSomeoneCommand {
     pub async fn run(self, ctx: LuroContext, interaction: &Interaction) -> SlashResponse {
         let (interaction_channel, interaction_author, _) =
-            interaction_context(interaction, "heck user")?;
+            interaction_context(interaction, "heck someone")?;
         // Is the channel the interaction called in NSFW?
         let nsfw = interaction_channel.nsfw.unwrap_or(false);
 
-        let (heck, heck_id) = get_heck(ctx.clone(), self.id, nsfw).await?;
+        debug!("attempting to get a heck");
+        let (heck, heck_id) = get_heck(
+            ctx.clone(),
+            self.id,
+            interaction.guild_id,
+            self.global,
+            nsfw,
+        )
+        .await?;
+
+        debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, interaction_author, &self.user.resolved).await;
 
         // Attempt to get the author of the heck
+        debug!("attempting to get the author of the heck");
         let heck_author = match ctx.twilight_cache.user(Id::new(heck.author_id)) {
             Some(ok) => ok.clone(),
             None => {
@@ -52,10 +66,13 @@ impl HeckUserCommand {
             .build();
 
         // Create our response, depending on if the user wants a plaintext heck or not
+        debug!("creating our response");
         let mut response = InteractionResponseDataBuilder::new();
         if let Some(plaintext) = self.plaintext && plaintext {
+            trace!("user wanted plaintext");
             response = response.content(formatted_heck.heck_message)
         } else {
+            trace!("user wanted embed");
             let mut embed = EmbedBuilder::default()
             .description(formatted_heck.heck_message)
             .author(embed_author)

@@ -6,8 +6,8 @@ use anyhow::{bail, Error};
 use twilight_http::client::InteractionClient;
 use twilight_model::{
     application::interaction::{
-        application_command::InteractionMember, modal::ModalInteractionData, Interaction,
-        InteractionData,
+        application_command::InteractionMember, message_component::MessageComponentInteractionData,
+        modal::ModalInteractionData, Interaction, InteractionData,
     },
     channel::Channel,
     guild::PartialMember,
@@ -242,6 +242,15 @@ pub fn parse_modal_data(
 ) -> Result<ModalInteractionData, anyhow::Error> {
     match mem::take(&mut interaction.data) {
         Some(InteractionData::ModalSubmit(data)) => Ok(data),
+        _ => bail!("unable to parse modal data, received unknown data type"),
+    }
+}
+
+pub fn parse_component_data(
+    interaction: &mut Interaction,
+) -> Result<MessageComponentInteractionData, anyhow::Error> {
+    match mem::take(&mut interaction.data) {
+        Some(InteractionData::MessageComponent(data)) => Ok(data),
         _ => bail!("unable to parse modal data, received unknown data type"),
     }
 }

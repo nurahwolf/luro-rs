@@ -4,6 +4,9 @@ use anyhow::Context;
 use futures_util::StreamExt;
 use interactions::InteractionResponse;
 use std::{env, sync::Arc};
+use tracing_subscriber::{
+    filter, fmt, prelude::__tracing_subscriber_SubscriberExt, reload, util::SubscriberInitExt,
+};
 use twilight_gateway::{stream::ShardEventStream, Intents};
 
 use crate::{commands::Commands, framework::LuroFramework};
@@ -64,8 +67,12 @@ pub type SlashResponse = Result<InteractionResponse, anyhow::Error>;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Initialise the tracing subscriber
-    tracing_subscriber::fmt::init();
-    tracing::info!("Booting Luro!");
+    let filter = filter::LevelFilter::DEBUG;
+    let (filter, reload_handle) = reload::Layer::new(filter);
+    tracing_subscriber::registry()
+        .with(filter)
+        .with(fmt::Layer::default())
+        .init();
 
     // Key things needed for the framework
     let (token, lavalink_host, lavalink_auth, intents) = (
@@ -82,8 +89,15 @@ async fn main() -> anyhow::Result<()> {
     let commands = Commands::default_commands();
 
     // Create the framework
-    let (luro, mut shards) =
-        LuroFramework::builder(commands, intents, lavalink_auth, lavalink_host, token).await?;
+    let (luro, mut shards) = LuroFramework::builder(
+        commands,
+        intents,
+        lavalink_auth,
+        lavalink_host,
+        token,
+        reload_handle,
+    )
+    .await?;
     let mut stream = ShardEventStream::new(shards.iter_mut());
 
     while let Some((shard, event)) = stream.next().await {

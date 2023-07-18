@@ -5,7 +5,7 @@ use twilight_model::application::command::Command;
 
 use self::{
     boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand,
-    moderator::ModeratorCommands, music::MusicCommands, say::SayCommand, owner::OwnerCommands,
+    moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands, say::SayCommand,
 };
 
 pub mod boop;
@@ -14,8 +14,8 @@ pub mod heck;
 pub mod hello;
 pub mod moderator;
 pub mod music;
-pub mod say;
 pub mod owner;
+pub mod say;
 
 #[derive(Default)]
 pub struct Commands {
@@ -50,7 +50,7 @@ impl Commands {
         init.global_commands
             .insert("heck", HeckCommands::create_command().into());
         init.global_commands
-        .insert("owner", OwnerCommands::create_command().into());
+            .insert("owner", OwnerCommands::create_command().into());
 
         // Return our initialised commands
         init

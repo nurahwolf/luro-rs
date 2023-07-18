@@ -16,11 +16,15 @@ use crate::{
     commands::{
         boop::BoopCommand,
         count::CountCommand,
-        heck::{add::handle_heck_model, HeckCommands},
+        heck::{
+            add::{handle_heck_model, HeckAddCommand},
+            HeckCommands,
+        },
         hello::HelloCommand,
         moderator::ModeratorCommands,
         music::MusicCommands,
-        say::SayCommand, owner::OwnerCommands,
+        owner::OwnerCommands,
+        say::SayCommand,
     },
     framework::LuroFramework,
     functions::CustomId,
@@ -71,7 +75,9 @@ impl LuroFramework {
             InteractionType::ApplicationCommand => {
                 self.clone().handle_command(&interaction, shard).await
             }
-            InteractionType::MessageComponent => self.handle_component(&interaction).await,
+            InteractionType::MessageComponent => {
+                self.handle_component(self.clone(), &interaction).await
+            }
             InteractionType::ModalSubmit => handle_modal(interaction, &self).await,
             other => {
                 warn!("received unexpected {} interaction", other.kind());
@@ -143,6 +149,7 @@ impl LuroFramework {
     /// Handle incoming component interaction
     async fn handle_component(
         &self,
+        ctx: LuroContext,
         interaction: &Interaction,
     ) -> Result<InteractionResponse, anyhow::Error> {
         let custom_id = match &interaction.data {
@@ -152,6 +159,8 @@ impl LuroFramework {
 
         match &*custom_id.name {
             "boop" => BoopCommand::button(interaction).await,
+            "heck-setting" => HeckAddCommand::handle(ctx, interaction).await,
+
             name => {
                 warn!(name = name, "received unknown component");
 

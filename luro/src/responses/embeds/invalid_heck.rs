@@ -11,11 +11,19 @@ pub fn embed(heck_message: &str) -> EmbedBuilder {
 }
 
 /// Repond with an invalid heck error
-pub fn response(missing_user: bool, missing_author: bool, heck_message: &str) -> InteractionResponse {
+pub fn response(
+    missing_user: bool,
+    missing_author: bool,
+    heck_message: &str,
+) -> InteractionResponse {
     let mut embed = embed(heck_message);
 
-    if missing_user { embed = embed.field(EmbedFieldBuilder::new("Missing Value", "`<user>`").inline()) };
-    if missing_author { embed = embed.field(EmbedFieldBuilder::new("Missing Value", "`<author>`").inline()) };
+    if missing_user {
+        embed = embed.field(EmbedFieldBuilder::new("Missing Value", "`<user>`").inline())
+    };
+    if missing_author {
+        embed = embed.field(EmbedFieldBuilder::new("Missing Value", "`<author>`").inline())
+    };
 
     InteractionResponse::Embed {
         embeds: vec![embed.build()],

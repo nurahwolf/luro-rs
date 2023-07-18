@@ -60,37 +60,25 @@ impl Hecks {
         }
     }
 
-    /// Reload ALL hecks
-    pub fn reload(&mut self, new_hecks: &Hecks) -> &mut Self {
-        self.sfw_hecks = new_hecks.sfw_hecks.clone();
-        self.nsfw_hecks = new_hecks.nsfw_hecks.clone();
-        self.sfw_heck_ids = calculate_heck_ids(self.sfw_hecks.clone());
-        self.nsfw_heck_ids = calculate_heck_ids(self.nsfw_hecks.clone());
-        self
-    }
-
-    /// Reload all heck IDs only
-    pub fn reload_all_heck_ids(&mut self) {
-        self.sfw_heck_ids = calculate_heck_ids(self.sfw_hecks.clone());
-        self.nsfw_heck_ids = calculate_heck_ids(self.nsfw_hecks.clone());
-    }
-
     /// Reload sfw heck IDs
     pub fn reload_sfw_heck_ids(&mut self) {
-        self.sfw_heck_ids = calculate_heck_ids(self.sfw_hecks.clone());
+        let mut heck_ids = vec![];
+
+        for num in 0..self.sfw_hecks.len() {
+            heck_ids.push(num)
+        }
+
+        self.sfw_heck_ids = heck_ids;
     }
 
     /// Reload nsfw heck IDs
     pub fn reload_nsfw_heck_ids(&mut self) {
-        self.nsfw_heck_ids = calculate_heck_ids(self.nsfw_hecks.clone());
-    }
-}
+        let mut heck_ids = vec![];
 
-/// Returns a vector filled with the available heck IDs
-fn calculate_heck_ids(hecks: Vec<Heck>) -> Vec<usize> {
-    let mut heck_ids = vec![];
-    for num in 0..hecks.len() {
-        heck_ids.push(num)
+        for num in 0..self.nsfw_hecks.len() {
+            heck_ids.push(num)
+        }
+
+        self.nsfw_heck_ids = heck_ids;
     }
-    heck_ids
 }

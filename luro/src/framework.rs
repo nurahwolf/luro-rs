@@ -3,6 +3,8 @@ use std::{collections::HashMap, convert::TryInto, net::SocketAddr, str::FromStr,
 use anyhow::Error;
 use hyper::client::HttpConnector;
 use parking_lot::RwLock;
+use tracing::metadata::LevelFilter;
+use tracing_subscriber::{reload::Handle, Registry};
 use twilight_cache_inmemory::InMemoryCache;
 use twilight_gateway::{stream, ConfigBuilder, Intents, Shard};
 use twilight_http::{client::InteractionClient, Client};
@@ -44,6 +46,7 @@ pub struct LuroFramework {
     pub guilds: RwLock<HashMap<Id<GuildMarker>, LuroGuild>>,
     /// Mutable data used throughout Luro
     pub global_data: RwLock<GlobalData>,
+    pub tracing_subscriber: Handle<LevelFilter, Registry>,
 }
 
 impl LuroFramework {
@@ -55,6 +58,7 @@ impl LuroFramework {
         lavalink_auth: String,
         lavalink_host: String,
         token: String,
+        tracing_subscriber: Handle<LevelFilter, Registry>,
     ) -> Result<(Arc<Self>, Vec<Shard>), Error> {
         let (twilight_client, twilight_cache, shard_config) = (
             twilight_http::Client::new(token.clone()),
@@ -95,6 +99,7 @@ impl LuroFramework {
                 commands,
                 guilds,
                 global_data,
+                tracing_subscriber,
             }
             .into(),
             shards,
