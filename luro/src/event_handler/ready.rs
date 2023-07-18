@@ -5,11 +5,25 @@ use crate::LuroFramework;
 
 impl LuroFramework {
     pub async fn ready_listener(&self, ready: Box<Ready>) -> anyhow::Result<()> {
+        let mut presence_string = "/about".to_owned();
         info!("Luro is now ready!");
         info!("==================");
-        info!("Username: {}", ready.user.name);
-        info!("ID:       {}", ready.user.id);
-        info!("Guilds:   {}", ready.guilds.len());
+        info!("Username:     {}", ready.user.name);
+        info!("ID:           {}", ready.user.id);
+        info!("Guilds:       {}", ready.guilds.len());
+        info!("API Version:  {}", ready.version);
+
+        if let Some(shard) = ready.shard {
+            info!("Shard:        {}", shard.number());
+            info!("Total Shards: {}", shard.total());
+            presence_string.push_str(format!(" | shard {}", shard.number()).as_str());
+        }
+
+        presence_string.push_str(format!(" | on {} guilds", ready.guilds.len()).as_str());
+
+        if let Some(owner) = &self.application.owner {
+            info!("Owner:        {}", owner.name);
+        }
 
         debug!("Attempting to register guild settings");
         self.register_commands(self.application.id).await?;
