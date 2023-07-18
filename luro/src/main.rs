@@ -22,6 +22,9 @@ pub mod macros;
 pub mod permissions;
 pub mod responses;
 
+/// [tracing_subscriber] filter level
+pub const FILTER: filter::LevelFilter = filter::LevelFilter::INFO;
+
 /// Luro's main accent colour
 pub const ACCENT_COLOUR: u32 = 0xDABEEF;
 /// Luro's DANGER colour
@@ -67,8 +70,7 @@ pub type SlashResponse = Result<InteractionResponse, anyhow::Error>;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Initialise the tracing subscriber
-    let filter = filter::LevelFilter::DEBUG;
-    let (filter, reload_handle) = reload::Layer::new(filter);
+    let (filter, reload_handle) = reload::Layer::new(FILTER);
     tracing_subscriber::registry()
         .with(filter)
         .with(fmt::Layer::default())
