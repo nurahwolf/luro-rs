@@ -47,7 +47,7 @@ impl LuroFramework {
         ctx.lavalink.process(&event).await?;
 
         match event {
-            Event::Ready(ready) => ctx.ready_listener(ready).await?,
+            Event::Ready(ready) => ctx.ready_listener(ready, shard).await?,
             Event::InteractionCreate(interaction) => {
                 ctx.handle_interaction(interaction.0, shard).await?
             }

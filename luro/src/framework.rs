@@ -12,7 +12,7 @@ use twilight_lavalink::Lavalink;
 use twilight_model::{
     application::command::Command,
     id::{marker::GuildMarker, Id},
-    oauth::Application,
+    oauth::Application, gateway::{payload::outgoing::update_presence::UpdatePresencePayload, presence::{MinimalActivity, ActivityType, Status}},
 };
 
 use crate::{
@@ -63,7 +63,19 @@ impl LuroFramework {
         let (twilight_client, twilight_cache, shard_config) = (
             twilight_http::Client::new(token.clone()),
             InMemoryCache::new(),
-            ConfigBuilder::new(token, intents).build(),
+            ConfigBuilder::new(token, intents)
+                .presence(UpdatePresencePayload::new(
+                    vec![MinimalActivity {
+                        kind: ActivityType::Playing,
+                        name: "/about | Hello World!".to_owned(),
+                        url: None,
+                    }
+                    .into()],
+                    false,
+                    None,
+                    Status::Online,
+                )?)
+                .build(),
         );
 
         let shards = stream::create_recommended(&twilight_client, shard_config, |_, c| c.build())

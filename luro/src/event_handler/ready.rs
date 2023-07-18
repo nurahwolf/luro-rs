@@ -1,10 +1,11 @@
 use tracing::{debug, info};
-use twilight_model::gateway::payload::incoming::Ready;
+use twilight_gateway::MessageSender;
+use twilight_model::gateway::{payload::{outgoing::UpdatePresence, incoming::Ready}, presence::{MinimalActivity, ActivityType, Status}};
 
 use crate::LuroFramework;
 
 impl LuroFramework {
-    pub async fn ready_listener(&self, ready: Box<Ready>) -> anyhow::Result<()> {
+    pub async fn ready_listener(&self, ready: Box<Ready>, shard: MessageSender,) -> anyhow::Result<()> {
         let mut presence_string = "/about".to_owned();
         info!("Luro is now ready!");
         info!("==================");
@@ -13,13 +14,27 @@ impl LuroFramework {
         info!("Guilds:       {}", ready.guilds.len());
         info!("API Version:  {}", ready.version);
 
-        if let Some(shard) = ready.shard {
-            info!("Shard:        {}", shard.number());
-            info!("Total Shards: {}", shard.total());
-            presence_string.push_str(format!(" | shard {}", shard.number()).as_str());
-        }
-
         presence_string.push_str(format!(" | on {} guilds", ready.guilds.len()).as_str());
+
+
+        if let Some(shard_id) = ready.shard {
+            info!("Shard:        {}", shard_id.number());
+            info!("Total Shards: {}", shard_id.total());
+            presence_string.push_str(format!(" | shard {}", shard_id.number()).as_str());
+
+            shard.command(&UpdatePresence::new(
+                vec![MinimalActivity {
+                    kind: ActivityType::Playing,
+                    name: presence_string,
+                    url: None,
+                }
+                .into()],
+                false,
+                None,
+                Status::Online,
+            )?)?;
+        };
+
 
         if let Some(owner) = &self.application.owner {
             info!("Owner:        {}", owner.name);
