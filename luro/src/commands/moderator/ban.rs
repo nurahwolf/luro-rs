@@ -8,18 +8,18 @@ use twilight_model::{application::interaction::Interaction, guild::Permissions};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
-    framework::LuroFramework,
+    functions::defer_interaction,
     interactions::InteractionResponse,
     permissions::GuildPermissions,
     responses::embeds::{
         ban::{embed, interaction_response},
         bot_hierarchy::bot_hierarchy,
         bot_missing_permissions::bot_missing_permission,
-        not_member::not_member,
         server_owner::server_owner,
         unable_to_get_guild::unable_to_get_guild,
         user_hierarchy::user_hierarchy,
     },
+    LuroContext,
 };
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
@@ -63,9 +63,12 @@ impl BanCommand {
 
     pub async fn run(
         self,
-        ctx: &LuroFramework,
+        ctx: &LuroContext,
         interaction: &Interaction,
     ) -> Result<InteractionResponse, anyhow::Error> {
+        // Defer this interaction
+        defer_interaction(ctx, interaction);
+
         let reason = match self.reason {
             Some(reason) => reason,
             None => String::new(),
@@ -201,8 +204,9 @@ impl BanCommand {
         };
 
         // Now respond to the original interaction
-        Ok(crate::interactions::InteractionResponse::Embed {
-            embeds: vec![embed.build()],
+        Ok(crate::interactions::InteractionResponse::Update {
+            content: None,
+            embeds: Some(vec![embed.build()]),
             components: None,
             ephemeral: false,
         })

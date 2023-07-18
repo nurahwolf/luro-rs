@@ -4,6 +4,7 @@ use std::{fmt::Display, mem, str::FromStr};
 
 use anyhow::{bail, Error};
 use twilight_http::client::InteractionClient;
+use twilight_model::http::interaction::InteractionResponse;
 use twilight_model::{
     application::interaction::{
         application_command::InteractionMember, message_component::MessageComponentInteractionData,
@@ -11,7 +12,7 @@ use twilight_model::{
     },
     channel::Channel,
     guild::PartialMember,
-    http::interaction::{InteractionResponse, InteractionResponseType},
+    http::interaction::InteractionResponseType,
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
@@ -79,6 +80,11 @@ use twilight_model::{
     guild::Member,
     id::{marker::GuildMarker, Id},
     user::User,
+};
+
+use crate::{
+    interactions::{InteractionResponder, InteractionResponse as LuroResponse},
+    LuroContext,
 };
 
 pub fn assemble_user_avatar(user: &User) -> String {
@@ -282,4 +288,18 @@ pub fn parse_modal_field_required<'a>(
     let value = parse_modal_field(data, name)?;
 
     value.ok_or_else(|| anyhow!("required modal field is empty: {}", name))
+}
+
+pub async fn defer_interaction(ctx: &LuroContext, interaction: &Interaction) -> anyhow::Result<()> {
+    InteractionResponder::from_interaction(interaction)
+        .respond(
+            ctx,
+            LuroResponse::Raw {
+                kind: InteractionResponseType::DeferredChannelMessageWithSource,
+                data: None,
+            },
+        )
+        .await?;
+
+    Ok(())
 }

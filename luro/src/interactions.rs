@@ -86,9 +86,39 @@ impl InteractionResponder {
     ) -> Result<(), Error> {
         let client = ctx.twilight_client.interaction(self.application_id);
 
-        client
-            .create_response(self.id, &self.token, &response.into_http())
-            .await?;
+        match response {
+            InteractionResponse::Update {
+                content,
+                embeds,
+                components,
+                ephemeral,
+            } => {
+                let mut followup = client.create_followup(&self.token);
+
+                if let Some(content) = &content {
+                    followup = followup.content(content)?
+                };
+
+                if let Some(embeds) = &embeds {
+                    followup = followup.embeds(embeds)?;
+                };
+
+                if let Some(components) = &components {
+                    followup = followup.components(components)?;
+                };
+
+                if ephemeral {
+                    followup = followup.flags(MessageFlags::EPHEMERAL)
+                }
+
+                followup.await?;
+            }
+            _ => {
+                client
+                    .create_response(self.id, &self.token, &response.into_http())
+                    .await?;
+            }
+        };
 
         Ok(())
     }

@@ -2,7 +2,7 @@ use anyhow::Context;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::{application_command::CommandData, Interaction};
 
-use crate::{framework::LuroFramework, interactions::InteractionResponse};
+use crate::{interactions::InteractionResponse, LuroContext};
 
 use self::{ban::BanCommand, kick::KickCommand};
 
@@ -26,7 +26,7 @@ impl ModeratorCommands {
     /// Handle incoming `/mod` commands.
     pub async fn run(
         interaction: &Interaction,
-        ctx: &LuroFramework,
+        ctx: &LuroContext,
         data: CommandData,
     ) -> anyhow::Result<InteractionResponse> {
         // Parse the command data into a structure using twilight-interactions.
