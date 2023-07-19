@@ -168,7 +168,6 @@ impl BanCommand {
             guild.clone(),
             author.clone(),
             user_to_remove.clone(),
-            guild_id,
             &reason,
             &period_string,
         )?;

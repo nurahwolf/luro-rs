@@ -19,12 +19,11 @@ pub fn embed(
     guild: Guild,
     moderator: Member,
     banned_user: User,
-    guild_id: Id<GuildMarker>,
     reason: &String,
     period: &String,
 ) -> Result<EmbedBuilder, Error> {
     // Variables for the moderator
-    let moderator_avatar = get_member_avatar(Some(&moderator), &Some(guild_id), &moderator.user);
+    let moderator_avatar = get_member_avatar(Some(&moderator), &Some(guild.id), &moderator.user);
     let moderator_name = if moderator.user.discriminator == 0 {
         moderator.user.name
     } else {
@@ -77,7 +76,7 @@ pub fn interaction_response(
     period: &String,
     success: bool,
 ) -> Result<InteractionResponse, Error> {
-    let mut embed = embed(guild, moderator, banned_user, guild_id, reason, period)?;
+    let mut embed = embed(guild, moderator, banned_user, reason, period)?;
     if success {
         embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
     } else {

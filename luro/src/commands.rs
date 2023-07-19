@@ -4,10 +4,12 @@ use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
 
 use self::{
-    boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand,
-    moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands, say::SayCommand,
+    about::AboutCommand, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
+    hello::HelloCommand, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
+    say::SayCommand,
 };
 
+pub mod about;
 pub mod boop;
 pub mod count;
 pub mod heck;
@@ -51,6 +53,8 @@ impl Commands {
             .insert("heck", HeckCommands::create_command().into());
         init.global_commands
             .insert("owner", OwnerCommands::create_command().into());
+        init.global_commands
+            .insert("about", AboutCommand::create_command().into());
 
         // Return our initialised commands
         init

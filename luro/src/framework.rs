@@ -11,8 +11,15 @@ use twilight_http::{client::InteractionClient, Client};
 use twilight_lavalink::Lavalink;
 use twilight_model::{
     application::command::Command,
-    id::{marker::GuildMarker, Id},
-    oauth::Application, gateway::{payload::outgoing::update_presence::UpdatePresencePayload, presence::{MinimalActivity, ActivityType, Status}},
+    gateway::{
+        payload::outgoing::update_presence::UpdatePresencePayload,
+        presence::{ActivityType, MinimalActivity, Status},
+    },
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
+    oauth::Application,
 };
 
 use crate::{
@@ -26,6 +33,7 @@ pub struct GlobalData {
     /// Simply used as a test to make sure that data is shared across threads
     pub count: usize,
     pub hecks: Hecks,
+    pub owners: Vec<Id<UserMarker>>,
 }
 
 /// The framework used to dispatch slash commands.
@@ -99,7 +107,13 @@ impl LuroFramework {
         let hyper_client = hyper::Client::new();
         let guilds = LuroGuilds::get().await?.guilds.into();
         let hecks = Hecks::get(HECK_FILE_PATH).await?;
-        let global_data = GlobalData { count: 0, hecks }.into();
+        let owners = vec![Id::new(97003404601094144)];
+        let global_data = GlobalData {
+            count: 0,
+            hecks,
+            owners,
+        }
+        .into();
 
         Ok((
             Self {

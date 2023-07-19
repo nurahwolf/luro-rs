@@ -14,6 +14,7 @@ use twilight_model::{
 
 use crate::{
     commands::{
+        about::AboutCommand,
         boop::BoopCommand,
         count::CountCommand,
         heck::{
@@ -37,6 +38,7 @@ mod message_create;
 mod message_delete;
 mod message_update;
 mod ready;
+mod ban_add;
 
 impl LuroFramework {
     pub async fn handle_event(
@@ -45,17 +47,16 @@ impl LuroFramework {
         shard: MessageSender,
     ) -> anyhow::Result<()> {
         ctx.lavalink.process(&event).await?;
+        ctx.twilight_cache.update(&event);
 
         match event {
             Event::Ready(ready) => ctx.ready_listener(ready, shard).await?,
-            Event::InteractionCreate(interaction) => {
-                ctx.handle_interaction(interaction.0, shard).await?
-            }
-            Event::MessageCreate(message) => {
-                LuroFramework::message_create_listener(message).await?
-            }
+            Event::InteractionCreate(interaction) => ctx.handle_interaction(interaction.0, shard).await?,
+            Event::MessageCreate(message) => ctx.message_create_listener(message).await?,
             Event::MessageDelete(message) => ctx.message_delete_listener(message).await?,
             Event::MessageUpdate(message) => LuroFramework::message_update_handler(message).await?,
+            Event::BanAdd(ban) => ctx.ban_add_listener(ban).await?,
+
             _ => (),
         };
 
@@ -113,9 +114,17 @@ impl LuroFramework {
         };
 
         Ok(match data.name.as_str() {
+            "about" => {
+                AboutCommand::run(
+                    AboutCommand::from_interaction(data.into())?,
+                    &self,
+                    interaction,
+                )
+                .await?
+            }
             "say" => SayCommand::run(SayCommand::from_interaction(data.into())?).await?,
             "hello" => {
-                HelloCommand::execute(
+                HelloCommand::run(
                     &HelloCommand::from_interaction(data.into())?,
                     &self,
                     interaction,

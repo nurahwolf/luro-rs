@@ -1,6 +1,8 @@
 use anyhow::anyhow;
 use core::fmt;
 use std::{fmt::Display, mem, str::FromStr};
+use twilight_model::user::CurrentUser;
+use twilight_util::builder::embed::EmbedBuilder;
 
 use anyhow::{bail, Error};
 use twilight_http::client::InteractionClient;
@@ -82,6 +84,7 @@ use twilight_model::{
     user::User,
 };
 
+use crate::ACCENT_COLOUR;
 use crate::{
     interactions::{InteractionResponder, InteractionResponse as LuroResponse},
     LuroContext,
@@ -170,6 +173,25 @@ pub fn get_user_avatar(user: &User) -> String {
     };
 
     let modulo = user.discriminator % 5;
+    format!("https://cdn.discordapp.com/embed/avatars/{modulo}.png")
+}
+
+/// Return a string that is a link to the user's avatar
+pub fn get_currentuser_avatar(currentuser: &CurrentUser) -> String {
+    let user_id = currentuser.id;
+
+    if let Some(user_avatar) = currentuser.avatar {
+        match user_avatar.is_animated() {
+            true => {
+                return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.gif")
+            }
+            false => {
+                return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.png")
+            }
+        }
+    };
+
+    let modulo = currentuser.discriminator % 5;
     format!("https://cdn.discordapp.com/embed/avatars/{modulo}.png")
 }
 
@@ -302,4 +324,25 @@ pub async fn defer_interaction(ctx: &LuroContext, interaction: &Interaction) -> 
         .await?;
 
     Ok(())
+}
+
+pub async fn accent_colour(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u32 {
+    if let Some(guild_id) = guild_id {
+        let guild_db = ctx.guilds.read();
+        let guild_settings = guild_db.get(&guild_id);
+
+        if let Some(guild_settings) = guild_settings {
+            if let Some(custom_accent_colour) = guild_settings.accent_colour_custom {
+                return custom_accent_colour;
+            };
+
+            return guild_settings.accent_colour;
+        }
+    };
+
+    ACCENT_COLOUR
+}
+
+pub async fn base_embed(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {
+    EmbedBuilder::new().color(accent_colour(ctx, guild_id).await)
 }

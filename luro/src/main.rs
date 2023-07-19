@@ -82,10 +82,7 @@ async fn main() -> anyhow::Result<()> {
         env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
         env::var("LAVALINK_AUTHORISATION")
             .context("Failed to get the variable LAVALINK_AUTHORISATION")?,
-        Intents::GUILD_MESSAGES
-            | Intents::GUILD_VOICE_STATES
-            | Intents::MESSAGE_CONTENT
-            | Intents::GUILD_INVITES,
+        Intents::all()
     );
 
     let commands = Commands::default_commands();

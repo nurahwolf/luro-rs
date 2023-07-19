@@ -11,7 +11,7 @@ use crate::{
 pub struct HelloCommand {}
 
 impl HelloCommand {
-    pub async fn execute(
+    pub async fn run(
         &self,
         ctx: &LuroFramework,
         interaction: &Interaction,

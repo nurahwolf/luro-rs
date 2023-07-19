@@ -1,11 +1,18 @@
 use tracing::{debug, info};
 use twilight_gateway::MessageSender;
-use twilight_model::gateway::{payload::{outgoing::UpdatePresence, incoming::Ready}, presence::{MinimalActivity, ActivityType, Status}};
+use twilight_model::gateway::{
+    payload::{incoming::Ready, outgoing::UpdatePresence},
+    presence::{ActivityType, MinimalActivity, Status},
+};
 
 use crate::LuroFramework;
 
 impl LuroFramework {
-    pub async fn ready_listener(&self, ready: Box<Ready>, shard: MessageSender,) -> anyhow::Result<()> {
+    pub async fn ready_listener(
+        &self,
+        ready: Box<Ready>,
+        shard: MessageSender,
+    ) -> anyhow::Result<()> {
         let mut presence_string = "/about".to_owned();
         info!("Luro is now ready!");
         info!("==================");
@@ -15,7 +22,6 @@ impl LuroFramework {
         info!("API Version:  {}", ready.version);
 
         presence_string.push_str(format!(" | on {} guilds", ready.guilds.len()).as_str());
-
 
         if let Some(shard_id) = ready.shard {
             info!("Shard:        {}", shard_id.number());
@@ -34,7 +40,6 @@ impl LuroFramework {
                 Status::Online,
             )?)?;
         };
-
 
         if let Some(owner) = &self.application.owner {
             info!("Owner:        {}", owner.name);
