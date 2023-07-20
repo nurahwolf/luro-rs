@@ -2,17 +2,13 @@ use tracing::{debug, info};
 use twilight_gateway::MessageSender;
 use twilight_model::gateway::{
     payload::{incoming::Ready, outgoing::UpdatePresence},
-    presence::{ActivityType, MinimalActivity, Status},
+    presence::{ActivityType, MinimalActivity, Status}
 };
 
 use crate::LuroFramework;
 
 impl LuroFramework {
-    pub async fn ready_listener(
-        &self,
-        ready: Box<Ready>,
-        shard: MessageSender,
-    ) -> anyhow::Result<()> {
+    pub async fn ready_listener(&self, ready: Box<Ready>, shard: MessageSender) -> anyhow::Result<()> {
         let mut presence_string = "/about".to_owned();
         info!("Luro is now ready!");
         info!("==================");
@@ -32,12 +28,12 @@ impl LuroFramework {
                 vec![MinimalActivity {
                     kind: ActivityType::Playing,
                     name: presence_string,
-                    url: None,
+                    url: None
                 }
                 .into()],
                 false,
                 None,
-                Status::Online,
+                Status::Online
             )?)?;
         };
 

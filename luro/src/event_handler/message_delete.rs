@@ -10,10 +10,7 @@ impl LuroFramework {
             let author = message.author();
             let content = message.content();
 
-            info!(
-                "Message Deleted - Author ID: {}\nContent: {}",
-                author, content
-            );
+            info!("Message Deleted - Author ID: {}\nContent: {}", author, content);
         };
 
         Ok(())
