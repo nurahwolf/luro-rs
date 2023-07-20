@@ -34,16 +34,21 @@ impl LuroFramework {
         ctx.lavalink.process(&event).await?;
         ctx.twilight_cache.update(&event);
 
-        match event {
-            Event::Ready(ready) => ctx.ready_listener(ready, shard).await?,
-            Event::InteractionCreate(interaction) => ctx.handle_interaction(interaction.0, shard).await?,
-            Event::MessageCreate(message) => ctx.message_create_listener(message).await?,
-            Event::MessageDelete(message) => ctx.message_delete_listener(message).await?,
-            Event::MessageUpdate(message) => LuroFramework::message_update_handler(message).await?,
-            Event::BanAdd(ban) => ctx.ban_add_listener(ban).await?,
-
-            _ => ()
+        let callback = match event {
+            Event::Ready(ready) => ctx.ready_listener(ready, shard).await,
+            Event::InteractionCreate(interaction) => ctx.handle_interaction(interaction.0, shard).await,
+            Event::MessageCreate(message) => ctx.message_create_listener(message).await,
+            Event::MessageDelete(message) => ctx.message_delete_listener(message).await,
+            Event::MessageUpdate(message) => LuroFramework::message_update_handler(message).await,
+            Event::BanAdd(ban) => ctx.ban_add_listener(ban).await,
+            _ => Ok(())
         };
+
+        // TODO: Really shitty event handler, please change this
+        if let Err(why) = callback {
+            let why = why.to_string();
+            error!(why)
+        }
 
         Ok(())
     }
