@@ -2,18 +2,16 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{interactions::InteractionResponse, COLOUR_DANGER};
 
-/// User is not a server member.
-pub fn not_member(username: String) -> InteractionResponse {
+/// Unknown command received
+pub fn unknown_command() -> InteractionResponse {
     let embed = EmbedBuilder::new()
+        .title("Unknown Command Received")
         .color(COLOUR_DANGER)
-        .description(format!(
-            "I'm afraid {username} is no longer a member of the server."
-        ))
+        .description("We had a fucky wucky!")
         .build();
 
     InteractionResponse::Embed {
         embeds: vec![embed],
-        components: None,
-        ephemeral: true,
+        ephemeral: true
     }
 }

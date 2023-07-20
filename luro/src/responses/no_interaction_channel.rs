@@ -16,7 +16,6 @@ pub fn embed() -> EmbedBuilder {
 pub fn no_interaction_channel() -> InteractionResponse {
     InteractionResponse::Embed {
         embeds: vec![embed().build()],
-        components: None,
-        ephemeral: true,
+        ephemeral: true
     }
 }

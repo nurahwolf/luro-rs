@@ -13,7 +13,6 @@ pub fn embed() -> EmbedBuilder {
 pub fn not_owner_response() -> InteractionResponse {
     InteractionResponse::Embed {
         embeds: vec![embed().build()],
-        components: None,
-        ephemeral: true,
+        ephemeral: true
     }
 }

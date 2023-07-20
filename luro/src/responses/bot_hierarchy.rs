@@ -12,7 +12,6 @@ pub fn bot_hierarchy(bot_username: &String) -> InteractionResponse {
 
     InteractionResponse::Embed {
         embeds: vec![embed],
-        components: None,
-        ephemeral: true,
+        ephemeral: true
     }
 }

@@ -11,11 +11,7 @@ pub fn embed(heck_message: &str) -> EmbedBuilder {
 }
 
 /// Repond with an invalid heck error
-pub fn response(
-    missing_user: bool,
-    missing_author: bool,
-    heck_message: &str,
-) -> InteractionResponse {
+pub fn response(missing_user: bool, missing_author: bool, heck_message: &str) -> InteractionResponse {
     let mut embed = embed(heck_message);
 
     if missing_user {
@@ -27,7 +23,6 @@ pub fn response(
 
     InteractionResponse::Embed {
         embeds: vec![embed.build()],
-        components: None,
-        ephemeral: true,
+        ephemeral: true
     }
 }

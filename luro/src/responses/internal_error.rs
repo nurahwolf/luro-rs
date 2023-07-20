@@ -9,13 +9,12 @@ pub fn internal_error(error: String) -> InteractionResponse {
         .color(COLOUR_DANGER)
         .description(error)
         .footer(EmbedFooterBuilder::new(
-            "Okay, Houston, I believe we've had a problem here ...",
+            "Okay, Houston, I believe we've had a problem here ..."
         ))
         .build();
 
     InteractionResponse::Embed {
         embeds: vec![embed],
-        components: None,
-        ephemeral: true,
+        ephemeral: true
     }
 }

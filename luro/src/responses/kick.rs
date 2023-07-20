@@ -2,16 +2,14 @@ use anyhow::Error;
 use twilight_model::{
     guild::{Guild, Member},
     id::{marker::GuildMarker, Id},
-    user::User,
+    user::User
 };
-use twilight_util::builder::embed::{
-    EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource,
-};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{
     functions::{get_member_avatar, get_user_avatar},
     interactions::InteractionResponse,
-    ACCENT_COLOUR,
+    ACCENT_COLOUR
 };
 
 /// Embed showing that a member got banned
@@ -20,7 +18,7 @@ pub fn embed(
     moderator: Member,
     kicked_user: User,
     guild_id: Id<GuildMarker>,
-    reason: &String,
+    reason: &String
 ) -> Result<EmbedBuilder, Error> {
     // Variables for the moderator
     let moderator_avatar = get_member_avatar(Some(&moderator), &Some(guild_id), &moderator.user);
@@ -39,12 +37,9 @@ pub fn embed(
         format!("{}#{}", kicked_user.name, kicked_user.discriminator)
     };
 
-    let embed_author = EmbedAuthorBuilder::new(format!(
-        "Kicked by {} - {}",
-        moderator_name, moderator.user.id
-    ))
-    .icon_url(ImageSource::url(moderator_avatar)?)
-    .build();
+    let embed_author = EmbedAuthorBuilder::new(format!("Kicked by {} - {}", moderator_name, moderator.user.id))
+        .icon_url(ImageSource::url(moderator_avatar)?)
+        .build();
 
     let mut embed = EmbedBuilder::new()
         .color(ACCENT_COLOUR)
@@ -72,7 +67,7 @@ pub fn interaction_response(
     kicked_user: User,
     guild_id: Id<GuildMarker>,
     reason: &String,
-    success: bool,
+    success: bool
 ) -> Result<InteractionResponse, Error> {
     let mut embed = embed(guild, moderator, kicked_user, guild_id, reason)?;
     if success {
@@ -83,7 +78,6 @@ pub fn interaction_response(
 
     Ok(InteractionResponse::Embed {
         embeds: vec![embed.build()],
-        components: None,
-        ephemeral: false,
+        ephemeral: false
     })
 }
