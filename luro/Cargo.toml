@@ -17,7 +17,7 @@ tracing = "0.1"
 twilight-model = "0.15"
 twilight-http = "0.15"
 twilight-gateway = "0.15"
-twilight-util = { version = "0.15", features = ["builder", "permission-calculator"] }
+twilight-util = { version = "0.15", features = ["builder", "permission-calculator", "snowflake"] }
 futures-util = "0.3.28"
 anyhow = "1.0.71"
 tracing-subscriber = "0.3.17"
