@@ -61,7 +61,8 @@ impl LogCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("Luro's log level is now set to {}!", level),
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

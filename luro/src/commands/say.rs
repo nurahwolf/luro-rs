@@ -22,7 +22,8 @@ impl SayCommand {
 
         Ok(InteractionResponse::Content {
             content: message,
-            ephemeral: false
+            ephemeral: false,
+            deferred: false
         })
     }
 }

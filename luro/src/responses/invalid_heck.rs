@@ -23,6 +23,7 @@ pub fn response(missing_user: bool, missing_author: bool, heck_message: &str) ->
 
     InteractionResponse::Embed {
         embeds: vec![embed.build()],
-        ephemeral: true
+        ephemeral: true,
+        deferred: true
     }
 }

@@ -12,6 +12,7 @@ pub fn unknown_command() -> InteractionResponse {
 
     InteractionResponse::Embed {
         embeds: vec![embed],
-        ephemeral: true
+        ephemeral: true,
+        deferred: true
     }
 }

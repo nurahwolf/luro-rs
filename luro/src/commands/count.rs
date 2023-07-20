@@ -19,7 +19,8 @@ impl CountCommand {
 
         Ok(InteractionResponse::Content {
             content: message,
-            ephemeral: false
+            ephemeral: false,
+            deferred: false
         })
     }
 }

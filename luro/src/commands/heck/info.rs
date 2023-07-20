@@ -46,7 +46,8 @@ impl HeckInfo {
 
         Ok(InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

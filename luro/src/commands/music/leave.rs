@@ -20,7 +20,8 @@ impl LeaveCommand {
         shard.command(&UpdateVoiceState::new(guild_id, None, false, false))?;
         Ok(InteractionResponse::Content {
             content: "Left the channel. Goodbye!".to_string(),
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

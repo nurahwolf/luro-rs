@@ -122,7 +122,8 @@ impl UserCommands {
         embed = embed.description(description);
         Ok(InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

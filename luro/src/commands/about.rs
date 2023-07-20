@@ -9,6 +9,7 @@ use twilight_util::builder::embed::{EmbedFooterBuilder, ImageSource};
 
 use crate::{
     functions::{base_embed, get_currentuser_avatar, interaction_context},
+    interactions::InteractionResponse,
     LuroContext, SlashResponse
 };
 
@@ -129,9 +130,10 @@ impl AboutCommand {
 
         embed = embed.description(description);
 
-        Ok(crate::interactions::InteractionResponse::Embed {
+        Ok(InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

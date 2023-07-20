@@ -78,6 +78,7 @@ pub fn interaction_response(
 
     Ok(InteractionResponse::Embed {
         embeds: vec![embed.build()],
-        ephemeral: false
+        ephemeral: true,
+        deferred: true
     })
 }

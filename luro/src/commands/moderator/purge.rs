@@ -50,7 +50,8 @@ impl PurgeCommand {
 
         Ok(InteractionResponse::Content {
             content: "Done!!".to_owned(),
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

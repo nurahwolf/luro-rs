@@ -12,6 +12,7 @@ pub fn bot_missing_permission(permission_missing: String) -> InteractionResponse
 
     InteractionResponse::Embed {
         embeds: vec![embed],
-        ephemeral: true
+        ephemeral: true,
+        deferred: true
     }
 }

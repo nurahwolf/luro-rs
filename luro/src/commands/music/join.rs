@@ -31,7 +31,8 @@ impl JoinCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("Joined <#{}>!", self.channel),
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

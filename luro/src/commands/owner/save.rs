@@ -21,7 +21,8 @@ impl SaveCommand {
 
         Ok(InteractionResponse::Content {
             content: "Flushed data to disk!".to_string(),
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

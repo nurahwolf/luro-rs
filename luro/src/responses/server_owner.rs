@@ -12,6 +12,7 @@ pub fn server_owner() -> InteractionResponse {
 
     InteractionResponse::Embed {
         embeds: vec![embed],
-        ephemeral: true
+        ephemeral: true,
+        deferred: true
     }
 }

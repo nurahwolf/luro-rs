@@ -26,7 +26,8 @@ impl HelloCommand {
 
         Ok(InteractionResponse::Content {
             content: message,
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

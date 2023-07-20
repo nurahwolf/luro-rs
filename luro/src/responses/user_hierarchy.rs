@@ -12,6 +12,7 @@ pub fn user_hierarchy(username: String) -> InteractionResponse {
 
     InteractionResponse::Embed {
         embeds: vec![embed],
-        ephemeral: true
+        ephemeral: true,
+        deferred: true
     }
 }

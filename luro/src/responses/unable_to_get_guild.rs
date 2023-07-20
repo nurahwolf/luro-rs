@@ -11,6 +11,7 @@ pub fn unable_to_get_guild(reason: String) -> InteractionResponse {
 
     InteractionResponse::Embed {
         embeds: vec![embed],
-        ephemeral: true
+        ephemeral: true,
+        deferred: true
     }
 }

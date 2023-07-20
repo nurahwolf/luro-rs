@@ -23,7 +23,8 @@ impl VolumeCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("Set the volume to {}", self.volume),
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

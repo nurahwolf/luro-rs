@@ -24,7 +24,8 @@ impl PauseCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("{action} the track"),
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

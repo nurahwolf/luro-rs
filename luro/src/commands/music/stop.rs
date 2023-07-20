@@ -19,7 +19,8 @@ impl StopCommand {
 
         Ok(InteractionResponse::Content {
             content: "Stopped the track!".to_string(),
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

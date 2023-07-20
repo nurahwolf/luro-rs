@@ -181,6 +181,7 @@ pub async fn handle_heck_model(interaction: Interaction) -> Result<InteractionRe
     Ok(InteractionResponse::EmbedComponents {
         embeds: vec![embed.build()],
         components,
-        ephemeral: true
+        ephemeral: true,
+        deferred: false
     })
 }

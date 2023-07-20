@@ -48,6 +48,10 @@ impl PlayCommand {
             content = "Didn't find any results".to_owned();
         }
 
-        Ok(InteractionResponse::Content { content, ephemeral })
+        Ok(InteractionResponse::Content {
+            content,
+            ephemeral,
+            deferred: true
+        })
     }
 }

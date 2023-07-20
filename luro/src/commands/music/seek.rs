@@ -22,7 +22,8 @@ impl SeekCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("Seeked to {}s", self.position),
-            ephemeral
+            ephemeral,
+            deferred: true
         })
     }
 }

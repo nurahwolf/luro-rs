@@ -51,7 +51,7 @@ impl HeckSomeoneCommand {
         debug!("creating our response");
         Ok(if let Some(plaintext) = self.plaintext && plaintext {
             trace!("user wanted plaintext");
-            InteractionResponse::Content { content: formatted_heck.heck_message, ephemeral: false }
+            InteractionResponse::Content { content: formatted_heck.heck_message, ephemeral,         deferred: true }
         } else {
             trace!("user wanted embed");
             let mut embed = EmbedBuilder::default()
@@ -68,7 +68,7 @@ impl HeckSomeoneCommand {
             )))
         }
 
-            InteractionResponse::ContentEmbed { content: format!("<@{}>", self.user.resolved.id), embeds: vec![embed.build()], ephemeral }
+            InteractionResponse::ContentEmbed { content: format!("<@{}>", self.user.resolved.id), embeds: vec![embed.build()], ephemeral,        deferred: true }
 
         })
     }

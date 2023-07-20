@@ -15,8 +15,7 @@ pub fn commands() -> Vec<Command> {
 pub struct BoopCommand {}
 
 impl BoopCommand {
-    pub async fn run(interaction: &Interaction, ctx: &LuroContext) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+    pub async fn run(_interaction: &Interaction, _ctx: &LuroContext) -> SlashResponse {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
@@ -31,7 +30,8 @@ impl BoopCommand {
         Ok(InteractionResponse::ContentComponents {
             content: "Boop Count: 0".to_string(),
             components,
-            ephemeral
+            ephemeral: false,
+            deferred: false
         })
     }
 
