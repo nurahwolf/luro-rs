@@ -1,14 +1,18 @@
-use anyhow::Error;
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::application::interaction::Interaction;
 
-use crate::{interactions::InteractionResponse, LuroContext};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "count", desc = "Test to see if the framework is globally mutable")]
 pub struct CountCommand {}
 
-impl CountCommand {
-    pub async fn run(self, ctx: &LuroContext) -> Result<InteractionResponse, Error> {
+#[async_trait]
+impl LuroCommand for CountCommand {
+    async fn run_command(self, _interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
         let message;
 
         {

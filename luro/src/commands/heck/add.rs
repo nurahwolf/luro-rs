@@ -1,4 +1,6 @@
 use anyhow::Error;
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::Interaction,
@@ -10,28 +12,24 @@ use twilight_model::{
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, ImageSource};
 
 use crate::{
-    functions::{
-        get_partial_member_avatar, interaction_context, parse_component_data, parse_modal_data, parse_modal_field_required
-    },
-    interactions::InteractionResponse,
-    models::Heck,
-    responses::invalid_heck,
-    LuroContext, SlashResponse, ACCENT_COLOUR
+    commands::LuroCommand, interactions::InteractionResponse, models::Heck, responses::invalid_heck, LuroContext,
+    SlashResponse, ACCENT_COLOUR
 };
 
-#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
+#[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(name = "add", desc = "Add a heck", dm_permission = true)]
 pub struct HeckAddCommand {}
 
-impl HeckAddCommand {
-    pub async fn run(&self) -> SlashResponse {
+#[async_trait]
+impl LuroCommand for HeckAddCommand {
+    async fn run_command(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
         Ok(heck_modal())
     }
 
-    pub async fn handle(ctx: LuroContext, interaction: &Interaction) -> SlashResponse {
-        let (interaction_channel, interaction_author, _) = interaction_context(interaction, "heck user")?;
+    async fn handle(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let (interaction_channel, interaction_author, _) = self.interaction_context(&interaction, "heck user")?;
         // Get interaction data
-        let data = parse_component_data(&mut interaction.clone())?;
+        let data = self.parse_component_data(&mut interaction.clone())?;
         let global = data
             .values
             .first()
@@ -101,6 +99,63 @@ impl HeckAddCommand {
             ephemeral: false
         })
     }
+
+    async fn handle_model(self, interaction: Interaction) -> SlashResponse {
+        let (_, interaction_author, interaction_member) = self.interaction_context(&interaction, "heck add")?;
+        let author_avatar = self.get_partial_member_avatar(interaction_member, &interaction.guild_id, interaction_author);
+        let data = self.parse_modal_data(&mut interaction.clone())?;
+        let heck_text = self.parse_modal_field_required(&data, "heck-text")?;
+
+        // Make sure heck_text contains both <user> and <author>, else exit early
+        match (heck_text.contains("<user>"), heck_text.contains("<author>")) {
+            (true, true) => (),
+            (true, false) => return Ok(invalid_heck::response(true, false, heck_text)),
+            (false, true) => return Ok(invalid_heck::response(false, true, heck_text)),
+            (false, false) => return Ok(invalid_heck::response(true, true, heck_text))
+        };
+
+        // Send a success message.
+        let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", interaction_author.name))
+            .icon_url(ImageSource::url(author_avatar)?)
+            .build();
+        let embed = EmbedBuilder::new()
+            .color(ACCENT_COLOUR)
+            .description(heck_text)
+            .author(embed_author);
+
+        let components = vec![Component::ActionRow(ActionRow {
+            components: vec![Component::SelectMenu(SelectMenu {
+                custom_id: "heck-setting".to_owned(),
+                disabled: false,
+                max_values: None,
+                min_values: None,
+                options: vec![
+                    SelectMenuOption {
+                        default: false,
+                        description: Some("Can only be used in this guild".to_owned()),
+                        emoji: None,
+                        label: "Guild Specific Heck".to_owned(),
+                        value: "heck-add-guild".to_owned()
+                    },
+                    SelectMenuOption {
+                        default: false,
+                        description: Some("Can be used globally, including DMs and other servers".to_owned()),
+                        emoji: None,
+                        label: "Global Heck".to_owned(),
+                        value: "heck-add-global".to_owned()
+                    },
+                ],
+                placeholder: Some("Choose if this is a global or guild specific heck".to_owned())
+            })]
+        })];
+
+        Ok(InteractionResponse::EmbedComponents {
+            embeds: vec![embed.build()],
+            components,
+            ephemeral: true,
+            deferred: false
+        })
+    }
 }
 
 /// Modal that asks the user to enter a reason for the kick.
@@ -126,61 +181,4 @@ fn heck_modal() -> InteractionResponse {
         title: "Write your heck below!".to_owned(),
         components
     }
-}
-
-pub async fn handle_heck_model(interaction: Interaction) -> Result<InteractionResponse, anyhow::Error> {
-    let (_, interaction_author, interaction_member) = interaction_context(&interaction, "heck add")?;
-    let author_avatar = get_partial_member_avatar(interaction_member, &interaction.guild_id, interaction_author);
-    let data = parse_modal_data(&mut interaction.clone())?;
-    let heck_text = parse_modal_field_required(&data, "heck-text")?;
-
-    // Make sure heck_text contains both <user> and <author>, else exit early
-    match (heck_text.contains("<user>"), heck_text.contains("<author>")) {
-        (true, true) => (),
-        (true, false) => return Ok(invalid_heck::response(true, false, heck_text)),
-        (false, true) => return Ok(invalid_heck::response(false, true, heck_text)),
-        (false, false) => return Ok(invalid_heck::response(true, true, heck_text))
-    };
-
-    // Send a success message.
-    let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", interaction_author.name))
-        .icon_url(ImageSource::url(author_avatar)?)
-        .build();
-    let embed = EmbedBuilder::new()
-        .color(ACCENT_COLOUR)
-        .description(heck_text)
-        .author(embed_author);
-
-    let components = vec![Component::ActionRow(ActionRow {
-        components: vec![Component::SelectMenu(SelectMenu {
-            custom_id: "heck-setting".to_owned(),
-            disabled: false,
-            max_values: None,
-            min_values: None,
-            options: vec![
-                SelectMenuOption {
-                    default: false,
-                    description: Some("Can only be used in this guild".to_owned()),
-                    emoji: None,
-                    label: "Guild Specific Heck".to_owned(),
-                    value: "heck-add-guild".to_owned()
-                },
-                SelectMenuOption {
-                    default: false,
-                    description: Some("Can be used globally, including DMs and other servers".to_owned()),
-                    emoji: None,
-                    label: "Global Heck".to_owned(),
-                    value: "heck-add-global".to_owned()
-                },
-            ],
-            placeholder: Some("Choose if this is a global or guild specific heck".to_owned())
-        })]
-    })];
-
-    Ok(InteractionResponse::EmbedComponents {
-        embeds: vec![embed.build()],
-        components,
-        ephemeral: true,
-        deferred: false
-    })
 }

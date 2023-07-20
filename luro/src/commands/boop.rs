@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::{command::Command, interaction::Interaction},
@@ -6,16 +8,19 @@ use twilight_model::{
 
 use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
+
 pub fn commands() -> Vec<Command> {
     vec![BoopCommand::create_command().into()]
 }
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(name = "boop", desc = "Boop the Bot!")]
 pub struct BoopCommand {}
 
-impl BoopCommand {
-    pub async fn run(_interaction: &Interaction, _ctx: &LuroContext) -> SlashResponse {
+#[async_trait]
+impl LuroCommand for BoopCommand {
+    async fn run_command(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
@@ -35,7 +40,7 @@ impl BoopCommand {
         })
     }
 
-    pub async fn button(interaction: &Interaction) -> SlashResponse {
+    async fn handle_button(self, interaction: Interaction) -> SlashResponse {
         // Get message and parse number
         let message = interaction.message.clone().unwrap();
 
@@ -54,3 +59,5 @@ impl BoopCommand {
         })
     }
 }
+
+impl BoopCommand {}

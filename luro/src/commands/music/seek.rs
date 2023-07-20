@@ -1,9 +1,12 @@
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Seek;
 use twilight_model::application::interaction::Interaction;
 
-use crate::{interactions::InteractionResponse, LuroContext};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "seek", desc = "Seek through the track", dm_permission = false)]
 pub struct SeekCommand {
@@ -11,9 +14,10 @@ pub struct SeekCommand {
     position: i64
 }
 
-impl SeekCommand {
-    pub async fn run(self, interaction: &Interaction, ctx: &LuroContext) -> anyhow::Result<InteractionResponse> {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+#[async_trait]
+impl LuroCommand for SeekCommand {
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
 
         let guild_id = interaction.guild_id.unwrap();
 

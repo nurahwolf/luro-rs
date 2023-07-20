@@ -1,16 +1,19 @@
-use anyhow::Error;
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
 
-use crate::{interactions::InteractionResponse, LuroContext};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "hello", desc = "Say hello")]
 pub struct HelloCommand {}
 
-impl HelloCommand {
-    pub async fn run(interaction: &Interaction, ctx: &LuroContext) -> Result<InteractionResponse, Error> {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+#[async_trait]
+impl LuroCommand for HelloCommand {
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
 
         let message = match interaction.author_id() {
             Some(author_id) => format!(

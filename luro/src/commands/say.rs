@@ -1,8 +1,11 @@
-use anyhow::Error;
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_model::application::interaction::Interaction;
 
-use crate::interactions::InteractionResponse;
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "say", desc = "Make me say garbage!")]
 pub struct SayCommand {
@@ -12,8 +15,9 @@ pub struct SayCommand {
     user: Option<ResolvedUser>
 }
 
-impl SayCommand {
-    pub async fn run(self) -> Result<InteractionResponse, Error> {
+#[async_trait]
+impl LuroCommand for SayCommand {
+    async fn run_command(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
         let message = if let Some(user) = self.user {
             format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
         } else {

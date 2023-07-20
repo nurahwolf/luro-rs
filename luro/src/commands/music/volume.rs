@@ -1,9 +1,12 @@
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Volume;
 use twilight_model::application::interaction::Interaction;
 
-use crate::{interactions::InteractionResponse, LuroContext};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "volume", desc = "Set the volume of the player!", dm_permission = false)]
 pub struct VolumeCommand {
@@ -12,9 +15,10 @@ pub struct VolumeCommand {
     volume: i64
 }
 
-impl VolumeCommand {
-    pub async fn run(self, interaction: &Interaction, ctx: &LuroContext) -> anyhow::Result<InteractionResponse> {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+#[async_trait]
+impl LuroCommand for VolumeCommand {
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
 
         let guild_id = interaction.guild_id.unwrap();
 

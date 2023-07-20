@@ -4,10 +4,10 @@ use tracing::info;
 use twilight_model::gateway::payload::incoming::BanAdd;
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{functions::base_embed, models::LuroFramework};
+use crate::{functions::default_embed, models::LuroFramework};
 
 impl LuroFramework {
-    pub async fn ban_add_listener(self: &Arc<Self>, ban: BanAdd) -> anyhow::Result<()> {
+    pub async fn ban_add_listener(self: Arc<Self>, ban: BanAdd) -> anyhow::Result<()> {
         info!("User {} banned from guild {}", ban.user.name, ban.guild_id);
 
         // Exit early if it was the bot that performed the ban
@@ -26,8 +26,7 @@ impl LuroFramework {
             let resolved_ban = self.twilight_client.ban(ban.guild_id, ban.user.id).await?.model().await?;
             let guild = self.twilight_client.guild(ban.guild_id).await?.model().await?;
 
-            let mut embed = base_embed(self, Some(ban.guild_id))
-                .await
+            let mut embed = default_embed(&self, Some(ban.guild_id))
                 .title(format!("Banned from {}", guild.name))
                 .field(EmbedFieldBuilder::new("Guild ID", guild.id.to_string()).inline());
 

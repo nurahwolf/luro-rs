@@ -1,23 +1,27 @@
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
 
 use crate::{
-    functions::interaction_context,
     interactions::InteractionResponse,
     models::{GuildSettings, Hecks},
-    LuroContext
+    LuroContext, SlashResponse
 };
+
+use super::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "save", desc = "Flush data to disk")]
 pub struct SaveCommand {}
 
-impl SaveCommand {
-    pub async fn run(self, interaction: &Interaction, ctx: &LuroContext) -> anyhow::Result<InteractionResponse> {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
-        let (_, _, _) = interaction_context(interaction, "heck add")?;
-        Hecks::write(ctx).await?;
-        GuildSettings::write(ctx).await?;
+#[async_trait]
+impl LuroCommand for SaveCommand {
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let (_, _, _) = self.interaction_context(&interaction, "heck add")?;
+        Hecks::write(&ctx).await?;
+        GuildSettings::write(&ctx).await?;
 
         // Config::write(&ctx.data().config.write().await.clone(), CONFIG_FILE_PATH).await;
         // Hecks::write(data.clone().global_data.read().hecks.clone(), HECK_FILE_PATH).await?;

@@ -1,11 +1,15 @@
+use async_trait::async_trait;
 use tracing::{debug, trace};
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{application::interaction::Interaction, id::Id};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFooterBuilder, ImageSource};
 
 use crate::{
-    commands::heck::{format_heck, get_heck},
-    functions::{get_user_avatar, interaction_context},
+    commands::{
+        heck::{format_heck, get_heck},
+        LuroCommand
+    },
     interactions::InteractionResponse,
     LuroContext, SlashResponse, ACCENT_COLOUR
 };
@@ -23,10 +27,11 @@ pub struct HeckSomeoneCommand {
     pub plaintext: Option<bool>
 }
 
-impl HeckSomeoneCommand {
-    pub async fn run(self, ctx: LuroContext, interaction: &Interaction) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
-        let (interaction_channel, interaction_author, _) = interaction_context(interaction, "heck someone")?;
+#[async_trait]
+impl LuroCommand for HeckSomeoneCommand {
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let (interaction_channel, interaction_author, _) = self.interaction_context(&interaction, "heck someone")?;
         // Is the channel the interaction called in NSFW?
         let nsfw = interaction_channel.nsfw.unwrap_or(false);
 
@@ -42,7 +47,7 @@ impl HeckSomeoneCommand {
             Some(ok) => ok.clone(),
             None => ctx.twilight_client.user(Id::new(heck.author_id)).await?.model().await?
         };
-        let heck_author_avatar = get_user_avatar(&heck_author);
+        let heck_author_avatar = self.get_user_avatar(&heck_author);
         let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", heck_author.name))
             .icon_url(ImageSource::url(heck_author_avatar)?)
             .build();

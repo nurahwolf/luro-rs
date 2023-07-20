@@ -1,7 +1,14 @@
+use anyhow::anyhow;
 use std::collections::HashMap;
+use twilight_util::builder::embed::EmbedBuilder;
 
 use twilight_interactions::command::CreateCommand;
-use twilight_model::application::command::Command;
+use twilight_model::{
+    application::{command::Command, interaction::application_command::InteractionMember},
+    guild::Member,
+    id::{marker::GuildMarker, Id},
+    user::CurrentUser
+};
 
 use self::{
     about::AboutCommand, boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand,
@@ -13,10 +20,15 @@ use std::sync::Arc;
 use anyhow::bail;
 use tracing::warn;
 use twilight_gateway::MessageSender;
-use twilight_interactions::command::CommandModel;
+
 use twilight_model::application::interaction::{Interaction, InteractionData};
 
-use crate::{interactions::InteractionResponse, models::LuroFramework, responses::unknown_command::unknown_command};
+use crate::{
+    functions::{accent_colour, default_embed, get_user_avatar},
+    interactions::InteractionResponse,
+    models::LuroFramework,
+    responses::unknown_command::unknown_command
+};
 
 pub mod about;
 pub mod boop;
@@ -67,7 +79,7 @@ impl LuroFramework {
     /// Handle incoming command interaction.
     pub async fn handle_command(
         self: Arc<Self>,
-        interaction: &Interaction,
+        interaction: Interaction,
         shard: MessageSender
     ) -> Result<InteractionResponse, anyhow::Error> {
         let data = match interaction.data.clone() {
@@ -76,21 +88,300 @@ impl LuroFramework {
         };
 
         Ok(match data.name.as_str() {
-            "about" => AboutCommand::run(AboutCommand::from_interaction(data.into())?, interaction, &self).await?,
-            "say" => SayCommand::run(SayCommand::from_interaction(data.into())?).await?,
-            "user" => UserCommands::from_interaction(data.into())?.run(interaction, self).await?,
-            "hello" => HelloCommand::run(interaction, &self).await?,
-            "count" => CountCommand::run(CountCommand::from_interaction(data.into())?, &self).await?,
-            "mod" => ModeratorCommands::run(interaction, &self, data).await?,
-            "music" => MusicCommands::run(interaction, &self, data, shard).await?,
-            "boop" => BoopCommand::run(interaction, &self).await?,
-            "owner" => OwnerCommands::run(interaction, &self, data).await?,
-            "heck" => HeckCommands::run(HeckCommands::from_interaction(data.clone().into())?, self, interaction, data).await?,
+            "about" => AboutCommand::new(data).await?.run_command(interaction, self, shard).await?,
+            "say" => SayCommand::new(data).await?.run_command(interaction, self, shard).await?,
+            "user" => UserCommands::new(data).await?.run_command(interaction, self, shard).await?,
+            "hello" => HelloCommand::new(data).await?.run_command(interaction, self, shard).await?,
+            "count" => CountCommand::new(data).await?.run_command(interaction, self, shard).await?,
+            "mod" => {
+                ModeratorCommands::new(data)
+                    .await?
+                    .run_command(interaction, self, shard)
+                    .await?
+            }
+            "music" => MusicCommands::new(data).await?.run_command(interaction, self, shard).await?,
+            "boop" => BoopCommand::new(data).await?.run_command(interaction, self, shard).await?,
+            "owner" => OwnerCommands::new(data).await?.run_command(interaction, self, shard).await?,
+            "heck" => HeckCommands::new(data).await?.run_command(interaction, self, shard).await?,
             name => {
                 warn!(name = name, "received unknown command");
 
                 unknown_command()
             }
         })
+    }
+}
+
+use anyhow::{Context, Error};
+use async_trait::async_trait;
+use std::mem;
+use twilight_interactions::command::CommandModel;
+use twilight_model::{
+    application::interaction::{
+        application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData
+    },
+    channel::Channel,
+    guild::{PartialMember, Permissions},
+    user::User
+};
+
+use crate::{LuroContext, SlashResponse};
+
+/// Add some custom functionality around [CommandModel]
+#[async_trait]
+pub trait LuroCommand: CommandModel {
+    /// Create a new command and get it's data from the interaction
+    async fn new(data: CommandData) -> anyhow::Result<Self> {
+        Self::from_interaction(data.into()).context("failed to parse command data")
+    }
+
+    /// Run the command
+    async fn run_command(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        Ok(InteractionResponse::Content {
+            content: "It works!".to_owned(),
+            ephemeral: true,
+            deferred: false
+        })
+    }
+
+    /// Run a command group
+    async fn run_commands(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        Ok(InteractionResponse::Content {
+            content: "It works!".to_owned(),
+            ephemeral: true,
+            deferred: false
+        })
+    }
+
+    /// Handle a component interaction
+    async fn handle(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        Ok(InteractionResponse::Content {
+            content: "It works!".to_owned(),
+            ephemeral: true,
+            deferred: false
+        })
+    }
+
+    /// Create and respond to a button interaction
+    async fn handle_button(self, _interaction: Interaction) -> SlashResponse {
+        Ok(InteractionResponse::Update {
+            content: Some("This button has not been configured yet!".to_owned()),
+            embeds: None,
+            components: None,
+            ephemeral: false
+        })
+    }
+
+    /// Create and respond to a button interaction
+    async fn handle_model(self, _interaction: Interaction) -> SlashResponse {
+        Ok(InteractionResponse::Content {
+            content: "This model has not been configured yet!".to_owned(),
+            ephemeral: false,
+            deferred: false
+        })
+    }
+
+    /// The default permissions a user needs to run this command
+    fn default_permissions() -> Permissions {
+        Permissions::all()
+    }
+
+    /// A function that takes a borred interaction, and returns a borred reference to interaction.channel and a user who invoked the interaction. Additionally it calls a debug to print where the command was executed in the logs
+    fn interaction_context<'a>(
+        &self,
+        interaction: &'a Interaction,
+        command_name: &str
+    ) -> anyhow::Result<(&'a Channel, &'a User, Option<&'a PartialMember>)> {
+        let invoked_channel = interaction
+            .channel
+            .as_ref()
+            .ok_or_else(|| Error::msg("Unable to get the channel this interaction was ran in"))?;
+        let interaction_member = interaction.member.as_ref();
+        let interaction_author = match interaction.member.as_ref() {
+            Some(member) => member
+                .user
+                .as_ref()
+                .ok_or_else(|| Error::msg("Unable to find the user that executed this command"))?,
+            None => interaction
+                .user
+                .as_ref()
+                .ok_or_else(|| Error::msg("Unable to find the user that executed this command"))?
+        };
+
+        match &invoked_channel.name {
+            Some(channel_name) => tracing::debug!(
+                "'{}' interaction in channel {} by {}",
+                command_name,
+                channel_name,
+                interaction_author.name
+            ),
+            None => tracing::debug!("'{}' interaction by {}", command_name, interaction_author.name)
+        };
+
+        Ok((invoked_channel, interaction_author, interaction_member))
+    }
+
+    fn parse_component_data(self, interaction: &mut Interaction) -> Result<MessageComponentInteractionData, anyhow::Error> {
+        match mem::take(&mut interaction.data) {
+            Some(InteractionData::MessageComponent(data)) => Ok(data),
+            _ => bail!("unable to parse modal data, received unknown data type")
+        }
+    }
+
+    /// Parse incoming [`ModalSubmit`] interaction and return the inner data.
+    ///
+    /// This takes a mutable [`Interaction`] since the inner [`ModalInteractionData`]
+    /// is replaced with [`None`] to avoid useless clones.
+    ///
+    /// [`ModalSubmit`]: twilight_model::application::interaction::InteractionType::ModalSubmit
+    /// [`ModalInteractionData`]: twilight_model::application::interaction::modal::ModalInteractionData
+    fn parse_modal_data(&self, interaction: &mut Interaction) -> Result<ModalInteractionData, anyhow::Error> {
+        match mem::take(&mut interaction.data) {
+            Some(InteractionData::ModalSubmit(data)) => Ok(data),
+            _ => bail!("unable to parse modal data, received unknown data type")
+        }
+    }
+
+    /// Parse a field from [`ModalInteractionData`].
+    ///
+    /// This function try to find a field with the given name in the modal data and
+    /// return its value as a string.
+    fn parse_modal_field<'a>(&self, data: &'a ModalInteractionData, name: &str) -> Result<Option<&'a str>, anyhow::Error> {
+        let mut components = data.components.iter().flat_map(|c| &c.components);
+
+        match components.find(|c| &*c.custom_id == name) {
+            Some(component) => Ok(component.value.as_deref()),
+            None => bail!("missing modal field: {}", name)
+        }
+    }
+
+    /// Parse a required field from [`ModalInteractionData`].
+    ///
+    /// This function is the same as [`parse_modal_field`] but returns an error if
+    /// the field value is [`None`].
+    fn parse_modal_field_required<'a>(&self, data: &'a ModalInteractionData, name: &str) -> Result<&'a str, anyhow::Error> {
+        let value = self.parse_modal_field(data, name)?;
+
+        value.ok_or_else(|| anyhow!("required modal field is empty: {}", name))
+    }
+
+    /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
+    fn default_embed(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {
+        default_embed(ctx, guild_id)
+    }
+
+    /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
+    fn accent_colour(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u32 {
+        accent_colour(ctx, guild_id)
+    }
+
+    fn assemble_user_avatar(&self, user: &User) -> String {
+        let user_id = user.id;
+        user.avatar.map_or_else(
+            || format!("https://cdn.discordapp.com/embed/avatars/{}.png", user.discriminator % 5),
+            |avatar| format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png")
+        )
+    }
+
+    /// Return the user's avatar fromH
+    fn get_partial_member_avatar(
+        &self,
+        member: Option<&PartialMember>,
+        guild_id: &Option<Id<GuildMarker>>,
+        user: &User
+    ) -> String {
+        let user_id = user.id;
+
+        if let Some(member) = member && let Some(guild_id) = guild_id && let Some(member_avatar) = member.avatar {
+            match member_avatar.is_animated() {
+                true => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.gif"),
+                false => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.png"),
+            }
+        };
+
+        self.get_user_avatar(user)
+    }
+
+    /// Return the user's avatar fromH
+    fn get_interaction_member_avatar(
+        &self,
+        member: Option<InteractionMember>,
+        guild_id: &Option<Id<GuildMarker>>,
+        user: &User
+    ) -> String {
+        let user_id = user.id;
+
+        if let Some(member) = member && let Some(guild_id) = guild_id && let Some(member_avatar) = member.avatar {
+            match member_avatar.is_animated() {
+                true => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.gif"),
+                false => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.png"),
+            }
+        };
+
+        self.get_user_avatar(user)
+    }
+
+    /// Return a string that is a link to the member's banner, falling back to a user banner if it present. Returns [None] if the user does not have a banner at all.
+    fn get_member_banner(&self, _member: &Member, _guild_id: Id<GuildMarker>, user: &User) -> Option<String> {
+        let _user_id = user.id;
+
+        // TODO: Looks like this is not possible currently, due to Twilight not having a guild_banner object.
+
+        // if let Some(member) = member && let Some(guild_id) = guild_id && let Some(member_avatar) = member. {
+        //     match member_avatar.is_animated() {
+        //         true => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.gif"),
+        //         false => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.png"),
+        //     }
+        // };
+
+        self.get_user_banner(user)
+    }
+
+    /// Return a string that is a link to the user's banner, or [None] if they don't have one
+    fn get_user_banner(&self, user: &User) -> Option<String> {
+        let user_id = user.id;
+
+        if let Some(banner) = user.banner {
+            match banner.is_animated() {
+                true => Some(format!("https://cdn.discordapp.com/banner/{user_id}/{banner}.gif")),
+                false => Some(format!("https://cdn.discordapp.com/avatars/{user_id}/{banner}.png"))
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Return a string that is a link to the member's avatar, falling back to user avatar if it does not exist
+    fn get_member_avatar(&self, member: Option<&Member>, guild_id: &Option<Id<GuildMarker>>, user: &User) -> String {
+        let user_id = user.id;
+
+        if let Some(member) = member && let Some(guild_id) = guild_id && let Some(member_avatar) = member.avatar {
+            match member_avatar.is_animated() {
+                true => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.gif"),
+                false => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.png"),
+            }
+        };
+
+        self.get_user_avatar(user)
+    }
+
+    /// Return a string that is a link to the user's avatar
+    fn get_user_avatar(&self, user: &User) -> String {
+        get_user_avatar(user)
+    }
+
+    /// Return a string that is a link to the user's avatar
+    fn get_currentuser_avatar(&self, currentuser: &CurrentUser) -> String {
+        let user_id = currentuser.id;
+
+        if let Some(user_avatar) = currentuser.avatar {
+            match user_avatar.is_animated() {
+                true => return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.gif"),
+                false => return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.png")
+            }
+        };
+
+        let modulo = currentuser.discriminator % 5;
+        format!("https://cdn.discordapp.com/embed/avatars/{modulo}.png")
     }
 }

@@ -11,12 +11,9 @@ use twilight_model::{
     id::{marker::ApplicationMarker, Id}
 };
 
+use crate::commands::LuroCommand;
 use crate::{
-    commands::{
-        boop::BoopCommand,
-        heck::add::{handle_heck_model, HeckAddCommand},
-        Commands
-    },
+    commands::{boop::BoopCommand, heck::add::HeckAddCommand, Commands},
     functions::CustomId,
     interactions::{InteractionResponder, InteractionResponse},
     models::LuroFramework,
@@ -59,9 +56,9 @@ impl LuroFramework {
         debug!(id = ?interaction.id, "received {} interaction", interaction.kind.kind());
 
         let response = match interaction.kind {
-            InteractionType::ApplicationCommand => self.clone().handle_command(&interaction, shard).await,
-            InteractionType::MessageComponent => self.handle_component(self.clone(), &interaction).await,
-            InteractionType::ModalSubmit => handle_modal(interaction, &self).await,
+            InteractionType::ApplicationCommand => self.clone().handle_command(interaction, shard).await,
+            InteractionType::MessageComponent => self.handle_component(interaction).await,
+            InteractionType::ModalSubmit => Self::handle_modal(interaction).await,
             other => {
                 warn!("received unexpected {} interaction", other.kind());
 
@@ -75,26 +72,22 @@ impl LuroFramework {
                 error!(error = ?error, "error while processing interaction");
 
                 responder
-                    .respond(&self, internal_error(format!("```{}```", error.to_string())))
+                    .respond(&self, internal_error(format!("```{}```", error.to_string()), true, false))
                     .await
             }
         }
     }
 
     /// Handle incoming component interaction
-    async fn handle_component(
-        &self,
-        ctx: LuroContext,
-        interaction: &Interaction
-    ) -> Result<InteractionResponse, anyhow::Error> {
+    async fn handle_component(&self, interaction: Interaction) -> Result<InteractionResponse, anyhow::Error> {
         let custom_id = match &interaction.data {
             Some(InteractionData::MessageComponent(data)) => CustomId::from_str(&data.custom_id)?,
             _ => bail!("expected message component data")
         };
 
         match &*custom_id.name {
-            "boop" => BoopCommand::button(interaction).await,
-            "heck-setting" => HeckAddCommand::handle(ctx, interaction).await,
+            "boop" => BoopCommand::handle_button(Default::default(), interaction).await,
+            "heck-setting" => HeckAddCommand::handle_button(Default::default(), interaction).await,
 
             name => {
                 warn!(name = name, "received unknown component");
@@ -137,20 +130,20 @@ impl LuroFramework {
 
         Ok(ephemeral)
     }
-}
 
-/// Handle incoming modal interaction
-async fn handle_modal(interaction: Interaction, _: &LuroContext) -> SlashResponse {
-    let custom_id = match &interaction.data {
-        Some(InteractionData::ModalSubmit(data)) => CustomId::from_str(&data.custom_id)?,
-        _ => bail!("expected modal submit data")
-    };
+    /// Handle incoming modal interaction
+    async fn handle_modal(interaction: Interaction) -> SlashResponse {
+        let custom_id = match &interaction.data {
+            Some(InteractionData::ModalSubmit(data)) => CustomId::from_str(&data.custom_id)?,
+            _ => bail!("expected modal submit data")
+        };
 
-    match &*custom_id.name {
-        "heck-add" => handle_heck_model(interaction).await,
-        name => {
-            warn!(name = name, "received unknown modal");
-            Ok(unknown_command())
+        match &*custom_id.name {
+            "heck-add" => HeckAddCommand::handle_model(Default::default(), interaction).await,
+            name => {
+                warn!(name = name, "received unknown modal");
+                Ok(unknown_command())
+            }
         }
     }
 }

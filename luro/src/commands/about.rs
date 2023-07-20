@@ -1,17 +1,17 @@
 use std::fmt::Write;
 use std::path::Path;
 
+use async_trait::async_trait;
 use git2::{ErrorCode, Repository};
 use memory_stats::memory_stats;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::embed::{EmbedFooterBuilder, ImageSource};
 
-use crate::{
-    functions::{base_embed, get_currentuser_avatar, interaction_context},
-    interactions::InteractionResponse,
-    LuroContext, SlashResponse
-};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
+
+use super::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "about", desc = "Information about me!")]
@@ -22,17 +22,18 @@ pub struct AboutCommand {
     cache: Option<bool>
 }
 
-impl AboutCommand {
-    pub async fn run(self, interaction: &Interaction, ctx: &LuroContext) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(interaction, false).await?;
-        let (_, _, _) = interaction_context(interaction, "about")?;
+#[async_trait]
+impl LuroCommand for AboutCommand {
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, false).await?;
+        let (_, _, _) = self.interaction_context(&interaction, "about")?;
 
         // Variables
-        let mut embed = base_embed(ctx, interaction.guild_id).await;
+        let mut embed = self.default_embed(&ctx, interaction.guild_id);
         let mut description = String::new();
         let mut framework_owners_list = String::new();
         let current_user = ctx.twilight_client.current_user().await?.model().await?;
-        let current_user_avatar = get_currentuser_avatar(&current_user);
+        let current_user_avatar = self.get_currentuser_avatar(&current_user);
         let version = env!("CARGO_PKG_VERSION").to_string();
 
         let owners = ctx.global_data.read().owners.clone();

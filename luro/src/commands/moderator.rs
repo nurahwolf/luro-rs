@@ -1,14 +1,17 @@
-use anyhow::Context;
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::interaction::{application_command::CommandData, Interaction};
+use twilight_model::application::interaction::Interaction;
 
-use crate::{interactions::InteractionResponse, LuroContext};
+use crate::{LuroContext, SlashResponse};
 
-use self::{ban::BanCommand, kick::KickCommand, purge::PurgeCommand};
+use self::{ban::BanCommand, kick::KickCommand, purge::PurgeCommand, settings::GuildSettingsCommand};
+use super::LuroCommand;
 
 mod ban;
 mod kick;
 mod purge;
+mod settings;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "mod", desc = "Commands that can be used by moderators", dm_permission = false)]
@@ -18,20 +21,20 @@ pub enum ModeratorCommands {
     #[command(name = "kick")]
     Kick(KickCommand),
     #[command(name = "purge")]
-    Purge(PurgeCommand)
+    Purge(PurgeCommand),
+    #[command(name = "settings")]
+    Setting(GuildSettingsCommand)
 }
 
-impl ModeratorCommands {
-    /// Handle incoming `/mod` commands.
-    pub async fn run(interaction: &Interaction, ctx: &LuroContext, data: CommandData) -> anyhow::Result<InteractionResponse> {
-        // Parse the command data into a structure using twilight-interactions.
-        let command = ModeratorCommands::from_interaction(data.into()).context("failed to parse command data")?;
-
+#[async_trait]
+impl LuroCommand for ModeratorCommands {
+    async fn run_commands(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
         // Call the appropriate subcommand.
-        Ok(match command {
-            Self::Ban(command) => command.run(ctx, interaction).await?,
-            Self::Kick(command) => command.run(ctx, interaction).await?,
-            Self::Purge(command) => command.run(ctx, interaction).await?
-        })
+        match self {
+            Self::Ban(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Kick(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Purge(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Setting(command) => command.run_command(interaction, ctx, shard).await
+        }
     }
 }

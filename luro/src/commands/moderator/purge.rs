@@ -1,24 +1,36 @@
 use std::convert::TryInto;
 
 use anyhow::Error;
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::interaction::Interaction;
+use twilight_model::{application::interaction::Interaction, guild::Permissions};
 
-use crate::{functions::interaction_context, interactions::InteractionResponse, LuroContext, SlashResponse};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(name = "purge", desc = "Remove up to 100 messages from a channel")]
+#[command(
+    name = "purge",
+    desc = "Remove up to 100 messages from a channel",
+    default_permissions = "Self::default_permissions"
+)]
 pub struct PurgeCommand {
     /// Choose how many messages should be removed
     #[command(min_value = 1, max_value = 100)]
     amount: i64
 }
 
-impl PurgeCommand {
-    pub async fn run(self, ctx: &LuroContext, interaction: &Interaction) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+#[async_trait]
+impl LuroCommand for PurgeCommand {
+    fn default_permissions() -> Permissions {
+        Permissions::MANAGE_MESSAGES
+    }
 
-        let (interaction_channel, _, _) = interaction_context(interaction, "mod purge")?;
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+
+        let (interaction_channel, _, _) = self.interaction_context(&interaction, "mod purge")?;
 
         if self.amount == 1 {
             let message = ctx

@@ -1,16 +1,15 @@
 use std::convert::TryInto;
 
-use anyhow::{Context, Error};
+use anyhow::Error;
 
+use async_trait::async_trait;
 use rand::Rng;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use tracing::{debug, trace};
 use twilight_model::{
-    application::{
-        command::Command,
-        interaction::{application_command::CommandData, Interaction}
-    },
+    application::{command::Command, interaction::Interaction},
     id::{marker::GuildMarker, Id},
     user::User
 };
@@ -19,6 +18,8 @@ use crate::{
     models::{GuildSettings, Heck},
     LuroContext, SlashResponse
 };
+
+use super::LuroCommand;
 
 use self::{add::HeckAddCommand, info::HeckInfo, someone::HeckSomeoneCommand};
 
@@ -45,17 +46,15 @@ pub enum HeckCommands {
     Info(HeckInfo)
 }
 
-impl HeckCommands {
-    pub async fn run(self, ctx: LuroContext, interaction: &Interaction, data: CommandData) -> SlashResponse {
-        // Parse the command data into a structure using twilight-interactions.
-        let command = HeckCommands::from_interaction(data.into()).context("failed to parse command data")?;
-
+#[async_trait]
+impl LuroCommand for HeckCommands {
+    async fn run_commands(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
         // Call the appropriate subcommand.
-        Ok(match command {
-            Self::Add(command) => command.run().await?,
-            Self::User(command) => command.run(ctx, interaction).await?,
-            Self::Info(command) => command.run(ctx, interaction).await?
-        })
+        match self {
+            Self::Add(command) => command.run_command(interaction, ctx, shard).await,
+            Self::User(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Info(command) => command.run_command(interaction, ctx, shard).await
+        }
     }
 }
 

@@ -1,9 +1,12 @@
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{application::interaction::Interaction, guild::Permissions};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
-    interactions::InteractionResponse,
+    commands::LuroCommand,
+    functions::GuildPermissions,
     responses::{
         bot_hierarchy::bot_hierarchy,
         bot_missing_permissions::bot_missing_permission,
@@ -13,7 +16,7 @@ use crate::{
         unable_to_get_guild::unable_to_get_guild,
         user_hierarchy::user_hierarchy
     },
-    LuroContext, functions::GuildPermissions
+    LuroContext, SlashResponse
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -21,7 +24,7 @@ use crate::{
     name = "kick",
     desc = "Kick a user",
     dm_permission = false,
-    default_permissions = "KickCommand::default_permissions"
+    default_permissions = "Self::default_permissions"
 )]
 pub struct KickCommand {
     /// The user to ban
@@ -30,13 +33,14 @@ pub struct KickCommand {
     pub reason: Option<String>
 }
 
-impl KickCommand {
+#[async_trait]
+impl LuroCommand for KickCommand {
     fn default_permissions() -> Permissions {
         Permissions::KICK_MEMBERS
     }
 
-    pub async fn run(self, ctx: &LuroContext, interaction: &Interaction) -> Result<InteractionResponse, anyhow::Error> {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
 
         let reason = match self.reason {
             Some(reason) => reason,

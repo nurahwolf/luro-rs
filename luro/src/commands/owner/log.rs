@@ -1,9 +1,12 @@
+use async_trait::async_trait;
 use tracing_subscriber::filter;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 use twilight_model::application::interaction::Interaction;
 
-use crate::{functions::interaction_context, interactions::InteractionResponse, LuroContext, SlashResponse};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "log", desc = "Set Luro's global log level, useful for debugging")]
 pub struct LogCommand {
@@ -27,10 +30,9 @@ pub enum LogLevel {
     Off
 }
 
-impl LogCommand {
-    pub async fn run(self, interaction: &Interaction, ctx: &LuroContext) -> SlashResponse {
-        let (_, _, _) = interaction_context(interaction, "owner log")?;
-
+#[async_trait]
+impl LuroCommand for LogCommand {
+    async fn run_command(self, _interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
         let (_, level) = match self.level {
             LogLevel::Trace => (
                 ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::TRACE)?,

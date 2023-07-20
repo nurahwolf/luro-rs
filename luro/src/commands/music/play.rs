@@ -1,11 +1,14 @@
+use async_trait::async_trait;
 use hyper::{Body, Request};
 
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::{http::LoadedTracks, model::Play};
 use twilight_model::application::interaction::Interaction;
 
-use crate::{interactions::InteractionResponse, LuroContext};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "play",
@@ -17,9 +20,10 @@ pub struct PlayCommand {
     song: String
 }
 
-impl PlayCommand {
-    pub async fn run(self, interaction: &Interaction, ctx: &LuroContext) -> anyhow::Result<InteractionResponse> {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+#[async_trait]
+impl LuroCommand for PlayCommand {
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
 
         let guild_id = interaction.guild_id.unwrap();
 

@@ -1,18 +1,22 @@
+use async_trait::async_trait;
 use std::fmt::Write;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::{functions::interaction_context, interactions::InteractionResponse, LuroContext};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
+use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "info", desc = "Information on the current heck database", dm_permission = true)]
 pub struct HeckInfo {}
 
-impl HeckInfo {
-    pub async fn run(self, ctx: LuroContext, interaction: &Interaction) -> anyhow::Result<InteractionResponse> {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
-        let (_, _, _) = interaction_context(interaction, "'heck info' command invoked")?;
+#[async_trait]
+impl LuroCommand for HeckInfo {
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let (_, _, _) = self.interaction_context(&interaction, "'heck info' command invoked")?;
         let global_data = ctx.global_data.read();
 
         let mut embed = EmbedBuilder::new().title("Heck Information - Global");

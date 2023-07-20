@@ -19,8 +19,8 @@ use twilight_model::{
     user::CurrentUser
 };
 
-mod luroframework;
 mod guildsettings;
+mod luroframework;
 
 /// Settings that are stored on disk and meant to be modified by the user
 pub struct Settings {

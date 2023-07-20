@@ -1,9 +1,8 @@
-use anyhow::{Context, Error};
+use async_trait::async_trait;
 use twilight_gateway::MessageSender;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use twilight_model::application::interaction::application_command::CommandData;
 use twilight_model::application::{command::Command, interaction::Interaction};
 
 use self::pause::PauseCommand;
@@ -12,10 +11,9 @@ use self::stop::StopCommand;
 use self::volume::VolumeCommand;
 use self::{join::JoinCommand, leave::LeaveCommand, play::PlayCommand};
 
-use crate::LuroContext;
+use crate::{LuroContext, SlashResponse};
 
-use crate::interactions::InteractionResponse;
-
+use super::LuroCommand;
 mod join;
 mod leave;
 mod pause;
@@ -47,24 +45,18 @@ pub enum MusicCommands {
     Stop(StopCommand)
 }
 
-impl MusicCommands {
-    pub async fn run(
-        interaction: &Interaction,
-        ctx: &LuroContext,
-        data: CommandData,
-        shard: MessageSender
-    ) -> Result<InteractionResponse, Error> {
-        // Parse the command data into a structure using twilight-interactions.
-        let command = Self::from_interaction(data.into()).context("failed to parse command data")?;
-
-        match command {
-            Self::Play(data) => data.run(interaction, ctx).await,
-            Self::Join(data) => data.run(interaction, ctx, shard).await,
-            Self::Leave(data) => data.run(interaction, ctx, shard).await,
-            Self::Pause(data) => data.run(interaction, ctx).await,
-            Self::Seek(data) => data.run(interaction, ctx).await,
-            Self::Volume(data) => data.run(interaction, ctx).await,
-            Self::Stop(data) => data.run(interaction, ctx).await
+#[async_trait]
+impl LuroCommand for MusicCommands {
+    async fn run_commands(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
+        // Call the appropriate subcommand.
+        match self {
+            Self::Play(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Join(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Leave(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Pause(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Seek(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Volume(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Stop(command) => command.run_command(interaction, ctx, shard).await
         }
     }
 }

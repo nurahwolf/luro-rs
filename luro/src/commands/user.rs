@@ -1,5 +1,7 @@
+use async_trait::async_trait;
 use std::{fmt::Write, time::Duration};
 use tracing::debug;
+use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     application::interaction::Interaction,
@@ -10,11 +12,9 @@ use twilight_util::{
     snowflake::Snowflake
 };
 
-use crate::{
-    functions::{base_embed, get_member_avatar, get_user_avatar, get_user_banner, interaction_context},
-    interactions::InteractionResponse,
-    LuroContext, SlashResponse
-};
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
+
+use super::LuroCommand;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "user", desc = "Information about a user")]
@@ -27,15 +27,16 @@ pub struct UserCommands {
     user_only: Option<bool>
 }
 
-impl UserCommands {
-    pub async fn run(self, interaction: &Interaction, ctx: LuroContext) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
-        let (_, interaction_author, _) = interaction_context(interaction, "user command invoked")?;
+#[async_trait]
+impl LuroCommand for UserCommands {
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let (_, interaction_author, _) = self.interaction_context(&interaction, "user command invoked")?;
 
-        let mut embed = base_embed(&ctx, interaction.guild_id).await;
+        let mut embed = self.default_embed(&ctx, interaction.guild_id);
         let mut description = String::new();
         // The user we are interested in is the interaction author, unless a user was specified
-        let user = if let Some(user_specified) = self.user {
+        let user = if let Some(ref user_specified) = self.user {
             match ctx.twilight_cache.user(user_specified.resolved.id) {
                 Some(user) => {
                     debug!("Using cached user");
@@ -53,7 +54,7 @@ impl UserCommands {
         let mut timestamp = format!("Joined discord on <t:{0}> - <t:{0}:R>\n", user_timestamp.as_secs());
 
         embed = embed.title(&user.name);
-        embed = embed.thumbnail(ImageSource::url(get_user_avatar(&user))?);
+        embed = embed.thumbnail(ImageSource::url(self.get_user_avatar(&user))?);
         writeln!(description, "**ID:** `{0}` - <@{0}>", user.id)?;
         if let Some(accent_color) = user.accent_color {
             embed = embed.color(accent_color);
@@ -77,7 +78,7 @@ impl UserCommands {
         if user.bot {
             writeln!(description, "**Bot:** `true`")?;
         }
-        if let Some(banner) = get_user_banner(&user) {
+        if let Some(banner) = self.get_user_banner(&user) {
             embed = embed.image(ImageSource::url(&banner)?);
             writeln!(description, "**Banner:** {banner}")?;
         }
@@ -89,7 +90,7 @@ impl UserCommands {
         };
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
             let member = ctx.twilight_client.guild_member(guild_id, user.id).await?.model().await?;
-            embed = embed.thumbnail(ImageSource::url(get_member_avatar(Some(&member), &Some(guild_id), &user))?);
+            embed = embed.thumbnail(ImageSource::url(self.get_member_avatar(Some(&member), &Some(guild_id), &user))?);
             writeln!(description, "\n-----\n**GUILD INFORMATION**")?;
             writeln!(description, "**Total Roles:** `{}`", member.roles.len())?;            
 

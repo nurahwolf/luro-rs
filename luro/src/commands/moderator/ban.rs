@@ -1,11 +1,15 @@
 use std::convert::TryInto;
 
+use async_trait::async_trait;
+use twilight_gateway::MessageSender;
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::{application::interaction::Interaction, guild::Permissions};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
+    commands::LuroCommand,
+    functions::GuildPermissions,
     interactions::InteractionResponse,
     responses::{
         ban::{embed, interaction_response},
@@ -15,7 +19,7 @@ use crate::{
         unable_to_get_guild::unable_to_get_guild,
         user_hierarchy::user_hierarchy
     },
-    LuroContext, functions::GuildPermissions
+    LuroContext, SlashResponse
 };
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
@@ -23,7 +27,7 @@ use crate::{
     name = "ban",
     desc = "Ban a user",
     dm_permission = false,
-    default_permissions = "BanCommand::default_permissions"
+    default_permissions = "Self::default_permissions"
 )]
 pub struct BanCommand {
     /// The user to ban
@@ -52,13 +56,14 @@ pub enum TimeToBan {
     SevenDays
 }
 
-impl BanCommand {
+#[async_trait]
+impl LuroCommand for BanCommand {
     fn default_permissions() -> Permissions {
         Permissions::BAN_MEMBERS
     }
 
-    pub async fn run(self, ctx: &LuroContext, interaction: &Interaction) -> Result<InteractionResponse, anyhow::Error> {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
 
         let reason = match self.reason {
             Some(reason) => reason,
@@ -166,7 +171,7 @@ impl BanCommand {
         };
 
         // Now respond to the original interaction
-        Ok(crate::interactions::InteractionResponse::Embed {
+        Ok(InteractionResponse::Embed {
             embeds: vec![embed.build()],
             ephemeral,
             deferred: true

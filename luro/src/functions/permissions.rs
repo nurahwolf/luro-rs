@@ -12,7 +12,7 @@ use twilight_model::{
 };
 use twilight_util::permission_calculator::PermissionCalculator;
 
-use super::{MemberRoles, GuildPermissions, LuroPermissions, RoleOrdering};
+use super::{GuildPermissions, LuroPermissions, MemberRoles, RoleOrdering};
 
 impl<'a> GuildPermissions<'a> {
     /// Initialize [`GuildPermissions`] with from a guild.
@@ -155,7 +155,6 @@ impl<'a> LuroPermissions<'a> {
         Ok((permissions, kind))
     }
 }
-
 
 impl MemberRoles {
     /// Query roles of a member in the cache.
