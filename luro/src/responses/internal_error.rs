@@ -6,7 +6,7 @@ pub fn embed(error: String) -> EmbedBuilder {
     EmbedBuilder::new()
         .title("It's fucked")
         .color(COLOUR_DANGER)
-        .description(error)
+        .description(format!("```{error}```"))
         .footer(EmbedFooterBuilder::new(
             "Okay, Houston, I believe we've had a problem here ..."
         ))
