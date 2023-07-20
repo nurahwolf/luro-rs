@@ -125,8 +125,8 @@ mod permissions;
 /// [twilight-model documentation]: https://docs.rs/twilight-model/0.10.2/twilight_model/guild/struct.Role.html#impl-Ord
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RoleOrdering {
-    id: Id<RoleMarker>,
-    position: i64
+    pub id: Id<RoleMarker>,
+    pub position: i64
 }
 
 /// Calculate the permissions of a member with information from the cache.
@@ -164,11 +164,14 @@ pub fn accent_colour(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u3
         let guild_settings = guild_db.get(&guild_id);
 
         if let Some(guild_settings) = guild_settings {
+            // Check to see if a custom colour is defined
             if let Some(custom_accent_colour) = guild_settings.accent_colour_custom {
                 return custom_accent_colour;
             };
 
-            return guild_settings.accent_colour;
+            if guild_settings.accent_colour != 0 {
+                return guild_settings.accent_colour
+            }
         }
     };
 

@@ -22,6 +22,8 @@ pub const FILTER: filter::LevelFilter = filter::LevelFilter::INFO;
 
 /// Luro's main accent colour
 pub const ACCENT_COLOUR: u32 = 0xDABEEF;
+// Luro's primary owner
+pub const BOT_OWNER: u64 = 97003404601094144;
 /// Luro's DANGER colour
 pub const COLOUR_DANGER: u32 = 0xD35F5F;
 /// Transparent embed color (dark theme)

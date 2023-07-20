@@ -68,12 +68,31 @@ impl LuroFramework {
 
         match response {
             Ok(response) => Ok(responder.respond(&self, response).await?),
-            Err(error) => {
-                error!(error = ?error, "error while processing interaction");
+            Err(why) => {
+                error!(error = ?why, "error while processing interaction");
 
-                responder
-                    .respond(&self, internal_error(format!("```{}```", error.to_string()), true, false))
+                // TODO: Better way of doing this. Currently it tries to send four types of responses and hopes that one sticks lol
+                if responder
+                    .respond(&self, internal_error(why.to_string(), true, true))
                     .await
+                    .is_err()
+                    || responder
+                        .respond(&self, internal_error(why.to_string(), true, false))
+                        .await
+                        .is_err()
+                    || responder
+                        .respond(&self, internal_error(why.to_string(), false, true))
+                        .await
+                        .is_err()
+                    || responder
+                        .respond(&self, internal_error(why.to_string(), false, false))
+                        .await
+                        .is_err()
+                {
+                    return Err(why);
+                }
+
+                Err(why)
             }
         }
     }

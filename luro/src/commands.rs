@@ -90,18 +90,18 @@ impl LuroFramework {
         Ok(match data.name.as_str() {
             "about" => AboutCommand::new(data).await?.run_command(interaction, self, shard).await?,
             "say" => SayCommand::new(data).await?.run_command(interaction, self, shard).await?,
-            "user" => UserCommands::new(data).await?.run_command(interaction, self, shard).await?,
+            "user" => UserCommands::new(data).await?.run_commands(interaction, self, shard).await?,
             "hello" => HelloCommand::new(data).await?.run_command(interaction, self, shard).await?,
             "count" => CountCommand::new(data).await?.run_command(interaction, self, shard).await?,
             "mod" => {
                 ModeratorCommands::new(data)
                     .await?
-                    .run_command(interaction, self, shard)
+                    .run_commands(interaction, self, shard)
                     .await?
             }
-            "music" => MusicCommands::new(data).await?.run_command(interaction, self, shard).await?,
+            "music" => MusicCommands::new(data).await?.run_commands(interaction, self, shard).await?,
             "boop" => BoopCommand::new(data).await?.run_command(interaction, self, shard).await?,
-            "owner" => OwnerCommands::new(data).await?.run_command(interaction, self, shard).await?,
+            "owner" => OwnerCommands::new(data).await?.run_commands(interaction, self, shard).await?,
             "heck" => HeckCommands::new(data).await?.run_command(interaction, self, shard).await?,
             name => {
                 warn!(name = name, "received unknown command");
