@@ -1,15 +1,10 @@
 use anyhow::Error;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{
-    framework::LuroFramework, interactions::InteractionResponse, responses::text::say::say,
-};
+use crate::{framework::LuroFramework, interactions::InteractionResponse};
 
 #[derive(CommandModel, CreateCommand)]
-#[command(
-    name = "count",
-    desc = "Test to see if the framework is globally mutable"
-)]
+#[command(name = "count", desc = "Test to see if the framework is globally mutable")]
 pub struct CountCommand {}
 
 impl CountCommand {
@@ -22,6 +17,9 @@ impl CountCommand {
             message = format!("Here is your number: {}", global_data.count);
         }
 
-        Ok(say(message, None, false))
+        Ok(InteractionResponse::Content {
+            content: message,
+            ephemeral: false
+        })
     }
 }

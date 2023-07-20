@@ -10,18 +10,18 @@ use twilight_model::http::interaction::InteractionResponse;
 use twilight_model::{
     application::interaction::{
         application_command::InteractionMember, message_component::MessageComponentInteractionData,
-        modal::ModalInteractionData, Interaction, InteractionData,
+        modal::ModalInteractionData, Interaction, InteractionData
     },
     channel::Channel,
     guild::PartialMember,
-    http::interaction::InteractionResponseType,
+    http::interaction::InteractionResponseType
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
 /// A function that takes a borred interaction, and returns a borred reference to interaction.channel and a user who invoked the interaction. Additionally it calls a debug to print where the command was executed in the logs
 pub fn interaction_context<'a>(
     interaction: &'a Interaction,
-    command_name: &str,
+    command_name: &str
 ) -> anyhow::Result<(&'a Channel, &'a User, Option<&'a PartialMember>)> {
     let invoked_channel = interaction
         .channel
@@ -36,7 +36,7 @@ pub fn interaction_context<'a>(
         None => interaction
             .user
             .as_ref()
-            .ok_or_else(|| Error::msg("Unable to find the user that executed this command"))?,
+            .ok_or_else(|| Error::msg("Unable to find the user that executed this command"))?
     };
 
     match &invoked_channel.name {
@@ -46,11 +46,7 @@ pub fn interaction_context<'a>(
             channel_name,
             interaction_author.name
         ),
-        None => tracing::debug!(
-            "'{}' interaction by {}",
-            command_name,
-            interaction_author.name
-        ),
+        None => tracing::debug!("'{}' interaction by {}", command_name, interaction_author.name)
     };
 
     Ok((invoked_channel, interaction_author, interaction_member))
@@ -60,15 +56,13 @@ pub fn interaction_context<'a>(
 pub async fn respond_to_interaction(
     interaction_client: &InteractionClient<'_>,
     interaction: &Interaction,
-    content: String,
+    content: String
 ) -> Result<(), Error> {
-    let data = InteractionResponseDataBuilder::new()
-        .content(content)
-        .build();
+    let data = InteractionResponseDataBuilder::new().content(content).build();
 
     let response = InteractionResponse {
         kind: InteractionResponseType::ChannelMessageWithSource,
-        data: Some(data),
+        data: Some(data)
     };
 
     interaction_client
@@ -81,34 +75,22 @@ pub async fn respond_to_interaction(
 use twilight_model::{
     guild::Member,
     id::{marker::GuildMarker, Id},
-    user::User,
+    user::User
 };
 
+use crate::LuroContext;
 use crate::ACCENT_COLOUR;
-use crate::{
-    interactions::{InteractionResponder, InteractionResponse as LuroResponse},
-    LuroContext,
-};
 
 pub fn assemble_user_avatar(user: &User) -> String {
     let user_id = user.id;
     user.avatar.map_or_else(
-        || {
-            format!(
-                "https://cdn.discordapp.com/embed/avatars/{}.png",
-                user.discriminator % 5
-            )
-        },
-        |avatar| format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png"),
+        || format!("https://cdn.discordapp.com/embed/avatars/{}.png", user.discriminator % 5),
+        |avatar| format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png")
     )
 }
 
 /// Return the user's avatar fromH
-pub fn get_partial_member_avatar(
-    member: Option<&PartialMember>,
-    guild_id: &Option<Id<GuildMarker>>,
-    user: &User,
-) -> String {
+pub fn get_partial_member_avatar(member: Option<&PartialMember>, guild_id: &Option<Id<GuildMarker>>, user: &User) -> String {
     let user_id = user.id;
 
     if let Some(member) = member && let Some(guild_id) = guild_id && let Some(member_avatar) = member.avatar {
@@ -125,7 +107,7 @@ pub fn get_partial_member_avatar(
 pub fn get_interaction_member_avatar(
     member: Option<InteractionMember>,
     guild_id: &Option<Id<GuildMarker>>,
-    user: &User,
+    user: &User
 ) -> String {
     let user_id = user.id;
 
@@ -139,12 +121,38 @@ pub fn get_interaction_member_avatar(
     get_user_avatar(user)
 }
 
+/// Return a string that is a link to the member's banner, falling back to a user banner if it present. Returns [None] if the user does not have a banner at all.
+pub fn get_member_banner(_member: &Member, _guild_id: Id<GuildMarker>, user: &User) -> Option<String> {
+    let _user_id = user.id;
+
+    // TODO: Looks like this is not possible currently, due to Twilight not having a guild_banner object.
+
+    // if let Some(member) = member && let Some(guild_id) = guild_id && let Some(member_avatar) = member. {
+    //     match member_avatar.is_animated() {
+    //         true => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.gif"),
+    //         false => return format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{member_avatar}.png"),
+    //     }
+    // };
+
+    get_user_banner(user)
+}
+
+/// Return a string that is a link to the user's banner, or [None] if they don't have one
+pub fn get_user_banner(user: &User) -> Option<String> {
+    let user_id = user.id;
+
+    if let Some(banner) = user.banner {
+        match banner.is_animated() {
+            true => Some(format!("https://cdn.discordapp.com/banner/{user_id}/{banner}.gif")),
+            false => Some(format!("https://cdn.discordapp.com/avatars/{user_id}/{banner}.png"))
+        }
+    } else {
+        None
+    }
+}
+
 /// Return a string that is a link to the member's avatar, falling back to user avatar if it does not exist
-pub fn get_member_avatar(
-    member: Option<&Member>,
-    guild_id: &Option<Id<GuildMarker>>,
-    user: &User,
-) -> String {
+pub fn get_member_avatar(member: Option<&Member>, guild_id: &Option<Id<GuildMarker>>, user: &User) -> String {
     let user_id = user.id;
 
     if let Some(member) = member && let Some(guild_id) = guild_id && let Some(member_avatar) = member.avatar {
@@ -163,12 +171,8 @@ pub fn get_user_avatar(user: &User) -> String {
 
     if let Some(user_avatar) = user.avatar {
         match user_avatar.is_animated() {
-            true => {
-                return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.gif")
-            }
-            false => {
-                return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.png")
-            }
+            true => return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.gif"),
+            false => return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.png")
         }
     };
 
@@ -182,12 +186,8 @@ pub fn get_currentuser_avatar(currentuser: &CurrentUser) -> String {
 
     if let Some(user_avatar) = currentuser.avatar {
         match user_avatar.is_animated() {
-            true => {
-                return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.gif")
-            }
-            false => {
-                return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.png")
-            }
+            true => return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.gif"),
+            false => return format!("https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.png")
         }
     };
 
@@ -204,7 +204,7 @@ pub struct CustomId {
     /// Name of the component.
     pub name: String,
     /// ID of the component.
-    pub id: Option<String>,
+    pub id: Option<String>
 }
 
 impl CustomId {
@@ -212,7 +212,7 @@ impl CustomId {
     pub fn new(name: impl Into<String>, id: String) -> Self {
         Self {
             name: name.into(),
-            id: Some(id),
+            id: Some(id)
         }
     }
 
@@ -220,7 +220,7 @@ impl CustomId {
     pub fn name(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
-            id: None,
+            id: None
         }
     }
 }
@@ -236,12 +236,12 @@ impl FromStr for CustomId {
         match value.split_once(':') {
             Some((name, id)) => Ok(CustomId {
                 name: name.to_owned(),
-                id: Some(id.to_owned()),
+                id: Some(id.to_owned())
             }),
             None => Ok(CustomId {
                 name: value.to_owned(),
-                id: None,
-            }),
+                id: None
+            })
         }
     }
 }
@@ -265,21 +265,17 @@ impl Display for CustomId {
 ///
 /// [`ModalSubmit`]: twilight_model::application::interaction::InteractionType::ModalSubmit
 /// [`ModalInteractionData`]: twilight_model::application::interaction::modal::ModalInteractionData
-pub fn parse_modal_data(
-    interaction: &mut Interaction,
-) -> Result<ModalInteractionData, anyhow::Error> {
+pub fn parse_modal_data(interaction: &mut Interaction) -> Result<ModalInteractionData, anyhow::Error> {
     match mem::take(&mut interaction.data) {
         Some(InteractionData::ModalSubmit(data)) => Ok(data),
-        _ => bail!("unable to parse modal data, received unknown data type"),
+        _ => bail!("unable to parse modal data, received unknown data type")
     }
 }
 
-pub fn parse_component_data(
-    interaction: &mut Interaction,
-) -> Result<MessageComponentInteractionData, anyhow::Error> {
+pub fn parse_component_data(interaction: &mut Interaction) -> Result<MessageComponentInteractionData, anyhow::Error> {
     match mem::take(&mut interaction.data) {
         Some(InteractionData::MessageComponent(data)) => Ok(data),
-        _ => bail!("unable to parse modal data, received unknown data type"),
+        _ => bail!("unable to parse modal data, received unknown data type")
     }
 }
 
@@ -287,15 +283,12 @@ pub fn parse_component_data(
 ///
 /// This function try to find a field with the given name in the modal data and
 /// return its value as a string.
-pub fn parse_modal_field<'a>(
-    data: &'a ModalInteractionData,
-    name: &str,
-) -> Result<Option<&'a str>, anyhow::Error> {
+pub fn parse_modal_field<'a>(data: &'a ModalInteractionData, name: &str) -> Result<Option<&'a str>, anyhow::Error> {
     let mut components = data.components.iter().flat_map(|c| &c.components);
 
     match components.find(|c| &*c.custom_id == name) {
         Some(component) => Ok(component.value.as_deref()),
-        None => bail!("missing modal field: {}", name),
+        None => bail!("missing modal field: {}", name)
     }
 }
 
@@ -303,27 +296,10 @@ pub fn parse_modal_field<'a>(
 ///
 /// This function is the same as [`parse_modal_field`] but returns an error if
 /// the field value is [`None`].
-pub fn parse_modal_field_required<'a>(
-    data: &'a ModalInteractionData,
-    name: &str,
-) -> Result<&'a str, anyhow::Error> {
+pub fn parse_modal_field_required<'a>(data: &'a ModalInteractionData, name: &str) -> Result<&'a str, anyhow::Error> {
     let value = parse_modal_field(data, name)?;
 
     value.ok_or_else(|| anyhow!("required modal field is empty: {}", name))
-}
-
-pub async fn defer_interaction(ctx: &LuroContext, interaction: &Interaction) -> anyhow::Result<()> {
-    InteractionResponder::from_interaction(interaction)
-        .respond(
-            ctx,
-            LuroResponse::Raw {
-                kind: InteractionResponseType::DeferredChannelMessageWithSource,
-                data: None,
-            },
-        )
-        .await?;
-
-    Ok(())
 }
 
 pub async fn accent_colour(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u32 {

@@ -1,7 +1,7 @@
 use anyhow::Error;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::{interactions::InteractionResponse, responses::text::say::say};
+use crate::interactions::InteractionResponse;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "say", desc = "Make me say garbage!")]
@@ -9,7 +9,7 @@ pub struct SayCommand {
     /// The message to send.
     message: String,
     /// The user to send the message to.
-    user: Option<ResolvedUser>,
+    user: Option<ResolvedUser>
 }
 
 impl SayCommand {
@@ -20,6 +20,9 @@ impl SayCommand {
             self.message
         };
 
-        Ok(say(message, None, false))
+        Ok(InteractionResponse::Content {
+            content: message,
+            ephemeral: false
+        })
     }
 }

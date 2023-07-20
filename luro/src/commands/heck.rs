@@ -9,10 +9,10 @@ use tracing::{debug, trace};
 use twilight_model::{
     application::{
         command::Command,
-        interaction::{application_command::CommandData, Interaction},
+        interaction::{application_command::CommandData, Interaction}
     },
     id::{marker::GuildMarker, Id},
-    user::User,
+    user::User
 };
 
 use crate::{guild::LuroGuilds, hecks::Heck, LuroContext, SlashResponse};
@@ -39,34 +39,25 @@ pub enum HeckCommands {
     #[command(name = "someone")]
     User(HeckSomeoneCommand),
     #[command(name = "info")]
-    Info(HeckInfo),
+    Info(HeckInfo)
 }
 
 impl HeckCommands {
-    pub async fn run(
-        self,
-        ctx: LuroContext,
-        interaction: &Interaction,
-        data: CommandData,
-    ) -> SlashResponse {
+    pub async fn run(self, ctx: LuroContext, interaction: &Interaction, data: CommandData) -> SlashResponse {
         // Parse the command data into a structure using twilight-interactions.
-        let command =
-            HeckCommands::from_interaction(data.into()).context("failed to parse command data")?;
+        let command = HeckCommands::from_interaction(data.into()).context("failed to parse command data")?;
 
         // Call the appropriate subcommand.
         Ok(match command {
-            Self::Add(command) => command.run().await?,
+            Self::Add(command) => command.run(interaction, ctx).await?,
             Self::User(command) => command.run(ctx, interaction).await?,
-            Self::Info(command) => command.run(ctx, interaction).await?,
+            Self::Info(command) => command.run(ctx, interaction).await?
         })
     }
 }
 
 /// Open the database as writable in case we need to reload the hecks
-async fn check_hecks_are_present(
-    ctx: LuroContext,
-    guild_id: Option<Id<GuildMarker>>,
-) -> anyhow::Result<()> {
+async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMarker>>) -> anyhow::Result<()> {
     debug!("checking to make sure hecks are present");
     let (are_sfw_hecks_empty, are_nsfw_hecks_empty);
 
@@ -75,9 +66,7 @@ async fn check_hecks_are_present(
             trace!("checking if guild hecks are present");
             {
                 let guild_db = ctx.guilds.read();
-                let guild_data = guild_db
-                    .get(&guild_id)
-                    .ok_or_else(|| Error::msg("No guild data available"))?;
+                let guild_data = guild_db.get(&guild_id).ok_or_else(|| Error::msg("No guild data available"))?;
                 are_sfw_hecks_empty = guild_data.hecks.sfw_heck_ids.is_empty();
                 are_nsfw_hecks_empty = guild_data.hecks.nsfw_heck_ids.is_empty();
             }
@@ -128,7 +117,7 @@ async fn get_heck(
     id: Option<i64>,
     guild_id: Option<Id<GuildMarker>>,
     global: bool,
-    nsfw: bool,
+    nsfw: bool
 ) -> anyhow::Result<(Heck, usize)> {
     // Check to make sure our hecks are present, if not reload them
     check_hecks_are_present(ctx.clone(), guild_id).await?;
@@ -137,16 +126,15 @@ async fn get_heck(
     let no_heck = (
         Heck {
             heck_message: "No hecks found!".to_string(),
-            author_id: 97003404601094144,
+            author_id: 97003404601094144
         },
-        69,
+        69
     );
 
     if !global {
         debug!("user wants a guild heck");
-        let guild_id = guild_id.ok_or_else(|| {
-            Error::msg("Guild ID is not present. You can only use this option in a guild.")
-        })?;
+        let guild_id =
+            guild_id.ok_or_else(|| Error::msg("Guild ID is not present. You can only use this option in a guild."))?;
         trace!("got guild_id");
         LuroGuilds::check_guild_is_present(ctx.clone(), guild_id)?;
         trace!("checked to make sure guild settings is present");
@@ -172,7 +160,7 @@ async fn get_heck(
                             return Ok(no_heck);
                         }
                         len
-                    },
+                    }
                 );
 
                 if nsfw {
@@ -194,7 +182,7 @@ async fn get_heck(
 
         Ok(match heck {
             Some(heck) => (heck.clone(), heck_id),
-            None => no_heck,
+            None => no_heck
         })
     } else {
         debug!("user wants a global heck");
@@ -217,7 +205,7 @@ async fn get_heck(
                             return Ok(no_heck);
                         }
                         len
-                    },
+                    }
                 );
 
                 if nsfw {
@@ -239,10 +227,10 @@ async fn get_heck(
             None => (
                 Heck {
                     heck_message: "No hecks found!".to_string(),
-                    author_id: 97003404601094144,
+                    author_id: 97003404601094144
                 },
-                69,
-            ),
+                69
+            )
         })
     }
 }
@@ -254,6 +242,6 @@ async fn format_heck(heck: &Heck, heck_author: &User, hecked_user: &User) -> Hec
             .heck_message
             .replace("<user>", &format!("<@{}>", &hecked_user.id))
             .replace("<author>", &format!("<@{}>", &heck_author.id)),
-        author_id: heck.author_id,
+        author_id: heck.author_id
     }
 }

@@ -1,18 +1,13 @@
 use tracing::{debug, trace};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::{
-    application::interaction::Interaction, http::interaction::InteractionResponseType, id::Id,
-};
-use twilight_util::builder::{
-    embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFooterBuilder, ImageSource},
-    InteractionResponseDataBuilder,
-};
+use twilight_model::{application::interaction::Interaction, id::Id};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFooterBuilder, ImageSource};
 
 use crate::{
     commands::heck::{format_heck, get_heck},
     functions::{get_user_avatar, interaction_context},
     interactions::InteractionResponse,
-    LuroContext, SlashResponse, ACCENT_COLOUR,
+    LuroContext, SlashResponse, ACCENT_COLOUR
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -25,25 +20,18 @@ pub struct HeckSomeoneCommand {
     /// Get a specific heck
     pub id: Option<i64>,
     /// Should the heck be sent as plaintext? (Without an embed)
-    pub plaintext: Option<bool>,
+    pub plaintext: Option<bool>
 }
 
 impl HeckSomeoneCommand {
     pub async fn run(self, ctx: LuroContext, interaction: &Interaction) -> SlashResponse {
-        let (interaction_channel, interaction_author, _) =
-            interaction_context(interaction, "heck someone")?;
+        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+        let (interaction_channel, interaction_author, _) = interaction_context(interaction, "heck someone")?;
         // Is the channel the interaction called in NSFW?
         let nsfw = interaction_channel.nsfw.unwrap_or(false);
 
         debug!("attempting to get a heck");
-        let (heck, heck_id) = get_heck(
-            ctx.clone(),
-            self.id,
-            interaction.guild_id,
-            self.global,
-            nsfw,
-        )
-        .await?;
+        let (heck, heck_id) = get_heck(ctx.clone(), self.id, interaction.guild_id, self.global, nsfw).await?;
 
         debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, interaction_author, &self.user.resolved).await;
@@ -52,13 +40,7 @@ impl HeckSomeoneCommand {
         debug!("attempting to get the author of the heck");
         let heck_author = match ctx.twilight_cache.user(Id::new(heck.author_id)) {
             Some(ok) => ok.clone(),
-            None => {
-                ctx.twilight_client
-                    .user(Id::new(heck.author_id))
-                    .await?
-                    .model()
-                    .await?
-            }
+            None => ctx.twilight_client.user(Id::new(heck.author_id)).await?.model().await?
         };
         let heck_author_avatar = get_user_avatar(&heck_author);
         let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", heck_author.name))
@@ -67,10 +49,9 @@ impl HeckSomeoneCommand {
 
         // Create our response, depending on if the user wants a plaintext heck or not
         debug!("creating our response");
-        let mut response = InteractionResponseDataBuilder::new();
-        if let Some(plaintext) = self.plaintext && plaintext {
+        Ok(if let Some(plaintext) = self.plaintext && plaintext {
             trace!("user wanted plaintext");
-            response = response.content(formatted_heck.heck_message)
+            InteractionResponse::Content { content: formatted_heck.heck_message, ephemeral: false }
         } else {
             trace!("user wanted embed");
             let mut embed = EmbedBuilder::default()
@@ -87,13 +68,8 @@ impl HeckSomeoneCommand {
             )))
         }
 
-         response = response.embeds(vec![embed.build()])
-         .content(format!("<@{}>", self.user.resolved.id))
-        }
+            InteractionResponse::ContentEmbed { content: format!("<@{}>", self.user.resolved.id), embeds: vec![embed.build()], ephemeral }
 
-        Ok(InteractionResponse::Raw {
-            kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(response.build()),
         })
     }
 }

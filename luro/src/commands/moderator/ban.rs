@@ -1,25 +1,22 @@
 use std::convert::TryInto;
 
 use twilight_http::request::AuditLogReason;
-use twilight_interactions::command::{
-    CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
-};
+use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::{application::interaction::Interaction, guild::Permissions};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
-    functions::defer_interaction,
     interactions::InteractionResponse,
     permissions::GuildPermissions,
-    responses::embeds::{
+    responses::{
         ban::{embed, interaction_response},
         bot_hierarchy::bot_hierarchy,
         bot_missing_permissions::bot_missing_permission,
         server_owner::server_owner,
         unable_to_get_guild::unable_to_get_guild,
-        user_hierarchy::user_hierarchy,
+        user_hierarchy::user_hierarchy
     },
-    LuroContext,
+    LuroContext
 };
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
@@ -35,7 +32,7 @@ pub struct BanCommand {
     /// Message history to purge in seconds. Defaults to 1 day. Max is 604800.
     pub purge: TimeToBan,
     /// The reason they should be banned
-    pub reason: Option<String>,
+    pub reason: Option<String>
 }
 
 #[derive(CommandOption, CreateOption, Clone, Debug, PartialEq, Eq)]
@@ -53,7 +50,7 @@ pub enum TimeToBan {
     #[option(name = "Previous 3 Days", value = 259_200)]
     ThreeDays,
     #[option(name = "Previous 7 Days", value = 604_800)]
-    SevenDays,
+    SevenDays
 }
 
 impl BanCommand {
@@ -61,17 +58,12 @@ impl BanCommand {
         Permissions::BAN_MEMBERS
     }
 
-    pub async fn run(
-        self,
-        ctx: &LuroContext,
-        interaction: &Interaction,
-    ) -> Result<InteractionResponse, anyhow::Error> {
-        // Defer this interaction
-        defer_interaction(ctx, interaction).await?;
+    pub async fn run(self, ctx: &LuroContext, interaction: &Interaction) -> Result<InteractionResponse, anyhow::Error> {
+        let ephemeral = ctx.defer_interaction(interaction, true).await?;
 
         let reason = match self.reason {
             Some(reason) => reason,
-            None => String::new(),
+            None => String::new()
         };
         let period_string = match self.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),
@@ -80,24 +72,20 @@ impl BanCommand {
             TimeToBan::TwelveHours => "Previous 12 Hours".to_string(),
             TimeToBan::TwentyFourHours => "Previous 24 Hours".to_string(),
             TimeToBan::ThreeDays => "Previous 3 Days".to_string(),
-            TimeToBan::SevenDays => "Previous 7 Days".to_string(),
+            TimeToBan::SevenDays => "Previous 7 Days".to_string()
         };
         // Fetch the author and the bot permissions.
         let guild_id = match interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return Ok(unable_to_get_guild("Failed to get guild ID".to_string())),
+            None => return Ok(unable_to_get_guild("Failed to get guild ID".to_string()))
         };
         let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
         let author_user = match &interaction.member {
             Some(member) => match &member.user {
                 Some(user) => user,
-                None => return Ok(unable_to_get_guild("Failed to get author user".to_string())),
+                None => return Ok(unable_to_get_guild("Failed to get author user".to_string()))
             },
-            None => {
-                return Ok(unable_to_get_guild(
-                    "Failed to get author member".to_string(),
-                ))
-            }
+            None => return Ok(unable_to_get_guild("Failed to get author member".to_string()))
         };
         let author = ctx
             .twilight_client
@@ -118,9 +106,7 @@ impl BanCommand {
 
         if let Some(member_to_remove) = self.user.member {
             // The user is a member of the server, so carry out some additional checks.
-            let member_permissions = permissions
-                .member(user_to_remove.id, &member_to_remove.roles)
-                .await?;
+            let member_permissions = permissions.member(user_to_remove.id, &member_to_remove.roles).await?;
 
             // Check if the author and the bot have required permissions.
             if member_permissions.is_owner() {
@@ -133,9 +119,7 @@ impl BanCommand {
 
             if member_highest_role >= author_permissions.highest_role() {
                 return Ok(user_hierarchy(
-                    member_to_remove
-                        .nick
-                        .unwrap_or(user_to_remove.name.to_string()),
+                    member_to_remove.nick.unwrap_or(user_to_remove.name.to_string())
                 ));
             }
 
@@ -145,32 +129,12 @@ impl BanCommand {
         };
 
         // Checks passed, now let's action the user
-        let user_to_ban_dm = match ctx
-            .twilight_client
-            .create_private_channel(user_to_remove.id)
-            .await
-        {
+        let user_to_ban_dm = match ctx.twilight_client.create_private_channel(user_to_remove.id).await {
             Ok(channel) => channel.model().await?,
-            Err(_) => {
-                return interaction_response(
-                    guild,
-                    author,
-                    user_to_remove,
-                    guild_id,
-                    &reason,
-                    &period_string,
-                    false,
-                )
-            }
+            Err(_) => return interaction_response(guild, author, user_to_remove, &reason, &period_string, false)
         };
 
-        let mut embed = embed(
-            guild.clone(),
-            author.clone(),
-            user_to_remove.clone(),
-            &reason,
-            &period_string,
-        )?;
+        let mut embed = embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason, &period_string)?;
 
         let victim_dm = ctx
             .twilight_client
@@ -180,7 +144,7 @@ impl BanCommand {
 
         match victim_dm {
             Ok(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline()),
-            Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline()),
+            Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
         }
 
         let mut ban = ctx
@@ -207,7 +171,7 @@ impl BanCommand {
             content: None,
             embeds: Some(vec![embed.build()]),
             components: None,
-            ephemeral: false,
+            ephemeral
         })
     }
 }

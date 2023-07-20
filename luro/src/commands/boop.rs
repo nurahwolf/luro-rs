@@ -1,9 +1,10 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::{command::Command, interaction::Interaction},
-    channel::message::component::{ActionRow, Button, ButtonStyle, Component},
-    http::interaction::{InteractionResponseData, InteractionResponseType},
+    channel::message::component::{ActionRow, Button, ButtonStyle, Component}
 };
+
+use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
 
 pub fn commands() -> Vec<Command> {
     vec![BoopCommand::create_command().into()]
@@ -14,28 +15,27 @@ pub fn commands() -> Vec<Command> {
 pub struct BoopCommand {}
 
 impl BoopCommand {
-    pub async fn run() -> anyhow::Result<crate::interactions::InteractionResponse> {
-        let components = Some(Vec::from([Component::ActionRow(ActionRow {
+    pub async fn run(interaction: &Interaction, ctx: &LuroContext) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+        let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
                 disabled: false,
                 emoji: None,
                 label: Some(String::from("Boop Me!")),
                 style: ButtonStyle::Primary,
-                url: None,
-            })]),
-        })]));
+                url: None
+            })])
+        })]);
 
-        Ok(crate::interactions::InteractionResponse::Text {
+        Ok(InteractionResponse::ContentComponents {
             content: "Boop Count: 0".to_string(),
             components,
-            ephemeral: false,
+            ephemeral
         })
     }
 
-    pub async fn button(
-        interaction: &Interaction,
-    ) -> anyhow::Result<crate::interactions::InteractionResponse> {
+    pub async fn button(interaction: &Interaction) -> SlashResponse {
         // Get message and parse number
         let message = interaction.message.clone().unwrap();
 
@@ -43,15 +43,14 @@ impl BoopCommand {
 
         let value_number = match number.parse::<i32>() {
             Ok(v) => v + 1,
-            Err(_) => 0,
+            Err(_) => 0
         };
 
-        Ok(crate::interactions::InteractionResponse::Raw {
-            kind: InteractionResponseType::UpdateMessage,
-            data: Some(InteractionResponseData {
-                content: Some(format!("Boop Count: {}", value_number)),
-                ..Default::default()
-            }),
+        Ok(InteractionResponse::Update {
+            content: Some(format!("Boop Count: {}", value_number)),
+            embeds: None,
+            components: None,
+            ephemeral: false
         })
     }
 }

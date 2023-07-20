@@ -9,7 +9,7 @@ use twilight_util::builder::embed::{EmbedFooterBuilder, ImageSource};
 
 use crate::{
     functions::{base_embed, get_currentuser_avatar, interaction_context},
-    LuroContext, SlashResponse,
+    LuroContext, SlashResponse
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -18,11 +18,12 @@ pub struct AboutCommand {
     /// Show memory stats
     memory: Option<bool>,
     /// Show cache stats,
-    cache: Option<bool>,
+    cache: Option<bool>
 }
 
 impl AboutCommand {
-    pub async fn run(self, ctx: &LuroContext, interaction: &Interaction) -> SlashResponse {
+    pub async fn run(self, interaction: &Interaction, ctx: &LuroContext) -> SlashResponse {
+        let ephemeral = ctx.defer_interaction(interaction, true).await?;
         let (_, _, _) = interaction_context(interaction, "about")?;
 
         // Variables
@@ -38,7 +39,10 @@ impl AboutCommand {
             let owner = ctx.twilight_client.user(owner).await?.model().await?;
             write!(framework_owners_list, "{} - <@{}>, ", owner.name, owner.id)?;
         }
-        writeln!(description, "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.")?;
+        writeln!(
+            description,
+            "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist."
+        )?;
         writeln!(description, "**\nVersion:** `{}`", version)?;
 
         // If we are git
@@ -127,8 +131,7 @@ impl AboutCommand {
 
         Ok(crate::interactions::InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            components: None,
-            ephemeral: false,
+            ephemeral
         })
     }
 }
@@ -137,10 +140,8 @@ impl AboutCommand {
 fn get_current_branch(repo: &Repository) -> String {
     let head = match repo.head() {
         Ok(head) => Some(head),
-        Err(ref e) if e.code() == ErrorCode::UnbornBranch || e.code() == ErrorCode::NotFound => {
-            None
-        }
-        Err(e) => return format!("An error occured: {e:?}"),
+        Err(ref e) if e.code() == ErrorCode::UnbornBranch || e.code() == ErrorCode::NotFound => None,
+        Err(e) => return format!("An error occured: {e:?}")
     };
 
     let head = head.as_ref().and_then(|h| h.shorthand());

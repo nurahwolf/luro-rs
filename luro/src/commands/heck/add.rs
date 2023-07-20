@@ -4,21 +4,19 @@ use twilight_model::{
     application::interaction::Interaction,
     channel::message::{
         component::{ActionRow, SelectMenu, SelectMenuOption, TextInput, TextInputStyle},
-        Component,
-    },
-    http::interaction::{InteractionResponseData, InteractionResponseType},
+        Component
+    }
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, ImageSource};
 
 use crate::{
     functions::{
-        get_partial_member_avatar, interaction_context, parse_component_data, parse_modal_data,
-        parse_modal_field_required,
+        get_partial_member_avatar, interaction_context, parse_component_data, parse_modal_data, parse_modal_field_required
     },
     hecks::Heck,
     interactions::InteractionResponse,
-    responses::embeds::invalid_heck,
-    LuroContext, SlashResponse, ACCENT_COLOUR,
+    responses::invalid_heck,
+    LuroContext, SlashResponse, ACCENT_COLOUR
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -26,13 +24,13 @@ use crate::{
 pub struct HeckAddCommand {}
 
 impl HeckAddCommand {
-    pub async fn run(&self) -> SlashResponse {
+    pub async fn run(&self, interaction: &Interaction, ctx: LuroContext) -> SlashResponse {
+        ctx.defer_interaction(interaction, true).await?;
         Ok(heck_modal())
     }
 
     pub async fn handle(ctx: LuroContext, interaction: &Interaction) -> SlashResponse {
-        let (interaction_channel, interaction_author, _) =
-            interaction_context(interaction, "heck user")?;
+        let (interaction_channel, interaction_author, _) = interaction_context(interaction, "heck user")?;
         // Get interaction data
         let data = parse_component_data(&mut interaction.clone())?;
         let global = data
@@ -62,7 +60,7 @@ impl HeckAddCommand {
                 .clone()
                 .description
                 .ok_or_else(|| Error::msg("Could not find the new heck in the embed"))?,
-            author_id: interaction_author.id.get(),
+            author_id: interaction_author.id.get()
         }];
 
         // Based on our component data, should this be added as a global heck or a guild heck?
@@ -78,9 +76,11 @@ impl HeckAddCommand {
             };
         } else {
             let mut guild_db = ctx.guilds.write();
-            let heck_db = guild_db.entry(interaction.guild_id.ok_or_else(|| {
-                Error::msg("This place is not a guild. You can only use this option in a guild.")
-            })?);
+            let heck_db = guild_db.entry(
+                interaction
+                    .guild_id
+                    .ok_or_else(|| Error::msg("This place is not a guild. You can only use this option in a guild."))?
+            );
 
             if interaction_channel.nsfw.unwrap_or(false) {
                 heck_db.and_modify(|guild| guild.hecks.nsfw_hecks.append(&mut heck));
@@ -95,13 +95,11 @@ impl HeckAddCommand {
         heck_embed.author = Some(heck_author);
 
         // Finally, repond with an updated message
-        Ok(InteractionResponse::Raw {
-            kind: InteractionResponseType::UpdateMessage,
-            data: Some(InteractionResponseData {
-                embeds: Some(vec![heck_embed]),
-                components: Some(components),
-                ..Default::default()
-            }),
+        Ok(InteractionResponse::Update {
+            content: None,
+            embeds: Some(vec![heck_embed]),
+            components: Some(components),
+            ephemeral: false
         })
     }
 }
@@ -120,27 +118,20 @@ fn heck_modal() -> InteractionResponse {
             placeholder: Some("<author> just gave <user> headpats!!".to_owned()),
             required: Some(true),
             style: TextInputStyle::Paragraph,
-            value: None,
-        })],
+            value: None
+        })]
     })];
 
     InteractionResponse::Modal {
         custom_id: "heck-add".to_owned(),
         title: "Write your heck below!".to_owned(),
-        components,
+        components
     }
 }
 
-pub async fn handle_heck_model(
-    interaction: Interaction,
-) -> Result<InteractionResponse, anyhow::Error> {
-    let (_, interaction_author, interaction_member) =
-        interaction_context(&interaction, "heck add")?;
-    let author_avatar = get_partial_member_avatar(
-        interaction_member,
-        &interaction.guild_id,
-        interaction_author,
-    );
+pub async fn handle_heck_model(interaction: Interaction) -> Result<InteractionResponse, anyhow::Error> {
+    let (_, interaction_author, interaction_member) = interaction_context(&interaction, "heck add")?;
+    let author_avatar = get_partial_member_avatar(interaction_member, &interaction.guild_id, interaction_author);
     let data = parse_modal_data(&mut interaction.clone())?;
     let heck_text = parse_modal_field_required(&data, "heck-text")?;
 
@@ -149,14 +140,13 @@ pub async fn handle_heck_model(
         (true, true) => (),
         (true, false) => return Ok(invalid_heck::response(true, false, heck_text)),
         (false, true) => return Ok(invalid_heck::response(false, true, heck_text)),
-        (false, false) => return Ok(invalid_heck::response(true, true, heck_text)),
+        (false, false) => return Ok(invalid_heck::response(true, true, heck_text))
     };
 
     // Send a success message.
-    let embed_author =
-        EmbedAuthorBuilder::new(format!("Brand new heck by {}", interaction_author.name))
-            .icon_url(ImageSource::url(author_avatar)?)
-            .build();
+    let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", interaction_author.name))
+        .icon_url(ImageSource::url(author_avatar)?)
+        .build();
     let embed = EmbedBuilder::new()
         .color(ACCENT_COLOUR)
         .description(heck_text)
@@ -174,25 +164,23 @@ pub async fn handle_heck_model(
                     description: Some("Can only be used in this guild".to_owned()),
                     emoji: None,
                     label: "Guild Specific Heck".to_owned(),
-                    value: "heck-add-guild".to_owned(),
+                    value: "heck-add-guild".to_owned()
                 },
                 SelectMenuOption {
                     default: false,
-                    description: Some(
-                        "Can be used globally, including DMs and other servers".to_owned(),
-                    ),
+                    description: Some("Can be used globally, including DMs and other servers".to_owned()),
                     emoji: None,
                     label: "Global Heck".to_owned(),
-                    value: "heck-add-global".to_owned(),
+                    value: "heck-add-global".to_owned()
                 },
             ],
-            placeholder: Some("Choose if this is a global or guild specific heck".to_owned()),
-        })],
+            placeholder: Some("Choose if this is a global or guild specific heck".to_owned())
+        })]
     })];
 
-    Ok(InteractionResponse::Embed {
+    Ok(InteractionResponse::EmbedComponents {
         embeds: vec![embed.build()],
-        components: Some(components),
-        ephemeral: true,
+        components,
+        ephemeral: true
     })
 }
