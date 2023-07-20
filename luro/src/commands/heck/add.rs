@@ -24,8 +24,7 @@ use crate::{
 pub struct HeckAddCommand {}
 
 impl HeckAddCommand {
-    pub async fn run(&self, interaction: &Interaction, ctx: LuroContext) -> SlashResponse {
-        ctx.defer_interaction(interaction, true).await?;
+    pub async fn run(&self) -> SlashResponse {
         Ok(heck_modal())
     }
 

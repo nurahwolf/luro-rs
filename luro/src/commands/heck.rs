@@ -49,7 +49,7 @@ impl HeckCommands {
 
         // Call the appropriate subcommand.
         Ok(match command {
-            Self::Add(command) => command.run(interaction, ctx).await?,
+            Self::Add(command) => command.run().await?,
             Self::User(command) => command.run(ctx, interaction).await?,
             Self::Info(command) => command.run(ctx, interaction).await?
         })
