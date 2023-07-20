@@ -11,7 +11,7 @@ impl LuroFramework {
             || !message.content.is_empty()
         {
             info!(
-                "Message Received - Author: {}\nContent: {}",
+                "Message Received - Author: {}\n{}",
                 message.author.name, message.0.content
             );
         }
