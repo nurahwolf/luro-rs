@@ -127,10 +127,10 @@ impl LuroCommand for GuildSettingsCommand {
             EmbedFieldBuilder::new(
                 "Bot Log Channel",
                 if let Some(bot_log_channel) = guild_setting.discord_events_log_channel {
-                    format!("<@{}>", bot_log_channel.get())
+                    format!("<#{}>", bot_log_channel.get())
                 } else {
                     match guild_setting.discord_events_log_channel {
-                        Some(bot_log_channel) => format!("<@{}>", bot_log_channel.get()),
+                        Some(bot_log_channel) => format!("<#{}>", bot_log_channel.get()),
                         None => "Not set!".to_owned()
                     }
                 }
