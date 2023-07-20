@@ -8,7 +8,7 @@ use crate::{framework::LuroFramework, HECK_FILE_PATH};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Heck {
     pub heck_message: String,
-    pub author_id: u64,
+    pub author_id: u64
 }
 
 /// Structure for `heck.toml`
@@ -22,7 +22,7 @@ pub struct Hecks {
     /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
     pub sfw_heck_ids: Vec<usize>,
     /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
-    pub nsfw_heck_ids: Vec<usize>,
+    pub nsfw_heck_ids: Vec<usize>
 }
 
 impl Hecks {
@@ -30,7 +30,7 @@ impl Hecks {
     pub async fn get(path: &str) -> Result<Hecks, Error> {
         let mut file_opened = match File::open(path).await {
             Ok(file_opened) => file_opened,
-            Err(why) => return Err(why.into()),
+            Err(why) => return Err(why.into())
         };
 
         let mut contents = String::new();
@@ -38,12 +38,12 @@ impl Hecks {
             Ok(size) => {
                 info!("Read file {path} of length {size}");
             }
-            Err(why) => return Err(why.into()),
+            Err(why) => return Err(why.into())
         }
 
         match toml::from_str::<Hecks>(&contents) {
             Ok(secrets) => Ok(secrets),
-            Err(why) => Err(why.into()),
+            Err(why) => Err(why.into())
         }
     }
 
@@ -51,12 +51,12 @@ impl Hecks {
     pub async fn write(ctx: &LuroFramework) -> Result<(), Error> {
         let struct_to_toml_string = match toml::to_string(&ctx.global_data.read().hecks) {
             Ok(string) => string,
-            Err(why) => return Err(why.into()),
+            Err(why) => return Err(why.into())
         };
 
         match write(HECK_FILE_PATH, struct_to_toml_string).await {
             Ok(a) => Ok(a),
-            Err(why) => Err(why.into()),
+            Err(why) => Err(why.into())
         }
     }
 

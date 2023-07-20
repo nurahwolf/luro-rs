@@ -4,9 +4,7 @@ use anyhow::Context;
 use futures_util::StreamExt;
 use interactions::InteractionResponse;
 use std::{env, sync::Arc};
-use tracing_subscriber::{
-    filter, fmt, prelude::__tracing_subscriber_SubscriberExt, reload, util::SubscriberInitExt,
-};
+use tracing_subscriber::{filter, fmt, prelude::__tracing_subscriber_SubscriberExt, reload, util::SubscriberInitExt};
 use twilight_gateway::{stream::ShardEventStream, Intents};
 
 use crate::{commands::Commands, framework::LuroFramework};
@@ -71,32 +69,21 @@ pub type SlashResponse = Result<InteractionResponse, anyhow::Error>;
 async fn main() -> anyhow::Result<()> {
     // Initialise the tracing subscriber
     let (filter, reload_handle) = reload::Layer::new(FILTER);
-    tracing_subscriber::registry()
-        .with(filter)
-        .with(fmt::Layer::default())
-        .init();
+    tracing_subscriber::registry().with(filter).with(fmt::Layer::default()).init();
 
     // Key things needed for the framework
     let (token, lavalink_host, lavalink_auth, intents) = (
         env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
         env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
-        env::var("LAVALINK_AUTHORISATION")
-            .context("Failed to get the variable LAVALINK_AUTHORISATION")?,
+        env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
         Intents::all()
     );
 
     let commands = Commands::default_commands();
 
     // Create the framework
-    let (luro, mut shards) = LuroFramework::builder(
-        commands,
-        intents,
-        lavalink_auth,
-        lavalink_host,
-        token,
-        reload_handle,
-    )
-    .await?;
+    let (luro, mut shards) =
+        LuroFramework::builder(commands, intents, lavalink_auth, lavalink_host, token, reload_handle).await?;
     let mut stream = ShardEventStream::new(shards.iter_mut());
 
     while let Some((shard, event)) = stream.next().await {
@@ -110,14 +97,10 @@ async fn main() -> anyhow::Result<()> {
                 tracing::warn!(?error, "error while receiving event");
                 continue;
             }
-            Ok(event) => event,
+            Ok(event) => event
         };
 
-        tokio::spawn(LuroFramework::handle_event(
-            luro.clone(),
-            event,
-            shard.sender(),
-        ));
+        tokio::spawn(LuroFramework::handle_event(luro.clone(), event, shard.sender()));
     }
 
     Ok(())

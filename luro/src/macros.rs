@@ -15,10 +15,9 @@ macro_rules! impl_guild_command_handle {
             #[::tracing::instrument]
             pub async fn handle(
                 mut interaction: ::twilight_model::application::interaction::Interaction,
-                state: &$crate::cluster::ClusterState,
+                state: &$crate::cluster::ClusterState
             ) -> Result<$crate::interaction::response::InteractionResponse, ::anyhow::Error> {
-                let parsed =
-                    $crate::interaction::util::parse_command_data::<Self>(&mut interaction)?;
+                let parsed = $crate::interaction::util::parse_command_data::<Self>(&mut interaction)?;
                 let ctx = $crate::interaction::util::GuildInteractionContext::new(interaction)?;
 
                 parsed.exec(ctx, state).await

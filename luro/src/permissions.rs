@@ -7,36 +7,30 @@ use twilight_model::{
     guild::{Guild, Permissions, Role},
     id::{
         marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
-        Id,
-    },
+        Id
+    }
 };
 use twilight_util::permission_calculator::PermissionCalculator;
 
 /// Calculate the permissions for a given guild.
 pub struct GuildPermissions<'a> {
     twilight_client: &'a Client,
-    guild: Guild,
+    guild: Guild
 }
 
 impl<'a> GuildPermissions<'a> {
     /// Initialize [`GuildPermissions`] with from a guild.
-    pub async fn new(
-        twilight_client: &'a Client,
-        guild_id: &Id<GuildMarker>,
-    ) -> Result<GuildPermissions<'a>, anyhow::Error> {
+    pub async fn new(twilight_client: &'a Client, guild_id: &Id<GuildMarker>) -> Result<GuildPermissions<'a>, anyhow::Error> {
         let guild = twilight_client.guild(*guild_id).await?.model().await?;
 
-        Ok(Self {
-            twilight_client,
-            guild,
-        })
+        Ok(Self { twilight_client, guild })
     }
 
     /// Compute permissions for a given guild member.
     pub async fn member(
         &self,
         member_id: Id<UserMarker>,
-        member_roles: &[Id<RoleMarker>],
+        member_roles: &[Id<RoleMarker>]
     ) -> Result<LuroPermissions<'a>, anyhow::Error> {
         LuroPermissions::new(self, member_id, member_roles).await
     }
@@ -53,7 +47,7 @@ pub struct LuroPermissions<'a> {
     guild_id: Id<GuildMarker>,
     member_id: Id<UserMarker>,
     member_roles: MemberRoles,
-    is_owner: bool,
+    is_owner: bool
 }
 
 impl<'a> LuroPermissions<'a> {
@@ -63,42 +57,29 @@ impl<'a> LuroPermissions<'a> {
     pub async fn new(
         guild_permissions: &GuildPermissions<'a>,
         member_id: Id<UserMarker>,
-        member_roles: &[Id<RoleMarker>],
+        member_roles: &[Id<RoleMarker>]
     ) -> Result<LuroPermissions<'a>, anyhow::Error> {
         let guild_id = guild_permissions.guild.id;
         let is_owner = member_id == guild_permissions.guild.owner_id;
 
-        let member_roles = MemberRoles::query(
-            guild_permissions.twilight_client,
-            guild_id,
-            member_roles.iter(),
-        )
-        .await?;
+        let member_roles = MemberRoles::query(guild_permissions.twilight_client, guild_id, member_roles.iter()).await?;
 
         Ok(Self {
             twilight_client: guild_permissions.twilight_client,
             guild_id,
             member_id,
             member_roles,
-            is_owner,
+            is_owner
         })
     }
 
     /// Initialize [`LuroPermissions`] for the bot current member.
-    pub async fn current_member(
-        guild_permissions: &GuildPermissions<'a>,
-    ) -> Result<LuroPermissions<'a>, anyhow::Error> {
+    pub async fn current_member(guild_permissions: &GuildPermissions<'a>) -> Result<LuroPermissions<'a>, anyhow::Error> {
         let member = guild_permissions
             .twilight_client
             .guild_member(
                 guild_permissions.guild.id,
-                guild_permissions
-                    .twilight_client
-                    .current_user()
-                    .await?
-                    .model()
-                    .await?
-                    .id,
+                guild_permissions.twilight_client.current_user().await?.model().await?.id
             )
             .await?
             .model()
@@ -107,19 +88,14 @@ impl<'a> LuroPermissions<'a> {
         let guild_id = guild_permissions.guild.id;
         let is_owner = member.user.id == guild_permissions.guild.owner_id;
 
-        let member_roles = MemberRoles::query(
-            guild_permissions.twilight_client,
-            guild_id,
-            member.roles.iter(),
-        )
-        .await?;
+        let member_roles = MemberRoles::query(guild_permissions.twilight_client, guild_id, member.roles.iter()).await?;
 
         Ok(Self {
             twilight_client: guild_permissions.twilight_client,
             guild_id,
             member_id: member.user.id,
             member_roles,
-            is_owner,
+            is_owner
         })
     }
 
@@ -133,12 +109,7 @@ impl<'a> LuroPermissions<'a> {
         if self.member_roles.roles.is_empty() {
             RoleOrdering::from(&self.member_roles.everyone)
         } else {
-            let mut roles: Vec<_> = self
-                .member_roles
-                .roles
-                .iter()
-                .map(RoleOrdering::from)
-                .collect();
+            let mut roles: Vec<_> = self.member_roles.roles.iter().map(RoleOrdering::from).collect();
             roles.sort();
 
             *roles.last().unwrap() // SAFETY: roles is not empty
@@ -161,8 +132,7 @@ impl<'a> LuroPermissions<'a> {
             .map(|role| (role.id, role.permissions))
             .collect::<Vec<_>>();
 
-        let calculator =
-            PermissionCalculator::new(self.guild_id, self.member_id, everyone_role, &member_roles);
+        let calculator = PermissionCalculator::new(self.guild_id, self.member_id, everyone_role, &member_roles);
 
         calculator.root()
     }
@@ -171,21 +141,13 @@ impl<'a> LuroPermissions<'a> {
     ///
     /// This method also return the [`ChannelType`] of the requested channel
     /// to handle the case where the channel is a thread.
-    pub async fn channel(
-        &self,
-        channel: Id<ChannelMarker>,
-    ) -> Result<(Permissions, ChannelType), anyhow::Error> {
+    pub async fn channel(&self, channel: Id<ChannelMarker>) -> Result<(Permissions, ChannelType), anyhow::Error> {
         let mut channel = self.twilight_client.channel(channel).await?.model().await?;
 
         // If the channel is a thread, get the parent channel.
         if channel.kind.is_thread() {
             if let Some(parent_id) = channel.parent_id {
-                channel = self
-                    .twilight_client
-                    .channel(parent_id)
-                    .await?
-                    .model()
-                    .await?;
+                channel = self.twilight_client.channel(parent_id).await?.model().await?;
             }
         }
 
@@ -198,12 +160,10 @@ impl<'a> LuroPermissions<'a> {
             .map(|role| (role.id, role.permissions))
             .collect::<Vec<_>>();
 
-        let calculator =
-            PermissionCalculator::new(self.guild_id, self.member_id, everyone_role, &member_roles);
+        let calculator = PermissionCalculator::new(self.guild_id, self.member_id, everyone_role, &member_roles);
 
         let kind = channel.kind;
-        let permissions =
-            calculator.in_channel(kind, &channel.permission_overwrites.unwrap_or_default());
+        let permissions = calculator.in_channel(kind, &channel.permission_overwrites.unwrap_or_default());
 
         Ok((permissions, kind))
     }
@@ -214,7 +174,7 @@ struct MemberRoles {
     /// Everyone role
     pub everyone: Role,
     /// List of roles of the user
-    pub roles: Vec<Role>,
+    pub roles: Vec<Role>
 }
 
 impl MemberRoles {
@@ -222,7 +182,7 @@ impl MemberRoles {
     async fn query(
         twilight_client: &Client,
         guild_id: Id<GuildMarker>,
-        member_roles: impl Iterator<Item = &Id<RoleMarker>>,
+        member_roles: impl Iterator<Item = &Id<RoleMarker>>
     ) -> Result<MemberRoles, anyhow::Error> {
         let everyone_id = guild_id.cast();
         let mut everyone_role = None;
@@ -243,7 +203,7 @@ impl MemberRoles {
         if let Some(everyone) = everyone_role {
             Ok(MemberRoles {
                 everyone: everyone.clone(),
-                roles,
+                roles
             })
         } else {
             Err(anyhow!("everyone role not found in cache"))
@@ -272,14 +232,12 @@ impl MemberRoles {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RoleOrdering {
     id: Id<RoleMarker>,
-    position: i64,
+    position: i64
 }
 
 impl Ord for RoleOrdering {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.position
-            .cmp(&other.position)
-            .then(self.id.get().cmp(&other.id.get()))
+        self.position.cmp(&other.position).then(self.id.get().cmp(&other.id.get()))
     }
 }
 
@@ -293,7 +251,7 @@ impl From<&Role> for RoleOrdering {
     fn from(role: &Role) -> Self {
         Self {
             id: role.id,
-            position: role.position,
+            position: role.position
         }
     }
 }

@@ -6,15 +6,15 @@ use serde::{Deserialize, Serialize};
 use tokio::fs::write;
 use tokio::{
     fs::File,
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::{AsyncReadExt, AsyncWriteExt}
 };
 use tracing::{info, warn};
 use twilight_model::{
     application::command::Command,
     id::{
         marker::{ChannelMarker, GuildMarker},
-        Id,
-    },
+        Id
+    }
 };
 
 use crate::framework::LuroFramework;
@@ -24,7 +24,7 @@ use crate::{hecks::Hecks, GUILDSETTINGS_FILE_PATH};
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct LuroGuilds {
     /// Guild Settings
-    pub guilds: HashMap<Id<GuildMarker>, LuroGuild>,
+    pub guilds: HashMap<Id<GuildMarker>, LuroGuild>
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -40,7 +40,7 @@ pub struct LuroGuild {
     /// Discord events are logged here, if defined
     pub discord_events_log_channel: Option<Id<ChannelMarker>>,
     /// Moderator actions are pushed here such as bans, if defined
-    pub moderator_actions_log_channel: Option<Id<ChannelMarker>>,
+    pub moderator_actions_log_channel: Option<Id<ChannelMarker>>
 }
 
 impl LuroGuilds {
@@ -55,11 +55,7 @@ impl LuroGuilds {
 
             file = match File::create(GUILDSETTINGS_FILE_PATH).await {
                 Ok(ok) => ok,
-                Err(why) => {
-                    return Err(Error::msg(format!(
-                        "Error creating guild_settings.toml - {why}"
-                    )))
-                }
+                Err(why) => return Err(Error::msg(format!("Error creating guild_settings.toml - {why}")))
             };
 
             if let Err(why) = file.write_all(contents.as_bytes()).await {
@@ -69,47 +65,40 @@ impl LuroGuilds {
         } else {
             file = match File::open(GUILDSETTINGS_FILE_PATH).await {
                 Ok(file_opened) => file_opened,
-                Err(why) => return Err(Error::msg(format!("Error opening toml file - {why}"))),
+                Err(why) => return Err(Error::msg(format!("Error opening toml file - {why}")))
             };
 
             match file.read_to_string(&mut contents).await {
                 Ok(size) => info!("Read file {GUILDSETTINGS_FILE_PATH} of length {size}"),
-                Err(why) => return Err(Error::msg(format!("Error reading toml file - {why}"))),
+                Err(why) => return Err(Error::msg(format!("Error reading toml file - {why}")))
             };
         };
 
         match toml::from_str::<Self>(&contents) {
             Ok(guild_settings) => Ok(guild_settings),
-            Err(why) => Err(Error::msg(format!("Error serialising toml file - {why}"))),
+            Err(why) => Err(Error::msg(format!("Error serialising toml file - {why}")))
         }
     }
 
     /// Write the struct to a toml file
     pub async fn write(ctx: &LuroFramework) -> anyhow::Result<()> {
         let guilds = LuroGuilds {
-            guilds: ctx.guilds.read().clone(),
+            guilds: ctx.guilds.read().clone()
         };
 
         let struct_to_toml_string = match toml::to_string(&guilds) {
             Ok(string) => string,
-            Err(why) => {
-                return Err(Error::msg(format!(
-                    "Error serialising struct to toml string: {why}"
-                )))
-            }
+            Err(why) => return Err(Error::msg(format!("Error serialising struct to toml string: {why}")))
         };
 
         match write(GUILDSETTINGS_FILE_PATH, struct_to_toml_string).await {
             Ok(_) => Ok(()),
-            Err(why) => Err(Error::msg(format!("Error writing toml file: {why}"))),
+            Err(why) => Err(Error::msg(format!("Error writing toml file: {why}")))
         }
     }
 
     /// Create guild settings for a guild, if it is not present.
-    pub fn check_guild_is_present(
-        ctx: LuroContext,
-        guild_id: Id<GuildMarker>,
-    ) -> anyhow::Result<()> {
+    pub fn check_guild_is_present(ctx: LuroContext, guild_id: Id<GuildMarker>) -> anyhow::Result<()> {
         let mut guild_db = ctx.guilds.write();
 
         match guild_db.entry(guild_id) {
@@ -121,7 +110,7 @@ impl LuroGuilds {
                     accent_colour: Default::default(),
                     accent_colour_custom: Default::default(),
                     discord_events_log_channel: Default::default(),
-                    moderator_actions_log_channel: Default::default(),
+                    moderator_actions_log_channel: Default::default()
                 });
             }
         };

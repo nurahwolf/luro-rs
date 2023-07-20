@@ -13,27 +13,27 @@ use twilight_model::{
     application::command::Command,
     gateway::{
         payload::outgoing::update_presence::UpdatePresencePayload,
-        presence::{ActivityType, MinimalActivity, Status},
+        presence::{ActivityType, MinimalActivity, Status}
     },
     id::{
         marker::{GuildMarker, UserMarker},
-        Id,
+        Id
     },
-    oauth::Application,
+    oauth::Application
 };
 
 use crate::{
     commands::Commands,
     guild::{LuroGuild, LuroGuilds},
     hecks::Hecks,
-    HECK_FILE_PATH,
+    HECK_FILE_PATH
 };
 
 pub struct GlobalData {
     /// Simply used as a test to make sure that data is shared across threads
     pub count: usize,
     pub hecks: Hecks,
-    pub owners: Vec<Id<UserMarker>>,
+    pub owners: Vec<Id<UserMarker>>
 }
 
 /// The framework used to dispatch slash commands.
@@ -54,7 +54,7 @@ pub struct LuroFramework {
     pub guilds: RwLock<HashMap<Id<GuildMarker>, LuroGuild>>,
     /// Mutable data used throughout Luro
     pub global_data: RwLock<GlobalData>,
-    pub tracing_subscriber: Handle<LevelFilter, Registry>,
+    pub tracing_subscriber: Handle<LevelFilter, Registry>
 }
 
 impl LuroFramework {
@@ -66,7 +66,7 @@ impl LuroFramework {
         lavalink_auth: String,
         lavalink_host: String,
         token: String,
-        tracing_subscriber: Handle<LevelFilter, Registry>,
+        tracing_subscriber: Handle<LevelFilter, Registry>
     ) -> Result<(Arc<Self>, Vec<Shard>), Error> {
         let (twilight_client, twilight_cache, shard_config) = (
             twilight_http::Client::new(token.clone()),
@@ -76,14 +76,14 @@ impl LuroFramework {
                     vec![MinimalActivity {
                         kind: ActivityType::Playing,
                         name: "/about | Hello World!".to_owned(),
-                        url: None,
+                        url: None
                     }
                     .into()],
                     false,
                     None,
-                    Status::Online,
+                    Status::Online
                 )?)
-                .build(),
+                .build()
         );
 
         let shards = stream::create_recommended(&twilight_client, shard_config, |_, c| c.build())
@@ -91,11 +91,7 @@ impl LuroFramework {
             .collect::<Vec<_>>();
 
         let current_user = twilight_client.current_user().await?.model().await?;
-        let application = twilight_client
-            .current_user_application()
-            .await?
-            .model()
-            .await?;
+        let application = twilight_client.current_user_application().await?.model().await?;
 
         let lavalink = {
             let socket = SocketAddr::from_str(&lavalink_host)?;
@@ -108,12 +104,7 @@ impl LuroFramework {
         let guilds = LuroGuilds::get().await?.guilds.into();
         let hecks = Hecks::get(HECK_FILE_PATH).await?;
         let owners = vec![Id::new(97003404601094144)];
-        let global_data = GlobalData {
-            count: 0,
-            hecks,
-            owners,
-        }
-        .into();
+        let global_data = GlobalData { count: 0, hecks, owners }.into();
 
         Ok((
             Self {
@@ -125,10 +116,10 @@ impl LuroFramework {
                 commands,
                 guilds,
                 global_data,
-                tracing_subscriber,
+                tracing_subscriber
             }
             .into(),
-            shards,
+            shards
         ))
     }
 
