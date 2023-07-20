@@ -32,7 +32,7 @@ pub mod prelude {
         framework::{DefaultCommandResult, Framework},
         modal::*,
         parse::{Parse, ParseError},
-        range::Range,
+        range::Range
     };
     pub use async_trait::async_trait;
     pub use luro_macros::*;
@@ -42,42 +42,34 @@ pub mod twilight_exports {
     pub use twilight_http::{
         client::{Client, InteractionClient},
         request::application::interaction::UpdateResponse,
-        response::DeserializeBodyError,
+        response::DeserializeBodyError
     };
     pub use twilight_model::{
         application::{
-            command::{
-                Command, CommandOption, CommandOptionChoice, CommandOptionChoiceValue,
-                CommandOptionType,
-            },
+            command::{Command, CommandOption, CommandOptionChoice, CommandOptionChoiceValue, CommandOptionType},
             interaction::{
-                application_command::{
-                    CommandData, CommandDataOption, CommandInteractionDataResolved,
-                    CommandOptionValue,
-                },
+                application_command::{CommandData, CommandDataOption, CommandInteractionDataResolved, CommandOptionValue},
                 message_component::MessageComponentInteractionData,
                 modal::ModalInteractionData,
-                Interaction, InteractionData, InteractionType,
-            },
+                Interaction, InteractionData, InteractionType
+            }
         },
         channel::{
             message::{
                 component::{ActionRow, TextInput, TextInputStyle},
-                Component,
+                Component
             },
-            Message,
+            Message
         },
         gateway::payload::incoming::InteractionCreate,
         guild::Permissions,
-        http::interaction::{
-            InteractionResponse, InteractionResponseData, InteractionResponseType,
-        },
+        http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
         id::{
             marker::{
-                ApplicationMarker, AttachmentMarker, ChannelMarker, GenericMarker, GuildMarker,
-                MessageMarker, RoleMarker, UserMarker,
+                ApplicationMarker, AttachmentMarker, ChannelMarker, GenericMarker, GuildMarker, MessageMarker, RoleMarker,
+                UserMarker
             },
-            Id,
-        },
+            Id
+        }
     };
 }

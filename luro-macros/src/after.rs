@@ -11,7 +11,7 @@ pub fn after(input: TokenStream2) -> Result<TokenStream2> {
         attrs,
         vis,
         mut sig,
-        block,
+        block
     } = fun;
 
     match sig.inputs.len() {
@@ -20,7 +20,7 @@ pub fn after(input: TokenStream2) -> Result<TokenStream2> {
             // a &str indicating the name of the command and the result of a command execution.
             return Err(Error::new(sig.inputs.span(), "Expected three arguments"));
         }
-        _ => (),
+        _ => ()
     };
 
     // The name of the original function

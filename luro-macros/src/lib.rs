@@ -257,7 +257,7 @@ pub fn modal(input: TokenStream) -> TokenStream {
 fn extract(res: syn::Result<TokenStream2>) -> TokenStream {
     match res {
         Ok(s) => s,
-        Err(why) => why.to_compile_error(),
+        Err(why) => why.to_compile_error()
     }
     .into()
 }

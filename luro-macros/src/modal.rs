@@ -1,7 +1,7 @@
 use crate::optional::Optional;
 use crate::{
     attr::{self, Attr},
-    util::{consume_map, unique},
+    util::{consume_map, unique}
 };
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
@@ -9,7 +9,7 @@ use syn::{parse2, spanned::Spanned, Data, DeriveInput, Error, Fields, FieldsName
 
 struct Modal {
     title: String,
-    fields: Vec<Field>,
+    fields: Vec<Field>
 }
 
 struct Field {
@@ -20,7 +20,7 @@ struct Field {
     paragraph: bool,
     max_length: Optional<u16>,
     min_length: Optional<u16>,
-    value: Optional<String>,
+    value: Optional<String>
 }
 
 struct FieldParser<'a>(&'a Field);
@@ -28,16 +28,13 @@ struct FieldParser<'a>(&'a Field);
 impl Modal {
     fn new(input: &mut DeriveInput, fields: FieldsNamed) -> Result<Self> {
         if fields.named.len() > 5 || fields.named.is_empty() {
-            return Err(Error::new(
-                fields.span(),
-                "Modals must have between 1 and 5 fields",
-            ));
+            return Err(Error::new(fields.span(), "Modals must have between 1 and 5 fields"));
         }
 
         let mut title = None;
         let mut this = Self {
             title: input.ident.to_string(),
-            fields: Vec::with_capacity(fields.named.len()),
+            fields: Vec::with_capacity(fields.named.len())
         };
 
         consume_map(&mut input.attrs, &mut title, |attribute, title| {
@@ -76,7 +73,7 @@ impl Field {
             paragraph: false,
             max_length: None.into(),
             min_length: None.into(),
-            value: None.into(),
+            value: None.into()
         };
 
         consume_map(&mut field.attrs, &mut this, |attribute, this| {
@@ -104,12 +101,7 @@ impl Field {
                 unique(&mut self.label, attr.parse_string()?, "label", span)?;
             }
             "placeholder" => {
-                unique(
-                    &mut self.placeholder,
-                    attr.parse_string()?,
-                    "placeholder",
-                    span,
-                )?;
+                unique(&mut self.placeholder, attr.parse_string()?, "placeholder", span)?;
             }
             "paragraph" => {
                 if self.paragraph {
@@ -120,25 +112,15 @@ impl Field {
                 self.paragraph = true;
             }
             "max_length" => {
-                unique(
-                    &mut self.max_length,
-                    attr.parse_number::<u16>()?,
-                    "max_length",
-                    span,
-                )?;
+                unique(&mut self.max_length, attr.parse_number::<u16>()?, "max_length", span)?;
             }
             "min_length" => {
-                unique(
-                    &mut self.min_length,
-                    attr.parse_number::<u16>()?,
-                    "min_length",
-                    span,
-                )?;
+                unique(&mut self.min_length, attr.parse_number::<u16>()?, "min_length", span)?;
             }
             "value" => {
                 unique(&mut self.value, attr.parse_string()?, "value", span)?;
             }
-            _ => Err(Error::new(span, "Attribute not recognized"))?,
+            _ => Err(Error::new(span, "Attribute not recognized"))?
         }
 
         Ok(())
@@ -155,7 +137,7 @@ impl ToTokens for Field {
             paragraph,
             max_length,
             min_length,
-            value,
+            value
         } = &self;
         let label = label.as_ref().unwrap();
         let label_ref = &label;
@@ -203,15 +185,10 @@ fn fields(data: Data, derive_span: impl Spanned) -> Result<FieldsNamed> {
     match data {
         Data::Struct(s) => match s.fields {
             Fields::Named(fields) => Ok(fields),
-            Fields::Unnamed(fields) => {
-                Err(Error::new(fields.span(), "Unnamed fields not supported"))
-            }
-            Fields::Unit => Err(Error::new(s.fields.span(), "Unit structs not supported")),
+            Fields::Unnamed(fields) => Err(Error::new(fields.span(), "Unnamed fields not supported")),
+            Fields::Unit => Err(Error::new(s.fields.span(), "Unit structs not supported"))
         },
-        _ => Err(Error::new(
-            derive_span.span(),
-            "This derive is only available for structs",
-        )),
+        _ => Err(Error::new(derive_span.span(), "This derive is only available for structs"))
     }
 }
 
@@ -223,14 +200,8 @@ pub fn modal(input: TokenStream2) -> Result<TokenStream2> {
     let struct_ident = &derive.ident;
 
     let parsers = fields.iter().map(FieldParser).collect::<Vec<FieldParser>>();
-    let field_names = fields
-        .iter()
-        .map(|field| &field.ident)
-        .collect::<Vec<&Ident>>();
-    let field_types = fields
-        .iter()
-        .map(|field| &field.kind)
-        .collect::<Vec<&Type>>();
+    let field_names = fields.iter().map(|field| &field.ident).collect::<Vec<&Ident>>();
+    let field_types = fields.iter().map(|field| &field.kind).collect::<Vec<&Type>>();
 
     Ok(quote::quote! {
         const _: () = {

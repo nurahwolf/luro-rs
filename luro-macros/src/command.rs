@@ -12,15 +12,12 @@ pub fn command(macro_attrs: TokenStream2, input: TokenStream2) -> Result<TokenSt
         mut attrs,
         vis,
         mut sig,
-        mut block,
+        mut block
     } = fun;
 
     if sig.inputs.is_empty() {
         // The function must have at least one argument, which must be an `SlashContext`
-        return Err(Error::new(
-            sig.inputs.span(),
-            "Expected at least SlashContext as a parameter",
-        ));
+        return Err(Error::new(sig.inputs.span(), "Expected at least SlashContext as a parameter"));
     }
 
     // If we provided a name at macro invocation, use it, if not, use the function's one
@@ -66,14 +63,11 @@ pub fn parse_arguments<'a>(
     sig: &mut Signature,
     block: &mut Block,
     ctx_ident: Ident,
-    ctx_type: &'a Type,
+    ctx_type: &'a Type
 ) -> Result<Vec<Argument<'a>>> {
     let mut arguments = Vec::new();
     while sig.inputs.len() > 1 {
-        arguments.push(Argument::new(
-            sig.inputs.pop().unwrap().into_value(),
-            ctx_type,
-        )?);
+        arguments.push(Argument::new(sig.inputs.pop().unwrap().into_value(), ctx_type)?);
     }
 
     arguments.reverse();
@@ -90,7 +84,7 @@ pub fn parse_arguments<'a>(
                     s.name.to_string()
                 }
             })
-            .collect::<Vec<_>>(),
+            .collect::<Vec<_>>()
     );
 
     // The original block of the function
@@ -123,23 +117,15 @@ pub fn parse_arguments<'a>(
 /// `SlashContext`
 pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
     let arg = match sig.inputs.iter().next() {
-        None => {
-            return Err(Error::new(
-                sig.inputs.span(),
-                "Expected SlashContext as first parameter",
-            ))
-        }
-        Some(c) => c,
+        None => return Err(Error::new(sig.inputs.span(), "Expected SlashContext as first parameter")),
+        Some(c) => c
     };
 
     let ctx_ident = util::get_ident(&util::get_pat(arg)?.pat)?;
 
     let ty = util::get_bracketed_generic(arg, true, |ty| {
         if let Type::Infer(_) = ty {
-            Err(Error::new(
-                sig.inputs.span(),
-                "SlashContext must have a known type",
-            ))
+            Err(Error::new(sig.inputs.span(), "SlashContext must have a known type"))
         } else {
             Ok(ty.clone())
         }
@@ -147,7 +133,7 @@ pub fn get_context_type_and_ident(sig: &Signature) -> Result<(Ident, Type)> {
 
     let ty = match ty {
         None => Err(Error::new(arg.span(), "SlashContext type must be set")),
-        Some(ty) => Ok(ty),
+        Some(ty) => Ok(ty)
     }?;
 
     Ok((ctx_ident, ty))

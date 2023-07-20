@@ -11,14 +11,14 @@ pub enum Value {
     /// An identifier
     Ident(Ident),
     /// A literal value
-    Lit(Lit),
+    Lit(Lit)
 }
 
 impl ToTokens for Value {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             Value::Ident(ident) => ident.to_tokens(tokens),
-            Value::Lit(lit) => lit.to_tokens(tokens),
+            Value::Lit(lit) => lit.to_tokens(tokens)
         }
     }
 }
@@ -31,7 +31,7 @@ pub struct Attr {
     /// e.g.: In `#[name = "some"]`, the part of `name` is the path of the attribute
     pub path: Path,
     /// The data type the attribute can have
-    pub values: Vec<Value>,
+    pub values: Vec<Value>
 }
 
 impl Attr {
@@ -50,7 +50,7 @@ impl Attr {
                     out.push(Attr::new(list.path, vec![Value::Lit(lit)]));
                     return Ok(());
                 }
-                NestedMeta::Meta(meta) => meta,
+                NestedMeta::Meta(meta) => meta
             };
 
             match inner {
@@ -76,7 +76,7 @@ impl Attr {
         match meta {
             Meta::Path(p) => parsed.push(Attr::new(p, Vec::new())),
             Meta::List(list) => Self::parse_meta_list(&mut parsed, list, allow_lit)?,
-            Meta::NameValue(nv) => parsed.push(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
+            Meta::NameValue(nv) => parsed.push(Attr::new(nv.path, vec![Value::Lit(nv.lit)]))
         }
 
         Ok(parsed)
@@ -96,17 +96,14 @@ impl Attr {
                         NestedMeta::Lit(lit) => Ok(Value::Lit(lit)),
                         NestedMeta::Meta(m) => match m {
                             Meta::Path(p) => Ok(Value::Ident(p.get_ident().unwrap().clone())),
-                            _ => Err(Error::new(
-                                m.span(),
-                                "Nested lists or name values are not supported",
-                            )),
-                        },
+                            _ => Err(Error::new(m.span(), "Nested lists or name values are not supported"))
+                        }
                     })
                     .collect::<Result<Vec<_>>>()?;
 
                 Ok(Attr::new(path, values))
             }
-            Meta::NameValue(nv) => Ok(Attr::new(nv.path, vec![Value::Lit(nv.lit)])),
+            Meta::NameValue(nv) => Ok(Attr::new(nv.path, vec![Value::Lit(nv.lit)]))
         }
     }
 
@@ -124,7 +121,7 @@ impl Attr {
         if self.values.len() > 1 {
             return Err(Error::new(
                 self.span(),
-                "Attribute input must not exceed more than one argument",
+                "Attribute input must not exceed more than one argument"
             ));
         }
 
@@ -137,10 +134,8 @@ impl Attr {
             .iter()
             .map(|v| match v {
                 Value::Ident(ident) => Ok(ident.clone()),
-                Value::Lit(Lit::Str(inner)) => {
-                    Ok(Ident::new(inner.value().as_str(), Span::call_site()))
-                }
-                other => Err(Error::new(other.span(), "Not supported")),
+                Value::Lit(Lit::Str(inner)) => Ok(Ident::new(inner.value().as_str(), Span::call_site())),
+                other => Err(Error::new(other.span(), "Not supported"))
             })
             .collect::<Result<_>>()
     }
@@ -153,7 +148,7 @@ impl Attr {
             .iter()
             .map(|v| match v {
                 Value::Ident(ident) => Ok(ident.clone()),
-                Value::Lit(lit) => Err(Error::new(lit.span(), "Literals are forbidden")),
+                Value::Lit(lit) => Err(Error::new(lit.span(), "Literals are forbidden"))
             })
             .collect::<Result<Vec<_>>>()
     }
@@ -165,7 +160,7 @@ impl Attr {
         self.parse_value(|value| {
             Ok(match value {
                 Value::Ident(ident) => ident.clone(),
-                _ => return Err(Error::new(value.span(), "Argument must be an identifier")),
+                _ => return Err(Error::new(value.span(), "Argument must be an identifier"))
             })
         })
     }
@@ -177,7 +172,7 @@ impl Attr {
         self.parse_value(|value| {
             Ok(match value {
                 Value::Lit(Lit::Str(s)) => s.value(),
-                _ => return Err(Error::new(value.span(), "Argument must be a string")),
+                _ => return Err(Error::new(value.span(), "Argument must be a string"))
             })
         })
     }
@@ -189,7 +184,7 @@ impl Attr {
         self.parse_value(|value| {
             Ok(match value {
                 Value::Lit(Lit::Bool(b)) => b.value,
-                _ => return Err(Error::new(value.span(), "Argument must be a boolean")),
+                _ => return Err(Error::new(value.span(), "Argument must be a boolean"))
             })
         })
     }
@@ -198,12 +193,12 @@ impl Attr {
     pub fn parse_number<T>(&self) -> Result<T>
     where
         T: FromStr,
-        T::Err: std::fmt::Display,
+        T::Err: std::fmt::Display
     {
         self.parse_value(|value| {
             Ok(match value {
                 Value::Lit(Lit::Int(lit)) => lit.base10_parse()?,
-                _ => Err(Error::new(value.span(), "Argument must be a number"))?,
+                _ => Err(Error::new(value.span(), "Argument must be a number"))?
             })
         })
     }

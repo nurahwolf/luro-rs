@@ -31,7 +31,7 @@ pub struct Argument<'a> {
     /// used to parse the argument and register the command in discord
     pub renaming: Option<String>,
     pub autocomplete: Option<Ident>,
-    trait_type: &'a Type,
+    trait_type: &'a Type
 }
 
 impl<'a> Argument<'a> {
@@ -70,10 +70,7 @@ impl<'a> Argument<'a> {
 
         if descriptions.len() > 1 {
             // We only want a single description attribute
-            return Err(Error::new(
-                arg.span(),
-                "Only allowed a single description attribute",
-            ));
+            return Err(Error::new(arg.span(), "Only allowed a single description attribute"));
         } else if descriptions.is_empty() {
             // Description attribute is required
             return Err(Error::new(arg.span(), "Description attribute is required"));
@@ -81,41 +78,31 @@ impl<'a> Argument<'a> {
 
         if names.len() > 1 {
             // While this attribute is not required, we only accept a single use of it per parameter
-            return Err(Error::new(
-                arg.span(),
-                "Only allowed a single name attribute",
-            ));
+            return Err(Error::new(arg.span(), "Only allowed a single name attribute"));
         }
 
         if autocompletes.len() > 1 {
-            return Err(Error::new(
-                arg.span(),
-                "Only allowed a single autocomplete attribute",
-            ));
+            return Err(Error::new(arg.span(), "Only allowed a single autocomplete attribute"));
         }
 
         Ok(Self {
             name,
             ty: type_,
             description: descriptions.remove(0),
-            renaming: if names.is_empty() {
-                None
-            } else {
-                Some(names.remove(0))
-            },
+            renaming: if names.is_empty() { None } else { Some(names.remove(0)) },
             autocomplete: if autocompletes.is_empty() {
                 None
             } else {
                 Some(autocompletes.remove(0))
             },
-            trait_type,
+            trait_type
         })
     }
 
     /// Executes the given closure into an [attr](crate::attr::Attr)
     fn exec<F, R>(attr: &Attribute, fun: F) -> Result<R>
     where
-        F: FnOnce(attr::Attr) -> Result<R>,
+        F: FnOnce(attr::Attr) -> Result<R>
     {
         fun(attr::parse_attribute(attr)?)
     }
@@ -164,7 +151,7 @@ impl ToTokens for Argument<'_> {
 
         let name = match &self.renaming {
             Some(rename) => rename.clone(),
-            None => self.name.to_string(),
+            None => self.name.to_string()
         };
 
         if let Some(autocomplete) = &self.autocomplete {

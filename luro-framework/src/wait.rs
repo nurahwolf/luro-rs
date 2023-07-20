@@ -1,23 +1,23 @@
 use std::pin::Pin;
 use std::{
     future::Future,
-    task::{Context, Poll},
+    task::{Context, Poll}
 };
 use tokio::sync::oneshot::{channel, error::RecvError, Receiver, Sender};
 use twilight_model::application::interaction::Interaction;
 
 pub(crate) fn new_pair<F>(fun: F) -> (WaiterWaker, InteractionWaiter)
 where
-    F: Fn(&Interaction) -> bool + Send + 'static,
+    F: Fn(&Interaction) -> bool + Send + 'static
 {
     let (sender, receiver) = channel();
 
     (
         WaiterWaker {
             predicate: Box::new(fun),
-            sender,
+            sender
         },
-        InteractionWaiter { receiver },
+        InteractionWaiter { receiver }
     )
 }
 
@@ -45,7 +45,7 @@ where
 ///
 /// [`Future`]: Future
 pub struct InteractionWaiter {
-    receiver: Receiver<Interaction>,
+    receiver: Receiver<Interaction>
 }
 
 impl Future for InteractionWaiter {
@@ -62,7 +62,7 @@ impl Future for InteractionWaiter {
 /// [`waiter`]: InteractionWaiter
 pub struct WaiterWaker {
     pub predicate: Box<dyn Fn(&Interaction) -> bool + Send + 'static>,
-    pub sender: Sender<Interaction>,
+    pub sender: Sender<Interaction>
 }
 
 impl WaiterWaker {

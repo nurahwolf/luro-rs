@@ -8,7 +8,7 @@ pub fn autocomplete(input: TokenStream2) -> Result<TokenStream2> {
     if fun.sig.inputs.len() != 1 {
         return Err(Error::new(
             fun.sig.inputs.span(),
-            "Autocomplete hook must have as parameters an AutocompleteContext<D>",
+            "Autocomplete hook must have as parameters an AutocompleteContext<D>"
         ));
     }
 

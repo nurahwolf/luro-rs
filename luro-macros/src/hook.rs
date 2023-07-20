@@ -1,8 +1,5 @@
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use syn::{
-    parse2, spanned::Spanned, Error, FnArg, GenericParam, ItemFn, Lifetime, LifetimeDef, Result,
-    ReturnType, Type,
-};
+use syn::{parse2, spanned::Spanned, Error, FnArg, GenericParam, ItemFn, Lifetime, LifetimeDef, Result, ReturnType, Type};
 
 /// The implementation of the hook macro, this macro takes the given function and changes
 /// it's output and body to fit into a `Pin<Box<dyn Future>>`
@@ -13,7 +10,7 @@ pub fn hook(input: TokenStream2) -> Result<TokenStream2> {
         attrs,
         vis,
         mut sig,
-        block,
+        block
     } = fun;
 
     if sig.asyncness.is_none() {
@@ -31,7 +28,7 @@ pub fn hook(input: TokenStream2) -> Result<TokenStream2> {
     // The output of the function as a token stream, so we can quote it after
     let output = match &sig.output {
         ReturnType::Default => quote::quote!(()),
-        ReturnType::Type(_, t) => quote::quote!(#t),
+        ReturnType::Type(_, t) => quote::quote!(#t)
     };
 
     // Wrap the original result in a Pin<Box<dyn Future>>
@@ -50,8 +47,8 @@ pub fn hook(input: TokenStream2) -> Result<TokenStream2> {
             attrs: Default::default(),
             lifetime: Lifetime::new("'future", Span::call_site()),
             colon_token: None,
-            bounds: Default::default(),
-        }),
+            bounds: Default::default()
+        })
     );
 
     for i in sig.inputs.iter_mut() {

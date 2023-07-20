@@ -5,7 +5,7 @@ use syn::{spanned::Spanned, DeriveInput, Error, Result};
 struct Variant {
     value: String,
     ident: Ident,
-    index: usize,
+    index: usize
 }
 
 impl Variant {
@@ -35,12 +35,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
     let derive = syn::parse2::<DeriveInput>(input)?;
     let enumeration = match derive.data {
         syn::Data::Enum(e) => e,
-        _ => {
-            return Err(Error::new(
-                derive.ident.span(),
-                "This derive is only available for enums",
-            ))
-        }
+        _ => return Err(Error::new(derive.ident.span(), "This derive is only available for enums"))
     };
 
     let mut variants = Vec::new();
@@ -48,10 +43,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
 
     for variant in enumeration.variants {
         if !matches!(&variant.fields, syn::Fields::Unit) {
-            return Err(Error::new(
-                variant.span(),
-                "Choice parameter cannot have inner values",
-            ));
+            return Err(Error::new(variant.span(), "Choice parameter cannot have inner values"));
         }
 
         let mut name = None;
@@ -66,7 +58,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
                     "rename" => {
                         unique(&mut name, attr.parse_string()?, "rename", span)?;
                     }
-                    _ => Err(Error::new(span, "Attribute not recognized"))?,
+                    _ => Err(Error::new(span, "Attribute not recognized"))?
                 }
             }
         }
@@ -76,7 +68,7 @@ pub fn parse(input: TokenStream2) -> Result<TokenStream2> {
         variants.push(Variant {
             ident: variant.ident.clone(),
             value: name,
-            index,
+            index
         });
 
         index += 1;

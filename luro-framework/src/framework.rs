@@ -7,7 +7,7 @@ use crate::{
     context::{AutocompleteContext, Focused, SlashContext},
     group::{GroupParent, GroupParentMap, ParentType},
     hook::{AfterHook, BeforeHook},
-    wait::WaiterWaker,
+    wait::WaiterWaker
 };
 use parking_lot::Mutex;
 use tracing::debug;
@@ -18,21 +18,21 @@ use twilight_model::{
         command::{CommandOption, CommandOptionType},
         interaction::{
             application_command::{CommandDataOption, CommandOptionValue},
-            Interaction, InteractionType,
-        },
+            Interaction, InteractionType
+        }
     },
     http::interaction::{InteractionResponse, InteractionResponseType},
     id::{
         marker::{ApplicationMarker, GuildMarker},
-        Id,
-    },
+        Id
+    }
 };
 
 macro_rules! extract {
     ($expr:expr => $variant:ident) => {
         match $expr {
             InteractionData::$variant(inner) => inner,
-            _ => return None,
+            _ => return None
         }
     };
 }
@@ -59,12 +59,12 @@ pub struct Framework<D, T = (), E = DefaultError> {
     pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's execution.
     pub after: Option<AfterHook<D, T, E>>,
-    pub waiters: Mutex<Vec<WaiterWaker>>,
+    pub waiters: Mutex<Vec<WaiterWaker>>
 }
 
 impl<D, T, E> Framework<D, T, E>
 where
-    E: From<ParseError>,
+    E: From<ParseError>
 {
     pub(crate) fn from_builder(builder: FrameworkBuilder<D, T, E>) -> Self {
         Self {
@@ -75,7 +75,7 @@ where
             groups: builder.groups,
             before: builder.before,
             after: builder.after,
-            waiters: Mutex::new(Vec::new()),
+            waiters: Mutex::new(Vec::new())
         }
     }
 
@@ -84,7 +84,7 @@ where
     pub fn builder(
         http_client: impl Into<WrappedClient>,
         application_id: Id<ApplicationMarker>,
-        data: D,
+        data: D
     ) -> FrameworkBuilder<D, T, E> {
         FrameworkBuilder::new(http_client, application_id, data)
     }
@@ -104,16 +104,14 @@ where
     pub async fn process(&self, interaction: Interaction) {
         match interaction.kind {
             InteractionType::ApplicationCommand => self.try_execute(interaction).await,
-            InteractionType::ApplicationCommandAutocomplete => {
-                self.try_autocomplete(interaction).await
-            }
+            InteractionType::ApplicationCommandAutocomplete => self.try_autocomplete(interaction).await,
             InteractionType::MessageComponent | InteractionType::ModalSubmit => {
                 let mut lock = self.waiters.lock();
                 if let Some(position) = lock.iter().position(|waker| waker.check(&interaction)) {
                     lock.remove(position).wake(interaction);
                 }
             }
-            _ => (),
+            _ => ()
         }
     }
 
@@ -126,12 +124,7 @@ where
     async fn try_autocomplete(&self, mut interaction: Interaction) {
         if let Some((name, argument, value)) = self.get_autocomplete_argument(&interaction) {
             if let Some(fun) = &argument.autocomplete {
-                let context = AutocompleteContext::new(
-                    &self.http_client,
-                    &self.data,
-                    value,
-                    &mut interaction,
-                );
+                let context = AutocompleteContext::new(&self.http_client, &self.data, value, &mut interaction);
                 debug!(
                     "Command [{}] executing argument {} autocomplete function",
                     name, argument.name
@@ -145,18 +138,15 @@ where
                         &interaction.token,
                         &InteractionResponse {
                             kind: InteractionResponseType::ApplicationCommandAutocompleteResult,
-                            data,
-                        },
+                            data
+                        }
                     )
                     .await;
             }
         }
     }
 
-    fn get_autocomplete_argument(
-        &self,
-        interaction: &Interaction,
-    ) -> Option<(&str, &CommandArgument<D>, Focused)> {
+    fn get_autocomplete_argument(&self, interaction: &Interaction) -> Option<(&str, &CommandArgument<D>, Focused)> {
         let data = extract!(interaction.data.as_ref().unwrap() => ApplicationCommand);
         if !data.options.is_empty() {
             let outer = data.options.get(0)?;
@@ -170,24 +160,21 @@ where
                     }
                 }
                 CommandOptionValue::SubCommand(sc) => self.get_focus(sc),
-                _ => self.get_focus(&data.options),
+                _ => self.get_focus(&data.options)
             }?;
             let CommandOptionValue::Focused(ref input, kind) = focused.value else {
                 return None;
             };
 
             let command = self.get_command(interaction)?;
-            let position = command
-                .arguments
-                .iter()
-                .position(|arg| arg.name == focused.name)?;
+            let position = command.arguments.iter().position(|arg| arg.name == focused.name)?;
             return Some((
                 command.name,
                 command.arguments.get(position)?,
                 Focused {
                     input: input.clone(),
-                    kind,
-                },
+                    kind
+                }
             ));
         }
 
@@ -225,7 +212,7 @@ where
                     let group = subgroups.get(&*next.name)?;
                     group.subcommands.get(&*subcommand.name)
                 }
-                _ => None,
+                _ => None
             }
         } else {
             self.commands.get(&*interaction_data.name)
@@ -234,10 +221,7 @@ where
 
     /// Gets the next [option](CommandDataOption)
     /// only if it corresponds to a subcommand or a subcommand group.
-    fn get_next<'a>(
-        &self,
-        interaction: &'a Vec<CommandDataOption>,
-    ) -> Option<&'a CommandDataOption> {
+    fn get_next<'a>(&self, interaction: &'a Vec<CommandDataOption>) -> Option<&'a CommandDataOption> {
         if !interaction.is_empty()
             && (interaction[0].value.kind() == CommandOptionType::SubCommand
                 || interaction[0].value.kind() == CommandOptionType::SubCommandGroup)
@@ -250,13 +234,7 @@ where
 
     /// Executes the given [command](crate::command::Command) and the hooks.
     async fn execute(&self, cmd: &Command<D, T, E>, interaction: Interaction) {
-        let context = SlashContext::new(
-            &self.http_client,
-            self.application_id,
-            &self.data,
-            &self.waiters,
-            interaction,
-        );
+        let context = SlashContext::new(&self.http_client, self.application_id, &self.data, &self.waiters, interaction);
 
         let execute = if let Some(before) = &self.before {
             (before.0)(&context, cmd.name).await
@@ -277,11 +255,8 @@ where
     /// Registers the commands provided to the framework in the specified guild.
     pub async fn register_guild_commands(
         &self,
-        guild_id: Id<GuildMarker>,
-    ) -> Result<
-        Vec<twilight_model::application::command::Command>,
-        Box<dyn std::error::Error + Send + Sync>,
-    > {
+        guild_id: Id<GuildMarker>
+    ) -> Result<Vec<twilight_model::application::command::Command>, Box<dyn std::error::Error + Send + Sync>> {
         let mut commands = Vec::new();
 
         for cmd in self.commands.values() {
@@ -324,11 +299,8 @@ where
 
     /// Registers the commands provided to the framework globally.
     pub async fn register_global_commands(
-        &self,
-    ) -> Result<
-        Vec<twilight_model::application::command::Command>,
-        Box<dyn std::error::Error + Send + Sync>,
-    > {
+        &self
+    ) -> Result<Vec<twilight_model::application::command::Command>, Box<dyn std::error::Error + Send + Sync>> {
         let mut commands = Vec::new();
 
         for cmd in self.commands.values() {
@@ -405,7 +377,7 @@ where
                     max_value: None,
                     min_length: None,
                     min_value: None,
-                    name_localizations: None,
+                    name_localizations: None
                 });
             }
             subgroups
@@ -439,7 +411,7 @@ where
             max_value: None,
             min_length: None,
             min_value: None,
-            name_localizations: None,
+            name_localizations: None
         }
     }
 }

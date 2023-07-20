@@ -1,7 +1,7 @@
 use crate::{
     builder::WrappedClient,
     twilight_exports::*,
-    wait::{InteractionWaiter, WaiterWaker},
+    wait::{InteractionWaiter, WaiterWaker}
 };
 use parking_lot::Mutex;
 use twilight_model::channel::message::MessageFlags;
@@ -15,7 +15,7 @@ use crate::wait::new_pair;
 #[derive(Debug, Clone)]
 pub struct Focused {
     pub input: String,
-    pub kind: CommandOptionType,
+    pub kind: CommandOptionType
 }
 
 /// Context given to all functions used to autocomplete arguments.
@@ -27,7 +27,7 @@ pub struct AutocompleteContext<'a, D> {
     /// The user input.
     pub user_input: Focused,
     /// The interaction itself.
-    pub interaction: &'a mut Interaction,
+    pub interaction: &'a mut Interaction
 }
 
 impl<'a, D> AutocompleteContext<'a, D> {
@@ -35,13 +35,13 @@ impl<'a, D> AutocompleteContext<'a, D> {
         http_client: &'a WrappedClient,
         data: &'a D,
         user_input: Focused,
-        interaction: &'a mut Interaction,
+        interaction: &'a mut Interaction
     ) -> Self {
         Self {
             http_client,
             data,
             user_input,
-            interaction,
+            interaction
         }
     }
 
@@ -65,7 +65,7 @@ pub struct SlashContext<'a, D> {
     /// Components waiting for an interaction.
     pub waiters: &'a Mutex<Vec<WaiterWaker>>,
     /// The interaction itself.
-    pub interaction: Interaction,
+    pub interaction: Interaction
 }
 
 impl<'a, D> Clone for SlashContext<'a, D> {
@@ -76,7 +76,7 @@ impl<'a, D> Clone for SlashContext<'a, D> {
             interaction_client: self.http_client.inner().interaction(self.application_id),
             data: self.data,
             waiters: self.waiters,
-            interaction: self.interaction.clone(),
+            interaction: self.interaction.clone()
         }
     }
 }
@@ -88,7 +88,7 @@ impl<'a, D> SlashContext<'a, D> {
         application_id: Id<ApplicationMarker>,
         data: &'a D,
         waiters: &'a Mutex<Vec<WaiterWaker>>,
-        interaction: Interaction,
+        interaction: Interaction
     ) -> Self {
         let interaction_client = http_client.inner().interaction(application_id);
         Self {
@@ -97,7 +97,7 @@ impl<'a, D> SlashContext<'a, D> {
             interaction_client,
             data,
             waiters,
-            interaction,
+            interaction
         }
     }
 
@@ -182,8 +182,8 @@ impl<'a, D> SlashContext<'a, D> {
                         })
                     } else {
                         None
-                    },
-                },
+                    }
+                }
             )
             .await?;
 
@@ -222,14 +222,14 @@ impl<'a, D> SlashContext<'a, D> {
     /// [`WaitModal`]: WaitModal
     pub async fn create_modal<M>(&self) -> Result<WaitModal<M>, twilight_http::Error>
     where
-        M: Modal<D>,
+        M: Modal<D>
     {
         let modal_id = self.interaction.id.to_string();
         self.interaction_client
             .create_response(
                 self.interaction.id,
                 &self.interaction.token,
-                &M::create(self, modal_id.clone()),
+                &M::create(self, modal_id.clone())
             )
             .await?;
 
@@ -248,7 +248,7 @@ impl<'a, D> SlashContext<'a, D> {
     /// closure.
     pub fn wait_interaction<F>(&self, fun: F) -> InteractionWaiter
     where
-        F: Fn(&Interaction) -> bool + Send + 'static,
+        F: Fn(&Interaction) -> bool + Send + 'static
     {
         let (waker, waiter) = new_pair(fun);
         let mut lock = self.waiters.lock();
@@ -259,33 +259,24 @@ impl<'a, D> SlashContext<'a, D> {
 
 impl<'a, D: Send + Sync> SlashContext<'a, D> {
     #[doc(hidden)]
-    pub async fn named_parse<T>(
-        &self,
-        name: &str,
-        mut iterator: DataIterator<'a>,
-    ) -> Result<(T, DataIterator<'a>), ParseError>
+    pub async fn named_parse<T>(&self, name: &str, mut iterator: DataIterator<'a>) -> Result<(T, DataIterator<'a>), ParseError>
     where
-        T: Parse<D>,
+        T: Parse<D>
     {
         let value = iterator.get(|s| s.name == name);
         if value.is_none() && <T as Parse<D>>::required() {
             Err(ParseError::StructureMismatch(format!("{} not found", name)))
         } else {
             Ok((
-                T::parse(
-                    self.http_client,
-                    self.data,
-                    value.map(|it| &it.value),
-                    iterator.resolved(),
-                )
-                .await
-                .map_err(|mut err| {
-                    if let ParseError::Parsing { argument_name, .. } = &mut err {
-                        *argument_name = name.to_string();
-                    }
-                    err
-                })?,
-                iterator,
+                T::parse(self.http_client, self.data, value.map(|it| &it.value), iterator.resolved())
+                    .await
+                    .map_err(|mut err| {
+                        if let ParseError::Parsing { argument_name, .. } = &mut err {
+                            *argument_name = name.to_string();
+                        }
+                        err
+                    })?,
+                iterator
             ))
         }
     }

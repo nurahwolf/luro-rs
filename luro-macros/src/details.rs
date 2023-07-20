@@ -11,7 +11,7 @@ pub struct CommandDetails {
     pub description: String,
     pub required_permissions: Option<Vec<Ident>>,
     pub checks: Vec<Ident>,
-    pub error_handler: Option<Ident>,
+    pub error_handler: Option<Ident>
 }
 
 impl CommandDetails {
@@ -55,17 +55,14 @@ impl CommandDetails {
                     let attr = Attr::try_from(attr)?;
                     s.error_handler = Some(attr.parse_identifier()?);
                 }
-                _ => return Err(Error::new(attr.span(), "Attribute not recognized")),
+                _ => return Err(Error::new(attr.span(), "Attribute not recognized"))
             }
 
             attrs.remove(i);
         }
 
         if s.description.is_empty() {
-            return Err(Error::new(
-                proc_macro2::Span::call_site(),
-                "Description is required",
-            ));
+            return Err(Error::new(proc_macro2::Span::call_site(), "Description is required"));
         }
 
         Ok(s)
@@ -82,12 +79,9 @@ impl ToTokens for CommandDetails {
 
             for (index, permission) in permissions.iter().enumerate() {
                 if index == 0 || permissions.len() == 1 {
-                    permission_stream
-                        .extend(quote::quote!(zephyrus::twilight_exports::Permissions::#permission))
+                    permission_stream.extend(quote::quote!(zephyrus::twilight_exports::Permissions::#permission))
                 } else {
-                    permission_stream.extend(
-                        quote::quote!( | zephyrus::twilight_exports::Permissions::#permission),
-                    )
+                    permission_stream.extend(quote::quote!( | zephyrus::twilight_exports::Permissions::#permission))
                 }
             }
 

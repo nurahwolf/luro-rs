@@ -3,8 +3,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::ToTokens;
 use syn::spanned::Spanned;
 use syn::{
-    parse2, Error, FnArg, GenericArgument, Lifetime, Pat, PatType, Path, PathArguments, Result,
-    ReturnType, Signature, Type,
+    parse2, Error, FnArg, GenericArgument, Lifetime, Pat, PatType, Path, PathArguments, Result, ReturnType, Signature, Type
 };
 
 /// Gets the path of the futurize macro
@@ -44,10 +43,7 @@ pub fn get_path(t: &Type, allow_references: bool) -> Result<&Path> {
                 Err(Error::new(r.span(), "Reference not allowed"))
             }
         }
-        _ => Err(Error::new(
-            t.span(),
-            "parameter must be a path to a context type",
-        )),
+        _ => Err(Error::new(t.span(), "parameter must be a path to a context type"))
     }
 }
 
@@ -58,10 +54,7 @@ pub fn get_path_mut(t: &mut Type) -> Result<&mut Path> {
         Type::Path(p) => Ok(&mut p.path),
         // If the type is a reference, call this function recursively until we get the path
         Type::Reference(r) => get_path_mut(&mut r.elem),
-        _ => Err(Error::new(
-            t.span(),
-            "parameter must be a path to a context type",
-        )),
+        _ => Err(Error::new(t.span(), "parameter must be a path to a context type"))
     }
 }
 
@@ -69,10 +62,7 @@ pub fn get_path_mut(t: &mut Type) -> Result<&mut Path> {
 pub fn get_pat(arg: &FnArg) -> Result<&PatType> {
     match arg {
         FnArg::Typed(t) => Ok(t),
-        _ => Err(Error::new(
-            arg.span(),
-            "`self` parameter is not allowed here",
-        )),
+        _ => Err(Error::new(arg.span(), "`self` parameter is not allowed here"))
     }
 }
 
@@ -80,10 +70,7 @@ pub fn get_pat(arg: &FnArg) -> Result<&PatType> {
 pub fn get_pat_mut(arg: &mut FnArg) -> Result<&mut PatType> {
     match arg {
         FnArg::Typed(t) => Ok(t),
-        _ => Err(Error::new(
-            arg.span(),
-            "`self` parameter is not allowed here",
-        )),
+        _ => Err(Error::new(arg.span(), "`self` parameter is not allowed here"))
     }
 }
 
@@ -91,7 +78,7 @@ pub fn get_pat_mut(arg: &mut FnArg) -> Result<&mut PatType> {
 pub fn get_ident(p: &Pat) -> Result<Ident> {
     match p {
         Pat::Ident(pi) => Ok(pi.ident.clone()),
-        _ => Err(Error::new(p.span(), "parameter must have an identifier")),
+        _ => Err(Error::new(p.span(), "parameter must have an identifier"))
     }
 }
 
@@ -99,35 +86,25 @@ pub fn get_ident(p: &Pat) -> Result<Ident> {
 pub fn get_generic_arguments(path: &Path) -> Result<impl Iterator<Item = &GenericArgument> + '_> {
     match &path.segments.last().unwrap().arguments {
         PathArguments::None => Ok(Vec::new().into_iter()),
-        PathArguments::AngleBracketed(arguments) => {
-            Ok(arguments.args.iter().collect::<Vec<_>>().into_iter())
-        }
+        PathArguments::AngleBracketed(arguments) => Ok(arguments.args.iter().collect::<Vec<_>>().into_iter()),
         _ => Err(Error::new(
             path.span(),
-            "context type cannot have generic parameters in parenthesis",
-        )),
+            "context type cannot have generic parameters in parenthesis"
+        ))
     }
 }
 
 pub fn get_return_type(sig: &Signature) -> Result<Box<Type>> {
     match &sig.output {
-        ReturnType::Default => Err(Error::new(
-            sig.output.span(),
-            "Return type must be a Result<T, E>",
-        )),
-        ReturnType::Type(_, kind) => Ok(kind.clone()),
+        ReturnType::Default => Err(Error::new(sig.output.span(), "Return type must be a Result<T, E>")),
+        ReturnType::Type(_, kind) => Ok(kind.clone())
     }
 }
 
 pub fn get_context_type(sig: &Signature, allow_references: bool) -> Result<Type> {
     let arg = match sig.inputs.iter().next() {
-        None => {
-            return Err(Error::new(
-                sig.inputs.span(),
-                "Expected Context as first parameter",
-            ))
-        }
-        Some(c) => c,
+        None => return Err(Error::new(sig.inputs.span(), "Expected Context as first parameter")),
+        Some(c) => c
     };
 
     let ty = util::get_bracketed_generic(arg, allow_references, |ty| {
@@ -140,7 +117,7 @@ pub fn get_context_type(sig: &Signature, allow_references: bool) -> Result<Type>
 
     match ty {
         None => Err(Error::new(arg.span(), "Context type must be set")),
-        Some(ty) => Ok(ty),
+        Some(ty) => Ok(ty)
     }
 }
 
@@ -162,9 +139,7 @@ pub fn set_context_lifetime(sig: &mut Signature) -> Result<()> {
     }
 
     if insert_lifetime {
-        if let PathArguments::AngleBracketed(inner) =
-            &mut path.segments.last_mut().unwrap().arguments
-        {
+        if let PathArguments::AngleBracketed(inner) = &mut path.segments.last_mut().unwrap().arguments {
             inner.args.insert(0, GenericArgument::Lifetime(lifetime));
         }
     }
@@ -174,7 +149,7 @@ pub fn set_context_lifetime(sig: &mut Signature) -> Result<()> {
 
 pub fn get_bracketed_generic<F>(arg: &FnArg, allow_references: bool, fun: F) -> Result<Option<Type>>
 where
-    F: Fn(&Type) -> Result<Type>,
+    F: Fn(&Type) -> Result<Type>
 {
     let generics = get_generic_arguments(get_path(&get_pat(arg)?.ty, allow_references)?)?;
 
@@ -182,7 +157,7 @@ where
         match next {
             GenericArgument::Lifetime(_) => (),
             GenericArgument::Type(ty) => return Ok(Some(fun(ty)?)),
-            other => return Err(Error::new(other.span(), "Generic must be a type")),
+            other => return Err(Error::new(other.span(), "Generic must be a type"))
         }
     }
 
@@ -193,7 +168,7 @@ where
 pub fn check_return_type(ret: &ReturnType, out: TokenStream) -> Result<()> {
     let ty = match &ret {
         ReturnType::Default => syn::parse2::<Type>(quote::quote!(()))?,
-        ReturnType::Type(_, ty) => syn::parse2::<Type>(quote::quote!(#ty))?,
+        ReturnType::Type(_, ty) => syn::parse2::<Type>(quote::quote!(#ty))?
     };
 
     let out = parse2(quote::quote!(#out))?;
@@ -205,7 +180,7 @@ pub fn check_return_type(ret: &ReturnType, out: TokenStream) -> Result<()> {
                 "Expected {} as return type, got {}",
                 out.to_token_stream(),
                 ty.to_token_stream()
-            ),
+            )
         ));
     }
 
@@ -215,7 +190,7 @@ pub fn check_return_type(ret: &ReturnType, out: TokenStream) -> Result<()> {
 /// Takes a vec of elements and applies a function to all of them, deleting them from the vec.
 pub fn consume_map<T, D, F>(items: &mut Vec<T>, data: &mut D, mut predicate: F) -> Result<()>
 where
-    F: FnMut(T, &mut D) -> Result<()>,
+    F: FnMut(T, &mut D) -> Result<()>
 {
     let i = 0;
 

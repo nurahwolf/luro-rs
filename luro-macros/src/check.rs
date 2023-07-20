@@ -8,15 +8,12 @@ pub fn check(input: TokenStream2) -> Result<TokenStream2> {
         attrs,
         vis,
         mut sig,
-        block,
+        block
     } = fun;
 
     if sig.inputs.len() > 1 {
         // This hook is expected to have a single `&SlashContext` parameter.
-        return Err(Error::new(
-            sig.inputs.span(),
-            "Function parameter must only be &SlashContext",
-        ));
+        return Err(Error::new(sig.inputs.span(), "Function parameter must only be &SlashContext"));
     }
 
     // The name of the original macro

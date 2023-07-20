@@ -11,14 +11,14 @@ pub fn before(input: TokenStream2) -> Result<TokenStream2> {
         attrs,
         vis,
         mut sig,
-        block,
+        block
     } = fun;
 
     if sig.inputs.len() > 2 {
         // This hook is expected to have a `&SlashContext` and a `&str` parameter.
         return Err(Error::new(
             sig.inputs.span(),
-            "Function parameter must only be &SlashContext and &str",
+            "Function parameter must only be &SlashContext and &str"
         ));
     }
 

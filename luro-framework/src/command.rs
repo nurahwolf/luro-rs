@@ -5,15 +5,14 @@ use tracing::{debug, info, warn};
 use twilight_model::guild::Permissions;
 
 /// A pointer to a command function.
-pub(crate) type CommandFn<D, T, E> =
-    for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, Result<T, E>>;
+pub(crate) type CommandFn<D, T, E> = for<'a> fn(&'a SlashContext<'a, D>) -> BoxFuture<'a, Result<T, E>>;
 /// A map of [commands](self::Command).
 pub type CommandMap<D, T, E> = HashMap<&'static str, Command<D, T, E>>;
 
 pub enum ExecutionResult<T, E> {
     CheckErrored,
     CheckFailed,
-    Finished(Option<Result<T, E>>),
+    Finished(Option<Result<T, E>>)
 }
 
 /// A command executed by the framework.
@@ -29,7 +28,7 @@ pub struct Command<D, T, E> {
     /// The required permissions to use this command
     pub required_permissions: Option<Permissions>,
     pub checks: Vec<CheckHook<D, E>>,
-    pub error_handler: Option<ErrorHandlerHook<D, E>>,
+    pub error_handler: Option<ErrorHandlerHook<D, E>>
 }
 
 impl<D, T, E> Command<D, T, E> {
@@ -42,7 +41,7 @@ impl<D, T, E> Command<D, T, E> {
             fun,
             required_permissions: Default::default(),
             checks: Default::default(),
-            error_handler: None,
+            error_handler: None
         }
     }
 
@@ -99,10 +98,7 @@ impl<D, T, E> Command<D, T, E> {
 
                 let remainder = match (&self.error_handler, output) {
                     (Some(hook), Err(why)) => {
-                        info!(
-                            "Command [{}] raised an error, using established error handler",
-                            self.name
-                        );
+                        info!("Command [{}] raised an error, using established error handler", self.name);
                         (hook.0)(context, why).await;
                         None
                     }
@@ -138,7 +134,7 @@ impl<D, T, E> Command<D, T, E> {
                 }
                 ExecutionResult::CheckErrored
             }
-            _ => ExecutionResult::CheckFailed,
+            _ => ExecutionResult::CheckFailed
         }
     }
 }

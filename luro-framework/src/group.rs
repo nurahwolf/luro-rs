@@ -13,7 +13,7 @@ pub enum ParentType<D, T, E> {
     /// Simple, the group only has subcommands.
     Simple(CommandMap<D, T, E>),
     /// Group, the group has other groups inside of it.
-    Group(CommandGroupMap<D, T, E>),
+    Group(CommandGroupMap<D, T, E>)
 }
 
 impl<D, T, E> ParentType<D, T, E> {
@@ -23,7 +23,7 @@ impl<D, T, E> ParentType<D, T, E> {
     pub fn as_simple(&self) -> Option<&CommandMap<D, T, E>> {
         match self {
             Self::Simple(map) => Some(map),
-            _ => None,
+            _ => None
         }
     }
 
@@ -32,7 +32,7 @@ impl<D, T, E> ParentType<D, T, E> {
     pub fn as_group(&self) -> Option<&CommandGroupMap<D, T, E>> {
         match self {
             Self::Group(group) => Some(group),
-            _ => None,
+            _ => None
         }
     }
 }
@@ -52,7 +52,7 @@ pub struct GroupParent<D, T, E> {
     /// This parent group child commands.
     pub kind: ParentType<D, T, E>,
     /// The required permissions to execute commands inside this group
-    pub required_permissions: Option<Permissions>,
+    pub required_permissions: Option<Permissions>
 }
 
 /// A group of commands, referred by discord as `SubCommandGroup`.
@@ -66,5 +66,5 @@ pub struct CommandGroup<D, T, E> {
     /// The description of this group.
     pub description: &'static str,
     /// The commands this group has as children.
-    pub subcommands: CommandMap<D, T, E>,
+    pub subcommands: CommandMap<D, T, E>
 }

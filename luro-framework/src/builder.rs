@@ -1,7 +1,7 @@
 use twilight_http::Client;
 use twilight_model::{
     guild::Permissions,
-    id::{marker::ApplicationMarker, Id},
+    id::{marker::ApplicationMarker, Id}
 };
 
 use crate::{
@@ -9,7 +9,7 @@ use crate::{
     framework::{DefaultError, Framework},
     group::*,
     hook::{AfterHook, BeforeHook},
-    parse::ParseError,
+    parse::ParseError
 };
 #[cfg(feature = "rc")]
 use std::rc::Rc;
@@ -22,7 +22,7 @@ pub enum WrappedClient {
     #[cfg(feature = "rc")]
     Rc(Rc<Client>),
     Raw(Client),
-    Boxed(Box<dyn Deref<Target = Client> + Send + Sync>),
+    Boxed(Box<dyn Deref<Target = Client> + Send + Sync>)
 }
 
 impl WrappedClient {
@@ -33,7 +33,7 @@ impl WrappedClient {
             #[cfg(feature = "rc")]
             Self::Rc(c) => &c,
             Self::Raw(c) => c,
-            Self::Boxed(b) => b,
+            Self::Boxed(b) => b
         }
     }
 
@@ -98,19 +98,15 @@ pub struct FrameworkBuilder<D, T = (), E = DefaultError> {
     /// A hook executed before any command.
     pub before: Option<BeforeHook<D>>,
     /// A hook executed after command's completion.
-    pub after: Option<AfterHook<D, T, E>>,
+    pub after: Option<AfterHook<D, T, E>>
 }
 
 impl<D, T, E> FrameworkBuilder<D, T, E>
 where
-    E: From<ParseError>,
+    E: From<ParseError>
 {
     /// Creates a new [Builder](self::FrameworkBuilder).
-    pub fn new(
-        http_client: impl Into<WrappedClient>,
-        application_id: Id<ApplicationMarker>,
-        data: D,
-    ) -> Self {
+    pub fn new(http_client: impl Into<WrappedClient>, application_id: Id<ApplicationMarker>, data: D) -> Self {
         Self {
             http_client: http_client.into(),
             application_id,
@@ -118,7 +114,7 @@ where
             commands: Default::default(),
             groups: Default::default(),
             before: None,
-            after: None,
+            after: None
         }
     }
 
@@ -243,7 +239,7 @@ where
     /// Registers a new group of commands.
     pub fn group<F>(mut self, fun: F) -> Self
     where
-        F: FnOnce(&mut GroupParentBuilder<D, T, E>) -> &mut GroupParentBuilder<D, T, E>,
+        F: FnOnce(&mut GroupParentBuilder<D, T, E>) -> &mut GroupParentBuilder<D, T, E>
     {
         let mut builder = GroupParentBuilder::new();
         fun(&mut builder);
@@ -268,7 +264,7 @@ pub struct GroupParentBuilder<D, T, E> {
     name: Option<&'static str>,
     description: Option<&'static str>,
     kind: ParentType<D, T, E>,
-    required_permissions: Option<Permissions>,
+    required_permissions: Option<Permissions>
 }
 
 impl<D, T, E> GroupParentBuilder<D, T, E> {
@@ -278,7 +274,7 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
             name: None,
             description: None,
             kind: ParentType::Group(Default::default()),
-            required_permissions: None,
+            required_permissions: None
         }
     }
 
@@ -303,7 +299,7 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
     /// allowing to create subcommand groups inside of it.
     pub fn group<F>(&mut self, fun: F) -> &mut Self
     where
-        F: FnOnce(&mut CommandGroupBuilder<D, T, E>) -> &mut CommandGroupBuilder<D, T, E>,
+        F: FnOnce(&mut CommandGroupBuilder<D, T, E>) -> &mut CommandGroupBuilder<D, T, E>
     {
         let mut builder = CommandGroupBuilder::new();
         fun(&mut builder);
@@ -340,7 +336,7 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
             name: self.name.unwrap(),
             description: self.description.unwrap(),
             kind: self.kind,
-            required_permissions: self.required_permissions,
+            required_permissions: self.required_permissions
         }
     }
 }
@@ -349,7 +345,7 @@ impl<D, T, E> GroupParentBuilder<D, T, E> {
 pub struct CommandGroupBuilder<D, T, E> {
     name: Option<&'static str>,
     description: Option<&'static str>,
-    subcommands: CommandMap<D, T, E>,
+    subcommands: CommandMap<D, T, E>
 }
 
 impl<D, T, E> CommandGroupBuilder<D, T, E> {
@@ -379,7 +375,7 @@ impl<D, T, E> CommandGroupBuilder<D, T, E> {
         CommandGroup {
             name: self.name.unwrap(),
             description: self.description.unwrap(),
-            subcommands: self.subcommands,
+            subcommands: self.subcommands
         }
     }
 
@@ -388,7 +384,7 @@ impl<D, T, E> CommandGroupBuilder<D, T, E> {
         Self {
             name: None,
             description: None,
-            subcommands: Default::default(),
+            subcommands: Default::default()
         }
     }
 }

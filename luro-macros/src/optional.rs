@@ -44,7 +44,7 @@ impl<T: Clone> Clone for Optional<T> {
 impl<T> Optional<T> {
     pub fn map<F, R>(self, fun: F) -> Optional<R>
     where
-        F: FnOnce(T) -> R,
+        F: FnOnce(T) -> R
     {
         Optional(self.0.map(fun))
     }

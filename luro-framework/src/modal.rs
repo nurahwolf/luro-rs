@@ -6,7 +6,7 @@ use std::pin::Pin;
 use std::task::{ready, Context, Poll};
 use std::{
     error::Error as StdError,
-    fmt::{Debug, Display, Formatter, Result as FmtResult},
+    fmt::{Debug, Display, Formatter, Result as FmtResult}
 };
 use tokio::sync::oneshot::error::RecvError;
 use twilight_http::client::InteractionClient;
@@ -14,9 +14,7 @@ use twilight_http::response::marker::EmptyBody;
 use twilight_http::response::ResponseFuture;
 use twilight_model::application::interaction::Interaction;
 use twilight_model::channel::message::MessageFlags;
-use twilight_model::http::interaction::{
-    InteractionResponse, InteractionResponseData, InteractionResponseType,
-};
+use twilight_model::http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType};
 
 /// Errors that can be returned when awaiting modals.
 #[derive(Debug)]
@@ -24,14 +22,14 @@ pub enum ModalError {
     /// An http error occurred.
     Http(twilight_http::Error),
     /// Something failed when using a [waiter](InteractionWaiter)
-    Waiter(RecvError),
+    Waiter(RecvError)
 }
 
 impl Display for ModalError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             Self::Http(error) => write!(f, "Http error: {}", error),
-            Self::Waiter(error) => write!(f, "Waiter error {}", error),
+            Self::Waiter(error) => write!(f, "Waiter error {}", error)
         }
     }
 }
@@ -45,7 +43,7 @@ pub struct ModalOutcome<S> {
     /// The inner parsed modal.
     pub inner: S,
     /// The interaction used to retrieve the modal.
-    pub interaction: Interaction,
+    pub interaction: Interaction
 }
 
 impl<S: Debug> Debug for ModalOutcome<S> {
@@ -84,14 +82,14 @@ pub struct WaitModal<'ctx, S> {
     pub(crate) response_type: InteractionResponseType,
     pub(crate) acknowledge: Option<ResponseFuture<EmptyBody>>,
     pub(crate) parse_fn: fn(&mut Interaction) -> S,
-    pub(crate) _marker: PhantomData<S>,
+    pub(crate) _marker: PhantomData<S>
 }
 
 impl<'ctx, S> WaitModal<'ctx, S> {
     pub(crate) fn new(
         waiter: InteractionWaiter,
         http_client: &'ctx InteractionClient<'ctx>,
-        parse_fn: fn(&mut Interaction) -> S,
+        parse_fn: fn(&mut Interaction) -> S
     ) -> WaitModal<'ctx, S> {
         Self {
             waiter: Some(waiter),
@@ -101,7 +99,7 @@ impl<'ctx, S> WaitModal<'ctx, S> {
             response_type: InteractionResponseType::DeferredUpdateMessage,
             acknowledge: None,
             parse_fn,
-            _marker: PhantomData,
+            _marker: PhantomData
         }
     }
 
@@ -145,12 +143,12 @@ impl<'ctx, S> Future for WaitModal<'ctx, S> {
                         flags: this.flags,
                         ..Default::default()
                     })
-                },
+                }
             };
 
-            let response =
-                this.http_client
-                    .create_response(interaction.id, &interaction.token, &response);
+            let response = this
+                .http_client
+                .create_response(interaction.id, &interaction.token, &response);
 
             this.acknowledge = Some(response.into_future());
         }
@@ -161,7 +159,7 @@ impl<'ctx, S> Future for WaitModal<'ctx, S> {
 
         Poll::Ready(Ok(ModalOutcome {
             inner: (this.parse_fn)(&mut interaction),
-            interaction,
+            interaction
         }))
     }
 }

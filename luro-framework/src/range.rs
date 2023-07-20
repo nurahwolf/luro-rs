@@ -26,9 +26,7 @@ mod sealed {
 use async_trait::async_trait;
 use sealed::Number;
 use twilight_model::application::command::CommandOptionType;
-use twilight_model::application::interaction::application_command::{
-    CommandInteractionDataResolved, CommandOptionValue,
-};
+use twilight_model::application::interaction::application_command::{CommandInteractionDataResolved, CommandOptionValue};
 
 /// A range-like type used to constraint the input provided by the user. This is equivalent to
 /// using a [RangeInclusive], but implements the [parse] trait.
@@ -55,13 +53,13 @@ impl<T: Number, const START: i64, const END: i64> DerefMut for Range<T, START, E
 impl<T, E, const START: i64, const END: i64> Parse<T> for Range<E, START, END>
 where
     T: Send + Sync,
-    E: Parse<T> + Number,
+    E: Parse<T> + Number
 {
     async fn parse(
         http_client: &WrappedClient,
         data: &T,
         value: Option<&CommandOptionValue>,
-        resolved: Option<&mut CommandInteractionDataResolved>,
+        resolved: Option<&mut CommandInteractionDataResolved>
     ) -> Result<Self, ParseError> {
         let value = E::parse(http_client, data, value, resolved).await?;
 
@@ -73,7 +71,7 @@ where
             return Err(error(
                 &format!("Range<{}, {}, {}>", type_name::<E>(), START, END),
                 true,
-                "Input out of range",
+                "Input out of range"
             ));
         }
 
@@ -88,20 +86,13 @@ where
         use twilight_model::application::command::CommandOptionValue;
         Some(ArgumentLimits {
             min: Some(CommandOptionValue::Integer(START)),
-            max: Some(CommandOptionValue::Integer(END)),
+            max: Some(CommandOptionValue::Integer(END))
         })
     }
 }
 
 impl<T: Number, const START: i64, const END: i64> Debug for Range<T, START, END> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(
-            f,
-            "Range<{}, {}, {}>({})",
-            type_name::<T>(),
-            START,
-            END,
-            self.0
-        )
+        write!(f, "Range<{}, {}, {}>({})", type_name::<T>(), START, END, self.0)
     }
 }

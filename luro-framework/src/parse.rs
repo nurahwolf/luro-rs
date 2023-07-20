@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use std::error::Error;
 use twilight_model::application::{
     command::{CommandOptionChoice, CommandOptionType},
-    interaction::application_command::{CommandInteractionDataResolved, CommandOptionValue},
+    interaction::application_command::{CommandInteractionDataResolved, CommandOptionValue}
 };
 
 /// The core trait of this framework, it is used to parse all command arguments
@@ -14,7 +14,7 @@ pub trait Parse<T: Send + Sync>: Sized {
         _http_client: &WrappedClient,
         _data: &T,
         _value: Option<&CommandOptionValue>,
-        _resolved: Option<&mut CommandInteractionDataResolved>,
+        _resolved: Option<&mut CommandInteractionDataResolved>
     ) -> Result<Self, ParseError>;
 
     /// Returns the option type this argument has.
@@ -50,10 +50,10 @@ pub enum ParseError {
         /// The type of the argument.
         argument_type: String,
         /// The error message as a string.
-        error: String,
+        error: String
     },
     /// Other error occurred.
-    Other(Box<dyn Error + Send + Sync>),
+    Other(Box<dyn Error + Send + Sync>)
 }
 
 impl std::fmt::Display for ParseError {
@@ -64,7 +64,7 @@ impl std::fmt::Display for ParseError {
                 argument_name,
                 required,
                 argument_type,
-                error,
+                error
             } => {
                 write!(
                     f,
@@ -81,7 +81,7 @@ impl std::fmt::Display for ParseError {
                     error
                 )
             }
-            Self::Other(why) => write!(f, "Other: {}", why),
+            Self::Other(why) => write!(f, "Other: {}", why)
         }
     }
 }

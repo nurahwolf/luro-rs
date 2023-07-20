@@ -8,7 +8,7 @@ pub fn error_handler(input: TokenStream2) -> Result<TokenStream2> {
         attrs,
         vis,
         mut sig,
-        block,
+        block
     } = fun;
 
     match sig.inputs.len() {
@@ -17,7 +17,7 @@ pub fn error_handler(input: TokenStream2) -> Result<TokenStream2> {
             // a &str indicating the name of the command and the result of a command execution.
             return Err(Error::new(sig.inputs.span(), "Expected two arguments"));
         }
-        _ => (),
+        _ => ()
     };
 
     // The name of the original function
