@@ -1,4 +1,7 @@
 use anyhow::anyhow;
+use twilight_http::Client;
+use twilight_model::guild::{Role, Guild};
+use twilight_model::id::marker::{RoleMarker, UserMarker};
 use core::fmt;
 use std::{fmt::Display, mem, str::FromStr};
 use twilight_model::user::CurrentUser;
@@ -304,7 +307,7 @@ pub fn parse_modal_field_required<'a>(data: &'a ModalInteractionData, name: &str
 
 pub async fn accent_colour(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u32 {
     if let Some(guild_id) = guild_id {
-        let guild_db = ctx.guilds.read();
+        let guild_db = ctx.guild_data.read();
         let guild_settings = guild_db.get(&guild_id);
 
         if let Some(guild_settings) = guild_settings {
@@ -321,4 +324,53 @@ pub async fn accent_colour(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>)
 
 pub async fn base_embed(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {
     EmbedBuilder::new().color(accent_colour(ctx, guild_id).await)
+}
+
+mod permissions;
+
+/// Compares the position of two roles.
+///
+/// This type is used to compare positions of two different roles, using the
+/// [`Ord`] trait.
+///
+/// According to [twilight-model documentation]:
+///
+/// > Roles are primarily ordered by their position in descending order.
+/// > For example, a role with a position of 17 is considered a higher role than
+/// > one with a position of 12.
+/// >
+/// > Discord does not guarantee that role positions are positive, unique, or
+/// > contiguous. When two or more roles have the same position then the order
+/// > is based on the roles’ IDs in ascending order. For example, given two roles
+/// > with positions of 10 then a role with an ID of 1 would be considered a
+/// > higher role than one with an ID of 20.
+///
+/// [twilight-model documentation]: https://docs.rs/twilight-model/0.10.2/twilight_model/guild/struct.Role.html#impl-Ord
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RoleOrdering {
+    id: Id<RoleMarker>,
+    position: i64
+}
+
+/// Calculate the permissions of a member with information from the cache.
+pub struct LuroPermissions<'a> {
+    twilight_client: &'a Client,
+    guild_id: Id<GuildMarker>,
+    member_id: Id<UserMarker>,
+    member_roles: MemberRoles,
+    is_owner: bool
+}
+
+/// List of resolved roles of a member.
+struct MemberRoles {
+    /// Everyone role
+    pub everyone: Role,
+    /// List of roles of the user
+    pub roles: Vec<Role>
+}
+
+/// Calculate the permissions for a given guild.
+pub struct GuildPermissions<'a> {
+    twilight_client: &'a Client,
+    guild: Guild
 }

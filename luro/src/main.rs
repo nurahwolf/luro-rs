@@ -3,21 +3,18 @@
 use anyhow::Context;
 use futures_util::StreamExt;
 use interactions::InteractionResponse;
+use models::LuroFramework;
 use std::{env, sync::Arc};
 use tracing_subscriber::{filter, fmt, prelude::__tracing_subscriber_SubscriberExt, reload, util::SubscriberInitExt};
 use twilight_gateway::{stream::ShardEventStream, Intents};
 
-use crate::{commands::Commands, framework::LuroFramework};
-
 pub mod commands;
 pub mod event_handler;
-pub mod framework;
 pub mod functions;
-pub mod guild;
 pub mod hecks;
 pub mod interactions;
 pub mod macros;
-pub mod permissions;
+pub mod models;
 pub mod responses;
 
 /// [tracing_subscriber] filter level
@@ -78,12 +75,8 @@ async fn main() -> anyhow::Result<()> {
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
         Intents::all()
     );
-
-    let commands = Commands::default_commands();
-
     // Create the framework
-    let (luro, mut shards) =
-        LuroFramework::builder(commands, intents, lavalink_auth, lavalink_host, token, reload_handle).await?;
+    let (luro, mut shards) = LuroFramework::builder(intents, lavalink_auth, lavalink_host, token, reload_handle).await?;
     let mut stream = ShardEventStream::new(shards.iter_mut());
 
     while let Some((shard, event)) = stream.next().await {

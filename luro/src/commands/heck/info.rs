@@ -35,7 +35,7 @@ impl HeckInfo {
         )?;
         embed = embed.field(EmbedFieldBuilder::new("Global Stats", global_details).inline());
 
-        if let Some(guild_id) = interaction.guild_id && let Some(guild_settings) = ctx.guilds.read().get(&guild_id) {
+        if let Some(guild_id) = interaction.guild_id && let Some(guild_settings) = ctx.guild_data.read().get(&guild_id) {
             let mut guild_details = String::new();
             writeln!(guild_details, "**GUILD SFW HECKS:** {}", guild_settings.hecks.sfw_hecks.len())?;
             writeln!(guild_details, "**GUILD NSFW HECKS:** {}", guild_settings.hecks.nsfw_hecks.len())?;

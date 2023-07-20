@@ -37,12 +37,14 @@ impl LuroFramework {
             )?)?;
         };
 
-        if let Some(owner) = &self.application.owner {
+        let application = self.twilight_client.current_user_application().await?.model().await?;
+
+        if let Some(owner) = &application.owner {
             info!("Owner:        {}", owner.name);
         }
 
         debug!("Attempting to register guild settings");
-        self.register_commands(self.application.id).await?;
+        self.register_commands(application.id).await?;
 
         // match luro.application.try_read() {
         //     Ok(application_data) => {

@@ -1,9 +1,11 @@
+use tracing::error;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::{interactions::InteractionResponse, COLOUR_DANGER};
 
 /// Internal error embed
 pub fn internal_error(error: String) -> InteractionResponse {
+    error!("Generic error raised");
     let embed = EmbedBuilder::new()
         .title("It's fucked")
         .color(COLOUR_DANGER)

@@ -1,9 +1,11 @@
+use tracing::warn;
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{interactions::InteractionResponse, COLOUR_DANGER};
 
 /// Member is the guild owner...
 pub fn server_owner() -> InteractionResponse {
+    warn!("Someone tried to fuck with the server owner using the bot");
     let embed = EmbedBuilder::new()
         .color(COLOUR_DANGER)
         .title("That's the server owner you idiot")

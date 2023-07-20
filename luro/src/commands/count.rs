@@ -1,14 +1,14 @@
 use anyhow::Error;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{framework::LuroFramework, interactions::InteractionResponse};
+use crate::{interactions::InteractionResponse, LuroContext};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "count", desc = "Test to see if the framework is globally mutable")]
 pub struct CountCommand {}
 
 impl CountCommand {
-    pub async fn run(self, ctx: &LuroFramework) -> Result<InteractionResponse, Error> {
+    pub async fn run(self, ctx: &LuroContext) -> Result<InteractionResponse, Error> {
         let message;
 
         {

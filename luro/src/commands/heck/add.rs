@@ -13,8 +13,8 @@ use crate::{
     functions::{
         get_partial_member_avatar, interaction_context, parse_component_data, parse_modal_data, parse_modal_field_required
     },
-    hecks::Heck,
     interactions::InteractionResponse,
+    models::Heck,
     responses::invalid_heck,
     LuroContext, SlashResponse, ACCENT_COLOUR
 };
@@ -74,7 +74,7 @@ impl HeckAddCommand {
                 heck_author.name = "Global Heck Created - SFW Heck".to_owned()
             };
         } else {
-            let mut guild_db = ctx.guilds.write();
+            let mut guild_db = ctx.guild_data.write();
             let heck_db = guild_db.entry(
                 interaction
                     .guild_id

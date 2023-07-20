@@ -24,7 +24,7 @@ pub struct AboutCommand {
 
 impl AboutCommand {
     pub async fn run(self, interaction: &Interaction, ctx: &LuroContext) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
+        let ephemeral = ctx.defer_interaction(interaction, false).await?;
         let (_, _, _) = interaction_context(interaction, "about")?;
 
         // Variables
@@ -61,7 +61,7 @@ impl AboutCommand {
         // if let Some(git_url) = &ctx.data().config.read().await.git_url {
         //     embed.url(git_url);
         // }
-        if let Some(application_owner) = &ctx.application.owner {
+        if let Some(application_owner) = &ctx.twilight_client.current_user_application().await?.model().await?.owner {
             writeln!(
                 description,
                 "**Primary Owner:** {} - <@{}>",

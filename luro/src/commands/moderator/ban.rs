@@ -7,7 +7,6 @@ use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
     interactions::InteractionResponse,
-    permissions::GuildPermissions,
     responses::{
         ban::{embed, interaction_response},
         bot_hierarchy::bot_hierarchy,
@@ -16,7 +15,7 @@ use crate::{
         unable_to_get_guild::unable_to_get_guild,
         user_hierarchy::user_hierarchy
     },
-    LuroContext
+    LuroContext, functions::GuildPermissions
 };
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
@@ -124,7 +123,7 @@ impl BanCommand {
             }
 
             if member_highest_role >= bot_permissions.highest_role() {
-                return Ok(bot_hierarchy(&ctx.application.name));
+                return Ok(bot_hierarchy(&ctx.global_data.read().current_user.name));
             }
         };
 
@@ -157,7 +156,7 @@ impl BanCommand {
         ban.await?;
 
         // If an alert channel is defined, send a message there
-        let guild_settings = ctx.guilds.read().clone();
+        let guild_settings = ctx.guild_data.read().clone();
         if let Some(guild_settings) = guild_settings.get(&guild_id) && let Some(alert_channel) = guild_settings.moderator_actions_log_channel {
             ctx
             .twilight_client
@@ -167,11 +166,10 @@ impl BanCommand {
         };
 
         // Now respond to the original interaction
-        Ok(crate::interactions::InteractionResponse::Update {
-            content: None,
-            embeds: Some(vec![embed.build()]),
-            components: None,
-            ephemeral
+        Ok(crate::interactions::InteractionResponse::Embed {
+            embeds: vec![embed.build()],
+            ephemeral,
+            deferred: true
         })
     }
 }

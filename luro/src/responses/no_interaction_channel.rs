@@ -1,9 +1,11 @@
+use tracing::error;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::{interactions::InteractionResponse, COLOUR_DANGER};
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
 pub fn embed() -> EmbedBuilder {
+    error!("Unable to get the interaction channel");
     EmbedBuilder::new()
         .title("Unable to get interaction channel")
         .color(COLOUR_DANGER)

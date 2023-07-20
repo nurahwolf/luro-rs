@@ -11,7 +11,7 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::framework::LuroFramework;
+use crate::LuroContext;
 
 /// Response to an interaction.
 ///
@@ -108,16 +108,11 @@ impl InteractionResponder {
     }
 
     /// Create a new response
-    pub async fn new_response(
-        &self,
-        ctx: &LuroFramework,
-        response: &InteractionResponse,
-        deferred: bool
-    ) -> anyhow::Result<()> {
+    pub async fn new_response(&self, ctx: &LuroContext, response: &InteractionResponse, deferred: bool) -> anyhow::Result<()> {
         let client = ctx.twilight_client.interaction(self.application_id);
         let response = response.clone().into_http();
 
-        Ok(if deferred {
+        if deferred {
             // The inteaction was deferred, so respond as a follow up
             let interaction_response = response.data.unwrap_or(InteractionResponseData {
                 allowed_mentions: None,
@@ -153,11 +148,12 @@ impl InteractionResponder {
         } else {
             // This is a new interaction, so create a response
             client.create_response(self.id, &self.token, &response).await?;
-        })
+        };
+        Ok(())
     }
 
     /// Send a response to an interaction.
-    pub async fn respond(&self, ctx: &LuroFramework, response: InteractionResponse) -> Result<(), Error> {
+    pub async fn respond(&self, ctx: &LuroContext, response: InteractionResponse) -> Result<(), Error> {
         match response {
             InteractionResponse::Embed { deferred, .. } => self.new_response(ctx, &response, deferred).await?,
             InteractionResponse::EmbedComponents { deferred, .. } => self.new_response(ctx, &response, deferred).await?,

@@ -3,8 +3,6 @@ use std::collections::HashMap;
 use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
 
-use crate::framework::LuroFramework;
-
 use self::{
     about::AboutCommand, boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand,
     moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands, say::SayCommand, user::UserCommands
@@ -18,7 +16,7 @@ use twilight_gateway::MessageSender;
 use twilight_interactions::command::CommandModel;
 use twilight_model::application::interaction::{Interaction, InteractionData};
 
-use crate::{interactions::InteractionResponse, responses::unknown_command::unknown_command};
+use crate::{interactions::InteractionResponse, models::LuroFramework, responses::unknown_command::unknown_command};
 
 pub mod about;
 pub mod boop;

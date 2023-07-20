@@ -1,7 +1,12 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
 
-use crate::{functions::interaction_context, guild::LuroGuilds, hecks::Hecks, interactions::InteractionResponse, LuroContext};
+use crate::{
+    functions::interaction_context,
+    interactions::InteractionResponse,
+    models::{GuildSettings, Hecks},
+    LuroContext
+};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "save", desc = "Flush data to disk")]
@@ -12,7 +17,7 @@ impl SaveCommand {
         let ephemeral = ctx.defer_interaction(interaction, true).await?;
         let (_, _, _) = interaction_context(interaction, "heck add")?;
         Hecks::write(ctx).await?;
-        LuroGuilds::write(ctx).await?;
+        GuildSettings::write(ctx).await?;
 
         // Config::write(&ctx.data().config.write().await.clone(), CONFIG_FILE_PATH).await;
         // Hecks::write(data.clone().global_data.read().hecks.clone(), HECK_FILE_PATH).await?;

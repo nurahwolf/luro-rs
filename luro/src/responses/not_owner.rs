@@ -1,9 +1,11 @@
+use tracing::warn;
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{interactions::InteractionResponse, COLOUR_DANGER};
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
 pub fn embed() -> EmbedBuilder {
+    warn!("Someone tried to run a bot owner command without being the bot owner...r");
     EmbedBuilder::new()
         .title("You are not the bot owner")
         .color(COLOUR_DANGER)

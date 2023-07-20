@@ -4,7 +4,7 @@ use tracing::info;
 use twilight_model::gateway::payload::incoming::BanAdd;
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{framework::LuroFramework, functions::base_embed};
+use crate::{functions::base_embed, models::LuroFramework};
 
 impl LuroFramework {
     pub async fn ban_add_listener(self: &Arc<Self>, ban: BanAdd) -> anyhow::Result<()> {
@@ -15,7 +15,7 @@ impl LuroFramework {
             return Ok(());
         }
 
-        let guild_db = self.guilds.read().clone();
+        let guild_db = self.guild_data.read().clone();
         let guild_settings = match guild_db.get(&ban.guild_id) {
             Some(guild_settings) => guild_settings,
             None => return Ok(())

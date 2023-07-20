@@ -1,29 +1,9 @@
 use anyhow::Error;
-use serde::{Deserialize, Serialize};
+
 use tokio::{fs::write, fs::File, io::AsyncReadExt};
 use tracing::info;
 
-use crate::{framework::LuroFramework, HECK_FILE_PATH};
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Heck {
-    pub heck_message: String,
-    pub author_id: u64
-}
-
-/// Structure for `heck.toml`
-/// We have two hecks, one that is slowly drained (so we only get a heck once) and another used to get explicit hecks.
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct Hecks {
-    /// A vector containing all SFW hecks
-    pub sfw_hecks: Vec<Heck>,
-    /// A vector containing all NSFW hecks
-    pub nsfw_hecks: Vec<Heck>,
-    /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
-    pub sfw_heck_ids: Vec<usize>,
-    /// A vector of [usize] that contains availalbe random hecks to get. The hecks are reloaded when this reaches zero.
-    pub nsfw_heck_ids: Vec<usize>
-}
+use crate::{models::Hecks, LuroContext, HECK_FILE_PATH};
 
 impl Hecks {
     /// Get a new structure filled with data from a toml file.
@@ -48,7 +28,7 @@ impl Hecks {
     }
 
     /// Write the struct to a toml file
-    pub async fn write(ctx: &LuroFramework) -> Result<(), Error> {
+    pub async fn write(ctx: &LuroContext) -> Result<(), Error> {
         let struct_to_toml_string = match toml::to_string(&ctx.global_data.read().hecks) {
             Ok(string) => string,
             Err(why) => return Err(why.into())

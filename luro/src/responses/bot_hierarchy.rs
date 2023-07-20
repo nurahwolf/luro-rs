@@ -1,9 +1,11 @@
+use tracing::warn;
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{interactions::InteractionResponse, COLOUR_DANGER};
 
 /// User is above Luro in the role hierarchy.
 pub fn bot_hierarchy(bot_username: &String) -> InteractionResponse {
+    warn!("User tried to execute a command in which the bot is too low to function");
     let embed = EmbedBuilder::new()
         .color(COLOUR_DANGER)
         .title("Role Hierarchy Error")

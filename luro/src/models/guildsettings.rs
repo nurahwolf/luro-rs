@@ -1,49 +1,20 @@
 use std::collections::hash_map::Entry;
-use std::{collections::HashMap, path::Path};
+use std::path::Path;
 
 use anyhow::Error;
-use serde::{Deserialize, Serialize};
+
 use tokio::fs::write;
 use tokio::{
     fs::File,
     io::{AsyncReadExt, AsyncWriteExt}
 };
 use tracing::{info, warn};
-use twilight_model::{
-    application::command::Command,
-    id::{
-        marker::{ChannelMarker, GuildMarker},
-        Id
-    }
-};
+use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::framework::LuroFramework;
-use crate::LuroContext;
-use crate::{hecks::Hecks, GUILDSETTINGS_FILE_PATH};
+use crate::models::{GuildSetting, GuildSettings};
+use crate::{LuroContext, GUILDSETTINGS_FILE_PATH};
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct LuroGuilds {
-    /// Guild Settings
-    pub guilds: HashMap<Id<GuildMarker>, LuroGuild>
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct LuroGuild {
-    /// Commands registered to a guild
-    pub commands: Vec<Command>,
-    /// Private hecks for this specific guild
-    pub hecks: Hecks,
-    /// Guild Accent Colour, which is the first colour role within a guild
-    pub accent_colour: u32,
-    /// An administrator may wish to override the colour in which case this is set.
-    pub accent_colour_custom: Option<u32>,
-    /// Discord events are logged here, if defined
-    pub discord_events_log_channel: Option<Id<ChannelMarker>>,
-    /// Moderator actions are pushed here such as bans, if defined
-    pub moderator_actions_log_channel: Option<Id<ChannelMarker>>
-}
-
-impl LuroGuilds {
+impl GuildSettings {
     /// Get a new structure filled with data from a toml file. Note, this panics if it cannot find the toml file!
     pub async fn get() -> anyhow::Result<Self> {
         let mut file;
@@ -81,9 +52,9 @@ impl LuroGuilds {
     }
 
     /// Write the struct to a toml file
-    pub async fn write(ctx: &LuroFramework) -> anyhow::Result<()> {
-        let guilds = LuroGuilds {
-            guilds: ctx.guilds.read().clone()
+    pub async fn write(ctx: &LuroContext) -> anyhow::Result<()> {
+        let guilds = Self {
+            guilds: ctx.guild_data.read().clone()
         };
 
         let struct_to_toml_string = match toml::to_string(&guilds) {
@@ -99,12 +70,12 @@ impl LuroGuilds {
 
     /// Create guild settings for a guild, if it is not present.
     pub fn check_guild_is_present(ctx: LuroContext, guild_id: Id<GuildMarker>) -> anyhow::Result<()> {
-        let mut guild_db = ctx.guilds.write();
+        let mut guild_db = ctx.guild_data.write();
 
         match guild_db.entry(guild_id) {
             Entry::Occupied(_) => (),
             Entry::Vacant(vacant) => {
-                vacant.insert(LuroGuild {
+                vacant.insert(GuildSetting {
                     commands: Default::default(),
                     hecks: Default::default(),
                     accent_colour: Default::default(),

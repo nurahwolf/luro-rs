@@ -1,9 +1,11 @@
+use tracing::error;
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{interactions::InteractionResponse, COLOUR_DANGER};
 
 /// Luro is missing permissions in order to use this command.
 pub fn bot_missing_permission(permission_missing: String) -> InteractionResponse {
+    error!("Luro was missing permissions to run a command");
     let embed = EmbedBuilder::new()
         .color(COLOUR_DANGER)
         .title("I am missing permissions")

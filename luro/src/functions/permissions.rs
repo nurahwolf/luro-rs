@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use twilight_http::Client;
 use twilight_model::{
     channel::ChannelType,
-    guild::{Guild, Permissions, Role},
+    guild::{Permissions, Role},
     id::{
         marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
         Id
@@ -12,11 +12,7 @@ use twilight_model::{
 };
 use twilight_util::permission_calculator::PermissionCalculator;
 
-/// Calculate the permissions for a given guild.
-pub struct GuildPermissions<'a> {
-    twilight_client: &'a Client,
-    guild: Guild
-}
+use super::{MemberRoles, GuildPermissions, LuroPermissions, RoleOrdering};
 
 impl<'a> GuildPermissions<'a> {
     /// Initialize [`GuildPermissions`] with from a guild.
@@ -39,15 +35,6 @@ impl<'a> GuildPermissions<'a> {
     pub async fn current_member(&self) -> Result<LuroPermissions<'a>, anyhow::Error> {
         LuroPermissions::current_member(self).await
     }
-}
-
-/// Calculate the permissions of a member with information from the cache.
-pub struct LuroPermissions<'a> {
-    twilight_client: &'a Client,
-    guild_id: Id<GuildMarker>,
-    member_id: Id<UserMarker>,
-    member_roles: MemberRoles,
-    is_owner: bool
 }
 
 impl<'a> LuroPermissions<'a> {
@@ -169,13 +156,6 @@ impl<'a> LuroPermissions<'a> {
     }
 }
 
-/// List of resolved roles of a member.
-struct MemberRoles {
-    /// Everyone role
-    pub everyone: Role,
-    /// List of roles of the user
-    pub roles: Vec<Role>
-}
 
 impl MemberRoles {
     /// Query roles of a member in the cache.
@@ -209,30 +189,6 @@ impl MemberRoles {
             Err(anyhow!("everyone role not found in cache"))
         }
     }
-}
-
-/// Compares the position of two roles.
-///
-/// This type is used to compare positions of two different roles, using the
-/// [`Ord`] trait.
-///
-/// According to [twilight-model documentation]:
-///
-/// > Roles are primarily ordered by their position in descending order.
-/// > For example, a role with a position of 17 is considered a higher role than
-/// > one with a position of 12.
-/// >
-/// > Discord does not guarantee that role positions are positive, unique, or
-/// > contiguous. When two or more roles have the same position then the order
-/// > is based on the roles’ IDs in ascending order. For example, given two roles
-/// > with positions of 10 then a role with an ID of 1 would be considered a
-/// > higher role than one with an ID of 20.
-///
-/// [twilight-model documentation]: https://docs.rs/twilight-model/0.10.2/twilight_model/guild/struct.Role.html#impl-Ord
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RoleOrdering {
-    id: Id<RoleMarker>,
-    position: i64
 }
 
 impl Ord for RoleOrdering {

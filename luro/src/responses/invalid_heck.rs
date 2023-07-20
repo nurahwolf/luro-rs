@@ -1,9 +1,11 @@
+use tracing::warn;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 use crate::{interactions::InteractionResponse, COLOUR_DANGER};
 
 /// Invalid heck embed
 pub fn embed(heck_message: &str) -> EmbedBuilder {
+    warn!("User attempted to make an invalid heck");
     EmbedBuilder::new()
         .color(COLOUR_DANGER)
         .title("Can you read?")

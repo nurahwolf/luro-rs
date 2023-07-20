@@ -2,7 +2,7 @@ use anyhow::Error;
 use tracing::info;
 use twilight_model::gateway::payload::incoming::MessageUpdate;
 
-use crate::framework::LuroFramework;
+use crate::models::LuroFramework;
 
 impl LuroFramework {
     pub async fn message_update_handler(message: Box<MessageUpdate>) -> Result<(), Error> {

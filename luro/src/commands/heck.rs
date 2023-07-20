@@ -15,7 +15,10 @@ use twilight_model::{
     user::User
 };
 
-use crate::{guild::LuroGuilds, hecks::Heck, LuroContext, SlashResponse};
+use crate::{
+    models::{GuildSettings, Heck},
+    LuroContext, SlashResponse
+};
 
 use self::{add::HeckAddCommand, info::HeckInfo, someone::HeckSomeoneCommand};
 
@@ -65,7 +68,7 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
         Some(guild_id) => {
             trace!("checking if guild hecks are present");
             {
-                let guild_db = ctx.guilds.read();
+                let guild_db = ctx.guild_data.read();
                 let guild_data = guild_db.get(&guild_id).ok_or_else(|| Error::msg("No guild data available"))?;
                 are_sfw_hecks_empty = guild_data.hecks.sfw_heck_ids.is_empty();
                 are_nsfw_hecks_empty = guild_data.hecks.nsfw_heck_ids.is_empty();
@@ -73,7 +76,7 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
 
             if are_sfw_hecks_empty || are_nsfw_hecks_empty {
                 debug!("some hecks are empty, so we are reloading them");
-                let mut guild_db = ctx.guilds.write();
+                let mut guild_db = ctx.guild_data.write();
                 let guild = guild_db.entry(guild_id);
                 guild.and_modify(|guild| {
                     if are_sfw_hecks_empty {
@@ -136,9 +139,9 @@ async fn get_heck(
         let guild_id =
             guild_id.ok_or_else(|| Error::msg("Guild ID is not present. You can only use this option in a guild."))?;
         trace!("got guild_id");
-        LuroGuilds::check_guild_is_present(ctx.clone(), guild_id)?;
+        GuildSettings::check_guild_is_present(ctx.clone(), guild_id)?;
         trace!("checked to make sure guild settings is present");
-        let mut guild_db = ctx.guilds.write();
+        let mut guild_db = ctx.guild_data.write();
         trace!("got guild_db");
         let guild_settings = guild_db
             .get_mut(&guild_id)

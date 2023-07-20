@@ -14,11 +14,12 @@ use twilight_model::{
 use crate::{
     commands::{
         boop::BoopCommand,
-        heck::add::{handle_heck_model, HeckAddCommand}
+        heck::add::{handle_heck_model, HeckAddCommand},
+        Commands
     },
-    framework::LuroFramework,
     functions::CustomId,
     interactions::{InteractionResponder, InteractionResponse},
+    models::LuroFramework,
     responses::{internal_error::internal_error, unknown_command::unknown_command},
     LuroContext, SlashResponse
 };
@@ -46,8 +47,7 @@ impl LuroFramework {
 
         // TODO: Really shitty event handler, please change this
         if let Err(why) = callback {
-            let why = why.to_string();
-            error!(why)
+            error!(why = ?why, "error while handling event");
         }
 
         Ok(())
@@ -113,7 +113,12 @@ impl LuroFramework {
         };
 
         match client
-            .set_global_commands(&self.commands.global_commands.clone().into_values().collect::<Vec<Command>>())
+            .set_global_commands(
+                &Commands::default_commands()
+                    .global_commands
+                    .into_values()
+                    .collect::<Vec<Command>>()
+            )
             .await
         {
             Ok(command_result) => Ok(info!(
@@ -125,6 +130,7 @@ impl LuroFramework {
     }
 
     pub async fn defer_interaction(self: &Arc<Self>, interaction: &Interaction, ephemeral: bool) -> anyhow::Result<bool> {
+        debug!("Deferring interaction");
         InteractionResponder::from_interaction(interaction)
             .respond(self, InteractionResponse::Defer { ephemeral })
             .await?;
