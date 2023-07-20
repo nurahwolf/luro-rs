@@ -99,9 +99,7 @@ impl LuroCommand for BanCommand {
             .await?;
         let permissions = GuildPermissions::new(&ctx.twilight_client, &guild_id).await?;
         let author_permissions = permissions.member(author.user.id, &author.roles).await?;
-
         let user_to_remove = self.user.resolved;
-
         let bot_permissions = permissions.current_member().await?;
 
         if !bot_permissions.guild().contains(Permissions::BAN_MEMBERS) {

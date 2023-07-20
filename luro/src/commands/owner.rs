@@ -3,7 +3,7 @@ use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
 
-use crate::{LuroContext, SlashResponse};
+use crate::{LuroContext, SlashResponse, BOT_OWNER};
 
 use super::LuroCommand;
 use crate::responses::not_owner::not_owner_response;
@@ -28,8 +28,8 @@ impl LuroCommand for OwnerCommands {
     async fn run_commands(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
         let (_, interaction_author, _) = self.interaction_context(&interaction, "owner command invoked")?;
 
-        if !interaction_author.id.get() == 97003404601094144 {
-            return Ok(not_owner_response());
+        if !interaction_author.id.get() != BOT_OWNER {
+            return Ok(not_owner_response(true, false));
         }
 
         // Call the appropriate subcommand.
