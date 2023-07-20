@@ -29,7 +29,6 @@ pub enum LogLevel {
 
 impl LogCommand {
     pub async fn run(self, interaction: &Interaction, ctx: &LuroContext) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(interaction, true).await?;
         let (_, _, _) = interaction_context(interaction, "owner log")?;
 
         let (_, level) = match self.level {
@@ -61,8 +60,8 @@ impl LogCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("Luro's log level is now set to {}!", level),
-            ephemeral,
-            deferred: true
+            ephemeral: true,
+            deferred: false
         })
     }
 }
