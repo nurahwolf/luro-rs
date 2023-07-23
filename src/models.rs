@@ -30,12 +30,15 @@ pub struct LuroResponse {
 }
 
 /// Settings that are stored on disk and meant to be modified by the user
+#[derive(Debug)]
 pub struct Settings {
     /// The application ID
     pub application_id: Id<ApplicationMarker>
 }
 
 /// Data that may be accessed globally, including DMs. Generally not modified by the end user
+#[derive(Debug)]
+
 pub struct GlobalData {
     pub application: Application,
     pub count: usize,
@@ -65,6 +68,7 @@ pub struct Hecks {
 }
 
 /// The framework used to dispatch slash commands.
+#[derive(Debug)]
 pub struct LuroFramework {
     /// HTTP client used for making outbound API requests
     pub hyper_client: hyper::Client<HttpConnector>,

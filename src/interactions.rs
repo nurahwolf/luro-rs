@@ -3,7 +3,7 @@ use anyhow::Error;
 use tracing::info;
 use twilight_model::{
     application::interaction::Interaction,
-    channel::message::{Component, Embed, MessageFlags, AllowedMentions},
+    channel::message::{Component, Embed, MessageFlags},
     http::interaction::{InteractionResponse as HttpInteractionResponse, InteractionResponseData, InteractionResponseType},
     id::{
         marker::{ApplicationMarker, InteractionMarker},

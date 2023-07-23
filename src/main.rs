@@ -17,6 +17,7 @@ pub mod interactions;
 pub mod macros;
 pub mod models;
 pub mod responses;
+pub mod builder;
 
 /// [tracing_subscriber] filter level
 pub const FILTER: filter::LevelFilter = filter::LevelFilter::INFO;

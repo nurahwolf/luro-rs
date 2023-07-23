@@ -1,6 +1,6 @@
-use std::fmt::Write;
 use async_trait::async_trait;
 use serde::Serialize;
+use std::fmt::Write;
 use tracing::info;
 use twilight_gateway::MessageSender;
 use twilight_http::{request::Request, response::marker::EmptyBody, routing::Route};
@@ -9,7 +9,7 @@ use twilight_model::{
     application::interaction::Interaction,
     id::{marker::RoleMarker, Id}
 };
-use twilight_util::builder::embed::{EmbedFieldBuilder, ImageSource};
+use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
     interactions::InteractionResponse, models::LuroResponse, responses::not_guild::not_guild_response, LuroContext,
@@ -127,9 +127,15 @@ impl LuroCommand for ModifyRoleCommand {
                 role_selected.color = colour;
 
                 if colour == 0 {
-                    ctx.twilight_client.update_role(guild.id, role_selected.id).color(None).await?;
+                    ctx.twilight_client
+                        .update_role(guild.id, role_selected.id)
+                        .color(None)
+                        .await?;
                 } else {
-                    ctx.twilight_client.update_role(guild.id, role_selected.id).color(Some(colour)).await?;
+                    ctx.twilight_client
+                        .update_role(guild.id, role_selected.id)
+                        .color(Some(colour))
+                        .await?;
                 };
             }
 
@@ -138,7 +144,6 @@ impl LuroCommand for ModifyRoleCommand {
             writeln!(description, "**Role:** <@&{0}> - {0}", role_selected.id)?;
             writeln!(description, "**Position:** {}", role_selected.position)?;
             write!(description, "**Permissons:**\n```{:?}```", role_selected.permissions)?;
-            
 
             embed = embed.title(role_selected.name);
             embed = embed.description(description);

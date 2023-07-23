@@ -11,7 +11,7 @@ use crate::{
         LuroCommand
     },
     interactions::InteractionResponse,
-    LuroContext, SlashResponse, ACCENT_COLOUR
+    LuroContext, SlashResponse, ACCENT_COLOUR, builder::LuroResponseV2
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -30,7 +30,7 @@ pub struct HeckSomeoneCommand {
 #[async_trait]
 impl LuroCommand for HeckSomeoneCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let luro_response = ctx.defer_interaction(&interaction, false).await?;
+        let response = LuroResponseV2::new("heck someone".to_owned(), interaction.clone());
         let (interaction_channel, interaction_author, _) = self.interaction_context(&interaction, "heck someone")?;
         // Is the channel the interaction called in NSFW?
         let nsfw = interaction_channel.nsfw.unwrap_or(false);
@@ -56,7 +56,7 @@ impl LuroCommand for HeckSomeoneCommand {
         debug!("creating our response");
         Ok(if let Some(plaintext) = self.plaintext && plaintext {
             trace!("user wanted plaintext");
-            InteractionResponse::Content { content: formatted_heck.heck_message, luro_response}
+            response.content(heck.heck_message).legacy_response(true)
         } else {
             trace!("user wanted embed");
             let mut embed = EmbedBuilder::default()
@@ -72,9 +72,7 @@ impl LuroCommand for HeckSomeoneCommand {
                 "Heck ID {heck_id} - SFW Heck"
             )))
         }
-
-            InteractionResponse::ContentEmbed { content: format!("<@{}>", self.user.resolved.id), embeds: vec![embed.build()], luro_response }
-
+            response.content(format!("Hey <@{}>!", self.user.resolved.id)).legacy_response(false)
         })
     }
 }

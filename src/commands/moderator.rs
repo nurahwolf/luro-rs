@@ -8,11 +8,11 @@ use crate::{LuroContext, SlashResponse};
 use self::{ban::BanCommand, kick::KickCommand, purge::PurgeCommand, settings::GuildSettingsCommand};
 use super::LuroCommand;
 
+mod assign;
 mod ban;
 mod kick;
 mod purge;
 mod settings;
-mod assign;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "mod", desc = "Commands that can be used by moderators", dm_permission = false)]
