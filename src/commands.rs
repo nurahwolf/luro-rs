@@ -12,7 +12,7 @@ use twilight_model::{
 
 use self::{
     about::AboutCommand, boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand,
-    moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands, say::SayCommand, user::UserCommands
+    moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands, say::SayCommand, user::UserCommands, lewd::LewdCommands
 };
 
 use std::sync::Arc;
@@ -40,6 +40,7 @@ pub mod music;
 pub mod owner;
 pub mod say;
 pub mod user;
+pub mod lewd;
 
 #[derive(Default)]
 pub struct Commands {
@@ -69,6 +70,7 @@ impl Commands {
         init.global_commands.insert("owner", OwnerCommands::create_command().into());
         init.global_commands.insert("about", AboutCommand::create_command().into());
         init.global_commands.insert("user", UserCommands::create_command().into());
+        init.global_commands.insert("lewd", LewdCommands::create_command().into());
 
         // Return our initialised commands
         init
@@ -103,6 +105,7 @@ impl LuroFramework {
             "boop" => BoopCommand::new(data).await?.run_command(interaction, self, shard).await?,
             "owner" => OwnerCommands::new(data).await?.run_commands(interaction, self, shard).await?,
             "heck" => HeckCommands::new(data).await?.run_commands(interaction, self, shard).await?,
+            "lewd" => LewdCommands::new(data).await?.run_commands(interaction, self, shard).await?,
             name => {
                 warn!(name = name, "received unknown command");
 
