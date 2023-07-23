@@ -303,5 +303,5 @@ fn interaction_response_builder(
         response = response.components(components);
     }
 
-    response.allowed_mentions(AllowedMentions { parse: todo!(), replied_user: false, roles: todo!(), users: todo!() }).build()
+    response.build()
 }
