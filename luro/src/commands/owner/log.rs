@@ -62,8 +62,7 @@ impl LuroCommand for LogCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("Luro's log level is now set to {}!", level),
-            ephemeral: true,
-            deferred: false
+            luro_response: Default::default()
         })
     }
 }

@@ -13,7 +13,7 @@ pub struct HelloCommand {}
 #[async_trait]
 impl LuroCommand for HelloCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let message = match interaction.author_id() {
             Some(author_id) => format!(
@@ -29,8 +29,7 @@ impl LuroCommand for HelloCommand {
 
         Ok(InteractionResponse::Content {
             content: message,
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

@@ -41,7 +41,7 @@ pub enum HeckCommands {
     #[command(name = "add")]
     Add(HeckAddCommand),
     #[command(name = "someone")]
-    User(HeckSomeoneCommand),
+    Someone(Box<HeckSomeoneCommand>),
     #[command(name = "info")]
     Info(HeckInfo)
 }
@@ -52,7 +52,7 @@ impl LuroCommand for HeckCommands {
         // Call the appropriate subcommand.
         match self {
             Self::Add(command) => command.run_command(interaction, ctx, shard).await,
-            Self::User(command) => command.run_command(interaction, ctx, shard).await,
+            Self::Someone(command) => command.run_command(interaction, ctx, shard).await,
             Self::Info(command) => command.run_command(interaction, ctx, shard).await
         }
     }
@@ -68,7 +68,9 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
             trace!("checking if guild hecks are present");
             {
                 let guild_db = ctx.guild_data.read();
-                let guild_data = guild_db.get(&guild_id).ok_or_else(|| Error::msg("No guild data available"))?;
+                let guild_data = guild_db
+                    .get(&guild_id)
+                    .ok_or_else(|| Error::msg("There is no guild data available! Are you sure there are guild hecks here?"))?;
                 are_sfw_hecks_empty = guild_data.hecks.sfw_heck_ids.is_empty();
                 are_nsfw_hecks_empty = guild_data.hecks.nsfw_heck_ids.is_empty();
             }
@@ -122,7 +124,12 @@ async fn get_heck(
     nsfw: bool
 ) -> anyhow::Result<(Heck, usize)> {
     // Check to make sure our hecks are present, if not reload them
-    check_hecks_are_present(ctx.clone(), guild_id).await?;
+    // NOTE: This sets guild_id to false if we don't need to check for global hecks
+    if global {
+        check_hecks_are_present(ctx.clone(), None).await?;
+    } else {
+        check_hecks_are_present(ctx.clone(), guild_id).await?;
+    }
 
     // A heck type to remove if we can't find it
     let no_heck = (

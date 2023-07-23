@@ -28,7 +28,7 @@ impl LuroCommand for PurgeCommand {
     }
 
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let (interaction_channel, _, _) = self.interaction_context(&interaction, "mod purge")?;
 
@@ -62,8 +62,7 @@ impl LuroCommand for PurgeCommand {
 
         Ok(InteractionResponse::Content {
             content: "Done!!".to_owned(),
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

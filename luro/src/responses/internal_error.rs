@@ -1,8 +1,8 @@
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
-use crate::{interactions::InteractionResponse, COLOUR_DANGER};
+use crate::{interactions::InteractionResponse, models::LuroResponse, COLOUR_DANGER};
 
-pub fn embed(error: String) -> EmbedBuilder {
+fn internal_error_embed(error: &String) -> EmbedBuilder {
     EmbedBuilder::new()
         .title("It's fucked")
         .color(COLOUR_DANGER)
@@ -13,10 +13,9 @@ pub fn embed(error: String) -> EmbedBuilder {
 }
 
 /// Internal error embed
-pub fn internal_error(error: String, ephemeral: bool, deferred: bool) -> InteractionResponse {
+pub fn internal_error_response(error: &String, response: LuroResponse) -> InteractionResponse {
     InteractionResponse::Embed {
-        embeds: vec![embed(error).build()],
-        ephemeral,
-        deferred
+        embeds: vec![internal_error_embed(error).build()],
+        luro_response: response
     }
 }

@@ -18,7 +18,7 @@ pub struct SaveCommand {}
 #[async_trait]
 impl LuroCommand for SaveCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, true).await?;
         let (_, _, _) = self.interaction_context(&interaction, "heck add")?;
         Hecks::write(&ctx).await?;
         GuildSettings::write(&ctx).await?;
@@ -30,8 +30,7 @@ impl LuroCommand for SaveCommand {
 
         Ok(InteractionResponse::Content {
             content: "Flushed data to disk!".to_string(),
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

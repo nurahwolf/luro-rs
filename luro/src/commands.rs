@@ -26,8 +26,8 @@ use twilight_model::application::interaction::{Interaction, InteractionData};
 use crate::{
     functions::{accent_colour, default_embed, get_user_avatar},
     interactions::InteractionResponse,
-    models::LuroFramework,
-    responses::unknown_command::unknown_command
+    models::{LuroFramework, LuroResponse},
+    responses::unknown_command::unknown_command_response
 };
 
 pub mod about;
@@ -102,11 +102,14 @@ impl LuroFramework {
             "music" => MusicCommands::new(data).await?.run_commands(interaction, self, shard).await?,
             "boop" => BoopCommand::new(data).await?.run_command(interaction, self, shard).await?,
             "owner" => OwnerCommands::new(data).await?.run_commands(interaction, self, shard).await?,
-            "heck" => HeckCommands::new(data).await?.run_command(interaction, self, shard).await?,
+            "heck" => HeckCommands::new(data).await?.run_commands(interaction, self, shard).await?,
             name => {
                 warn!(name = name, "received unknown command");
 
-                unknown_command()
+                unknown_command_response(LuroResponse {
+                    ephemeral: true,
+                    deferred: false
+                })
             }
         })
     }
@@ -139,8 +142,10 @@ pub trait LuroCommand: CommandModel {
     async fn run_command(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
         Ok(InteractionResponse::Content {
             content: "It works!".to_owned(),
-            ephemeral: true,
-            deferred: false
+            luro_response: LuroResponse {
+                ephemeral: true,
+                deferred: false
+            }
         })
     }
 
@@ -148,8 +153,10 @@ pub trait LuroCommand: CommandModel {
     async fn run_commands(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
         Ok(InteractionResponse::Content {
             content: "It works!".to_owned(),
-            ephemeral: true,
-            deferred: false
+            luro_response: LuroResponse {
+                ephemeral: true,
+                deferred: false
+            }
         })
     }
 
@@ -157,8 +164,10 @@ pub trait LuroCommand: CommandModel {
     async fn handle(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
         Ok(InteractionResponse::Content {
             content: "It works!".to_owned(),
-            ephemeral: true,
-            deferred: false
+            luro_response: LuroResponse {
+                ephemeral: true,
+                deferred: false
+            }
         })
     }
 
@@ -176,8 +185,10 @@ pub trait LuroCommand: CommandModel {
     async fn handle_model(self, _interaction: Interaction) -> SlashResponse {
         Ok(InteractionResponse::Content {
             content: "This model has not been configured yet!".to_owned(),
-            ephemeral: false,
-            deferred: false
+            luro_response: LuroResponse {
+                ephemeral: true,
+                deferred: false
+            }
         })
     }
 

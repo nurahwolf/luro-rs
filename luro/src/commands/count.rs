@@ -23,8 +23,7 @@ impl LuroCommand for CountCommand {
 
         Ok(InteractionResponse::Content {
             content: message,
-            ephemeral: false,
-            deferred: false
+            luro_response: Default::default()
         })
     }
 }

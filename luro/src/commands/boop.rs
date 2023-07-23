@@ -35,8 +35,7 @@ impl LuroCommand for BoopCommand {
         Ok(InteractionResponse::ContentComponents {
             content: "Boop Count: 0".to_string(),
             components,
-            ephemeral: false,
-            deferred: false
+            luro_response: Default::default()
         })
     }
 

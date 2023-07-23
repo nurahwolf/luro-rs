@@ -1,20 +1,20 @@
 use tracing::warn;
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{interactions::InteractionResponse, COLOUR_DANGER};
+use crate::{interactions::InteractionResponse, models::LuroResponse, COLOUR_DANGER};
 
 /// Member is the guild owner...
-pub fn server_owner() -> InteractionResponse {
+fn server_owner_embed() -> EmbedBuilder {
     warn!("Someone tried to fuck with the server owner using the bot");
-    let embed = EmbedBuilder::new()
+    EmbedBuilder::new()
         .color(COLOUR_DANGER)
         .title("That's the server owner you idiot")
         .description("Congratulations moron, that's the server owner. Do you really think I'm gonna try to kick OR ban them? Holy shit, no.")
-        .build();
+}
 
+pub fn server_owner_response(luro_response: LuroResponse) -> InteractionResponse {
     InteractionResponse::Embed {
-        embeds: vec![embed],
-        ephemeral: true,
-        deferred: true
+        embeds: vec![server_owner_embed().build()],
+        luro_response
     }
 }

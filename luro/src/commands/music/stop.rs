@@ -14,7 +14,7 @@ pub struct StopCommand {}
 #[async_trait]
 impl LuroCommand for StopCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
 
@@ -23,8 +23,7 @@ impl LuroCommand for StopCommand {
 
         Ok(InteractionResponse::Content {
             content: "Stopped the track!".to_string(),
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

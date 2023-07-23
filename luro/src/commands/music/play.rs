@@ -23,7 +23,7 @@ pub struct PlayCommand {
 #[async_trait]
 impl LuroCommand for PlayCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
 
@@ -52,10 +52,6 @@ impl LuroCommand for PlayCommand {
             content = "Didn't find any results".to_owned();
         }
 
-        Ok(InteractionResponse::Content {
-            content,
-            ephemeral,
-            deferred: true
-        })
+        Ok(InteractionResponse::Content { content, luro_response })
     }
 }

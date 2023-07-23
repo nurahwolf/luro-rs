@@ -8,11 +8,12 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedField
 use crate::{
     functions::{get_member_avatar, get_user_avatar},
     interactions::InteractionResponse,
+    models::LuroResponse,
     ACCENT_COLOUR
 };
 
-/// Embed showing that a member got banned
-pub fn embed(
+/// An embed formatted to show a banned user
+pub fn ban_embed(
     guild: Guild,
     moderator: Member,
     banned_user: User,
@@ -61,15 +62,17 @@ pub fn embed(
     Ok(embed)
 }
 
-pub fn interaction_response(
+/// A response containing [ban_embed()]
+pub fn ban_response(
     guild: Guild,
     moderator: Member,
     banned_user: User,
     reason: &String,
     period: &String,
-    success: bool
+    success: bool,
+    response: LuroResponse
 ) -> Result<InteractionResponse, Error> {
-    let mut embed = embed(guild, moderator, banned_user, reason, period)?;
+    let mut embed = ban_embed(guild, moderator, banned_user, reason, period)?;
     if success {
         embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
     } else {
@@ -78,7 +81,6 @@ pub fn interaction_response(
 
     Ok(InteractionResponse::Embed {
         embeds: vec![embed.build()],
-        ephemeral: true,
-        deferred: true
+        luro_response: response
     })
 }

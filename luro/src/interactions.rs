@@ -1,5 +1,6 @@
 use anyhow::Error;
 
+use tracing::info;
 use twilight_model::{
     application::interaction::Interaction,
     channel::message::{Component, Embed, MessageFlags},
@@ -11,7 +12,7 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::LuroContext;
+use crate::{models::LuroResponse, LuroContext};
 
 /// Response to an interaction.
 ///
@@ -21,43 +22,34 @@ pub enum InteractionResponse {
     /// Respond with an embed.
     Embed {
         embeds: Vec<Embed>,
-        ephemeral: bool,
-        deferred: bool
+        luro_response: LuroResponse
     },
     /// Respond with an embed and components.
     EmbedComponents {
         embeds: Vec<Embed>,
         components: Vec<Component>,
-        ephemeral: bool,
-        deferred: bool
+        luro_response: LuroResponse
     },
     /// Respond with content, embed and components.
     ContentEmbedComponents {
         content: String,
         embeds: Vec<Embed>,
         components: Vec<Component>,
-        ephemeral: bool,
-        deferred: bool
+        luro_response: LuroResponse
     },
     /// Respond with content.
-    Content {
-        content: String,
-        ephemeral: bool,
-        deferred: bool
-    },
+    Content { content: String, luro_response: LuroResponse },
     /// Respond with content and embeds.
     ContentEmbed {
         content: String,
         embeds: Vec<Embed>,
-        ephemeral: bool,
-        deferred: bool
+        luro_response: LuroResponse
     },
     /// Respond with content and components.
     ContentComponents {
         content: String,
         components: Vec<Component>,
-        ephemeral: bool,
-        deferred: bool
+        luro_response: LuroResponse
     },
     /// Respond with a modal.
     Modal {
@@ -76,8 +68,7 @@ pub enum InteractionResponse {
     Raw {
         kind: InteractionResponseType,
         data: Option<InteractionResponseData>,
-        deferred: bool,
-        ephemeral: bool
+        luro_response: LuroResponse
     },
     /// Send a response to defer the interaction, so that the command does not time out.
     Defer {
@@ -108,12 +99,18 @@ impl InteractionResponder {
     }
 
     /// Create a new response
-    pub async fn new_response(&self, ctx: &LuroContext, response: &InteractionResponse, deferred: bool) -> anyhow::Result<()> {
+    pub async fn new_response(
+        &self,
+        ctx: &LuroContext,
+        interaction_response: &InteractionResponse,
+        deferred: bool
+    ) -> anyhow::Result<()> {
         let client = ctx.twilight_client.interaction(self.application_id);
-        let response = response.clone().into_http();
+        let response = interaction_response.clone().into_http();
 
         if deferred {
             // The inteaction was deferred, so respond as a follow up
+            info!("Called deferred response");
             let interaction_response = response.data.unwrap_or(InteractionResponseData {
                 allowed_mentions: None,
                 attachments: None,
@@ -149,22 +146,37 @@ impl InteractionResponder {
             // This is a new interaction, so create a response
             client.create_response(self.id, &self.token, &response).await?;
         };
+
         Ok(())
     }
 
     /// Send a response to an interaction.
-    pub async fn respond(&self, ctx: &LuroContext, response: InteractionResponse) -> Result<(), Error> {
-        match response {
-            InteractionResponse::Embed { deferred, .. } => self.new_response(ctx, &response, deferred).await?,
-            InteractionResponse::EmbedComponents { deferred, .. } => self.new_response(ctx, &response, deferred).await?,
-            InteractionResponse::ContentEmbedComponents { deferred, .. } => self.new_response(ctx, &response, deferred).await?,
-            InteractionResponse::Content { deferred, .. } => self.new_response(ctx, &response, deferred).await?,
-            InteractionResponse::ContentComponents { deferred, .. } => self.new_response(ctx, &response, deferred).await?,
-            InteractionResponse::ContentEmbed { deferred, .. } => self.new_response(ctx, &response, deferred).await?,
-            InteractionResponse::Modal { .. } => self.new_response(ctx, &response, false).await?,
-            InteractionResponse::Update { .. } => self.new_response(ctx, &response, false).await?,
-            InteractionResponse::Defer { .. } => self.new_response(ctx, &response, false).await?,
-            InteractionResponse::Raw { deferred, .. } => self.new_response(ctx, &response, deferred).await?
+    pub async fn respond(&self, ctx: &LuroContext, interaction_response: &InteractionResponse) -> Result<(), Error> {
+        match interaction_response {
+            InteractionResponse::Embed {
+                luro_response: response, ..
+            } => self.new_response(ctx, interaction_response, response.deferred).await?,
+            InteractionResponse::EmbedComponents {
+                luro_response: response, ..
+            } => self.new_response(ctx, interaction_response, response.deferred).await?,
+            InteractionResponse::ContentEmbedComponents {
+                luro_response: response, ..
+            } => self.new_response(ctx, interaction_response, response.deferred).await?,
+            InteractionResponse::Content {
+                luro_response: response, ..
+            } => self.new_response(ctx, interaction_response, response.deferred).await?,
+            InteractionResponse::ContentComponents {
+                luro_response: response, ..
+            } => self.new_response(ctx, interaction_response, response.deferred).await?,
+            InteractionResponse::ContentEmbed {
+                luro_response: response, ..
+            } => self.new_response(ctx, interaction_response, response.deferred).await?,
+            InteractionResponse::Modal { .. } => self.new_response(ctx, interaction_response, false).await?,
+            InteractionResponse::Update { .. } => self.new_response(ctx, interaction_response, false).await?,
+            InteractionResponse::Defer { .. } => self.new_response(ctx, interaction_response, false).await?,
+            InteractionResponse::Raw {
+                luro_response: response, ..
+            } => self.new_response(ctx, interaction_response, response.deferred).await?
         };
 
         Ok(())
@@ -183,34 +195,50 @@ impl InteractionResponse {
         };
 
         let data = match self {
-            Self::Embed { embeds, ephemeral, .. } => Some(interaction_response_builder(None, Some(embeds), None, ephemeral)),
+            Self::Embed {
+                embeds,
+                luro_response: response,
+                ..
+            } => Some(interaction_response_builder(None, Some(embeds), None, response.ephemeral)),
             Self::EmbedComponents {
                 embeds,
                 components,
-                ephemeral,
+                luro_response: response,
                 ..
-            } => Some(interaction_response_builder(None, Some(embeds), Some(components), ephemeral)),
+            } => Some(interaction_response_builder(
+                None,
+                Some(embeds),
+                Some(components),
+                response.ephemeral
+            )),
             Self::ContentEmbedComponents {
                 content,
                 embeds,
                 components,
-                ephemeral,
+                luro_response: response,
                 ..
             } => Some(interaction_response_builder(
                 Some(content),
                 Some(embeds),
                 Some(components),
-                ephemeral
+                response.ephemeral
             )),
-            Self::Content { content, ephemeral, .. } => {
-                Some(interaction_response_builder(Some(content), None, None, ephemeral))
-            }
+            Self::Content {
+                content,
+                luro_response: response,
+                ..
+            } => Some(interaction_response_builder(Some(content), None, None, response.ephemeral)),
             Self::ContentComponents {
                 content,
                 components,
-                ephemeral,
+                luro_response: response,
                 ..
-            } => Some(interaction_response_builder(Some(content), None, Some(components), ephemeral)),
+            } => Some(interaction_response_builder(
+                Some(content),
+                None,
+                Some(components),
+                response.ephemeral
+            )),
             Self::Modal {
                 custom_id,
                 title,
@@ -232,10 +260,19 @@ impl InteractionResponse {
             Self::ContentEmbed {
                 content,
                 embeds,
-                ephemeral,
+                luro_response: response,
                 ..
-            } => Some(interaction_response_builder(Some(content), Some(embeds), None, ephemeral)),
-            Self::Defer { .. } => Some(InteractionResponseDataBuilder::new().flags(MessageFlags::EPHEMERAL).build())
+            } => Some(interaction_response_builder(
+                Some(content),
+                Some(embeds),
+                None,
+                response.ephemeral
+            )),
+            Self::Defer { ephemeral } => Some(if ephemeral {
+                InteractionResponseDataBuilder::new().flags(MessageFlags::EPHEMERAL).build()
+            } else {
+                InteractionResponseDataBuilder::new().build()
+            })
         };
 
         HttpInteractionResponse { kind, data }

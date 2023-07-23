@@ -1,10 +1,10 @@
 use tracing::warn;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::{interactions::InteractionResponse, COLOUR_DANGER};
+use crate::{interactions::InteractionResponse, models::LuroResponse, COLOUR_DANGER};
 
 /// Invalid heck embed
-pub fn embed(heck_message: &str) -> EmbedBuilder {
+fn invalid_heck_embed(heck_message: &str) -> EmbedBuilder {
     warn!("User attempted to make an invalid heck");
     EmbedBuilder::new()
         .color(COLOUR_DANGER)
@@ -13,8 +13,13 @@ pub fn embed(heck_message: &str) -> EmbedBuilder {
 }
 
 /// Repond with an invalid heck error
-pub fn response(missing_user: bool, missing_author: bool, heck_message: &str) -> InteractionResponse {
-    let mut embed = embed(heck_message);
+pub fn invalid_heck_response(
+    missing_user: bool,
+    missing_author: bool,
+    heck_message: &str,
+    response: LuroResponse
+) -> InteractionResponse {
+    let mut embed = invalid_heck_embed(heck_message);
 
     if missing_user {
         embed = embed.field(EmbedFieldBuilder::new("Missing Value", "`<user>`").inline())
@@ -25,7 +30,6 @@ pub fn response(missing_user: bool, missing_author: bool, heck_message: &str) ->
 
     InteractionResponse::Embed {
         embeds: vec![embed.build()],
-        ephemeral: true,
-        deferred: true
+        luro_response: response
     }
 }

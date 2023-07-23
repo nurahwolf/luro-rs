@@ -1,6 +1,7 @@
 use std::convert::TryInto;
 
 use async_trait::async_trait;
+use tracing::debug;
 use twilight_gateway::MessageSender;
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
@@ -12,12 +13,12 @@ use crate::{
     functions::GuildPermissions,
     interactions::InteractionResponse,
     responses::{
-        ban::{embed, interaction_response},
-        bot_hierarchy::bot_hierarchy,
-        bot_missing_permissions::bot_missing_permission,
-        server_owner::server_owner,
-        unable_to_get_guild::unable_to_get_guild,
-        user_hierarchy::user_hierarchy
+        ban::{ban_embed, ban_response},
+        bot_hierarchy::bot_hierarchy_response,
+        bot_missing_permissions::bot_missing_permission_response,
+        server_owner::server_owner_response,
+        unable_to_get_guild::unable_to_get_guild_response,
+        user_hierarchy::user_hierarchy_response
     },
     LuroContext, SlashResponse
 };
@@ -63,7 +64,7 @@ impl LuroCommand for BanCommand {
     }
 
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let reason = match self.reason {
             Some(reason) => reason,
@@ -81,15 +82,30 @@ impl LuroCommand for BanCommand {
         // Fetch the author and the bot permissions.
         let guild_id = match interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return Ok(unable_to_get_guild("Failed to get guild ID".to_string()))
+            None => {
+                return Ok(unable_to_get_guild_response(
+                    &"Failed to get guild ID".to_string(),
+                    luro_response
+                ))
+            }
         };
         let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
         let author_user = match &interaction.member {
             Some(member) => match &member.user {
                 Some(user) => user,
-                None => return Ok(unable_to_get_guild("Failed to get author user".to_string()))
+                None => {
+                    return Ok(unable_to_get_guild_response(
+                        &"Failed to get author user".to_string(),
+                        luro_response
+                    ))
+                }
             },
-            None => return Ok(unable_to_get_guild("Failed to get author member".to_string()))
+            None => {
+                return Ok(unable_to_get_guild_response(
+                    &"Failed to get author member".to_string(),
+                    luro_response
+                ))
+            }
         };
         let author = ctx
             .twilight_client
@@ -97,22 +113,26 @@ impl LuroCommand for BanCommand {
             .await?
             .model()
             .await?;
+        debug!("Getting permissions of the guild");
         let permissions = GuildPermissions::new(&ctx.twilight_client, &guild_id).await?;
+        debug!("Getting author permissions");
         let author_permissions = permissions.member(author.user.id, &author.roles).await?;
         let user_to_remove = self.user.resolved;
+        debug!("Getting bot permissions");
         let bot_permissions = permissions.current_member().await?;
 
         if !bot_permissions.guild().contains(Permissions::BAN_MEMBERS) {
-            return Ok(bot_missing_permission("BAN_MEMBERS".to_string()));
+            return Ok(bot_missing_permission_response(&"BAN_MEMBERS".to_string(), luro_response));
         }
 
         if let Some(member_to_remove) = self.user.member {
             // The user is a member of the server, so carry out some additional checks.
+            debug!("Getting banned user's permissions");
             let member_permissions = permissions.member(user_to_remove.id, &member_to_remove.roles).await?;
 
             // Check if the author and the bot have required permissions.
             if member_permissions.is_owner() {
-                return Ok(server_owner());
+                return Ok(server_owner_response(luro_response));
             }
 
             // Check if the role hierarchy allow the author and the bot to perform
@@ -120,23 +140,27 @@ impl LuroCommand for BanCommand {
             let member_highest_role = member_permissions.highest_role();
 
             if member_highest_role >= author_permissions.highest_role() {
-                return Ok(user_hierarchy(
-                    member_to_remove.nick.unwrap_or(user_to_remove.name.to_string())
+                return Ok(user_hierarchy_response(
+                    &member_to_remove.nick.unwrap_or(user_to_remove.name.to_string()),
+                    luro_response
                 ));
             }
 
             if member_highest_role >= bot_permissions.highest_role() {
-                return Ok(bot_hierarchy(&ctx.global_data.read().current_user.name));
+                return Ok(bot_hierarchy_response(
+                    &ctx.global_data.read().current_user.name,
+                    luro_response
+                ));
             }
         };
 
         // Checks passed, now let's action the user
         let user_to_ban_dm = match ctx.twilight_client.create_private_channel(user_to_remove.id).await {
             Ok(channel) => channel.model().await?,
-            Err(_) => return interaction_response(guild, author, user_to_remove, &reason, &period_string, false)
+            Err(_) => return ban_response(guild, author, user_to_remove, &reason, &period_string, false, luro_response)
         };
 
-        let mut embed = embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason, &period_string)?;
+        let mut embed = ban_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason, &period_string)?;
 
         let victim_dm = ctx
             .twilight_client
@@ -171,8 +195,7 @@ impl LuroCommand for BanCommand {
         // Now respond to the original interaction
         Ok(InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

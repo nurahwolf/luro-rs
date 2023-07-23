@@ -26,8 +26,7 @@ impl LuroCommand for SayCommand {
 
         Ok(InteractionResponse::Content {
             content: message,
-            ephemeral: false,
-            deferred: false
+            luro_response: Default::default()
         })
     }
 }

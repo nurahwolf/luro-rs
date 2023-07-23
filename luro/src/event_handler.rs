@@ -11,13 +11,13 @@ use twilight_model::{
     id::{marker::ApplicationMarker, Id}
 };
 
-use crate::commands::LuroCommand;
+use crate::{commands::LuroCommand, models::LuroResponse};
 use crate::{
     commands::{boop::BoopCommand, heck::add::HeckAddCommand, Commands},
     functions::CustomId,
     interactions::{InteractionResponder, InteractionResponse},
     models::LuroFramework,
-    responses::{internal_error::internal_error, unknown_command::unknown_command},
+    responses::{internal_error::internal_error_response, unknown_command::unknown_command_response},
     LuroContext, SlashResponse
 };
 
@@ -67,32 +67,43 @@ impl LuroFramework {
         };
 
         match response {
-            Ok(response) => Ok(responder.respond(&self, response).await?),
+            Ok(response) => Ok(responder.respond(&self, &response).await?),
             Err(why) => {
                 error!(error = ?why, "error while processing interaction");
 
-                // TODO: Better way of doing this. Currently it tries to send four types of responses and hopes that one sticks lol
-                if responder
-                    .respond(&self, internal_error(why.to_string(), true, true))
+                match responder
+                    .respond(
+                        &self,
+                        &internal_error_response(
+                            &why.to_string(),
+                            LuroResponse {
+                                ephemeral: true,
+                                deferred: false
+                            }
+                        )
+                    )
                     .await
-                    .is_err()
-                    || responder
-                        .respond(&self, internal_error(why.to_string(), true, false))
-                        .await
-                        .is_err()
-                    || responder
-                        .respond(&self, internal_error(why.to_string(), false, true))
-                        .await
-                        .is_err()
-                    || responder
-                        .respond(&self, internal_error(why.to_string(), false, false))
-                        .await
-                        .is_err()
                 {
-                    return Err(why);
+                    Ok(_) => info!("Successfully responded to interaction with error"),
+                    Err(_) => match responder
+                        .respond(
+                            &self,
+                            &internal_error_response(
+                                &why.to_string(),
+                                LuroResponse {
+                                    ephemeral: true,
+                                    deferred: true
+                                }
+                            )
+                        )
+                        .await
+                    {
+                        Ok(_) => info!("Successfully responded to interaction with error"),
+                        Err(_) => error!("Failed to respond to interaction with error")
+                    }
                 }
 
-                Err(why)
+                Ok(())
             }
         }
     }
@@ -111,7 +122,10 @@ impl LuroFramework {
             name => {
                 warn!(name = name, "received unknown component");
 
-                Ok(unknown_command())
+                Ok(unknown_command_response(LuroResponse {
+                    ephemeral: true,
+                    deferred: false
+                }))
             }
         }
     }
@@ -141,13 +155,20 @@ impl LuroFramework {
         }
     }
 
-    pub async fn defer_interaction(self: &Arc<Self>, interaction: &Interaction, ephemeral: bool) -> anyhow::Result<bool> {
+    pub async fn defer_interaction(
+        self: &Arc<Self>,
+        interaction: &Interaction,
+        ephemeral: bool
+    ) -> anyhow::Result<LuroResponse> {
         debug!("Deferring interaction");
         InteractionResponder::from_interaction(interaction)
-            .respond(self, InteractionResponse::Defer { ephemeral })
+            .respond(self, &InteractionResponse::Defer { ephemeral })
             .await?;
 
-        Ok(ephemeral)
+        Ok(LuroResponse {
+            ephemeral,
+            deferred: true
+        })
     }
 
     /// Handle incoming modal interaction
@@ -161,7 +182,10 @@ impl LuroFramework {
             "heck-add" => HeckAddCommand::handle_model(Default::default(), interaction).await,
             name => {
                 warn!(name = name, "received unknown modal");
-                Ok(unknown_command())
+                Ok(unknown_command_response(LuroResponse {
+                    ephemeral: true,
+                    deferred: true
+                }))
             }
         }
     }

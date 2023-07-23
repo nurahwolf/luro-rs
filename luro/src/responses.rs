@@ -6,6 +6,7 @@ pub mod invalid_heck;
 pub mod kick;
 pub mod no_guild_settings;
 pub mod no_interaction_channel;
+pub mod not_guild;
 pub mod not_member;
 pub mod not_owner;
 pub mod server_owner;

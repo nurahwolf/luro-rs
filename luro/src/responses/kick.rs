@@ -9,11 +9,12 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedField
 use crate::{
     functions::{get_member_avatar, get_user_avatar},
     interactions::InteractionResponse,
+    models::LuroResponse,
     ACCENT_COLOUR
 };
 
 /// Embed showing that a member got banned
-pub fn embed(
+pub fn kick_embed(
     guild: Guild,
     moderator: Member,
     kicked_user: User,
@@ -61,15 +62,16 @@ pub fn embed(
     Ok(embed)
 }
 
-pub fn interaction_response(
+pub fn kick_response(
     guild: Guild,
     moderator: Member,
     kicked_user: User,
     guild_id: Id<GuildMarker>,
     reason: &String,
-    success: bool
+    success: bool,
+    luro_response: LuroResponse
 ) -> Result<InteractionResponse, Error> {
-    let mut embed = embed(guild, moderator, kicked_user, guild_id, reason)?;
+    let mut embed = kick_embed(guild, moderator, kicked_user, guild_id, reason)?;
     if success {
         embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
     } else {
@@ -78,7 +80,6 @@ pub fn interaction_response(
 
     Ok(InteractionResponse::Embed {
         embeds: vec![embed.build()],
-        ephemeral: true,
-        deferred: true
+        luro_response
     })
 }

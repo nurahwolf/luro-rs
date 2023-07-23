@@ -18,7 +18,7 @@ pub struct VolumeCommand {
 #[async_trait]
 impl LuroCommand for VolumeCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
 
@@ -27,8 +27,7 @@ impl LuroCommand for VolumeCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("Set the volume to {}", self.volume),
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

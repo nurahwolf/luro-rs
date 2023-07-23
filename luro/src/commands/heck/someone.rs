@@ -30,7 +30,7 @@ pub struct HeckSomeoneCommand {
 #[async_trait]
 impl LuroCommand for HeckSomeoneCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
         let (interaction_channel, interaction_author, _) = self.interaction_context(&interaction, "heck someone")?;
         // Is the channel the interaction called in NSFW?
         let nsfw = interaction_channel.nsfw.unwrap_or(false);
@@ -56,7 +56,7 @@ impl LuroCommand for HeckSomeoneCommand {
         debug!("creating our response");
         Ok(if let Some(plaintext) = self.plaintext && plaintext {
             trace!("user wanted plaintext");
-            InteractionResponse::Content { content: formatted_heck.heck_message, ephemeral,         deferred: true }
+            InteractionResponse::Content { content: formatted_heck.heck_message, luro_response}
         } else {
             trace!("user wanted embed");
             let mut embed = EmbedBuilder::default()
@@ -73,7 +73,7 @@ impl LuroCommand for HeckSomeoneCommand {
             )))
         }
 
-            InteractionResponse::ContentEmbed { content: format!("<@{}>", self.user.resolved.id), embeds: vec![embed.build()], ephemeral,        deferred: true }
+            InteractionResponse::ContentEmbed { content: format!("<@{}>", self.user.resolved.id), embeds: vec![embed.build()], luro_response }
 
         })
     }

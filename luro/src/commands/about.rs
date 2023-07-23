@@ -25,7 +25,7 @@ pub struct AboutCommand {
 #[async_trait]
 impl LuroCommand for AboutCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, false).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
         let (_, _, _) = self.interaction_context(&interaction, "about")?;
 
         // Variables
@@ -133,8 +133,7 @@ impl LuroCommand for AboutCommand {
 
         Ok(InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

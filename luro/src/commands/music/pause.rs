@@ -15,7 +15,7 @@ pub struct PauseCommand {}
 #[async_trait]
 impl LuroCommand for PauseCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
 
@@ -28,8 +28,7 @@ impl LuroCommand for PauseCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("{action} the track"),
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

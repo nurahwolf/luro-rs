@@ -15,7 +15,7 @@ pub struct HeckInfo {}
 #[async_trait]
 impl LuroCommand for HeckInfo {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
         let (_, _, _) = self.interaction_context(&interaction, "'heck info' command invoked")?;
         let global_data = ctx.global_data.read();
 
@@ -50,8 +50,7 @@ impl LuroCommand for HeckInfo {
 
         Ok(InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

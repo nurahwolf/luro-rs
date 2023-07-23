@@ -170,7 +170,7 @@ pub fn accent_colour(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u3
             };
 
             if guild_settings.accent_colour != 0 {
-                return guild_settings.accent_colour
+                return guild_settings.accent_colour;
             }
         }
     };

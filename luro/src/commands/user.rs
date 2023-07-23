@@ -30,7 +30,7 @@ pub struct UserCommands {
 #[async_trait]
 impl LuroCommand for UserCommands {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
         let (_, interaction_author, _) = self.interaction_context(&interaction, "user command invoked")?;
 
         let mut embed = self.default_embed(&ctx, interaction.guild_id);
@@ -123,8 +123,7 @@ impl LuroCommand for UserCommands {
         embed = embed.description(description);
         Ok(InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

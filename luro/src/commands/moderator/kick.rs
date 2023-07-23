@@ -8,13 +8,13 @@ use crate::{
     commands::LuroCommand,
     functions::GuildPermissions,
     responses::{
-        bot_hierarchy::bot_hierarchy,
-        bot_missing_permissions::bot_missing_permission,
-        kick::{embed, interaction_response},
-        not_member::not_member,
-        server_owner::server_owner,
-        unable_to_get_guild::unable_to_get_guild,
-        user_hierarchy::user_hierarchy
+        bot_hierarchy::bot_hierarchy_response,
+        bot_missing_permissions::bot_missing_permission_response,
+        kick::{kick_embed, kick_response},
+        not_member::not_member_response,
+        server_owner::server_owner_response,
+        unable_to_get_guild::unable_to_get_guild_response,
+        user_hierarchy::user_hierarchy_response
     },
     LuroContext, SlashResponse
 };
@@ -40,7 +40,7 @@ impl LuroCommand for KickCommand {
     }
 
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let reason = match self.reason {
             Some(reason) => reason,
@@ -49,21 +49,36 @@ impl LuroCommand for KickCommand {
         let user_to_remove = self.user.resolved;
         let member_to_remove = match self.user.member {
             Some(member) => member,
-            None => return Ok(not_member(user_to_remove.name))
+            None => return Ok(not_member_response(&user_to_remove.name, luro_response))
         };
 
         // Fetch the author and the bot permissions.
         let guild_id = match interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return Ok(unable_to_get_guild("Failed to get guild ID".to_string()))
+            None => {
+                return Ok(unable_to_get_guild_response(
+                    &"Failed to get guild ID".to_string(),
+                    luro_response
+                ))
+            }
         };
         let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
         let author_user = match &interaction.member {
             Some(member) => match &member.user {
                 Some(user) => user,
-                None => return Ok(unable_to_get_guild("Failed to get author user".to_string()))
+                None => {
+                    return Ok(unable_to_get_guild_response(
+                        &"Failed to get author user".to_string(),
+                        luro_response
+                    ))
+                }
             },
-            None => return Ok(unable_to_get_guild("Failed to get author member".to_string()))
+            None => {
+                return Ok(unable_to_get_guild_response(
+                    &"Failed to get author member".to_string(),
+                    luro_response
+                ))
+            }
         };
         let author = ctx
             .twilight_client
@@ -78,11 +93,11 @@ impl LuroCommand for KickCommand {
 
         // Check if the author and the bot have required permissions.
         if member_permissions.is_owner() {
-            return Ok(server_owner());
+            return Ok(server_owner_response(luro_response));
         }
 
         if !bot_permissions.guild().contains(Permissions::BAN_MEMBERS) {
-            return Ok(bot_missing_permission("BAN_MEMBERS".to_string()));
+            return Ok(bot_missing_permission_response(&"BAN_MEMBERS".to_string(), luro_response));
         }
 
         // Check if the role hierarchy allow the author and the bot to perform
@@ -90,22 +105,26 @@ impl LuroCommand for KickCommand {
         let member_highest_role = member_permissions.highest_role();
 
         if member_highest_role >= author_permissions.highest_role() {
-            return Ok(user_hierarchy(
-                member_to_remove.nick.unwrap_or(user_to_remove.name.to_string())
+            return Ok(user_hierarchy_response(
+                &member_to_remove.nick.unwrap_or(user_to_remove.name.to_string()),
+                luro_response
             ));
         }
 
         if member_highest_role >= bot_permissions.highest_role() {
-            return Ok(bot_hierarchy(&ctx.global_data.read().current_user.name));
+            return Ok(bot_hierarchy_response(
+                &ctx.global_data.read().current_user.name,
+                luro_response
+            ));
         }
 
         // Checks passed, now let's action the user
         let user_to_ban_dm = match ctx.twilight_client.create_private_channel(user_to_remove.id).await {
             Ok(channel) => channel.model().await?,
-            Err(_) => return interaction_response(guild, author, user_to_remove, guild_id, &reason, false)
+            Err(_) => return kick_response(guild, author, user_to_remove, guild_id, &reason, false, luro_response)
         };
 
-        let mut embed = embed(guild.clone(), author.clone(), user_to_remove.clone(), guild_id, &reason)?;
+        let mut embed = kick_embed(guild.clone(), author.clone(), user_to_remove.clone(), guild_id, &reason)?;
 
         let victim_dm = ctx
             .twilight_client
@@ -133,8 +152,7 @@ impl LuroCommand for KickCommand {
         // Now respond to the original interaction
         Ok(crate::interactions::InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

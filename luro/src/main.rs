@@ -9,6 +9,7 @@ use tracing_subscriber::{filter, fmt, prelude::__tracing_subscriber_SubscriberEx
 use twilight_gateway::{stream::ShardEventStream, Intents};
 
 pub mod commands;
+pub mod error;
 pub mod event_handler;
 pub mod functions;
 pub mod hecks;
@@ -23,7 +24,7 @@ pub const FILTER: filter::LevelFilter = filter::LevelFilter::INFO;
 /// Luro's main accent colour
 pub const ACCENT_COLOUR: u32 = 0xDABEEF;
 // Luro's primary owner
-pub const BOT_OWNER: u64 = 97003404601094144;
+pub const BOT_OWNER: u64 = 373524896187416576;
 /// Luro's DANGER colour
 pub const COLOUR_DANGER: u32 = 0xD35F5F;
 /// Transparent embed color (dark theme)

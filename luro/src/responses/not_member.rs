@@ -1,19 +1,19 @@
 use tracing::warn;
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{interactions::InteractionResponse, COLOUR_DANGER};
+use crate::{interactions::InteractionResponse, models::LuroResponse, COLOUR_DANGER};
 
 /// User is not a server member.
-pub fn not_member(username: String) -> InteractionResponse {
+fn not_member_embed(username: &String) -> EmbedBuilder {
     warn!("User is no longer a member of the server");
-    let embed = EmbedBuilder::new()
+    EmbedBuilder::new()
         .color(COLOUR_DANGER)
         .description(format!("I'm afraid {username} is no longer a member of the server."))
-        .build();
+}
 
+pub fn not_member_response(username: &String, luro_response: LuroResponse) -> InteractionResponse {
     InteractionResponse::Embed {
-        embeds: vec![embed],
-        ephemeral: true,
-        deferred: true
+        embeds: vec![not_member_embed(username).build()],
+        luro_response
     }
 }

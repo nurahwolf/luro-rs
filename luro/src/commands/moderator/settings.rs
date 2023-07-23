@@ -10,12 +10,11 @@ use twilight_model::{
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
-    commands::LuroCommand,
-    functions::RoleOrdering,
-    interactions::InteractionResponse,
-    responses::{no_guild_settings::no_guild_settings, unable_to_get_guild::unable_to_get_guild},
-    LuroContext, SlashResponse
+    commands::LuroCommand, functions::RoleOrdering, interactions::InteractionResponse, models::GuildSetting,
+    responses::unable_to_get_guild::unable_to_get_guild_response, LuroContext, SlashResponse
 };
+use std::collections::hash_map::Entry::Occupied;
+use std::collections::hash_map::Entry::Vacant;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -40,14 +39,17 @@ impl LuroCommand for GuildSettingsCommand {
     }
 
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let test = 0xDABEEF;
-        info!(test);
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
         let (_, _, _) = self.interaction_context(&interaction, "mod setting")?;
 
         let guild_id = match interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return Ok(unable_to_get_guild("No guild ID for this interaction".to_owned()))
+            None => {
+                return Ok(unable_to_get_guild_response(
+                    &"No guild ID for this interaction".to_owned(),
+                    luro_response
+                ))
+            }
         };
         let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
         // Attempt to get the first role after @everyone, otherwise fall back to @everyone
@@ -68,32 +70,53 @@ impl LuroCommand for GuildSettingsCommand {
             None
         };
         let mut embed = self.default_embed(&ctx, interaction.guild_id);
-        let mut guild_settings = ctx.guild_data.write();
         embed = embed.title(format!("Guild Setting - {}", guild.name));
 
-        guild_settings.entry(guild_id).and_modify(|guild_setting| {
-            // Only update if it has been defined
-            if let Some(accent_colour) = accent_colour_defined {
-                guild_setting.accent_colour_custom = Some(accent_colour)
-            }
+        // Get guild settings, otherwise create a new entry
+        let guild_setting = match ctx.guild_data.write().entry(guild_id) {
+            Occupied(mut entry) => {
+                let guild_setting = entry.get_mut();
 
-            if let Some(moderator_action_log_channel) = self.moderator_action_log_channel {
-                guild_setting.moderator_actions_log_channel = Some(moderator_action_log_channel)
-            }
+                if let Some(accent_colour) = accent_colour_defined {
+                    guild_setting.accent_colour_custom = Some(accent_colour)
+                }
 
-            if let Some(bot_log_channel) = self.bot_log_channel {
-                guild_setting.discord_events_log_channel = Some(bot_log_channel)
-            }
+                if let Some(moderator_action_log_channel) = self.moderator_action_log_channel {
+                    guild_setting.moderator_actions_log_channel = Some(moderator_action_log_channel)
+                }
 
-            if let Some(role) = highest_role {
-                info!(role.name);
-                guild_setting.accent_colour = role.color
-            }
-        });
+                if let Some(bot_log_channel) = self.bot_log_channel {
+                    guild_setting.discord_events_log_channel = Some(bot_log_channel)
+                }
 
-        let guild_setting = match guild_settings.get(&guild_id) {
-            Some(guild_setting) => guild_setting,
-            None => return Ok(no_guild_settings(ephemeral, true))
+                if let Some(role) = highest_role {
+                    info!(role.name);
+                    guild_setting.accent_colour = role.color
+                }
+
+                guild_setting.clone()
+            }
+            Vacant(vacant) => {
+                let mut guild_setting: GuildSetting = Default::default();
+                if let Some(accent_colour) = accent_colour_defined {
+                    guild_setting.accent_colour_custom = Some(accent_colour)
+                }
+
+                if let Some(moderator_action_log_channel) = self.moderator_action_log_channel {
+                    guild_setting.moderator_actions_log_channel = Some(moderator_action_log_channel)
+                }
+
+                if let Some(bot_log_channel) = self.bot_log_channel {
+                    guild_setting.discord_events_log_channel = Some(bot_log_channel)
+                }
+
+                if let Some(role) = highest_role {
+                    info!(role.name);
+                    guild_setting.accent_colour = role.color
+                }
+                vacant.insert(guild_setting.clone());
+                guild_setting
+            }
         };
 
         embed =
@@ -114,7 +137,7 @@ impl LuroCommand for GuildSettingsCommand {
         embed = embed.field(EmbedFieldBuilder::new(
             "Moderator Action Log Channel",
             if let Some(moderator_action_log_channel) = guild_setting.moderator_actions_log_channel {
-                format!("<@{}>", moderator_action_log_channel.get())
+                format!("<#{}>", moderator_action_log_channel.get())
             } else {
                 match guild_setting.moderator_actions_log_channel {
                     Some(moderator_actions_log_channel) => format!("<@{}>", moderator_actions_log_channel.get()),
@@ -138,11 +161,17 @@ impl LuroCommand for GuildSettingsCommand {
             .inline()
         );
 
+        if let Some(moderator_actions_log_channel) = guild_setting.moderator_actions_log_channel {
+            ctx.twilight_client
+                .create_message(moderator_actions_log_channel)
+                .embeds(&[embed.clone().build()])?
+                .await?;
+        }
+
         // Now respond to the original interaction
         Ok(InteractionResponse::Embed {
             embeds: vec![embed.build()],
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

@@ -26,7 +26,7 @@ pub struct JoinCommand {
 #[async_trait]
 impl LuroCommand for JoinCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
 
@@ -34,8 +34,7 @@ impl LuroCommand for JoinCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("Joined <#{}>!", self.channel),
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

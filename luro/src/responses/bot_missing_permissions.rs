@@ -1,20 +1,21 @@
 use tracing::error;
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{interactions::InteractionResponse, COLOUR_DANGER};
+use crate::{interactions::InteractionResponse, models::LuroResponse, COLOUR_DANGER};
 
-/// Luro is missing permissions in order to use this command.
-pub fn bot_missing_permission(permission_missing: String) -> InteractionResponse {
+/// An embed returned if the bot is missing permissions to provide this command.
+fn bot_missing_permission_embed(permission_missing: &String) -> EmbedBuilder {
     error!("Luro was missing permissions to run a command");
-    let embed = EmbedBuilder::new()
+    EmbedBuilder::new()
         .color(COLOUR_DANGER)
         .title("I am missing permissions")
         .description(format!("***SOME*** motherfucker failed to set me up correctly.\nI should have ***Administrator*** privileges in the server to work my best, but it seems I'm missing that. Fix it >:c\nIf you explicitly want to limit my permissions, I'm missing the {permission_missing} permisison for this command to work."))
-        .build();
+}
 
+/// A response returned if the bot is missing permissions to provide this command.
+pub fn bot_missing_permission_response(permission_missing: &String, response: LuroResponse) -> InteractionResponse {
     InteractionResponse::Embed {
-        embeds: vec![embed],
-        ephemeral: true,
-        deferred: true
+        embeds: vec![bot_missing_permission_embed(permission_missing).build()],
+        luro_response: response
     }
 }

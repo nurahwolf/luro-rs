@@ -1,10 +1,10 @@
 use tracing::warn;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
-use crate::{interactions::InteractionResponse, COLOUR_DANGER};
+use crate::{interactions::InteractionResponse, models::LuroResponse, COLOUR_DANGER};
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-pub fn embed() -> EmbedBuilder {
+fn not_owner_embed() -> EmbedBuilder {
     warn!("Someone tried to run a bot owner command without being the bot owner...r");
     EmbedBuilder::new()
         .title("You are not the bot owner!")
@@ -13,10 +13,9 @@ pub fn embed() -> EmbedBuilder {
         .footer(EmbedFooterBuilder::new("FYI, I'm reporting you to Nurah."))
 }
 
-pub fn not_owner_response(ephemeral: bool, deferred: bool) -> InteractionResponse {
+pub fn not_owner_response(luro_response: LuroResponse) -> InteractionResponse {
     InteractionResponse::Embed {
-        embeds: vec![embed().build()],
-        ephemeral,
-        deferred
+        embeds: vec![not_owner_embed().build()],
+        luro_response
     }
 }

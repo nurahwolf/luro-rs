@@ -17,7 +17,7 @@ pub struct SeekCommand {
 #[async_trait]
 impl LuroCommand for SeekCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
 
@@ -26,8 +26,7 @@ impl LuroCommand for SeekCommand {
 
         Ok(InteractionResponse::Content {
             content: format!("Seeked to {}s", self.position),
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

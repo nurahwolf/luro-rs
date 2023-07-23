@@ -14,7 +14,7 @@ pub struct LeaveCommand {}
 #[async_trait]
 impl LuroCommand for LeaveCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
-        let ephemeral = ctx.defer_interaction(&interaction, true).await?;
+        let luro_response = ctx.defer_interaction(&interaction, false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
         let player = ctx.lavalink.player(guild_id).await.unwrap();
@@ -23,8 +23,7 @@ impl LuroCommand for LeaveCommand {
         shard.command(&UpdateVoiceState::new(guild_id, None, false, false))?;
         Ok(InteractionResponse::Content {
             content: "Left the channel. Goodbye!".to_string(),
-            ephemeral,
-            deferred: true
+            luro_response
         })
     }
 }

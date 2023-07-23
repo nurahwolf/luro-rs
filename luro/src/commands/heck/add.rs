@@ -12,8 +12,11 @@ use twilight_model::{
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, ImageSource};
 
 use crate::{
-    commands::LuroCommand, interactions::InteractionResponse, models::Heck, responses::invalid_heck, LuroContext,
-    SlashResponse, ACCENT_COLOUR
+    commands::LuroCommand,
+    interactions::InteractionResponse,
+    models::{Heck, LuroResponse},
+    responses::invalid_heck,
+    LuroContext, SlashResponse, ACCENT_COLOUR
 };
 
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
@@ -101,6 +104,10 @@ impl LuroCommand for HeckAddCommand {
     }
 
     async fn handle_model(self, interaction: Interaction) -> SlashResponse {
+        let luro_response = LuroResponse {
+            ephemeral: true,
+            deferred: false
+        };
         let (_, interaction_author, interaction_member) = self.interaction_context(&interaction, "heck add")?;
         let author_avatar = self.get_partial_member_avatar(interaction_member, &interaction.guild_id, interaction_author);
         let data = self.parse_modal_data(&mut interaction.clone())?;
@@ -109,9 +116,9 @@ impl LuroCommand for HeckAddCommand {
         // Make sure heck_text contains both <user> and <author>, else exit early
         match (heck_text.contains("<user>"), heck_text.contains("<author>")) {
             (true, true) => (),
-            (true, false) => return Ok(invalid_heck::response(true, false, heck_text)),
-            (false, true) => return Ok(invalid_heck::response(false, true, heck_text)),
-            (false, false) => return Ok(invalid_heck::response(true, true, heck_text))
+            (true, false) => return Ok(invalid_heck::invalid_heck_response(true, false, heck_text, luro_response)),
+            (false, true) => return Ok(invalid_heck::invalid_heck_response(false, true, heck_text, luro_response)),
+            (false, false) => return Ok(invalid_heck::invalid_heck_response(true, true, heck_text, luro_response))
         };
 
         // Send a success message.
@@ -152,8 +159,7 @@ impl LuroCommand for HeckAddCommand {
         Ok(InteractionResponse::EmbedComponents {
             embeds: vec![embed.build()],
             components,
-            ephemeral: true,
-            deferred: false
+            luro_response
         })
     }
 }
