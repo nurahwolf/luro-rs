@@ -6,11 +6,11 @@ use twilight_model::{application::interaction::Interaction, id::Id};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFooterBuilder, ImageSource};
 
 use crate::{
-    responses::LuroResponseV2,
     commands::{
         heck::{format_heck, get_heck},
         LuroCommand
     },
+    responses::LuroResponseV2,
     LuroContext, SlashResponse, ACCENT_COLOUR
 };
 

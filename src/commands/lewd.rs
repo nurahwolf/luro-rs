@@ -13,10 +13,13 @@ use self::muzzle::MuzzleCommand;
 mod muzzle;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(name = "lewd", desc = "Whoa! How very lewd of you! These are more... Adult orientated commands.")]
+#[command(
+    name = "lewd",
+    desc = "Whoa! How very lewd of you! These are more... Adult orientated commands."
+)]
 pub enum LewdCommands {
     #[command(name = "muzzle")]
-    Muzzle(MuzzleCommand),
+    Muzzle(MuzzleCommand)
 }
 
 #[async_trait]
@@ -25,13 +28,15 @@ impl LuroCommand for LewdCommands {
         let (interaction_channel, _, _) = self.interaction_context(&interaction, "owner command invoked")?;
 
         // TODO: Create a response type for this
-        // TODO: Check for both 
+        // TODO: Check for both
         if let Some(nsfw) = interaction_channel.nsfw && !nsfw {
             return Ok(LuroResponseV2::new("lewd".to_owned(), &interaction).content("WHOA! You pervert!! This is a SFW CHANNEL!!".to_owned()).legacy_response(false))
         }
 
         if interaction_channel.nsfw.is_none() {
-            return Ok(LuroResponseV2::new("lewd".to_owned(), &interaction).content("WHOA! You pervert!! This is a SFW CHANNEL!!".to_owned()).legacy_response(false))
+            return Ok(LuroResponseV2::new("lewd".to_owned(), &interaction)
+                .content("WHOA! You pervert!! This is a SFW CHANNEL!!".to_owned())
+                .legacy_response(false));
         }
 
         // Call the appropriate subcommand.

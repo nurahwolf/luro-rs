@@ -31,7 +31,6 @@ pub mod unable_to_get_guild;
 pub mod unknown_command;
 pub mod user_hierarchy;
 
-
 /// Some nice stuff about formatting a response, ready to send via twilight's client
 #[derive(Clone, Debug, PartialEq)]
 pub struct LuroResponseV2 {

@@ -11,8 +11,8 @@ use twilight_model::{
 };
 
 use self::{
-    about::AboutCommand, boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand,
-    moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands, say::SayCommand, user::UserCommands, lewd::LewdCommands
+    about::AboutCommand, boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand, lewd::LewdCommands,
+    moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands, say::SayCommand, user::UserCommands
 };
 
 use std::sync::Arc;
@@ -35,12 +35,12 @@ pub mod boop;
 pub mod count;
 pub mod heck;
 pub mod hello;
+pub mod lewd;
 pub mod moderator;
 pub mod music;
 pub mod owner;
 pub mod say;
 pub mod user;
-pub mod lewd;
 
 #[derive(Default)]
 pub struct Commands {
