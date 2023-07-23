@@ -8,6 +8,7 @@ use std::{env, sync::Arc};
 use tracing_subscriber::{filter, fmt, prelude::__tracing_subscriber_SubscriberExt, reload, util::SubscriberInitExt};
 use twilight_gateway::{stream::ShardEventStream, Intents};
 
+pub mod builder;
 pub mod commands;
 pub mod error;
 pub mod event_handler;
@@ -17,7 +18,6 @@ pub mod interactions;
 pub mod macros;
 pub mod models;
 pub mod responses;
-pub mod builder;
 
 /// [tracing_subscriber] filter level
 pub const FILTER: filter::LevelFilter = filter::LevelFilter::INFO;

@@ -6,12 +6,12 @@ use twilight_model::{application::interaction::Interaction, id::Id};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFooterBuilder, ImageSource};
 
 use crate::{
+    builder::LuroResponseV2,
     commands::{
         heck::{format_heck, get_heck},
         LuroCommand
     },
-    interactions::InteractionResponse,
-    LuroContext, SlashResponse, ACCENT_COLOUR, builder::LuroResponseV2
+    LuroContext, SlashResponse, ACCENT_COLOUR
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -30,7 +30,7 @@ pub struct HeckSomeoneCommand {
 #[async_trait]
 impl LuroCommand for HeckSomeoneCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let response = LuroResponseV2::new("heck someone".to_owned(), interaction.clone());
+        let response = LuroResponseV2::new("heck someone".to_owned(), &interaction);
         let (interaction_channel, interaction_author, _) = self.interaction_context(&interaction, "heck someone")?;
         // Is the channel the interaction called in NSFW?
         let nsfw = interaction_channel.nsfw.unwrap_or(false);
@@ -56,7 +56,7 @@ impl LuroCommand for HeckSomeoneCommand {
         debug!("creating our response");
         Ok(if let Some(plaintext) = self.plaintext && plaintext {
             trace!("user wanted plaintext");
-            response.content(heck.heck_message).legacy_response(true)
+            response.content(formatted_heck.heck_message).legacy_response(true)
         } else {
             trace!("user wanted embed");
             let mut embed = EmbedBuilder::default()
@@ -72,7 +72,7 @@ impl LuroCommand for HeckSomeoneCommand {
                 "Heck ID {heck_id} - SFW Heck"
             )))
         }
-            response.content(format!("Hey <@{}>!", self.user.resolved.id)).legacy_response(false)
+            response.content(format!("<@{}>", self.user.resolved.id)).embed(embed)?.legacy_response(false)
         })
     }
 }

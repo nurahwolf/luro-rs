@@ -64,13 +64,13 @@ impl LuroResponseV2 {
     /// This is set with some defaults:
     /// - AllowedMentions - All
     /// - InteractionResponseType - [`InteractionResponseType::ChannelMessageWithSource`]
-    pub fn new(command_name: String, interaction: Interaction) -> Self {
+    pub fn new(command_name: String, interaction: &Interaction) -> Self {
         // TODO: Set allowed_mentions to actually allow all
         Self {
             command_name,
             id: interaction.id,
             application_id: interaction.application_id,
-            token: interaction.token,
+            token: interaction.token.clone(),
             interaction_response_type: InteractionResponseType::ChannelMessageWithSource,
             allowed_mentions: None,
             attachments: None,
@@ -141,7 +141,7 @@ impl LuroResponseV2 {
     }
 
     /// Set's the response type to be sent as a response to a deferred message and acknowledge this interaction.
-    pub async fn deferred(mut self,ctx: &LuroContext, ephemeral: bool) -> anyhow::Result<Self> {
+    pub async fn deferred(mut self, ctx: &LuroContext, ephemeral: bool) -> anyhow::Result<Self> {
         if ephemeral {
             self.ephemeral();
         };

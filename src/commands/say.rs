@@ -3,7 +3,7 @@ use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::Interaction;
 
-use crate::{LuroContext, SlashResponse, builder::LuroResponseV2};
+use crate::{builder::LuroResponseV2, LuroContext, SlashResponse};
 
 use super::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
@@ -17,14 +17,14 @@ pub struct SayCommand {
 
 #[async_trait]
 impl LuroCommand for SayCommand {
-async fn run_command(self, interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-    let message = if let Some(user) = self.user {
-        format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
-    } else {
-        self.message
-    };
-    let response = LuroResponseV2::new("say".to_owned(), interaction);
+    async fn run_command(self, interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+        let message = if let Some(user) = self.user {
+            format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
+        } else {
+            self.message
+        };
+        let response = LuroResponseV2::new("say".to_owned(), &interaction);
 
-    Ok(response.content(message).legacy_response(false))
-}
+        Ok(response.content(message).legacy_response(false))
+    }
 }
