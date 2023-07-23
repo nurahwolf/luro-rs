@@ -3,7 +3,7 @@ use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::Interaction;
 
-use crate::{builder::LuroResponseV2, LuroContext, SlashResponse};
+use crate::{responses::LuroResponseV2, LuroContext, SlashResponse};
 
 use super::LuroCommand;
 #[derive(CommandModel, CreateCommand)]

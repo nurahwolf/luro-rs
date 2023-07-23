@@ -9,7 +9,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::embed::{EmbedFooterBuilder, ImageSource};
 
-use crate::{builder::LuroResponseV2, LuroContext, SlashResponse};
+use crate::{LuroContext, SlashResponse, responses::LuroResponseV2};
 
 use super::LuroCommand;
 
@@ -25,9 +25,7 @@ pub struct AboutCommand {
 #[async_trait]
 impl LuroCommand for AboutCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _: MessageSender) -> SlashResponse {
-        let response = LuroResponseV2::new("about".to_owned(), &interaction)
-            .deferred(&ctx, true)
-            .await?;
+        let response = LuroResponseV2::new("about".to_owned(), &interaction).deferred(&ctx, true).await?;
 
         // Variables
         let mut embed = self.default_embed(&ctx, interaction.guild_id);
