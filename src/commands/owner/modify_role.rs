@@ -9,6 +9,7 @@ use twilight_model::{
     application::interaction::Interaction,
     id::{marker::RoleMarker, Id}
 };
+use twilight_util::builder::embed::{EmbedFieldBuilder, ImageSource};
 
 use crate::{
     interactions::InteractionResponse, models::LuroResponse, responses::not_guild::not_guild_response, LuroContext,
@@ -44,7 +45,7 @@ struct Position {
 impl LuroCommand for ModifyRoleCommand {
     async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
         let luro_response = LuroResponse {
-            ephemeral: true,
+            ephemeral: false,
             deferred: false
         };
         let (_, _, _) = self.interaction_context(&interaction, "owner modify_role")?;
@@ -135,18 +136,24 @@ impl LuroCommand for ModifyRoleCommand {
             let mut embed = self.default_embed(&ctx, Some(guild.id));
             let mut description = String::new();
             writeln!(description, "**Role:** <@&{0}> - {0}", role_selected.id)?;
-            write!(description, "**Permissons:**\n```")?;
-            if CREATE_INVITE
-
-            for permission in role_selected.permissions {
-                write!(description, "{}", permission)?;
-            }
-            write!(description, "```\n")?;
+            writeln!(description, "**Position:** {}", role_selected.position)?;
+            write!(description, "**Permissons:**\n```{:?}```", role_selected.permissions)?;
+            
 
             embed = embed.title(role_selected.name);
             embed = embed.description(description);
-            embed = embed.color(role_selected.color);
-
+            if role_selected.color != 0 {
+                embed = embed.color(role_selected.color);
+            }
+            if role_selected.hoist {
+                embed = embed.field(EmbedFieldBuilder::new("Hoisted", "True").inline())
+            }
+            if role_selected.managed {
+                embed = embed.field(EmbedFieldBuilder::new("Managed", "True").inline())
+            }
+            if role_selected.mentionable {
+                embed = embed.field(EmbedFieldBuilder::new("Mentionable", "True").inline())
+            }
 
             // TODO: Return an embed with new role information
             Ok(InteractionResponse::Embed {

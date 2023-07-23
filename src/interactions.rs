@@ -3,7 +3,7 @@ use anyhow::Error;
 use tracing::info;
 use twilight_model::{
     application::interaction::Interaction,
-    channel::message::{Component, Embed, MessageFlags},
+    channel::message::{Component, Embed, MessageFlags, AllowedMentions},
     http::interaction::{InteractionResponse as HttpInteractionResponse, InteractionResponseData, InteractionResponseType},
     id::{
         marker::{ApplicationMarker, InteractionMarker},
@@ -303,5 +303,5 @@ fn interaction_response_builder(
         response = response.components(components);
     }
 
-    response.build()
+    response.allowed_mentions(AllowedMentions { parse: todo!(), replied_user: false, roles: todo!(), users: todo!() }).build()
 }
