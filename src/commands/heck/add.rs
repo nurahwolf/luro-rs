@@ -1,23 +1,14 @@
 use anyhow::Error;
 use async_trait::async_trait;
-use twilight_gateway::MessageSender;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{
-    application::interaction::Interaction,
-    channel::message::{
-        component::{ActionRow, SelectMenu, SelectMenuOption, TextInput, TextInputStyle},
-        Component
-    }
+use twilight_model::channel::message::{
+    component::{ActionRow, SelectMenu, SelectMenuOption, TextInput, TextInputStyle},
+    Component
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, ImageSource};
 
-use crate::{
-    commands::LuroCommand,
-    interactions::InteractionResponse,
-    models::{Heck, LuroResponse},
-    responses::invalid_heck,
-    LuroContext, SlashResponse, ACCENT_COLOUR
-};
+use crate::{commands::LuroCommand, models::Heck, responses::LuroSlash, ACCENT_COLOUR};
 
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(name = "add", desc = "Add a heck", dm_permission = true)]
@@ -25,20 +16,45 @@ pub struct HeckAddCommand {}
 
 #[async_trait]
 impl LuroCommand for HeckAddCommand {
-    async fn run_command(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        Ok(heck_modal())
+    /// Modal that asks the user to enter a reason for the kick.
+    ///
+    /// This modal is only shown if the user has not specified a reason in the
+    /// initial command.
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let components = vec![Component::ActionRow(ActionRow {
+            components: vec![Component::TextInput(TextInput {
+                custom_id: "heck-text".to_owned(),
+                label: "Enter your new heck below".to_owned(),
+                max_length: Some(2048),
+                min_length: Some(20),
+                placeholder: Some("<author> just gave <user> headpats!!".to_owned()),
+                required: Some(true),
+                style: TextInputStyle::Paragraph,
+                value: None
+            })]
+        })];
+
+        ctx.custom_id("heck-add".to_owned())
+            .title("Write your heck below!".to_owned())
+            .components(components)
+            .respond()
+            .await
     }
 
-    async fn handle(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let (interaction_channel, interaction_author, _) = self.interaction_context(&interaction, "heck user")?;
+    async fn handle_component(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let interaction_channel = ctx.channel()?;
+        let interaction_author = ctx.author()?;
+
         // Get interaction data
-        let data = self.parse_component_data(&mut interaction.clone())?;
+        // TODO: Don't get data in the command
+        let data = self.parse_component_data(&mut ctx.interaction.clone())?;
         let global = data
             .values
             .first()
             .ok_or_else(|| Error::msg("Unable to find interaction data"))?;
         // Get the message of the interaction, to grab out data from it
-        let message = interaction
+        let message = ctx
+            .interaction
             .message
             .clone()
             .ok_or_else(|| Error::msg("Unable to find the original message"))?;
@@ -65,7 +81,7 @@ impl LuroCommand for HeckAddCommand {
 
         // Based on our component data, should this be added as a global heck or a guild heck?
         if global.contains("heck-add-global") {
-            let mut heck_db = ctx.global_data.write();
+            let mut heck_db = ctx.luro.global_data.write();
 
             if interaction_channel.nsfw.unwrap_or(false) {
                 heck_db.hecks.nsfw_hecks.append(&mut heck);
@@ -75,9 +91,10 @@ impl LuroCommand for HeckAddCommand {
                 heck_author.name = "Global Heck Created - SFW Heck".to_owned()
             };
         } else {
-            let mut guild_db = ctx.guild_data.write();
+            let mut guild_db = ctx.luro.guild_data.write();
             let heck_db = guild_db.entry(
-                interaction
+                // TODO: Move getting guild into a function
+                ctx.interaction
                     .guild_id
                     .ok_or_else(|| Error::msg("This place is not a guild. You can only use this option in a guild."))?
             );
@@ -95,34 +112,25 @@ impl LuroCommand for HeckAddCommand {
         heck_embed.author = Some(heck_author);
 
         // Finally, repond with an updated message
-        Ok(InteractionResponse::Update {
-            content: None,
-            embeds: Some(vec![heck_embed]),
-            components: Some(components),
-            ephemeral: false
-        })
+        ctx.embed(heck_embed)?.components(components).update().respond().await
     }
 
-    async fn handle_model(self, interaction: Interaction) -> SlashResponse {
-        let luro_response = LuroResponse {
-            ephemeral: true,
-            deferred: false
-        };
-        let (_, interaction_author, interaction_member) = self.interaction_context(&interaction, "heck add")?;
-        let author_avatar = self.get_partial_member_avatar(interaction_member, &interaction.guild_id, interaction_author);
-        let data = self.parse_modal_data(&mut interaction.clone())?;
+    async fn handle_model(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let author = ctx.author()?;
+        let author_avatar = self.get_partial_member_avatar(ctx.interaction.member.as_ref(), &ctx.interaction.guild_id, &author);
+        // TODO: Remove the manual data here
+        let data = self.parse_modal_data(&mut ctx.interaction.clone())?;
         let heck_text = self.parse_modal_field_required(&data, "heck-text")?;
 
-        // Make sure heck_text contains both <user> and <author>, else exit early
         match (heck_text.contains("<user>"), heck_text.contains("<author>")) {
             (true, true) => (),
-            (true, false) => return Ok(invalid_heck::invalid_heck_response(true, false, heck_text, luro_response)),
-            (false, true) => return Ok(invalid_heck::invalid_heck_response(false, true, heck_text, luro_response)),
-            (false, false) => return Ok(invalid_heck::invalid_heck_response(true, true, heck_text, luro_response))
+            (true, false) => return ctx.invalid_heck_response(true, false, heck_text).await,
+            (false, true) => return ctx.invalid_heck_response(false, true, heck_text).await,
+            (false, false) => return ctx.invalid_heck_response(false, false, heck_text).await
         };
 
         // Send a success message.
-        let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", interaction_author.name))
+        let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", author.name))
             .icon_url(ImageSource::url(author_avatar)?)
             .build();
         let embed = EmbedBuilder::new()
@@ -156,35 +164,6 @@ impl LuroCommand for HeckAddCommand {
             })]
         })];
 
-        Ok(InteractionResponse::EmbedComponents {
-            embeds: vec![embed.build()],
-            components,
-            luro_response
-        })
-    }
-}
-
-/// Modal that asks the user to enter a reason for the kick.
-///
-/// This modal is only shown if the user has not specified a reason in the
-/// initial command.
-fn heck_modal() -> InteractionResponse {
-    let components = vec![Component::ActionRow(ActionRow {
-        components: vec![Component::TextInput(TextInput {
-            custom_id: "heck-text".to_owned(),
-            label: "Enter your new heck below".to_owned(),
-            max_length: Some(2048),
-            min_length: Some(20),
-            placeholder: Some("<author> just gave <user> headpats!!".to_owned()),
-            required: Some(true),
-            style: TextInputStyle::Paragraph,
-            value: None
-        })]
-    })];
-
-    InteractionResponse::Modal {
-        custom_id: "heck-add".to_owned(),
-        title: "Write your heck below!".to_owned(),
-        components
+        ctx.embed(embed.build())?.components(components).respond().await
     }
 }

@@ -4,12 +4,10 @@ use std::path::Path;
 use async_trait::async_trait;
 use git2::{ErrorCode, Repository};
 use memory_stats::memory_stats;
-use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::interaction::Interaction;
 use twilight_util::builder::embed::{EmbedFooterBuilder, ImageSource};
 
-use crate::{responses::LuroResponseV2, LuroContext, SlashResponse};
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 
@@ -24,22 +22,19 @@ pub struct AboutCommand {
 
 #[async_trait]
 impl LuroCommand for AboutCommand {
-    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _: MessageSender) -> SlashResponse {
-        let response = LuroResponseV2::new("about".to_owned(), &interaction)
-            .deferred(&ctx, true)
-            .await?;
-
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.ephemeral().clone().deferred().await?;
         // Variables
-        let mut embed = self.default_embed(&ctx, interaction.guild_id);
+        let mut embed = ctx.default_embed();
         let mut description = String::new();
         let mut framework_owners_list = String::new();
-        let current_user = ctx.twilight_client.current_user().await?.model().await?;
+        let current_user = ctx.luro.twilight_client.current_user().await?.model().await?;
         let current_user_avatar = self.get_currentuser_avatar(&current_user);
         let version = env!("CARGO_PKG_VERSION").to_string();
 
-        let owners = ctx.global_data.read().owners.clone();
+        let owners = ctx.luro.global_data.read().owners.clone();
         for owner in owners {
-            let owner = ctx.twilight_client.user(owner).await?.model().await?;
+            let owner = ctx.luro.twilight_client.user(owner).await?.model().await?;
             write!(framework_owners_list, "{} - <@{}>, ", owner.name, owner.id)?;
         }
         writeln!(
@@ -63,7 +58,15 @@ impl LuroCommand for AboutCommand {
         // if let Some(git_url) = &ctx.data().config.read().await.git_url {
         //     embed.url(git_url);
         // }
-        if let Some(application_owner) = &ctx.twilight_client.current_user_application().await?.model().await?.owner {
+        if let Some(application_owner) = &ctx
+            .luro
+            .twilight_client
+            .current_user_application()
+            .await?
+            .model()
+            .await?
+            .owner
+        {
             writeln!(
                 description,
                 "**Primary Owner:** {} - <@{}>",
@@ -94,7 +97,7 @@ impl LuroCommand for AboutCommand {
         }
 
         if let Some(cache_stats) = self.cache && cache_stats {
-            let stats = ctx.twilight_cache.stats();
+            let stats = ctx.luro.twilight_cache.stats();
             writeln!(description, "-----")?;
             writeln!(description, "**Cache Stats**\n")?;
             if stats.guilds() != 0 {
@@ -132,7 +135,7 @@ impl LuroCommand for AboutCommand {
 
         embed = embed.description(description);
 
-        Ok(response.embed(embed)?.legacy_response(true))
+        ctx.embed(embed.build())?.respond().await
     }
 }
 

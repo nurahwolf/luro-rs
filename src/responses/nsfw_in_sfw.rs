@@ -6,13 +6,14 @@ use crate::COLOUR_DANGER;
 use super::LuroSlash;
 
 impl LuroSlash {
-    pub async fn not_owner_response(self) -> anyhow::Result<()> {
-        self.embed(not_owner_embed().build())?.respond().await
+    pub async fn nsfw_in_sfw_response(self) -> anyhow::Result<()> {
+        self.embed(nsfw_in_sfw_embed().build())?.respond().await
     }
 }
 
-/// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-fn not_owner_embed() -> EmbedBuilder {
+/// Returns an embed containing a standardised error that the user is running a NSFW command in a SFW channel
+fn nsfw_in_sfw_embed() -> EmbedBuilder {
+    // TODO: Tweak this
     warn!("Someone tried to run a bot owner command without being the bot owner...r");
     EmbedBuilder::new()
     .title("You are not the bot owner!")

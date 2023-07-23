@@ -153,15 +153,15 @@ pub struct GuildPermissions<'a> {
 }
 
 /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
-pub fn default_embed(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {
+pub fn default_embed(ctx: &LuroContext, guild_id: &Option<Id<GuildMarker>>) -> EmbedBuilder {
     EmbedBuilder::new().color(accent_colour(ctx, guild_id))
 }
 
 /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
-pub fn accent_colour(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u32 {
+pub fn accent_colour(ctx: &LuroContext, guild_id: &Option<Id<GuildMarker>>) -> u32 {
     if let Some(guild_id) = guild_id {
         let guild_db = ctx.guild_data.read();
-        let guild_settings = guild_db.get(&guild_id);
+        let guild_settings = guild_db.get(guild_id);
 
         if let Some(guild_settings) = guild_settings {
             // Check to see if a custom colour is defined

@@ -24,7 +24,7 @@ impl LuroFramework {
             let guild = self.twilight_client.guild(ban.guild_id).await?.model().await?;
             let banned_avatar = get_user_avatar(&resolved_ban.user);
 
-            let mut embed = default_embed(&self, Some(ban.guild_id))
+            let mut embed = default_embed(&self, &Some(ban.guild_id))
                 .title(format!("Banned from {}", guild.name))
                 .thumbnail(ImageSource::url(banned_avatar)?);
 

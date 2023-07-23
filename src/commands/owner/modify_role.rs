@@ -2,19 +2,13 @@ use async_trait::async_trait;
 use serde::Serialize;
 use std::fmt::Write;
 use tracing::info;
-use twilight_gateway::MessageSender;
+
 use twilight_http::{request::Request, response::marker::EmptyBody, routing::Route};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{
-    application::interaction::Interaction,
-    id::{marker::RoleMarker, Id}
-};
+use twilight_model::id::{marker::RoleMarker, Id};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{
-    interactions::InteractionResponse, models::LuroResponse, responses::not_guild::not_guild_response, LuroContext,
-    SlashResponse
-};
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -31,7 +25,9 @@ pub struct ModifyRoleCommand {
     /// If set, change the role position to this exact number
     position_num: Option<i64>,
     /// A colour set. Pass either a HEXADECIMAL `0xDABEEF`, HEX `DABEEF` or number `1922942`.
-    pub colour: Option<String>
+    colour: Option<String>,
+    /// A new name for a role if defined
+    name: Option<String>
 }
 
 // BUG: This is fucked currently: https://github.com/twilight-rs/twilight/issues/2209
@@ -43,20 +39,16 @@ struct Position {
 
 #[async_trait]
 impl LuroCommand for ModifyRoleCommand {
-    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let luro_response = LuroResponse {
-            ephemeral: false,
-            deferred: false
-        };
-        let (_, _, _) = self.interaction_context(&interaction, "owner modify_role")?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let (mut role_selected, mut role_position) = (None, None);
 
         // Guild to modify
         let guild = ctx
+            .luro
             .twilight_client
-            .guild(match interaction.guild_id {
+            .guild(match ctx.interaction.guild_id {
                 Some(guild_id) => guild_id,
-                None => return Ok(not_guild_response(luro_response))
+                None => return ctx.not_guild_response().await
             })
             .await?
             .model()
@@ -78,6 +70,7 @@ impl LuroCommand for ModifyRoleCommand {
         if let Some(mut role_selected) = role_selected {
             let mut number = 1;
             let mut updated_role_list = Vec::new();
+            let mut update_role = ctx.luro.twilight_client.update_role(guild.id, role_selected.id);
 
             for role in guild.roles {
                 info!(role.name);
@@ -97,7 +90,7 @@ impl LuroCommand for ModifyRoleCommand {
                 })
                 .json(&positions)?
                 .build();
-                ctx.twilight_client.request::<EmptyBody>(request).await?;
+                ctx.luro.twilight_client.request::<EmptyBody>(request).await?;
             }
 
             // If we are updating the position based on an exact number
@@ -111,7 +104,11 @@ impl LuroCommand for ModifyRoleCommand {
                 })
                 .json(&positions)?
                 .build();
-                ctx.twilight_client.request::<EmptyBody>(request).await?;
+                ctx.luro.twilight_client.request::<EmptyBody>(request).await?;
+            }
+
+            if let Some(ref name) = self.name {
+                update_role = update_role.name(Some(name));
             }
 
             // If we are changing the colour
@@ -127,50 +124,39 @@ impl LuroCommand for ModifyRoleCommand {
                 role_selected.color = colour;
 
                 if colour == 0 {
-                    ctx.twilight_client
-                        .update_role(guild.id, role_selected.id)
-                        .color(None)
-                        .await?;
+                    update_role = update_role.color(None)
                 } else {
-                    ctx.twilight_client
-                        .update_role(guild.id, role_selected.id)
-                        .color(Some(colour))
-                        .await?;
+                    update_role = update_role.color(Some(colour))
                 };
             }
 
-            let mut embed = self.default_embed(&ctx, Some(guild.id));
+            let updated_role = update_role.await?.model().await?;
+            let mut embed = ctx.default_embed();
             let mut description = String::new();
-            writeln!(description, "**Role:** <@&{0}> - {0}", role_selected.id)?;
-            writeln!(description, "**Position:** {}", role_selected.position)?;
-            write!(description, "**Permissons:**\n```{:?}```", role_selected.permissions)?;
+            writeln!(description, "**Role:** <@&{0}> - {0}", updated_role.id)?;
+            writeln!(description, "**Position:** {}", updated_role.position)?;
+            write!(description, "**Permissons:**\n```{:?}```", updated_role.permissions)?;
 
-            embed = embed.title(role_selected.name);
+            embed = embed.title(updated_role.name);
             embed = embed.description(description);
-            if role_selected.color != 0 {
+            if updated_role.color != 0 {
                 embed = embed.color(role_selected.color);
             }
-            if role_selected.hoist {
+            if updated_role.hoist {
                 embed = embed.field(EmbedFieldBuilder::new("Hoisted", "True").inline())
             }
-            if role_selected.managed {
+            if updated_role.managed {
                 embed = embed.field(EmbedFieldBuilder::new("Managed", "True").inline())
             }
-            if role_selected.mentionable {
+            if updated_role.mentionable {
                 embed = embed.field(EmbedFieldBuilder::new("Mentionable", "True").inline())
             }
 
             // TODO: Return an embed with new role information
-            Ok(InteractionResponse::Embed {
-                embeds: vec![embed.build()],
-                luro_response
-            })
+            ctx.embed(embed.build())?.respond().await
         } else {
             // TODO: Make this a response type
-            Ok(InteractionResponse::Content {
-                content: "No role found".to_owned(),
-                luro_response
-            })
+            ctx.content("No role found".to_owned()).respond().await
         }
     }
 }

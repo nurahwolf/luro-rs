@@ -1,12 +1,11 @@
 use async_trait::async_trait;
-use twilight_gateway::MessageSender;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
-    application::{command::Command, interaction::Interaction},
+    application::command::Command,
     channel::message::component::{ActionRow, Button, ButtonStyle, Component}
 };
 
-use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 
@@ -20,7 +19,7 @@ pub struct BoopCommand {}
 
 #[async_trait]
 impl LuroCommand for BoopCommand {
-    async fn run_command(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
@@ -32,16 +31,12 @@ impl LuroCommand for BoopCommand {
             })])
         })]);
 
-        Ok(InteractionResponse::ContentComponents {
-            content: "Boop Count: 0".to_string(),
-            components,
-            luro_response: Default::default()
-        })
+        ctx.content("Boop Count: 0".to_owned()).components(components).respond().await
     }
 
-    async fn handle_button(self, interaction: Interaction) -> SlashResponse {
+    async fn handle_button(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Get message and parse number
-        let message = interaction.message.clone().unwrap();
+        let message = ctx.interaction.message.clone().unwrap();
 
         let (_text, number) = message.content.split_at(12);
 
@@ -50,12 +45,7 @@ impl LuroCommand for BoopCommand {
             Err(_) => 0
         };
 
-        Ok(InteractionResponse::Update {
-            content: Some(format!("Boop Count: {}", value_number)),
-            embeds: None,
-            components: None,
-            ephemeral: false
-        })
+        ctx.content(format!("Boop Count: {}", value_number)).update().respond().await
     }
 }
 

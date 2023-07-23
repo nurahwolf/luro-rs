@@ -1,12 +1,9 @@
 use async_trait::async_trait;
-use twilight_gateway::MessageSender;
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::{
-    application::interaction::Interaction,
-    id::{marker::RoleMarker, Id}
-};
 
-use crate::{interactions::InteractionResponse, responses::not_guild::not_guild_response, LuroContext, SlashResponse};
+use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_model::id::{marker::RoleMarker, Id};
+
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -24,31 +21,24 @@ pub struct AssignCommand {
 
 #[async_trait]
 impl LuroCommand for AssignCommand {
-    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let (_, interaction_user, _) = self.interaction_context(&interaction, "owner assign")?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let author = ctx.author()?;
 
         // User to action
-        let user = if let Some(user) = self.user {
-            user.resolved
-        } else {
-            interaction_user.clone()
-        };
+        let user = if let Some(user) = self.user { user.resolved } else { author };
 
         // Guild to modify
-        let guild_id = match interaction.guild_id {
+        let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return Ok(not_guild_response(Default::default()))
+            None => return ctx.not_guild_response().await
         };
 
-        let response = ctx
+        ctx.luro
             .twilight_client
             .add_guild_member_role(guild_id, user.id, self.role)
-            .await?
-            .status();
+            .await?;
 
-        Ok(InteractionResponse::Content {
-            content: response.to_string(),
-            luro_response: Default::default()
-        })
+        // TODO: Real response
+        ctx.content("All good!".to_owned()).respond().await
     }
 }

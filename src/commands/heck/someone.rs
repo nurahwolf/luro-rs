@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use tracing::{debug, trace};
-use twilight_gateway::MessageSender;
+
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::{application::interaction::Interaction, id::Id};
+use twilight_model::id::Id;
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFooterBuilder, ImageSource};
 
 use crate::{
@@ -10,8 +10,8 @@ use crate::{
         heck::{format_heck, get_heck},
         LuroCommand
     },
-    responses::LuroResponseV2,
-    LuroContext, SlashResponse, ACCENT_COLOUR
+    responses::LuroSlash,
+    ACCENT_COLOUR
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -29,23 +29,21 @@ pub struct HeckSomeoneCommand {
 
 #[async_trait]
 impl LuroCommand for HeckSomeoneCommand {
-    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let response = LuroResponseV2::new("heck someone".to_owned(), &interaction);
-        let (interaction_channel, interaction_author, _) = self.interaction_context(&interaction, "heck someone")?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Is the channel the interaction called in NSFW?
-        let nsfw = interaction_channel.nsfw.unwrap_or(false);
+        let nsfw = ctx.channel()?.nsfw.unwrap_or(false);
 
         debug!("attempting to get a heck");
-        let (heck, heck_id) = get_heck(ctx.clone(), self.id, interaction.guild_id, self.global, nsfw).await?;
+        let (heck, heck_id) = get_heck(ctx.luro.clone(), self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
 
         debug!("attempting to format the returned heck");
-        let formatted_heck = format_heck(&heck, interaction_author, &self.user.resolved).await;
+        let formatted_heck = format_heck(&heck, &ctx.author()?, &self.user.resolved).await;
 
         // Attempt to get the author of the heck
         debug!("attempting to get the author of the heck");
-        let heck_author = match ctx.twilight_cache.user(Id::new(heck.author_id)) {
+        let heck_author = match ctx.luro.twilight_cache.user(Id::new(heck.author_id)) {
             Some(ok) => ok.clone(),
-            None => ctx.twilight_client.user(Id::new(heck.author_id)).await?.model().await?
+            None => ctx.luro.twilight_client.user(Id::new(heck.author_id)).await?.model().await?
         };
         let heck_author_avatar = self.get_user_avatar(&heck_author);
         let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", heck_author.name))
@@ -54,9 +52,9 @@ impl LuroCommand for HeckSomeoneCommand {
 
         // Create our response, depending on if the user wants a plaintext heck or not
         debug!("creating our response");
-        Ok(if let Some(plaintext) = self.plaintext && plaintext {
+        if let Some(plaintext) = self.plaintext && plaintext {
             trace!("user wanted plaintext");
-            response.content(formatted_heck.heck_message).legacy_response(true)
+            ctx.content(formatted_heck.heck_message).respond().await
         } else {
             trace!("user wanted embed");
             let mut embed = EmbedBuilder::default()
@@ -72,7 +70,7 @@ impl LuroCommand for HeckSomeoneCommand {
                 "Heck ID {heck_id} - SFW Heck"
             )))
         }
-            response.content(format!("<@{}>", self.user.resolved.id)).embed(embed)?.legacy_response(false)
-        })
+            ctx.content(format!("<@{}>", self.user.resolved.id)).embed(embed.build())?.respond().await
+        }
     }
 }

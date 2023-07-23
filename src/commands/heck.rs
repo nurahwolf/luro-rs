@@ -4,19 +4,20 @@ use anyhow::Error;
 
 use async_trait::async_trait;
 use rand::Rng;
-use twilight_gateway::MessageSender;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use tracing::{debug, trace};
 use twilight_model::{
-    application::{command::Command, interaction::Interaction},
+    application::command::Command,
     id::{marker::GuildMarker, Id},
     user::User
 };
 
 use crate::{
     models::{GuildSettings, Heck},
-    LuroContext, SlashResponse
+    responses::LuroSlash,
+    LuroContext
 };
 
 use super::LuroCommand;
@@ -48,12 +49,12 @@ pub enum HeckCommands {
 
 #[async_trait]
 impl LuroCommand for HeckCommands {
-    async fn run_commands(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
-            Self::Add(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Someone(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Info(command) => command.run_command(interaction, ctx, shard).await
+            Self::Add(command) => command.run_command(ctx).await,
+            Self::Someone(command) => command.run_command(ctx).await,
+            Self::Info(command) => command.run_command(ctx).await
         }
     }
 }

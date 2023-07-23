@@ -15,19 +15,15 @@ use self::{
     moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands, say::SayCommand, user::UserCommands
 };
 
-use std::sync::Arc;
-
 use anyhow::bail;
 use tracing::warn;
-use twilight_gateway::MessageSender;
 
 use twilight_model::application::interaction::{Interaction, InteractionData};
 
 use crate::{
     functions::{accent_colour, default_embed, get_user_avatar},
-    interactions::InteractionResponse,
-    models::{LuroFramework, LuroResponse},
-    responses::unknown_command::unknown_command_response
+    responses::LuroSlash,
+    LuroContext
 };
 
 pub mod about;
@@ -77,44 +73,33 @@ impl Commands {
     }
 }
 
-impl LuroFramework {
+impl LuroSlash {
     /// Handle incoming command interaction.
-    pub async fn handle_command(
-        self: Arc<Self>,
-        interaction: Interaction,
-        shard: MessageSender
-    ) -> Result<InteractionResponse, anyhow::Error> {
-        let data = match interaction.data.clone() {
+    pub async fn handle_command(self) -> anyhow::Result<()> {
+        let data = match self.interaction.data.clone() {
             Some(InteractionData::ApplicationCommand(data)) => *data,
             _ => bail!("expected application command data")
         };
 
-        Ok(match data.name.as_str() {
-            "about" => AboutCommand::new(data).await?.run_command(interaction, self, shard).await?,
-            "say" => SayCommand::new(data).await?.run_command(interaction, self, shard).await?,
-            "user" => UserCommands::new(data).await?.run_commands(interaction, self, shard).await?,
-            "hello" => HelloCommand::new(data).await?.run_command(interaction, self, shard).await?,
-            "count" => CountCommand::new(data).await?.run_command(interaction, self, shard).await?,
-            "mod" => {
-                ModeratorCommands::new(data)
-                    .await?
-                    .run_commands(interaction, self, shard)
-                    .await?
-            }
-            "music" => MusicCommands::new(data).await?.run_commands(interaction, self, shard).await?,
-            "boop" => BoopCommand::new(data).await?.run_command(interaction, self, shard).await?,
-            "owner" => OwnerCommands::new(data).await?.run_commands(interaction, self, shard).await?,
-            "heck" => HeckCommands::new(data).await?.run_commands(interaction, self, shard).await?,
-            "lewd" => LewdCommands::new(data).await?.run_commands(interaction, self, shard).await?,
+        match data.name.as_str() {
+            "about" => AboutCommand::new(data).await?.run_command(self).await,
+            "say" => SayCommand::new(data).await?.run_command(self).await,
+            "user" => UserCommands::new(data).await?.run_command(self).await,
+            "hello" => HelloCommand::new(data).await?.run_command(self).await,
+            "count" => CountCommand::new(data).await?.run_command(self).await,
+            "mod" => ModeratorCommands::new(data).await?.run_command(self).await,
+            "music" => MusicCommands::new(data).await?.run_command(self).await,
+            "boop" => BoopCommand::new(data).await?.run_command(self).await,
+            "owner" => OwnerCommands::new(data).await?.run_command(self).await,
+            "heck" => HeckCommands::new(data).await?.run_command(self).await,
+            "lewd" => LewdCommands::new(data).await?.run_command(self).await,
             name => {
                 warn!(name = name, "received unknown command");
+                // TODO: Handling
 
-                unknown_command_response(LuroResponse {
-                    ephemeral: true,
-                    deferred: false
-                })
+                Ok(())
             }
-        })
+        }
     }
 }
 
@@ -131,8 +116,6 @@ use twilight_model::{
     user::User
 };
 
-use crate::{LuroContext, SlashResponse};
-
 /// Add some custom functionality around [CommandModel]
 #[async_trait]
 pub trait LuroCommand: CommandModel {
@@ -142,57 +125,28 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Run the command
-    async fn run_command(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        Ok(InteractionResponse::Content {
-            content: "It works!".to_owned(),
-            luro_response: LuroResponse {
-                ephemeral: true,
-                deferred: false
-            }
-        })
+    async fn run_command(self, _ctx: LuroSlash) -> anyhow::Result<()> {
+        Err(Error::msg("Not implemented!"))
     }
 
     /// Run a command group
-    async fn run_commands(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        Ok(InteractionResponse::Content {
-            content: "It works!".to_owned(),
-            luro_response: LuroResponse {
-                ephemeral: true,
-                deferred: false
-            }
-        })
+    async fn run_commands(self, _ctx: LuroSlash) -> anyhow::Result<()> {
+        Err(Error::msg("Not implemented!"))
     }
 
     /// Handle a component interaction
-    async fn handle(self, _interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        Ok(InteractionResponse::Content {
-            content: "It works!".to_owned(),
-            luro_response: LuroResponse {
-                ephemeral: true,
-                deferred: false
-            }
-        })
+    async fn handle_component(self, _ctx: LuroSlash) -> anyhow::Result<()> {
+        Err(Error::msg("Not implemented!"))
     }
 
     /// Create and respond to a button interaction
-    async fn handle_button(self, _interaction: Interaction) -> SlashResponse {
-        Ok(InteractionResponse::Update {
-            content: Some("This button has not been configured yet!".to_owned()),
-            embeds: None,
-            components: None,
-            ephemeral: false
-        })
+    async fn handle_button(self, _ctx: LuroSlash) -> anyhow::Result<()> {
+        Err(Error::msg("Not implemented!"))
     }
 
     /// Create and respond to a button interaction
-    async fn handle_model(self, _interaction: Interaction) -> SlashResponse {
-        Ok(InteractionResponse::Content {
-            content: "This model has not been configured yet!".to_owned(),
-            luro_response: LuroResponse {
-                ephemeral: true,
-                deferred: false
-            }
-        })
+    async fn handle_model(self, _ctx: LuroSlash) -> anyhow::Result<()> {
+        Err(Error::msg("Not implemented!"))
     }
 
     /// The default permissions a user needs to run this command
@@ -281,12 +235,12 @@ pub trait LuroCommand: CommandModel {
 
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
     fn default_embed(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {
-        default_embed(ctx, guild_id)
+        default_embed(ctx, &guild_id)
     }
 
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     fn accent_colour(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u32 {
-        accent_colour(ctx, guild_id)
+        accent_colour(ctx, &guild_id)
     }
 
     fn assemble_user_avatar(&self, user: &User) -> String {

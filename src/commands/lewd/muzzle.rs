@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use rand::Rng;
-use twilight_gateway::MessageSender;
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::application::interaction::Interaction;
 
-use crate::{responses::LuroResponseV2, LuroContext, SlashResponse};
+use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -16,8 +15,7 @@ pub struct MuzzleCommand {
 
 #[async_trait]
 impl LuroCommand for MuzzleCommand {
-    async fn run_command(self, interaction: Interaction, _ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let (_, interaction_author, _) = self.interaction_context(&interaction, "lewd muzzle command invoked")?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let responses = ["<user> just got muzzled for a few seconds!!",
         "<user> just got slapped on the muzzle and told to hush.",
         "<user> just got spanked and told to hush up immediately!",
@@ -180,13 +178,12 @@ impl LuroCommand for MuzzleCommand {
         "A sly fox just swiped <user>'s words away with a swish of its tail."];
 
         let choice = rand::thread_rng().gen_range(0..responses.len());
-        let response_text = responses
+        let response = responses
             .get(choice)
             .unwrap()
             .replace("<user>", format!("<@{}>", self.user.resolved.id).as_str())
-            .replace("<author>", format!("<@{}>", interaction_author.id).as_str());
+            .replace("<author>", format!("<@{}>", ctx.author()?.id).as_str());
 
-        let response = LuroResponseV2::new("lewd muzzle".to_owned(), &interaction);
-        Ok(response.content(response_text).legacy_response(false))
+        ctx.content(response).respond().await
     }
 }

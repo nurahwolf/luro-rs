@@ -1,25 +1,19 @@
-use std::{str::FromStr, sync::Arc};
+use std::sync::Arc;
 
-use anyhow::{bail, Error};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 use twilight_gateway::{Event, MessageSender};
 use twilight_model::{
-    application::{
-        command::Command,
-        interaction::{Interaction, InteractionData, InteractionType}
-    },
+    application::{command::Command, interaction::Interaction},
     id::{marker::ApplicationMarker, Id}
 };
 
-use crate::{commands::LuroCommand, models::LuroResponse};
 use crate::{
-    commands::{boop::BoopCommand, heck::add::HeckAddCommand, Commands},
-    functions::CustomId,
+    commands::Commands,
     interactions::{InteractionResponder, InteractionResponse},
     models::LuroFramework,
-    responses::{internal_error::internal_error_response, unknown_command::unknown_command_response},
-    LuroContext, SlashResponse
+    LuroContext
 };
+use crate::{models::LuroResponse, responses::LuroSlash};
 
 mod ban_add;
 mod message_create;
@@ -34,7 +28,7 @@ impl LuroFramework {
 
         let callback = match event {
             Event::Ready(ready) => ctx.ready_listener(ready, shard).await,
-            Event::InteractionCreate(interaction) => ctx.handle_interaction(interaction.0, shard).await,
+            Event::InteractionCreate(interaction) => LuroSlash::new(ctx, interaction.0, shard).handle().await,
             Event::MessageCreate(message) => ctx.message_create_listener(message).await,
             Event::MessageDelete(message) => ctx.message_delete_listener(message).await,
             Event::MessageUpdate(message) => LuroFramework::message_update_handler(message).await,
@@ -51,83 +45,47 @@ impl LuroFramework {
     }
 
     /// Handle incoming [`Interaction`].
-    pub async fn handle_interaction(self: Arc<Self>, interaction: Interaction, shard: MessageSender) -> Result<(), Error> {
-        let responder = InteractionResponder::from_interaction(&interaction);
-        debug!(id = ?interaction.id, "received {} interaction", interaction.kind.kind());
+    pub async fn handle_interaction() {
+        // TODO: Better error handling
+        // match response {
+        //     Ok(response) => Ok(()),
+        //     Err(why) => {
 
-        let response = match interaction.kind {
-            InteractionType::ApplicationCommand => self.clone().handle_command(interaction, shard).await,
-            InteractionType::MessageComponent => self.handle_component(interaction).await,
-            InteractionType::ModalSubmit => Self::handle_modal(interaction).await,
-            other => {
-                warn!("received unexpected {} interaction", other.kind());
+        //         match responder
+        //             .respond(
+        //                 &self,
+        //                 &internal_error_response(
+        //                     &why.to_string(),
+        //                     LuroResponse {
+        //                         ephemeral: true,
+        //                         deferred: false
+        //                     }
+        //                 )
+        //             )
+        //             .await
+        //         {
+        //             Ok(_) => info!("Successfully responded to interaction with error"),
+        //             Err(_) => match responder
+        //                 .respond(
+        //                     &self,
+        //                     &internal_error_response(
+        //                         &why.to_string(),
+        //                         LuroResponse {
+        //                             ephemeral: true,
+        //                             deferred: true
+        //                         }
+        //                     )
+        //                 )
+        //                 .await
+        //             {
+        //                 Ok(_) => info!("Successfully responded to interaction with error"),
+        //                 Err(_) => error!("Failed to respond to interaction with error")
+        //             }
+        //         }
 
-                return Ok(());
-            }
-        };
-
-        match response {
-            Ok(response) => Ok(responder.respond(&self, &response).await?),
-            Err(why) => {
-                error!(error = ?why, "error while processing interaction");
-
-                match responder
-                    .respond(
-                        &self,
-                        &internal_error_response(
-                            &why.to_string(),
-                            LuroResponse {
-                                ephemeral: true,
-                                deferred: false
-                            }
-                        )
-                    )
-                    .await
-                {
-                    Ok(_) => info!("Successfully responded to interaction with error"),
-                    Err(_) => match responder
-                        .respond(
-                            &self,
-                            &internal_error_response(
-                                &why.to_string(),
-                                LuroResponse {
-                                    ephemeral: true,
-                                    deferred: true
-                                }
-                            )
-                        )
-                        .await
-                    {
-                        Ok(_) => info!("Successfully responded to interaction with error"),
-                        Err(_) => error!("Failed to respond to interaction with error")
-                    }
-                }
-
-                Ok(())
-            }
-        }
-    }
-
-    /// Handle incoming component interaction
-    async fn handle_component(&self, interaction: Interaction) -> Result<InteractionResponse, anyhow::Error> {
-        let custom_id = match &interaction.data {
-            Some(InteractionData::MessageComponent(data)) => CustomId::from_str(&data.custom_id)?,
-            _ => bail!("expected message component data")
-        };
-
-        match &*custom_id.name {
-            "boop" => BoopCommand::handle_button(Default::default(), interaction).await,
-            "heck-setting" => HeckAddCommand::handle_button(Default::default(), interaction).await,
-
-            name => {
-                warn!(name = name, "received unknown component");
-
-                Ok(unknown_command_response(LuroResponse {
-                    ephemeral: true,
-                    deferred: false
-                }))
-            }
-        }
+        //         Ok(())
+        //     }
+        // }
     }
 
     /// Register commands to the Discord API.
@@ -169,24 +127,5 @@ impl LuroFramework {
             ephemeral,
             deferred: true
         })
-    }
-
-    /// Handle incoming modal interaction
-    async fn handle_modal(interaction: Interaction) -> SlashResponse {
-        let custom_id = match &interaction.data {
-            Some(InteractionData::ModalSubmit(data)) => CustomId::from_str(&data.custom_id)?,
-            _ => bail!("expected modal submit data")
-        };
-
-        match &*custom_id.name {
-            "heck-add" => HeckAddCommand::handle_model(Default::default(), interaction).await,
-            name => {
-                warn!(name = name, "received unknown modal");
-                Ok(unknown_command_response(LuroResponse {
-                    ephemeral: true,
-                    deferred: true
-                }))
-            }
-        }
     }
 }

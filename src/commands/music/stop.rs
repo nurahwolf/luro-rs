@@ -1,10 +1,9 @@
 use async_trait::async_trait;
-use twilight_gateway::MessageSender;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Stop;
-use twilight_model::application::interaction::Interaction;
 
-use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -13,17 +12,12 @@ pub struct StopCommand {}
 
 #[async_trait]
 impl LuroCommand for StopCommand {
-    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let luro_response = ctx.defer_interaction(&interaction, false).await?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let guild_id = ctx.interaction.guild_id.unwrap();
 
-        let guild_id = interaction.guild_id.unwrap();
-
-        let player = ctx.lavalink.player(guild_id).await.unwrap();
+        let player = ctx.luro.lavalink.player(guild_id).await.unwrap();
         player.send(Stop::from(guild_id))?;
 
-        Ok(InteractionResponse::Content {
-            content: "Stopped the track!".to_string(),
-            luro_response
-        })
+        ctx.content("Stopped the track!".to_owned()).respond().await
     }
 }

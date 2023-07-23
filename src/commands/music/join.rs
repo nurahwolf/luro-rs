@@ -1,14 +1,13 @@
 use async_trait::async_trait;
-use twilight_gateway::MessageSender;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use twilight_model::{
-    application::interaction::Interaction,
     gateway::payload::outgoing::UpdateVoiceState,
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -25,16 +24,12 @@ pub struct JoinCommand {
 
 #[async_trait]
 impl LuroCommand for JoinCommand {
-    async fn run_command(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
-        let luro_response = ctx.defer_interaction(&interaction, false).await?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let guild_id = ctx.interaction.guild_id.unwrap();
 
-        let guild_id = interaction.guild_id.unwrap();
+        ctx.shard
+            .command(&UpdateVoiceState::new(guild_id, Some(self.channel), false, false))?;
 
-        shard.command(&UpdateVoiceState::new(guild_id, Some(self.channel), false, false))?;
-
-        Ok(InteractionResponse::Content {
-            content: format!("Joined <#{}>!", self.channel),
-            luro_response
-        })
+        ctx.content(format!("Joined <#{}>!", self.channel)).respond().await
     }
 }

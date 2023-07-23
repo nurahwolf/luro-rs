@@ -1,9 +1,8 @@
 use async_trait::async_trait;
-use twilight_gateway::MessageSender;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use twilight_model::application::{command::Command, interaction::Interaction};
+use twilight_model::application::command::Command;
 
 use self::pause::PauseCommand;
 use self::seek::SeekCommand;
@@ -11,7 +10,7 @@ use self::stop::StopCommand;
 use self::volume::VolumeCommand;
 use self::{join::JoinCommand, leave::LeaveCommand, play::PlayCommand};
 
-use crate::{LuroContext, SlashResponse};
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 mod join;
@@ -47,16 +46,16 @@ pub enum MusicCommands {
 
 #[async_trait]
 impl LuroCommand for MusicCommands {
-    async fn run_commands(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
-            Self::Play(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Join(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Leave(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Pause(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Seek(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Volume(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Stop(command) => command.run_command(interaction, ctx, shard).await
+            Self::Play(command) => command.run_command(ctx).await,
+            Self::Join(command) => command.run_command(ctx).await,
+            Self::Leave(command) => command.run_command(ctx).await,
+            Self::Pause(command) => command.run_command(ctx).await,
+            Self::Seek(command) => command.run_command(ctx).await,
+            Self::Volume(command) => command.run_command(ctx).await,
+            Self::Stop(command) => command.run_command(ctx).await
         }
     }
 }

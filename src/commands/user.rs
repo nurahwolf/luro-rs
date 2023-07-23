@@ -1,18 +1,15 @@
 use async_trait::async_trait;
 use std::{fmt::Write, time::Duration};
 use tracing::debug;
-use twilight_gateway::MessageSender;
+
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::{
-    application::interaction::Interaction,
-    id::{marker::GenericMarker, Id}
-};
+use twilight_model::id::{marker::GenericMarker, Id};
 use twilight_util::{
     builder::embed::{EmbedFieldBuilder, ImageSource},
     snowflake::Snowflake
 };
 
-use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 
@@ -29,26 +26,29 @@ pub struct UserCommands {
 
 #[async_trait]
 impl LuroCommand for UserCommands {
-    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let luro_response = ctx.defer_interaction(&interaction, false).await?;
-        let (_, interaction_author, _) = self.interaction_context(&interaction, "user command invoked")?;
-
-        let mut embed = self.default_embed(&ctx, interaction.guild_id);
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.clone().deferred().await?;
+        let mut embed = ctx.default_embed();
         let mut description = String::new();
         // The user we are interested in is the interaction author, unless a user was specified
         let user = if let Some(ref user_specified) = self.user {
-            match ctx.twilight_cache.user(user_specified.resolved.id) {
+            match ctx.luro.twilight_cache.user(user_specified.resolved.id) {
                 Some(user) => {
                     debug!("Using cached user");
                     user.clone()
                 }
                 None => {
                     debug!("Using client to fetch user");
-                    ctx.twilight_client.user(user_specified.resolved.id).await?.model().await?
+                    ctx.luro
+                        .twilight_client
+                        .user(user_specified.resolved.id)
+                        .await?
+                        .model()
+                        .await?
                 }
             }
         } else {
-            interaction_author.clone()
+            ctx.author()?
         };
         let user_timestamp = Duration::from_millis(user.id.timestamp().unsigned_abs());
         let mut timestamp = format!("Joined discord on <t:{0}> - <t:{0}:R>\n", user_timestamp.as_secs());
@@ -84,12 +84,12 @@ impl LuroCommand for UserCommands {
         }
 
         // Some additional details if we are a guild
-        let mut guild_id = interaction.guild_id;
+        let mut guild_id = ctx.interaction.guild_id;
         if let Some(requested_guild_id) = self.guild {
             guild_id = Some(Id::new(requested_guild_id.get()))
         };
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
-            let member = ctx.twilight_client.guild_member(guild_id, user.id).await?.model().await?;
+            let member = ctx.luro.twilight_client.guild_member(guild_id, user.id).await?.model().await?;
             embed = embed.thumbnail(ImageSource::url(self.get_member_avatar(Some(&member), &Some(guild_id), &user))?);
             writeln!(description, "\n-----\n**GUILD INFORMATION**")?;
             writeln!(description, "**Total Roles:** `{}`", member.roles.len())?;            
@@ -121,9 +121,6 @@ impl LuroCommand for UserCommands {
         embed = embed.field(EmbedFieldBuilder::new("Timestamps", timestamp));
 
         embed = embed.description(description);
-        Ok(InteractionResponse::Embed {
-            embeds: vec![embed.build()],
-            luro_response
-        })
+        ctx.embed(embed.build())?.respond().await
     }
 }

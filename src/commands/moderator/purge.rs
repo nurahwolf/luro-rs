@@ -2,11 +2,11 @@ use std::convert::TryInto;
 
 use anyhow::Error;
 use async_trait::async_trait;
-use twilight_gateway::MessageSender;
-use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{application::interaction::Interaction, guild::Permissions};
 
-use crate::{interactions::InteractionResponse, LuroContext, SlashResponse};
+use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::guild::Permissions;
+
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -27,42 +27,35 @@ impl LuroCommand for PurgeCommand {
         Permissions::MANAGE_MESSAGES
     }
 
-    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let luro_response = ctx.defer_interaction(&interaction, false).await?;
-
-        let (interaction_channel, _, _) = self.interaction_context(&interaction, "mod purge")?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let channel = ctx.channel()?;
 
         if self.amount == 1 {
             let message = ctx
+                .luro
                 .twilight_client
-                .channel_messages(interaction_channel.id)
+                .channel_messages(channel.id)
                 .limit(1)?
                 .await?
                 .model()
                 .await?;
-            ctx.twilight_client
-                .delete_message(
-                    interaction_channel.id,
-                    message.first().ok_or_else(|| Error::msg("No messages found"))?.id
-                )
+            ctx.luro
+                .twilight_client
+                .delete_message(channel.id, message.first().ok_or_else(|| Error::msg("No messages found"))?.id)
                 .await?;
         } else {
             let messages = ctx
+                .luro
                 .twilight_client
-                .channel_messages(interaction_channel.id)
+                .channel_messages(channel.id)
                 .limit(self.amount.try_into().unwrap())?
                 .await?
                 .model()
                 .await?;
             let message_ids = messages.into_iter().map(|messages| messages.id).collect::<Vec<_>>();
-            ctx.twilight_client
-                .delete_messages(interaction_channel.id, &message_ids)?
-                .await?;
+            ctx.luro.twilight_client.delete_messages(channel.id, &message_ids)?.await?;
         }
 
-        Ok(InteractionResponse::Content {
-            content: "Done!!".to_owned(),
-            luro_response
-        })
+        ctx.content("Done!!".to_owned()).respond().await
     }
 }

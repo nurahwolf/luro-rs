@@ -37,7 +37,7 @@ pub struct Settings {
 }
 
 /// Data that may be accessed globally, including DMs. Generally not modified by the end user
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 
 pub struct GlobalData {
     pub application: Application,

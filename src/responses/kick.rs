@@ -1,28 +1,41 @@
 use anyhow::Error;
 use twilight_model::{
     guild::{Guild, Member},
-    id::{marker::GuildMarker, Id},
     user::User
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{
     functions::{get_member_avatar, get_user_avatar},
-    interactions::InteractionResponse,
-    models::LuroResponse,
     ACCENT_COLOUR
 };
 
+use super::LuroSlash;
+
+impl LuroSlash {
+    pub async fn kick_response(
+        self,
+        guild: Guild,
+        moderator: Member,
+        banned_user: User,
+        reason: &String,
+        success: bool
+    ) -> anyhow::Result<()> {
+        let mut embed = kick_embed(guild, moderator, banned_user, reason)?;
+        if success {
+            embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
+        } else {
+            embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
+        }
+
+        self.embed(embed.build())?.respond().await
+    }
+}
+
 /// Embed showing that a member got banned
-pub fn kick_embed(
-    guild: Guild,
-    moderator: Member,
-    kicked_user: User,
-    guild_id: Id<GuildMarker>,
-    reason: &String
-) -> Result<EmbedBuilder, Error> {
+pub fn kick_embed(guild: Guild, moderator: Member, kicked_user: User, reason: &String) -> Result<EmbedBuilder, Error> {
     // Variables for the moderator
-    let moderator_avatar = get_member_avatar(Some(&moderator), &Some(guild_id), &moderator.user);
+    let moderator_avatar = get_member_avatar(Some(&moderator), &Some(guild.id), &moderator.user);
     let moderator_name = if moderator.user.discriminator == 0 {
         moderator.user.name
     } else {
@@ -60,26 +73,4 @@ pub fn kick_embed(
     }
 
     Ok(embed)
-}
-
-pub fn kick_response(
-    guild: Guild,
-    moderator: Member,
-    kicked_user: User,
-    guild_id: Id<GuildMarker>,
-    reason: &String,
-    success: bool,
-    luro_response: LuroResponse
-) -> Result<InteractionResponse, Error> {
-    let mut embed = kick_embed(guild, moderator, kicked_user, guild_id, reason)?;
-    if success {
-        embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
-    } else {
-        embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
-    }
-
-    Ok(InteractionResponse::Embed {
-        embeds: vec![embed.build()],
-        luro_response
-    })
 }

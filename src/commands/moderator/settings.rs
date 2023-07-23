@@ -1,18 +1,14 @@
 use async_trait::async_trait;
 use tracing::info;
-use twilight_gateway::MessageSender;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
-    application::interaction::Interaction,
     guild::Permissions,
     id::{marker::ChannelMarker, Id}
 };
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{
-    commands::LuroCommand, functions::RoleOrdering, interactions::InteractionResponse, models::GuildSetting,
-    responses::unable_to_get_guild::unable_to_get_guild_response, LuroContext, SlashResponse
-};
+use crate::{commands::LuroCommand, functions::RoleOrdering, models::GuildSetting, responses::LuroSlash};
 use std::collections::hash_map::Entry::Occupied;
 use std::collections::hash_map::Entry::Vacant;
 
@@ -38,20 +34,12 @@ impl LuroCommand for GuildSettingsCommand {
         Permissions::MANAGE_GUILD
     }
 
-    async fn run_command(self, interaction: Interaction, ctx: LuroContext, _shard: MessageSender) -> SlashResponse {
-        let luro_response = ctx.defer_interaction(&interaction, false).await?;
-        let (_, _, _) = self.interaction_context(&interaction, "mod setting")?;
-
-        let guild_id = match interaction.guild_id {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => {
-                return Ok(unable_to_get_guild_response(
-                    &"No guild ID for this interaction".to_owned(),
-                    luro_response
-                ))
-            }
+            None => return ctx.not_guild_response().await
         };
-        let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
+        let guild = ctx.luro.twilight_client.guild(guild_id).await?.model().await?;
         // Attempt to get the first role after @everyone, otherwise fall back to @everyone
         let mut roles: Vec<_> = guild.roles.iter().map(RoleOrdering::from).collect();
         roles.sort();
@@ -69,11 +57,11 @@ impl LuroCommand for GuildSettingsCommand {
         } else {
             None
         };
-        let mut embed = self.default_embed(&ctx, interaction.guild_id);
+        let mut embed = ctx.default_embed();
         embed = embed.title(format!("Guild Setting - {}", guild.name));
 
         // Get guild settings, otherwise create a new entry
-        let guild_setting = match ctx.guild_data.write().entry(guild_id) {
+        let guild_setting = match ctx.luro.guild_data.write().entry(guild_id) {
             Occupied(mut entry) => {
                 let guild_setting = entry.get_mut();
 
@@ -162,16 +150,13 @@ impl LuroCommand for GuildSettingsCommand {
         );
 
         if let Some(moderator_actions_log_channel) = guild_setting.moderator_actions_log_channel {
-            ctx.twilight_client
+            ctx.luro
+                .twilight_client
                 .create_message(moderator_actions_log_channel)
                 .embeds(&[embed.clone().build()])?
                 .await?;
         }
 
-        // Now respond to the original interaction
-        Ok(InteractionResponse::Embed {
-            embeds: vec![embed.build()],
-            luro_response
-        })
+        ctx.embed(embed.build())?.respond().await
     }
 }

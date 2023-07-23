@@ -7,10 +7,31 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedField
 
 use crate::{
     functions::{get_member_avatar, get_user_avatar},
-    interactions::InteractionResponse,
-    models::LuroResponse,
     ACCENT_COLOUR
 };
+
+use super::LuroSlash;
+
+impl LuroSlash {
+    pub async fn ban_response(
+        self,
+        guild: Guild,
+        moderator: Member,
+        banned_user: User,
+        reason: &String,
+        period: &String,
+        success: bool
+    ) -> anyhow::Result<()> {
+        let mut embed = ban_embed(guild, moderator, banned_user, reason, period)?;
+        if success {
+            embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
+        } else {
+            embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
+        }
+
+        self.embed(embed.build())?.respond().await
+    }
+}
 
 /// An embed formatted to show a banned user
 pub fn ban_embed(
@@ -60,27 +81,4 @@ pub fn ban_embed(
     }
 
     Ok(embed)
-}
-
-/// A response containing [ban_embed()]
-pub fn ban_response(
-    guild: Guild,
-    moderator: Member,
-    banned_user: User,
-    reason: &String,
-    period: &String,
-    success: bool,
-    response: LuroResponse
-) -> Result<InteractionResponse, Error> {
-    let mut embed = ban_embed(guild, moderator, banned_user, reason, period)?;
-    if success {
-        embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
-    } else {
-        embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
-    }
-
-    Ok(InteractionResponse::Embed {
-        embeds: vec![embed.build()],
-        luro_response: response
-    })
 }

@@ -1,12 +1,11 @@
 use async_trait::async_trait;
-use twilight_gateway::MessageSender;
-use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::interaction::Interaction;
 
-use crate::{LuroContext, SlashResponse, BOT_OWNER};
+use twilight_interactions::command::{CommandModel, CreateCommand};
+
+use crate::responses::LuroSlash;
+use crate::BOT_OWNER;
 
 use super::LuroCommand;
-use crate::responses::not_owner::not_owner_response;
 
 use self::assign::AssignCommand;
 use self::log::LogCommand;
@@ -33,19 +32,19 @@ pub enum OwnerCommands {
 
 #[async_trait]
 impl LuroCommand for OwnerCommands {
-    async fn run_commands(self, interaction: Interaction, ctx: LuroContext, shard: MessageSender) -> SlashResponse {
-        let (_, interaction_author, _) = self.interaction_context(&interaction, "owner command invoked")?;
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let interaction_author = ctx.author()?;
 
         if !interaction_author.id.get() == BOT_OWNER {
-            return Ok(not_owner_response(Default::default()));
+            return ctx.not_owner_response().await;
         }
 
         // Call the appropriate subcommand.
         match self {
-            Self::Save(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Log(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Assign(command) => command.run_command(interaction, ctx, shard).await,
-            Self::Modify(command) => command.run_command(interaction, ctx, shard).await
+            Self::Save(command) => command.run_command(ctx).await,
+            Self::Log(command) => command.run_command(ctx).await,
+            Self::Assign(command) => command.run_command(ctx).await,
+            Self::Modify(command) => command.run_command(ctx).await
         }
     }
 }
