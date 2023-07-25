@@ -59,6 +59,9 @@ pub const SOURCE_FINDER_REGEX: &str = r"(?P<url>http[^\s>]+)";
 /// The timeout duriation for command buttons, in seconds.
 pub const TIMEOUT_DURIATION: u64 = 12 * 60;
 
+/// Regex for matching content within code blocks
+pub const REGEX_CODE_BLOCK: &str = r"\`\`\`s\n?([\s\S]*?)\n?\`\`\`|\`\`\`\n?([\s\S]*?)\n?\`\`\`";
+
 // TYPES
 /// A shorthand to [LuroFramework] wrapped in an [Arc].
 pub type LuroContext = Arc<LuroFramework>;

@@ -11,8 +11,9 @@ use twilight_model::{
 };
 
 use self::{
-    about::AboutCommand, boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand, lewd::LewdCommands,
-    moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands, say::SayCommand, user::UserCommands
+    about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
+    hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
+    say::SayCommand, user::UserCommands
 };
 
 use anyhow::bail;
@@ -27,6 +28,7 @@ use crate::{
 };
 
 pub mod about;
+pub mod base64;
 pub mod boop;
 pub mod count;
 pub mod heck;
@@ -67,6 +69,7 @@ impl Commands {
         init.global_commands.insert("about", AboutCommand::create_command().into());
         init.global_commands.insert("user", UserCommands::create_command().into());
         init.global_commands.insert("lewd", LewdCommands::create_command().into());
+        init.global_commands.insert("base64", Base64Commands::create_command().into());
 
         // Return our initialised commands
         init
@@ -84,15 +87,16 @@ impl LuroSlash {
         match data.name.as_str() {
             "about" => AboutCommand::new(data).await?.run_command(self).await,
             "say" => SayCommand::new(data).await?.run_command(self).await,
-            "user" => UserCommands::new(data).await?.run_command(self).await,
+            "user" => UserCommands::new(data).await?.run_commands(self).await,
             "hello" => HelloCommand::new(data).await?.run_command(self).await,
             "count" => CountCommand::new(data).await?.run_command(self).await,
-            "mod" => ModeratorCommands::new(data).await?.run_command(self).await,
-            "music" => MusicCommands::new(data).await?.run_command(self).await,
+            "mod" => ModeratorCommands::new(data).await?.run_commands(self).await,
+            "music" => MusicCommands::new(data).await?.run_commands(self).await,
             "boop" => BoopCommand::new(data).await?.run_command(self).await,
-            "owner" => OwnerCommands::new(data).await?.run_command(self).await,
-            "heck" => HeckCommands::new(data).await?.run_command(self).await,
-            "lewd" => LewdCommands::new(data).await?.run_command(self).await,
+            "owner" => OwnerCommands::new(data).await?.run_commands(self).await,
+            "heck" => HeckCommands::new(data).await?.run_commands(self).await,
+            "lewd" => LewdCommands::new(data).await?.run_commands(self).await,
+            "base64" => Base64Commands::new(data).await?.run_commands(self).await,
             name => {
                 warn!(name = name, "received unknown command");
                 // TODO: Handling
@@ -125,28 +129,28 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Run the command
-    async fn run_command(self, _ctx: LuroSlash) -> anyhow::Result<()> {
-        Err(Error::msg("Not implemented!"))
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.not_implemented_response().await
     }
 
     /// Run a command group
-    async fn run_commands(self, _ctx: LuroSlash) -> anyhow::Result<()> {
-        Err(Error::msg("Not implemented!"))
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.not_implemented_response().await
     }
 
     /// Handle a component interaction
-    async fn handle_component(self, _ctx: LuroSlash) -> anyhow::Result<()> {
-        Err(Error::msg("Not implemented!"))
+    async fn handle_component(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.not_implemented_response().await
     }
 
     /// Create and respond to a button interaction
-    async fn handle_button(self, _ctx: LuroSlash) -> anyhow::Result<()> {
-        Err(Error::msg("Not implemented!"))
+    async fn handle_button(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.not_implemented_response().await
     }
 
     /// Create and respond to a button interaction
-    async fn handle_model(self, _ctx: LuroSlash) -> anyhow::Result<()> {
-        Err(Error::msg("Not implemented!"))
+    async fn handle_model(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.not_implemented_response().await
     }
 
     /// The default permissions a user needs to run this command
