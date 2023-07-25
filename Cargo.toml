@@ -31,6 +31,8 @@ toml = "0.7.6"
 rand = "0.8.5"
 git2 = "0.17.2"
 memory-stats = "1.1.0"
+base64 = "0.21.2"
+regex = "1.9.1"
 # luro-framework = { path = "../luro-framework", version = "0" }
 
 [dependencies.tokio]
