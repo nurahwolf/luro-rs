@@ -1,9 +1,16 @@
 use std::str::FromStr;
 
-use crate::{commands::LuroCommand, functions::default_embed};
+use crate::{
+    commands::{
+        base64::{Base64Decode, Base64Encode},
+        LuroCommand
+    },
+    functions::default_embed
+};
 use anyhow::anyhow;
-use tracing::{debug, error, warn};
+use tracing::{debug, error, info, warn};
 use twilight_gateway::MessageSender;
+use twilight_http::Response;
 use twilight_model::{
     application::{
         command::CommandOptionChoice,
@@ -11,7 +18,7 @@ use twilight_model::{
     },
     channel::{
         message::{AllowedMentions, Component, Embed, MentionType, MessageFlags},
-        Channel
+        Channel, Message
     },
     http::{
         attachment::Attachment,
@@ -37,6 +44,7 @@ pub mod kick;
 mod no_guild_settings;
 mod no_interaction_channel;
 mod not_guild;
+mod not_implemented;
 mod not_member;
 mod not_owner;
 mod nsfw_in_sfw;
@@ -123,9 +131,9 @@ impl LuroSlash {
     // Handle an interaction
     pub async fn handle(self) -> anyhow::Result<()> {
         let response = match self.interaction.kind {
-            InteractionType::ApplicationCommand => self.handle_command().await,
-            InteractionType::MessageComponent => self.handle_component().await,
-            InteractionType::ModalSubmit => self.handle_modal().await,
+            InteractionType::ApplicationCommand => self.clone().handle_command().await,
+            InteractionType::MessageComponent => self.clone().handle_component().await,
+            InteractionType::ModalSubmit => self.clone().handle_modal().await,
             other => {
                 warn!("received unexpected {} interaction", other.kind());
                 Ok(())
@@ -134,6 +142,10 @@ impl LuroSlash {
 
         if let Err(why) = response {
             error!(error = ?why, "error while processing interaction");
+            // Attempt to send an error response
+            if let Err(send_fail) = self.internal_error_response(why.to_string()).await {
+                error!(error = ?send_fail, "Failed to respond to the interaction with an error response");
+            };
         };
 
         Ok(())
@@ -141,13 +153,21 @@ impl LuroSlash {
 
     /// Handle incoming component interaction
     pub async fn handle_component(self) -> anyhow::Result<()> {
-        let custom_id = match &self.interaction.data {
-            Some(InteractionData::MessageComponent(data)) => CustomId::from_str(&data.custom_id)?,
+        let data = match &self.interaction.data {
+            Some(InteractionData::MessageComponent(data)) => data,
             _ => return Err(anyhow!("expected message component data"))
         };
 
-        match &*custom_id.name {
+        info!(
+            "Received component interaction - {} - {}",
+            self.author()?.name,
+            data.custom_id
+        );
+
+        match &*data.custom_id {
             "boop" => BoopCommand::handle_button(Default::default(), self).await,
+            "decode" => Base64Decode::handle_button(Default::default(), self).await,
+            "encode" => Base64Encode::handle_button(Default::default(), self).await,
             "heck-setting" => HeckAddCommand::handle_button(Default::default(), self).await,
             name => {
                 warn!(name = name, "received unknown component");
@@ -258,7 +278,7 @@ impl LuroSlash {
     }
 
     /// Set the response to be an update response
-    pub fn update(&mut self) -> &mut Self {
+    pub fn update(mut self) -> Self {
         self.interaction_response_type = InteractionResponseType::UpdateMessage;
         self
     }
@@ -298,6 +318,37 @@ impl LuroSlash {
         Ok(())
     }
 
+    /// Send a message, useful if you do not want to consume the interaction.
+    pub async fn send_message(&self) -> anyhow::Result<Response<Message>> {
+        //TODO: Change this to not unwrap and error handle
+        let mut message = self
+            .luro
+            .twilight_client
+            .create_message(self.interaction.channel.as_ref().unwrap().id);
+
+        if let Some(embeds) = &self.embeds {
+            message = message.embeds(embeds)?
+        }
+
+        if let Some(content) = &self.content {
+            message = message.content(content)?
+        }
+
+        if let Some(components) = &self.components {
+            message = message.components(components)?
+        }
+
+        if let Some(flags) = &self.flags {
+            message = message.flags(*flags)
+        }
+
+        if let Some(interaction_message) = &self.interaction.message {
+            message = message.reply(interaction_message.id)
+        }
+
+        Ok(message.await?)
+    }
+
     /// A legacy return type that returns a [``] type, while old commands are migrated
     pub fn legacy_response(self, deferred: bool) -> crate::interactions::InteractionResponse {
         let response = self.interaction_response();
@@ -328,8 +379,7 @@ impl LuroSlash {
 
     /// Get the interaction channel.
     pub fn channel(&self) -> anyhow::Result<Channel> {
-        self
-            .interaction
+        self.interaction
             .channel
             .clone()
             .ok_or_else(|| anyhow!("Unable to get the channel this interaction was ran in"))
