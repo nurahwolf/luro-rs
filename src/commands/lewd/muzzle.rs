@@ -16,6 +16,7 @@ pub struct MuzzleCommand {
 #[async_trait]
 impl LuroCommand for MuzzleCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        // TODO: Load these from a text file
         let responses = ["<user> just got muzzled for a few seconds!!",
         "<user> just got slapped on the muzzle and told to hush.",
         "<user> just got spanked and told to hush up immediately!",
