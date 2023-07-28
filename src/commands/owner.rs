@@ -8,6 +8,7 @@ use crate::BOT_OWNER;
 use super::LuroCommand;
 
 use self::assign::AssignCommand;
+use self::commands::OwnerCommandsCommand;
 use self::log::LogCommand;
 use self::modify_role::ModifyRoleCommand;
 use self::save::SaveCommand;
@@ -16,6 +17,7 @@ mod assign;
 mod log;
 mod modify_role;
 mod save;
+mod commands;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]
@@ -27,7 +29,9 @@ pub enum OwnerCommands {
     #[command(name = "assign")]
     Assign(Box<AssignCommand>),
     #[command(name = "modify_role")]
-    Modify(ModifyRoleCommand)
+    Modify(ModifyRoleCommand),
+    #[command(name = "commands")]
+    Commands(OwnerCommandsCommand)
 }
 
 #[async_trait]
@@ -44,7 +48,8 @@ impl LuroCommand for OwnerCommands {
             Self::Save(command) => command.run_command(ctx).await,
             Self::Log(command) => command.run_command(ctx).await,
             Self::Assign(command) => command.run_command(ctx).await,
-            Self::Modify(command) => command.run_command(ctx).await
+            Self::Modify(command) => command.run_command(ctx).await,
+            Self::Commands(command) => command.run_command(ctx).await
         }
     }
 }

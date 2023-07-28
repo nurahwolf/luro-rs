@@ -92,10 +92,6 @@ impl LuroFramework {
     pub async fn register_commands(&self, application_id: Id<ApplicationMarker>) -> anyhow::Result<()> {
         let client = self.twilight_client.interaction(application_id);
 
-        if let Err(error) = client.set_guild_commands(Id::new(234815470954348545), &[]).await {
-            error!(error = ?error, "failed to clear guild commands");
-        };
-
         match client
             .set_global_commands(
                 &Commands::default_commands()
