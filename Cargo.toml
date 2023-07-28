@@ -33,6 +33,8 @@ git2 = "0.17.2"
 memory-stats = "1.1.0"
 base64 = "0.21.2"
 regex = "1.9.1"
+tracing-appender = "0.2.2"
+dotenv = "0.15.0"
 # luro-framework = { path = "../luro-framework", version = "0" }
 
 [dependencies.tokio]
