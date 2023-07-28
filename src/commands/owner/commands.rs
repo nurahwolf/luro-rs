@@ -3,10 +3,7 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{Id, marker::GenericMarker};
 
-use crate::{
-    models::{GuildSettings, Hecks},
-    responses::LuroSlash
-};
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 

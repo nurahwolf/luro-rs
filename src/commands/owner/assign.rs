@@ -46,7 +46,7 @@ impl LuroCommand for AssignCommand {
             .twilight_client
             .remove_guild_member_role(guild_id, user.id, self.role)
             .await {
-                Ok(response) => ctx.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.id)).ephemeral().respond().await,
+                Ok(_) => ctx.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.id)).ephemeral().respond().await,
                 Err(why) => ctx.internal_error_response(why.to_string()).await
             }
         } else {
@@ -56,7 +56,7 @@ impl LuroCommand for AssignCommand {
             .twilight_client
             .add_guild_member_role(guild_id, user.id, self.role)
             .await {
-                Ok(response) => ctx.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.id)).ephemeral().respond().await,
+                Ok(_) => ctx.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.id)).ephemeral().respond().await,
                 Err(why) => ctx.internal_error_response(why.to_string()).await
             }
         }
