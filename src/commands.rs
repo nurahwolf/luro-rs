@@ -17,7 +17,6 @@ use self::{
 };
 
 use anyhow::bail;
-use tracing::warn;
 
 use twilight_model::application::interaction::{Interaction, InteractionData};
 
