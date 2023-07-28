@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::id::{Id, marker::GenericMarker};
+use twilight_model::id::{marker::GenericMarker, Id};
 
 use crate::responses::LuroSlash;
 
@@ -23,6 +23,9 @@ impl LuroCommand for OwnerCommandsCommand {
 
         client.set_guild_commands(Id::new(self.guild.get()), &[]).await?;
 
-        ctx.content(format!("Commands set to null in guild <#{}>", self.guild)).ephemeral().respond().await
+        ctx.content(format!("Commands set to null in guild <#{}>", self.guild))
+            .ephemeral()
+            .respond()
+            .await
     }
 }

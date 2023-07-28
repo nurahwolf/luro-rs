@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use tracing::info;
 use std::collections::HashMap;
 use twilight_util::builder::embed::EmbedBuilder;
 
@@ -6,7 +7,7 @@ use twilight_interactions::command::CreateCommand;
 use twilight_model::{
     application::{command::Command, interaction::application_command::InteractionMember},
     guild::Member,
-    id::{marker::GuildMarker, Id},
+    id::{marker::{GuildMarker, ApplicationMarker}, Id},
     user::CurrentUser
 };
 
@@ -23,7 +24,7 @@ use twilight_model::application::interaction::{Interaction, InteractionData};
 use crate::{
     functions::{accent_colour, default_embed, get_user_avatar},
     responses::LuroSlash,
-    LuroContext
+    LuroContext, models::LuroFramework
 };
 
 pub mod about;
@@ -349,5 +350,28 @@ pub trait LuroCommand: CommandModel {
 
         let modulo = currentuser.discriminator % 5;
         format!("https://cdn.discordapp.com/embed/avatars/{modulo}.png")
+    }
+}
+
+impl LuroFramework {
+    /// Register commands to the Discord API.
+    pub async fn register_commands(&self, application_id: Id<ApplicationMarker>) -> anyhow::Result<()> {
+        let client = self.twilight_client.interaction(application_id);
+
+        match client
+            .set_global_commands(
+                &Commands::default_commands()
+                    .global_commands
+                    .into_values()
+                    .collect::<Vec<Command>>()
+            )
+            .await
+        {
+            Ok(command_result) => Ok(info!(
+                "Successfully registered {} global commands!",
+                command_result.model().await?.len()
+            )),
+            Err(why) => Err(why.into())
+        }
     }
 }

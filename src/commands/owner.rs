@@ -14,10 +14,10 @@ use self::modify_role::ModifyRoleCommand;
 use self::save::SaveCommand;
 
 mod assign;
+mod commands;
 mod log;
 mod modify_role;
 mod save;
-mod commands;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]

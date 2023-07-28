@@ -20,14 +20,8 @@ use twilight_model::{
 };
 
 mod guildsettings;
+mod hecks;
 mod luroframework;
-
-/// A simple struct simply containing if a resposne should be ephemeral or deferred
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct LuroResponse {
-    pub ephemeral: bool,
-    pub deferred: bool
-}
 
 /// Settings that are stored on disk and meant to be modified by the user
 #[derive(Debug)]

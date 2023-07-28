@@ -2,24 +2,16 @@
 
 use anyhow::Context;
 use futures_util::StreamExt;
-use interactions::InteractionResponse;
 use models::LuroFramework;
 use std::{env, sync::Arc};
 use tracing_subscriber::{filter, fmt, prelude::__tracing_subscriber_SubscriberExt, reload, util::SubscriberInitExt};
 use twilight_gateway::{stream::ShardEventStream, Intents};
 
 pub mod commands;
-pub mod error;
 pub mod event_handler;
 pub mod functions;
-pub mod hecks;
-pub mod interactions;
-pub mod macros;
 pub mod models;
 pub mod responses;
-
-/// [tracing_subscriber] filter level
-pub const FILTER: filter::LevelFilter = filter::LevelFilter::INFO;
 
 /// Luro's main accent colour
 pub const ACCENT_COLOUR: u32 = 0xDABEEF;
@@ -59,14 +51,15 @@ pub const SOURCE_FINDER_REGEX: &str = r"(?P<url>http[^\s>]+)";
 /// The timeout duriation for command buttons, in seconds.
 pub const TIMEOUT_DURIATION: u64 = 12 * 60;
 
+// CONSTANTS defined below are strictly required.
 /// Regex for matching content within code blocks
 pub const REGEX_CODE_BLOCK: &str = r"\`\`\`s\n?([\s\S]*?)\n?\`\`\`|\`\`\`\n?([\s\S]*?)\n?\`\`\`";
+/// [tracing_subscriber] filter level
+pub const FILTER: filter::LevelFilter = filter::LevelFilter::INFO;
 
 // TYPES
 /// A shorthand to [LuroFramework] wrapped in an [Arc].
 pub type LuroContext = Arc<LuroFramework>;
-/// Luro's response type for interactions, returning an [InteractionResponse] if successful, or  [anyhow::Error] if unsuccessful
-pub type SlashResponse = Result<InteractionResponse, anyhow::Error>;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

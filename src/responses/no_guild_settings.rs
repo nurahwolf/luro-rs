@@ -1,5 +1,5 @@
 use tracing::error;
-use twilight_model::id::{Id, marker::GuildMarker};
+use twilight_model::id::{marker::GuildMarker, Id};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::COLOUR_DANGER;

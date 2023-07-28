@@ -68,6 +68,7 @@ impl LuroFramework {
         let hyper_client = hyper::Client::new();
         let guild_data = GuildSettings::get().await?.guilds.into();
         let hecks = Hecks::get(HECK_FILE_PATH).await?;
+        // TODO: Remove this hardcoded variable
         let owners = vec![Id::new(97003404601094144)];
         let global_data = GlobalData {
             count: 0,

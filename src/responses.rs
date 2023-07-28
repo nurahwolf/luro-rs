@@ -31,7 +31,6 @@ use twilight_util::builder::embed::EmbedBuilder;
 use crate::{
     commands::{boop::BoopCommand, heck::add::HeckAddCommand},
     functions::CustomId,
-    models::LuroResponse,
     LuroContext
 };
 
@@ -347,19 +346,6 @@ impl LuroSlash {
         }
 
         Ok(message.await?)
-    }
-
-    /// A legacy return type that returns a [``] type, while old commands are migrated
-    pub fn legacy_response(self, deferred: bool) -> crate::interactions::InteractionResponse {
-        let response = self.interaction_response();
-        crate::interactions::InteractionResponse::Raw {
-            kind: response.kind,
-            data: response.data,
-            luro_response: LuroResponse {
-                ephemeral: self.flags.is_some(),
-                deferred
-            }
-        }
     }
 
     /// Get the interaction author.

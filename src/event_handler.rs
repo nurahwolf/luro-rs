@@ -1,19 +1,8 @@
-use std::sync::Arc;
-
-use tracing::{debug, error, info};
+use tracing::error;
 use twilight_gateway::{Event, MessageSender};
-use twilight_model::{
-    application::{command::Command, interaction::Interaction},
-    id::{marker::ApplicationMarker, Id}
-};
 
-use crate::{
-    commands::Commands,
-    interactions::{InteractionResponder, InteractionResponse},
-    models::LuroFramework,
-    LuroContext
-};
-use crate::{models::LuroResponse, responses::LuroSlash};
+use crate::responses::LuroSlash;
+use crate::{models::LuroFramework, LuroContext};
 
 mod ban_add;
 mod message_create;
@@ -42,86 +31,5 @@ impl LuroFramework {
         }
 
         Ok(())
-    }
-
-    /// Handle incoming [`Interaction`].
-    pub async fn handle_interaction() {
-        // TODO: Better error handling
-        // match response {
-        //     Ok(response) => Ok(()),
-        //     Err(why) => {
-
-        //         match responder
-        //             .respond(
-        //                 &self,
-        //                 &internal_error_response(
-        //                     &why.to_string(),
-        //                     LuroResponse {
-        //                         ephemeral: true,
-        //                         deferred: false
-        //                     }
-        //                 )
-        //             )
-        //             .await
-        //         {
-        //             Ok(_) => info!("Successfully responded to interaction with error"),
-        //             Err(_) => match responder
-        //                 .respond(
-        //                     &self,
-        //                     &internal_error_response(
-        //                         &why.to_string(),
-        //                         LuroResponse {
-        //                             ephemeral: true,
-        //                             deferred: true
-        //                         }
-        //                     )
-        //                 )
-        //                 .await
-        //             {
-        //                 Ok(_) => info!("Successfully responded to interaction with error"),
-        //                 Err(_) => error!("Failed to respond to interaction with error")
-        //             }
-        //         }
-
-        //         Ok(())
-        //     }
-        // }
-    }
-
-    /// Register commands to the Discord API.
-    pub async fn register_commands(&self, application_id: Id<ApplicationMarker>) -> anyhow::Result<()> {
-        let client = self.twilight_client.interaction(application_id);
-
-        match client
-            .set_global_commands(
-                &Commands::default_commands()
-                    .global_commands
-                    .into_values()
-                    .collect::<Vec<Command>>()
-            )
-            .await
-        {
-            Ok(command_result) => Ok(info!(
-                "Successfully registered {} global commands!",
-                command_result.model().await?.len()
-            )),
-            Err(why) => Err(why.into())
-        }
-    }
-
-    pub async fn defer_interaction(
-        self: &Arc<Self>,
-        interaction: &Interaction,
-        ephemeral: bool
-    ) -> anyhow::Result<LuroResponse> {
-        debug!("Deferring interaction");
-        InteractionResponder::from_interaction(interaction)
-            .respond(self, &InteractionResponse::Defer { ephemeral })
-            .await?;
-
-        Ok(LuroResponse {
-            ephemeral,
-            deferred: true
-        })
     }
 }
