@@ -12,16 +12,16 @@ impl LuroFramework {
         let mut presence_string = "/about".to_owned();
         info!("Luro is now ready!");
         info!("==================");
-        info!("Username:     {}", ready.user.name);
-        info!("ID:           {}", ready.user.id);
-        info!("Guilds:       {}", ready.guilds.len());
-        info!("API Version:  {}", ready.version);
+        info!("Username:      {}", ready.user.name);
+        info!("ID:            {}", ready.user.id);
+        info!("Guilds:        {}", ready.guilds.len());
+        info!("API Version:   {}", ready.version);
 
         presence_string.push_str(format!(" | on {} guilds", ready.guilds.len()).as_str());
 
         if let Some(shard_id) = ready.shard {
-            info!("Shard:        {}", shard_id.number());
-            info!("Total Shards: {}", shard_id.total());
+            info!("Shard:         {}", shard_id.number());
+            info!("Total Shards:  {}", shard_id.total());
             presence_string.push_str(format!(" | shard {}", shard_id.number()).as_str());
 
             shard.command(&UpdatePresence::new(
@@ -40,8 +40,17 @@ impl LuroFramework {
         let application = self.twilight_client.current_user_application().await?.model().await?;
 
         if let Some(owner) = &application.owner {
-            info!("Owner:        {}", owner.name);
+            info!("Primary Owner: {}", owner.name);
         }
+        let mut owners = String::new();
+        for owner in &self.global_data.read().owners {
+            if owners.is_empty() {
+                owners.push_str(&owner.name)
+            } else {
+                owners.push_str(format!(", {}", owner.name).as_str())
+            }
+        }
+        info!("Owners:        {owners}");
 
         debug!("Attempting to register guild settings");
         self.register_commands(application.id).await?;

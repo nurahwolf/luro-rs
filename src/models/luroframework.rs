@@ -1,4 +1,11 @@
-use std::{convert::TryInto, net::SocketAddr, str::FromStr, sync::Arc};
+use std::{
+    convert::TryInto,
+    fs,
+    net::SocketAddr,
+    path::{Path, PathBuf},
+    str::FromStr,
+    sync::Arc
+};
 
 use anyhow::Error;
 
@@ -8,24 +15,22 @@ use twilight_cache_inmemory::InMemoryCache;
 use twilight_gateway::{stream, ConfigBuilder, Intents, Shard};
 use twilight_http::client::InteractionClient;
 use twilight_lavalink::Lavalink;
-use twilight_model::{
-    gateway::{
-        payload::outgoing::update_presence::UpdatePresencePayload,
-        presence::{ActivityType, MinimalActivity, Status}
-    },
-    id::Id
+use twilight_model::gateway::{
+    payload::outgoing::update_presence::UpdatePresencePayload,
+    presence::{ActivityType, MinimalActivity, Status}
 };
 
 use crate::{
-    models::{GlobalData, GuildSettings, Hecks, Settings},
-    LuroFramework
+    models::{GlobalData, Hecks, Settings},
+    LuroFramework, BOT_OWNERS
 };
 
 use crate::HECK_FILE_PATH;
 
+use super::toml::LuroTOML;
+
 impl LuroFramework {
     /// Creates a new framework builder, this is a shortcut to FrameworkBuilder.
-    /// [new](crate::builder::FrameworkBuilder::new)
     pub async fn builder(
         intents: Intents,
         lavalink_auth: String,
@@ -33,6 +38,7 @@ impl LuroFramework {
         token: String,
         tracing_subscriber: Handle<LevelFilter, Registry>
     ) -> Result<(Arc<Self>, Vec<Shard>), Error> {
+        check_data();
         let (twilight_client, twilight_cache, shard_config) = (
             twilight_http::Client::new(token.clone()),
             InMemoryCache::new(),
@@ -66,20 +72,30 @@ impl LuroFramework {
         };
 
         let hyper_client = hyper::Client::new();
-        let guild_data = GuildSettings::get().await?.guilds.into();
-        let hecks = Hecks::get(HECK_FILE_PATH).await?;
-        // TODO: Remove this hardcoded variable
-        let owners = vec![Id::new(97003404601094144)];
+        let hecks = Hecks::get(Path::new(HECK_FILE_PATH)).await?;
+        let application_owner = match &application.owner {
+            Some(owner) => owner.clone(),
+            None => panic!("No bot owner present in application")
+        };
+        let mut owners = vec![application_owner.clone()];
+        for owner in BOT_OWNERS {
+            // If we already have the owner in the list (which is likely) then don't add them again.
+            if owner == application_owner.id {
+                continue;
+            }
+
+            owners.push(twilight_client.user(owner).await?.model().await?)
+        }
+        let settings = Settings {
+            application_id: application.id
+        }
+        .into();
         let global_data = GlobalData {
             count: 0,
             hecks,
             owners,
-            application: application.clone(),
+            application,
             current_user
-        }
-        .into();
-        let settings = Settings {
-            application_id: application.id
         }
         .into();
 
@@ -89,7 +105,7 @@ impl LuroFramework {
                 twilight_cache,
                 hyper_client,
                 lavalink,
-                guild_data,
+                guild_data: Default::default(),
                 global_data,
                 tracing_subscriber,
                 settings
@@ -103,5 +119,17 @@ impl LuroFramework {
     /// [http client](Client) and [application id](ApplicationMarker)
     pub fn interaction_client(&self) -> InteractionClient {
         self.twilight_client.interaction(self.settings.read().application_id)
+    }
+}
+
+// A simple function used to make sure our data path and other needed files exist
+fn check_data() {
+    let path_to_data = PathBuf::from("./data"); //env::current_dir().expect("Invaild executing directory").join("/data");
+
+    // Initialise /data folder for toml. Otherwise it panics.
+    if !path_to_data.exists() {
+        tracing::warn!("/data folder does not exist, creating it...");
+        fs::create_dir(path_to_data).expect("Failed to make data subfolder");
+        tracing::info!("/data folder successfully created!");
     }
 }

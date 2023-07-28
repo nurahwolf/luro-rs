@@ -34,7 +34,7 @@ impl LuroCommand for HeckSomeoneCommand {
         let nsfw = ctx.channel()?.nsfw.unwrap_or(false);
 
         debug!("attempting to get a heck");
-        let (heck, heck_id) = get_heck(ctx.luro.clone(), self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
+        let (heck, heck_id) = get_heck(&ctx.luro, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
 
         debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, &ctx.author()?, &self.user.resolved).await;

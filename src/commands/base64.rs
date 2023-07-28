@@ -49,7 +49,7 @@ impl LuroCommand for Base64Decode {
         let decoded = format!("```\n{}\n```", decode(&self.string)?);
 
         if decoded.len() > 1000 {
-            let embed = ctx.default_embed().description(decoded);
+            let embed = ctx.default_embed().await?.description(decoded);
             ctx.embed(embed.build())?.components(button).respond().await
         } else {
             ctx.content(decoded).components(button).respond().await
@@ -83,7 +83,7 @@ impl LuroCommand for Base64Encode {
         };
 
         if encoded.len() > 1000 {
-            let embed = ctx.default_embed().description(encoded);
+            let embed = ctx.default_embed().await?.description(encoded);
             ctx.embed(embed.build())?.components(button).respond().await
         } else {
             ctx.content(encoded).components(button).respond().await
@@ -192,7 +192,7 @@ async fn response(ctx: LuroSlash, decode_operation: bool) -> anyhow::Result<()> 
             .await
     } else if content.len() > 1000 {
         // If our string is over 1000 characters, return an embed
-        let embed = ctx.default_embed().description(content).build();
+        let embed = ctx.default_embed().await?.description(content).build();
         ctx.embed(embed)?
             .content(String::new())
             .components(button)

@@ -12,16 +12,17 @@ use twilight_lavalink::Lavalink;
 use twilight_model::{
     application::command::Command,
     id::{
-        marker::{ApplicationMarker, ChannelMarker, GuildMarker, UserMarker},
+        marker::{ApplicationMarker, ChannelMarker, GuildMarker},
         Id
     },
     oauth::Application,
-    user::CurrentUser
+    user::{CurrentUser, User}
 };
 
 mod guildsettings;
 mod hecks;
 mod luroframework;
+pub mod toml;
 
 /// Settings that are stored on disk and meant to be modified by the user
 #[derive(Debug)]
@@ -31,14 +32,14 @@ pub struct Settings {
 }
 
 /// Data that may be accessed globally, including DMs. Generally not modified by the end user
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 
 pub struct GlobalData {
     pub application: Application,
     pub count: usize,
     pub current_user: CurrentUser,
     pub hecks: Hecks,
-    pub owners: Vec<Id<UserMarker>>
+    pub owners: Vec<User>
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -81,12 +82,6 @@ pub struct LuroFramework {
     pub global_data: RwLock<GlobalData>,
     /// Data that is specific to a guild
     pub guild_data: RwLock<HashMap<Id<GuildMarker>, GuildSetting>>
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct GuildSettings {
-    /// Guild Settings
-    pub guilds: HashMap<Id<GuildMarker>, GuildSetting>
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]

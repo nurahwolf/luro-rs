@@ -1,90 +1,94 @@
 use std::collections::hash_map::Entry;
 use std::path::Path;
-
-use anyhow::Error;
-
-use tokio::fs::write;
-use tokio::{
-    fs::File,
-    io::{AsyncReadExt, AsyncWriteExt}
-};
-use tracing::{info, warn};
+use tracing::warn;
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::models::{GuildSetting, GuildSettings};
-use crate::{LuroContext, GUILDSETTINGS_FILE_PATH};
+use crate::models::GuildSetting;
+use crate::LuroContext;
 
-impl GuildSettings {
-    /// Get a new structure filled with data from a toml file. Note, this panics if it cannot find the toml file!
-    pub async fn get() -> anyhow::Result<Self> {
-        let mut file;
-        let mut contents = String::new();
-        // Create a file if it does not exist
-        if !Path::new(GUILDSETTINGS_FILE_PATH).exists() {
-            warn!("guild_settings.toml does not exist, creating it...");
-            contents = r"guilds = {}".to_string();
+use super::toml::LuroTOML;
+use crate::GUILDSETTINGS_FILE_PATH;
 
-            file = match File::create(GUILDSETTINGS_FILE_PATH).await {
-                Ok(ok) => ok,
-                Err(why) => return Err(Error::msg(format!("Error creating guild_settings.toml - {why}")))
-            };
+impl LuroTOML for GuildSetting {}
 
-            if let Err(why) = file.write_all(contents.as_bytes()).await {
-                warn!("Error writing toml file - {why}");
-            };
-            info!("guild_settings.toml successfully created!");
-        } else {
-            file = match File::open(GUILDSETTINGS_FILE_PATH).await {
-                Ok(file_opened) => file_opened,
-                Err(why) => return Err(Error::msg(format!("Error opening toml file - {why}")))
-            };
-
-            match file.read_to_string(&mut contents).await {
-                Ok(size) => info!("Read file {GUILDSETTINGS_FILE_PATH} of length {size}"),
-                Err(why) => return Err(Error::msg(format!("Error reading toml file - {why}")))
-            };
+impl GuildSetting {
+    // This function makes sure guild settings are present on disk and in the cache
+    pub async fn manage_guild_settings(
+        ctx: &LuroContext,
+        guild_id: Id<GuildMarker>,
+        guild_settings: Option<Self>
+    ) -> anyhow::Result<Self> {
+        // new_guild_settings is set to true if we are specifying settings, so we know to flush it to disk.
+        // TODO: Can I only call this if it is vacant from the cache?
+        let data_from_disk = Self::get(Path::new(&format!(
+            "{0}/{1}/guild_settings.toml",
+            GUILDSETTINGS_FILE_PATH, guild_id
+        )))
+        .await?;
+        let (mut guild_settings, new_settings) = match guild_settings {
+            Some(guild_settings) => (guild_settings, true),
+            None => (Self::default(), false)
         };
 
-        match toml::from_str::<Self>(&contents) {
-            Ok(guild_settings) => Ok(guild_settings),
-            Err(why) => Err(Error::msg(format!("Error serialising toml file - {why}")))
+        {
+            let mut guild_data = ctx.guild_data.write();
+            match guild_data.entry(guild_id) {
+                Entry::Occupied(mut entry) => {
+                    // If present and we have new settings passed to this function, replace the settings with what we defined
+                    if new_settings {
+                        let new_settings = entry.get_mut();
+                        // Only overwrite if explicitly set
+                        if let Some(accent_colour) = guild_settings.accent_colour_custom {
+                            new_settings.accent_colour_custom = Some(accent_colour)
+                        }
+
+                        if let Some(moderator_actions_log_channel) = guild_settings.moderator_actions_log_channel {
+                            new_settings.moderator_actions_log_channel = Some(moderator_actions_log_channel)
+                        }
+
+                        if let Some(discord_events_log_channel) = guild_settings.discord_events_log_channel {
+                            new_settings.discord_events_log_channel = Some(discord_events_log_channel)
+                        }
+
+                        if let Some(accent_colour_custom) = guild_settings.accent_colour_custom {
+                            new_settings.accent_colour_custom = Some(accent_colour_custom)
+                        }
+                        guild_settings = new_settings.clone()
+                    }
+                }
+                Entry::Vacant(vacant) => {
+                    guild_settings = data_from_disk;
+                    // Only overwrite if explicitly set
+                    if let Some(accent_colour) = guild_settings.accent_colour_custom {
+                        guild_settings.accent_colour_custom = Some(accent_colour)
+                    }
+
+                    if let Some(moderator_actions_log_channel) = guild_settings.moderator_actions_log_channel {
+                        guild_settings.moderator_actions_log_channel = Some(moderator_actions_log_channel)
+                    }
+
+                    if let Some(discord_events_log_channel) = guild_settings.discord_events_log_channel {
+                        guild_settings.discord_events_log_channel = Some(discord_events_log_channel)
+                    }
+
+                    if let Some(accent_colour_custom) = guild_settings.accent_colour_custom {
+                        guild_settings.accent_colour_custom = Some(accent_colour_custom)
+                    }
+
+                    vacant.insert(guild_settings.clone());
+                }
+            };
         }
-    }
 
-    /// Write the struct to a toml file
-    pub async fn write(ctx: &LuroContext) -> anyhow::Result<()> {
-        let guilds = Self {
-            guilds: ctx.guild_data.read().clone()
-        };
-
-        let struct_to_toml_string = match toml::to_string(&guilds) {
-            Ok(string) => string,
-            Err(why) => return Err(Error::msg(format!("Error serialising struct to toml string: {why}")))
-        };
-
-        match write(GUILDSETTINGS_FILE_PATH, struct_to_toml_string).await {
-            Ok(_) => Ok(()),
-            Err(why) => Err(Error::msg(format!("Error writing toml file: {why}")))
+        if new_settings {
+            warn!("New settings are defined, flushing data to disk");
+            Self::write(
+                &guild_settings,
+                Path::new(&format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, guild_id))
+            )
+            .await?;
         }
-    }
 
-    /// Create guild settings for a guild, if it is not present.
-    pub fn check_guild_is_present(ctx: LuroContext, guild_id: Id<GuildMarker>) -> anyhow::Result<()> {
-        let mut guild_db = ctx.guild_data.write();
-
-        match guild_db.entry(guild_id) {
-            Entry::Occupied(_) => (),
-            Entry::Vacant(vacant) => {
-                vacant.insert(GuildSetting {
-                    commands: Default::default(),
-                    hecks: Default::default(),
-                    accent_colour: Default::default(),
-                    accent_colour_custom: Default::default(),
-                    discord_events_log_channel: Default::default(),
-                    moderator_actions_log_channel: Default::default()
-                });
-            }
-        };
-        Ok(())
+        Ok(guild_settings)
     }
 }

@@ -5,12 +5,13 @@ use crate::{
         base64::{Base64Decode, Base64Encode},
         LuroCommand
     },
+    models::GuildSetting,
     ACCENT_COLOUR
 };
 use anyhow::anyhow;
 use tracing::{debug, error, info, warn};
 use twilight_gateway::MessageSender;
-use twilight_http::Response;
+use twilight_http::{client::InteractionClient, Response};
 use twilight_model::{
     application::{
         command::CommandOptionChoice,
@@ -169,6 +170,7 @@ impl LuroSlash {
                 // TODO: Make this a response type.
                 let embed = self
                     .default_embed()
+                    .await?
                     .title("IT'S FUCKED")
                     .description("Will finish this at some point");
                 self.embeds(vec![embed.build()])?.respond().await
@@ -191,6 +193,7 @@ impl LuroSlash {
                 // TODO: Make this a response type.
                 let embed = self
                     .default_embed()
+                    .await?
                     .title("IT'S FUCKED")
                     .description("Will finish this at some point");
                 self.embeds(vec![embed.build()])?.respond().await
@@ -259,11 +262,18 @@ impl LuroSlash {
         self
     }
 
+    /// Create an interaction client
+    pub fn interaction_client(&self) -> InteractionClient {
+        self.luro.twilight_client.interaction(self.interaction.application_id)
+    }
+
     /// Set's the response type to be sent as a response to a deferred message and acknowledge this interaction.
-    pub async fn deferred(mut self) -> anyhow::Result<Self> {
+    pub async fn deferred(&mut self) -> anyhow::Result<&mut Self> {
         // TODO: Check to make sure we are responding to an interaction, otherwise this type cannot be used
         self.interaction_response_type = InteractionResponseType::DeferredChannelMessageWithSource;
-        self.respond().await?;
+        self.interaction_client()
+            .create_response(self.interaction.id, &self.interaction.token, &self.interaction_response())
+            .await?;
         Ok(self)
     }
 
@@ -274,7 +284,7 @@ impl LuroSlash {
     }
 
     /// Set the response to be an update response
-    pub fn update(mut self) -> Self {
+    pub fn update(&mut self) -> &mut Self {
         self.interaction_response_type = InteractionResponseType::UpdateMessage;
         self
     }
@@ -306,8 +316,27 @@ impl LuroSlash {
 
     /// Using the data contained within this struct, respond to an interaction.
     pub async fn respond(&self) -> anyhow::Result<()> {
-        let client = self.luro.twilight_client.interaction(self.interaction.application_id);
-        client
+        if self.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource {
+            let client = self.interaction_client();
+            let mut response = client
+                .update_response(&self.interaction.token)
+                .embeds(self.embeds.as_deref())?
+                .components(self.components.as_deref())?
+                .allowed_mentions(self.allowed_mentions.as_ref());
+
+            if let Some(content) = &self.content && !content.is_empty() {
+                response = response.content(Some(content))?;
+            }
+
+            if let Some(attachments) = &self.attachments {
+                response = response.attachments(attachments)?
+            }
+
+            response.await?;
+            return Ok(());
+        }
+
+        self.interaction_client()
             .create_response(self.interaction.id, &self.interaction.token, &self.interaction_response())
             .await?;
 
@@ -369,28 +398,25 @@ impl LuroSlash {
     }
 
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
-    pub fn default_embed(&self) -> EmbedBuilder {
-        EmbedBuilder::new().color(self.accent_colour())
+    pub async fn default_embed(&self) -> anyhow::Result<EmbedBuilder> {
+        Ok(EmbedBuilder::new().color(self.accent_colour().await?))
     }
 
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
-    pub fn accent_colour(&self) -> u32 {
+    pub async fn accent_colour(&self) -> anyhow::Result<u32> {
         if let Some(guild_id) = &self.interaction.guild_id {
-            let guild_db = self.luro.guild_data.read();
-            let guild_settings = guild_db.get(guild_id);
+            let guild_settings = GuildSetting::manage_guild_settings(&self.luro, *guild_id, None).await?;
 
-            if let Some(guild_settings) = guild_settings {
-                // Check to see if a custom colour is defined
-                if let Some(custom_accent_colour) = guild_settings.accent_colour_custom {
-                    return custom_accent_colour;
-                };
+            // Check to see if a custom colour is defined
+            if let Some(custom_accent_colour) = guild_settings.accent_colour_custom {
+                return Ok(custom_accent_colour);
+            };
 
-                if guild_settings.accent_colour != 0 {
-                    return guild_settings.accent_colour;
-                }
+            if guild_settings.accent_colour != 0 {
+                return Ok(ACCENT_COLOUR);
             }
         };
 
-        ACCENT_COLOUR
+        Ok(ACCENT_COLOUR)
     }
 }

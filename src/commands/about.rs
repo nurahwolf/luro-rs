@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use git2::{ErrorCode, Repository};
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_util::builder::embed::{EmbedFooterBuilder, ImageSource};
+use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder, ImageSource};
 
 use crate::responses::LuroSlash;
 
@@ -23,19 +23,22 @@ pub struct AboutCommand {
 #[async_trait]
 impl LuroCommand for AboutCommand {
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.ephemeral().clone().deferred().await?;
+        ctx.ephemeral().deferred().await?;
         // Variables
-        let mut embed = ctx.default_embed();
+        let mut embed = ctx.default_embed().await?;
         let mut description = String::new();
         let mut framework_owners_list = String::new();
         let current_user = ctx.luro.twilight_client.current_user().await?.model().await?;
         let current_user_avatar = self.get_currentuser_avatar(&current_user);
         let version = env!("CARGO_PKG_VERSION").to_string();
 
-        let owners = ctx.luro.global_data.read().owners.clone();
-        for owner in owners {
-            let owner = ctx.luro.twilight_client.user(owner).await?.model().await?;
-            write!(framework_owners_list, "{} - <@{}>, ", owner.name, owner.id)?;
+        for owner in &ctx.luro.global_data.read().owners {
+            if framework_owners_list.is_empty() {
+                write!(framework_owners_list, "`{}` - <@{}>", owner.name, owner.id)?;
+                continue;
+            }
+
+            write!(framework_owners_list, ", `{}` - <@{}>", owner.name, owner.id)?;
         }
         writeln!(
             description,
@@ -69,7 +72,7 @@ impl LuroCommand for AboutCommand {
         {
             writeln!(
                 description,
-                "**Primary Owner:** {} - <@{}>",
+                "**Primary Owner:** `{}` - <@{}>",
                 application_owner.name, application_owner.id
             )?;
         };
@@ -80,57 +83,57 @@ impl LuroCommand for AboutCommand {
         writeln!(description, "")?;
 
         if let Some(memory) = self.memory && memory {
-            writeln!(description, "-----")?;
-
+            let mut memory_description = String::new();
             if let Some(usage) = memory_stats() {
                 writeln!(
-                    description,
+                    memory_description,
                     "**Physical memory usage:** `{} MB`",
                     usage.physical_mem / 1024 / 1024
                 )?;
                 writeln!(
-                    description,
+                    memory_description,
                     "**Virtual memory usage:** `{} MB`",
                     usage.virtual_mem / 1024 / 1024
                 )?;
             };
+            embed = embed.field(EmbedFieldBuilder::new("Memory Stats", memory_description).inline())
         }
 
         if let Some(cache_stats) = self.cache && cache_stats {
+            let mut cache_stats = String::new();
             let stats = ctx.luro.twilight_cache.stats();
-            writeln!(description, "-----")?;
-            writeln!(description, "**Cache Stats**\n")?;
             if stats.guilds() != 0 {
-                writeln!(description, "**Guilds:** `{}`", stats.guilds())?;
+                writeln!(cache_stats, "**Guilds:** `{}`", stats.guilds())?;
             }
             if stats.channels() != 0 {
-                writeln!(description, "**Channels:** `{}`", stats.channels())?;
+                writeln!(cache_stats, "**Channels:** `{}`", stats.channels())?;
             }
             if stats.emojis() != 0 {
-                writeln!(description, "**Emojis:** `{}`", stats.emojis())?;
+                writeln!(cache_stats, "**Emojis:** `{}`", stats.emojis())?;
             }
             if stats.members() != 0 {
-                writeln!(description, "**Members:** `{}`", stats.members())?;
+                writeln!(cache_stats, "**Members:** `{}`", stats.members())?;
             }
             if stats.presences() != 0 {
-                writeln!(description, "**Presences:** `{}`", stats.presences())?;
+                writeln!(cache_stats, "**Presences:** `{}`", stats.presences())?;
             }
             if stats.roles() != 0 {
-                writeln!(description, "**Roles:** `{}`", stats.roles())?;
+                writeln!(cache_stats, "**Roles:** `{}`", stats.roles())?;
             }
             if stats.unavailable_guilds() != 0 {
                 writeln!(
-                    description,
+                    cache_stats,
                     "**Unavailable Guilds:** `{}`",
                     stats.unavailable_guilds()
                 )?;
             }
             if stats.guilds() != 0 {
-                writeln!(description, "**Users:** `{}`", stats.users())?;
+                writeln!(cache_stats, "**Users:** `{}`", stats.users())?;
             }
             if stats.voice_states() != 0 {
-                writeln!(description, "**Voice States:** `{}`", stats.voice_states())?;
+                writeln!(cache_stats, "**Voice States:** `{}`", stats.voice_states())?;
             }
+            embed = embed.field(EmbedFieldBuilder::new("Cache Stats", cache_stats).inline())
         }
 
         embed = embed.description(description);

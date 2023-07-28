@@ -15,7 +15,7 @@ use twilight_model::{
 };
 
 use crate::{
-    models::{GuildSettings, Heck},
+    models::{GuildSetting, Heck},
     responses::LuroSlash,
     LuroContext
 };
@@ -118,7 +118,7 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
 
 /// Open the database as writeable and remove a NSFW heck from it, returning the heck removed
 async fn get_heck(
-    ctx: LuroContext,
+    ctx: &LuroContext,
     id: Option<i64>,
     guild_id: Option<Id<GuildMarker>>,
     global: bool,
@@ -146,7 +146,7 @@ async fn get_heck(
         let guild_id =
             guild_id.ok_or_else(|| Error::msg("Guild ID is not present. You can only use this option in a guild."))?;
         trace!("got guild_id");
-        GuildSettings::check_guild_is_present(ctx.clone(), guild_id)?;
+        GuildSetting::manage_guild_settings(ctx, guild_id, None).await?;
         trace!("checked to make sure guild settings is present");
         let mut guild_db = ctx.guild_data.write();
         trace!("got guild_db");

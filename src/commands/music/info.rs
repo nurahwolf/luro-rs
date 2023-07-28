@@ -38,6 +38,7 @@ impl LuroCommand for InfoCommand {
 
         let embed = ctx
             .default_embed()
+            .await?
             .title("Lavalink Music Stats")
             .description(description)
             .field(EmbedFieldBuilder::new("Total Players", stats.players.to_string()).inline())

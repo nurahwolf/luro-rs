@@ -131,7 +131,7 @@ impl LuroCommand for ModifyRoleCommand {
             }
 
             let updated_role = update_role.await?.model().await?;
-            let mut embed = ctx.default_embed();
+            let mut embed = ctx.default_embed().await?;
             let mut description = String::new();
             writeln!(description, "**Role:** <@&{0}> - {0}", updated_role.id)?;
             writeln!(description, "**Position:** {}", updated_role.position)?;
@@ -153,10 +153,10 @@ impl LuroCommand for ModifyRoleCommand {
             }
 
             // TODO: Return an embed with new role information
-            ctx.embed(embed.build())?.respond().await
+            ctx.embed(embed.build())?.ephemeral().respond().await
         } else {
             // TODO: Make this a response type
-            ctx.content("No role found".to_owned()).respond().await
+            ctx.content("No role found".to_owned()).ephemeral().respond().await
         }
     }
 }
