@@ -97,12 +97,7 @@ impl LuroSlash {
             "heck" => HeckCommands::new(data).await?.run_commands(self).await,
             "lewd" => LewdCommands::new(data).await?.run_commands(self).await,
             "base64" => Base64Commands::new(data).await?.run_commands(self).await,
-            name => {
-                warn!(name = name, "received unknown command");
-                // TODO: Handling
-
-                Ok(())
-            }
+            _ => self.unknown_command_response().await
         }
     }
 }
