@@ -1,8 +1,12 @@
 use async_trait::async_trait;
 use hyper::{Body, Request};
 
+use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_lavalink::{http::LoadedTracks, model::Play};
+use twilight_lavalink::{
+    http::{LoadType, LoadedTracks},
+    model::Play
+};
 
 use crate::responses::LuroSlash;
 
@@ -35,8 +39,20 @@ impl LuroCommand for PlayCommand {
         let response_bytes = hyper::body::to_bytes(res.into_body()).await?;
         let loaded = serde_json::from_slice::<LoadedTracks>(&response_bytes)?;
 
+        let loadtype = match loaded.load_type {
+            LoadType::LoadFailed => "LoadFailed",
+            LoadType::NoMatches => "Failed",
+            LoadType::SearchResult => "SearchResult",
+            LoadType::TrackLoaded => "TrackLoaded",
+            LoadType::PlaylistLoaded => "PlaylistLoaded",
+            _ => "Unknown"
+        };
+        info!(loadtype);
+
         let content;
         if let Some(track) = loaded.tracks.first() {
+            info!(track.track);
+
             player.send(Play::from((guild_id, &track.track)))?;
 
             content = if let (Some(title), Some(author)) = (&track.info.title, &track.info.author) {
