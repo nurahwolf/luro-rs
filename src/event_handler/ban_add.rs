@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use tracing::info;
 use twilight_model::gateway::payload::incoming::BanAdd;
 use twilight_util::builder::embed::{EmbedFieldBuilder, ImageSource};
@@ -10,7 +8,7 @@ use crate::{
 };
 
 impl LuroFramework {
-    pub async fn ban_add_listener(self: Arc<Self>, ban: BanAdd) -> anyhow::Result<()> {
+    pub async fn ban_add_listener(&self, ban: BanAdd) -> anyhow::Result<()> {
         info!("User {} banned from guild {}", ban.user.name, ban.guild_id);
         let guild_db = self.guild_data.read().clone();
         let guild_settings = match guild_db.get(&ban.guild_id) {
@@ -24,7 +22,7 @@ impl LuroFramework {
             let guild = self.twilight_client.guild(ban.guild_id).await?.model().await?;
             let banned_avatar = get_user_avatar(&resolved_ban.user);
 
-            let mut embed = default_embed(&self, &Some(ban.guild_id))
+            let mut embed = default_embed(self, &Some(ban.guild_id))
                 .title(format!("Banned from {}", guild.name))
                 .thumbnail(ImageSource::url(banned_avatar)?);
 

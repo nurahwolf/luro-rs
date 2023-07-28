@@ -1,13 +1,16 @@
 use anyhow::anyhow;
-use tracing::info;
 use std::collections::HashMap;
+use tracing::info;
 use twilight_util::builder::embed::EmbedBuilder;
 
 use twilight_interactions::command::CreateCommand;
 use twilight_model::{
     application::{command::Command, interaction::application_command::InteractionMember},
     guild::Member,
-    id::{marker::{GuildMarker, ApplicationMarker}, Id},
+    id::{
+        marker::{ApplicationMarker, GuildMarker},
+        Id
+    },
     user::CurrentUser
 };
 
@@ -23,8 +26,9 @@ use twilight_model::application::interaction::{Interaction, InteractionData};
 
 use crate::{
     functions::{accent_colour, default_embed, get_user_avatar},
+    models::LuroFramework,
     responses::LuroSlash,
-    LuroContext, models::LuroFramework
+    LuroContext
 };
 
 pub mod about;

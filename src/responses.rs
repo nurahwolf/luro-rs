@@ -5,7 +5,7 @@ use crate::{
         base64::{Base64Decode, Base64Encode},
         LuroCommand
     },
-    functions::default_embed
+    ACCENT_COLOUR
 };
 use anyhow::anyhow;
 use tracing::{debug, error, info, warn};
@@ -122,11 +122,6 @@ impl LuroSlash {
         }
     }
 
-    /// Create a default embed (which has an accent colour defined) by using the data contained within the interaction.
-    pub fn default_embed(&self) -> EmbedBuilder {
-        default_embed(&self.luro, &self.interaction.guild_id)
-    }
-
     // Handle an interaction
     pub async fn handle(self) -> anyhow::Result<()> {
         let response = match self.interaction.kind {
@@ -172,7 +167,8 @@ impl LuroSlash {
                 warn!(name = name, "received unknown component");
 
                 // TODO: Make this a response type.
-                let embed = default_embed(&self.luro, &self.interaction.guild_id)
+                let embed = self
+                    .default_embed()
                     .title("IT'S FUCKED")
                     .description("Will finish this at some point");
                 self.embeds(vec![embed.build()])?.respond().await
@@ -193,7 +189,8 @@ impl LuroSlash {
                 warn!(name = name, "received unknown component");
 
                 // TODO: Make this a response type.
-                let embed = default_embed(&self.luro, &self.interaction.guild_id)
+                let embed = self
+                    .default_embed()
                     .title("IT'S FUCKED")
                     .description("Will finish this at some point");
                 self.embeds(vec![embed.build()])?.respond().await
@@ -369,5 +366,31 @@ impl LuroSlash {
             .channel
             .clone()
             .ok_or_else(|| anyhow!("Unable to get the channel this interaction was ran in"))
+    }
+
+    /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
+    pub fn default_embed(&self) -> EmbedBuilder {
+        EmbedBuilder::new().color(self.accent_colour())
+    }
+
+    /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
+    pub fn accent_colour(&self) -> u32 {
+        if let Some(guild_id) = &self.interaction.guild_id {
+            let guild_db = self.luro.guild_data.read();
+            let guild_settings = guild_db.get(guild_id);
+
+            if let Some(guild_settings) = guild_settings {
+                // Check to see if a custom colour is defined
+                if let Some(custom_accent_colour) = guild_settings.accent_colour_custom {
+                    return custom_accent_colour;
+                };
+
+                if guild_settings.accent_colour != 0 {
+                    return guild_settings.accent_colour;
+                }
+            }
+        };
+
+        ACCENT_COLOUR
     }
 }
