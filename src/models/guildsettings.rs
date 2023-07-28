@@ -30,6 +30,10 @@ impl GuildSetting {
             None => (Self::default(), false)
         };
 
+        if let Some(guild) = ctx.twilight_cache.guild(guild_id) {
+            guild_settings.guild_name = guild.name().to_owned();
+        }
+
         {
             let mut guild_data = ctx.guild_data.write();
             match guild_data.entry(guild_id) {

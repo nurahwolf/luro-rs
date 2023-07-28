@@ -86,6 +86,8 @@ pub struct LuroFramework {
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct GuildSetting {
+    /// The Guild's name
+    pub guild_name: String,
     /// Commands registered to a guild
     pub commands: Vec<Command>,
     /// Private hecks for this specific guild
