@@ -16,7 +16,9 @@ pub struct AssignCommand {
     /// The role that should be assigned. It HAS to be below the bot for this to work.
     role: Id<RoleMarker>,
     /// Optionally the user to apply the role to. Applies to self if not defined.
-    user: Option<ResolvedUser>
+    user: Option<ResolvedUser>,
+    /// Set this to instead remove the role
+    remove: Option<bool>
 }
 
 #[async_trait]
@@ -37,14 +39,26 @@ impl LuroCommand for AssignCommand {
             None => return ctx.not_guild_response().await
         };
 
-        let _response = ctx
+        // If the user wants' to remove a role
+        if let Some(remove) = self.remove && remove {
+            match ctx
+            .luro
+            .twilight_client
+            .remove_guild_member_role(guild_id, user.id, self.role)
+            .await {
+                Ok(response) => ctx.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.id)).ephemeral().respond().await,
+                Err(why) => ctx.internal_error_response(why.to_string()).await
+            }
+        } else {
+        // Otherwise we just assign a role as expected
+        match ctx
             .luro
             .twilight_client
             .add_guild_member_role(guild_id, user.id, self.role)
-            .await?
-            .status();
-
-        // TODO: A success message
-        ctx.content("All good!".to_owned()).respond().await
+            .await {
+                Ok(response) => ctx.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.id)).ephemeral().respond().await,
+                Err(why) => ctx.internal_error_response(why.to_string()).await
+            }
+        }
     }
 }
