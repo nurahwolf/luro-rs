@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
-    application::command::Command,
+    application::{command::Command, interaction::message_component::MessageComponentInteractionData},
     channel::message::component::{ActionRow, Button, ButtonStyle, Component}
 };
 
@@ -34,7 +34,7 @@ impl LuroCommand for BoopCommand {
         ctx.content("Boop Count: 0".to_owned()).components(components).respond().await
     }
 
-    async fn handle_button(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_button(self, ctx: LuroSlash, _data: MessageComponentInteractionData) -> anyhow::Result<()> {
         // Get message and parse number
         let message = ctx.interaction.message.clone().unwrap();
 

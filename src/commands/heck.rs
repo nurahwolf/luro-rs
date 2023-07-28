@@ -126,6 +126,7 @@ async fn get_heck(
 ) -> anyhow::Result<(Heck, usize)> {
     // Check to make sure our hecks are present, if not reload them
     // NOTE: This sets guild_id to false if we don't need to check for global hecks
+    let (heck, heck_id);
     if global {
         check_hecks_are_present(ctx.clone(), None).await?;
     } else {
@@ -142,56 +143,54 @@ async fn get_heck(
     );
 
     if !global {
-        debug!("user wants a guild heck");
         let guild_id =
             guild_id.ok_or_else(|| Error::msg("Guild ID is not present. You can only use this option in a guild."))?;
-        trace!("got guild_id");
-        GuildSetting::manage_guild_settings(ctx, guild_id, None).await?;
-        trace!("checked to make sure guild settings is present");
-        let mut guild_db = ctx.guild_data.write();
-        trace!("got guild_db");
-        let guild_settings = guild_db
-            .get_mut(&guild_id)
-            .ok_or_else(|| Error::msg("There are no settings for this guild. Blame Nurah."))?;
-        debug!("finding a heck id");
-        let heck_id = match id {
-            Some(id) => id.try_into()?,
-            None => {
-                let id = rand::thread_rng().gen_range(
-                    0..if nsfw {
-                        let len = guild_settings.hecks.nsfw_heck_ids.len();
-                        if len == 0 {
-                            return Ok(no_heck);
+
+        {
+            let mut guild_db = ctx.guild_data.write();
+            let guild_settings = guild_db
+                .get_mut(&guild_id)
+                .ok_or_else(|| Error::msg("There are no settings for this guild. Blame Nurah."))?;
+
+            heck_id = match id {
+                Some(id) => id.try_into()?,
+                None => {
+                    let id = rand::thread_rng().gen_range(
+                        0..if nsfw {
+                            let len = guild_settings.hecks.nsfw_heck_ids.len();
+                            if len == 0 {
+                                return Ok(no_heck);
+                            }
+                            len
+                        } else {
+                            let len = guild_settings.hecks.sfw_heck_ids.len();
+                            if len == 0 {
+                                return Ok(no_heck);
+                            }
+                            len
                         }
-                        len
+                    );
+
+                    if nsfw {
+                        guild_settings.hecks.nsfw_heck_ids.remove(id)
                     } else {
-                        let len = guild_settings.hecks.sfw_heck_ids.len();
-                        if len == 0 {
-                            return Ok(no_heck);
-                        }
-                        len
+                        guild_settings.hecks.sfw_heck_ids.remove(id)
                     }
-                );
-
-                if nsfw {
-                    guild_settings.hecks.nsfw_heck_ids.remove(id)
-                } else {
-                    guild_settings.hecks.sfw_heck_ids.remove(id)
                 }
-            }
-        };
-        debug!("heck id found");
+            };
 
-        debug!("creating heck");
-        let heck = if nsfw {
-            guild_settings.hecks.nsfw_hecks.get(heck_id)
-        } else {
-            guild_settings.hecks.sfw_hecks.get(heck_id)
-        };
+            heck = if nsfw {
+                guild_settings.hecks.nsfw_hecks.get(heck_id).cloned()
+            } else {
+                guild_settings.hecks.sfw_hecks.get(heck_id).cloned()
+            };
+        }
+
         debug!("heck created, returning");
+        GuildSetting::manage_guild_settings(ctx, guild_id, None, true).await?;
 
         Ok(match heck {
-            Some(heck) => (heck.clone(), heck_id),
+            Some(heck) => (heck, heck_id),
             None => no_heck
         })
     } else {

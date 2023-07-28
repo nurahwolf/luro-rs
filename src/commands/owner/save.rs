@@ -37,7 +37,7 @@ impl LuroCommand for SaveCommand {
         for (guild_id, guild_settings) in guild_settings {
             GuildSetting::write(
                 &guild_settings,
-                Path::new(&format!("{0}/{1}/{1}.toml", GUILDSETTINGS_FILE_PATH, guild_id))
+                Path::new(&format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, guild_id))
             )
             .await?;
         }

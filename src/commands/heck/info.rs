@@ -5,7 +5,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::responses::LuroSlash;
+use crate::{models::GuildSetting, responses::LuroSlash};
 
 use super::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -39,12 +39,25 @@ impl LuroCommand for HeckInfo {
 
         embed = embed.field(EmbedFieldBuilder::new("Global Stats", global_details).inline());
 
-        if let Some(guild_id) = ctx.interaction.guild_id && let Some(guild_settings) = ctx.luro.guild_data.read().get(&guild_id) {
+        if let Some(guild_id) = ctx.interaction.guild_id {
             let mut guild_details = String::new();
+            let guild_settings = GuildSetting::manage_guild_settings(&ctx.luro, guild_id, None, false).await?;
             writeln!(guild_details, "**GUILD SFW HECKS:** {}", guild_settings.hecks.sfw_hecks.len())?;
-            writeln!(guild_details, "**GUILD NSFW HECKS:** {}", guild_settings.hecks.nsfw_hecks.len())?;
-            writeln!(guild_details, "**GUILD SFW IDS AVAILABLE:** {}", guild_settings.hecks.sfw_heck_ids.len())?;
-            writeln!(guild_details, "**GUILD NSFW IDS AVAILABLE:** {}", guild_settings.hecks.nsfw_heck_ids.len())?;
+            writeln!(
+                guild_details,
+                "**GUILD NSFW HECKS:** {}",
+                guild_settings.hecks.nsfw_hecks.len()
+            )?;
+            writeln!(
+                guild_details,
+                "**GUILD SFW IDS AVAILABLE:** {}",
+                guild_settings.hecks.sfw_heck_ids.len()
+            )?;
+            writeln!(
+                guild_details,
+                "**GUILD NSFW IDS AVAILABLE:** {}",
+                guild_settings.hecks.nsfw_heck_ids.len()
+            )?;
             embed = embed.field(EmbedFieldBuilder::new("Guild Stats", guild_details).inline());
         }
 

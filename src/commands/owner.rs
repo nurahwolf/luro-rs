@@ -12,6 +12,7 @@ use self::log::LogCommand;
 use self::modify_role::ModifyRoleCommand;
 use self::reload::ReloadCommand;
 use self::save::SaveCommand;
+use self::save_guilds::SaveGuildsCommand;
 
 mod assign;
 mod commands;
@@ -19,6 +20,7 @@ mod log;
 mod modify_role;
 mod reload;
 mod save;
+mod save_guilds;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]
@@ -34,7 +36,9 @@ pub enum OwnerCommands {
     #[command(name = "commands")]
     Commands(OwnerCommandsCommand),
     #[command(name = "reload")]
-    Reload(ReloadCommand)
+    Reload(ReloadCommand),
+    #[command(name = "save_guilds")]
+    SaveGuilds(SaveGuildsCommand)
 }
 
 #[async_trait]
@@ -62,7 +66,8 @@ impl LuroCommand for OwnerCommands {
             Self::Assign(command) => command.run_command(ctx).await,
             Self::Modify(command) => command.run_command(ctx).await,
             Self::Commands(command) => command.run_command(ctx).await,
-            Self::Reload(command) => command.run_command(ctx).await
+            Self::Reload(command) => command.run_command(ctx).await,
+            Self::SaveGuilds(command) => command.run_command(ctx).await
         }
     }
 }

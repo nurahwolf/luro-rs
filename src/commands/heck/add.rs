@@ -1,14 +1,22 @@
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::channel::message::{
-    component::{ActionRow, SelectMenu, SelectMenuOption, TextInput, TextInputStyle},
-    Component
+use twilight_model::{
+    application::interaction::message_component::MessageComponentInteractionData,
+    channel::message::{
+        component::{ActionRow, SelectMenu, SelectMenuOption, TextInput, TextInputStyle},
+        Component
+    }
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, ImageSource};
 
-use crate::{commands::LuroCommand, models::Heck, responses::LuroSlash, ACCENT_COLOUR};
+use crate::{
+    commands::LuroCommand,
+    models::{GuildSetting, Heck},
+    responses::LuroSlash,
+    ACCENT_COLOUR
+};
 
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(name = "add", desc = "Add a heck", dm_permission = true)]
@@ -37,17 +45,17 @@ impl LuroCommand for HeckAddCommand {
         ctx.custom_id("heck-add".to_owned())
             .title("Write your heck below!".to_owned())
             .components(components)
+            .model()
             .respond()
             .await
     }
 
-    async fn handle_component(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(self, ctx: LuroSlash, data: MessageComponentInteractionData) -> anyhow::Result<()> {
         let interaction_channel = ctx.channel()?;
         let interaction_author = ctx.author()?;
 
         // Get interaction data
         // TODO: Don't get data in the command
-        let data = self.parse_component_data(&mut ctx.interaction.clone())?;
         let global = data
             .values
             .first()
@@ -91,13 +99,16 @@ impl LuroCommand for HeckAddCommand {
                 heck_author.name = "Global Heck Created - SFW Heck".to_owned()
             };
         } else {
+            let guild_id = match ctx.interaction.guild_id {
+                Some(guild_id) => guild_id,
+                None => return Err(anyhow!("This place is not a guild. You can only use this option in a guild."))
+            };
+
+            // Make sure guild settings are present
+            GuildSetting::manage_guild_settings(&ctx.luro, guild_id, None, true).await?;
+
             let mut guild_db = ctx.luro.guild_data.write();
-            let heck_db = guild_db.entry(
-                // TODO: Move getting guild into a function
-                ctx.interaction
-                    .guild_id
-                    .ok_or_else(|| Error::msg("This place is not a guild. You can only use this option in a guild."))?
-            );
+            let heck_db = guild_db.entry(guild_id);
 
             if interaction_channel.nsfw.unwrap_or(false) {
                 heck_db.and_modify(|guild| guild.hecks.nsfw_hecks.append(&mut heck));

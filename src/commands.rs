@@ -138,12 +138,12 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Handle a component interaction
-    async fn handle_component(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(self, ctx: LuroSlash, _data: MessageComponentInteractionData) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
     /// Create and respond to a button interaction
-    async fn handle_button(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_button(self, ctx: LuroSlash, _data: MessageComponentInteractionData) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 

@@ -148,8 +148,8 @@ impl LuroSlash {
 
     /// Handle incoming component interaction
     pub async fn handle_component(self) -> anyhow::Result<()> {
-        let data = match &self.interaction.data {
-            Some(InteractionData::MessageComponent(data)) => data,
+        let data = match self.interaction.data {
+            Some(InteractionData::MessageComponent(ref data)) => data.clone(),
             _ => return Err(anyhow!("expected message component data"))
         };
 
@@ -160,20 +160,13 @@ impl LuroSlash {
         );
 
         match &*data.custom_id {
-            "boop" => BoopCommand::handle_button(Default::default(), self).await,
-            "decode" => Base64Decode::handle_button(Default::default(), self).await,
-            "encode" => Base64Encode::handle_button(Default::default(), self).await,
-            "heck-setting" => HeckAddCommand::handle_button(Default::default(), self).await,
+            "boop" => BoopCommand::handle_button(Default::default(), self, data).await,
+            "decode" => Base64Decode::handle_button(Default::default(), self, data).await,
+            "encode" => Base64Encode::handle_button(Default::default(), self, data).await,
+            "heck-setting" => HeckAddCommand::handle_component(Default::default(), self, data).await,
             name => {
                 warn!(name = name, "received unknown component");
-
-                // TODO: Make this a response type.
-                let embed = self
-                    .default_embed()
-                    .await?
-                    .title("IT'S FUCKED")
-                    .description("Will finish this at some point");
-                self.embeds(vec![embed.build()])?.respond().await
+                self.unknown_command_response().await
             }
         }
     }
@@ -405,7 +398,7 @@ impl LuroSlash {
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     pub async fn accent_colour(&self) -> anyhow::Result<u32> {
         if let Some(guild_id) = &self.interaction.guild_id {
-            let guild_settings = GuildSetting::manage_guild_settings(&self.luro, *guild_id, None).await?;
+            let guild_settings = GuildSetting::manage_guild_settings(&self.luro, *guild_id, None, false).await?;
 
             // Check to see if a custom colour is defined
             if let Some(custom_accent_colour) = guild_settings.accent_colour_custom {

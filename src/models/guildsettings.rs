@@ -16,18 +16,19 @@ impl GuildSetting {
     pub async fn manage_guild_settings(
         ctx: &LuroContext,
         guild_id: Id<GuildMarker>,
-        guild_settings: Option<Self>
+        guild_settings: Option<Self>,
+        new_settings: bool
     ) -> anyhow::Result<Self> {
         // new_guild_settings is set to true if we are specifying settings, so we know to flush it to disk.
-        // TODO: Can I only call this if it is vacant from the cache?
-        let data_from_disk = Self::get(Path::new(&format!(
-            "{0}/{1}/guild_settings.toml",
-            GUILDSETTINGS_FILE_PATH, guild_id
-        )))
-        .await?;
-        let (mut guild_settings, new_settings) = match guild_settings {
-            Some(guild_settings) => (guild_settings, true),
-            None => (Self::default(), false)
+        let mut guild_settings = match guild_settings {
+            Some(guild_settings) => guild_settings,
+            None => {
+                Self::get(Path::new(&format!(
+                    "{0}/{1}/guild_settings.toml",
+                    GUILDSETTINGS_FILE_PATH, guild_id
+                )))
+                .await?
+            }
         };
 
         if let Some(guild) = ctx.twilight_cache.guild(guild_id) {
@@ -57,11 +58,11 @@ impl GuildSetting {
                         if let Some(accent_colour_custom) = guild_settings.accent_colour_custom {
                             new_settings.accent_colour_custom = Some(accent_colour_custom)
                         }
+                        new_settings.guild_name = guild_settings.guild_name;
                         guild_settings = new_settings.clone()
                     }
                 }
                 Entry::Vacant(vacant) => {
-                    guild_settings = data_from_disk;
                     // Only overwrite if explicitly set
                     if let Some(accent_colour) = guild_settings.accent_colour_custom {
                         guild_settings.accent_colour_custom = Some(accent_colour)

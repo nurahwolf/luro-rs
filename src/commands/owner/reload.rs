@@ -37,8 +37,11 @@ impl LuroCommand for ReloadCommand {
         }
 
         for (guild_id, _) in guild_settings {
-            let guild_settings =
-                GuildSetting::get(Path::new(&format!("{0}/{1}/{1}.toml", GUILDSETTINGS_FILE_PATH, guild_id))).await?;
+            let guild_settings = GuildSetting::get(Path::new(&format!(
+                "{0}/{1}/guild_settings.toml",
+                GUILDSETTINGS_FILE_PATH, guild_id
+            )))
+            .await?;
             ctx.luro.guild_data.write().entry(guild_id).insert_entry(guild_settings);
         }
 

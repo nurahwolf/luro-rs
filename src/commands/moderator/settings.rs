@@ -76,7 +76,7 @@ impl LuroCommand for GuildSettingsCommand {
         }
 
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
-        guild_settings = GuildSetting::manage_guild_settings(&ctx.luro, guild_id, Some(guild_settings)).await?;
+        guild_settings = GuildSetting::manage_guild_settings(&ctx.luro, guild_id, Some(guild_settings), true).await?;
 
         embed =
             embed.field(EmbedFieldBuilder::new("Guild Accent Colour", format!("`{}`", guild_settings.accent_colour)).inline());

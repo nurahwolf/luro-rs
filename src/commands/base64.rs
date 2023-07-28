@@ -6,9 +6,12 @@ use base64::{engine::general_purpose, Engine};
 use regex::Regex;
 use tracing::{debug, error};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::channel::message::{
-    component::{ActionRow, Button, ButtonStyle},
-    Component, Embed
+use twilight_model::{
+    application::interaction::message_component::MessageComponentInteractionData,
+    channel::message::{
+        component::{ActionRow, Button, ButtonStyle},
+        Component, Embed
+    }
 };
 
 use crate::{responses::LuroSlash, REGEX_CODE_BLOCK};
@@ -56,7 +59,7 @@ impl LuroCommand for Base64Decode {
         }
     }
 
-    async fn handle_button(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_button(self, ctx: LuroSlash, _data: MessageComponentInteractionData) -> anyhow::Result<()> {
         response(ctx, true).await
     }
 }
@@ -90,7 +93,7 @@ impl LuroCommand for Base64Encode {
         }
     }
 
-    async fn handle_button(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_button(self, ctx: LuroSlash, _data: MessageComponentInteractionData) -> anyhow::Result<()> {
         response(ctx, false).await
     }
 }
