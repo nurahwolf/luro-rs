@@ -6,6 +6,7 @@ use twilight_gateway::{Event, MessageSender};
 use crate::models::LuroFramework;
 use crate::responses::LuroSlash;
 
+mod audit_log_handler;
 mod ban_add;
 mod message_create;
 mod message_delete;
@@ -23,6 +24,7 @@ impl LuroFramework {
             Event::MessageCreate(message) => self.message_create_listener(message).await,
             Event::MessageDelete(message) => self.message_delete_listener(message).await,
             Event::MessageUpdate(message) => self.message_update_handler(message).await,
+            Event::GuildAuditLogEntryCreate(entry) => self.audit_log_handler(entry).await,
             Event::BanAdd(ban) => self.ban_add_listener(ban).await,
             _ => Ok(())
         };
