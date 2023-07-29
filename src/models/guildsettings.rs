@@ -1,6 +1,6 @@
 use std::collections::hash_map::Entry;
 use std::path::Path;
-use tracing::warn;
+use tracing::{info, warn};
 use twilight_model::id::{marker::GuildMarker, Id};
 
 use crate::models::GuildSetting;
@@ -79,7 +79,7 @@ impl GuildSetting {
                     if let Some(accent_colour_custom) = guild_settings.accent_colour_custom {
                         guild_settings.accent_colour_custom = Some(accent_colour_custom)
                     }
-
+                    info!("A new guild was inserted into the cache");
                     vacant.insert(guild_settings.clone());
                 }
             };

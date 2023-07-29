@@ -22,7 +22,7 @@ use twilight_model::gateway::{
 
 use crate::{
     models::{GlobalData, Hecks, Settings},
-    LuroFramework, BOT_OWNERS
+    LuroFramework, BOT_OWNERS, STORIES_FILE_PATH
 };
 
 use crate::HECK_FILE_PATH;
@@ -95,7 +95,8 @@ impl LuroFramework {
             hecks,
             owners,
             application,
-            current_user
+            current_user,
+            stories: GlobalData::get_stories(Path::new(STORIES_FILE_PATH)).await?.stories
         }
         .into();
 

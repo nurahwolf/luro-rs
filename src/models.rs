@@ -19,6 +19,7 @@ use twilight_model::{
     user::{CurrentUser, User}
 };
 
+pub mod global_data;
 mod guildsettings;
 mod hecks;
 mod luroframework;
@@ -31,14 +32,25 @@ pub struct Settings {
     pub application_id: Id<ApplicationMarker>
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub struct Stories {
+    pub stories: Vec<Story>
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub struct Story {
+    pub title: String,
+    pub description: String
+}
+
 /// Data that may be accessed globally, including DMs. Generally not modified by the end user
 #[derive(Debug, Clone, Deserialize, Serialize)]
-
 pub struct GlobalData {
     pub application: Application,
     pub count: usize,
     pub current_user: CurrentUser,
     pub hecks: Hecks,
+    pub stories: Vec<Story>,
     pub owners: Vec<User>
 }
 

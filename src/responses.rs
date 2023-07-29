@@ -231,14 +231,14 @@ impl LuroSlash {
     }
 
     /// Set the custom_id of a response
-    pub fn custom_id(mut self, custom_id: String) -> Self {
-        self.custom_id = Some(custom_id);
+    pub fn custom_id(mut self, custom_id: impl Into<String>) -> Self {
+        self.custom_id = Some(custom_id.into());
         self
     }
 
     /// Set the content of a response
-    pub fn content(mut self, content: String) -> Self {
-        self.content = Some(content);
+    pub fn content(mut self, content: impl Into<String>) -> Self {
+        self.content = Some(content.into());
         self
     }
 
@@ -326,12 +326,11 @@ impl LuroSlash {
             }
 
             response.await?;
-            return Ok(());
+        } else {
+            self.interaction_client()
+                .create_response(self.interaction.id, &self.interaction.token, &self.interaction_response())
+                .await?;
         }
-
-        self.interaction_client()
-            .create_response(self.interaction.id, &self.interaction.token, &self.interaction_response())
-            .await?;
 
         Ok(())
     }

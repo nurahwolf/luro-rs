@@ -17,7 +17,7 @@ use twilight_model::{
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
-    say::SayCommand, user::UserCommands
+    say::SayCommand, story::StoryCommand, user::UserCommands
 };
 
 use anyhow::bail;
@@ -42,7 +42,9 @@ pub mod moderator;
 pub mod music;
 pub mod owner;
 pub mod say;
+pub mod story;
 pub mod user;
+// pub mod fursona;
 
 #[derive(Default)]
 pub struct Commands {
@@ -74,6 +76,7 @@ impl Commands {
         init.global_commands.insert("user", UserCommands::create_command().into());
         init.global_commands.insert("lewd", LewdCommands::create_command().into());
         init.global_commands.insert("base64", Base64Commands::create_command().into());
+        init.global_commands.insert("story", StoryCommand::create_command().into());
 
         // Return our initialised commands
         init
@@ -91,7 +94,7 @@ impl LuroSlash {
         match data.name.as_str() {
             "about" => AboutCommand::new(data).await?.run_command(self).await,
             "say" => SayCommand::new(data).await?.run_command(self).await,
-            "user" => UserCommands::new(data).await?.run_commands(self).await,
+            "user" => UserCommands::new(data).await?.run_command(self).await,
             "hello" => HelloCommand::new(data).await?.run_command(self).await,
             "count" => CountCommand::new(data).await?.run_command(self).await,
             "mod" => ModeratorCommands::new(data).await?.run_commands(self).await,
@@ -101,6 +104,7 @@ impl LuroSlash {
             "heck" => HeckCommands::new(data).await?.run_commands(self).await,
             "lewd" => LewdCommands::new(data).await?.run_commands(self).await,
             "base64" => Base64Commands::new(data).await?.run_commands(self).await,
+            "story" => StoryCommand::new(data).await?.run_command(self).await,
             _ => self.unknown_command_response().await
         }
     }
