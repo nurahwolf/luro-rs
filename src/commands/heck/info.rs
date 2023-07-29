@@ -41,7 +41,7 @@ impl LuroCommand for HeckInfo {
 
         if let Some(guild_id) = ctx.interaction.guild_id {
             let mut guild_details = String::new();
-            let guild_settings = GuildSetting::manage_guild_settings(&ctx.luro, guild_id, None, false).await?;
+            let guild_settings = GuildSetting::get_guild_settings(&ctx.luro, &guild_id).await?;
             writeln!(guild_details, "**GUILD SFW HECKS:** {}", guild_settings.hecks.sfw_hecks.len())?;
             writeln!(
                 guild_details,

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{models::GuildSetting, responses::LuroSlash};
+use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 
@@ -17,9 +17,14 @@ pub struct SaveGuildsCommand {}
 impl LuroCommand for SaveGuildsCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let mut total = 0;
-        let guilds = ctx.luro.twilight_client.current_user_guilds().await?.model().await?;
-        for guild in guilds {
-            GuildSetting::manage_guild_settings(&ctx.luro, guild.id, None, true).await?;
+        let guild_data;
+
+        {
+            guild_data = ctx.luro.guild_data.read().clone();
+        }
+
+        for (guild_id, guild_setting) in guild_data.iter() {
+            guild_setting.flush_to_disk(guild_id).await?;
             total += 1;
         }
 

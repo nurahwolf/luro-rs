@@ -1,6 +1,6 @@
-use std::collections::hash_map::Entry;
 use std::path::Path;
-use tracing::{info, warn};
+use anyhow::Context;
+use tracing::warn;
 use twilight_model::id::{marker::GuildMarker, Id};
 
 use crate::models::GuildSetting;
@@ -12,88 +12,76 @@ use crate::GUILDSETTINGS_FILE_PATH;
 impl LuroTOML for GuildSetting {}
 
 impl GuildSetting {
-    // This function makes sure guild settings are present on disk and in the cache
-    pub async fn manage_guild_settings(
-        ctx: &LuroContext,
-        guild_id: Id<GuildMarker>,
-        guild_settings: Option<Self>,
-        new_settings: bool
-    ) -> anyhow::Result<Self> {
-        // new_guild_settings is set to true if we are specifying settings, so we know to flush it to disk.
-        let mut guild_settings = match guild_settings {
-            Some(guild_settings) => guild_settings,
-            None => {
-                Self::get(Path::new(&format!(
-                    "{0}/{1}/guild_settings.toml",
-                    GUILDSETTINGS_FILE_PATH, guild_id
-                )))
-                .await?
+    /// This function just gets guild settings and ensures it is in Luro's context.
+    pub async fn get_guild_settings(ctx: &LuroContext, guild_id: &Id<GuildMarker>) -> anyhow::Result<Self> {
+        // Check to see if our data is present. if it is, return early
+        {
+            let guild_data = ctx.guild_data.read().clone();
+            if let Some(settings) = guild_data.get(guild_id) {
+                return Ok(settings.clone())
             }
-        };
-
-        if let Some(guild) = ctx.twilight_cache.guild(guild_id) {
-            guild_settings.guild_name = guild.name().to_owned();
         }
+
+        // If we got this far, we know we need to load from disk
+        let guild_settings = Self::get(Path::new(&format!(
+            "{0}/{1}/guild_settings.toml",
+            GUILDSETTINGS_FILE_PATH, guild_id
+        )))
+        .await?;
+
+        // Now insert it into our context
+        {
+            ctx.guild_data.write().insert(*guild_id, guild_settings.clone());
+        }
+
+        // Return the settings loaded from disk
+        Ok(guild_settings)
+    }
+
+    // Get and modify some guild settings
+    pub async fn modify_guild_settings(
+        ctx: &LuroContext,
+        guild_id: &Id<GuildMarker>,
+        new_settings: Self,
+    ) -> anyhow::Result<Self> {
+        // This is only called to make sure they are present...
+        let mut guild_settings = Self::get_guild_settings(ctx, guild_id).await?;
 
         {
             let mut guild_data = ctx.guild_data.write();
-            match guild_data.entry(guild_id) {
-                Entry::Occupied(mut entry) => {
-                    // If present and we have new settings passed to this function, replace the settings with what we defined
-                    if new_settings {
-                        let new_settings = entry.get_mut();
-                        // Only overwrite if explicitly set
-                        if let Some(accent_colour) = guild_settings.accent_colour_custom {
-                            new_settings.accent_colour_custom = Some(accent_colour)
-                        }
+            let new_guild_settings = guild_data.get_mut(guild_id).context("Expected to have a guild in the cache!")?;
 
-                        if let Some(moderator_actions_log_channel) = guild_settings.moderator_actions_log_channel {
-                            new_settings.moderator_actions_log_channel = Some(moderator_actions_log_channel)
-                        }
+            if let Some(guild) = ctx.twilight_cache.guild(*guild_id) {
+                guild_settings.guild_name = guild.name().to_owned();
+            }
 
-                        if let Some(discord_events_log_channel) = guild_settings.discord_events_log_channel {
-                            new_settings.discord_events_log_channel = Some(discord_events_log_channel)
-                        }
+            // Only overwrite if explicitly set
+            if let Some(accent_colour) = new_settings.accent_colour_custom {
+                new_guild_settings.accent_colour_custom = Some(accent_colour)
+            }
 
-                        if let Some(accent_colour_custom) = guild_settings.accent_colour_custom {
-                            new_settings.accent_colour_custom = Some(accent_colour_custom)
-                        }
-                        new_settings.guild_name = guild_settings.guild_name;
-                        guild_settings = new_settings.clone()
-                    }
-                }
-                Entry::Vacant(vacant) => {
-                    // Only overwrite if explicitly set
-                    if let Some(accent_colour) = guild_settings.accent_colour_custom {
-                        guild_settings.accent_colour_custom = Some(accent_colour)
-                    }
+            if let Some(moderator_actions_log_channel) = new_settings.moderator_actions_log_channel {
+                new_guild_settings.moderator_actions_log_channel = Some(moderator_actions_log_channel)
+            }
 
-                    if let Some(moderator_actions_log_channel) = guild_settings.moderator_actions_log_channel {
-                        guild_settings.moderator_actions_log_channel = Some(moderator_actions_log_channel)
-                    }
+            if let Some(discord_events_log_channel) = new_settings.discord_events_log_channel {
+                new_guild_settings.discord_events_log_channel = Some(discord_events_log_channel)
+            }
 
-                    if let Some(discord_events_log_channel) = guild_settings.discord_events_log_channel {
-                        guild_settings.discord_events_log_channel = Some(discord_events_log_channel)
-                    }
-
-                    if let Some(accent_colour_custom) = guild_settings.accent_colour_custom {
-                        guild_settings.accent_colour_custom = Some(accent_colour_custom)
-                    }
-                    info!("A new guild was inserted into the cache");
-                    vacant.insert(guild_settings.clone());
-                }
-            };
+            if let Some(accent_colour_custom) = new_settings.accent_colour_custom {
+                new_guild_settings.accent_colour_custom = Some(accent_colour_custom)
+            }
+            guild_settings = new_guild_settings.clone()
         }
 
-        if new_settings {
-            warn!("New settings are defined, flushing data to disk");
-            Self::write(
-                &guild_settings,
-                Path::new(&format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, guild_id))
-            )
-            .await?;
-        }
+        guild_settings.flush_to_disk(guild_id).await?;
 
         Ok(guild_settings)
+    }
+
+    pub async fn flush_to_disk(&self, guild_id: &Id<GuildMarker>) -> anyhow::Result<()> {
+        warn!("New guild settings are defined, flushing data to disk");
+
+        self.write(Path::new(&format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, guild_id))).await
     }
 }

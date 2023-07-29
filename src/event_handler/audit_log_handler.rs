@@ -15,7 +15,7 @@ impl LuroFramework {
         let guild_id = event.guild_id.context("No guild id in this event")?;
 
         {
-            let guild_settings = GuildSetting::manage_guild_settings(&self, guild_id, None, false).await?;
+            let guild_settings = GuildSetting::get_guild_settings(&self, &guild_id).await?;
 
             match guild_settings.moderator_actions_log_channel {
                 Some(settings) => moderation_actions_log_channel = settings,

@@ -15,7 +15,7 @@ use twilight_model::{
 };
 
 use crate::{
-    models::{GuildSetting, Heck},
+    models::Heck,
     responses::LuroSlash,
     LuroContext
 };
@@ -127,11 +127,7 @@ async fn get_heck(
     // Check to make sure our hecks are present, if not reload them
     // NOTE: This sets guild_id to false if we don't need to check for global hecks
     let (heck, heck_id);
-    if global {
-        check_hecks_are_present(ctx.clone(), None).await?;
-    } else {
-        check_hecks_are_present(ctx.clone(), guild_id).await?;
-    }
+    check_hecks_are_present(ctx.clone(), guild_id).await?;
 
     // A heck type to remove if we can't find it
     let no_heck = (
@@ -143,6 +139,7 @@ async fn get_heck(
     );
 
     if !global {
+        let new_guild_settings;
         let guild_id =
             guild_id.ok_or_else(|| Error::msg("Guild ID is not present. You can only use this option in a guild."))?;
 
@@ -184,11 +181,14 @@ async fn get_heck(
             } else {
                 guild_settings.hecks.sfw_hecks.get(heck_id).cloned()
             };
+
+            new_guild_settings = guild_settings.clone()
         }
 
-        debug!("heck created, returning");
-        GuildSetting::manage_guild_settings(ctx, guild_id, None, true).await?;
+        debug!("Saving new heck to disk");
+        new_guild_settings.flush_to_disk(&guild_id).await?;
 
+        debug!("heck created, returning");
         Ok(match heck {
             Some(heck) => (heck, heck_id),
             None => no_heck
