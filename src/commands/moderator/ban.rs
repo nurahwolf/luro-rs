@@ -54,8 +54,8 @@ impl LuroCommand for BanCommand {
         Permissions::BAN_MEMBERS
     }
 
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.clone().deferred().await?;
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.deferred().await?;
 
         let reason = match self.reason {
             Some(reason) => reason,
