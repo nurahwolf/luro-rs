@@ -1,22 +1,21 @@
 use anyhow::Context;
-use std::fmt::Write;
+use std::{fmt::Write, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::audit_log::AuditLogEventType, id::Id};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, ImageSource};
 
 use crate::{
     functions::{default_embed, get_user_avatar},
-    models::LuroFramework,
+    models::{GuildSetting, LuroFramework},
     COLOUR_DANGER, COLOUR_SUCCESS
 };
 
 impl LuroFramework {
-    pub async fn audit_log_handler(&self, event: Box<GuildAuditLogEntryCreate>) -> anyhow::Result<()> {
+    pub async fn audit_log_handler(self: Arc<Self>, event: Box<GuildAuditLogEntryCreate>) -> anyhow::Result<()> {
         let moderation_actions_log_channel;
         let guild_id = event.guild_id.context("No guild id in this event")?;
 
         {
-            let guild_db = self.guild_data.read();
-            let guild_settings = guild_db.get(&guild_id).context("No guild settings available")?;
+            let guild_settings = GuildSetting::manage_guild_settings(&self, guild_id, None, false).await?;
 
             match guild_settings.moderator_actions_log_channel {
                 Some(settings) => moderation_actions_log_channel = settings,
@@ -44,7 +43,7 @@ impl LuroFramework {
             let embed_author = EmbedAuthorBuilder::new(format!("Performed by {} - {}", author_name, author.id))
                 .icon_url(ImageSource::url(author_avatar)?)
                 .build();
-            let mut embed = default_embed(self, &Some(guild_id)).author(embed_author);
+            let mut embed = default_embed(&self, &Some(guild_id)).author(embed_author);
 
             // TODO: Move this to it's own function
             match event.action_type {
