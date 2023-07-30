@@ -17,6 +17,7 @@ pub mod event_handler;
 pub mod functions;
 pub mod models;
 pub mod responses;
+pub mod webhook;
 
 /// Where the config toml file lives. Can be overriden elsewhere if desired.
 pub const CONFIG_FILE_PATH: &str = "data/config.toml";
@@ -64,6 +65,8 @@ pub const COLOUR_DANGER: u32 = 0xD35F5F;
 pub const COLOUR_TRANSPARENT: u32 = 0x2F3136;
 /// Luro's SUCCESS colour
 pub const COLOUR_SUCCESS: u32 = 0xA0D995;
+/// The name used for Luro's webhooks
+pub const WEBHOOK_NAME: &str = "LuroHook";
 
 // PATH constants
 // =========

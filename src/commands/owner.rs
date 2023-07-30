@@ -6,6 +6,7 @@ use crate::responses::LuroSlash;
 
 use super::LuroCommand;
 
+use self::abuse::AbuseCommand;
 use self::assign::AssignCommand;
 use self::commands::OwnerCommandsCommand;
 use self::log::LogCommand;
@@ -14,6 +15,7 @@ use self::reload::ReloadCommand;
 use self::save::SaveCommand;
 use self::save_guilds::SaveGuildsCommand;
 
+mod abuse;
 mod assign;
 mod commands;
 mod log;
@@ -38,7 +40,9 @@ pub enum OwnerCommands {
     #[command(name = "reload")]
     Reload(ReloadCommand),
     #[command(name = "save_guilds")]
-    SaveGuilds(SaveGuildsCommand)
+    SaveGuilds(SaveGuildsCommand),
+    #[command(name = "abuse")]
+    Abuse(AbuseCommand)
 }
 
 #[async_trait]
@@ -67,7 +71,8 @@ impl LuroCommand for OwnerCommands {
             Self::Modify(command) => command.run_command(ctx).await,
             Self::Commands(command) => command.run_command(ctx).await,
             Self::Reload(command) => command.run_command(ctx).await,
-            Self::SaveGuilds(command) => command.run_command(ctx).await
+            Self::SaveGuilds(command) => command.run_command(ctx).await,
+            Self::Abuse(command) => command.run_command(ctx).await
         }
     }
 }
