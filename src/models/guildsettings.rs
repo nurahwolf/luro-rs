@@ -1,5 +1,5 @@
-use std::path::Path;
 use anyhow::Context;
+use std::path::Path;
 use tracing::warn;
 use twilight_model::id::{marker::GuildMarker, Id};
 
@@ -18,7 +18,7 @@ impl GuildSetting {
         {
             let guild_data = ctx.guild_data.read().clone();
             if let Some(settings) = guild_data.get(guild_id) {
-                return Ok(settings.clone())
+                return Ok(settings.clone());
             }
         }
 
@@ -42,14 +42,16 @@ impl GuildSetting {
     pub async fn modify_guild_settings(
         ctx: &LuroContext,
         guild_id: &Id<GuildMarker>,
-        new_settings: Self,
+        new_settings: Self
     ) -> anyhow::Result<Self> {
         // This is only called to make sure they are present...
         let mut guild_settings = Self::get_guild_settings(ctx, guild_id).await?;
 
         {
             let mut guild_data = ctx.guild_data.write();
-            let new_guild_settings = guild_data.get_mut(guild_id).context("Expected to have a guild in the cache!")?;
+            let new_guild_settings = guild_data
+                .get_mut(guild_id)
+                .context("Expected to have a guild in the cache!")?;
 
             if let Some(guild) = ctx.twilight_cache.guild(*guild_id) {
                 guild_settings.guild_name = guild.name().to_owned();
@@ -82,6 +84,10 @@ impl GuildSetting {
     pub async fn flush_to_disk(&self, guild_id: &Id<GuildMarker>) -> anyhow::Result<()> {
         warn!("New guild settings are defined, flushing data to disk");
 
-        self.write(Path::new(&format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, guild_id))).await
+        self.write(Path::new(&format!(
+            "{0}/{1}/guild_settings.toml",
+            GUILDSETTINGS_FILE_PATH, guild_id
+        )))
+        .await
     }
 }

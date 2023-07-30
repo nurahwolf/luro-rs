@@ -14,11 +14,7 @@ use twilight_model::{
     user::User
 };
 
-use crate::{
-    models::Heck,
-    responses::LuroSlash,
-    LuroContext
-};
+use crate::{models::Heck, responses::LuroSlash, LuroContext};
 
 use super::LuroCommand;
 

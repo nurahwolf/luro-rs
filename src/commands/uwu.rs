@@ -10,7 +10,7 @@ use super::LuroCommand;
 #[command(name = "uwu", desc = "UwUify a message")]
 pub struct UwUCommand {
     /// What should I UwUify?
-    message: String,
+    message: String
 }
 
 #[async_trait]
@@ -21,7 +21,6 @@ impl LuroCommand for UwUCommand {
         } else {
             arm_uwu()
         };
-
 
         ctx.content(uwu).respond().await
     }
