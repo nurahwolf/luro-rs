@@ -26,8 +26,8 @@ pub struct UserCommands {
 
 #[async_trait]
 impl LuroCommand for UserCommands {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.clone().deferred().await?;
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.deferred().await?;
         let mut embed = ctx.default_embed().await?;
         let mut description = String::new();
         // The user we are interested in is the interaction author, unless a user was specified
