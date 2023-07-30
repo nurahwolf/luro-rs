@@ -12,7 +12,7 @@ use twilight_lavalink::Lavalink;
 use twilight_model::{
     application::command::Command,
     id::{
-        marker::{ApplicationMarker, ChannelMarker, GuildMarker},
+        marker::{ApplicationMarker, ChannelMarker, GuildMarker, UserMarker},
         Id
     },
     oauth::Application,
@@ -24,6 +24,7 @@ mod guildsettings;
 mod hecks;
 mod luroframework;
 pub mod toml;
+pub mod user_data;
 
 /// Settings that are stored on disk and meant to be modified by the user
 #[derive(Debug)]
@@ -41,6 +42,12 @@ pub struct Stories {
 pub struct Story {
     pub title: String,
     pub description: String
+}
+
+/// Data that is specific to a user
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct UserData {
+    pub wordcount: HashMap<String, usize>
 }
 
 /// Data that may be accessed globally, including DMs. Generally not modified by the end user
@@ -87,13 +94,14 @@ pub struct LuroFramework {
     pub twilight_cache: InMemoryCache,
     /// The global tracing subscriber, for allowing manipulation within commands
     pub tracing_subscriber: Handle<LevelFilter, Registry>,
-
     /// Settings that are stored on disk and meant to be modified by the user
     pub settings: RwLock<Settings>,
     /// Data that may be accessed globally, including DMs
     pub global_data: RwLock<GlobalData>,
     /// Data that is specific to a guild
-    pub guild_data: RwLock<HashMap<Id<GuildMarker>, GuildSetting>>
+    pub guild_data: RwLock<HashMap<Id<GuildMarker>, GuildSetting>>,
+    /// Data that is specific to a user
+    pub user_data: RwLock<HashMap<Id<UserMarker>, UserData>>
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]

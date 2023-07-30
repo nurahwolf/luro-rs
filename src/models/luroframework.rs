@@ -106,6 +106,7 @@ impl LuroFramework {
                 twilight_cache,
                 hyper_client,
                 lavalink,
+                user_data: Default::default(),
                 guild_data: Default::default(),
                 global_data,
                 tracing_subscriber,

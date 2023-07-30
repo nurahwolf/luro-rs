@@ -35,6 +35,8 @@ pub const SECRETS_FILE_PATH: &str = "data/secrets.toml";
 pub const STORIES_FILE_PATH: &str = "data/stories.toml";
 /// A folder where <guild/guild_id.toml> are stored
 pub const GUILDSETTINGS_FILE_PATH: &str = "data/guilds";
+/// A folder where <user/user_id.toml> are stored
+pub const USERDATA_FILE_PATH: &str = "data/user";
 /// Where the fursona folder lives. Can be overriden elsewhere if desired.
 pub const FURSONA_FILE_PATH: &str = "data/fursona";
 /// The timeout duriation for command buttons, in seconds.
