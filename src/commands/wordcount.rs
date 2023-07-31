@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use anyhow::Context;
 use async_trait::async_trait;
 
@@ -22,6 +24,8 @@ pub struct WordcountCommand {
 #[async_trait]
 impl LuroCommand for WordcountCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        // How many digits to pad
+        let mut digits = 0;
         let limit = self
             .limit
             .unwrap_or(10)
@@ -66,7 +70,15 @@ impl LuroCommand for WordcountCommand {
 
         let mut word_size = String::new();
         for (size, count) in user_data.wordsize.iter().take(limit) {
-            writeln!(word_size, "There are {} words of size {}.", count, size)?;
+            if let (Ok(size), Ok(count)) = (usize::try_from(size.checked_ilog10().unwrap_or(0) + 1), usize::try_from(count.checked_ilog10().unwrap_or(0) + 1)) {
+                if digits < size {
+                    digits = size
+                }
+                if digits < count {
+                    digits = count
+                }
+            }
+            writeln!(word_size, "`{:<2$}` words of `{:<2$}` characters", count, size, digits)?;
         }
         word_size.truncate(1024);
         embed = embed.field(EmbedFieldBuilder::new("Word Length", word_size).inline());
@@ -75,8 +87,19 @@ impl LuroCommand for WordcountCommand {
         let mut most_used_words = Vec::from_iter(user_data.words);
         most_used_words.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
         most_used_words.truncate(limit);
+        digits = 0;
+        let mut word_length = 1;
         for (word, count) in most_used_words {
-            writeln!(most_used, "`{word}` said `{count}` times")?;
+            if let Ok(length) = usize::try_from(count.checked_ilog10().unwrap_or(0) + 1) {
+                if digits < length {
+                    digits = length
+                }
+            }
+
+            if word_length < word.len() {
+                word_length = word.len()
+            }
+            writeln!(most_used, "`{:<3$}` said `{:<2$}` times", word, count, digits, word_length)?;
         }
         most_used.truncate(1024);
         embed = embed.field(EmbedFieldBuilder::new("Most used words", most_used).inline());
