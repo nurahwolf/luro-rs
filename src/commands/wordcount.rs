@@ -61,7 +61,8 @@ impl LuroCommand for WordcountCommand {
             }
         };
 
-        let averagesize = user_data.averagesize / user_data.wordcount;
+        let averagesize = user_data.averagesize.checked_div(user_data.wordcount).unwrap_or(0);
+        
         writeln!(
             content,
             "The user has said **{}** words with an average of **{}** letters per word.\n",
@@ -78,7 +79,7 @@ impl LuroCommand for WordcountCommand {
                     digits = count
                 }
             }
-            writeln!(word_size, "`{:<2$}` words with `{:<2$}` total characters", count, size, digits)?;
+            writeln!(word_size, "`{:^2$}` words with `{:^2$}` total characters", count, size, digits)?;
         }
         word_size.truncate(1024);
         embed = embed.field(EmbedFieldBuilder::new("Word Length", word_size).inline());
@@ -99,7 +100,7 @@ impl LuroCommand for WordcountCommand {
             if word_length < word.len() {
                 word_length = word.len()
             }
-            writeln!(most_used, "`{:<3$}` said `{:<2$}` times", word, count, digits, word_length)?;
+            writeln!(most_used, "`{:^3$}` said `{:^2$}` times", word, count, digits, word_length)?;
         }
         most_used.truncate(1024);
         embed = embed.field(EmbedFieldBuilder::new("Most used words", most_used).inline());
