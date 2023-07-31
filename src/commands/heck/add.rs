@@ -9,7 +9,7 @@ use twilight_model::{
         Component
     }
 };
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, ImageSource};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{
     commands::LuroCommand,
@@ -51,6 +51,8 @@ impl LuroCommand for HeckAddCommand {
     }
 
     async fn handle_component(self, ctx: LuroSlash, data: MessageComponentInteractionData) -> anyhow::Result<()> {
+        let mut heck_id = 0;
+        let mut field = vec![];
         let interaction_channel = ctx.channel()?;
         let interaction_author = ctx.author()?;
 
@@ -93,11 +95,16 @@ impl LuroCommand for HeckAddCommand {
 
             if interaction_channel.nsfw.unwrap_or(false) {
                 heck_db.hecks.nsfw_hecks.append(&mut heck);
-                heck_author.name = "Global Heck Created - NSFW Heck".to_owned()
+                heck_id = heck_db.hecks.nsfw_hecks.len();
+                heck_author.name = "Global Heck Created - NSFW Heck".to_owned();
             } else {
                 heck_db.hecks.sfw_hecks.append(&mut heck);
-                heck_author.name = "Global Heck Created - SFW Heck".to_owned()
+                heck_id = heck_db.hecks.sfw_hecks.len();
+                heck_author.name = "Global Heck Created - SFW Heck".to_owned();
             };
+            field.append(&mut vec![EmbedFieldBuilder::new("Global Heck", "Just created")
+                .inline()
+                .build()]);
         } else {
             let guild_id = match ctx.interaction.guild_id {
                 Some(guild_id) => guild_id,
@@ -111,13 +118,30 @@ impl LuroCommand for HeckAddCommand {
             let heck_db = guild_db.entry(guild_id);
 
             if interaction_channel.nsfw.unwrap_or(false) {
-                heck_db.and_modify(|guild| guild.hecks.nsfw_hecks.append(&mut heck));
+                heck_db.and_modify(|guild| {
+                    heck_id = guild.hecks.nsfw_hecks.len();
+                    guild.hecks.sfw_hecks.append(&mut heck)
+                });
+
                 heck_author.name = "Guild Heck Created - NSFW Heck".to_owned()
             } else {
-                heck_db.and_modify(|guild| guild.hecks.sfw_hecks.append(&mut heck));
+                heck_db.and_modify(|guild| {
+                    heck_id = guild.hecks.sfw_hecks.len();
+                    guild.hecks.sfw_hecks.append(&mut heck)
+                });
+
                 heck_author.name = "Guild Heck Created - SFW Heck".to_owned()
             };
+            field.append(&mut vec![EmbedFieldBuilder::new("Guild Heck", "Just created")
+                .inline()
+                .build()]);
         };
+        field.append(&mut vec![EmbedFieldBuilder::new("Heck ID", heck_id.to_string())
+            .inline()
+            .build()]);
+
+        // Add our fields
+        heck_embed.fields.append(&mut field);
 
         // Update the heck embed to state that the heck has been created
         heck_embed.author = Some(heck_author);

@@ -1,4 +1,5 @@
 use anyhow::Context;
+use regex::Regex;
 use std::path::Path;
 use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
@@ -6,8 +7,6 @@ use twilight_model::id::Id;
 use crate::models::UserData;
 use crate::LuroContext;
 use crate::USERDATA_FILE_PATH;
-use std::collections::btree_map::Entry::Occupied;
-use std::collections::btree_map::Entry::Vacant;
 
 use super::toml::LuroTOML;
 
@@ -59,18 +58,25 @@ impl UserData {
     }
 
     /// Write new words
-    pub async fn write_words(ctx: &LuroContext, new_words: Vec<&str>, user_id: &Id<UserMarker>) -> anyhow::Result<()> {
+    pub async fn write_words(ctx: &LuroContext, new_words: &str, user_id: &Id<UserMarker>) -> anyhow::Result<()> {
         // Make sure is valid
-        let mut modified_user_data = UserData::get_user_settings(ctx, user_id).await?;
+        let mut modified_user_data = UserData::get_user_settings(ctx, user_id)
+            .await
+            .context("Failed to get user data")?;
 
-        // Modify the user data and add the new words. This is done on a clone of the user's data
-        for word in new_words {
-            match modified_user_data.wordcount.entry(word.to_owned()) {
-                Occupied(mut entry) => *entry.get_mut() += 1,
-                Vacant(vacant) => {
-                    vacant.insert(1);
-                }
-            }
+        // First perform analysis
+        let regex = Regex::new(r"\b[\w-]+\b").unwrap();
+        for capture in regex.captures_iter(new_words) {
+            let word = match capture.get(0) {
+                Some(word) => word.as_str().to_ascii_lowercase(),
+                None => "".to_owned()
+            };
+            let size = word.len();
+
+            modified_user_data.wordcount += 1;
+            modified_user_data.averagesize += size;
+            *modified_user_data.words.entry(word).or_insert(0) += 1;
+            *modified_user_data.wordsize.entry(size).or_insert(0) += 1;
         }
 
         {

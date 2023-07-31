@@ -42,7 +42,7 @@ pub enum OwnerCommands {
     #[command(name = "save_guilds")]
     SaveGuilds(SaveGuildsCommand),
     #[command(name = "abuse")]
-    Abuse(AbuseCommand)
+    Abuse(Box<AbuseCommand>)
 }
 
 #[async_trait]

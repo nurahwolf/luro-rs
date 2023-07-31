@@ -1,8 +1,8 @@
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 
 use hyper::client::HttpConnector;
 use parking_lot::RwLock;
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::{reload::Handle, Registry};
 use twilight_cache_inmemory::InMemoryCache;
@@ -47,7 +47,48 @@ pub struct Story {
 /// Data that is specific to a user
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct UserData {
-    pub wordcount: BTreeMap<String, usize>
+    pub wordcount: usize,
+    pub averagesize: usize,
+    #[serde(deserialize_with = "deserialize_data", serialize_with = "serialize_data")]
+    pub wordsize: BTreeMap<usize, usize>,
+    pub words: BTreeMap<String, usize>
+}
+
+fn serialize_data<S>(input: &BTreeMap<usize, usize>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer
+{
+    let data = input
+        .iter()
+        .map(|(str_key, value)| (str_key.to_string(), *value))
+        .collect::<BTreeMap<String, usize>>();
+
+    s.collect_map(data)
+}
+
+fn deserialize_data<'de, D>(deserializer: D) -> Result<BTreeMap<usize, usize>, D::Error>
+where
+    D: Deserializer<'de>
+{
+    let str_map = BTreeMap::<String, usize>::deserialize(deserializer)?;
+    let original_len = str_map.len();
+    let data = {
+        str_map
+            .into_iter()
+            .map(|(str_key, value)| match str_key.parse() {
+                Ok(int_key) => Ok((int_key, value)),
+                Err(_) => Err(de::Error::invalid_value(
+                    de::Unexpected::Str(&str_key),
+                    &"a non-negative integer"
+                ))
+            })
+            .collect::<Result<BTreeMap<_, _>, _>>()?
+    };
+    // multiple strings could parse to the same int, e.g "0" and "00"
+    if data.len() < original_len {
+        return Err(de::Error::custom("detected duplicate integer key"));
+    }
+    Ok(data)
 }
 
 /// Data that may be accessed globally, including DMs. Generally not modified by the end user

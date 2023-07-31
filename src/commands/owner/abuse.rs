@@ -22,8 +22,7 @@ pub struct AbuseCommand {
 #[async_trait]
 impl LuroCommand for AbuseCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let guild_id = ctx.interaction.guild_id.context("Not a guild")?;
-        let luro_webhook = LuroWebhook::new(ctx.luro.clone(), guild_id).await?;
+        let luro_webhook = LuroWebhook::new(ctx.luro.clone()).await?;
         let webhook = luro_webhook
             .get_webhook(
                 ctx.interaction

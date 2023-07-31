@@ -8,10 +8,7 @@ use crate::models::{LuroFramework, UserData};
 impl LuroFramework {
     pub async fn message_create_listener(self: Arc<Self>, message: Box<MessageCreate>) -> Result<(), Error> {
         if !message.content.is_empty() {
-            // TODO: Strip out special characters
-            let lowercase = message.content.to_ascii_lowercase();
-            let words: Vec<&str> = lowercase.split_whitespace().collect();
-            UserData::write_words(&self, words, &message.author.id).await?;
+            UserData::write_words(&self, &message.content, &message.author.id).await?;
         }
 
         Ok(())

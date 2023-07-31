@@ -1,25 +1,18 @@
 use twilight_model::{
     channel::Webhook,
-    guild::Guild,
-    id::{
-        marker::{ChannelMarker, GuildMarker},
-        Id
-    }
+    id::{marker::ChannelMarker, Id}
 };
 
 use crate::{LuroContext, WEBHOOK_NAME};
 
 /// Used for handling webhooks
 pub struct LuroWebhook {
-    luro: LuroContext,
-    guild: Guild
+    luro: LuroContext
 }
 
 impl LuroWebhook {
-    pub async fn new(luro: LuroContext, guild_id: Id<GuildMarker>) -> anyhow::Result<Self> {
-        let guild = luro.twilight_client.guild(guild_id).await?.model().await?;
-
-        Ok(Self { luro, guild })
+    pub async fn new(luro: LuroContext) -> anyhow::Result<Self> {
+        Ok(Self { luro })
     }
 
     // Get a webhook for a channel, or create it if it does not exist
