@@ -45,6 +45,7 @@ impl LuroCommand for WordcountCommand {
             }
         }
 
+        content.truncate(2048);
         ctx.embed(embed.description(content).author(author).build())?.respond().await
     }
 }
