@@ -47,13 +47,13 @@ impl LuroCommand for WordcountCommand {
             match user_data.words.get(&word) {
                 // If we are getting a single word, then we want to get it from the BTreeMap that is sorted by key
                 Some(word_count) => {
-                    content = format!("**{word}:** `{word_count}`");
+                    content = format!("The user has said the word `{word}` about `{word_count}` times!");
                     return ctx.embed(embed.description(content).author(author).build())?.respond().await;
                 }
                 None => {
                     return ctx
                         .content(format!(
-                            "Sorry! That user has never said the word `{word}` as far as I know! :("
+                            "Sorry! <@{}> has never said the word `{word}` as far as I know! :(", self.user.resolved.id
                         ))
                         .respond()
                         .await
