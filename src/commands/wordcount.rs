@@ -78,7 +78,7 @@ impl LuroCommand for WordcountCommand {
                     digits = count
                 }
             }
-            writeln!(word_size, "`{:<2$}` words of `{:<2$}` characters", count, size, digits)?;
+            writeln!(word_size, "`{:<2$}` words with `{:<2$}` total characters", count, size, digits)?;
         }
         word_size.truncate(1024);
         embed = embed.field(EmbedFieldBuilder::new("Word Length", word_size).inline());
