@@ -6,8 +6,8 @@ use twilight_model::id::Id;
 use crate::models::UserData;
 use crate::LuroContext;
 use crate::USERDATA_FILE_PATH;
-use std::collections::hash_map::Entry::Occupied;
-use std::collections::hash_map::Entry::Vacant;
+use std::collections::btree_map::Entry::Occupied;
+use std::collections::btree_map::Entry::Vacant;
 
 use super::toml::LuroTOML;
 

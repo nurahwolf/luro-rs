@@ -5,7 +5,7 @@ use twilight_util::builder::embed::EmbedAuthorBuilder;
 
 use super::LuroCommand;
 use crate::{models::UserData, responses::LuroSlash};
-use std::fmt::Write;
+use std::{fmt::Write, collections::BTreeMap};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "wordcount", desc = "Get some stats on the bullshit someone has posted.")]
@@ -30,9 +30,13 @@ impl LuroCommand for WordcountCommand {
         let user_avatar = self.get_interaction_member_avatar(self.user.member.clone(), &ctx.interaction.guild_id, &self.user.resolved);
         let author = EmbedAuthorBuilder::new(user_name).url(user_avatar);
 
+        // Create a new hashmap with the order reversed, to see what the most commonly used words are
+        let word_count_by_amount: BTreeMap<&usize, &String> = user_data.wordcount.iter().map(|(k,v)| (v,k)).collect();
+
 
         if let Some(word) = self.word {
             match user_data.wordcount.get(&word) {
+                // If we are getting a single word, then we want to get it from the BTreeMap that is sorted by key
                 Some(word_count) => {
                     content = format!("**{word}:** `{word_count}`")
                 },
@@ -40,7 +44,8 @@ impl LuroCommand for WordcountCommand {
             }
             
         } else {
-            for (word, amount) in user_data.wordcount.iter() {
+            // Otherwise, we want to get it from the BTreeMap sorted by amount
+            for (amount, word) in word_count_by_amount.iter() {
                 writeln!(content, "`{word}`: `{amount}`")?
             }
         }

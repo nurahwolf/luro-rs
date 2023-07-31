@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 
 use hyper::client::HttpConnector;
 use parking_lot::RwLock;
@@ -47,7 +47,7 @@ pub struct Story {
 /// Data that is specific to a user
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct UserData {
-    pub wordcount: HashMap<String, usize>
+    pub wordcount: BTreeMap<String, usize>
 }
 
 /// Data that may be accessed globally, including DMs. Generally not modified by the end user
