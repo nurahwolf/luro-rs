@@ -61,24 +61,26 @@ impl UserData {
     /// Write new words
     pub async fn write_words(ctx: &LuroContext, new_words: Vec<&str>, user_id: &Id<UserMarker>) -> anyhow::Result<()> {
         // Make sure is valid
-        let _ = UserData::get_user_settings(ctx, user_id).await?;
-        let modified_user_data;
-        {
-            let mut user_data_db = ctx.user_data.write();
-            let user_data = user_data_db.get_mut(user_id).context("Expected user data to be present")?;
+        let mut modified_user_data = UserData::get_user_settings(ctx, user_id).await?;
 
-            for word in new_words {
-                match user_data.wordcount.entry(word.to_owned()) {
-                    Occupied(mut entry) => *entry.get_mut() += 1,
-                    Vacant(vacant) => {
-                        vacant.insert(1);
-                    }
+        // Modify the user data and add the new words. This is done on a clone of the user's data
+        for word in new_words {
+            match modified_user_data.wordcount.entry(word.to_owned()) {
+                Occupied(mut entry) => *entry.get_mut() += 1,
+                Vacant(vacant) => {
+                    vacant.insert(1);
                 }
             }
-
-            modified_user_data = user_data.clone()
         }
 
+        {
+            // Now write that to the user's context
+            let mut user_data_db = ctx.user_data.write();
+            let user_data = user_data_db.get_mut(user_id).context("Expected user data to be present")?;
+            *user_data = modified_user_data.clone()
+        }
+
+        // Write it to file
         modified_user_data
             .write(Path::new(&format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id)))
             .await
