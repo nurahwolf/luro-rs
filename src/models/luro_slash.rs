@@ -15,7 +15,10 @@ use twilight_model::{
         message::{AllowedMentions, Component, Embed, MentionType, MessageFlags},
         Channel, Message
     },
-    http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+    http::{
+        attachment::Attachment,
+        interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType}
+    },
     user::User
 };
 use twilight_util::builder::embed::EmbedBuilder;
@@ -270,6 +273,26 @@ impl LuroSlash {
         }
 
         Ok(())
+    }
+
+    /// Respond but check to make sure the message body fits, otherwise send the result as a file.
+    /// This WILL defer the interaction if it matches, if not already deferred.
+    pub async fn respond_checked(&mut self, content: String) -> anyhow::Result<()> {
+        if content.len() > 2000 {
+            // Defer the message if it is not already
+            if self.interaction_response_type != InteractionResponseType::DeferredUpdateMessage {
+                self.deferred().await?;
+            }
+
+            self.attachments = Some(vec![Attachment::from_bytes(
+                "fucking-huge-file.txt".to_owned(),
+                content.as_bytes().to_vec(),
+                1
+            )]);
+            self.respond().await
+        } else {
+            self.clone().content(content).respond().await
+        }
     }
 
     /// Send a message, useful if you do not want to consume the interaction.

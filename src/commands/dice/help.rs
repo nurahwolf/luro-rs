@@ -8,7 +8,7 @@ use crate::{models::LuroSlash, traits::luro_command::LuroCommand};
 #[command(name = "help", desc = "Information for how to roll your dice")]
 pub struct DiceHelpCommand {
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
-    ephemeral: Option<bool>,
+    ephemeral: Option<bool>
 }
 
 #[async_trait]
@@ -81,7 +81,7 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
             .field(EmbedFieldBuilder::new(keep_help[0], keep_help[1]))
             .field(EmbedFieldBuilder::new(drop_help[0], drop_help[1]));
 
-            if let Some(ephemeral) = self.ephemeral && ephemeral {
+        if let Some(ephemeral) = self.ephemeral && ephemeral {
                 ctx.embed(embed.build())?.ephemeral().respond().await
             } else {
                 ctx.embed(embed.build())?.respond().await

@@ -1,6 +1,7 @@
 use twilight_interactions::command::CreateCommand;
 
 use self::dice::DiceCommands;
+use self::luro::LuroCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
@@ -13,6 +14,7 @@ use twilight_model::application::interaction::InteractionData;
 
 use crate::models::{Commands, LuroSlash};
 use crate::traits::luro_command::LuroCommand;
+use crate::BOT_NAME;
 
 mod about;
 pub mod base64;
@@ -22,6 +24,7 @@ mod dice;
 pub mod heck;
 mod hello;
 mod lewd;
+mod luro;
 mod moderator;
 mod music;
 mod owner;
@@ -58,6 +61,7 @@ impl Commands {
         init.global_commands.insert("story", StoryCommand::create_command().into());
         init.global_commands.insert("uwu", UwUCommand::create_command().into());
         init.global_commands.insert("roll", DiceCommands::create_command().into());
+        init.global_commands.insert(BOT_NAME, LuroCommands::create_command().into());
 
         init.global_commands
             .insert("wordcount", WordcountCommand::create_command().into());
@@ -75,6 +79,7 @@ impl LuroSlash {
             _ => bail!("expected application command data")
         };
 
+        // TODO: CONSTANT match for bot name...
         match data.name.as_str() {
             "about" => AboutCommand::new(data).await?.run_command(self).await,
             "say" => SayCommand::new(data).await?.run_command(self).await,
@@ -92,6 +97,7 @@ impl LuroSlash {
             "uwu" => UwUCommand::new(data).await?.run_command(self).await,
             "wordcount" => WordcountCommand::new(data).await?.run_command(self).await,
             "roll" => DiceCommands::new(data).await?.run_commands(self).await,
+            "luro" => LuroCommands::new(data).await?.run_commands(self).await,
             _ => self.unknown_command_response().await
         }
     }

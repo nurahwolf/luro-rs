@@ -10,7 +10,7 @@ use crate::{
 #[command(name = "stats", desc = "Get some stats for your character sheet")]
 pub struct DiceStatsCommand {
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
-    ephemeral: Option<bool>,
+    ephemeral: Option<bool>
 }
 
 #[async_trait]

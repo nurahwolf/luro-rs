@@ -10,7 +10,7 @@ use crate::{
 #[command(name = "direction", desc = "Roll for a direction, such as `North East`!")]
 pub struct DiceRollDirectionCommand {
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
-    ephemeral: Option<bool>,
+    ephemeral: Option<bool>
 }
 
 #[async_trait]

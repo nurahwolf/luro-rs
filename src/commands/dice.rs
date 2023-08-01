@@ -7,6 +7,7 @@ use crate::models::LuroSlash;
 mod help;
 mod roll;
 mod roll_direction;
+mod simple;
 mod stats;
 
 use crate::traits::luro_command::LuroCommand;
@@ -14,6 +15,7 @@ use crate::traits::luro_command::LuroCommand;
 use self::help::DiceHelpCommand;
 use self::roll::DiceRollCommand;
 use self::roll_direction::DiceRollDirectionCommand;
+use self::simple::DiceSimpleCommand;
 use self::stats::DiceStatsCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "roll", desc = "Roll those freaking dice!!!")]
@@ -25,7 +27,9 @@ pub enum DiceCommands {
     #[command(name = "stats")]
     Stats(DiceStatsCommand),
     #[command(name = "help")]
-    Help(DiceHelpCommand)
+    Help(DiceHelpCommand),
+    #[command(name = "simple")]
+    Simple(DiceSimpleCommand)
 }
 
 #[async_trait]
@@ -36,7 +40,8 @@ impl LuroCommand for DiceCommands {
             Self::Roll(command) => command.run_command(ctx).await,
             Self::RollDirection(command) => command.run_command(ctx).await,
             Self::Stats(command) => command.run_command(ctx).await,
-            Self::Help(command) => command.run_command(ctx).await
+            Self::Help(command) => command.run_command(ctx).await,
+            Self::Simple(command) => command.run_command(ctx).await
         }
     }
 }

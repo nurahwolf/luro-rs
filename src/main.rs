@@ -53,6 +53,10 @@ pub const SOURCE_FINDER_REGEX: &str = r"(?P<url>http[^\s>]+)";
 
 // SETTINGS constants
 // =========
+/// The name of the bot
+pub const BOT_NAME: &str = "luro";
+/// The name of the bot in lowercase
+
 /// [tracing_subscriber] filter level
 pub const FILTER: LevelFilter = LevelFilter::INFO;
 // Luro's intents. Can be set to all, but rather spammy.
