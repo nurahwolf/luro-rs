@@ -26,21 +26,21 @@ impl LuroCommand for DiceRollCommand {
         });
         let mut result_string = if let Some(reason) = self.reason {
             format!(
-                "<@{}> is rolling for the reason: **{reason}**\n\n**Result:** {}\n**Total:** {}",
+                "<@{}> is rolling for the reason:\n```{reason}```\n**Result:** `{}`\n**Total:** `{}`",
                 ctx.author()?.id,
                 result.string_result,
                 result.dice_total
             )
         } else {
-            format!("**Result:** {}\n**Total:** {}", result.string_result, result.dice_total)
+            format!("**Result:** `{}`\n**Total:** `{}`", result.string_result, result.dice_total)
         };
 
         if result.dice_total == RollValue::Int(20) {
-            result_string.push_str(&format!("\n*Whoa, a d20!! Congrats!! <3*"))
+            result_string.push_str(&format!("\n-----\n*Whoa, a d20!! Congrats!! <3*"))
         }
 
         if result.dice_total == RollValue::Int(0) {
-            result_string.push_str(&format!("\n*You failed. GitGud*"))
+            result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
         }
 
         if let Some(ephemeral) = self.ephemeral && ephemeral {
