@@ -43,6 +43,8 @@ impl LuroCommand for DiceRollCommand {
             result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
         }
 
+        result_string.truncate(2000);
+
         if let Some(ephemeral) = self.ephemeral && ephemeral {
             ctx.content(result_string).ephemeral().respond().await
         } else {
