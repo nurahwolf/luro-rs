@@ -35,8 +35,12 @@ impl LuroCommand for DiceRollCommand {
             format!("**Result:** {}\n**Total:** {}", result.string_result, result.dice_total)
         };
 
-        if result.dice_total == RollValue::Int(0) {
+        if result.dice_total == RollValue::Int(20) {
             result_string.push_str(&format!("\n*Whoa, a d20!! Congrats!! <3*"))
+        }
+
+        if result.dice_total == RollValue::Int(0) {
+            result_string.push_str(&format!("\n*You failed. GitGud*"))
         }
 
         if let Some(ephemeral) = self.ephemeral && ephemeral {
