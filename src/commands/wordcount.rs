@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::{collections::BTreeMap, convert::TryFrom};
 
 use anyhow::Context;
 use async_trait::async_trait;
@@ -14,64 +14,149 @@ use std::{convert::TryInto, fmt::Write, iter::FromIterator};
 #[command(name = "wordcount", desc = "Get some stats on the bullshit someone has posted.")]
 pub struct WordcountCommand {
     /// The user to get the stats of
-    user: ResolvedUser,
+    user: Option<ResolvedUser>,
     /// How many words we should get stats for. Defaults to 10.
     limit: Option<i64>,
     /// A particular word to search word
-    word: Option<String>
+    word: Option<String>,
+    /// Search across ALL user data for word stats. This can be very slow!
+    global: Option<bool>
 }
 
 #[async_trait]
 impl LuroCommand for WordcountCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        // How many digits to pad
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        let mut wordcount: usize = Default::default();
+        let mut averagesize: usize = Default::default();
+        let mut wordsize: BTreeMap<usize, usize> = Default::default();
+        let mut words: BTreeMap<String, usize> = Default::default();
+        let mut embed = ctx.default_embed().await?;
+        let mut content = String::new();
         let mut digits = 0;
+        let global = match self.global {
+            Some(global) => {
+                ctx.deferred().await?;
+                global
+            }
+            None => false
+        };
+        // How many items we should get
         let limit = self
             .limit
             .unwrap_or(10)
             .try_into()
             .context("Attempted to turn the limit into a usize")?;
-        let mut content = String::new();
-        let user_data = UserData::get_user_settings(&ctx.luro, &self.user.resolved.id).await?;
-        let mut embed = ctx.default_embed().await?;
 
-        let user_name = match self.user.member {
-            Some(ref member) => member.clone().nick.unwrap_or(self.user.resolved.name.clone()),
-            None => self.user.resolved.name.clone()
+        if global {
+            // Data set only on global invokations
+            let mut user_ids = vec![];
+            let user_data = ctx.luro.user_data.read();
+            for (user_id, user_data) in user_data.iter() {
+                user_ids.push(user_id);
+
+                wordcount += user_data.wordcount;
+                averagesize += user_data.averagesize;
+
+                for (word, count) in user_data.words.clone().into_iter() {
+                    *words.entry(word).or_insert(0) += count;
+                }
+
+                for (size, count) in user_data.wordsize.clone().into_iter() {
+                    *wordsize.entry(size).or_insert(0) += count;
+                }
+            }
+
+            let mut users = String::new();
+            for user_id in user_ids.clone() {
+                if users.len() > 965 {
+                    break;
+                }
+
+                if users.is_empty() {
+                    users.push_str(&format!("<@{user_id}>"));
+                } else {
+                    users.push_str(&format!(", <@{user_id}>"))
+                }
+            }
+
+            let footer = format!("Words counted from a total of **{}** users!\n{}", user_ids.len(), users);
+            embed = embed.field(EmbedFieldBuilder::new("Total Users", footer));
+        } else {
+            // TODO: Tidy this mess
+            let (user, avatar, name) = match self.user {
+                Some(ref user_defined) => (
+                    user_defined.resolved.clone(),
+                    self.get_interaction_member_avatar(
+                        user_defined.member.clone(),
+                        &ctx.interaction.guild_id,
+                        &user_defined.resolved
+                    ),
+                    match user_defined.member {
+                        Some(ref member) => member.clone().nick.unwrap_or(user_defined.resolved.name.clone()),
+                        None => user_defined.resolved.name.clone()
+                    }
+                ),
+                None => match ctx.interaction.member {
+                    Some(ref member) => {
+                        let user = member.user.clone().context("Expected user in interaction")?;
+                        let guild_id = ctx.interaction.guild_id.context("Expected guild ID")?;
+                        (
+                            user.clone(),
+                            self.get_partial_member_avatar(Some(member), &Some(guild_id), &user),
+                            match &member.nick {
+                                Some(nick) => nick.clone(),
+                                None => user.name
+                            }
+                        )
+                    }
+                    None => match ctx.interaction.user {
+                        Some(ref user) => (user.clone(), self.get_user_avatar(user), user.name.clone()),
+                        None => {
+                            return ctx
+                                .internal_error_response("Could not find a user or member".to_owned())
+                                .await
+                        }
+                    }
+                }
+            };
+            let author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
+            embed = embed.author(author);
+            let user_data = UserData::get_user_settings(&ctx.luro, &user.id).await?;
+            wordcount = user_data.wordcount;
+            averagesize = user_data.averagesize;
+            wordsize = user_data.wordsize;
+            words = user_data.words;
         };
-        let user_avatar =
-            self.get_interaction_member_avatar(self.user.member.clone(), &ctx.interaction.guild_id, &self.user.resolved);
-        let author = EmbedAuthorBuilder::new(user_name).icon_url(ImageSource::url(user_avatar)?);
 
+        let averagesize = averagesize.checked_div(wordcount).unwrap_or(0);
+        writeln!(
+            content,
+            "Approximately **{}** words have been said with an average of **{}** letters per word.\n",
+            wordcount, averagesize
+        )?;
+
+        // Handle if a user is just interested in a word
         if let Some(word) = self.word {
-            match user_data.words.get(&word) {
+            match words.get(&word) {
                 // If we are getting a single word, then we want to get it from the BTreeMap that is sorted by key
                 Some(word_count) => {
-                    content = format!("The user has said the word `{word}` about `{word_count}` times!");
-                    return ctx.embed(embed.description(content).author(author).build())?.respond().await;
+                    writeln!(content, "\nThe word `{word}` has been said about `{word_count}` times!")?;
+                    return ctx.embed(embed.description(content).build())?.respond().await;
                 }
                 None => {
-                    return ctx
-                        .content(format!(
-                            "Sorry! <@{}> has never said the word `{word}` as far as I know! :(", self.user.resolved.id
-                        ))
-                        .respond()
-                        .await
+                    content = format!("The word `{word}` has never been said, as far as I can see!");
+                    return ctx.content(content).respond().await;
                 }
             }
         };
 
-        let averagesize = user_data.averagesize.checked_div(user_data.wordcount).unwrap_or(0);
-        
-        writeln!(
-            content,
-            "The user has said **{}** words with an average of **{}** letters per word.\n",
-            user_data.wordcount, averagesize
-        )?;
-
+        // Word size field
         let mut word_size = String::new();
-        for (size, count) in user_data.wordsize.iter().take(limit) {
-            if let (Ok(size), Ok(count)) = (usize::try_from(size.checked_ilog10().unwrap_or(0) + 1), usize::try_from(count.checked_ilog10().unwrap_or(0) + 1)) {
+        for (size, count) in wordsize.iter().take(limit) {
+            if let (Ok(size), Ok(count)) = (
+                usize::try_from(size.checked_ilog10().unwrap_or(0) + 1),
+                usize::try_from(count.checked_ilog10().unwrap_or(0) + 1)
+            ) {
                 if digits < size {
                     digits = size
                 }
@@ -79,13 +164,18 @@ impl LuroCommand for WordcountCommand {
                     digits = count
                 }
             }
-            writeln!(word_size, "`{:^2$}` words with `{:^2$}` total characters", count, size, digits)?;
+            writeln!(
+                word_size,
+                "`{:^2$}` words with `{:^2$}` total characters",
+                count, size, digits
+            )?;
         }
         word_size.truncate(1024);
         embed = embed.field(EmbedFieldBuilder::new("Word Length", word_size).inline());
 
+        // Most used words field
         let mut most_used = String::new();
-        let mut most_used_words = Vec::from_iter(user_data.words);
+        let mut most_used_words = Vec::from_iter(words);
         most_used_words.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
         most_used_words.truncate(limit);
         digits = 0;
@@ -105,6 +195,6 @@ impl LuroCommand for WordcountCommand {
         most_used.truncate(1024);
         embed = embed.field(EmbedFieldBuilder::new("Most used words", most_used).inline());
 
-        ctx.embed(embed.description(content).author(author).build())?.respond().await
+        ctx.embed(embed.description(content).build())?.respond().await
     }
 }
