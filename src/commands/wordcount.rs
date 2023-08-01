@@ -4,6 +4,7 @@ use anyhow::Context;
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_model::id::{Id, marker::UserMarker};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource};
 
 use super::LuroCommand;
@@ -48,7 +49,7 @@ impl LuroCommand for WordcountCommand {
             .context("Attempted to turn the limit into a usize")?;
 
         if global {
-            // Data set only on global invokations
+            let mut most_said_words: BTreeMap<Id<UserMarker>, usize> = Default::default();
             let mut user_ids = vec![];
             let user_data = ctx.luro.user_data.read();
             for (user_id, user_data) in user_data.iter() {
@@ -59,6 +60,7 @@ impl LuroCommand for WordcountCommand {
 
                 for (word, count) in user_data.words.clone().into_iter() {
                     *words.entry(word).or_insert(0) += count;
+                    *most_said_words.entry(*user_id).or_insert(0) += count;
                 }
 
                 for (size, count) in user_data.wordsize.clone().into_iter() {
@@ -66,21 +68,19 @@ impl LuroCommand for WordcountCommand {
                 }
             }
 
-            let mut users = String::new();
-            for user_id in user_ids.clone() {
-                if users.len() > 965 {
-                    break;
-                }
+            writeln!(content, "Words counted from a total of **{}** users!\n-----", user_ids.len())?;
 
-                if users.is_empty() {
-                    users.push_str(&format!("<@{user_id}>"))
-                } else {
-                    users.push_str(&format!(", <@{user_id}>"))
-                }
+            let mut high_score_users = Vec::from_iter(most_said_words);
+            high_score_users.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
+            high_score_users.truncate(limit);
+
+            for (user, count) in high_score_users {
+                writeln!(content, "<@{}> has said `{}` words!", user, count)?;
             }
+            content.truncate(3900);
+            writeln!(content, "-----\n")?;
 
-            let footer = format!("Words counted from a total of **{}** users!\n{}", user_ids.len(), users);
-            embed = embed.field(EmbedFieldBuilder::new("Total Users", footer));
+
         } else {
             let (user, avatar, name) = self.get_specified_user_or_author(&self.user, &ctx.interaction)?;
             let author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
@@ -130,7 +130,7 @@ impl LuroCommand for WordcountCommand {
             }
             writeln!(
                 word_size,
-                "`{:^2$}` words with `{:^2$}` total characters",
+                "`{:^2$}` words with `{:^2$}` characters",
                 count, size, digits
             )?;
         }
@@ -158,7 +158,7 @@ impl LuroCommand for WordcountCommand {
         }
         most_used.truncate(1024);
         embed = embed.field(EmbedFieldBuilder::new("Most used words", most_used).inline());
-
+        content.truncate(4096);
         ctx.embed(embed.description(content).build())?.respond().await
     }
 }
