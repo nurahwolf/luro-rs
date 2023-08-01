@@ -9,11 +9,13 @@ use crate::LuroContext;
 use crate::traits::toml::LuroTOML;
 use crate::GUILDSETTINGS_FILE_PATH;
 
+use super::LuroFramework;
+
 impl LuroTOML for GuildSetting {}
 
 impl GuildSetting {
     /// This function just gets guild settings and ensures it is in Luro's context.
-    pub async fn get_guild_settings(ctx: &LuroContext, guild_id: &Id<GuildMarker>) -> anyhow::Result<Self> {
+    pub async fn get_guild_settings(ctx: &LuroFramework, guild_id: &Id<GuildMarker>) -> anyhow::Result<Self> {
         // Check to see if our data is present. if it is, return early
         {
             if let Some(settings) = ctx.guild_data.get(guild_id) {

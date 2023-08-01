@@ -147,12 +147,12 @@ pub trait LuroCommand: CommandModel + CreateCommand {
 
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
     fn default_embed(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {
-        crate::functions::default_embed(ctx, &guild_id)
+        ctx.default_embed(&guild_id)
     }
 
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     fn accent_colour(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u32 {
-        crate::functions::accent_colour(ctx, &guild_id)
+        ctx.accent_colour(&guild_id)
     }
 
     fn assemble_user_avatar(&self, user: &User) -> String {

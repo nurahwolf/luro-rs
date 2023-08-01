@@ -141,7 +141,9 @@ pub struct LuroFramework {
     /// Data that is specific to a guild
     pub guild_data: DashMap<Id<GuildMarker>, GuildSetting>,
     /// Data that is specific to a user
-    pub user_data: DashMap<Id<UserMarker>, UserData>
+    pub user_data: DashMap<Id<UserMarker>, UserData>,
+    /// Guild ID that can be set for some operations,
+    pub guild_id: Option<Id<GuildMarker>>
 }
 
 /// Calculate the permissions of a member with information from the cache.
