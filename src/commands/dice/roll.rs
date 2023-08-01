@@ -12,7 +12,9 @@ pub struct DiceRollCommand {
     /// Standard Dice Notation: 6d20dl2-10 (6x d20 dice, drop lowest 2, take away 10 from result)
     dice: String,
     /// Add context to your role, such as for D&D
-    reason: Option<String>
+    reason: Option<String>,
+    /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
+    ephemeral: Option<bool>,
 }
 
 #[async_trait]
@@ -22,7 +24,7 @@ impl LuroCommand for DiceRollCommand {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
-        let result_string = if let Some(reason) = self.reason {
+        let mut result_string = if let Some(reason) = self.reason {
             format!(
                 "<@{}> is rolling for the reason: **{reason}**\n\n**Result:** {}\n**Total:** {}",
                 ctx.author()?.id,
@@ -33,6 +35,15 @@ impl LuroCommand for DiceRollCommand {
             format!("**Result:** {}\n**Total:** {}", result.string_result, result.dice_total)
         };
 
-        ctx.content(result_string).respond().await
+        if result.dice_total == RollValue::Int(0) {
+            result_string.push_str(&format!("\n*Whoa, a d20!! Congrats!! <3*"))
+        }
+
+        if let Some(ephemeral) = self.ephemeral && ephemeral {
+            ctx.content(result_string).ephemeral().respond().await
+        } else {
+            ctx.content(result_string).respond().await
+        }
+
     }
 }

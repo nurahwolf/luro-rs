@@ -16,9 +16,9 @@ use self::roll::DiceRollCommand;
 use self::roll_direction::DiceRollDirectionCommand;
 use self::stats::DiceStatsCommand;
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "dice", desc = "Roll those freaking dice!!!")]
+#[command(name = "roll", desc = "Roll those freaking dice!!!")]
 pub enum DiceCommands {
-    #[command(name = "roll")]
+    #[command(name = "dice")]
     Roll(DiceRollCommand),
     #[command(name = "roll_direction")]
     RollDirection(DiceRollDirectionCommand),

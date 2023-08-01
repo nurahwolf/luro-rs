@@ -8,11 +8,18 @@ use crate::{
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "direction", desc = "Roll for a direction, such as `North East`!")]
-pub struct DiceRollDirectionCommand {}
+pub struct DiceRollDirectionCommand {
+    /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
+    ephemeral: Option<bool>,
+}
 
 #[async_trait]
 impl LuroCommand for DiceRollDirectionCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.content(Roll::roll_direction()).respond().await
+        if let Some(ephemeral) = self.ephemeral && ephemeral {
+            ctx.content(Roll::roll_direction()).ephemeral().respond().await
+        } else {
+            ctx.content(Roll::roll_direction()).respond().await
+        }
     }
 }
