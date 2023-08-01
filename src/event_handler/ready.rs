@@ -5,7 +5,7 @@ use twilight_model::gateway::{
     presence::{ActivityType, MinimalActivity, Status}
 };
 
-use crate::LuroFramework;
+use crate::{models::GuildSetting, LuroFramework};
 
 impl LuroFramework {
     pub async fn ready_listener(&self, ready: Box<Ready>, shard: MessageSender) -> anyhow::Result<()> {
@@ -54,6 +54,10 @@ impl LuroFramework {
 
         debug!("Attempting to register guild settings");
         self.register_commands(application.id).await?;
+
+        for guild in ready.guilds {
+            GuildSetting::get_guild_settings(self, &guild.id).await?;
+        }
 
         // match luro.application.try_read() {
         //     Ok(application_data) => {
