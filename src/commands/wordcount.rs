@@ -115,6 +115,7 @@ impl LuroCommand for WordcountCommand {
         };
 
         // Word size field
+        let mut count_size = 0;
         let mut word_size = String::new();
         for (size, count) in wordsize.iter().take(limit) {
             if let (Ok(size), Ok(count)) = (
@@ -124,14 +125,14 @@ impl LuroCommand for WordcountCommand {
                 if digits < size {
                     digits = size
                 }
-                if digits < count {
-                    digits = count
+                if count_size < count {
+                    count_size = count
                 }
             }
             writeln!(
                 word_size,
-                "`{:^2$}` words with `{:^2$}` characters",
-                count, size, digits
+                "`{:^2$}` words with `{:^3$}` characters",
+                count, size, digits, count_size
             )?;
         }
         word_size.truncate(1024);
