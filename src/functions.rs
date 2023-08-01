@@ -161,8 +161,7 @@ pub fn default_embed(ctx: &LuroFramework, guild_id: &Option<Id<GuildMarker>>) ->
 /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
 pub fn accent_colour(ctx: &LuroFramework, guild_id: &Option<Id<GuildMarker>>) -> u32 {
     if let Some(guild_id) = guild_id {
-        let guild_db = ctx.guild_data.read();
-        let guild_settings = guild_db.get(guild_id);
+        let guild_settings = ctx.guild_data.get(guild_id);
 
         if let Some(guild_settings) = guild_settings {
             // Check to see if a custom colour is defined

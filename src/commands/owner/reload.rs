@@ -24,25 +24,20 @@ pub struct ReloadCommand {}
 impl LuroCommand for ReloadCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let hecks = Hecks::get(Path::new(HECK_FILE_PATH)).await?;
-        let guild_settings;
 
         {
-            let mut global_data = ctx.luro.global_data.write();
-            global_data.hecks = hecks
+            let global_data = &ctx.luro.global_data;
+            global_data.write().hecks = hecks
         }
 
-        {
-            let guild_data = ctx.luro.guild_data.read();
-            guild_settings = guild_data.clone()
-        }
-
-        for (guild_id, _) in guild_settings {
+        for guild_setting in &ctx.luro.guild_data {
             let guild_settings = GuildSetting::get(Path::new(&format!(
                 "{0}/{1}/guild_settings.toml",
-                GUILDSETTINGS_FILE_PATH, guild_id
+                GUILDSETTINGS_FILE_PATH,
+                guild_setting.key()
             )))
             .await?;
-            ctx.luro.guild_data.write().entry(guild_id).insert_entry(guild_settings);
+            ctx.luro.guild_data.entry(*guild_setting.key()).insert_entry(guild_settings);
         }
 
         ctx.content("Reloaded data from disk!".to_owned()).respond().await

@@ -21,23 +21,21 @@ pub struct SaveCommand {}
 impl LuroCommand for SaveCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let hecks;
-        let guild_settings;
         {
             let global_data = ctx.luro.global_data.read();
             hecks = global_data.hecks.clone()
         }
 
-        {
-            let guild_data = ctx.luro.guild_data.read();
-            guild_settings = guild_data.clone()
-        }
-
         Hecks::write(&hecks, Path::new(HECK_FILE_PATH)).await?;
 
-        for (guild_id, guild_settings) in guild_settings {
+        for guild_setting in &ctx.luro.guild_data {
             GuildSetting::write(
-                &guild_settings,
-                Path::new(&format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, guild_id))
+                guild_setting.value(),
+                Path::new(&format!(
+                    "{0}/{1}/guild_settings.toml",
+                    GUILDSETTINGS_FILE_PATH,
+                    guild_setting.key()
+                ))
             )
             .await?;
         }

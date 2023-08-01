@@ -1,5 +1,6 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
+use dashmap::DashMap;
 use hyper::client::HttpConnector;
 use parking_lot::RwLock;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -140,9 +141,9 @@ pub struct LuroFramework {
     /// Data that may be accessed globally, including DMs
     pub global_data: RwLock<GlobalData>,
     /// Data that is specific to a guild
-    pub guild_data: RwLock<HashMap<Id<GuildMarker>, GuildSetting>>,
+    pub guild_data: DashMap<Id<GuildMarker>, GuildSetting>,
     /// Data that is specific to a user
-    pub user_data: RwLock<HashMap<Id<UserMarker>, UserData>>
+    pub user_data: DashMap<Id<UserMarker>, UserData>
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]

@@ -64,8 +64,8 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
         Some(guild_id) => {
             trace!("checking if guild hecks are present");
             {
-                let guild_db = ctx.guild_data.read();
-                let guild_data = guild_db
+                let guild_data = ctx
+                    .guild_data
                     .get(&guild_id)
                     .ok_or_else(|| Error::msg("There is no guild data available! Are you sure there are guild hecks here?"))?;
                 are_sfw_hecks_empty = guild_data.hecks.sfw_heck_ids.is_empty();
@@ -74,8 +74,7 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
 
             if are_sfw_hecks_empty || are_nsfw_hecks_empty {
                 debug!("some hecks are empty, so we are reloading them");
-                let mut guild_db = ctx.guild_data.write();
-                let guild = guild_db.entry(guild_id);
+                let guild = ctx.guild_data.entry(guild_id);
                 guild.and_modify(|guild| {
                     if are_sfw_hecks_empty {
                         guild.hecks.reload_sfw_heck_ids()
@@ -140,8 +139,8 @@ async fn get_heck(
             guild_id.ok_or_else(|| Error::msg("Guild ID is not present. You can only use this option in a guild."))?;
 
         {
-            let mut guild_db = ctx.guild_data.write();
-            let guild_settings = guild_db
+            let mut guild_settings = ctx
+                .guild_data
                 .get_mut(&guild_id)
                 .ok_or_else(|| Error::msg("There are no settings for this guild. Blame Nurah."))?;
 

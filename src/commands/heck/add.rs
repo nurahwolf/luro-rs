@@ -114,8 +114,7 @@ impl LuroCommand for HeckAddCommand {
             // Make sure guild settings are present
             GuildSetting::get_guild_settings(&ctx.luro, &guild_id).await?;
 
-            let mut guild_db = ctx.luro.guild_data.write();
-            let heck_db = guild_db.entry(guild_id);
+            let heck_db = ctx.luro.guild_data.entry(guild_id);
 
             if interaction_channel.nsfw.unwrap_or(false) {
                 heck_db.and_modify(|guild| {

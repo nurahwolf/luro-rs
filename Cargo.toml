@@ -36,6 +36,7 @@ regex = "1.9.1"
 tracing-appender = "0.2.2"
 dotenv = "0.15.0"
 uwuify = "0.2.2"
+dashmap = "5.5.0"
 # luro-framework = { path = "../luro-framework", version = "0" }
 
 [dependencies.tokio]

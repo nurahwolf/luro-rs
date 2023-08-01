@@ -4,7 +4,7 @@ use anyhow::Context;
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::id::{Id, marker::UserMarker};
+use twilight_model::id::{marker::UserMarker, Id};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource};
 
 use super::LuroCommand;
@@ -51,16 +51,15 @@ impl LuroCommand for WordcountCommand {
         if global {
             let mut most_said_words: BTreeMap<Id<UserMarker>, usize> = Default::default();
             let mut user_ids = vec![];
-            let user_data = ctx.luro.user_data.read();
-            for (user_id, user_data) in user_data.iter() {
-                user_ids.push(user_id);
+            for user_data in ctx.luro.user_data.iter() {
+                user_ids.push(*user_data.key());
 
                 wordcount += user_data.wordcount;
                 averagesize += user_data.averagesize;
 
                 for (word, count) in user_data.words.clone().into_iter() {
                     *words.entry(word).or_insert(0) += count;
-                    *most_said_words.entry(*user_id).or_insert(0) += count;
+                    *most_said_words.entry(*user_data.key()).or_insert(0) += count;
                 }
 
                 for (size, count) in user_data.wordsize.clone().into_iter() {
@@ -68,19 +67,21 @@ impl LuroCommand for WordcountCommand {
                 }
             }
 
-            writeln!(content, "Words counted from a total of **{}** users and I am showing stats for **{limit}** users!\n-----", user_ids.len())?;
+            writeln!(
+                content,
+                "Words counted from a total of **{}** users and I am showing stats for **{limit}** users!\n-----",
+                user_ids.len()
+            )?;
 
             let mut high_score_users = Vec::from_iter(most_said_words);
             high_score_users.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
             high_score_users.truncate(limit);
 
-            for (user, count) in high_score_users {
-                writeln!(content, "<@{}> has said `{}` words!", user, count)?;
+            for (user_number, (user, count)) in high_score_users.into_iter().enumerate() {
+                writeln!(content, "{user_number}. <@{user}> has said `{count}` words!")?;
             }
             content.truncate(3800);
             writeln!(content, "-----")?;
-
-
         } else {
             let (user, avatar, name) = self.get_specified_user_or_author(&self.user, &ctx.interaction)?;
             let author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
@@ -104,7 +105,10 @@ impl LuroCommand for WordcountCommand {
             match words.get(&word) {
                 // If we are getting a single word, then we want to get it from the BTreeMap that is sorted by key
                 Some(word_count) => {
-                    writeln!(content, "-----\nSpecifically, the word `{word}` has been said about `{word_count}` times!")?;
+                    writeln!(
+                        content,
+                        "-----\nSpecifically, the word `{word}` has been said about `{word_count}` times!"
+                    )?;
                     return ctx.embed(embed.description(content).build())?.respond().await;
                 }
                 None => {

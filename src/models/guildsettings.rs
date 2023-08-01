@@ -16,8 +16,7 @@ impl GuildSetting {
     pub async fn get_guild_settings(ctx: &LuroContext, guild_id: &Id<GuildMarker>) -> anyhow::Result<Self> {
         // Check to see if our data is present. if it is, return early
         {
-            let guild_data = ctx.guild_data.read().clone();
-            if let Some(settings) = guild_data.get(guild_id) {
+            if let Some(settings) = ctx.guild_data.get(guild_id) {
                 return Ok(settings.clone());
             }
         }
@@ -31,7 +30,7 @@ impl GuildSetting {
 
         // Now insert it into our context
         {
-            ctx.guild_data.write().insert(*guild_id, guild_settings.clone());
+            ctx.guild_data.insert(*guild_id, guild_settings.clone());
         }
 
         // Return the settings loaded from disk
@@ -48,8 +47,8 @@ impl GuildSetting {
         let mut guild_settings = Self::get_guild_settings(ctx, guild_id).await?;
 
         {
-            let mut guild_data = ctx.guild_data.write();
-            let new_guild_settings = guild_data
+            let mut new_guild_settings = ctx
+                .guild_data
                 .get_mut(guild_id)
                 .context("Expected to have a guild in the cache!")?;
 

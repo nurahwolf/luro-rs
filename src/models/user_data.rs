@@ -17,8 +17,7 @@ impl UserData {
     pub async fn write_user_settings(ctx: &LuroContext, user_id: &Id<UserMarker>) -> anyhow::Result<Self> {
         // Check to see if our data is present. if it is, return early
         {
-            let user_data = ctx.user_data.read().clone();
-            if let Some(settings) = user_data.get(user_id) {
+            if let Some(settings) = ctx.user_data.get(user_id) {
                 return Ok(settings.clone());
             }
         }
@@ -28,7 +27,7 @@ impl UserData {
 
         // Now insert it into our context
         {
-            ctx.user_data.write().insert(*user_id, user_settings.clone());
+            ctx.user_data.insert(*user_id, user_settings.clone());
         }
 
         // Return the settings loaded from disk
@@ -39,8 +38,7 @@ impl UserData {
     pub async fn get_user_settings(ctx: &LuroContext, user_id: &Id<UserMarker>) -> anyhow::Result<Self> {
         // Check to see if our data is present. if it is, return early
         {
-            let user_data = ctx.user_data.read().clone();
-            if let Some(settings) = user_data.get(user_id) {
+            if let Some(settings) = ctx.user_data.get(user_id) {
                 return Ok(settings.clone());
             }
         }
@@ -50,7 +48,7 @@ impl UserData {
 
         // Now insert it into our context
         {
-            ctx.user_data.write().insert(*user_id, user_settings.clone());
+            ctx.user_data.insert(*user_id, user_settings.clone());
         }
 
         // Return the settings loaded from disk
@@ -81,8 +79,7 @@ impl UserData {
 
         {
             // Now write that to the user's context
-            let mut user_data_db = ctx.user_data.write();
-            let user_data = user_data_db.get_mut(user_id).context("Expected user data to be present")?;
+            let mut user_data = ctx.user_data.get_mut(user_id).context("Expected user data to be present")?;
             *user_data = modified_user_data.clone()
         }
 
