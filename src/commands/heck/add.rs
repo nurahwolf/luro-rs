@@ -151,8 +151,7 @@ impl LuroCommand for HeckAddCommand {
     }
 
     async fn handle_model(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let author = ctx.author()?;
-        let author_avatar = self.get_partial_member_avatar(ctx.interaction.member.as_ref(), &ctx.interaction.guild_id, &author);
+        let (author, avatar, _) = self.get_interaction_author(&ctx.interaction)?;
         // TODO: Remove the manual data here
         let data = self.parse_modal_data(&mut ctx.interaction.clone())?;
         let heck_text = self.parse_modal_field_required(&data, "heck-text")?;
@@ -166,7 +165,7 @@ impl LuroCommand for HeckAddCommand {
 
         // Send a success message.
         let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", author.name))
-            .icon_url(ImageSource::url(author_avatar)?)
+            .icon_url(ImageSource::url(avatar)?)
             .build();
         let embed = EmbedBuilder::new()
             .color(ACCENT_COLOUR)

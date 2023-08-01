@@ -82,43 +82,7 @@ impl LuroCommand for WordcountCommand {
             let footer = format!("Words counted from a total of **{}** users!\n{}", user_ids.len(), users);
             embed = embed.field(EmbedFieldBuilder::new("Total Users", footer));
         } else {
-            // TODO: Tidy this mess
-            let (user, avatar, name) = match self.user {
-                Some(ref user_defined) => (
-                    user_defined.resolved.clone(),
-                    self.get_interaction_member_avatar(
-                        user_defined.member.clone(),
-                        &ctx.interaction.guild_id,
-                        &user_defined.resolved
-                    ),
-                    match user_defined.member {
-                        Some(ref member) => member.clone().nick.unwrap_or(user_defined.resolved.name.clone()),
-                        None => user_defined.resolved.name.clone()
-                    }
-                ),
-                None => match ctx.interaction.member {
-                    Some(ref member) => {
-                        let user = member.user.clone().context("Expected user in interaction")?;
-                        let guild_id = ctx.interaction.guild_id.context("Expected guild ID")?;
-                        (
-                            user.clone(),
-                            self.get_partial_member_avatar(Some(member), &Some(guild_id), &user),
-                            match &member.nick {
-                                Some(nick) => nick.clone(),
-                                None => user.name
-                            }
-                        )
-                    }
-                    None => match ctx.interaction.user {
-                        Some(ref user) => (user.clone(), self.get_user_avatar(user), user.name.clone()),
-                        None => {
-                            return ctx
-                                .internal_error_response("Could not find a user or member".to_owned())
-                                .await
-                        }
-                    }
-                }
-            };
+            let (user, avatar, name) = self.get_specified_user_or_author(&self.user, &ctx.interaction)?;
             let author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
             embed = embed.author(author);
             let user_data = UserData::get_user_settings(&ctx.luro, &user.id).await?;
