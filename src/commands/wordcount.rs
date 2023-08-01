@@ -68,7 +68,7 @@ impl LuroCommand for WordcountCommand {
                 }
             }
 
-            writeln!(content, "Words counted from a total of **{}** users!\n-----", user_ids.len())?;
+            writeln!(content, "Words counted from a total of **{}** users and I am showing stats for {limit} users!\n-----", user_ids.len())?;
 
             let mut high_score_users = Vec::from_iter(most_said_words);
             high_score_users.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
