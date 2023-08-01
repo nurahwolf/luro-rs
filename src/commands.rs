@@ -349,26 +349,24 @@ pub trait LuroCommand: CommandModel {
             }
             None => match interaction.user {
                 Some(ref user) => (user, self.get_user_avatar(user), &user.name),
-                None => {
-                    return Err(Error::msg("No interaction member or user present"))
-                }
+                None => return Err(Error::msg("No interaction member or user present"))
             }
         })
     }
 
     /// Get a specified user, else fall back to the interaction author
     /// Returns the user, their avatar and a nicely formatted name
-    fn get_specified_user_or_author<'a>(&'a self, specified_user: &'a Option<ResolvedUser>, interaction: &'a Interaction) -> anyhow::Result<(&User, String, &String)> {
+    fn get_specified_user_or_author<'a>(
+        &'a self,
+        specified_user: &'a Option<ResolvedUser>,
+        interaction: &'a Interaction
+    ) -> anyhow::Result<(&User, String, &String)> {
         Ok(match specified_user {
             Some(user_defined) => (
                 &user_defined.resolved,
-                self.get_interaction_member_avatar(
-                    &user_defined.member,
-                    &interaction.guild_id,
-                    &user_defined.resolved
-                ),
+                self.get_interaction_member_avatar(&user_defined.member, &interaction.guild_id, &user_defined.resolved),
                 match user_defined.member {
-                    Some(ref member) => match &member.nick{
+                    Some(ref member) => match &member.nick {
                         Some(nick) => nick,
                         None => &user_defined.resolved.name
                     },
@@ -399,12 +397,7 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Returns the avatar of an [PartialMember]!
-    fn get_partial_member_avatar(
-        &self,
-        member: &PartialMember,
-        guild_id: &Option<Id<GuildMarker>>,
-        user: &User
-    ) -> String {
+    fn get_partial_member_avatar(&self, member: &PartialMember, guild_id: &Option<Id<GuildMarker>>, user: &User) -> String {
         let user_id = user.id;
 
         if let Some(guild_id) = guild_id && let Some(member_avatar) = member.avatar {

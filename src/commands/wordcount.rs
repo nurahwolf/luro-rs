@@ -73,7 +73,7 @@ impl LuroCommand for WordcountCommand {
                 }
 
                 if users.is_empty() {
-                    users.push_str(&format!("<@{user_id}>"));
+                    users.push_str(&format!("<@{user_id}>"))
                 } else {
                     users.push_str(&format!(", <@{user_id}>"))
                 }
@@ -84,8 +84,8 @@ impl LuroCommand for WordcountCommand {
         } else {
             let (user, avatar, name) = self.get_specified_user_or_author(&self.user, &ctx.interaction)?;
             let author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
-            embed = embed.author(author);
             let user_data = UserData::get_user_settings(&ctx.luro, &user.id).await?;
+            embed = embed.author(author);
             wordcount = user_data.wordcount;
             averagesize = user_data.averagesize;
             wordsize = user_data.wordsize;
