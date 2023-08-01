@@ -122,11 +122,11 @@ impl LuroCommand for WordcountCommand {
                 usize::try_from(size.checked_ilog10().unwrap_or(0) + 1),
                 usize::try_from(count.checked_ilog10().unwrap_or(0) + 1)
             ) {
-                if digits < size {
-                    digits = size
+                if digits < count {
+                    digits = count
                 }
-                if count_size < count {
-                    count_size = count
+                if count_size < size {
+                    count_size = size
                 }
             }
             writeln!(
