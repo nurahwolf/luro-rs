@@ -3,9 +3,9 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "assign",

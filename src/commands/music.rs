@@ -2,8 +2,6 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use twilight_model::application::command::Command;
-
 use self::info::InfoCommand;
 use self::pause::PauseCommand;
 use self::seek::SeekCommand;
@@ -11,9 +9,9 @@ use self::stop::StopCommand;
 use self::volume::VolumeCommand;
 use self::{join::JoinCommand, leave::LeaveCommand, play::PlayCommand};
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 mod info;
 mod join;
 mod leave;
@@ -22,10 +20,6 @@ mod play;
 mod seek;
 mod stop;
 mod volume;
-
-pub fn commands() -> Vec<Command> {
-    vec![MusicCommands::create_command().into()]
-}
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "music", desc = "Music commands!", dm_permission = false)]

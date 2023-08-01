@@ -17,7 +17,7 @@ pub mod event_handler;
 pub mod functions;
 pub mod models;
 pub mod responses;
-pub mod webhook;
+pub mod traits;
 
 /// Where the config toml file lives. Can be overriden elsewhere if desired.
 pub const CONFIG_FILE_PATH: &str = "data/config.toml";

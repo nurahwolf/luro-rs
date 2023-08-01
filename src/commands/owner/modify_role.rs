@@ -8,9 +8,9 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "modify_role",

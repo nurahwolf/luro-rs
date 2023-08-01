@@ -3,9 +3,9 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::GenericMarker, Id};
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "commands", desc = "By default all this does is deregister commands in a guild")]

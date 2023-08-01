@@ -2,9 +2,9 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "count", desc = "Test to see if the framework is globally mutable")]
 pub struct CountCommand {}

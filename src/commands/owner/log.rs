@@ -3,9 +3,9 @@ use tracing_subscriber::filter;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "log", desc = "Set Luro's global log level, useful for debugging")]
 pub struct LogCommand {

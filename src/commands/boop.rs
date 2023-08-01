@@ -5,9 +5,9 @@ use twilight_model::{
     channel::message::component::{ActionRow, Button, ButtonStyle, Component}
 };
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 
 pub fn commands() -> Vec<Command> {
     vec![BoopCommand::create_command().into()]

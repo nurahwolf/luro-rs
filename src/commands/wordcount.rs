@@ -7,8 +7,10 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::UserMarker, Id};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource};
 
-use super::LuroCommand;
-use crate::{models::UserData, responses::LuroSlash};
+use crate::{
+    models::{LuroSlash, UserData},
+    traits::luro_command::LuroCommand
+};
 use std::{convert::TryInto, fmt::Write, iter::FromIterator};
 
 #[derive(CommandModel, CreateCommand)]

@@ -1,42 +1,14 @@
-use std::cmp::Ordering;
-
-use anyhow::anyhow;
-use tracing::debug;
-use twilight_http::Client;
 use twilight_model::{
     channel::ChannelType,
-    guild::{Permissions, Role},
+    guild::Permissions,
     id::{
-        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
+        marker::{ChannelMarker, RoleMarker, UserMarker},
         Id
     }
 };
 use twilight_util::permission_calculator::PermissionCalculator;
 
 use super::{GuildPermissions, LuroPermissions, MemberRoles, RoleOrdering};
-
-impl<'a> GuildPermissions<'a> {
-    /// Initialize [`GuildPermissions`] with from a guild.
-    pub async fn new(twilight_client: &'a Client, guild_id: &Id<GuildMarker>) -> Result<GuildPermissions<'a>, anyhow::Error> {
-        let guild = twilight_client.guild(*guild_id).await?.model().await?;
-
-        Ok(Self { twilight_client, guild })
-    }
-
-    /// Compute permissions for a given guild member.
-    pub async fn member(
-        &self,
-        member_id: Id<UserMarker>,
-        member_roles: &[Id<RoleMarker>]
-    ) -> Result<LuroPermissions<'a>, anyhow::Error> {
-        LuroPermissions::new(self, member_id, member_roles).await
-    }
-
-    /// Compute permissions for the current bot member.
-    pub async fn current_member(&self) -> Result<LuroPermissions<'a>, anyhow::Error> {
-        LuroPermissions::current_member(self).await
-    }
-}
 
 impl<'a> LuroPermissions<'a> {
     /// Initialize [`GuildPermissions`] from a cache client.
@@ -154,74 +126,5 @@ impl<'a> LuroPermissions<'a> {
         let permissions = calculator.in_channel(kind, &channel.permission_overwrites.unwrap_or_default());
 
         Ok((permissions, kind))
-    }
-}
-
-impl MemberRoles {
-    /// Query roles of a member in the cache.
-    async fn query(
-        twilight_client: &Client,
-        guild_id: Id<GuildMarker>,
-        member_roles: impl Iterator<Item = &Id<RoleMarker>>
-    ) -> anyhow::Result<MemberRoles> {
-        let mut everyone_role = None;
-        let mut roles = Vec::new();
-        let guild = twilight_client.guild(guild_id).await?.model().await?;
-        let mut member_roles = member_roles.peekable();
-
-        // In case the user has no roles, just return the everyone role. If there are roles, iterate through them
-        if member_roles.peek().is_some() {
-            // Filter everyone role and other roles
-            for member_role_id in member_roles {
-                debug!("User has roles");
-                debug!("{member_role_id}");
-                for role in &guild.roles {
-                    // info!(role.name);
-
-                    if role.id == guild_id.cast() {
-                        everyone_role = Some(role);
-                    } else if &role.id == member_role_id {
-                        roles.push(role.clone())
-                    }
-                }
-            }
-        } else {
-            debug!("User does not have roles, iterating through the guild_roles to grab the everyone role");
-            for role in &guild.roles {
-                if role.id == guild_id.cast() {
-                    everyone_role = Some(role);
-                }
-            }
-        }
-
-        if let Some(everyone) = everyone_role {
-            Ok(MemberRoles {
-                everyone: everyone.clone(),
-                roles
-            })
-        } else {
-            Err(anyhow!("everyone role not found in cache"))
-        }
-    }
-}
-
-impl Ord for RoleOrdering {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.position.cmp(&other.position).then(self.id.get().cmp(&other.id.get()))
-    }
-}
-
-impl PartialOrd for RoleOrdering {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl From<&Role> for RoleOrdering {
-    fn from(role: &Role) -> Self {
-        Self {
-            id: role.id,
-            position: role.position
-        }
     }
 }

@@ -14,9 +14,9 @@ use twilight_model::{
     }
 };
 
-use crate::{responses::LuroSlash, REGEX_CODE_BLOCK};
+use crate::{models::LuroSlash, REGEX_CODE_BLOCK};
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "base64", desc = "Convert to and from base64")]
 pub enum Base64Commands {

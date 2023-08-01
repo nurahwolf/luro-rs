@@ -2,10 +2,10 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
 use self::{ban::BanCommand, kick::KickCommand, purge::PurgeCommand, settings::GuildSettingsCommand};
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 
 mod assign;
 mod ban;

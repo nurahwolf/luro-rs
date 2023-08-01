@@ -7,7 +7,10 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{commands::LuroCommand, functions::RoleOrdering, models::GuildSetting, responses::LuroSlash};
+use crate::{
+    models::{GuildSetting, LuroSlash, RoleOrdering},
+    traits::luro_command::LuroCommand
+};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(

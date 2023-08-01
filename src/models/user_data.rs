@@ -1,5 +1,10 @@
 use anyhow::Context;
 use regex::Regex;
+use serde::de;
+use serde::Deserialize;
+use serde::Deserializer;
+use serde::Serializer;
+use std::collections::BTreeMap;
 use std::path::Path;
 use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
@@ -8,7 +13,7 @@ use crate::models::UserData;
 use crate::LuroContext;
 use crate::USERDATA_FILE_PATH;
 
-use super::toml::LuroTOML;
+use crate::traits::toml::LuroTOML;
 
 impl LuroTOML for UserData {}
 
@@ -88,4 +93,41 @@ impl UserData {
             .write(Path::new(&format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id)))
             .await
     }
+}
+
+pub fn serialize_wordsize<S>(input: &BTreeMap<usize, usize>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer
+{
+    let data = input
+        .iter()
+        .map(|(str_key, value)| (str_key.to_string(), *value))
+        .collect::<BTreeMap<String, usize>>();
+
+    s.collect_map(data)
+}
+
+pub fn deserialize_wordsize<'de, D>(deserializer: D) -> Result<BTreeMap<usize, usize>, D::Error>
+where
+    D: Deserializer<'de>
+{
+    let str_map = BTreeMap::<String, usize>::deserialize(deserializer)?;
+    let original_len = str_map.len();
+    let data = {
+        str_map
+            .into_iter()
+            .map(|(str_key, value)| match str_key.parse() {
+                Ok(int_key) => Ok((int_key, value)),
+                Err(_) => Err(de::Error::invalid_value(
+                    de::Unexpected::Str(&str_key),
+                    &"a non-negative integer"
+                ))
+            })
+            .collect::<Result<BTreeMap<_, _>, _>>()?
+    };
+    // multiple strings could parse to the same int, e.g "0" and "00"
+    if data.len() < original_len {
+        return Err(de::Error::custom("detected duplicate integer key"));
+    }
+    Ok(data)
 }

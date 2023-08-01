@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser, AutocompleteValue};
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -32,7 +32,7 @@ impl LuroCommand for LewdCommands {
 }
 
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel)]
 #[command(autocomplete = true, name = "nsfw", desc = "Make me say garbage!")]
 pub struct FursonaNSFWCommand {

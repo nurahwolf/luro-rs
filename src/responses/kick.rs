@@ -10,7 +10,7 @@ use crate::{
     ACCENT_COLOUR
 };
 
-use super::LuroSlash;
+use crate::models::LuroSlash;
 
 impl LuroSlash {
     pub async fn kick_response(

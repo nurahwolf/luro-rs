@@ -4,7 +4,7 @@ use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::COLOUR_DANGER;
 
-use super::LuroSlash;
+use crate::models::LuroSlash;
 
 impl LuroSlash {
     pub async fn no_guild_settings_response(self, guild_id: Id<GuildMarker>) -> anyhow::Result<()> {

@@ -7,9 +7,9 @@ use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder, ImageSource};
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "about", desc = "Information about me!")]

@@ -3,9 +3,9 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Seek;
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "seek", desc = "Seek through the track", dm_permission = false)]
 pub struct SeekCommand {

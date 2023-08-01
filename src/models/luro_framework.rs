@@ -9,15 +9,19 @@ use std::{
 
 use anyhow::Error;
 
-use tracing::metadata::LevelFilter;
+use tracing::{info, metadata::LevelFilter};
 use tracing_subscriber::{reload::Handle, Registry};
 use twilight_cache_inmemory::InMemoryCache;
 use twilight_gateway::{stream, ConfigBuilder, Intents, Shard};
 use twilight_http::client::InteractionClient;
 use twilight_lavalink::Lavalink;
-use twilight_model::gateway::{
-    payload::outgoing::update_presence::UpdatePresencePayload,
-    presence::{ActivityType, MinimalActivity, Status}
+use twilight_model::{
+    application::command::Command,
+    gateway::{
+        payload::outgoing::update_presence::UpdatePresencePayload,
+        presence::{ActivityType, MinimalActivity, Status}
+    },
+    id::{marker::ApplicationMarker, Id}
 };
 
 use crate::{
@@ -27,7 +31,9 @@ use crate::{
 
 use crate::HECK_FILE_PATH;
 
-use super::toml::LuroTOML;
+use crate::traits::toml::LuroTOML;
+
+use super::Commands;
 
 impl LuroFramework {
     /// Creates a new framework builder, this is a shortcut to FrameworkBuilder.
@@ -121,6 +127,26 @@ impl LuroFramework {
     /// [http client](Client) and [application id](ApplicationMarker)
     pub fn interaction_client(&self) -> InteractionClient {
         self.twilight_client.interaction(self.settings.read().application_id)
+    }
+    /// Register commands to the Discord API.
+    pub async fn register_commands(&self, application_id: Id<ApplicationMarker>) -> anyhow::Result<()> {
+        let client = self.twilight_client.interaction(application_id);
+
+        match client
+            .set_global_commands(
+                &Commands::default_commands()
+                    .global_commands
+                    .into_values()
+                    .collect::<Vec<Command>>()
+            )
+            .await
+        {
+            Ok(command_result) => Ok(info!(
+                "Successfully registered {} global commands!",
+                command_result.model().await?.len()
+            )),
+            Err(why) => Err(why.into())
+        }
     }
 }
 

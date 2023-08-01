@@ -5,9 +5,9 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::{models::GuildSetting, responses::LuroSlash};
+use crate::{models::GuildSetting, models::LuroSlash};
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "info", desc = "Information on the current heck database", dm_permission = true)]
 pub struct HeckInfo {}

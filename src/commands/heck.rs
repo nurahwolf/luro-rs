@@ -14,9 +14,9 @@ use twilight_model::{
     user::User
 };
 
-use crate::{models::Heck, responses::LuroSlash, LuroContext};
+use crate::{models::Heck, models::LuroSlash, LuroContext};
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 
 use self::{add::HeckAddCommand, info::HeckInfo, someone::HeckSomeoneCommand};
 

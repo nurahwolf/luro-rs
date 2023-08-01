@@ -3,9 +3,9 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Volume;
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "volume", desc = "Set the volume of the player!", dm_permission = false)]
 pub struct VolumeCommand {

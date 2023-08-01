@@ -9,9 +9,9 @@ use twilight_model::guild::Permissions;
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
-    commands::LuroCommand,
-    functions::GuildPermissions,
-    responses::{ban::ban_embed, LuroSlash}
+    models::{GuildPermissions, LuroSlash},
+    responses::ban::ban_embed,
+    traits::luro_command::LuroCommand
 };
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]

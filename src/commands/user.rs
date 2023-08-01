@@ -9,9 +9,9 @@ use twilight_util::{
     snowflake::Snowflake
 };
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "user", desc = "Information about a user")]

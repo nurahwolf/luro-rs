@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, ImageSource};
 
-use crate::{responses::LuroSlash, webhook::LuroWebhook};
+use crate::{models::LuroSlash, models::LuroWebhook};
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "abuse", desc = "Use a webhook to pretend to be a user", dm_permission = false)]

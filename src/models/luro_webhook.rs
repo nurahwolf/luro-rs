@@ -5,10 +5,7 @@ use twilight_model::{
 
 use crate::{LuroContext, WEBHOOK_NAME};
 
-/// Used for handling webhooks
-pub struct LuroWebhook {
-    luro: LuroContext
-}
+use super::LuroWebhook;
 
 impl LuroWebhook {
     pub async fn new(luro: LuroContext) -> anyhow::Result<Self> {

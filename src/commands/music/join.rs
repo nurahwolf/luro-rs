@@ -7,9 +7,9 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "join",

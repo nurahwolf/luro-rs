@@ -7,9 +7,9 @@ use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::EmbedFooterBuilder;
 
-use crate::{models::GlobalData, responses::LuroSlash, STORIES_FILE_PATH};
+use crate::{models::GlobalData, models::LuroSlash, STORIES_FILE_PATH};
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "story",

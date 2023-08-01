@@ -6,7 +6,7 @@ use twilight_model::id::{marker::GuildMarker, Id};
 use crate::models::GuildSetting;
 use crate::LuroContext;
 
-use super::toml::LuroTOML;
+use crate::traits::toml::LuroTOML;
 use crate::GUILDSETTINGS_FILE_PATH;
 
 impl LuroTOML for GuildSetting {}

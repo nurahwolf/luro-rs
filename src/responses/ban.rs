@@ -7,10 +7,9 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedField
 
 use crate::{
     functions::{get_member_avatar, get_user_avatar},
+    models::LuroSlash,
     ACCENT_COLOUR
 };
-
-use super::LuroSlash;
 
 impl LuroSlash {
     pub async fn ban_response(

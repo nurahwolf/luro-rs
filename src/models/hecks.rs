@@ -1,6 +1,6 @@
 use crate::models::Hecks;
 
-use super::toml::LuroTOML;
+use crate::traits::toml::LuroTOML;
 
 impl LuroTOML for Hecks {}
 

@@ -6,11 +6,9 @@ use twilight_model::id::Id;
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFooterBuilder, ImageSource};
 
 use crate::{
-    commands::{
-        heck::{format_heck, get_heck},
-        LuroCommand
-    },
-    responses::LuroSlash,
+    commands::heck::{format_heck, get_heck},
+    models::LuroSlash,
+    traits::luro_command::LuroCommand,
     ACCENT_COLOUR
 };
 

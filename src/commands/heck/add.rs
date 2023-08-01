@@ -12,9 +12,9 @@ use twilight_model::{
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{
-    commands::LuroCommand,
+    models::LuroSlash,
     models::{GuildSetting, Heck},
-    responses::LuroSlash,
+    traits::luro_command::LuroCommand,
     ACCENT_COLOUR
 };
 

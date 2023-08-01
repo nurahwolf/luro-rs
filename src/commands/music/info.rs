@@ -4,9 +4,9 @@ use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "info", desc = "Information about the music player", dm_permission = false)]
 pub struct InfoCommand {}

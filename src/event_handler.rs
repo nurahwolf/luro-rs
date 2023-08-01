@@ -3,8 +3,7 @@ use std::sync::Arc;
 use tracing::error;
 use twilight_gateway::{Event, MessageSender};
 
-use crate::models::LuroFramework;
-use crate::responses::LuroSlash;
+use crate::models::{LuroFramework, LuroSlash};
 
 mod audit_log_handler;
 mod ban_add;

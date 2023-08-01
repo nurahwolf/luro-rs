@@ -3,9 +3,9 @@ use rand::Rng;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::responses::LuroSlash;
+use crate::models::LuroSlash;
 
-use super::LuroCommand;
+use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "muzzle", desc = "Put a muzzle on a user")]
 pub struct MuzzleCommand {
