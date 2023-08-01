@@ -12,7 +12,6 @@ pub struct HelloCommand {}
 #[async_trait]
 impl LuroCommand for HelloCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        // TODO: Absolutely trash error handling lol
         let content = match ctx.interaction.author_id() {
             Some(author_id) => format!(
                 "Hello World! I am **{}**. It's nice to meet you, <@{}>!",

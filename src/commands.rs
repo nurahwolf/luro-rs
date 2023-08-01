@@ -1,5 +1,6 @@
 use twilight_interactions::command::CreateCommand;
 
+use self::dice::DiceCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
@@ -17,6 +18,7 @@ mod about;
 pub mod base64;
 pub mod boop;
 mod count;
+mod dice;
 pub mod heck;
 mod hello;
 mod lewd;
@@ -55,6 +57,8 @@ impl Commands {
         init.global_commands.insert("base64", Base64Commands::create_command().into());
         init.global_commands.insert("story", StoryCommand::create_command().into());
         init.global_commands.insert("uwu", UwUCommand::create_command().into());
+        init.global_commands.insert("dice", DiceCommands::create_command().into());
+
         init.global_commands
             .insert("wordcount", WordcountCommand::create_command().into());
 
@@ -87,6 +91,7 @@ impl LuroSlash {
             "story" => StoryCommand::new(data).await?.run_command(self).await,
             "uwu" => UwUCommand::new(data).await?.run_command(self).await,
             "wordcount" => WordcountCommand::new(data).await?.run_command(self).await,
+            "dice" => DiceCommands::new(data).await?.run_commands(self).await,
             _ => self.unknown_command_response().await
         }
     }
