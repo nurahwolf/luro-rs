@@ -78,7 +78,7 @@ impl LuroCommand for WordcountCommand {
                 writeln!(content, "<@{}> has said `{}` words!", user, count)?;
             }
             content.truncate(3800);
-            writeln!(content, "-----\n")?;
+            writeln!(content, "-----")?;
 
 
         } else {
