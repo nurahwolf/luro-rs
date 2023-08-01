@@ -68,7 +68,7 @@ impl LuroCommand for WordcountCommand {
                 }
             }
 
-            writeln!(content, "Words counted from a total of **{}** users and I am showing stats for {limit} users!\n-----", user_ids.len())?;
+            writeln!(content, "Words counted from a total of **{}** users and I am showing stats for **{limit}** users!\n-----", user_ids.len())?;
 
             let mut high_score_users = Vec::from_iter(most_said_words);
             high_score_users.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
@@ -77,7 +77,7 @@ impl LuroCommand for WordcountCommand {
             for (user, count) in high_score_users {
                 writeln!(content, "<@{}> has said `{}` words!", user, count)?;
             }
-            content.truncate(3900);
+            content.truncate(3800);
             writeln!(content, "-----\n")?;
 
 
@@ -95,7 +95,7 @@ impl LuroCommand for WordcountCommand {
         let averagesize = averagesize.checked_div(wordcount).unwrap_or(0);
         writeln!(
             content,
-            "Approximately **{}** words have been said with an average of **{}** letters per word.\n",
+            "Approximately **{}** words have been said with an average of **{}** letters per word.",
             wordcount, averagesize
         )?;
 
@@ -104,7 +104,7 @@ impl LuroCommand for WordcountCommand {
             match words.get(&word) {
                 // If we are getting a single word, then we want to get it from the BTreeMap that is sorted by key
                 Some(word_count) => {
-                    writeln!(content, "\nThe word `{word}` has been said about `{word_count}` times!")?;
+                    writeln!(content, "-----\nSpecifically, the word `{word}` has been said about `{word_count}` times!")?;
                     return ctx.embed(embed.description(content).build())?.respond().await;
                 }
                 None => {
