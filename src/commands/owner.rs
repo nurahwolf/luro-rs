@@ -9,6 +9,7 @@ use crate::traits::luro_command::LuroCommand;
 use self::abuse::AbuseCommand;
 use self::assign::AssignCommand;
 use self::commands::OwnerCommandsCommand;
+use self::load_users::OwnerLoadUsers;
 use self::log::LogCommand;
 use self::modify_role::ModifyRoleCommand;
 use self::reload::ReloadCommand;
@@ -18,6 +19,7 @@ use self::save_guilds::SaveGuildsCommand;
 mod abuse;
 mod assign;
 mod commands;
+mod load_users;
 mod log;
 mod modify_role;
 mod reload;
@@ -42,7 +44,9 @@ pub enum OwnerCommands {
     #[command(name = "save_guilds")]
     SaveGuilds(SaveGuildsCommand),
     #[command(name = "abuse")]
-    Abuse(Box<AbuseCommand>)
+    Abuse(Box<AbuseCommand>),
+    #[command(name = "load_users")]
+    LoadUsers(OwnerLoadUsers)
 }
 
 #[async_trait]
@@ -72,7 +76,8 @@ impl LuroCommand for OwnerCommands {
             Self::Commands(command) => command.run_command(ctx).await,
             Self::Reload(command) => command.run_command(ctx).await,
             Self::SaveGuilds(command) => command.run_command(ctx).await,
-            Self::Abuse(command) => command.run_command(ctx).await
+            Self::Abuse(command) => command.run_command(ctx).await,
+            Self::LoadUsers(command) => command.run_command(ctx).await
         }
     }
 }
