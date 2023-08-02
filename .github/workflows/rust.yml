@@ -1,38 +1,59 @@
 name: Rust
-
-on:
-  push:
-    branches: [ "twilight" ]
-  pull_request:
-    branches: [ "twilight" ]
+on: [push, pull_request]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  clippy:
+    name: Clippy
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Nightly with rustfmt and clippy
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: nightly
-        components: rustfmt, clippy
-    - name: Release build
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --release --all-features
-    - name: Annotate commit with clippy warnings
-      uses: actions-rs/clippy-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        args: --all-features
-    - name: Security audit
-      uses: actions-rs/audit-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Install nightly toolchain with clippy available
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: clippy
+
+      - name: Annotate commit with clippy warnings
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
+
+  rustfmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Install nightly toolchain with rustfmt available
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: rustfmt
+
+      - name: Run cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - name: Audit check
+        uses: actions-rs/audit-check@issue-104
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
