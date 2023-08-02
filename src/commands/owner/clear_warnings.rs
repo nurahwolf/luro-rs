@@ -1,7 +1,6 @@
 use std::convert::TryFrom;
 use std::path::Path;
 
-use anyhow::Context;
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -27,13 +26,26 @@ impl LuroCommand for OwnerClearWarning {
         let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, self.id);
         let path = Path::new(&path);
         let mut user_data = UserData::get_user_settings(&ctx.luro, &self.user.resolved.id).await?;
-        match user_data.warnings {
-            Some(ref mut warnings) => {
-                let index: usize = usize::try_from(self.id).context("Attempted to convert i64 to usize")? - 1;
-                if index > warnings.len() {
+        match user_data.warnings.as_mut() {
+            Some(warnings) => {
+                let index: usize = match usize::try_from(self.id) {
+                    Ok(index) => match index.checked_sub(1) {
+                        Some(index) => index,
+                        None => {
+                            return ctx
+                                .content("This function automatically reduces the ID by 1. You just had the buffer underflow")
+                                .respond()
+                                .await
+                        }
+                    },
+                    Err(_) => return ctx.content("Failed to convert ID to usize").respond().await
+                };
+
+                if index > warnings.len() || warnings.is_empty() {
                     return ctx
                         .content(format!(
-                            "The vector has {index} elements. You are trying to remove a number greater than that."
+                            "The vector has {} elements. You are trying to remove a number greater than that.",
+                            warnings.len()
                         ))
                         .respond()
                         .await;

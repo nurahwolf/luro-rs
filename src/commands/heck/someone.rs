@@ -8,7 +8,7 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFoote
 use crate::{
     commands::heck::{format_heck, get_heck},
     models::LuroSlash,
-    traits::luro_command::LuroCommand,
+    traits::{luro_command::LuroCommand, luro_functions::LuroFunctions},
     ACCENT_COLOUR
 };
 
@@ -43,7 +43,7 @@ impl LuroCommand for HeckSomeoneCommand {
             Some(ok) => ok.clone(),
             None => ctx.luro.twilight_client.user(Id::new(heck.author_id)).await?.model().await?
         };
-        let heck_author_avatar = self.get_user_avatar(&heck_author);
+        let heck_author_avatar = ctx.user_get_avatar(&heck_author);
         let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", heck_author.name))
             .icon_url(ImageSource::url(heck_author_avatar)?)
             .build();

@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{mem, str::FromStr};
 
 use crate::{
     commands::{
@@ -6,14 +6,18 @@ use crate::{
         moderator::warn::ModeratorWarnCommand
     },
     models::{GuildSetting, LuroSlash},
+    traits::luro_functions::LuroFunctions,
     ACCENT_COLOUR
 };
-use anyhow::anyhow;
+use anyhow::{anyhow};
 use tracing::{debug, error, info, warn};
 use twilight_gateway::MessageSender;
 use twilight_http::{client::InteractionClient, Response};
+
 use twilight_model::{
-    application::interaction::{Interaction, InteractionData, InteractionType},
+    application::interaction::{
+        modal::ModalInteractionData, Interaction, InteractionData, InteractionType
+    },
     channel::{
         message::{AllowedMentions, Component, Embed, MentionType, MessageFlags},
         Channel, Message
@@ -33,6 +37,8 @@ use crate::{
 };
 
 use super::CustomId;
+
+impl LuroFunctions for LuroSlash {}
 
 impl LuroSlash {
     /// Create a new interaction response. Note that not setting anything else will not cause a response to be sent!
@@ -120,10 +126,11 @@ impl LuroSlash {
             Some(InteractionData::ModalSubmit(ref data)) => CustomId::from_str(&data.custom_id)?,
             _ => return Err(anyhow!("expected modal submit data"))
         };
+        let data = self.parse_modal_data(&mut self.interaction.clone())?;
 
         match &*custom_id.name {
-            "heck-add" => HeckAddCommand::handle_model(Default::default(), self).await,
-            "mod-warn" => ModeratorWarnCommand::handle_model(Default::default(), self).await,
+            "heck-add" => HeckAddCommand::handle_model(data, self).await,
+            "mod-warn" => ModeratorWarnCommand::handle_model(data, self).await,
             name => {
                 warn!(name = name, "received unknown component");
 
@@ -135,6 +142,20 @@ impl LuroSlash {
                     .description("Will finish this at some point");
                 self.embeds(vec![embed.build()])?.respond().await
             }
+        }
+    }
+
+    /// Parse incoming [`ModalSubmit`] interaction and return the inner data.
+    ///
+    /// This takes a mutable [`Interaction`] since the inner [`ModalInteractionData`]
+    /// is replaced with [`None`] to avoid useless clones.
+    ///
+    /// [`ModalSubmit`]: twilight_model::application::interaction::InteractionType::ModalSubmit
+    /// [`ModalInteractionData`]: twilight_model::application::interaction::modal::ModalInteractionData
+    pub fn parse_modal_data(&self, interaction: &mut Interaction) -> anyhow::Result<ModalInteractionData> {
+        match mem::take(&mut interaction.data) {
+            Some(InteractionData::ModalSubmit(data)) => Ok(data),
+            _ => Err(anyhow!("unable to parse modal data, received unknown data type"))
         }
     }
 

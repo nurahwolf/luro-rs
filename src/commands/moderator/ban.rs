@@ -10,7 +10,6 @@ use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
     models::{GuildPermissions, LuroSlash},
-    responses::ban::ban_embed,
     traits::luro_command::LuroCommand
 };
 
@@ -138,7 +137,7 @@ impl LuroCommand for BanCommand {
             }
         };
 
-        let mut embed = ban_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason, &period_string)?;
+        let mut embed = ctx.ban_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason, &period_string)?;
 
         let victim_dm = ctx
             .luro

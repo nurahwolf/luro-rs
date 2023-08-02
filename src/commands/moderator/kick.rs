@@ -6,7 +6,6 @@ use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
     models::{GuildPermissions, LuroSlash},
-    responses::kick::kick_embed,
     traits::luro_command::LuroCommand
 };
 
@@ -98,7 +97,7 @@ impl LuroCommand for KickCommand {
             Err(_) => return ctx.kick_response(guild, author, user_to_remove, &reason, false).await
         };
 
-        let mut embed = kick_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason)?;
+        let mut embed = ctx.kick_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason)?;
 
         let victim_dm = ctx
             .luro

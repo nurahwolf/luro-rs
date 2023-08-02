@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, ImageSource};
 
+use crate::traits::luro_functions::LuroFunctions;
 use crate::{models::LuroSlash, models::LuroWebhook};
 
 use crate::traits::luro_command::LuroCommand;
@@ -34,24 +35,21 @@ impl LuroCommand for AbuseCommand {
             .await?;
         let webhook_token = webhook.token.context("Expected webhook token")?;
 
-        let user_avatar = self.get_user_avatar(&self.user.resolved);
-        let username = match self.user.member {
-            Some(member) => member.nick.unwrap_or(self.user.resolved.name),
-            None => self.user.resolved.name
-        };
+        let (_user, avatar, name) = ctx.get_specified_user(&self.user, &ctx.interaction);
+
         let embed = ctx
             .default_embed()
             .await?
             .description(&self.message)
-            .author(EmbedAuthorBuilder::new(username.clone()).icon_url(ImageSource::url(&user_avatar)?))
+            .author(EmbedAuthorBuilder::new(name.clone()).icon_url(ImageSource::url(&avatar)?))
             .build();
 
         let webhook_message = ctx
             .luro
             .twilight_client
             .execute_webhook(webhook.id, &webhook_token)
-            .username(&username)?
-            .avatar_url(&user_avatar);
+            .username(&name)?
+            .avatar_url(&avatar);
 
         if let Some(embed_wanted) = self.embed && embed_wanted {
             webhook_message.embeds(&[embed.clone()])?.await?

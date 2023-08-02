@@ -3,7 +3,7 @@ use std::fmt::Write;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
-use crate::{functions::get_user_avatar, models::LuroFramework, COLOUR_SUCCESS};
+use crate::{models::LuroFramework, traits::luro_functions::LuroFunctions, COLOUR_SUCCESS};
 
 impl LuroFramework {
     pub async fn subhandle_member_ban_remove(
@@ -14,20 +14,15 @@ impl LuroFramework {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let unbanned_user_id = Id::new(event.target_id.context("No user ID found for unbanned user")?.get());
-        let unbanned_user = self.twilight_client.user(unbanned_user_id).await?.model().await?;
-        let unbanned_user_name = if unbanned_user.discriminator == 0 {
-            unbanned_user.name.clone()
-        } else {
-            format!("{}#{}", unbanned_user.name, unbanned_user.discriminator)
-        };
-        let unbanned_user_avatar: String = get_user_avatar(&unbanned_user);
+        let (_author, avatar, name) = self.fetch_specified_user(&self, &unbanned_user_id).await?;
+
         embed = embed
-            .thumbnail(ImageSource::url(unbanned_user_avatar)?)
+            .thumbnail(ImageSource::url(avatar)?)
             .color(COLOUR_SUCCESS)
             .title(format!("🔓 Unbanned from {}", guild.name));
         writeln!(
             description,
-            "**User:** <@{unbanned_user_id}> - `{unbanned_user_name}`\n**User ID:** `{unbanned_user_id}`"
+            "**User:** <@{unbanned_user_id}> - `{name}`\n**User ID:** `{unbanned_user_id}`"
         )?;
 
         if let Some(reason) = &event.reason {

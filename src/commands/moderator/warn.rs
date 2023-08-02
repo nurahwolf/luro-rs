@@ -1,21 +1,23 @@
+use crate::traits::luro_functions::LuroFunctions;
 use crate::USERDATA_FILE_PATH;
 use async_trait::async_trait;
 use std::fmt::Write;
 use std::path::Path;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_model::application::interaction::modal::ModalInteractionData;
 use twilight_model::channel::message::component::{ActionRow, TextInput, TextInputStyle};
 use twilight_model::channel::message::Component;
 use twilight_model::guild::Permissions;
 use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
-use twilight_util::builder::embed::EmbedFooterBuilder;
 use twilight_util::builder::embed::{EmbedAuthorBuilder, ImageSource};
+use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder};
 
 use crate::models::{LuroSlash, UserData};
 
 use crate::traits::luro_command::LuroCommand;
 use crate::traits::toml::LuroTOML;
-#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq, Default)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "warn",
     desc = "Get the warnings of a user, or set a new warning",
@@ -24,8 +26,8 @@ use crate::traits::toml::LuroTOML;
 pub struct ModeratorWarnCommand {
     /// Want to make a new warning?
     new: bool,
-    /// The user to warn. Specify this if you are making one, else you are going to warn yourself...
-    user: Option<ResolvedUser>
+    /// The user to warn.
+    user: ResolvedUser
 }
 
 #[async_trait]
@@ -35,10 +37,7 @@ impl LuroCommand for ModeratorWarnCommand {
     }
 
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let user_id = match self.user {
-            Some(ref user) => user.resolved.id,
-            None => ctx.author()?.id
-        };
+        let user_id = self.user.resolved.id;
 
         if !self.new {
             let warnings = match UserData::get_user_settings(&ctx.luro, &user_id).await?.warnings {
@@ -47,19 +46,20 @@ impl LuroCommand for ModeratorWarnCommand {
             };
 
             let user = ctx.luro.twilight_client.user(user_id).await?.model().await?;
-            let avatar = self.get_user_avatar(&user);
+            let avatar = ctx.user_get_avatar(&user);
             let author = EmbedAuthorBuilder::new(user.name).icon_url(ImageSource::url(avatar)?);
             let mut warnings_formatted = String::new();
             for (warning, user_id) in &warnings {
                 writeln!(warnings_formatted, "Warning by <@{user_id}>```{warning}```")?
             }
+
             let embed = ctx
                 .luro
                 .default_embed(&ctx.interaction.guild_id)
                 .author(author)
                 .description(warnings_formatted)
                 .footer(EmbedFooterBuilder::new(format!(
-                    "User has a total of {} warnings",
+                    "User has a total of {} warnings.",
                     warnings.len()
                 )));
             return ctx.embed(embed.build())?.respond().await;
@@ -100,25 +100,25 @@ impl LuroCommand for ModeratorWarnCommand {
             .await
     }
 
-    async fn handle_model(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         let author = ctx.author()?;
-        // TODO: Remove the manual data here
-        let data = self.parse_modal_data(&mut ctx.interaction.clone())?;
-        let warning = self.parse_modal_field_required(&data, "mod-warn-text")?;
-        let id = self.parse_modal_field_required(&data, "mod-warn-id")?;
+        let warning = ctx.parse_modal_field_required(&data, "mod-warn-text")?;
+        let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
         let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id);
         let path = Path::new(&path);
-        let user = ctx.luro.twilight_client.user(user_id).await?.model().await?;
+        let user = ctx.luro.twilight_client.user(ctx.author()?.id).await?.model().await?;
 
-        let mut embed = ctx.luro.default_embed(&ctx.interaction.guild_id).title("Warning Added");
-        let avatar = self.get_user_avatar(&user);
-        let embed_author = EmbedAuthorBuilder::new(user.name.clone())
+        let mut embed = ctx.luro.default_embed(&ctx.interaction.guild_id);
+        let avatar = ctx.user_get_avatar(&user);
+        let embed_author = EmbedAuthorBuilder::new(format!("Warning by {}", user.name))
             .icon_url(ImageSource::url(avatar)?)
             .build();
-        embed = embed.author(embed_author).description(format!("```{warning}```"));
+        embed = embed
+            .author(embed_author)
+            .description(format!("Warning Created for <@{user_id}>\n```{warning}```"));
 
-        let mut user_data = UserData::get_user_settings(&ctx.luro, &user.id).await?;
+        let mut user_data = UserData::get_user_settings(&ctx.luro, &user_id).await?;
         match user_data.warnings {
             Some(ref mut warnings) => {
                 warnings.push((warning.to_owned(), author.id));
@@ -133,10 +133,30 @@ impl LuroCommand for ModeratorWarnCommand {
         user_data.write(path).await?;
 
         embed = embed.footer(EmbedFooterBuilder::new(format!(
-            "User has a total of {} warnings",
+            "User has a total of {} warnings.",
             user_data.warnings.unwrap_or(vec![]).len()
         )));
 
+        match ctx.luro.twilight_client.create_private_channel(user_id).await {
+            Ok(channel) => {
+                let channel = channel.model().await?;
+                let victim_dm = ctx
+                    .luro
+                    .twilight_client
+                    .create_message(channel.id)
+                    .embeds(&[embed.clone().build()])?
+                    .await;
+                match victim_dm {
+                    Ok(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline()),
+                    Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
+                }
+            }
+            Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
+        };
+
+        ctx.luro
+            .send_moderator_log_channel(&ctx.interaction.guild_id, embed.clone())
+            .await?;
         ctx.embed(embed.build())?.respond().await
     }
 }

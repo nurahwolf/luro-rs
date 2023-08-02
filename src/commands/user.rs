@@ -9,7 +9,7 @@ use twilight_util::{
     snowflake::Snowflake
 };
 
-use crate::models::LuroSlash;
+use crate::{models::LuroSlash, traits::luro_functions::LuroFunctions};
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -54,7 +54,7 @@ impl LuroCommand for UserCommands {
         let mut timestamp = format!("Joined discord on <t:{0}> - <t:{0}:R>\n", user_timestamp.as_secs());
 
         embed = embed.title(&user.name);
-        embed = embed.thumbnail(ImageSource::url(self.get_user_avatar(&user))?);
+        embed = embed.thumbnail(ImageSource::url(ctx.user_get_avatar(&user))?);
         writeln!(description, "**ID:** `{0}` - <@{0}>", user.id)?;
         if let Some(accent_color) = user.accent_color {
             embed = embed.color(accent_color);
@@ -78,7 +78,7 @@ impl LuroCommand for UserCommands {
         if user.bot {
             writeln!(description, "**Bot:** `true`")?;
         }
-        if let Some(banner) = self.get_user_banner(&user) {
+        if let Some(banner) = ctx.user_get_banner(&user) {
             embed = embed.image(ImageSource::url(&banner)?);
             writeln!(description, "**Banner:** {banner}")?;
         }
@@ -90,7 +90,7 @@ impl LuroCommand for UserCommands {
         };
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
             let member = ctx.luro.twilight_client.guild_member(guild_id, user.id).await?.model().await?;
-            embed = embed.thumbnail(ImageSource::url(self.get_member_avatar(Some(&member), &Some(guild_id), &user))?);
+            embed = embed.thumbnail(ImageSource::url(ctx.member_get_avatar(Some(&member), &Some(guild_id), &user))?);
             writeln!(description, "\n-----\n**GUILD INFORMATION**")?;
             writeln!(description, "**Total Roles:** `{}`", member.roles.len())?;            
 

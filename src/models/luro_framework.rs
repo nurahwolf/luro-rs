@@ -30,6 +30,7 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{
     models::{GlobalData, Hecks, Settings},
+    traits::luro_functions::LuroFunctions,
     LuroFramework, ACCENT_COLOUR, BOT_OWNERS, STORIES_FILE_PATH
 };
 
@@ -38,6 +39,8 @@ use crate::HECK_FILE_PATH;
 use crate::traits::toml::LuroTOML;
 
 use super::Commands;
+
+impl LuroFunctions for LuroFramework {}
 
 impl LuroFramework {
     /// Creates a new framework builder, this is a shortcut to FrameworkBuilder.

@@ -3,7 +3,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
-    application::interaction::message_component::MessageComponentInteractionData,
+    application::interaction::{message_component::MessageComponentInteractionData, modal::ModalInteractionData},
     channel::message::{
         component::{ActionRow, SelectMenu, SelectMenuOption, TextInput, TextInputStyle},
         Component
@@ -14,7 +14,7 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedField
 use crate::{
     models::LuroSlash,
     models::{GuildSetting, Heck},
-    traits::luro_command::LuroCommand,
+    traits::{luro_command::LuroCommand, luro_functions::LuroFunctions},
     ACCENT_COLOUR
 };
 
@@ -149,11 +149,9 @@ impl LuroCommand for HeckAddCommand {
         ctx.embed(heck_embed)?.components(components).update().respond().await
     }
 
-    async fn handle_model(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let (author, avatar, _) = self.get_interaction_author(&ctx.interaction)?;
-        // TODO: Remove the manual data here
-        let data = self.parse_modal_data(&mut ctx.interaction.clone())?;
-        let heck_text = self.parse_modal_field_required(&data, "heck-text")?;
+    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+        let (author, avatar, _) = ctx.get_interaction_author(&ctx.interaction)?;
+        let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
 
         match (heck_text.contains("<user>"), heck_text.contains("<author>")) {
             (true, true) => (),
