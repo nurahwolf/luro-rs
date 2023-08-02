@@ -56,6 +56,6 @@ impl LuroCommand for PurgeCommand {
             ctx.luro.twilight_client.delete_messages(channel.id, &message_ids)?.await?;
         }
 
-        ctx.content("Done!!".to_owned()).respond().await
+        ctx.content("Done!!".to_owned()).ephemeral().respond().await
     }
 }
