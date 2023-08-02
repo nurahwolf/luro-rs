@@ -49,7 +49,7 @@ pub enum OwnerCommands {
     Abuse(Box<AbuseCommand>),
     #[command(name = "load_users")]
     LoadUsers(OwnerLoadUsers),
-    #[command(name = "clear_warning")]
+    #[command(name = "clear_warnings")]
     ClearWarning(Box<OwnerClearWarning>)
 }
 

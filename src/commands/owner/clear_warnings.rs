@@ -12,7 +12,7 @@ use crate::traits::luro_command::LuroCommand;
 use crate::traits::toml::LuroTOML;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(name = "clear_warning", desc = "Clears a user's warning by ID.")]
+#[command(name = "clear_warnings", desc = "Clears a user's warning by ID.")]
 pub struct OwnerClearWarning {
     /// The user to clear
     pub user: ResolvedUser,
@@ -64,6 +64,6 @@ impl LuroCommand for OwnerClearWarning {
         ctx.luro.user_data.insert(self.user.resolved.id, user_data.clone());
         user_data.write(path).await?;
 
-        ctx.content("Warning removed!").respond().await
+        ctx.content("Warning removed!").ephemeral().respond().await
     }
 }
