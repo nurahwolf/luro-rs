@@ -8,6 +8,7 @@ use crate::traits::luro_command::LuroCommand;
 
 use self::abuse::AbuseCommand;
 use self::assign::AssignCommand;
+use self::clear_warnings::OwnerClearWarning;
 use self::commands::OwnerCommandsCommand;
 use self::load_users::OwnerLoadUsers;
 use self::log::LogCommand;
@@ -18,6 +19,7 @@ use self::save_guilds::SaveGuildsCommand;
 
 mod abuse;
 mod assign;
+mod clear_warnings;
 mod commands;
 mod load_users;
 mod log;
@@ -46,7 +48,9 @@ pub enum OwnerCommands {
     #[command(name = "abuse")]
     Abuse(Box<AbuseCommand>),
     #[command(name = "load_users")]
-    LoadUsers(OwnerLoadUsers)
+    LoadUsers(OwnerLoadUsers),
+    #[command(name = "clear_warning")]
+    ClearWarning(OwnerClearWarning)
 }
 
 #[async_trait]
@@ -77,7 +81,8 @@ impl LuroCommand for OwnerCommands {
             Self::Reload(command) => command.run_command(ctx).await,
             Self::SaveGuilds(command) => command.run_command(ctx).await,
             Self::Abuse(command) => command.run_command(ctx).await,
-            Self::LoadUsers(command) => command.run_command(ctx).await
+            Self::LoadUsers(command) => command.run_command(ctx).await,
+            Self::ClearWarning(command) => command.run_command(ctx).await
         }
     }
 }
