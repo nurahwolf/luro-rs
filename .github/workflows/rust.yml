@@ -22,3 +22,8 @@ jobs:
         profile: minimal
         toolchain: nightly
         components: rustfmt, clippy
+    - name: Release build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --all-features
