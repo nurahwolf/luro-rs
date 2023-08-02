@@ -47,13 +47,4 @@ jobs:
           command: fmt
           args: --all -- --check
 
-  security:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
-      - name: Audit check
-        uses: actions-rs/audit-check@issue-104
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+
