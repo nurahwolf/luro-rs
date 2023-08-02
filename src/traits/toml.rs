@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 use tokio::io::AsyncReadExt;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 #[async_trait]
 pub trait LuroTOML: Default + Serialize + for<'a> Deserialize<'a> {
@@ -45,6 +45,7 @@ pub trait LuroTOML: Default + Serialize + for<'a> Deserialize<'a> {
             fs::create_dir_all(path.parent().unwrap()).await?
         }
 
+        debug!("Path {} has bee updated with new data", path.to_string_lossy());
         Ok(fs::write(path, struct_to_toml_string).await?)
     }
 }

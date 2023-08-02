@@ -1,7 +1,10 @@
 use std::str::FromStr;
 
 use crate::{
-    commands::base64::{Base64Decode, Base64Encode},
+    commands::{
+        base64::{Base64Decode, Base64Encode},
+        moderator::warn::ModeratorWarnCommand
+    },
     models::{GuildSetting, LuroSlash},
     ACCENT_COLOUR
 };
@@ -120,6 +123,7 @@ impl LuroSlash {
 
         match &*custom_id.name {
             "heck-add" => HeckAddCommand::handle_model(Default::default(), self).await,
+            "mod-warn" => ModeratorWarnCommand::handle_model(Default::default(), self).await,
             name => {
                 warn!(name = name, "received unknown component");
 

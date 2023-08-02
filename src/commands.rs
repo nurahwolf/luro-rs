@@ -25,7 +25,7 @@ pub mod heck;
 mod hello;
 mod lewd;
 mod luro;
-mod moderator;
+pub mod moderator;
 mod music;
 mod owner;
 mod say;

@@ -364,5 +364,7 @@ pub struct UserData {
     /// A hashmap containing the word length, and how many times it has appeared
     pub wordsize: BTreeMap<usize, usize>,
     /// A hashmap containing a count on how often a particular word appears
-    pub words: BTreeMap<String, usize>
+    pub words: BTreeMap<String, usize>,
+    /// An tuple of warnings wrapped in a vec. The first value is the warning, and the second is whoever warned the person
+    pub warnings: Option<Vec<(String, Id<UserMarker>)>>
 }
