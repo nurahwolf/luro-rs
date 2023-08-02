@@ -23,5 +23,3 @@ pub async fn respond_to_interaction(
 
     Ok(())
 }
-
-

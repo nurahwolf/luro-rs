@@ -1,4 +1,4 @@
-use anyhow::{anyhow};
+use anyhow::anyhow;
 use async_trait::async_trait;
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{

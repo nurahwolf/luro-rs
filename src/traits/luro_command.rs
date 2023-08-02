@@ -1,4 +1,4 @@
-use anyhow::{bail};
+use anyhow::bail;
 use anyhow::{Context, Error};
 use async_trait::async_trait;
 
@@ -7,7 +7,6 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
 
 use twilight_model::application::interaction::InteractionData;
-
 
 use twilight_model::{
     application::interaction::{
@@ -22,8 +21,6 @@ use twilight_model::{
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{models::LuroSlash, LuroContext};
-
-
 
 /// Add some custom functionality around [CommandModel]
 #[async_trait]

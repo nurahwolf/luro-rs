@@ -9,15 +9,13 @@ use crate::{
     traits::luro_functions::LuroFunctions,
     ACCENT_COLOUR
 };
-use anyhow::{anyhow};
+use anyhow::anyhow;
 use tracing::{debug, error, info, warn};
 use twilight_gateway::MessageSender;
 use twilight_http::{client::InteractionClient, Response};
 
 use twilight_model::{
-    application::interaction::{
-        modal::ModalInteractionData, Interaction, InteractionData, InteractionType
-    },
+    application::interaction::{modal::ModalInteractionData, Interaction, InteractionData, InteractionType},
     channel::{
         message::{AllowedMentions, Component, Embed, MentionType, MessageFlags},
         Channel, Message
