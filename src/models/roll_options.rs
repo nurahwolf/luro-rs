@@ -26,19 +26,14 @@ impl RollOptions {
 
     pub fn merge(mut self, other: RollOptions) -> Self {
         for i in other.options {
-            self = self.add_str(i);
+            self = self.add_value(i);
         }
 
         self
     }
 
-    pub fn add(mut self, value: char) -> Self {
-        self.options.insert(value.to_string());
-        self
-    }
-
-    pub fn add_str(mut self, value: impl AsRef<str>) -> Self {
-        self.options.insert(value.as_ref().to_string());
+    pub fn add_value(mut self, value: impl Into<String>) -> Self {
+        self.options.insert(value.into());
         self
     }
 }

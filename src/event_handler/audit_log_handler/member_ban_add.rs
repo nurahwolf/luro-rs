@@ -14,7 +14,7 @@ impl LuroFramework {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let banned_user_id = Id::new(event.target_id.context("No user ID found for banned user")?.get());
-        let (_user, avatar, name) = self.fetch_specified_user(&self, &banned_user_id).await?;
+        let (_user, avatar, name) = self.fetch_specified_user(self, &banned_user_id).await?;
         let _resolved_ban = self.twilight_client.ban(guild.id, banned_user_id).await?.model().await?;
 
         embed = embed

@@ -48,7 +48,7 @@ impl LuroCommand for AbuseCommand {
             .luro
             .twilight_client
             .execute_webhook(webhook.id, &webhook_token)
-            .username(&name)?
+            .username(name)?
             .avatar_url(&avatar);
 
         if let Some(embed_wanted) = self.embed && embed_wanted {

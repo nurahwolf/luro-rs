@@ -59,7 +59,7 @@ impl<'a> RollParser<'a> {
         if pk == Some(&c) {
             Ok(())
         } else {
-            Err(options.clone().add(c).pos(self.pos))
+            Err(options.clone().add_value(c).pos(self.pos))
         }
     }
 
@@ -125,14 +125,14 @@ impl<'a> RollParser<'a> {
             } else if self.accept_string("mod", &options).is_ok() {
                 '%'
             } else {
-                options.add_str("mod").add_str("//");
+                options.add_value("mod").add_value("//");
                 break;
             };
 
             if op == '/' && self.accept('/', &options).is_ok() {
                 op = 'i'
             } else {
-                options = options.add('/');
+                options = options.add_value('/');
             }
 
             let right = self.parse_factor(options)?;
@@ -185,7 +185,7 @@ impl<'a> RollParser<'a> {
 
                     return Ok(sm);
                 }
-                o = o.add('(').message("tried to parse expression between parenthesis");
+                o = o.add_value('(').message("tried to parse expression between parenthesis");
                 self.restore(backup);
 
                 self.parse_number(&o.message("tried to parse dice roll"))?
@@ -205,7 +205,9 @@ impl<'a> RollParser<'a> {
             Some(Box::new(sm))
         } else {
             if self.advanced {
-                options = options.add('(').message("tried to parse expression between parenthesis");
+                options = options
+                    .add_value('(')
+                    .message("tried to parse expression between parenthesis");
             }
             self.restore(backup);
             self.parse_number(&options).map(Box::new).ok()
@@ -223,7 +225,9 @@ impl<'a> RollParser<'a> {
             Some(Box::new(sm))
         } else {
             if self.advanced {
-                options = options.add('(').message("tried to parse expression between parenthesis");
+                options = options
+                    .add_value('(')
+                    .message("tried to parse expression between parenthesis");
             }
             self.restore(backup);
 
@@ -261,17 +265,17 @@ impl<'a> RollParser<'a> {
         if self.accept('%', &options).is_ok() {
             Ok(RollAst::Const("100".to_ascii_lowercase()))
         } else {
-            self.parse_number(&options.add('%'))
+            self.parse_number(&options.add_value('%'))
         }
     }
 
     pub fn parse_number(&mut self, options: &RollOptions) -> Result<RollAst, RollOptions> {
         const DIGITS: &[char] = &['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.'];
-        let digits_name = RollOptions::new("".to_string()).add_str("0-9");
+        let digits_name = RollOptions::new("".to_string()).add_value("0-9");
 
         let mut number = vec![self
             .accept_any(DIGITS, options.clone(), Some(digits_name.clone()))
-            .map_err(|e| options.clone().merge(e).add('(').message("tried to parse a number"))?];
+            .map_err(|e| options.clone().merge(e).add_value('(').message("tried to parse a number"))?];
 
         loop {
             let backup = self.backup();

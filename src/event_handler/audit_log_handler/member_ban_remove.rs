@@ -14,7 +14,7 @@ impl LuroFramework {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let unbanned_user_id = Id::new(event.target_id.context("No user ID found for unbanned user")?.get());
-        let (_author, avatar, name) = self.fetch_specified_user(&self, &unbanned_user_id).await?;
+        let (_author, avatar, name) = self.fetch_specified_user(self, &unbanned_user_id).await?;
 
         embed = embed
             .thumbnail(ImageSource::url(avatar)?)
