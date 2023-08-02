@@ -1,9 +1,13 @@
+use std::path::Path;
+
 use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::models::{LuroSlash, UserData};
+use crate::USERDATA_FILE_PATH;
 
 use crate::traits::luro_command::LuroCommand;
+use crate::traits::toml::LuroTOML;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -22,7 +26,32 @@ impl LuroCommand for OwnerLoadUsers {
 
         for user in ctx.luro.twilight_cache.iter().users() {
             match UserData::get_user_settings(&ctx.luro, &user.id).await {
-                Ok(_) => loaded += 1,
+                Ok(mut user_data) => {
+                    user_data.accent_color = user.accent_color;
+                    user_data.avatar = user.avatar;
+                    user_data.banner = user.banner;
+                    user_data.bot = user.bot;
+                    user_data.discriminator = Some(user.discriminator().get());
+                    user_data.email = user.email.clone();
+                    user_data.flags = user.flags;
+                    user_data.id = Some(user.id);
+                    user_data.locale = user.locale.clone();
+                    user_data.mfa_enabled = user.mfa_enabled;
+                    user_data.name = Some(user.name.clone());
+                    user_data.premium_type = user.premium_type;
+                    user_data.public_flags = user.public_flags;
+                    user_data.system = user.system;
+                    user_data.verified = user.verified;
+                    if (user_data
+                        .write(Path::new(&format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user.id)))
+                        .await)
+                        .is_err()
+                    {
+                        errors += 1
+                    }
+
+                    loaded += 1;
+                }
                 Err(_) => errors += 1
             }
         }

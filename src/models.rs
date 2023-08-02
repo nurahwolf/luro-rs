@@ -29,7 +29,8 @@ use twilight_model::{
         Id
     },
     oauth::Application,
-    user::{CurrentUser, User}
+    user::{CurrentUser, PremiumType, User, UserFlags},
+    util::ImageHash
 };
 
 use crate::LuroContext;
@@ -323,12 +324,45 @@ pub struct Story {
 /// Data that is specific to a user
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct UserData {
+    /// Accent color of the user's banner.
+    ///
+    /// This is an integer representation of a hexadecimal color code.
+    pub accent_color: Option<u32>,
+    pub avatar: Option<ImageHash>,
+    /// Hash of the user's banner image.
+    pub banner: Option<ImageHash>,
+    #[serde(default)]
+    pub bot: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub discriminator: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub flags: Option<UserFlags>,
+    pub id: Option<Id<UserMarker>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub locale: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mfa_enabled: Option<bool>,
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub premium_type: Option<PremiumType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_flags: Option<UserFlags>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verified: Option<bool>,
+    /// How many words they have said
     pub wordcount: usize,
+    /// The sum of the length of all the words they have said. This is then divided by their wordcount to work out an average.
     pub averagesize: usize,
     #[serde(
         deserialize_with = "user_data::deserialize_wordsize",
         serialize_with = "user_data::serialize_wordsize"
     )]
+    /// A hashmap containing the word length, and how many times it has appeared
     pub wordsize: BTreeMap<usize, usize>,
+    /// A hashmap containing a count on how often a particular word appears
     pub words: BTreeMap<String, usize>
 }

@@ -67,6 +67,24 @@ impl UserData {
             .await
             .context("Failed to get user data")?;
 
+        if let Some(ref user) = ctx.twilight_cache.user(*user_id) {
+            modified_user_data.accent_color = user.accent_color;
+            modified_user_data.avatar = user.avatar;
+            modified_user_data.banner = user.banner;
+            modified_user_data.bot = user.bot;
+            modified_user_data.discriminator = Some(user.discriminator().get());
+            modified_user_data.email = user.email.clone();
+            modified_user_data.flags = user.flags;
+            modified_user_data.id = Some(user.id);
+            modified_user_data.locale = user.locale.clone();
+            modified_user_data.mfa_enabled = user.mfa_enabled;
+            modified_user_data.name = Some(user.name.clone());
+            modified_user_data.premium_type = user.premium_type;
+            modified_user_data.public_flags = user.public_flags;
+            modified_user_data.system = user.system;
+            modified_user_data.verified = user.verified;
+        }
+
         // First perform analysis
         let regex = Regex::new(r"\b[\w-]+\b").unwrap();
         for capture in regex.captures_iter(new_words) {
