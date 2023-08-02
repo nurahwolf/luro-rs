@@ -1,6 +1,4 @@
 #![feature(let_chains)]
-#![feature(map_entry_replace)]
-#![feature(entry_insert)]
 
 use anyhow::Context;
 use dotenv::dotenv;

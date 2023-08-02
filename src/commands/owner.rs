@@ -50,7 +50,7 @@ pub enum OwnerCommands {
     #[command(name = "load_users")]
     LoadUsers(OwnerLoadUsers),
     #[command(name = "clear_warning")]
-    ClearWarning(OwnerClearWarning)
+    ClearWarning(Box<OwnerClearWarning>)
 }
 
 #[async_trait]
