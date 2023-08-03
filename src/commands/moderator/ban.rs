@@ -159,13 +159,7 @@ impl LuroCommand for BanCommand {
         ban.await?;
 
         // If an alert channel is defined, send a message there
-        if let Some(guild_settings) = ctx.luro.guild_data.get(&guild_id) && let Some(alert_channel) = guild_settings.moderator_actions_log_channel {
-            ctx
-            .luro.twilight_client
-            .create_message(alert_channel)
-            .embeds(&[embed.clone().build()])?
-            .await?;
-        };
+        ctx.luro.send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator).await?;
 
         ctx.embed(embed.build())?.respond().await
     }

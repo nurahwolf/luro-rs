@@ -117,9 +117,13 @@ pub struct GuildSetting {
     pub accent_colour: u32,
     /// An administrator may wish to override the colour in which case this is set.
     pub accent_colour_custom: Option<u32>,
-    /// Discord events are logged here, if defined
-    pub discord_events_log_channel: Option<Id<ChannelMarker>>,
-    /// Moderator actions are pushed here such as bans, if defined
+    /// Log ALL events here, unless you set more specific channels
+    pub catchall_log_channel: Option<Id<ChannelMarker>>,
+    /// Events relating to threads (Create, modify, Delete) are logged here
+    pub thread_events_log_channel: Option<Id<ChannelMarker>>,
+    /// Events relating to messages (Create, modify, Delete) are logged here
+    pub message_events_log_channel: Option<Id<ChannelMarker>>,
+    /// Events relating to moderation (Ban, Kick) are logged here
     pub moderator_actions_log_channel: Option<Id<ChannelMarker>>
 }
 
@@ -184,6 +188,13 @@ pub enum LuroMessageSource {
     MessageDelete,
     MessageCreate,
     None
+}
+
+pub enum LuroLogChannel {
+    Catchall,
+    Message,
+    Moderator,
+    Thread
 }
 
 /// Effectively a wrapper around different type of messages, for more streamlined responses

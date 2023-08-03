@@ -9,7 +9,7 @@ use std::{
 
 use anyhow::Error;
 
-use tracing::{debug, info, metadata::LevelFilter};
+use tracing::{debug, info, metadata::LevelFilter, warn};
 use tracing_subscriber::{reload::Handle, Registry};
 use twilight_cache_inmemory::InMemoryCache;
 use twilight_gateway::{stream, ConfigBuilder, Intents, Shard};
@@ -38,7 +38,7 @@ use crate::HECK_FILE_PATH;
 
 use crate::traits::toml::LuroTOML;
 
-use super::Commands;
+use super::{Commands, LuroLogChannel};
 
 impl LuroFunctions for LuroFramework {}
 
@@ -132,7 +132,7 @@ impl LuroFramework {
     }
 
     /// Attempts to send to a log channel if it is present.
-    pub async fn send_log_channel(&self, guild_id: &Option<Id<GuildMarker>>, embed: EmbedBuilder) -> anyhow::Result<()> {
+    pub async fn send_log_channel(&self, guild_id: &Option<Id<GuildMarker>>, embed: EmbedBuilder, log_channel: LuroLogChannel) -> anyhow::Result<()> {
         debug!("Attempting to send to log channel");
         let guild_id = match guild_id {
             Some(data) => data,
@@ -142,9 +142,22 @@ impl LuroFramework {
             Some(data) => data,
             None => return Ok(())
         };
-        let log_channel = match guild_data.discord_events_log_channel {
+        let log_channel = match log_channel {
+            LuroLogChannel::Catchall => guild_data.catchall_log_channel,
+            LuroLogChannel::Message => guild_data.message_events_log_channel,
+            LuroLogChannel::Moderator => guild_data.moderator_actions_log_channel,
+            LuroLogChannel::Thread => guild_data.thread_events_log_channel,
+        };
+
+        let log_channel = match log_channel {
             Some(data) => data,
-            None => return Ok(())
+            None => match guild_data.catchall_log_channel {
+                Some(channel) => channel,
+                None => {
+                    warn!("Guild {guild_id} does not have a catchall channel defined");
+                    return Ok(())
+                },
+            }
         };
 
         self.twilight_client

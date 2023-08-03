@@ -20,12 +20,16 @@ use crate::{
     default_permissions = "Self::default_permissions"
 )]
 pub struct GuildSettingsCommand {
-    /// Moderator action logging channel
-    pub moderator_action_log_channel: Option<Id<ChannelMarker>>,
-    /// Bot spam such as message deletes and guild events
-    pub bot_log_channel: Option<Id<ChannelMarker>>,
     /// The accent colour for this guild. By default Luro will use the highest role colour.
-    pub accent_colour: Option<String>
+    pub accent_colour: Option<String>,
+    /// Log ALL events here, unless you set more specific channels
+    pub catchall_log_channel: Option<Id<ChannelMarker>>,
+    /// Events relating to threads (Create, modify, Delete) are logged here
+    pub thread_events_log_channel: Option<Id<ChannelMarker>>,
+    /// Events relating to messages (Create, modify, Delete) are logged here
+    pub message_events_log_channel: Option<Id<ChannelMarker>>,
+    /// Events relating to moderation (Ban, Kick) are logged here
+    pub moderator_actions_log_channel: Option<Id<ChannelMarker>>
 }
 
 #[async_trait]
@@ -62,16 +66,25 @@ impl LuroCommand for GuildSettingsCommand {
 
         // Create a new guild settings object
         let mut guild_settings = GuildSetting::default();
+
         if let Some(accent_colour) = accent_colour_defined {
             guild_settings.accent_colour_custom = Some(accent_colour)
         }
 
-        if let Some(moderator_action_log_channel) = self.moderator_action_log_channel {
-            guild_settings.moderator_actions_log_channel = Some(moderator_action_log_channel)
+        if let Some(catchall_log_channel) = self.catchall_log_channel {
+            guild_settings.catchall_log_channel = Some(catchall_log_channel)
         }
 
-        if let Some(bot_log_channel) = self.bot_log_channel {
-            guild_settings.discord_events_log_channel = Some(bot_log_channel)
+        if let Some(message_events_log_channel) = self.message_events_log_channel {
+            guild_settings.message_events_log_channel = Some(message_events_log_channel)
+        }
+
+        if let Some(moderator_actions_log_channel) = self.moderator_actions_log_channel {
+            guild_settings.moderator_actions_log_channel = Some(moderator_actions_log_channel)
+        }
+
+        if let Some(thread_events_log_channel) = self.thread_events_log_channel {
+            guild_settings.thread_events_log_channel = Some(thread_events_log_channel)
         }
 
         if let Some(role) = highest_role {
@@ -79,57 +92,28 @@ impl LuroCommand for GuildSettingsCommand {
         }
 
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
-        guild_settings = GuildSetting::modify_guild_settings(&ctx.luro, &guild_id, guild_settings).await?;
+        let guild_settings = GuildSetting::modify_guild_settings(&ctx.luro, &guild_id, &guild_settings).await?;
 
         embed =
             embed.field(EmbedFieldBuilder::new("Guild Accent Colour", format!("`{}`", guild_settings.accent_colour)).inline());
 
-        embed = embed.field(
-            EmbedFieldBuilder::new(
-                "Guild Custom Accent Colour",
-                if let Some(accent_colour) = guild_settings.accent_colour_custom {
-                    format!("`{}`", accent_colour)
-                } else {
-                    "Not set!".to_owned()
-                }
-            )
-            .inline()
-        );
-
-        embed = embed.field(EmbedFieldBuilder::new(
-            "Moderator Action Log Channel",
-            if let Some(moderator_action_log_channel) = guild_settings.moderator_actions_log_channel {
-                format!("<#{}>", moderator_action_log_channel.get())
-            } else {
-                match guild_settings.moderator_actions_log_channel {
-                    Some(moderator_actions_log_channel) => format!("<@{}>", moderator_actions_log_channel.get()),
-                    None => "Not set!".to_owned()
-                }
-            }
-        ));
-
-        embed = embed.field(
-            EmbedFieldBuilder::new(
-                "Bot Log Channel",
-                if let Some(bot_log_channel) = guild_settings.discord_events_log_channel {
-                    format!("<#{}>", bot_log_channel.get())
-                } else {
-                    match guild_settings.discord_events_log_channel {
-                        Some(bot_log_channel) => format!("<#{}>", bot_log_channel.get()),
-                        None => "Not set!".to_owned()
-                    }
-                }
-            )
-            .inline()
-        );
-
-        if let Some(moderator_actions_log_channel) = guild_settings.moderator_actions_log_channel {
-            ctx.luro
-                .twilight_client
-                .create_message(moderator_actions_log_channel)
-                .embeds(&[embed.clone().build()])?
-                .await?;
+        if let Some(accent_colour) = guild_settings.accent_colour_custom {
+            embed = embed.field(EmbedFieldBuilder::new("Custom Accent Colour", format!("`{accent_colour}`")).inline())
         }
+        if let Some(catchall_log_channel) = guild_settings.catchall_log_channel {
+            embed = embed.field(EmbedFieldBuilder::new("Catchall Log Channel", format!("<#{catchall_log_channel}>")).inline())
+        }
+        if let Some(message_events_log_channel) = guild_settings.message_events_log_channel {
+            embed = embed.field(EmbedFieldBuilder::new("Message Log Channel", format!("<#{message_events_log_channel}>")).inline())
+        }
+        if let Some(moderator_actions_log_channel) = guild_settings.moderator_actions_log_channel {
+            embed = embed.field(EmbedFieldBuilder::new("Moderation Log Channel", format!("<#{moderator_actions_log_channel}>")).inline())
+        }
+        if let Some(thread_events_log_channel) = guild_settings.thread_events_log_channel {
+            embed = embed.field(EmbedFieldBuilder::new("Thread Log Channel", format!("<#{thread_events_log_channel}>")).inline())
+        }
+
+        ctx.luro.send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator).await?;
 
         ctx.embed(embed.build())?.respond().await
     }

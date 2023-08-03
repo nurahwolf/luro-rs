@@ -84,7 +84,7 @@ impl LuroFramework {
         }
 
         match self.embed_message_modified(message, embed, description).await {
-            Ok(embed) => self.send_log_channel(&message.guild_id, embed).await,
+            Ok(embed) => self.send_log_channel(&message.guild_id, embed, crate::models::LuroLogChannel::Message).await,
             Err(why) => {
                 info!(why = ?why, "Failed to send to guild log channel");
                 Ok(())

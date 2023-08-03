@@ -43,7 +43,7 @@ impl GuildSetting {
     pub async fn modify_guild_settings(
         ctx: &LuroContext,
         guild_id: &Id<GuildMarker>,
-        new_settings: Self
+        new_settings: &Self
     ) -> anyhow::Result<Self> {
         // This is only called to make sure they are present...
         let mut guild_settings = Self::get_guild_settings(ctx, guild_id).await?;
@@ -63,17 +63,26 @@ impl GuildSetting {
                 new_guild_settings.accent_colour_custom = Some(accent_colour)
             }
 
+            if let Some(accent_colour_custom) = new_settings.accent_colour_custom {
+                new_guild_settings.accent_colour_custom = Some(accent_colour_custom)
+            }
+
+            if let Some(catchall_log_channel) = new_settings.catchall_log_channel {
+                new_guild_settings.catchall_log_channel = Some(catchall_log_channel)
+            }
+
+            if let Some(message_events_log_channel) = new_settings.message_events_log_channel {
+                new_guild_settings.message_events_log_channel = Some(message_events_log_channel)
+            }
+
             if let Some(moderator_actions_log_channel) = new_settings.moderator_actions_log_channel {
                 new_guild_settings.moderator_actions_log_channel = Some(moderator_actions_log_channel)
             }
 
-            if let Some(discord_events_log_channel) = new_settings.discord_events_log_channel {
-                new_guild_settings.discord_events_log_channel = Some(discord_events_log_channel)
+            if let Some(thread_events_log_channel) = new_settings.thread_events_log_channel {
+                new_guild_settings.thread_events_log_channel = Some(thread_events_log_channel)
             }
 
-            if let Some(accent_colour_custom) = new_settings.accent_colour_custom {
-                new_guild_settings.accent_colour_custom = Some(accent_colour_custom)
-            }
             guild_settings = new_guild_settings.clone()
         }
 
