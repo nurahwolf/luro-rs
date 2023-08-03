@@ -10,6 +10,7 @@ use self::abuse::AbuseCommand;
 use self::assign::AssignCommand;
 use self::clear_warnings::OwnerClearWarning;
 use self::commands::OwnerCommandsCommand;
+use self::get_message::OwnerGetMessage;
 use self::guilds::OwnerGuildsCommand;
 use self::load_users::OwnerLoadUsers;
 use self::log::LogCommand;
@@ -29,6 +30,7 @@ mod modify_role;
 mod reload;
 mod save;
 mod save_guilds;
+mod get_message;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]
@@ -54,7 +56,9 @@ pub enum OwnerCommands {
     #[command(name = "clear_warnings")]
     ClearWarning(Box<OwnerClearWarning>),
     #[command(name = "guilds")]
-    Guilds(OwnerGuildsCommand)
+    Guilds(OwnerGuildsCommand),
+    #[command(name = "get_message")]
+    GetMessage(Box<OwnerGetMessage>)
 }
 
 #[async_trait]
@@ -87,7 +91,8 @@ impl LuroCommand for OwnerCommands {
             Self::Abuse(command) => command.run_command(ctx).await,
             Self::LoadUsers(command) => command.run_command(ctx).await,
             Self::ClearWarning(command) => command.run_command(ctx).await,
-            Self::Guilds(command) => command.run_command(ctx).await
+            Self::Guilds(command) => command.run_command(ctx).await,
+            Self::GetMessage(command) => command.run_command(ctx).await
         }
     }
 }
