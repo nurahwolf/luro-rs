@@ -34,7 +34,6 @@ impl LuroCommand for InfoRole {
             embed = embed.title(&role.name);
             let roles = ctx.luro.twilight_client.roles(role.guild_id()).await?.model().await?;
             let mut roles: Vec<_> = roles.iter().map(RoleOrdering::from).collect();
-            roles.sort();
             roles.sort_by(|a, b| b.cmp(a));
             for guild_role in roles {
                 if guild_role.id == role.id {
