@@ -132,7 +132,12 @@ impl LuroFramework {
     }
 
     /// Attempts to send to a log channel if it is present.
-    pub async fn send_log_channel(&self, guild_id: &Option<Id<GuildMarker>>, embed: EmbedBuilder, log_channel: LuroLogChannel) -> anyhow::Result<()> {
+    pub async fn send_log_channel(
+        &self,
+        guild_id: &Option<Id<GuildMarker>>,
+        embed: EmbedBuilder,
+        log_channel: LuroLogChannel
+    ) -> anyhow::Result<()> {
         debug!("Attempting to send to log channel");
         let guild_id = match guild_id {
             Some(data) => data,
@@ -146,7 +151,7 @@ impl LuroFramework {
             LuroLogChannel::Catchall => guild_data.catchall_log_channel,
             LuroLogChannel::Message => guild_data.message_events_log_channel,
             LuroLogChannel::Moderator => guild_data.moderator_actions_log_channel,
-            LuroLogChannel::Thread => guild_data.thread_events_log_channel,
+            LuroLogChannel::Thread => guild_data.thread_events_log_channel
         };
 
         let log_channel = match log_channel {
@@ -155,8 +160,8 @@ impl LuroFramework {
                 Some(channel) => channel,
                 None => {
                     warn!("Guild {guild_id} does not have a catchall channel defined");
-                    return Ok(())
-                },
+                    return Ok(());
+                }
             }
         };
 

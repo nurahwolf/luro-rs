@@ -9,7 +9,8 @@ impl LuroFramework {
     // TODO: Change this to a response type
     pub async fn response_thread_created(&self, event: &ThreadCreate) -> anyhow::Result<()> {
         let embed = self.embed_thread_created(event);
-        self.send_log_channel(&event.guild_id, embed, crate::models::LuroLogChannel::Thread).await
+        self.send_log_channel(&event.guild_id, embed, crate::models::LuroLogChannel::Thread)
+            .await
     }
 
     /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.

@@ -8,7 +8,8 @@ use crate::models::LuroFramework;
 impl LuroFramework {
     pub async fn response_thread_update(&self, event: &ThreadUpdate) -> anyhow::Result<()> {
         let embed = self.embed_thread_update(event);
-        self.send_log_channel(&event.guild_id, embed, crate::models::LuroLogChannel::Thread).await
+        self.send_log_channel(&event.guild_id, embed, crate::models::LuroLogChannel::Thread)
+            .await
     }
 
     pub fn embed_thread_update(&self, event: &ThreadUpdate) -> EmbedBuilder {

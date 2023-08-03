@@ -5,7 +5,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
-use crate::{models::LuroSlash, traits::luro_functions::LuroFunctions, ACCENT_COLOUR, COLOUR_DANGER};
+use crate::{models::LuroSlash, traits::luro_functions::LuroFunctions, COLOUR_DANGER};
 
 impl LuroSlash {
     pub async fn ban_response(

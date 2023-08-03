@@ -23,6 +23,7 @@ mod abuse;
 mod assign;
 mod clear_warnings;
 mod commands;
+mod get_message;
 mod guilds;
 mod load_users;
 mod log;
@@ -30,7 +31,6 @@ mod modify_role;
 mod reload;
 mod save;
 mod save_guilds;
-mod get_message;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]

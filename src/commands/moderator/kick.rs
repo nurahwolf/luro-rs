@@ -119,7 +119,9 @@ impl LuroCommand for KickCommand {
             .await?;
 
         // If an alert channel is defined, send a message there
-        ctx.luro.send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator).await?;
+        ctx.luro
+            .send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator)
+            .await?;
 
         ctx.embed(embed.build())?.respond().await
     }

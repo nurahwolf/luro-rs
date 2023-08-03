@@ -1,3 +1,4 @@
+use anyhow::Context;
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -20,6 +21,8 @@ use crate::{
     default_permissions = "Self::default_permissions"
 )]
 pub struct GuildSettingsCommand {
+    /// Set this to true to completely clear all settings.
+    pub clear_settings: Option<bool>,
     /// The accent colour for this guild. By default Luro will use the highest role colour.
     pub accent_colour: Option<String>,
     /// Log ALL events here, unless you set more specific channels
@@ -65,7 +68,9 @@ impl LuroCommand for GuildSettingsCommand {
         embed = embed.title(format!("Guild Setting - {}", guild.name));
 
         // Create a new guild settings object
-        let mut guild_settings = GuildSetting::default();
+        let mut guild_settings = if let Some(clear_settings) = self.clear_settings && clear_settings {
+            GuildSetting::get_guild_settings(&ctx.luro, &ctx.interaction.guild_id.context("Expected Guild ID")?).await?
+        } else { GuildSetting::default() };
 
         if let Some(accent_colour) = accent_colour_defined {
             guild_settings.accent_colour_custom = Some(accent_colour)
@@ -104,16 +109,21 @@ impl LuroCommand for GuildSettingsCommand {
             embed = embed.field(EmbedFieldBuilder::new("Catchall Log Channel", format!("<#{catchall_log_channel}>")).inline())
         }
         if let Some(message_events_log_channel) = guild_settings.message_events_log_channel {
-            embed = embed.field(EmbedFieldBuilder::new("Message Log Channel", format!("<#{message_events_log_channel}>")).inline())
+            embed =
+                embed.field(EmbedFieldBuilder::new("Message Log Channel", format!("<#{message_events_log_channel}>")).inline())
         }
         if let Some(moderator_actions_log_channel) = guild_settings.moderator_actions_log_channel {
-            embed = embed.field(EmbedFieldBuilder::new("Moderation Log Channel", format!("<#{moderator_actions_log_channel}>")).inline())
+            embed = embed
+                .field(EmbedFieldBuilder::new("Moderation Log Channel", format!("<#{moderator_actions_log_channel}>")).inline())
         }
         if let Some(thread_events_log_channel) = guild_settings.thread_events_log_channel {
-            embed = embed.field(EmbedFieldBuilder::new("Thread Log Channel", format!("<#{thread_events_log_channel}>")).inline())
+            embed =
+                embed.field(EmbedFieldBuilder::new("Thread Log Channel", format!("<#{thread_events_log_channel}>")).inline())
         }
 
-        ctx.luro.send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator).await?;
+        ctx.luro
+            .send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator)
+            .await?;
 
         ctx.embed(embed.build())?.respond().await
     }

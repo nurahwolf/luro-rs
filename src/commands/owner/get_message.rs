@@ -1,11 +1,8 @@
-use std::convert::TryInto;
-
-use anyhow::Context;
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
-use twilight_util::builder::embed::{EmbedAuthorBuilder, ImageSource, EmbedFieldBuilder};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::models::{LuroSlash, UserData};
 
@@ -29,18 +26,36 @@ impl LuroCommand for OwnerGetMessage {
         let ((_, avatar, name), channel_id, message_id) = match ctx.luro.twilight_cache.message(message_id) {
             Some(message) => {
                 embed = embed.description(message.content());
-                (ctx.fetch_specified_user(&ctx.luro, &message.author()).await?, message.channel_id(), message.id())
-            },
+                (
+                    ctx.fetch_specified_user(&ctx.luro, &message.author()).await?,
+                    message.channel_id(),
+                    message.id()
+                )
+            }
             None => {
                 let user = match self.user {
                     Some(user) => user,
-                    None => return ctx.clone().content("Message not found! Try specifying a user ID if you know who sent it.").ephemeral().respond().await
+                    None => {
+                        return ctx
+                            .clone()
+                            .content("Message not found! Try specifying a user ID if you know who sent it.")
+                            .ephemeral()
+                            .respond()
+                            .await
+                    }
                 };
-        
+
                 let user_data = UserData::get_user_settings(&ctx.luro, &user.resolved.id).await?;
                 let message = match user_data.messages.get(&message_id) {
                     Some(message) => message,
-                    None => return ctx.clone().content("Looks like the user does not have the message ID you provided, sorry.").ephemeral().respond().await
+                    None => {
+                        return ctx
+                            .clone()
+                            .content("Looks like the user does not have the message ID you provided, sorry.")
+                            .ephemeral()
+                            .respond()
+                            .await
+                    }
                 };
                 if let Some(content) = &message.content {
                     embed = embed.description(content)

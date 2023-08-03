@@ -14,11 +14,7 @@ use crate::{
 };
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
-#[command(
-    name = "ban",
-    desc = "Ban a user",
-    dm_permission = false
-)]
+#[command(name = "ban", desc = "Ban a user", dm_permission = false)]
 pub struct BanCommand {
     /// The user to ban
     pub user: ResolvedUser,
@@ -159,7 +155,9 @@ impl LuroCommand for BanCommand {
         ban.await?;
 
         // If an alert channel is defined, send a message there
-        ctx.luro.send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator).await?;
+        ctx.luro
+            .send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator)
+            .await?;
 
         ctx.embed(embed.build())?.respond().await
     }
