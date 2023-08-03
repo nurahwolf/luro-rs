@@ -388,5 +388,6 @@ pub struct UserData {
     pub words: BTreeMap<String, usize>,
     /// An tuple of warnings wrapped in a vec. The first value is the warning, and the second is whoever warned the person
     pub warnings: Option<Vec<(String, Id<UserMarker>)>>,
+    #[serde(default)]
     pub messages: HashMap<Id<MessageMarker>, LuroMessage>
 }
