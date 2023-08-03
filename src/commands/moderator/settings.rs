@@ -9,6 +9,7 @@ use twilight_model::{
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
+    functions::parse_string_to_u32,
     models::{GuildSetting, LuroSlash, RoleOrdering},
     traits::luro_command::LuroCommand
 };
@@ -54,13 +55,7 @@ impl LuroCommand for GuildSettingsCommand {
         let highest_role = guild.roles.iter().find(|role| role.id == highest_role_id);
 
         let accent_colour_defined: Option<u32> = if let Some(accent_colour) = self.accent_colour.clone() {
-            if accent_colour.starts_with("0x") {
-                Some(u32::from_str_radix(accent_colour.as_str().strip_prefix("0x").unwrap(), 16)?)
-            } else if accent_colour.chars().all(|char| char.is_ascii_hexdigit()) {
-                Some(u32::from_str_radix(accent_colour.as_str(), 16)?)
-            } else {
-                Some(accent_colour.parse::<u32>()?)
-            }
+            Some(parse_string_to_u32(accent_colour)?)
         } else {
             None
         };

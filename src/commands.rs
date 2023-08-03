@@ -1,11 +1,12 @@
 use twilight_interactions::command::CreateCommand;
 
 use self::dice::DiceCommands;
+use self::info::InfoCommands;
 use self::luro::LuroCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
-    say::SayCommand, story::StoryCommand, user::UserCommands, uwu::UwUCommand, wordcount::WordcountCommand
+    say::SayCommand, story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand
 };
 
 use anyhow::bail;
@@ -23,6 +24,7 @@ mod count;
 mod dice;
 pub mod heck;
 mod hello;
+mod info;
 mod lewd;
 mod luro;
 pub mod moderator;
@@ -30,7 +32,6 @@ mod music;
 mod owner;
 mod say;
 mod story;
-mod user;
 mod uwu;
 mod wordcount;
 // pub mod fursona;
@@ -55,7 +56,7 @@ impl Commands {
         init.global_commands.insert("heck", HeckCommands::create_command().into());
         init.global_commands.insert("owner", OwnerCommands::create_command().into());
         init.global_commands.insert("about", AboutCommand::create_command().into());
-        init.global_commands.insert("user", UserCommands::create_command().into());
+        init.global_commands.insert("info", InfoCommands::create_command().into());
         init.global_commands.insert("lewd", LewdCommands::create_command().into());
         init.global_commands.insert("base64", Base64Commands::create_command().into());
         init.global_commands.insert("story", StoryCommand::create_command().into());
@@ -83,7 +84,7 @@ impl LuroSlash {
         match data.name.as_str() {
             "about" => AboutCommand::new(data).await?.run_command(self).await,
             "say" => SayCommand::new(data).await?.run_command(self).await,
-            "user" => UserCommands::new(data).await?.run_command(self).await,
+            "info" => InfoCommands::new(data).await?.run_commands(self).await,
             "hello" => HelloCommand::new(data).await?.run_command(self).await,
             "count" => CountCommand::new(data).await?.run_command(self).await,
             "mod" => ModeratorCommands::new(data).await?.run_commands(self).await,

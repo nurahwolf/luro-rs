@@ -24,11 +24,11 @@ use crate::{models::LuroSlash, LuroContext};
 
 /// Add some custom functionality around [CommandModel]
 #[async_trait]
-pub trait LuroCommand: CommandModel + CreateCommand {
+pub trait LuroCommand: CommandModel {
     /// Create a command that can be executed with Twilight
-    fn commands() -> Vec<Command> {
-        vec![Self::create_command().into()]
-    }
+    // fn commands() -> Vec<Command> {
+    //     vec![Self::create_command().into()]
+    // }
 
     /// Create a new command and get it's data from the interaction
     async fn new(data: CommandData) -> anyhow::Result<Self> {

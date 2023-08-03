@@ -15,7 +15,7 @@ use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "user", desc = "Information about a user")]
-pub struct UserCommands {
+pub struct InfoUser {
     /// The user to get, gets yourself if not specified
     user: Option<ResolvedUser>,
     /// Optionally try to get a user from a different guild
@@ -25,7 +25,7 @@ pub struct UserCommands {
 }
 
 #[async_trait]
-impl LuroCommand for UserCommands {
+impl LuroCommand for InfoUser {
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.deferred().await?;
         let mut embed = ctx.default_embed().await?;
