@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use std::{fmt::Write, sync::Arc};
 use tracing::{debug, info};
 
@@ -39,7 +38,7 @@ impl LuroFramework {
                 embed = embed.title("Message Edited");
                 match &message.content {
                     Some(content) => {
-                        writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
+                        writeln!(description, "**Original Message:**\n{}\n", old_message.content())?;
                         writeln!(description, "**Updated Message:**\n{content}")?
                     }
                     None => {
