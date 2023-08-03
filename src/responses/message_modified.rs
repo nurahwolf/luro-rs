@@ -1,5 +1,5 @@
 use std::{fmt::Write, sync::Arc};
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
@@ -31,7 +31,7 @@ impl LuroFramework {
                 let old_message = match self.twilight_cache.message(message.id) {
                     Some(old_message) => old_message,
                     None => {
-                        info!("Old message does not exist in the cache");
+                        warn!("Old message does not exist in the cache");
                         return Ok(());
                     }
                 };
@@ -51,7 +51,7 @@ impl LuroFramework {
                 let old_message = match self.twilight_cache.message(message.id) {
                     Some(old_message) => old_message,
                     None => {
-                        info!("Old message does not exist in the cache");
+                        warn!("Old message does not exist in the cache");
                         return Ok(());
                     }
                 };
