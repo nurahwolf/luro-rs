@@ -17,8 +17,7 @@ use crate::{
 #[command(
     name = "ban",
     desc = "Ban a user",
-    dm_permission = false,
-    default_permissions = "Self::default_permissions"
+    dm_permission = false
 )]
 pub struct BanCommand {
     /// The user to ban
@@ -49,10 +48,6 @@ pub enum TimeToBan {
 
 #[async_trait]
 impl LuroCommand for BanCommand {
-    fn default_permissions() -> Permissions {
-        Permissions::BAN_MEMBERS
-    }
-
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.deferred().await?;
 

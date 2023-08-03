@@ -5,7 +5,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
-use crate::{models::LuroSlash, traits::luro_functions::LuroFunctions, ACCENT_COLOUR};
+use crate::{models::LuroSlash, traits::luro_functions::LuroFunctions, ACCENT_COLOUR, COLOUR_DANGER};
 
 impl LuroSlash {
     pub async fn ban_response(
@@ -44,7 +44,7 @@ impl LuroSlash {
             .build();
 
         let mut embed = EmbedBuilder::new()
-            .color(ACCENT_COLOUR)
+            .color(COLOUR_DANGER)
             .title(format!("Banned from {}", guild.name))
             .author(embed_author)
             .field(EmbedFieldBuilder::new("Purged Messages", period).inline())
