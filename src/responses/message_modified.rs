@@ -12,44 +12,55 @@ use crate::{
 
 impl LuroFramework {
     pub async fn response_message_modified(self: &Arc<Self>, message: &LuroMessage) -> anyhow::Result<()> {
-        match self.embed_message_modified(message).await {
-            Ok(embed) => self.send_log_channel(&message.guild_id, embed).await,
-            Err(why) => {
-                info!(why = ?why, "Handling failed message modified handler");
-                Ok(())
-            }
-        }
-    }
-
-    /// Create an embed that details a modified message
-    pub async fn embed_message_modified(self: &Arc<Self>, message: &LuroMessage) -> anyhow::Result<EmbedBuilder> {
         debug!(message = ?message, "Message Modified");
-        let (mut embed, old_message) = match self.twilight_cache.message(message.id) {
-            Some(old_message) => (self.default_embed(&message.guild_id), old_message),
-            None => {
-                return Err(anyhow!("Failed to find old message in cache!"));
-            }
-        };
+
+        let mut description = String::new();
+        let mut embed = self.default_embed(&message.guild_id);
 
         if let Some(author) = message.author.clone() {
             if author.bot {
-                return Err(anyhow!("User is a bot"));
+                debug!("User is a bot");
+                return Ok(());
             };
             let (avatar, name, _author) = self.formatted_user(author);
             let embed_author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
             embed = embed.author(embed_author)
         }
 
-        let mut description = format!("**Original Message:**\n{}\n\n", old_message.content());
         match message.source {
             LuroMessageSource::MessageUpdate => {
+                let old_message = match self.twilight_cache.message(message.id) {
+                    Some(old_message) => old_message,
+                    None => {
+                        info!("Old message does not exist in the cache");
+                        return Ok(());
+                    },
+                };
                 embed = embed.title("Message Edited");
                 match &message.content {
-                    Some(content) => writeln!(description, "**Updated Message:**\n{content}")?,
-                    None => return Err(anyhow!("No message content found"))
+                    Some(content) => {
+                        writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
+                        writeln!(description, "**Updated Message:**\n{content}")?
+                    },
+                    None => {
+                        debug!("No message content, so no need to record it");
+                        return Ok(())
+                    }
                 }
             }
-            LuroMessageSource::MessageDelete => embed = embed.title("Message Deleted").color(COLOUR_DANGER),
+            LuroMessageSource::MessageDelete => {
+                let old_message = match self.twilight_cache.message(message.id) {
+                    Some(old_message) => old_message,
+                    None => {
+                        info!("Old message does not exist in the cache");
+                        return Ok(());
+                    },
+                };
+                writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
+                let (_author, avatar, name) = self.fetch_specified_user(self, &old_message.author()).await?;
+                let embed_author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
+                embed = embed.author(embed_author).title("Message Deleted").color(COLOUR_DANGER)
+            },
             LuroMessageSource::MessageCreate => {
                 let mut content = String::new();
                 if let Some(embeds) = &message.embeds {
@@ -67,10 +78,23 @@ impl LuroFramework {
                 if let Some(author) = &message.author && !content.is_empty() {
                     UserData::write_words(self, &content, &author.id, message).await?;
                 }
+
+                return Ok(())
             }
-            LuroMessageSource::None => return Err(anyhow!("No message type"))
+            LuroMessageSource::None => return Ok(())
         }
 
+        match self.embed_message_modified(message, embed, description).await {
+            Ok(embed) => self.send_log_channel(&message.guild_id, embed).await,
+            Err(why) => {
+                info!(why = ?why, "Failed to send to guild log channel");
+                Ok(())
+            }
+        }
+    }
+
+    /// Create an embed that details a modified message
+    pub async fn embed_message_modified(self: &Arc<Self>, message: &LuroMessage, mut embed: EmbedBuilder, mut description: String) -> anyhow::Result<EmbedBuilder> {
         match message.guild_id {
             Some(guild_id) => {
                 embed = embed.url(format!(

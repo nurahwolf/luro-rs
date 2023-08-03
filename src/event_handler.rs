@@ -23,7 +23,6 @@ impl LuroFramework {
         // events we want an IMMEDIATE resposne to, such as if we don't want the cache to be updated yet.
         let callback = match event.clone() {
             Event::MessageUpdate(message) => self.message_update_handler(*message).await,
-            Event::MessageCreate(message) => self.message_create_listener(*message).await,
             Event::MessageDelete(message) => self.message_delete_listener(message).await,
             _ => Ok(())
         };
@@ -38,6 +37,7 @@ impl LuroFramework {
 
         let callback = match event {
             Event::Ready(ready) => self.ready_listener(ready, shard).await,
+            Event::MessageCreate(message) => self.message_create_listener(*message).await,
             Event::InteractionCreate(interaction) => LuroSlash::new(self, interaction.0, shard).handle().await,
             Event::GuildAuditLogEntryCreate(entry) => self.audit_log_handler(entry).await,
             Event::BanAdd(ban) => self.ban_add_listener(ban).await,

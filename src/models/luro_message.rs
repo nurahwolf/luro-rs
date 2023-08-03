@@ -36,7 +36,7 @@ impl From<MessageCreate> for LuroMessage {
             author: Some(message.author.clone()),
             content: Some(message.content.clone()),
             guild_id: message.guild_id,
-            source: super::LuroMessageSource::MessageDelete,
+            source: super::LuroMessageSource::MessageCreate,
             channel_id: message.channel_id,
             id: message.id,
             embeds: Some(message.embeds.clone())
