@@ -52,12 +52,11 @@ impl LuroSlash {
 
         if !reason.is_empty() {
             embed = embed.description(format!(
-                "**User:** <@{0}> - {kicked_name}\n**User ID:** {0}\n```{reason}```",kicked_user.id
+                "**User:** <@{0}> - {kicked_name}\n**User ID:** {0}\n```{reason}```",
+                kicked_user.id
             ))
         } else {
-            embed = embed.description(format!(
-                "**User:** <@{0}> - {kicked_name}\n**User ID:** {0}",kicked_user.id
-            ))
+            embed = embed.description(format!("**User:** <@{0}> - {kicked_name}\n**User ID:** {0}", kicked_user.id))
         }
 
         Ok(embed)

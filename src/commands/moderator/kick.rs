@@ -97,7 +97,9 @@ impl LuroCommand for KickCommand {
             Err(_) => return ctx.kick_response(guild, author, user_to_remove, &reason, false).await
         };
 
-        let mut embed = ctx.kick_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason).await?;
+        let mut embed = ctx
+            .kick_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason)
+            .await?;
 
         let victim_dm = ctx
             .luro
