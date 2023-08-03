@@ -39,10 +39,10 @@ impl LuroCommand for InfoRole {
 
             for guild_role in ctx.luro.twilight_client.roles(role.guild_id()).await?.model().await?.iter() {
                 if guild_role.id == role.id {
-                    writeln!(description, "--> <@&{}> <--", role.id)?;
+                    writeln!(description, "--> <@&{}> <--", guild_role.id)?;
                     continue;
                 }
-                writeln!(description, "<@&{}>", role.id)?;
+                writeln!(description, "<@&{}>", guild_role.id)?;
             }
 
             embed = embed.description(description)
