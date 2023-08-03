@@ -18,7 +18,7 @@ impl LuroSlash {
         reason: &String,
         success: bool
     ) -> anyhow::Result<()> {
-        let mut embed = self.kick_embed(guild, moderator, banned_user, reason)?;
+        let mut embed = self.kick_embed(guild, moderator, banned_user, reason).await?;
         if success {
             embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
         } else {
@@ -29,29 +29,15 @@ impl LuroSlash {
     }
 
     /// Embed showing that a member got banned
-    pub fn kick_embed(
+    pub async fn kick_embed(
         &self,
         guild: Guild,
         moderator: Member,
         kicked_user: User,
         reason: &String
     ) -> Result<EmbedBuilder, Error> {
-        // Variables for the moderator
-        let moderator_avatar = self.member_get_avatar(Some(&moderator), &Some(guild.id), &moderator.user);
-        let moderator_name = if moderator.user.discriminator == 0 {
-            moderator.user.name
-        } else {
-            format!("{}#{}", moderator.user.name, moderator.user.discriminator)
-        };
-
-        // Variables for the user that was banned
-        let kicked_user_avatar = self.user_get_avatar(&kicked_user);
-        let kicked_user_id = kicked_user.id.to_string();
-        let kicked_user_name = if kicked_user.discriminator == 0 {
-            kicked_user.name
-        } else {
-            format!("{}#{}", kicked_user.name, kicked_user.discriminator)
-        };
+        let (moderator, moderator_avatar, moderator_name) = self.get_member(&moderator, guild.id).await?;
+        let (kicked_user, kicked_avatar, kicked_name) = self.fetch_specified_user(&self.luro, &kicked_user.id).await?;
 
         let embed_author = EmbedAuthorBuilder::new(format!("Kicked by {} - {}", moderator_name, moderator.user.id))
             .icon_url(ImageSource::url(moderator_avatar)?)
@@ -62,15 +48,15 @@ impl LuroSlash {
             .title(format!("Kicked from {}", guild.name))
             .author(embed_author)
             .field(EmbedFieldBuilder::new("Guild ID", guild.id.to_string()).inline())
-            .thumbnail(ImageSource::url(kicked_user_avatar)?);
+            .thumbnail(ImageSource::url(kicked_avatar)?);
 
         if !reason.is_empty() {
             embed = embed.description(format!(
-                "**User:** <@{kicked_user_id}> - {kicked_user_name}\n**User ID:** {kicked_user_id}\n**Reason:** ```{reason}```"
+                "**User:** <@{0}> - {kicked_name}\n**User ID:** {0}\n```{reason}```",kicked_user.id
             ))
         } else {
             embed = embed.description(format!(
-                "**User:** <@{kicked_user_id}> - {kicked_user_name}\n**User ID:** {kicked_user_id}",
+                "**User:** <@{0}> - {kicked_name}\n**User ID:** {0}",kicked_user.id
             ))
         }
 
