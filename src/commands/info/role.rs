@@ -44,6 +44,8 @@ impl LuroCommand for InfoRole {
                 }
                 writeln!(description, "<@{}>", role.id)?;
             }
+            
+            embed = embed.description(description)
         }
 
         ctx.embed(embed.build())?.respond().await
