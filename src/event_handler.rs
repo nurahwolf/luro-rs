@@ -20,15 +20,25 @@ mod thread_update;
 
 impl LuroFramework {
     pub async fn handle_event(self: Arc<Self>, event: Event, shard: MessageSender) -> anyhow::Result<()> {
+        // events we want an IMMEDIATE resposne to, such as if we don't want the cache to be updated yet.
+        let callback = match event.clone() {
+            Event::MessageUpdate(message) => self.message_update_handler(*message).await,
+            Event::MessageCreate(message) => self.message_create_listener(*message).await,
+            Event::MessageDelete(message) => self.message_delete_listener(message).await,
+            _ => Ok(())
+        };
+
+        // TODO: Really shitty event handler, please change this
+        if let Err(why) = callback {
+            error!(why = ?why, "error while handling event");
+        }
+
         self.lavalink.process(&event).await?;
         self.twilight_cache.update(&event);
 
         let callback = match event {
             Event::Ready(ready) => self.ready_listener(ready, shard).await,
             Event::InteractionCreate(interaction) => LuroSlash::new(self, interaction.0, shard).handle().await,
-            Event::MessageCreate(message) => self.message_create_listener(message).await,
-            Event::MessageDelete(message) => self.message_delete_listener(message).await,
-            Event::MessageUpdate(message) => self.message_update_handler(message).await,
             Event::GuildAuditLogEntryCreate(entry) => self.audit_log_handler(entry).await,
             Event::BanAdd(ban) => self.ban_add_listener(ban).await,
             Event::ThreadCreate(event) => self.listener_thread_create(event).await,

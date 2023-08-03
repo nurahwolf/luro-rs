@@ -25,7 +25,7 @@ use twilight_model::{
     guild::{Guild, Role},
     http::{attachment::Attachment, interaction::InteractionResponseType},
     id::{
-        marker::{ApplicationMarker, ChannelMarker, GuildMarker, RoleMarker, UserMarker},
+        marker::{ApplicationMarker, ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker},
         Id
     },
     oauth::Application,
@@ -42,6 +42,7 @@ mod guild_permissions;
 mod guild_settings;
 mod hecks;
 mod luro_framework;
+mod luro_message;
 mod luro_permissions;
 mod luro_slash;
 mod luro_webhook;
@@ -175,6 +176,26 @@ pub struct LuroPermissions<'a> {
     member_id: Id<UserMarker>,
     member_roles: MemberRoles,
     is_owner: bool
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum LuroMessageSource {
+    MessageUpdate,
+    MessageDelete,
+    MessageCreate,
+    None
+}
+
+/// Effectively a wrapper around different type of messages, for more streamlined responses
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LuroMessage {
+    pub author: Option<User>,
+    pub content: Option<String>,
+    pub guild_id: Option<Id<GuildMarker>>,
+    pub channel_id: Id<ChannelMarker>,
+    pub id: Id<MessageMarker>,
+    pub source: LuroMessageSource,
+    pub embeds: Option<Vec<Embed>>
 }
 
 /// Some nice stuff about formatting a response, ready to send via twilight's client
@@ -366,5 +387,6 @@ pub struct UserData {
     /// A hashmap containing a count on how often a particular word appears
     pub words: BTreeMap<String, usize>,
     /// An tuple of warnings wrapped in a vec. The first value is the warning, and the second is whoever warned the person
-    pub warnings: Option<Vec<(String, Id<UserMarker>)>>
+    pub warnings: Option<Vec<(String, Id<UserMarker>)>>,
+    pub messages: HashMap<Id<MessageMarker>, LuroMessage>
 }

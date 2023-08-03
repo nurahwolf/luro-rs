@@ -215,6 +215,21 @@ pub trait LuroFunctions {
         )
     }
 
+    /// Only attempt to get a specific user. If this fails then an error is returned
+    /// Returns the user, their avatar and a nicely formatted name
+    /// TODO: Better name
+    fn formatted_user(&self, user: User) -> (String, String, User) {
+        (
+            self.user_get_avatar(&user),
+            if user.discriminator == 0 {
+                user.name.clone()
+            } else {
+                format!("{}#{}", user.name, user.discriminator)
+            },
+            user
+        )
+    }
+
     /// Returns the avatar of an [InteractionMember]!
     fn interaction_member_get_avatar(
         &self,

@@ -4,6 +4,7 @@ mod bot_missing_permissions;
 mod internal_error;
 mod invalid_heck;
 pub mod kick;
+mod message_modified;
 mod no_guild_settings;
 mod no_interaction_channel;
 mod not_guild;

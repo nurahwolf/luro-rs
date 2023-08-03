@@ -15,6 +15,8 @@ use crate::USERDATA_FILE_PATH;
 
 use crate::traits::toml::LuroTOML;
 
+use super::LuroMessage;
+
 impl LuroTOML for UserData {}
 
 impl UserData {
@@ -61,11 +63,19 @@ impl UserData {
     }
 
     /// Write new words
-    pub async fn write_words(ctx: &LuroContext, new_words: &str, user_id: &Id<UserMarker>) -> anyhow::Result<()> {
+    pub async fn write_words(
+        ctx: &LuroContext,
+        new_words: &str,
+        user_id: &Id<UserMarker>,
+        message: &LuroMessage
+    ) -> anyhow::Result<()> {
         // Make sure is valid
         let mut modified_user_data = UserData::get_user_settings(ctx, user_id)
             .await
             .context("Failed to get user data")?;
+
+        // Add the raw message to the user's data
+        modified_user_data.messages.insert(message.id, message.clone());
 
         if let Some(ref user) = ctx.twilight_cache.user(*user_id) {
             modified_user_data.accent_color = user.accent_color;

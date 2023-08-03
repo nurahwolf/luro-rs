@@ -1,15 +1,12 @@
+use std::sync::Arc;
+
 use anyhow::Error;
-use tracing::info;
 use twilight_model::gateway::payload::incoming::MessageUpdate;
 
 use crate::models::LuroFramework;
 
 impl LuroFramework {
-    pub async fn message_update_handler(&self, message: Box<MessageUpdate>) -> Result<(), Error> {
-        if let Some(content) = message.content && let Some(author) = message.author {
-            info!("Message Updated - Author: {}\n{}", author.name, content);
-        };
-
-        Ok(())
+    pub async fn message_update_handler(self: &Arc<Self>, message: MessageUpdate) -> Result<(), Error> {
+        self.response_message_modified(&message.into()).await
     }
 }
