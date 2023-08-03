@@ -34,17 +34,17 @@ impl LuroFramework {
                     None => {
                         info!("Old message does not exist in the cache");
                         return Ok(());
-                    },
+                    }
                 };
                 embed = embed.title("Message Edited");
                 match &message.content {
                     Some(content) => {
                         writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
                         writeln!(description, "**Updated Message:**\n{content}")?
-                    },
+                    }
                     None => {
                         debug!("No message content, so no need to record it");
-                        return Ok(())
+                        return Ok(());
                     }
                 }
             }
@@ -54,13 +54,13 @@ impl LuroFramework {
                     None => {
                         info!("Old message does not exist in the cache");
                         return Ok(());
-                    },
+                    }
                 };
                 writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
                 let (_author, avatar, name) = self.fetch_specified_user(self, &old_message.author()).await?;
                 let embed_author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
                 embed = embed.author(embed_author).title("Message Deleted").color(COLOUR_DANGER)
-            },
+            }
             LuroMessageSource::MessageCreate => {
                 let mut content = String::new();
                 if let Some(embeds) = &message.embeds {
@@ -79,7 +79,7 @@ impl LuroFramework {
                     UserData::write_words(self, &content, &author.id, message).await?;
                 }
 
-                return Ok(())
+                return Ok(());
             }
             LuroMessageSource::None => return Ok(())
         }
@@ -94,7 +94,12 @@ impl LuroFramework {
     }
 
     /// Create an embed that details a modified message
-    pub async fn embed_message_modified(self: &Arc<Self>, message: &LuroMessage, mut embed: EmbedBuilder, mut description: String) -> anyhow::Result<EmbedBuilder> {
+    pub async fn embed_message_modified(
+        self: &Arc<Self>,
+        message: &LuroMessage,
+        mut embed: EmbedBuilder,
+        mut description: String
+    ) -> anyhow::Result<EmbedBuilder> {
         match message.guild_id {
             Some(guild_id) => {
                 embed = embed.url(format!(
