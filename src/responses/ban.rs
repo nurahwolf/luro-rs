@@ -17,7 +17,7 @@ impl LuroSlash {
         period: &String,
         success: bool
     ) -> anyhow::Result<()> {
-        let mut embed = self.ban_embed(guild, moderator, banned_user, reason, period)?;
+        let mut embed = self.ban_embed(guild, moderator, banned_user, reason, period).await?;
         if success {
             embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
         } else {
@@ -28,7 +28,7 @@ impl LuroSlash {
     }
 
     /// An embed formatted to show a banned user
-    pub fn ban_embed(
+    pub async fn ban_embed(
         &self,
         guild: Guild,
         moderator: Member,
@@ -36,22 +36,8 @@ impl LuroSlash {
         reason: &String,
         period: &String
     ) -> Result<EmbedBuilder, Error> {
-        // Variables for the moderator
-        let moderator_avatar = self.member_get_avatar(Some(&moderator), &Some(guild.id), &moderator.user);
-        let moderator_name = if moderator.user.discriminator == 0 {
-            moderator.user.name
-        } else {
-            format!("{}#{}", moderator.user.name, moderator.user.discriminator)
-        };
-
-        // Variables for the user that was banned
-        let banned_user_avatar = self.user_get_avatar(&banned_user);
-        let banned_user_id = banned_user.id.to_string();
-        let banned_user_name = if banned_user.discriminator == 0 {
-            banned_user.name
-        } else {
-            format!("{}#{}", banned_user.name, banned_user.discriminator)
-        };
+        let (moderator, moderator_avatar, moderator_name) = self.get_member(&moderator, guild.id).await?;
+        let (banned, banned_avatar, banned_name) = self.fetch_specified_user(&self.luro, &banned_user.id).await?;
 
         let embed_author = EmbedAuthorBuilder::new(format!("Banned by {} - {}", moderator_name, moderator.user.id))
             .icon_url(ImageSource::url(moderator_avatar)?)
@@ -63,16 +49,15 @@ impl LuroSlash {
             .author(embed_author)
             .field(EmbedFieldBuilder::new("Purged Messages", period).inline())
             .field(EmbedFieldBuilder::new("Guild ID", guild.id.to_string()).inline())
-            .thumbnail(ImageSource::url(banned_user_avatar)?);
+            .thumbnail(ImageSource::url(banned_avatar)?);
 
         if !reason.is_empty() {
             embed = embed.description(format!(
-                "**User:** <@{banned_user_id}> - {banned_user_name}\n**User ID:** {banned_user_id}\n**Reason:** ```{reason}```",
+                "**User:** <@{0}> - {banned_name}\n**User ID:** {0}\n```{reason}```",
+                banned.id
             ))
         } else {
-            embed = embed.description(format!(
-                "**User:** <@{banned_user_id}> - {banned_user_name}\n**User ID:** {banned_user_id}",
-            ))
+            embed = embed.description(format!("**User:** <@{0}> - {banned_name}\n**User ID:** {0}", banned.id))
         }
 
         Ok(embed)

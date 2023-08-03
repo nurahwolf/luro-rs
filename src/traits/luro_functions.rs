@@ -152,6 +152,30 @@ pub trait LuroFunctions {
         })
     }
 
+    /// Return useful information relating to a member.
+    /// Returns the member, their avatar and a nicely formatted name
+    /// TODO: Rename this to something smart
+    async fn get_member<'a>(
+        &'a self,
+        member: &'a Member,
+        guild_id: Id<GuildMarker>
+    ) -> anyhow::Result<(&Member, String, String)> {
+        Ok((
+            &member,
+            self.member_get_avatar(Some(member), &Some(guild_id), &member.user),
+            match &member.nick {
+                Some(nick) => nick.clone(),
+                None => {
+                    if member.user.discriminator == 0 {
+                        member.user.name.clone()
+                    } else {
+                        format!("{}#{}", member.user.name, member.user.discriminator)
+                    }
+                }
+            }
+        ))
+    }
+
     /// Get a specified user, else fall back to the interaction author
     /// Returns the user, their avatar and a nicely formatted name
     fn get_specified_user_or_author<'a>(

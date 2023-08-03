@@ -137,7 +137,9 @@ impl LuroCommand for BanCommand {
             }
         };
 
-        let mut embed = ctx.ban_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason, &period_string)?;
+        let mut embed = ctx
+            .ban_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason, &period_string)
+            .await?;
 
         let victim_dm = ctx
             .luro
