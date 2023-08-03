@@ -20,7 +20,8 @@ impl From<&Role> for RoleOrdering {
     fn from(role: &Role) -> Self {
         Self {
             id: role.id,
-            position: role.position
+            position: role.position,
+            colour: role.color
         }
     }
 }

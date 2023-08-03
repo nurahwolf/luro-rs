@@ -58,11 +58,9 @@ impl GuildSetting {
                 guild_settings.guild_name = guild.name().to_owned();
             }
 
-            // Only overwrite if explicitly set
-            if let Some(accent_colour) = new_settings.accent_colour_custom {
-                new_guild_settings.accent_colour_custom = Some(accent_colour)
-            }
+            new_guild_settings.accent_colour = new_settings.accent_colour;
 
+            // Only overwrite if explicitly set
             if let Some(accent_colour_custom) = new_settings.accent_colour_custom {
                 new_guild_settings.accent_colour_custom = Some(accent_colour_custom)
             }

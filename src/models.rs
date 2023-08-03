@@ -281,7 +281,8 @@ struct MemberRoles {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RoleOrdering {
     pub id: Id<RoleMarker>,
-    pub position: i64
+    pub position: i64,
+    pub colour: u32
 }
 
 #[derive(Debug, Clone)]

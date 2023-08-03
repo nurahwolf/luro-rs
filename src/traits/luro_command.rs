@@ -3,8 +3,8 @@ use anyhow::{Context, Error};
 use async_trait::async_trait;
 
 use std::mem;
-use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::command::Command;
+use twilight_interactions::command::{CommandModel};
+
 
 use twilight_model::application::interaction::InteractionData;
 

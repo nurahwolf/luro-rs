@@ -1,18 +1,14 @@
 use async_trait::async_trait;
-use std::{fmt::Write, time::Duration};
-use tracing::debug;
+use std::{fmt::Write};
 
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentionable, ResolvedUser};
-use twilight_model::id::{
-    marker::{GenericMarker, RoleMarker},
-    Id
-};
+
+use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentionable};
+
 use twilight_util::{
-    builder::embed::{EmbedFieldBuilder, ImageSource},
     snowflake::Snowflake
 };
 
-use crate::{models::LuroSlash, traits::luro_functions::LuroFunctions};
+use crate::{models::{LuroSlash, RoleOrdering}};
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -36,8 +32,11 @@ impl LuroCommand for InfoRole {
             let mut description: String = String::new();
 
             embed = embed.title(&role.name);
-
-            for guild_role in ctx.luro.twilight_client.roles(role.guild_id()).await?.model().await?.iter() {
+            let roles = ctx.luro.twilight_client.roles(role.guild_id()).await?.model().await?;
+            let mut roles: Vec<_> = roles.iter().map(RoleOrdering::from).collect();
+            roles.sort();
+            roles.sort_by(|a, b| b.cmp(a));
+            for guild_role in roles {
                 if guild_role.id == role.id {
                     writeln!(description, "--> <@&{}> <--", guild_role.id)?;
                     continue;
