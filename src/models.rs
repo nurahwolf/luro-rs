@@ -375,19 +375,24 @@ pub struct UserData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub verified: Option<bool>,
     /// How many words they have said
+    #[serde(default)]
     pub wordcount: usize,
     /// The sum of the length of all the words they have said. This is then divided by their wordcount to work out an average.
+    #[serde(default)]
     pub averagesize: usize,
     #[serde(
         deserialize_with = "user_data::deserialize_wordsize",
         serialize_with = "user_data::serialize_wordsize"
     )]
     /// A hashmap containing the word length, and how many times it has appeared
+    #[serde(default)]
     pub wordsize: BTreeMap<usize, usize>,
     /// A hashmap containing a count on how often a particular word appears
+    #[serde(default)]
     pub words: BTreeMap<String, usize>,
     /// An tuple of warnings wrapped in a vec. The first value is the warning, and the second is whoever warned the person
-    pub warnings: Option<Vec<(String, Id<UserMarker>)>>,
+    #[serde(default)]
+    pub warnings: Vec<(String, Id<UserMarker>)>,
     #[serde(default)]
     pub messages: HashMap<Id<MessageMarker>, LuroMessage>
 }

@@ -40,10 +40,10 @@ impl LuroCommand for ModeratorWarnCommand {
         let user_id = self.user.resolved.id;
 
         if !self.new {
-            let warnings = match UserData::get_user_settings(&ctx.luro, &user_id).await?.warnings {
-                Some(warnings) => warnings,
-                None => return ctx.clone().content("No warnings for that user!").respond().await
-            };
+            let warnings = UserData::get_user_settings(&ctx.luro, &user_id).await?.warnings;
+            if warnings.is_empty() {
+                return ctx.clone().content("No warnings for that user!").respond().await;
+            }
 
             let user = ctx.luro.twilight_client.user(user_id).await?.model().await?;
             let avatar = ctx.user_get_avatar(&user);
@@ -119,22 +119,14 @@ impl LuroCommand for ModeratorWarnCommand {
             .description(format!("Warning Created for <@{user_id}>\n```{warning}```"));
 
         let mut user_data = UserData::get_user_settings(&ctx.luro, &user_id).await?;
-        match user_data.warnings {
-            Some(ref mut warnings) => {
-                warnings.push((warning.to_owned(), author.id));
-            }
-            None => {
-                let warnings = vec![(warning.to_owned(), author.id)];
-                user_data.warnings = Some(warnings.clone());
-            }
-        }
+        user_data.warnings.push((warning.to_owned(), author.id));
 
         ctx.luro.user_data.insert(user_id, user_data.clone());
         user_data.write(path).await?;
 
         embed = embed.footer(EmbedFooterBuilder::new(format!(
             "User has a total of {} warnings.",
-            user_data.warnings.unwrap_or(vec![]).len()
+            user_data.warnings.len()
         )));
 
         match ctx.luro.twilight_client.create_private_channel(user_id).await {
