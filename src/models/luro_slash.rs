@@ -388,7 +388,7 @@ impl LuroSlash {
             };
 
             if guild_settings.accent_colour != 0 {
-                return Ok(ACCENT_COLOUR);
+                return Ok(guild_settings.accent_colour);
             }
         };
 
