@@ -10,6 +10,7 @@ use self::abuse::AbuseCommand;
 use self::assign::AssignCommand;
 use self::clear_warnings::OwnerClearWarning;
 use self::commands::OwnerCommandsCommand;
+use self::guilds::OwnerGuildsCommand;
 use self::load_users::OwnerLoadUsers;
 use self::log::LogCommand;
 use self::modify_role::ModifyRoleCommand;
@@ -21,6 +22,7 @@ mod abuse;
 mod assign;
 mod clear_warnings;
 mod commands;
+mod guilds;
 mod load_users;
 mod log;
 mod modify_role;
@@ -50,7 +52,9 @@ pub enum OwnerCommands {
     #[command(name = "load_users")]
     LoadUsers(OwnerLoadUsers),
     #[command(name = "clear_warnings")]
-    ClearWarning(Box<OwnerClearWarning>)
+    ClearWarning(Box<OwnerClearWarning>),
+    #[command(name = "guilds")]
+    Guilds(OwnerGuildsCommand)
 }
 
 #[async_trait]
@@ -82,7 +86,8 @@ impl LuroCommand for OwnerCommands {
             Self::SaveGuilds(command) => command.run_command(ctx).await,
             Self::Abuse(command) => command.run_command(ctx).await,
             Self::LoadUsers(command) => command.run_command(ctx).await,
-            Self::ClearWarning(command) => command.run_command(ctx).await
+            Self::ClearWarning(command) => command.run_command(ctx).await,
+            Self::Guilds(command) => command.run_command(ctx).await
         }
     }
 }
