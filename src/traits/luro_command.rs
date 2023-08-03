@@ -45,13 +45,8 @@ pub trait LuroCommand: CommandModel + CreateCommand {
         ctx.not_implemented_response().await
     }
 
-    /// Handle a component interaction
-    async fn handle_component(self, ctx: LuroSlash, _data: MessageComponentInteractionData) -> anyhow::Result<()> {
-        ctx.not_implemented_response().await
-    }
-
-    /// Create and respond to a button interaction
-    async fn handle_button(self, ctx: LuroSlash, _data: MessageComponentInteractionData) -> anyhow::Result<()> {
+    /// Handle a component interaction. This could be a button or other form of interaciton
+    async fn handle_component(_data: MessageComponentInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 

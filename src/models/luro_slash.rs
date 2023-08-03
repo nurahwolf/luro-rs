@@ -107,10 +107,10 @@ impl LuroSlash {
         );
 
         match &*data.custom_id {
-            "boop" => BoopCommand::handle_button(Default::default(), self, data).await,
-            "decode" => Base64Decode::handle_button(Default::default(), self, data).await,
-            "encode" => Base64Encode::handle_button(Default::default(), self, data).await,
-            "heck-setting" => HeckAddCommand::handle_component(Default::default(), self, data).await,
+            "boop" => BoopCommand::handle_component(data, self).await,
+            "decode" => Base64Decode::handle_component(data, self).await,
+            "encode" => Base64Encode::handle_component(data, self).await,
+            "heck-setting" => HeckAddCommand::handle_component(data, self).await,
             name => {
                 warn!(name = name, "received unknown component");
                 self.unknown_command_response().await

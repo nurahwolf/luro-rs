@@ -59,7 +59,7 @@ impl LuroCommand for Base64Decode {
         }
     }
 
-    async fn handle_button(self, ctx: LuroSlash, _data: MessageComponentInteractionData) -> anyhow::Result<()> {
+    async fn handle_component(_data: MessageComponentInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         response(ctx, true).await
     }
 }
@@ -93,7 +93,7 @@ impl LuroCommand for Base64Encode {
         }
     }
 
-    async fn handle_button(self, ctx: LuroSlash, _data: MessageComponentInteractionData) -> anyhow::Result<()> {
+    async fn handle_component(_data: MessageComponentInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         response(ctx, false).await
     }
 }

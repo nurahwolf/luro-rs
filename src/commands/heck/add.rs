@@ -50,7 +50,7 @@ impl LuroCommand for HeckAddCommand {
             .await
     }
 
-    async fn handle_component(self, ctx: LuroSlash, data: MessageComponentInteractionData) -> anyhow::Result<()> {
+    async fn handle_component(data: MessageComponentInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         let mut heck_id = 0;
         let mut field = vec![];
         let interaction_channel = ctx.channel()?;
