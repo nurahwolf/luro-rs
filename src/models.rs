@@ -419,7 +419,7 @@ pub struct UserActions {
     /// The type of action this is
     pub action_type: Vec<UserActionType>,
     /// The guild that the action took place
-    pub guild_id: Id<GuildMarker>,
+    pub guild_id: Option<Id<GuildMarker>>,
     /// The reason that the action took place
     pub reason: String,
     /// Who performed this action
@@ -430,5 +430,6 @@ pub struct UserActions {
 pub enum UserActionType {
     Ban,
     Kick,
-    Warn
+    Warn,
+    PrivilegeEscalation
 }

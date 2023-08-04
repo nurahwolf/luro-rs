@@ -177,7 +177,7 @@ impl LuroCommand for BanCommand {
                 .context("Expected to find user's data in the cache")?;
             data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::Ban],
-                guild_id,
+                guild_id: Some(guild_id),
                 reason,
                 responsible_user: author.user.id
             });

@@ -76,7 +76,27 @@ impl LuroCommand for OwnerCommands {
 
         // If we don't have a match, bitch at the user
         if !owner_match {
-            return ctx.not_owner_response().await;
+            return ctx
+                .clone()
+                .not_owner_response(
+                    &interaction_author.id,
+                    &ctx.interaction.guild_id,
+                    match self {
+                        Self::Save(_) => "owner_save",
+                        Self::Log(_) => "owner_log",
+                        Self::Assign(_) => "owner_assign",
+                        Self::Modify(_) => "owner_modify",
+                        Self::Commands(_) => "owner_commands",
+                        Self::Reload(_) => "owner_reload",
+                        Self::SaveGuilds(_) => "owner_saveguilds",
+                        Self::Abuse(_) => "owner_abuse",
+                        Self::LoadUsers(_) => "owner_loadusers",
+                        Self::ClearWarning(_) => "owner_clearwarning",
+                        Self::Guilds(_) => "owner_guilds",
+                        Self::GetMessage(_) => "owner_getmessage"
+                    }
+                )
+                .await;
         }
 
         // We know the user is good, so call the appropriate subcommand.

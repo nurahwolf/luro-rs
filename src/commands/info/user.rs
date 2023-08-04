@@ -176,13 +176,14 @@ impl LuroCommand for InfoUser {
                 "**Punishments Received - {}**",
                 user_data.moderation_actions.len()
             )?;
-            let (mut bans, mut kicks, mut warnings) = (0, 0, 0);
+            let (mut bans, mut kicks, mut warnings, mut priv_esc) = (0, 0, 0, 0);
             for punishment in user_data.moderation_actions {
                 for punishment_type in punishment.action_type {
                     match punishment_type {
                         UserActionType::Ban => bans += 1,
                         UserActionType::Kick => kicks += 1,
-                        UserActionType::Warn => warnings += 1
+                        UserActionType::Warn => warnings += 1,
+                        UserActionType::PrivilegeEscalation => priv_esc += 1
                     }
                 }
             }

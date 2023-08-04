@@ -172,7 +172,7 @@ impl LuroCommand for ModeratorWarnCommand {
                 .context("Expected to find user's data in the cache")?;
             data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::Warn],
-                guild_id: ctx.interaction.guild_id.context("Expected this to be a guild")?,
+                guild_id: Some(ctx.interaction.guild_id.context("Expected this to be a guild")?),
                 reason: warning.to_owned(),
                 responsible_user: author.id
             });
