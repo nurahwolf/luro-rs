@@ -193,12 +193,12 @@ impl LuroCommand for InfoUser {
                 writeln!(user_data_description, "- Times Kicks: `{kicks}`")?;
             }
             if warnings != 0 {
-                writeln!(user_data_description, "- Times Warned (including expired): `{warnings}`")?;
+                writeln!(user_data_description, "- Times Warned *(including expired)*: `{warnings}`")?;
             }
         }
 
         if !user_data.warnings.is_empty() {
-            writeln!(user_data_description, "- Warnings: `{}`", user_data.warnings.len())?;
+            writeln!(user_data_description, "- Active Warnings: `{}`", user_data.warnings.len())?;
         }
 
         match user_data_description.len() > 1024 {
