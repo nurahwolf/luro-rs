@@ -1,13 +1,11 @@
-use crate::USERDATA_FILE_PATH;
-use std::{fmt::Write, sync::Arc, path::Path};
-use anyhow::Context;
+use std::{fmt::Write, sync::Arc};
 use tracing::{debug, info, warn};
 
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{
     models::{LuroFramework, LuroMessage, LuroMessageSource, SlashUser, UserData},
-    COLOUR_DANGER, traits::toml::LuroTOML
+    COLOUR_DANGER
 };
 
 impl LuroFramework {
@@ -40,10 +38,9 @@ impl LuroFramework {
                     true => writeln!(description, "**Original Message:**\n{}\n", old_message.content())?,
                     false => embed = embed.field(EmbedFieldBuilder::new("Original Message", old_message.content()))
                 }
-                let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &old_message.author());
-                let mut user_data = self.user_data.get_mut(&old_message.author()).context("Expected to have user data cached")?;
+                let mut user_data = UserData::modify_user_settings(self, &old_message.author()).await?;
                 user_data.message_edits += 1;
-                user_data.write(Path::new(&path)).await?;
+                user_data.write_user_data(&old_message.author()).await?;
                 embed = embed.title("Message Edited");
                 match &message.content {
                     Some(content) => {

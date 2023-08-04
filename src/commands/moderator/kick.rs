@@ -145,8 +145,8 @@ impl LuroCommand for KickCommand {
             .await?;
 
         {
-            let _ = UserData::get_user_settings(&ctx.luro, &author.user.id).await?;
-            let _ = UserData::get_user_settings(&ctx.luro, &user_to_remove.id).await?;
+            let _ = UserData::modify_user_settings(&ctx.luro, &author.user.id).await?;
+            let _ = UserData::modify_user_settings(&ctx.luro, &user_to_remove.id).await?;
             // Reward the person who actioned the ban
             let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author.user.id);
             let data = &mut ctx

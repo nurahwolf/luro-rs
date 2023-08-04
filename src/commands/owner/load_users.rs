@@ -25,7 +25,7 @@ impl LuroCommand for OwnerLoadUsers {
         let mut errors = 0;
 
         for user in ctx.luro.twilight_cache.iter().users() {
-            match UserData::get_user_settings(&ctx.luro, &user.id).await {
+            match UserData::modify_user_settings(&ctx.luro, &user.id).await {
                 Ok(mut user_data) => {
                     user_data.accent_color = user.accent_color;
                     user_data.avatar = user.avatar;

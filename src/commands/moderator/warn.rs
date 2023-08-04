@@ -42,9 +42,9 @@ impl LuroCommand for ModeratorWarnCommand {
         let user_id = self.user.resolved.id;
 
         if !self.new {
-            let user_data = UserData::get_user_settings(&ctx.luro, &user_id).await?;
+            let user_data = UserData::modify_user_settings(&ctx.luro, &user_id).await?.clone();
             if user_data.warnings.is_empty() {
-                return ctx.clone().content("No warnings for that user!").respond().await;
+                return ctx.content("No warnings for that user!").respond().await;
             }
 
             let slash_author = SlashUser::client_fetch_user(&ctx.luro, user_id).await?.1;
@@ -125,16 +125,18 @@ impl LuroCommand for ModeratorWarnCommand {
             .author(embed_author)
             .description(format!("Warning Created for <@{user_id}>\n```{warning}```"));
 
-        let mut user_data = UserData::get_user_settings(&ctx.luro, &user_id).await?;
-        user_data.warnings.push((warning.to_owned(), author.id));
-
-        ctx.luro.user_data.insert(user_id, user_data.clone());
-        user_data.write(Path::new(&path)).await?;
-
-        embed = embed.footer(EmbedFooterBuilder::new(format!(
-            "User has a total of {} warnings.",
-            user_data.warnings.len()
-        )));
+        {
+            let mut user_data = UserData::modify_user_settings(&ctx.luro, &user_id).await?;
+            user_data.warnings.push((warning.to_owned(), author.id));
+    
+            ctx.luro.user_data.insert(user_id, user_data.clone());
+            user_data.write(Path::new(&path)).await?;
+    
+            embed = embed.footer(EmbedFooterBuilder::new(format!(
+                "User has a total of {} warnings.",
+                user_data.warnings.len()
+            )));
+        }
 
         match ctx.luro.twilight_client.create_private_channel(user_id).await {
             Ok(channel) => {
@@ -158,8 +160,8 @@ impl LuroCommand for ModeratorWarnCommand {
             .await?;
 
         {
-            let _ = UserData::get_user_settings(&ctx.luro, &author.id).await?;
-            let _ = UserData::get_user_settings(&ctx.luro, &user_id).await?;
+            let _ = UserData::modify_user_settings(&ctx.luro, &author.id).await?;
+            let _ = UserData::modify_user_settings(&ctx.luro, &user_id).await?;
             // Reward the person who actioned the ban
             let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author.id);
             let data = &mut ctx

@@ -43,7 +43,7 @@ impl LuroCommand for OwnerGetMessage {
                             .await
                     }
                 };
-                let user_data = UserData::get_user_settings(&ctx.luro, &user.resolved.id).await?;
+                let user_data = UserData::modify_user_settings(&ctx.luro, &user.resolved.id).await?;
                 let message = match user_data.messages.get(&message_id) {
                     Some(message) => message,
                     None => {

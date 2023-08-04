@@ -38,8 +38,8 @@ impl LuroFramework {
                 writeln!(description, "```{reason}```")?
             }
             if let Some(user_id) = &event.user_id {
-                let _ = UserData::get_user_settings(self, user_id).await?;
-                let _ = UserData::get_user_settings(self, &kicked_user_id).await?;
+                let _ = UserData::modify_user_settings(self, user_id).await?;
+                let _ = UserData::modify_user_settings(self, &kicked_user_id).await?;
                 // Reward the person who actioned the ban
                 let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_id);
                 let data = &mut self

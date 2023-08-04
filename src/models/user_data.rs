@@ -1,4 +1,5 @@
 use anyhow::Context;
+use dashmap::mapref::one::RefMut;
 use regex::Regex;
 use serde::de;
 use serde::Deserialize;
@@ -20,46 +21,42 @@ use super::LuroMessage;
 impl LuroTOML for UserData {}
 
 impl UserData {
-    /// This function just gets user settings and ensures it is in Luro's context.
-    pub async fn write_user_settings(ctx: &LuroContext, user_id: &Id<UserMarker>) -> anyhow::Result<Self> {
-        // Check to see if our data is present. if it is, return early
-        {
-            if let Some(settings) = ctx.user_data.get(user_id) {
-                return Ok(settings.clone());
-            }
-        }
-
-        // If we got this far, we know we need to load from disk
-        let user_settings = Self::get(Path::new(&format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id))).await?;
-
-        // Now insert it into our context
-        {
-            ctx.user_data.insert(*user_id, user_settings.clone());
-        }
-
-        // Return the settings loaded from disk
-        Ok(user_settings)
+    /// Internal function for converting a user_id into a path
+    fn path(user_id: &Id<UserMarker>) -> String {
+        format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id)
     }
 
     /// This function just gets user settings and ensures it is in Luro's context.
-    pub async fn get_user_settings(ctx: &LuroContext, user_id: &Id<UserMarker>) -> anyhow::Result<Self> {
-        // Check to see if our data is present. if it is, return early
-        {
-            if let Some(settings) = ctx.user_data.get(user_id) {
-                return Ok(settings.clone());
-            }
+    pub async fn get_user_settings<'a>(ctx: &'a LuroContext, user_id: &Id<UserMarker>) -> anyhow::Result<Self> {
+        match ctx.user_data.get(user_id) {
+            Some(user_data) => Ok(user_data.clone()),
+            None => {
+                let user_settings = Self::get(Path::new(&Self::path(user_id))).await?;
+                {
+                    ctx.user_data.insert(*user_id, user_settings.clone());
+                }
+                Ok(ctx.user_data.get(user_id).context("Expected to find user_data")?.clone())
+            },
         }
+    }
 
-        // If we got this far, we know we need to load from disk
-        let user_settings = Self::get(Path::new(&format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id))).await?;
-
-        // Now insert it into our context
-        {
-            ctx.user_data.insert(*user_id, user_settings.clone());
+    /// This function gets user settings and ensures it is in Luro's context, returning a context that can be modified.
+    pub async fn modify_user_settings<'a>(ctx: &'a LuroContext, user_id: &Id<UserMarker>) -> anyhow::Result<RefMut<'a, Id<UserMarker>, UserData>> {
+        match ctx.user_data.get_mut(user_id) {
+            Some(user_data) => Ok(user_data),
+            None => {
+                let user_settings = Self::get(Path::new(&Self::path(user_id))).await?;
+                {
+                    ctx.user_data.insert(*user_id, user_settings.clone());
+                }
+                Ok(ctx.user_data.get_mut(user_id).context("Expected to find user_data")?)
+            },
         }
+    }
 
-        // Return the settings loaded from disk
-        Ok(user_settings)
+    /// Write user data. This is a shorthand around [Self::write] which allows not needing to specify a path
+    pub async fn write_user_data(&self, user_id: &Id<UserMarker>) -> anyhow::Result<()> {
+        Self::write(self, Path::new(Path::new(&Self::path(user_id)))).await
     }
 
     /// Write new words
@@ -70,7 +67,7 @@ impl UserData {
         message: &LuroMessage
     ) -> anyhow::Result<()> {
         // Make sure is valid
-        let mut modified_user_data = UserData::get_user_settings(ctx, user_id)
+        let mut modified_user_data = UserData::modify_user_settings(ctx, user_id)
             .await
             .context("Failed to get user data")?;
 

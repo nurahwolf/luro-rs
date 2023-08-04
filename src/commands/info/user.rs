@@ -149,65 +149,64 @@ impl LuroCommand for InfoUser {
 
         // USER DATA SECTION
         let mut user_data_description = String::new();
-        let user_data = UserData::get_user_settings(&ctx.luro, &author.id).await?;
+        {
+            let user_data: dashmap::mapref::one::RefMut<'_, Id<twilight_model::id::marker::UserMarker>, UserData> =
+                UserData::modify_user_settings(&ctx.luro, &author.id).await?;
 
-        writeln!(user_data_description, "- Total Words Said: `{}`", user_data.wordcount)?;
-        writeln!(user_data_description, "- Total Characters Said: `{}`", user_data.averagesize)?;
+            writeln!(user_data_description, "- Total Words Said: `{}`", user_data.wordcount)?;
+            writeln!(user_data_description, "- Total Characters Said: `{}`", user_data.averagesize)?;
 
-        if user_data.moderation_actions_performed != 0 {
-            writeln!(
-                user_data_description,
-                "- Performed `{} moderation actions",
-                user_data.moderation_actions_performed
-            )?;
-        }
+            if user_data.moderation_actions_performed != 0 {
+                writeln!(
+                    user_data_description,
+                    "- Performed `{} moderation actions",
+                    user_data.moderation_actions_performed
+                )?;
+            }
 
-        if user_data.message_edits != 0 {
-            writeln!(
-                user_data_description,
-                "- Edited `{}` messages",
-                user_data.message_edits
-            )?;
-        }
+            if user_data.message_edits != 0 {
+                writeln!(user_data_description, "- Edited `{}` messages", user_data.message_edits)?;
+            }
 
-        if !user_data.moderation_actions.is_empty() {
-            writeln!(
-                user_data_description,
-                "**Received `{}` punishments**",
-                user_data.moderation_actions.len()
-            )?;
-            let (mut bans, mut kicks, mut warnings, mut priv_esc) = (0, 0, 0, 0);
-            for punishment in user_data.moderation_actions {
-                for punishment_type in punishment.action_type {
-                    match punishment_type {
-                        UserActionType::Ban => bans += 1,
-                        UserActionType::Kick => kicks += 1,
-                        UserActionType::Warn => warnings += 1,
-                        UserActionType::PrivilegeEscalation => priv_esc += 1
+            if !user_data.moderation_actions.is_empty() {
+                writeln!(
+                    user_data_description,
+                    "**Received `{}` punishments**",
+                    user_data.moderation_actions.len()
+                )?;
+                let (mut bans, mut kicks, mut warnings, mut priv_esc) = (0, 0, 0, 0);
+                for punishment in &user_data.moderation_actions {
+                    for punishment_type in &punishment.action_type {
+                        match punishment_type {
+                            UserActionType::Ban => bans += 1,
+                            UserActionType::Kick => kicks += 1,
+                            UserActionType::Warn => warnings += 1,
+                            UserActionType::PrivilegeEscalation => priv_esc += 1
+                        }
                     }
                 }
+                if bans != 0 {
+                    writeln!(user_data_description, "- Banned `{bans}` times")?;
+                }
+                if kicks != 0 {
+                    writeln!(user_data_description, "- Kicked `{kicks}` times")?;
+                }
+                if priv_esc != 0 {
+                    writeln!(user_data_description, "- Attempts Privilege Escalation `{priv_esc}` times")?;
+                }
+                if warnings != 0 {
+                    writeln!(user_data_description, "- Warned *(including expired)* `{warnings}` times")?;
+                }
             }
-            if bans != 0 {
-                writeln!(user_data_description, "- Banned `{bans}` times")?;
-            }
-            if kicks != 0 {
-                writeln!(user_data_description, "- Kicked `{kicks}` times")?;
-            }
-            if priv_esc != 0 {
-                writeln!(user_data_description, "- Attempts Privilege Escalation `{priv_esc}` times")?;
-            }
-            if warnings != 0 {
-                writeln!(user_data_description, "- Warned *(including expired)* `{warnings}` times")?;
-            }
-        }
 
-        if !user_data.warnings.is_empty() {
-            writeln!(user_data_description, "- Has `{}` active warnings", user_data.warnings.len())?;
-        }
+            if !user_data.warnings.is_empty() {
+                writeln!(user_data_description, "- Has `{}` active warnings", user_data.warnings.len())?;
+            }
 
-        match user_data_description.len() > 1024 {
-            true => writeln!(description, "\n**User Data**\n{user_data_description}")?,
-            false => embed = embed.field(EmbedFieldBuilder::new("User Data", user_data_description))
+            match user_data_description.len() > 1024 {
+                true => writeln!(description, "\n**User Data**\n{user_data_description}")?,
+                false => embed = embed.field(EmbedFieldBuilder::new("User Data", user_data_description))
+            }
         }
 
         if description.len() > 4096 {
