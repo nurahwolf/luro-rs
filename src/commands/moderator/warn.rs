@@ -128,10 +128,10 @@ impl LuroCommand for ModeratorWarnCommand {
         {
             let mut user_data = UserData::modify_user_settings(&ctx.luro, &user_id).await?;
             user_data.warnings.push((warning.to_owned(), author.id));
-    
+
             ctx.luro.user_data.insert(user_id, user_data.clone());
             user_data.write(Path::new(&path)).await?;
-    
+
             embed = embed.footer(EmbedFooterBuilder::new(format!(
                 "User has a total of {} warnings.",
                 user_data.warnings.len()

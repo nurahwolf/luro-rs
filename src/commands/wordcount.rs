@@ -87,7 +87,7 @@ impl LuroCommand for WordcountCommand {
         } else {
             let (user, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
             let author = EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.try_into()?);
-            let user_data = UserData::modify_user_settings(&ctx.luro, &user.id).await?;
+            let user_data = UserData::get_user_settings(&ctx.luro, &user.id).await?;
             embed = embed.author(author);
             wordcount = user_data.wordcount;
             averagesize = user_data.averagesize;

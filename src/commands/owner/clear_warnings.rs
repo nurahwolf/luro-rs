@@ -36,7 +36,8 @@ impl LuroCommand for OwnerClearWarning {
                 Ok(index) => match index.checked_sub(1) {
                     Some(index) => index,
                     None => {
-                        return ctx.clone()
+                        return ctx
+                            .clone()
                             .content("This function automatically reduces the ID by 1. You just had the buffer underflow")
                             .respond()
                             .await
@@ -46,7 +47,8 @@ impl LuroCommand for OwnerClearWarning {
             };
 
             if index > user_data.warnings.len() || user_data.warnings.is_empty() {
-                return ctx.clone()
+                return ctx
+                    .clone()
                     .content(format!(
                         "The vector has {} elements. You are trying to remove a number greater than that.",
                         user_data.warnings.len()

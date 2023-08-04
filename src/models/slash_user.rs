@@ -1,6 +1,5 @@
 use std::convert::TryInto;
 
-
 use twilight_model::{
     guild::Member,
     id::{

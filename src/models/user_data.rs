@@ -36,12 +36,15 @@ impl UserData {
                     ctx.user_data.insert(*user_id, user_settings.clone());
                 }
                 Ok(ctx.user_data.get(user_id).context("Expected to find user_data")?.clone())
-            },
+            }
         }
     }
 
     /// This function gets user settings and ensures it is in Luro's context, returning a context that can be modified.
-    pub async fn modify_user_settings<'a>(ctx: &'a LuroContext, user_id: &Id<UserMarker>) -> anyhow::Result<RefMut<'a, Id<UserMarker>, UserData>> {
+    pub async fn modify_user_settings<'a>(
+        ctx: &'a LuroContext,
+        user_id: &Id<UserMarker>
+    ) -> anyhow::Result<RefMut<'a, Id<UserMarker>, UserData>> {
         match ctx.user_data.get_mut(user_id) {
             Some(user_data) => Ok(user_data),
             None => {
@@ -50,13 +53,13 @@ impl UserData {
                     ctx.user_data.insert(*user_id, user_settings.clone());
                 }
                 Ok(ctx.user_data.get_mut(user_id).context("Expected to find user_data")?)
-            },
+            }
         }
     }
 
     /// Write user data. This is a shorthand around [Self::write] which allows not needing to specify a path
     pub async fn write_user_data(&self, user_id: &Id<UserMarker>) -> anyhow::Result<()> {
-        Self::write(self, Path::new(Path::new(&Self::path(user_id)))).await
+        Self::write(self, Path::new(&Self::path(user_id))).await
     }
 
     /// Write new words
@@ -66,7 +69,6 @@ impl UserData {
         user_id: &Id<UserMarker>,
         message: &LuroMessage
     ) -> anyhow::Result<()> {
-        // Make sure is valid
         let mut modified_user_data = UserData::modify_user_settings(ctx, user_id)
             .await
             .context("Failed to get user data")?;
@@ -107,16 +109,7 @@ impl UserData {
             *modified_user_data.wordsize.entry(size).or_insert(0) += 1;
         }
 
-        {
-            // Now write that to the user's context
-            let mut user_data = ctx.user_data.get_mut(user_id).context("Expected user data to be present")?;
-            *user_data = modified_user_data.clone()
-        }
-
-        // Write it to file
-        modified_user_data
-            .write(Path::new(&format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id)))
-            .await
+        modified_user_data.write_user_data(user_id).await
     }
 }
 

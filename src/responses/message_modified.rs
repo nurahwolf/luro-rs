@@ -38,23 +38,28 @@ impl LuroFramework {
                     true => writeln!(description, "**Original Message:**\n{}\n", old_message.content())?,
                     false => embed = embed.field(EmbedFieldBuilder::new("Original Message", old_message.content()))
                 }
-                let mut user_data = UserData::modify_user_settings(self, &old_message.author()).await?;
-                user_data.message_edits += 1;
-                user_data.write_user_data(&old_message.author()).await?;
+
                 embed = embed.title("Message Edited");
+
+                let user_data;
+                {
+                    let mut data = UserData::modify_user_settings(self, &old_message.author()).await?;
+                    data.message_edits += 1;
+                    user_data = data.clone()
+                }
                 match &message.content {
-                    Some(content) => {
-                        match content.len() > 1024 {
-                            true => writeln!(description, "**Updated Message:**\n{content}")?,
-                            false => embed = embed.field(EmbedFieldBuilder::new("Updated Message", content))
-                        }
-                    }
+                    Some(content) => match content.len() > 1024 {
+                        true => writeln!(description, "**Updated Message:**\n{content}")?,
+                        false => embed = embed.field(EmbedFieldBuilder::new("Updated Message", content))
+                    },
                     None => {
                         debug!("No message content, so no need to record it");
                         return Ok(());
                     }
                 }
-                embed = embed.field(EmbedFieldBuilder::new("Total Edits", format!("Edited `{}` messages!", user_data.message_edits)).inline());
+                embed = embed.field(
+                    EmbedFieldBuilder::new("Total Edits", format!("Edited `{}` messages!", user_data.message_edits)).inline()
+                );
             }
             LuroMessageSource::MessageDelete => {
                 let old_message = match self.twilight_cache.message(message.id) {

@@ -21,20 +21,14 @@ impl LuroSlash {
     ) -> anyhow::Result<()> {
         let command = command_name.into();
         {
-            let _ = UserData::modify_user_settings(&self.luro, user_id).await?;
-            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_id);
-            let data = &mut self
-                .luro
-                .user_data
-                .get_mut(user_id)
-                .context("Expected to find user's data in the cache")?;
-            data.moderation_actions.push(UserActions {
+            let mut user_data = UserData::modify_user_settings(&self.luro, user_id).await?;
+            user_data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::Kick],
                 guild_id: *guild_id,
                 reason: format!("Attempted to run the {} command", &command),
                 responsible_user: *user_id
             });
-            data.write(Path::new(&path)).await?;
+            user_data.write_user_data(user_id).await?;
         }
         self.embed(not_owner_embed(user_id, &command).build())?.respond().await
     }

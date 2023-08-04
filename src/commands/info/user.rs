@@ -150,8 +150,7 @@ impl LuroCommand for InfoUser {
         // USER DATA SECTION
         let mut user_data_description = String::new();
         {
-            let user_data: dashmap::mapref::one::RefMut<'_, Id<twilight_model::id::marker::UserMarker>, UserData> =
-                UserData::modify_user_settings(&ctx.luro, &author.id).await?;
+            let user_data = UserData::get_user_settings(&ctx.luro, &author.id).await?;
 
             writeln!(user_data_description, "- Total Words Said: `{}`", user_data.wordcount)?;
             writeln!(user_data_description, "- Total Characters Said: `{}`", user_data.averagesize)?;
@@ -159,7 +158,7 @@ impl LuroCommand for InfoUser {
             if user_data.moderation_actions_performed != 0 {
                 writeln!(
                     user_data_description,
-                    "- Performed `{} moderation actions",
+                    "- Performed `{}` moderation actions",
                     user_data.moderation_actions_performed
                 )?;
             }

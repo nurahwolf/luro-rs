@@ -42,11 +42,7 @@ impl LuroCommand for OwnerLoadUsers {
                     user_data.public_flags = user.public_flags;
                     user_data.system = user.system;
                     user_data.verified = user.verified;
-                    if (user_data
-                        .write(Path::new(&format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user.id)))
-                        .await)
-                        .is_err()
-                    {
+                    if user_data.write_user_data(&user.id).await.is_err() {
                         errors += 1
                     }
 
