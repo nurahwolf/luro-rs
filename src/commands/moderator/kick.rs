@@ -17,6 +17,8 @@ use crate::{
     traits::luro_command::LuroCommand
 };
 
+use super::Reason;
+
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "kick",
@@ -27,23 +29,34 @@ use crate::{
 pub struct KickCommand {
     /// The user to ban
     pub user: ResolvedUser,
-    /// The reason they should be kicked
-    pub reason: Option<String>
+    /// The reason they should be kicked.
+    pub reason: Reason,
+    /// Some added description to why they should be kicked
+    pub details: Option<String>
 }
 
 #[async_trait]
 impl LuroCommand for KickCommand {
-    fn default_permissions() -> Permissions {
-        Permissions::KICK_MEMBERS
-    }
-
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.deferred().await?;
 
-        let reason = match self.reason {
-            Some(reason) => reason,
-            None => String::new()
+        let mut reason = match self.reason {
+            Reason::ArtScam => "[Art Scam]".to_owned(),
+            Reason::Compromised => "[Compromised Account]".to_owned(),
+            Reason::Custom => String::new(),
+            Reason::Raider => "[Raider]".to_owned(),
+            Reason::Troll => "[Troll]".to_owned(),
+            Reason::Vile => "[Vile]".to_owned()
         };
+
+        if let Some(details) = self.details {
+            reason.push_str(&format!(" - {details}"))
+        }
+
+        if reason.is_empty() {
+            return ctx.content("You need to specify a reason, dork!").ephemeral().respond().await;
+        }
+
         let user_to_remove = self.user.resolved;
         let member_to_remove = match self.user.member {
             Some(member) => member,

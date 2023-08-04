@@ -433,3 +433,20 @@ pub enum UserActionType {
     Warn,
     PrivilegeEscalation
 }
+
+mod slash_user;
+
+/// Some useful formatting around a user, such as their avatar .
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SlashUser {
+    pub user_id: Id<UserMarker>,
+    pub user_avatar: Option<ImageHash>,
+    pub user_discriminator: u16,
+    pub user_name: String,
+    pub user_banner: Option<ImageHash>,
+    pub member_avatar: Option<ImageHash>,
+    pub guild_id: Option<Id<GuildMarker>>,
+    pub avatar: String,
+    pub banner: Option<String>,
+    pub name: String
+}

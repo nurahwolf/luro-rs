@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use async_trait::async_trait;
 use tracing::{debug, trace};
 
@@ -7,8 +9,8 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder, Imag
 
 use crate::{
     commands::heck::{format_heck, get_heck},
-    models::LuroSlash,
-    traits::{luro_command::LuroCommand, luro_functions::LuroFunctions}
+    models::{LuroSlash, SlashUser},
+    traits::luro_command::LuroCommand
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -36,15 +38,17 @@ impl LuroCommand for HeckSomeoneCommand {
         debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, &ctx.author()?, &self.user.resolved).await;
 
-        // Attempt to get the author of the heck
-        debug!("attempting to get the author of the heck");
-        let heck_author = match ctx.luro.twilight_cache.user(Id::new(heck.author_id)) {
-            Some(ok) => ok.clone(),
-            None => ctx.luro.twilight_client.user(Id::new(heck.author_id)).await?.model().await?
+        // This first attempts to get them from the guild if they are a member, otherwise resorts to fetching their user.
+        let slash_author = match ctx.interaction.guild_id {
+            Some(guild_id) => match SlashUser::client_fetch_member(&ctx.luro, guild_id, Id::new(heck.author_id)).await {
+                Ok(slash_author) => slash_author.1,
+                Err(_) => SlashUser::client_fetch_user(&ctx.luro, Id::new(heck.author_id)).await?.1
+            },
+            None => SlashUser::client_fetch_user(&ctx.luro, Id::new(heck.author_id)).await?.1
         };
-        let heck_author_avatar = ctx.user_get_avatar(&heck_author);
-        let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", heck_author.name))
-            .icon_url(ImageSource::url(heck_author_avatar)?)
+
+        let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", slash_author.name))
+            .icon_url(slash_author.try_into()?)
             .build();
 
         // Create our response, depending on if the user wants a plaintext heck or not

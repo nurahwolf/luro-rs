@@ -2,6 +2,7 @@ use crate::traits::luro_functions::LuroFunctions;
 use crate::USERDATA_FILE_PATH;
 use anyhow::Context;
 use async_trait::async_trait;
+use std::convert::TryInto;
 use std::fmt::Write;
 use std::path::Path;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -14,7 +15,7 @@ use twilight_model::id::Id;
 use twilight_util::builder::embed::{EmbedAuthorBuilder, ImageSource};
 use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder};
 
-use crate::models::{LuroSlash, UserActionType, UserActions, UserData};
+use crate::models::{LuroSlash, SlashUser, UserActionType, UserActions, UserData};
 
 use crate::traits::luro_command::LuroCommand;
 use crate::traits::toml::LuroTOML;
@@ -41,27 +42,26 @@ impl LuroCommand for ModeratorWarnCommand {
         let user_id = self.user.resolved.id;
 
         if !self.new {
-            let warnings = UserData::get_user_settings(&ctx.luro, &user_id).await?.warnings;
-            if warnings.is_empty() {
+            let user_data = UserData::get_user_settings(&ctx.luro, &user_id).await?;
+            if user_data.warnings.is_empty() {
                 return ctx.clone().content("No warnings for that user!").respond().await;
             }
 
-            let user = ctx.luro.twilight_client.user(user_id).await?.model().await?;
-            let avatar = ctx.user_get_avatar(&user);
-            let author = EmbedAuthorBuilder::new(user.name).icon_url(ImageSource::url(avatar)?);
+            let slash_author = SlashUser::client_fetch_user(&ctx.luro, user_id).await?.1;
+            let embed_author = EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.try_into()?);
             let mut warnings_formatted = String::new();
-            for (warning, user_id) in &warnings {
+            for (warning, user_id) in &user_data.warnings {
                 writeln!(warnings_formatted, "Warning by <@{user_id}>```{warning}```")?
             }
 
             let embed = ctx
                 .luro
                 .default_embed(&ctx.interaction.guild_id)
-                .author(author)
+                .author(embed_author)
                 .description(warnings_formatted)
                 .footer(EmbedFooterBuilder::new(format!(
                     "User has a total of {} warnings.",
-                    warnings.len()
+                    user_data.warnings.len()
                 )));
             return ctx.embed(embed.build())?.respond().await;
         }
@@ -107,13 +107,19 @@ impl LuroCommand for ModeratorWarnCommand {
         let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
         let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id);
-        let path = Path::new(&path);
-        let user = ctx.luro.twilight_client.user(ctx.author()?.id).await?.model().await?;
+
+        let slash_author = SlashUser::client_fetch(
+            &ctx.luro,
+            ctx.interaction.guild_id,
+            ctx.interaction
+                .author_id()
+                .context("Expected to get the interaction author's ID")?
+        )
+        .await?;
 
         let mut embed = ctx.luro.default_embed(&ctx.interaction.guild_id);
-        let avatar = ctx.user_get_avatar(&user);
-        let embed_author = EmbedAuthorBuilder::new(format!("Warning by {}", user.name))
-            .icon_url(ImageSource::url(avatar)?)
+        let embed_author = EmbedAuthorBuilder::new(format!("Warning by {}", slash_author.name))
+            .icon_url(ImageSource::url(slash_author.avatar)?)
             .build();
         embed = embed
             .author(embed_author)
@@ -123,7 +129,7 @@ impl LuroCommand for ModeratorWarnCommand {
         user_data.warnings.push((warning.to_owned(), author.id));
 
         ctx.luro.user_data.insert(user_id, user_data.clone());
-        user_data.write(path).await?;
+        user_data.write(Path::new(&path)).await?;
 
         embed = embed.footer(EmbedFooterBuilder::new(format!(
             "User has a total of {} warnings.",

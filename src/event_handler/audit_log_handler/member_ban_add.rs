@@ -1,12 +1,15 @@
-use crate::{models::UserData, traits::toml::LuroTOML, USERDATA_FILE_PATH};
+use crate::{
+    models::{SlashUser, UserData},
+    traits::toml::LuroTOML,
+    USERDATA_FILE_PATH
+};
 use anyhow::Context;
-use std::{fmt::Write, path::Path, sync::Arc};
+use std::{convert::TryInto, fmt::Write, path::Path, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
-use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
+use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{
     models::{LuroFramework, UserActionType, UserActions},
-    traits::luro_functions::LuroFunctions,
     COLOUR_DANGER
 };
 
@@ -19,16 +22,17 @@ impl LuroFramework {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let banned_user_id = Id::new(event.target_id.context("No user ID found for banned user")?.get());
-        let (_user, avatar, name) = self.fetch_specified_user(self, &banned_user_id).await?;
+        let (_, slash_author) = SlashUser::client_fetch_user(&self, banned_user_id).await?;
 
         embed = embed
-            .thumbnail(ImageSource::url(avatar)?)
+            .thumbnail(slash_author.clone().try_into()?)
             .color(COLOUR_DANGER)
             .title(format!("🔨 Banned from {}", guild.name));
 
         writeln!(
             description,
-            "**User:** <@{banned_user_id}> - `{name}`\n**User ID:** `{banned_user_id}`"
+            "**User:** <@{banned_user_id}> - `{}`\n**User ID:** `{banned_user_id}`",
+            slash_author.name
         )?;
 
         if let Some(reason) = &event.reason {

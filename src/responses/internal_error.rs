@@ -7,7 +7,17 @@ use crate::models::LuroSlash;
 impl LuroSlash {
     /// A response returned by default when a command does not exist within Luro.
     pub async fn internal_error_response(&mut self, error: String) -> anyhow::Result<()> {
-        self.embed(internal_error_embed(error).build())?.ephemeral().respond().await
+        if (self
+            .embed(internal_error_embed(error.clone()).build())?
+            .ephemeral()
+            .respond()
+            .await)
+            .is_err()
+        {
+            self.set_deferred().respond().await
+        } else {
+            Ok(())
+        }
     }
 }
 

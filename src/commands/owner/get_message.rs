@@ -4,10 +4,9 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource};
 
-use crate::models::{LuroSlash, UserData};
+use crate::models::{LuroSlash, SlashUser, UserData};
 
 use crate::traits::luro_command::LuroCommand;
-use crate::traits::luro_functions::LuroFunctions;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "get_message", desc = "Gets a particular message from the cache, or user's data")]
@@ -23,11 +22,11 @@ impl LuroCommand for OwnerGetMessage {
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let message_id = Id::new(self.message_id.parse()?);
         let mut embed = ctx.default_embed().await?;
-        let ((_, avatar, name), channel_id, message_id) = match ctx.luro.twilight_cache.message(message_id) {
+        let ((_, slash_author), channel_id, message_id) = match ctx.luro.twilight_cache.message(message_id) {
             Some(message) => {
                 embed = embed.description(message.content());
                 (
-                    ctx.fetch_specified_user(&ctx.luro, &message.author()).await?,
+                    SlashUser::client_fetch_user(&ctx.luro, message.author()).await?,
                     message.channel_id(),
                     message.id()
                 )
@@ -44,7 +43,6 @@ impl LuroCommand for OwnerGetMessage {
                             .await
                     }
                 };
-
                 let user_data = UserData::get_user_settings(&ctx.luro, &user.resolved.id).await?;
                 let message = match user_data.messages.get(&message_id) {
                     Some(message) => message,
@@ -57,16 +55,20 @@ impl LuroCommand for OwnerGetMessage {
                             .await
                     }
                 };
+
                 if let Some(content) = &message.content {
                     embed = embed.description(content)
                 }
 
-                let (user, avatar, name) = ctx.get_specified_user(&user, &ctx.interaction);
-                ((user.clone(), avatar, name.clone()), message.channel_id, message.id)
+                (
+                    SlashUser::client_fetch_user(&ctx.luro, user.resolved.id).await?,
+                    message.channel_id,
+                    message.id
+                )
             }
         };
 
-        embed = embed.author(EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?));
+        embed = embed.author(EmbedAuthorBuilder::new(slash_author.name).icon_url(ImageSource::url(slash_author.avatar)?));
         embed = embed.field(EmbedFieldBuilder::new("Channel", format!("<#{}>", channel_id)).inline());
         embed = embed.field(EmbedFieldBuilder::new("Message ID", message_id.to_string()).inline());
 

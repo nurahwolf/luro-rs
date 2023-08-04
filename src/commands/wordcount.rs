@@ -5,7 +5,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::UserMarker, Id};
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder};
 
 use crate::{
     models::{LuroSlash, UserData},
@@ -85,8 +85,8 @@ impl LuroCommand for WordcountCommand {
             content.truncate(3800);
             writeln!(content, "-----")?;
         } else {
-            let (user, avatar, name) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
-            let author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
+            let (user, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
+            let author = EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.try_into()?);
             let user_data = UserData::get_user_settings(&ctx.luro, &user.id).await?;
             embed = embed.author(author);
             wordcount = user_data.wordcount;

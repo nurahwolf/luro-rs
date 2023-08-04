@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use anyhow::{anyhow, Error};
 use async_trait::async_trait;
 
@@ -9,7 +11,7 @@ use twilight_model::{
         Component
     }
 };
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder};
 
 use crate::{
     models::LuroSlash,
@@ -150,7 +152,7 @@ impl LuroCommand for HeckAddCommand {
     }
 
     async fn handle_model(data: ModalInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        let (author, avatar, _) = ctx.get_interaction_author(&ctx.interaction)?;
+        let (_author, slash_author) = ctx.get_interaction_author(&ctx.interaction)?;
         let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
 
         match (heck_text.contains("<user>"), heck_text.contains("<author>")) {
@@ -161,8 +163,8 @@ impl LuroCommand for HeckAddCommand {
         };
 
         // Send a success message.
-        let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", author.name))
-            .icon_url(ImageSource::url(avatar)?)
+        let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", slash_author.name))
+            .icon_url(slash_author.try_into()?)
             .build();
         let embed = EmbedBuilder::new()
             .color(ACCENT_COLOUR)

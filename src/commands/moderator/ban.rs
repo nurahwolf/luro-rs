@@ -15,6 +15,8 @@ use crate::{
     traits::luro_command::LuroCommand
 };
 
+use super::Reason;
+
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
 #[command(name = "ban", desc = "Ban a user", dm_permission = false)]
 pub struct BanCommand {
@@ -22,8 +24,10 @@ pub struct BanCommand {
     pub user: ResolvedUser,
     /// Message history to purge in seconds. Defaults to 1 day. Max is 604800.
     pub purge: TimeToBan,
-    /// The reason they should be banned
-    pub reason: Option<String>
+    /// The reason they should be banned.
+    pub reason: Reason,
+    /// Some added description to why they should be banned
+    pub details: Option<String>
 }
 
 #[derive(CommandOption, CreateOption, Clone, Debug, PartialEq, Eq)]
@@ -49,10 +53,23 @@ impl LuroCommand for BanCommand {
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.deferred().await?;
 
-        let reason = match self.reason {
-            Some(reason) => reason,
-            None => String::new()
+        let mut reason = match self.reason {
+            Reason::ArtScam => "[Art Scam]".to_owned(),
+            Reason::Compromised => "[Compromised Account]".to_owned(),
+            Reason::Custom => String::new(),
+            Reason::Raider => "[Raider]".to_owned(),
+            Reason::Troll => "[Troll]".to_owned(),
+            Reason::Vile => "[Vile]".to_owned()
         };
+
+        if let Some(details) = self.details {
+            reason.push_str(&format!(" - {details}"))
+        }
+
+        if reason.is_empty() {
+            return ctx.content("You need to specify a reason, dork!").ephemeral().respond().await;
+        }
+
         let period_string = match self.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),
             TimeToBan::Hour => "Previous Hour".to_string(),

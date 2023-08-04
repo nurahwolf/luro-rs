@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
 use crate::models::LuroSlash;
 
@@ -15,6 +15,42 @@ mod kick;
 mod purge;
 mod settings;
 pub mod warn;
+
+#[derive(CommandOption, CreateOption, Clone, Debug, PartialEq, Eq)]
+pub enum Reason {
+    /// Someone who attempts to steal your money by offering fake commissions
+    #[option(
+        name = "Art Scam - Someone who attempts to steal your money by offering fake commissions",
+        value = "art-scam"
+    )]
+    ArtScam,
+
+    /// Compromised Account
+    #[option(
+        name = "Compromised Account - An account that has been token logged, or is spreading malware",
+        value = "compromised"
+    )]
+    Compromised,
+
+    /// Someone who is being a little bitch
+    #[option(name = "Troll - Someone who is being a little bitch", value = "troll")]
+    Troll,
+
+    /// Someone who joined just to be a little bitch
+    #[option(name = "Raider - Someone who joined just to be a little bitch", value = "raider")]
+    Raider,
+
+    /// Racist, Sexist and other such things.
+    #[option(name = "Vile - Racist, Sexist and other such plesent things.", value = "")]
+    Vile,
+
+    /// A completely custom reason if the others do not fit
+    #[option(
+        name = "Custom Reason - A completely custom reason if the others do not fit",
+        value = "custom"
+    )]
+    Custom
+}
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "mod", desc = "Commands that can be used by moderators", dm_permission = false)]

@@ -71,7 +71,7 @@ impl LuroSlash {
     }
 
     // Handle an interaction
-    pub async fn handle(mut self) -> anyhow::Result<()> {
+    pub async fn handle(self) -> anyhow::Result<()> {
         let response = match self.interaction.kind {
             InteractionType::ApplicationCommand => self.clone().handle_command().await,
             InteractionType::MessageComponent => self.clone().handle_component().await,
@@ -86,9 +86,7 @@ impl LuroSlash {
             error!(error = ?why, "error while processing interaction");
             // Attempt to send an error response
             if let Err(send_fail) = self.clone().internal_error_response(why.to_string()).await {
-                if let Err(_second_fail) = self.update_deferred().internal_error_response(why.to_string()).await {
-                    error!(error = ?send_fail, "Failed to respond to the interaction with an error response");
-                }
+                error!(error = ?send_fail, "Failed to respond to the interaction with an error response");
             };
         };
 
@@ -225,6 +223,12 @@ impl LuroSlash {
         self.luro.twilight_client.interaction(self.interaction.application_id)
     }
 
+    /// Set [InteractionResponseType::DeferredChannelMessageWithSource]
+    pub fn set_deferred(&mut self) -> &mut Self {
+        self.interaction_response_type = InteractionResponseType::DeferredChannelMessageWithSource;
+        self
+    }
+
     /// Set's the response type to be sent as a response to a deferred message and acknowledge this interaction.
     pub async fn deferred(&mut self) -> anyhow::Result<&mut Self> {
         // TODO: Check to make sure we are responding to an interaction, otherwise this type cannot be used
@@ -305,7 +309,7 @@ impl LuroSlash {
     pub async fn respond_checked(&mut self, content: String) -> anyhow::Result<()> {
         if content.len() > 2000 {
             // Defer the message if it is not already
-            if self.interaction_response_type != InteractionResponseType::DeferredUpdateMessage {
+            if self.interaction_response_type != InteractionResponseType::DeferredChannelMessageWithSource {
                 self.deferred().await?;
             }
 

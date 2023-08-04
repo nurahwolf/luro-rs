@@ -3,7 +3,7 @@ use std::sync::Arc;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::audit_log::AuditLogEventType};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder, ImageSource};
 
-use crate::{models::LuroFramework, traits::luro_functions::LuroFunctions};
+use crate::models::{LuroFramework, SlashUser};
 
 mod member_ban_add;
 mod member_ban_remove;
@@ -25,10 +25,10 @@ impl LuroFramework {
                     return Ok(());
                 }
 
-                let (author, avatar, name) = self.fetch_specified_user(&self, &action_user_id).await?;
+                let (author, slash_author) = SlashUser::client_fetch_user(&self, action_user_id).await?;
 
-                let embed_author = EmbedAuthorBuilder::new(format!("Performed by {} - {}", name, author.id))
-                    .icon_url(ImageSource::url(avatar)?)
+                let embed_author = EmbedAuthorBuilder::new(format!("Performed by {} - {}", slash_author.name, author.id))
+                    .icon_url(ImageSource::url(slash_author.avatar)?)
                     .build();
 
                 embed = embed.author(embed_author)

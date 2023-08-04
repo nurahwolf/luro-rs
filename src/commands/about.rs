@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::fmt::Write;
 use std::path::Path;
 
@@ -5,12 +6,11 @@ use async_trait::async_trait;
 use git2::{ErrorCode, Repository};
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder, ImageSource};
+use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder};
 
-use crate::models::LuroSlash;
+use crate::models::{LuroSlash, SlashUser};
 
 use crate::traits::luro_command::LuroCommand;
-use crate::traits::luro_functions::LuroFunctions;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "about", desc = "Information about me!")]
@@ -30,7 +30,7 @@ impl LuroCommand for AboutCommand {
         let mut description = String::new();
         let mut framework_owners_list = String::new();
         let current_user = ctx.luro.twilight_client.current_user().await?.model().await?;
-        let current_user_avatar = ctx.currentuser_get_avatar(&current_user);
+        let slash_author = SlashUser::from(current_user);
         let version = env!("CARGO_PKG_VERSION").to_string();
 
         for owner in &ctx.luro.global_data.read().owners {
@@ -56,8 +56,8 @@ impl LuroCommand for AboutCommand {
             writeln!(description, "**Revision:** `{}`", revision)?;
         }
 
-        embed = embed.title(current_user.name);
-        embed = embed.thumbnail(ImageSource::url(current_user_avatar)?);
+        embed = embed.title(&slash_author.name);
+        embed = embed.thumbnail(slash_author.clone().try_into()?);
         embed = embed.footer(EmbedFooterBuilder::new("Written in twilight.rs!"));
         // if let Some(git_url) = &ctx.data().config.read().await.git_url {
         //     embed.url(git_url);

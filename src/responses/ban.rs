@@ -5,7 +5,10 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
-use crate::{models::LuroSlash, traits::luro_functions::LuroFunctions, COLOUR_DANGER};
+use crate::{
+    models::{LuroSlash, SlashUser},
+    COLOUR_DANGER
+};
 
 impl LuroSlash {
     pub async fn ban_response(
@@ -36,11 +39,11 @@ impl LuroSlash {
         reason: &String,
         period: &String
     ) -> Result<EmbedBuilder, Error> {
-        let (moderator, moderator_avatar, moderator_name) = self.get_member(&moderator, guild.id).await?;
-        let (banned, banned_avatar, banned_name) = self.fetch_specified_user(&self.luro, &banned_user.id).await?;
+        let moderator = SlashUser::from_member(&moderator.user, moderator.avatar, Some(guild.id));
+        let victim = SlashUser::from(banned_user);
 
-        let embed_author = EmbedAuthorBuilder::new(format!("Banned by {} - {}", moderator_name, moderator.user.id))
-            .icon_url(ImageSource::url(moderator_avatar)?)
+        let embed_author = EmbedAuthorBuilder::new(format!("Banned by {} - {}", moderator.name, moderator.user_id))
+            .icon_url(ImageSource::url(moderator.avatar)?)
             .build();
 
         let mut embed = EmbedBuilder::new()
@@ -49,15 +52,18 @@ impl LuroSlash {
             .author(embed_author)
             .field(EmbedFieldBuilder::new("Purged Messages", period).inline())
             .field(EmbedFieldBuilder::new("Guild ID", guild.id.to_string()).inline())
-            .thumbnail(ImageSource::url(banned_avatar)?);
+            .thumbnail(ImageSource::url(victim.avatar)?);
 
         if !reason.is_empty() {
             embed = embed.description(format!(
-                "**User:** <@{0}> - {banned_name}\n**User ID:** {0}\n```{reason}```",
-                banned.id
+                "**User:** <@{0}> - {1}\n**User ID:** {0}\n```{reason}```",
+                victim.user_id, victim.name
             ))
         } else {
-            embed = embed.description(format!("**User:** <@{0}> - {banned_name}\n**User ID:** {0}", banned.id))
+            embed = embed.description(format!(
+                "**User:** <@{0}> - {1}\n**User ID:** {0}",
+                victim.user_id, victim.name
+            ))
         }
 
         Ok(embed)

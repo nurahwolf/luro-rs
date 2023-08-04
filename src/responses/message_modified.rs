@@ -4,8 +4,7 @@ use tracing::{debug, info, warn};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{
-    models::{LuroFramework, LuroMessage, LuroMessageSource, UserData},
-    traits::luro_functions::LuroFunctions,
+    models::{LuroFramework, LuroMessage, LuroMessageSource, SlashUser, UserData},
     COLOUR_DANGER
 };
 
@@ -21,8 +20,8 @@ impl LuroFramework {
                 debug!("User is a bot");
                 return Ok(());
             };
-            let (avatar, name, _author) = self.formatted_user(author);
-            let embed_author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
+            let slash_user = SlashUser::from(author);
+            let embed_author = EmbedAuthorBuilder::new(slash_user.name).icon_url(ImageSource::url(slash_user.avatar)?);
             embed = embed.author(embed_author)
         }
 
@@ -59,8 +58,8 @@ impl LuroFramework {
                     return Ok(());
                 }
                 writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
-                let (_author, avatar, name) = self.fetch_specified_user(self, &old_message.author()).await?;
-                let embed_author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);
+                let (_, slash_user) = SlashUser::client_fetch_user(self, old_message.author()).await?;
+                let embed_author = EmbedAuthorBuilder::new(slash_user.name).icon_url(ImageSource::url(slash_user.avatar)?);
                 embed = embed.author(embed_author).title("Message Deleted").color(COLOUR_DANGER)
             }
             LuroMessageSource::MessageCreate => {

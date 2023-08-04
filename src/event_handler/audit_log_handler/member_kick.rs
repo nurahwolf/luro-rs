@@ -1,4 +1,4 @@
-use crate::USERDATA_FILE_PATH;
+use crate::{models::SlashUser, USERDATA_FILE_PATH};
 use anyhow::Context;
 use std::{fmt::Write, path::Path, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
@@ -6,7 +6,7 @@ use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
 use crate::{
     models::{LuroFramework, UserActionType, UserActions, UserData},
-    traits::{luro_functions::LuroFunctions, toml::LuroTOML},
+    traits::toml::LuroTOML,
     COLOUR_DANGER
 };
 
@@ -19,15 +19,16 @@ impl LuroFramework {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let kicked_user_id = Id::new(event.target_id.context("No user ID found for kicked user")?.get());
-        let (_author, avatar, name) = self.fetch_specified_user(self, &kicked_user_id).await?;
+        let (_, slash_author) = SlashUser::client_fetch_user(self, kicked_user_id).await?;
         embed = embed
-            .thumbnail(ImageSource::url(avatar)?)
+            .thumbnail(ImageSource::url(slash_author.avatar)?)
             .color(COLOUR_DANGER)
             .title(format!("👢 Kicked from {}", guild.name));
 
         writeln!(
             description,
-            "**User:** <@{kicked_user_id}> - `{name}`\n**User ID:** `{kicked_user_id}`"
+            "**User:** <@{kicked_user_id}> - `{}`\n**User ID:** `{kicked_user_id}`",
+            slash_author.name
         )?;
 
         if let Some(reason) = &event.reason {
