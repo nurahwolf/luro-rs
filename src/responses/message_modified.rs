@@ -35,6 +35,10 @@ impl LuroFramework {
                         return Ok(());
                     }
                 };
+                match old_message.content().len() > 1024 {
+                    true => writeln!(description, "**Original Message:**\n{}\n", old_message.content())?,
+                    false => embed = embed.field(EmbedFieldBuilder::new("Original Message", old_message.content()))
+                }
                 let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &old_message.author());
                 let mut user_data = UserData::get_user_settings(self, &old_message.author()).await?;
                 user_data.message_edits += 1;
@@ -44,8 +48,10 @@ impl LuroFramework {
 
                 match &message.content {
                     Some(content) => {
-                        writeln!(description, "**Original Message:**\n{}\n", old_message.content())?;
-                        writeln!(description, "**Updated Message:**\n{content}")?
+                        match content.len() > 1024 {
+                            true => writeln!(description, "**Updated Message:**\n{content}")?,
+                            false => embed = embed.field(EmbedFieldBuilder::new("Updated Message", content))
+                        }
                     }
                     None => {
                         debug!("No message content, so no need to record it");
