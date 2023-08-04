@@ -56,7 +56,7 @@ impl LuroFramework {
                         return Ok(());
                     }
                 }
-                embed = embed.field(EmbedFieldBuilder::new("Total Edits", format!("They have edited `{}` total messages now!", user_data.message_edits)).inline());
+                embed = embed.field(EmbedFieldBuilder::new("Total Edits", format!("Edited `{}` messages!", user_data.message_edits)).inline());
             }
             LuroMessageSource::MessageDelete => {
                 let old_message = match self.twilight_cache.message(message.id) {
