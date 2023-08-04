@@ -55,6 +55,9 @@ impl LuroFramework {
                         return Ok(());
                     }
                 };
+                if old_message.content().is_empty() {
+                    return Ok(());
+                }
                 writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
                 let (_author, avatar, name) = self.fetch_specified_user(self, &old_message.author()).await?;
                 let embed_author = EmbedAuthorBuilder::new(name).icon_url(ImageSource::url(avatar)?);

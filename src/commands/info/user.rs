@@ -199,7 +199,6 @@ impl LuroCommand for InfoUser {
             if warnings != 0 {
                 writeln!(user_data_description, "- Times Warned *(including expired)*: `{warnings}`")?;
             }
-
         }
 
         if !user_data.warnings.is_empty() {
