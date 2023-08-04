@@ -1,5 +1,6 @@
 use crate::USERDATA_FILE_PATH;
 use std::{fmt::Write, sync::Arc, path::Path};
+use anyhow::Context;
 use tracing::{debug, info, warn};
 
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
@@ -40,7 +41,7 @@ impl LuroFramework {
                     false => embed = embed.field(EmbedFieldBuilder::new("Original Message", old_message.content()))
                 }
                 let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &old_message.author());
-                let mut user_data = UserData::get_user_settings(self, &old_message.author()).await?;
+                let mut user_data = self.user_data.get_mut(&old_message.author()).context("Expected to have user data cached")?;
                 user_data.message_edits += 1;
                 user_data.write(Path::new(&path)).await?;
                 embed = embed.title("Message Edited");
