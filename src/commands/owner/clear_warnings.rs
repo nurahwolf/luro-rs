@@ -17,7 +17,9 @@ pub struct OwnerClearWarning {
     /// The user to clear
     pub user: ResolvedUser,
     /// The warning ID to remove. Removes all if not set.
-    pub id: Option<i64>
+    pub id: Option<i64>,
+    /// Also remove ALL recorded punishments.
+    pub clear_punishments: Option<bool>
 }
 
 #[async_trait]
@@ -56,6 +58,10 @@ impl LuroCommand for OwnerClearWarning {
         } else {
             // Drain all warnings
             user_data.warnings.drain(..);
+        }
+
+        if let Some(clear_punishments) = self.clear_punishments && clear_punishments {
+            user_data.moderation_actions.drain(..);
         }
 
         ctx.luro.user_data.insert(self.user.resolved.id, user_data.clone());
