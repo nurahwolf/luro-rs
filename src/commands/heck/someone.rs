@@ -5,7 +5,7 @@ use tracing::{debug, trace};
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder, ImageSource};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder};
 
 use crate::{
     commands::heck::{format_heck, get_heck},

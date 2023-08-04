@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use tracing::warn;
+
 use twilight_model::{
     guild::Member,
     id::{

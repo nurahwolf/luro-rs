@@ -154,15 +154,23 @@ impl LuroCommand for InfoUser {
         if user_data.moderation_actions_performed != 0 {
             writeln!(
                 user_data_description,
-                "- Moderation Actions Performed: `{}`",
+                "- Performed `{} moderation actions",
                 user_data.moderation_actions_performed
+            )?;
+        }
+
+        if user_data.message_edits != 0 {
+            writeln!(
+                user_data_description,
+                "- Edited `{}` messages",
+                user_data.message_edits
             )?;
         }
 
         if !user_data.moderation_actions.is_empty() {
             writeln!(
                 user_data_description,
-                "**Punishments Received - {}**",
+                "**Received `{}` punishments**",
                 user_data.moderation_actions.len()
             )?;
             let (mut bans, mut kicks, mut warnings, mut priv_esc) = (0, 0, 0, 0);
@@ -177,21 +185,21 @@ impl LuroCommand for InfoUser {
                 }
             }
             if bans != 0 {
-                writeln!(user_data_description, "- Times Banned: `{bans}`")?;
+                writeln!(user_data_description, "- Banned `{bans}` times")?;
             }
             if kicks != 0 {
-                writeln!(user_data_description, "- Times Kicks: `{kicks}`")?;
+                writeln!(user_data_description, "- Kicked `{kicks}` times")?;
             }
             if priv_esc != 0 {
-                writeln!(user_data_description, "- Attempts at Privilege Escalation: `{priv_esc}`")?;
+                writeln!(user_data_description, "- Attempts Privilege Escalation `{priv_esc}` times")?;
             }
             if warnings != 0 {
-                writeln!(user_data_description, "- Times Warned *(including expired)*: `{warnings}`")?;
+                writeln!(user_data_description, "- Warned *(including expired)* `{warnings}` times")?;
             }
         }
 
         if !user_data.warnings.is_empty() {
-            writeln!(user_data_description, "- Active Warnings: `{}`", user_data.warnings.len())?;
+            writeln!(user_data_description, "- Has `{}` active warnings", user_data.warnings.len())?;
         }
 
         match user_data_description.len() > 1024 {

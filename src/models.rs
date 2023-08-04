@@ -410,7 +410,10 @@ pub struct UserData {
     #[serde(default)]
     pub moderation_actions: Vec<UserActions>,
     #[serde(default)]
-    pub moderation_actions_performed: usize
+    pub moderation_actions_performed: usize,
+    /// A simple tally of how many times a user has fucked up and needed to edit their message.
+    #[serde(default)]
+    pub message_edits: usize
 }
 
 /// Bans recorded against a user
