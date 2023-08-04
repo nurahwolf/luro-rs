@@ -23,7 +23,7 @@ pub struct AssignCommand {
 
 #[async_trait]
 impl LuroCommand for AssignCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let interaction_user = ctx.author()?;
 
         // User to action

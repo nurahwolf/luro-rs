@@ -22,7 +22,7 @@ pub struct AbuseCommand {
 
 #[async_trait]
 impl LuroCommand for AbuseCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let luro_webhook = LuroWebhook::new(ctx.luro.clone()).await?;
         let webhook = luro_webhook
             .get_webhook(

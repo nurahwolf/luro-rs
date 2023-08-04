@@ -13,7 +13,7 @@ pub struct LeaveCommand {}
 
 #[async_trait]
 impl LuroCommand for LeaveCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
         let player = ctx.luro.lavalink.player(guild_id).await.unwrap();
         player.send(Destroy::from(guild_id))?;

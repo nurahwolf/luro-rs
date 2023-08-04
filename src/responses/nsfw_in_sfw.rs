@@ -6,7 +6,7 @@ use crate::COLOUR_DANGER;
 use crate::models::LuroSlash;
 
 impl LuroSlash {
-    pub async fn nsfw_in_sfw_response(self) -> anyhow::Result<()> {
+    pub async fn nsfw_in_sfw_response(mut self) -> anyhow::Result<()> {
         self.embed(nsfw_in_sfw_embed().build())?.respond().await
     }
 }

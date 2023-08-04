@@ -27,7 +27,7 @@ impl LuroCommand for PurgeCommand {
         Permissions::MANAGE_MESSAGES
     }
 
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let channel = ctx.channel()?;
 
         if self.amount == 1 {

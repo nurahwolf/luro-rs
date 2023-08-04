@@ -20,7 +20,7 @@ pub struct OwnerGetMessage {
 
 #[async_trait]
 impl LuroCommand for OwnerGetMessage {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let message_id = Id::new(self.message_id.parse()?);
         let mut embed = ctx.default_embed().await?;
         let ((_, avatar, name), channel_id, message_id) = match ctx.luro.twilight_cache.message(message_id) {

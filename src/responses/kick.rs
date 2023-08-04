@@ -11,7 +11,7 @@ use crate::models::LuroSlash;
 
 impl LuroSlash {
     pub async fn kick_response(
-        self,
+        mut self,
         guild: Guild,
         moderator: Member,
         banned_user: User,

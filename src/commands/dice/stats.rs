@@ -15,7 +15,7 @@ pub struct DiceStatsCommand {
 
 #[async_trait]
 impl LuroCommand for DiceStatsCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let content = format!("**Your stats, as requested:**\n{}", Roll::roll_stats());
         if let Some(ephemeral) = self.ephemeral && ephemeral {
             ctx.content(content).ephemeral().respond().await

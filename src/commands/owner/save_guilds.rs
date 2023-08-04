@@ -15,7 +15,7 @@ pub struct SaveGuildsCommand {}
 
 #[async_trait]
 impl LuroCommand for SaveGuildsCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let mut total = 0;
 
         for guild_setting in &ctx.luro.guild_data {

@@ -1,5 +1,7 @@
-use std::convert::TryInto;
+use crate::{traits::toml::LuroTOML, USERDATA_FILE_PATH};
+use std::{convert::TryInto, path::Path};
 
+use anyhow::Context;
 use async_trait::async_trait;
 use tracing::debug;
 
@@ -9,7 +11,7 @@ use twilight_model::guild::Permissions;
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
-    models::{GuildPermissions, LuroSlash},
+    models::{GuildPermissions, LuroSlash, UserActionType, UserActions, UserData},
     traits::luro_command::LuroCommand
 };
 
@@ -123,7 +125,7 @@ impl LuroCommand for BanCommand {
             Ok(channel) => channel.model().await?,
             Err(_) => {
                 return ctx
-                    .ban_response(guild, author, user_to_remove, &reason, &period_string, false)
+                    .ban_response(guild, author.clone(), user_to_remove, &reason, &period_string, false)
                     .await
             }
         };
@@ -154,6 +156,34 @@ impl LuroCommand for BanCommand {
         }
         ban.await?;
 
+        {
+            let _ = UserData::get_user_settings(&ctx.luro, &author.user.id).await?;
+            let _ = UserData::get_user_settings(&ctx.luro, &user_to_remove.id).await?;
+            // Reward the person who actioned the ban
+            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author.user.id);
+            let data = &mut ctx
+                .luro
+                .user_data
+                .get_mut(&author.user.id)
+                .context("Expected to find user's data in the cache")?;
+            data.moderation_actions_performed += 1;
+            data.write(Path::new(&path)).await?;
+            // Record the punishment
+            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_to_remove.id);
+            let data = &mut ctx
+                .luro
+                .user_data
+                .get_mut(&user_to_remove.id)
+                .context("Expected to find user's data in the cache")?;
+            data.moderation_actions.push(UserActions {
+                action_type: vec![UserActionType::Ban],
+                guild_id,
+                reason,
+                responsible_user: author.user.id
+            });
+            data.write(Path::new(&path)).await?;
+        }
+
         // If an alert channel is defined, send a message there
         ctx.luro
             .send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator)
@@ -162,34 +192,3 @@ impl LuroCommand for BanCommand {
         ctx.embed(embed.build())?.respond().await
     }
 }
-
-// pub async fn ban(
-//     ctx: &LuroFramework,
-//     interaction: &Interaction,
-//     data: BanCommand,
-// ) -> Result<(), Error> {
-//     let embed;
-
-//     if let Some(author) = &interaction.member && let Some(permissions) = &author.permissions && let Some(guild_id) = interaction.guild_id {
-//         let author_user = &author.user.clone().unwrap();
-
-//         if permissions.contains(Permissions::BAN_MEMBERS) || author_user.id != Id::new(97003404601094144) {
-//             let user_avatar = match interaction.guild_id {
-//                 Some(guild_id) => get_member_avatar(&data.user.member, &Some(guild_id), &data.user.resolved),
-//                 None => get_user_avatar(&data.user.resolved),
-//             };
-
-//             let embed_author = EmbedAuthorBuilder::new(format!("{}#{} - {}", &data.user.resolved.name, &data.user.resolved.discriminator, &data.user.resolved.id)).icon_url(ImageSource::url(user_avatar)?).build();
-
-//             embed = EmbedBuilder::default().description(format!("**BANNED!**\n Looks like <@{}> was banned! How unfortunate.", &data.user.resolved.id)).author(embed_author).footer(EmbedFooterBuilder::new(format!("Banned by {}#{}", author_user.name, author_user.discriminator))).field(EmbedFieldBuilder::new("Reason", data.reason)).color(ACCENT_COLOUR).build();
-
-//             match data.purge {
-//                 Some(seconds) => luro.twilight_client.create_ban(guild_id, data.user.resolved.id).delete_message_seconds(seconds.try_into().unwrap())?.await?,
-//                 None => luro.twilight_client.create_ban(guild_id, data.user.resolved.id).delete_message_seconds(86400)?.await?,
-//             };
-
-//     let response = InteractionResponseDataBuilder::new().embeds(vec![embed]);
-//     create_response(luro, interaction, response.build()).await?;
-
-//     Ok(())
-// }

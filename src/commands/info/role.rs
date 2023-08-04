@@ -1,14 +1,9 @@
 use async_trait::async_trait;
-use std::{fmt::Write};
-
+use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentionable};
 
-use twilight_util::{
-    snowflake::Snowflake
-};
-
-use crate::{models::{LuroSlash, RoleOrdering}};
+use crate::models::{LuroSlash, RoleOrdering};
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -21,7 +16,7 @@ pub struct InfoRole {
 
 #[async_trait]
 impl LuroCommand for InfoRole {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let mut embed;
         {
             let role = match ctx.luro.twilight_cache.role(self.role.id().cast()) {

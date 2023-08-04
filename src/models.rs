@@ -406,5 +406,29 @@ pub struct UserData {
     #[serde(default)]
     pub warnings: Vec<(String, Id<UserMarker>)>,
     #[serde(default)]
-    pub messages: HashMap<Id<MessageMarker>, LuroMessage>
+    pub messages: HashMap<Id<MessageMarker>, LuroMessage>,
+    #[serde(default)]
+    pub moderation_actions: Vec<UserActions>,
+    #[serde(default)]
+    pub moderation_actions_performed: usize
+}
+
+/// Bans recorded against a user
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct UserActions {
+    /// The type of action this is
+    pub action_type: Vec<UserActionType>,
+    /// The guild that the action took place
+    pub guild_id: Id<GuildMarker>,
+    /// The reason that the action took place
+    pub reason: String,
+    /// Who performed this action
+    pub responsible_user: Id<UserMarker>
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum UserActionType {
+    Ban,
+    Kick,
+    Warn
 }

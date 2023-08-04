@@ -1,5 +1,6 @@
 use crate::traits::luro_functions::LuroFunctions;
 use crate::USERDATA_FILE_PATH;
+use anyhow::Context;
 use async_trait::async_trait;
 use std::fmt::Write;
 use std::path::Path;
@@ -13,7 +14,7 @@ use twilight_model::id::Id;
 use twilight_util::builder::embed::{EmbedAuthorBuilder, ImageSource};
 use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder};
 
-use crate::models::{LuroSlash, UserData};
+use crate::models::{LuroSlash, UserActionType, UserActions, UserData};
 
 use crate::traits::luro_command::LuroCommand;
 use crate::traits::toml::LuroTOML;
@@ -36,7 +37,7 @@ impl LuroCommand for ModeratorWarnCommand {
         Permissions::MANAGE_MESSAGES
     }
 
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let user_id = self.user.resolved.id;
 
         if !self.new {
@@ -100,7 +101,7 @@ impl LuroCommand for ModeratorWarnCommand {
             .await
     }
 
-    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model(data: ModalInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let author = ctx.author()?;
         let warning = ctx.parse_modal_field_required(&data, "mod-warn-text")?;
         let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
@@ -149,6 +150,35 @@ impl LuroCommand for ModeratorWarnCommand {
         ctx.luro
             .send_moderator_log_channel(&ctx.interaction.guild_id, embed.clone())
             .await?;
+
+        {
+            let _ = UserData::get_user_settings(&ctx.luro, &author.id).await?;
+            let _ = UserData::get_user_settings(&ctx.luro, &user_id).await?;
+            // Reward the person who actioned the ban
+            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author.id);
+            let data = &mut ctx
+                .luro
+                .user_data
+                .get_mut(&author.id)
+                .context("Expected to find user's data in the cache")?;
+            data.moderation_actions_performed += 1;
+            data.write(Path::new(&path)).await?;
+            // Record the punishment
+            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_id);
+            let data = &mut ctx
+                .luro
+                .user_data
+                .get_mut(&user_id)
+                .context("Expected to find user's data in the cache")?;
+            data.moderation_actions.push(UserActions {
+                action_type: vec![UserActionType::Warn],
+                guild_id: ctx.interaction.guild_id.context("Expected this to be a guild")?,
+                reason: warning.to_owned(),
+                responsible_user: author.id
+            });
+            data.write(Path::new(&path)).await?;
+        }
+
         ctx.embed(embed.build())?.respond().await
     }
 }

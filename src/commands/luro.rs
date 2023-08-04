@@ -42,7 +42,7 @@ impl LuroCommand for LuroNicknameCommand {
         Permissions::MANAGE_NICKNAMES
     }
 
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await

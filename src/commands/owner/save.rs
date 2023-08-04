@@ -19,7 +19,7 @@ pub struct SaveCommand {}
 
 #[async_trait]
 impl LuroCommand for SaveCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let hecks;
         {
             let global_data = ctx.luro.global_data.read();

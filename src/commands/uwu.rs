@@ -15,7 +15,7 @@ pub struct UwUCommand {
 
 #[async_trait]
 impl LuroCommand for UwUCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let uwu = if cfg!(target_feature = "sse4.1") {
             unsafe { sse_uwu(&self.message) }
         } else {

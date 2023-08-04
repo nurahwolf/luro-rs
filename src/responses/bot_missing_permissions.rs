@@ -6,7 +6,7 @@ use crate::COLOUR_DANGER;
 use crate::models::LuroSlash;
 
 impl LuroSlash {
-    pub async fn bot_missing_permission_response(self, permission_missing: &String) -> anyhow::Result<()> {
+    pub async fn bot_missing_permission_response(mut self, permission_missing: &String) -> anyhow::Result<()> {
         self.embed(bot_missing_permission_embed(permission_missing).build())?
             .respond()
             .await

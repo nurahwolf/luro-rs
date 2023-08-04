@@ -7,7 +7,7 @@ use crate::COLOUR_DANGER;
 use crate::models::LuroSlash;
 
 impl LuroSlash {
-    pub async fn no_guild_settings_response(self, guild_id: Id<GuildMarker>) -> anyhow::Result<()> {
+    pub async fn no_guild_settings_response(mut self, guild_id: Id<GuildMarker>) -> anyhow::Result<()> {
         self.embed(no_guild_settings_embed(guild_id).build())?.respond().await
     }
 }

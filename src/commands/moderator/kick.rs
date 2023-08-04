@@ -1,3 +1,11 @@
+use std::path::Path;
+
+use crate::{
+    models::{UserActionType, UserActions},
+    traits::toml::LuroTOML,
+    USERDATA_FILE_PATH
+};
+use anyhow::Context;
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -5,7 +13,7 @@ use twilight_model::guild::Permissions;
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
-    models::{GuildPermissions, LuroSlash},
+    models::{GuildPermissions, LuroSlash, UserData},
     traits::luro_command::LuroCommand
 };
 
@@ -122,6 +130,34 @@ impl LuroCommand for KickCommand {
         ctx.luro
             .send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator)
             .await?;
+
+        {
+            let _ = UserData::get_user_settings(&ctx.luro, &author.user.id).await?;
+            let _ = UserData::get_user_settings(&ctx.luro, &user_to_remove.id).await?;
+            // Reward the person who actioned the ban
+            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author.user.id);
+            let data = &mut ctx
+                .luro
+                .user_data
+                .get_mut(&author.user.id)
+                .context("Expected to find user's data in the cache")?;
+            data.moderation_actions_performed += 1;
+            data.write(Path::new(&path)).await?;
+            // Record the punishment
+            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_to_remove.id);
+            let data = &mut ctx
+                .luro
+                .user_data
+                .get_mut(&user_to_remove.id)
+                .context("Expected to find user's data in the cache")?;
+            data.moderation_actions.push(UserActions {
+                action_type: vec![UserActionType::Kick],
+                guild_id,
+                reason,
+                responsible_user: author.user.id
+            });
+            data.write(Path::new(&path)).await?;
+        }
 
         ctx.embed(embed.build())?.respond().await
     }

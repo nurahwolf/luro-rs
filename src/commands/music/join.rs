@@ -24,7 +24,7 @@ pub struct JoinCommand {
 
 #[async_trait]
 impl LuroCommand for JoinCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
         ctx.shard

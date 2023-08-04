@@ -9,7 +9,7 @@ use crate::{models::LuroSlash, traits::luro_functions::LuroFunctions, COLOUR_DAN
 
 impl LuroSlash {
     pub async fn ban_response(
-        self,
+        mut self,
         guild: Guild,
         moderator: Member,
         banned_user: User,

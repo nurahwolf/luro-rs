@@ -22,7 +22,7 @@ pub struct OwnerClearWarning {
 
 #[async_trait]
 impl LuroCommand for OwnerClearWarning {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, self.user.resolved.id);
         let path = Path::new(&path);
         let mut user_data = UserData::get_user_settings(&ctx.luro, &self.user.resolved.id).await?;

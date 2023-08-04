@@ -17,7 +17,7 @@ pub struct OwnerGuildsCommand {
 
 #[async_trait]
 impl LuroCommand for OwnerGuildsCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let mut guilds = String::new();
         for guild in ctx.luro.twilight_cache.iter().guilds() {
             if let Some(show_id) = self.show_id && show_id {

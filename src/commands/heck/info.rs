@@ -14,7 +14,7 @@ pub struct HeckInfo {}
 
 #[async_trait]
 impl LuroCommand for HeckInfo {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::new().title("Heck Information - Global");
         let mut global_details = String::new();
         {

@@ -22,7 +22,7 @@ pub struct ReloadCommand {}
 
 #[async_trait]
 impl LuroCommand for ReloadCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let hecks = Hecks::get(Path::new(HECK_FILE_PATH)).await?;
 
         {

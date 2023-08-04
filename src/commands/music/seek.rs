@@ -15,7 +15,7 @@ pub struct SeekCommand {
 
 #[async_trait]
 impl LuroCommand for SeekCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
         let player = ctx.luro.lavalink.player(guild_id).await.unwrap();

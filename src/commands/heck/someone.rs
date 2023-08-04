@@ -3,13 +3,12 @@ use tracing::{debug, trace};
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFooterBuilder, ImageSource};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder, ImageSource};
 
 use crate::{
     commands::heck::{format_heck, get_heck},
     models::LuroSlash,
-    traits::{luro_command::LuroCommand, luro_functions::LuroFunctions},
-    ACCENT_COLOUR
+    traits::{luro_command::LuroCommand, luro_functions::LuroFunctions}
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -27,7 +26,7 @@ pub struct HeckSomeoneCommand {
 
 #[async_trait]
 impl LuroCommand for HeckSomeoneCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         // Is the channel the interaction called in NSFW?
         let nsfw = ctx.channel()?.nsfw.unwrap_or(false);
 
@@ -55,10 +54,9 @@ impl LuroCommand for HeckSomeoneCommand {
             ctx.content(formatted_heck.heck_message).respond().await
         } else {
             trace!("user wanted embed");
-            let mut embed = EmbedBuilder::default()
+            let mut embed = ctx.default_embed().await?
             .description(formatted_heck.heck_message)
-            .author(embed_author)
-            .color(ACCENT_COLOUR);
+            .author(embed_author);
         if nsfw {
             embed = embed.footer(EmbedFooterBuilder::new(format!(
                 "Heck ID {heck_id} - NSFW Heck"

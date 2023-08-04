@@ -6,7 +6,7 @@ use crate::COLOUR_DANGER;
 use crate::models::LuroSlash;
 
 impl LuroSlash {
-    pub async fn bot_hierarchy_response(self, bot_username: &String) -> anyhow::Result<()> {
+    pub async fn bot_hierarchy_response(mut self, bot_username: &String) -> anyhow::Result<()> {
         self.embed(bot_hierarchy_embed(bot_username).build())?.respond().await
     }
 }

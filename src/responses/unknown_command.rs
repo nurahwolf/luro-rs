@@ -7,7 +7,7 @@ use crate::models::LuroSlash;
 
 impl LuroSlash {
     /// A response sent when Luro receives a command it does not have a handler for
-    pub async fn unknown_command_response(self) -> anyhow::Result<()> {
+    pub async fn unknown_command_response(mut self) -> anyhow::Result<()> {
         self.embed(unknown_command_embed().build())?.respond().await
     }
 }

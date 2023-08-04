@@ -17,7 +17,7 @@ pub struct OwnerCommandsCommand {
 
 #[async_trait]
 impl LuroCommand for OwnerCommandsCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let application = ctx.luro.twilight_client.current_user_application().await?.model().await?;
         let client = ctx.luro.twilight_client.interaction(application.id);
 

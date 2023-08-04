@@ -71,7 +71,7 @@ impl LuroSlash {
     }
 
     // Handle an interaction
-    pub async fn handle(self) -> anyhow::Result<()> {
+    pub async fn handle(mut self) -> anyhow::Result<()> {
         let response = match self.interaction.kind {
             InteractionType::ApplicationCommand => self.clone().handle_command().await,
             InteractionType::MessageComponent => self.clone().handle_component().await,
@@ -85,8 +85,10 @@ impl LuroSlash {
         if let Err(why) = response {
             error!(error = ?why, "error while processing interaction");
             // Attempt to send an error response
-            if let Err(send_fail) = self.internal_error_response(why.to_string()).await {
-                error!(error = ?send_fail, "Failed to respond to the interaction with an error response");
+            if let Err(send_fail) = self.clone().internal_error_response(why.to_string()).await {
+                if let Err(_second_fail) = self.update_deferred().internal_error_response(why.to_string()).await {
+                    error!(error = ?send_fail, "Failed to respond to the interaction with an error response");
+                }
             };
         };
 
@@ -158,7 +160,7 @@ impl LuroSlash {
     }
 
     /// Add an embed to the response. An error is returned if there are over 10 embeds already.
-    pub fn embed(mut self, embed: Embed) -> anyhow::Result<Self> {
+    pub fn embed(&mut self, embed: Embed) -> anyhow::Result<&mut Self> {
         if let Some(ref mut embeds) = self.embeds {
             // Check to make sure we have room
             if embeds.len() > 10 {
@@ -200,13 +202,13 @@ impl LuroSlash {
     }
 
     /// Set the content of a response
-    pub fn content(mut self, content: impl Into<String>) -> Self {
+    pub fn content(&mut self, content: impl Into<String>) -> &mut Self {
         self.content = Some(content.into());
         self
     }
 
     /// Set the components of a response
-    pub fn components(mut self, components: Vec<Component>) -> Self {
+    pub fn components(&mut self, components: Vec<Component>) -> &mut Self {
         self.components = Some(components);
         self
     }

@@ -50,7 +50,7 @@ impl LuroCommand for HeckAddCommand {
             .await
     }
 
-    async fn handle_component(data: MessageComponentInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(data: MessageComponentInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let mut heck_id = 0;
         let mut field = vec![];
         let interaction_channel = ctx.channel()?;
@@ -149,7 +149,7 @@ impl LuroCommand for HeckAddCommand {
         ctx.embed(heck_embed)?.components(components).update().respond().await
     }
 
-    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model(data: ModalInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let (author, avatar, _) = ctx.get_interaction_author(&ctx.interaction)?;
         let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
 

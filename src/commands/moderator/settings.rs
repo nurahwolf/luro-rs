@@ -43,7 +43,7 @@ impl LuroCommand for GuildSettingsCommand {
         Permissions::MANAGE_GUILD
     }
 
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await
@@ -57,14 +57,13 @@ impl LuroCommand for GuildSettingsCommand {
         let mut highest_role_id = 0;
         for role in &roles {
             if highest_role_colour != 0 {
-                break
+                break;
             }
 
             highest_role_colour = role.colour;
             highest_role_id = role.id.get();
             debug!("Role {highest_role_id} - {}", role.colour)
         }
-
 
         let accent_colour_defined: Option<u32> = if let Some(accent_colour) = self.accent_colour.clone() {
             Some(parse_string_to_u32(accent_colour)?)
@@ -78,7 +77,7 @@ impl LuroCommand for GuildSettingsCommand {
         let mut guild_settings = if let Some(clear_settings) = self.clear_settings && clear_settings {
             GuildSetting::get_guild_settings(&ctx.luro, &ctx.interaction.guild_id.context("Expected Guild ID")?).await?
         } else { GuildSetting::default() };
-        
+
         guild_settings.accent_colour = highest_role_colour;
 
         if let Some(accent_colour) = accent_colour_defined {
@@ -101,12 +100,16 @@ impl LuroCommand for GuildSettingsCommand {
             guild_settings.thread_events_log_channel = Some(thread_events_log_channel)
         }
 
-
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
         let guild_settings = GuildSetting::modify_guild_settings(&ctx.luro, &guild_id, &guild_settings).await?;
 
-        embed =
-            embed.field(EmbedFieldBuilder::new("Guild Accent Colour", format!("`{:X}` - <@&{highest_role_id}>", guild_settings.accent_colour)).inline());
+        embed = embed.field(
+            EmbedFieldBuilder::new(
+                "Guild Accent Colour",
+                format!("`{:X}` - <@&{highest_role_id}>", guild_settings.accent_colour)
+            )
+            .inline()
+        );
 
         if let Some(accent_colour) = guild_settings.accent_colour_custom {
             embed = embed.field(EmbedFieldBuilder::new("Custom Accent Colour", format!("`{:X}`", accent_colour)).inline())

@@ -15,7 +15,7 @@ pub struct DiceRollDirectionCommand {
 
 #[async_trait]
 impl LuroCommand for DiceRollDirectionCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         if let Some(ephemeral) = self.ephemeral && ephemeral {
             ctx.content(Roll::roll_direction()).ephemeral().respond().await
         } else {

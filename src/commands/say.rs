@@ -16,7 +16,7 @@ pub struct SayCommand {
 
 #[async_trait]
 impl LuroCommand for SayCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let content = if let Some(user) = self.user {
             format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
         } else {

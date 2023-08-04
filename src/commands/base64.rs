@@ -47,7 +47,7 @@ pub struct Base64Decode {
 
 #[async_trait]
 impl LuroCommand for Base64Decode {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let button = button("encode".to_owned(), "Encode".to_owned());
         let decoded = format!("```\n{}\n```", decode(&self.string)?);
 
@@ -76,7 +76,7 @@ pub struct Base64Encode {
 
 #[async_trait]
 impl LuroCommand for Base64Encode {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let button = button("decode".to_owned(), "Decode".to_owned());
         debug!("Recevied {} string", self.string.len());
         let encoded = if let Some(bait) = self.bait && bait {
@@ -176,7 +176,7 @@ async fn extract_message(ctx: &LuroSlash, decode_operation: bool) -> anyhow::Res
     Ok((content, embed.cloned()))
 }
 
-async fn response(ctx: LuroSlash, decode_operation: bool) -> anyhow::Result<()> {
+async fn response(mut ctx: LuroSlash, decode_operation: bool) -> anyhow::Result<()> {
     let (content, interaction_embed) = extract_message(&ctx, decode_operation).await?;
     let button = if !decode_operation {
         button("decode".to_owned(), "Decode".to_owned())

@@ -39,7 +39,7 @@ struct Position {
 
 #[async_trait]
 impl LuroCommand for ModifyRoleCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let (mut role_selected, mut role_position) = (None, None);
 
         // Guild to modify

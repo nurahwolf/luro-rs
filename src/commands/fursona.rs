@@ -16,7 +16,7 @@ pub enum LewdCommands {
 
 #[async_trait]
 impl LuroCommand for LewdCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_commands(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let interaction_channel = ctx.channel()?;
 
         if let Some(nsfw) = interaction_channel.nsfw && !nsfw {
@@ -42,7 +42,7 @@ pub struct FursonaNSFWCommand {
 
 #[async_trait]
 impl LuroCommand for FursonaNSFWCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let content = if let Some(user) = self.user {
             format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
         } else {

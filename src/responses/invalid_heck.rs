@@ -7,7 +7,7 @@ use crate::models::LuroSlash;
 
 impl LuroSlash {
     pub async fn invalid_heck_response(
-        self,
+        mut self,
         missing_user: bool,
         missing_author: bool,
         heck_message: &str

@@ -13,7 +13,7 @@ pub struct DiceHelpCommand {
 
 #[async_trait]
 impl LuroCommand for DiceHelpCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let description = "Roll some dice with a brief explanation of the output all on one line, such as `1d20 = [13] = 13`.";
 
         let shortmode_help = [

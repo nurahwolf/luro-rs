@@ -6,7 +6,7 @@ use crate::COLOUR_DANGER;
 use crate::models::LuroSlash;
 
 impl LuroSlash {
-    pub async fn server_owner_response(self) -> anyhow::Result<()> {
+    pub async fn server_owner_response(mut self) -> anyhow::Result<()> {
         self.embed(server_owner_embed().build())?.respond().await
     }
 }
