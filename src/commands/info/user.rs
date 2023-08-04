@@ -121,6 +121,12 @@ impl LuroCommand for InfoUser {
                 };
                 write!(role_list, ", <@&{}>", role.id)?
             }
+            if let Some(role) = user_roles.first() {
+                if role.colour != 0 {
+                    embed = embed.color(role.colour);
+                }
+            }
+
             writeln!(guild_information, "- Roles ({}): {role_list}", user_roles.len())?;
 
             timestamp.push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>", member.joined_at().as_secs()).as_str());       
