@@ -19,7 +19,7 @@ impl LuroSlash {
         guild_id: &Option<Id<GuildMarker>>,
         command_name: impl Into<String>
     ) -> anyhow::Result<()> {
-        let command = String::from(command_name.into());
+        let command = command_name.into();
         {
             let _ = UserData::get_user_settings(&self.luro, user_id).await?;
             let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_id);

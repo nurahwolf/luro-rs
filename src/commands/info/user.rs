@@ -193,9 +193,13 @@ impl LuroCommand for InfoUser {
             if kicks != 0 {
                 writeln!(user_data_description, "- Times Kicks: `{kicks}`")?;
             }
+            if priv_esc != 0 {
+                writeln!(user_data_description, "- Attempts at Privilege Escalation: `{priv_esc}`")?;
+            }
             if warnings != 0 {
                 writeln!(user_data_description, "- Times Warned *(including expired)*: `{warnings}`")?;
             }
+
         }
 
         if !user_data.warnings.is_empty() {
@@ -204,7 +208,7 @@ impl LuroCommand for InfoUser {
 
         match user_data_description.len() > 1024 {
             true => writeln!(description, "\n**User Data**\n{user_data_description}")?,
-            false => embed = embed.field(EmbedFieldBuilder::new("Guild Information", user_data_description))
+            false => embed = embed.field(EmbedFieldBuilder::new("User Data", user_data_description))
         }
 
         if description.len() > 4096 {
