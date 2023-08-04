@@ -11,7 +11,7 @@ use crate::{
 pub struct DiceRollCommand {
     /// Standard Dice Notation: 6d20dl2-10 (6x d20 dice, drop lowest 2, take away 10 from result)
     dice: String,
-    /// Add context to your role, such as for D&D
+    /// Add context to your role, such as for D&D. Use `\` to not have your reason in a code block.
     reason: Option<String>,
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
     ephemeral: Option<bool>
