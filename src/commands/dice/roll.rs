@@ -46,7 +46,7 @@ impl LuroCommand for DiceRollCommand {
             result_string.push_str(&format!("\n-----\n*Whoa, a 20!! Congrats!! <3*"))
         }
 
-        if result.dice_total == RollValue::Int(0) {
+        if result.dice_total == RollValue::Int(1) {
             result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
         }
 
