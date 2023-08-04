@@ -102,12 +102,15 @@ impl LuroCommand for InfoUser {
                     let mut user_roles: Vec<_> = user_roles.iter().map(RoleOrdering::from).collect();
                     user_roles.sort_by(|a, b| b.cmp(a));
                     let mut role_list = String::new();
+
                     for role in &user_roles {
                         if role_list.is_empty() {
-                            write!(role_list, "<@&{}>", role.id)?
+                            write!(role_list, "<@&{}>", role.id)?;
+                            continue;
                         };
                         write!(role_list, ", <@&{}>", role.id)?
                     }
+
                     if let Some(role) = user_roles.first() {
                         if role.colour != 0 {
                             embed = embed.color(role.colour);
