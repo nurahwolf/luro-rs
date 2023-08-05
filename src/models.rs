@@ -2,7 +2,7 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
     iter::Peekable,
     num::NonZeroU64,
-    str::Chars, time::{Duration, SystemTime}
+    str::Chars, time::{SystemTime}
 };
 
 use dashmap::DashMap;
@@ -425,7 +425,7 @@ pub struct UserData {
     pub message_edits: usize,
     /// The user's marriages
     #[serde(default)]
-    pub marraiges: HashMap<Id<UserMarker>, UserMarriages>
+    pub marriages: HashMap<Id<UserMarker>, UserMarriages>
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

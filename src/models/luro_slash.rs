@@ -1,4 +1,4 @@
-use std::{mem, str::FromStr};
+use std::{mem};
 
 use crate::{
     models::{GuildSetting, LuroSlash},
@@ -6,7 +6,7 @@ use crate::{
     ACCENT_COLOUR
 };
 use anyhow::anyhow;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, warn};
 use twilight_gateway::MessageSender;
 use twilight_http::{client::InteractionClient, Response};
 
@@ -29,7 +29,7 @@ use crate::{
     LuroContext
 };
 
-use super::CustomId;
+
 
 impl LuroFunctions for LuroSlash {}
 

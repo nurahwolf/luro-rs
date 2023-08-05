@@ -1,10 +1,10 @@
-use std::path::Path;
+
 
 use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::models::{LuroSlash, UserData};
-use crate::USERDATA_FILE_PATH;
+
 
 use crate::traits::luro_command::LuroCommand;
 use crate::traits::toml::LuroTOML;

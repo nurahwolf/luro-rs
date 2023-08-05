@@ -9,7 +9,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
-use twilight_model::id::Id;
+
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder};
 
 use crate::models::{LuroCommandCache, LuroSlash, SlashUser, UserData, UserMarriages};
@@ -54,7 +54,7 @@ impl LuroCommand for MarryMarriages {
             EmbedAuthorBuilder::new(format!("{}'s marriages", slash_author.name)).icon_url(slash_author.try_into()?);
         let mut embed = ctx.default_embed().await?.author(embed_author);
 
-        for (_, marriage) in user_data.marraiges.iter() {
+        for (_, marriage) in user_data.marriages.iter() {
             match ctx.luro.twilight_cache.user(marriage.user) {
                 Some(marriage_user) => writeln!(
                     content,
