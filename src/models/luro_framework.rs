@@ -124,7 +124,8 @@ impl LuroFramework {
                 global_data,
                 tracing_subscriber,
                 settings,
-                guild_id: None
+                guild_id: None,
+                command_cache: Default::default(),
             }
             .into(),
             shards

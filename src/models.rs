@@ -2,7 +2,7 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
     iter::Peekable,
     num::NonZeroU64,
-    str::Chars
+    str::Chars, time::{Duration, SystemTime}
 };
 
 use dashmap::DashMap;
@@ -148,9 +148,18 @@ pub struct Hecks {
     pub nsfw_heck_ids: Vec<usize>
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LuroCommandCache {
+    pub author: Id<UserMarker>,
+    pub user_in_command: Id<UserMarker>,
+    pub reason: String,
+}
+
 /// The core of Luro. Used to handle our global state and generally wrapped in an [Arc].
 #[derive(Debug)]
 pub struct LuroFramework {
+    /// Luro's own cache for command evokation
+    pub command_cache: DashMap<Id<MessageMarker>, LuroCommandCache>,
     /// HTTP client used for making outbound API requests
     pub hyper_client: hyper::Client<HttpConnector>,
     /// Lavalink client, for playing music
@@ -413,7 +422,17 @@ pub struct UserData {
     pub moderation_actions_performed: usize,
     /// A simple tally of how many times a user has fucked up and needed to edit their message.
     #[serde(default)]
-    pub message_edits: usize
+    pub message_edits: usize,
+    /// The user's marriages
+    #[serde(default)]
+    pub marraiges: HashMap<Id<UserMarker>, UserMarriages>
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct UserMarriages {
+    pub timestamp: SystemTime,
+    pub user: Id<UserMarker>,
+    pub reason: String
 }
 
 /// Bans recorded against a user

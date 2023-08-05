@@ -3,7 +3,7 @@ use std::{mem, str::FromStr};
 use crate::{
     commands::{
         base64::{Base64Decode, Base64Encode},
-        moderator::warn::ModeratorWarnCommand
+        moderator::warn::ModeratorWarnCommand, marry::MarryNew
     },
     models::{GuildSetting, LuroSlash},
     traits::luro_functions::LuroFunctions,
@@ -110,6 +110,7 @@ impl LuroSlash {
             "boop" => BoopCommand::handle_component(data, self).await,
             "decode" => Base64Decode::handle_component(data, self).await,
             "encode" => Base64Encode::handle_component(data, self).await,
+            "marry" => MarryNew::handle_component(data, self).await,
             "heck-setting" => HeckAddCommand::handle_component(data, self).await,
             name => {
                 warn!(name = name, "received unknown component");

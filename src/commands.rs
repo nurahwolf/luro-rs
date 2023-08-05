@@ -3,6 +3,7 @@ use twilight_interactions::command::CreateCommand;
 use self::dice::DiceCommands;
 use self::info::InfoCommands;
 use self::luro::LuroCommands;
+use self::marry::MarryCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
@@ -34,6 +35,7 @@ mod say;
 mod story;
 mod uwu;
 mod wordcount;
+pub mod marry;
 // pub mod fursona;
 
 impl Commands {
@@ -62,6 +64,7 @@ impl Commands {
         init.global_commands.insert("story", StoryCommand::create_command().into());
         init.global_commands.insert("uwu", UwUCommand::create_command().into());
         init.global_commands.insert("roll", DiceCommands::create_command().into());
+        init.global_commands.insert("marry", MarryCommands::create_command().into());
         init.global_commands.insert(BOT_NAME, LuroCommands::create_command().into());
 
         init.global_commands
@@ -99,6 +102,7 @@ impl LuroSlash {
             "wordcount" => WordcountCommand::new(data).await?.run_command(self).await,
             "roll" => DiceCommands::new(data).await?.run_commands(self).await,
             "luro" => LuroCommands::new(data).await?.run_commands(self).await,
+            "marry" => MarryCommands::new(data).await?.run_commands(self).await,
             _ => self.unknown_command_response().await
         }
     }
