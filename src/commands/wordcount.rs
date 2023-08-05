@@ -82,7 +82,10 @@ impl LuroCommand for WordcountCommand {
             for (user_number, (user, count)) in high_score_users.into_iter().enumerate() {
                 writeln!(content, "{user_number}. <@{user}> has said `{count}` words!")?;
             }
-            content.truncate(3800);
+            if content.len() > 3800 {
+                content.truncate(3800);
+                content.push_str("...")
+            }
             writeln!(content, "-----")?;
         } else {
             let (user, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
@@ -128,6 +131,10 @@ impl LuroCommand for WordcountCommand {
                 usize::try_from(size.checked_ilog10().unwrap_or(0) + 1),
                 usize::try_from(count.checked_ilog10().unwrap_or(0) + 1)
             ) {
+                if word_size.len() > 1000 {
+                    break
+                }
+
                 if digits < count {
                     digits = count
                 }
@@ -152,6 +159,10 @@ impl LuroCommand for WordcountCommand {
         digits = 0;
         let mut word_length = 1;
         for (word, count) in most_used_words {
+            if most_used.len() > 1000 {
+                break
+            }
+
             if let Ok(length) = usize::try_from(count.checked_ilog10().unwrap_or(0) + 1) {
                 if digits < length {
                     digits = length
@@ -165,7 +176,10 @@ impl LuroCommand for WordcountCommand {
         }
         most_used.truncate(1024);
         embed = embed.field(EmbedFieldBuilder::new("Most used words", most_used).inline());
-        content.truncate(4096);
+        if content.len() > 4096 {
+            content.truncate(4093);
+            content.push_str("...")
+        }
         ctx.embed(embed.description(content).build())?.respond().await
     }
 }

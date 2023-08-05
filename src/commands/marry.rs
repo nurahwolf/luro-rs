@@ -157,7 +157,7 @@ impl LuroCommand for MarryNew {
                 // Modify the proposer
                 {
                     let mut user_data = UserData::modify_user_settings(&ctx.luro, &command_data.author).await?;
-                    user_data.marraiges.insert(
+                    user_data.marriages.insert(
                         command_data.user_in_command,
                         UserMarriages {
                             timestamp: SystemTime::now(),
@@ -170,7 +170,7 @@ impl LuroCommand for MarryNew {
                 // Modify the proposee
                 {
                     let mut user_data = UserData::modify_user_settings(&ctx.luro, &command_data.user_in_command).await?;
-                    user_data.marraiges.insert(
+                    user_data.marriages.insert(
                         command_data.author,
                         UserMarriages {
                             timestamp: SystemTime::now(),
