@@ -186,6 +186,10 @@ impl LuroCommand for InfoUser {
                 writeln!(user_data_description, "- Edited `{}` messages", user_data.message_edits)?;
             }
 
+            if !user_data.marriages.is_empty() {
+                writeln!(user_data_description, "- Has `{}` marriages!", user_data.marriages.len())?;
+            }
+
             if !user_data.moderation_actions.is_empty() {
                 writeln!(
                     user_data_description,
