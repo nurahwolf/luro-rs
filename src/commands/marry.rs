@@ -5,6 +5,8 @@ use std::time::SystemTime;
 use anyhow::Context;
 use async_trait::async_trait;
 
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
@@ -16,6 +18,13 @@ use crate::models::{LuroCommandCache, LuroSlash, SlashUser, UserData, UserMarria
 
 use crate::traits::luro_command::LuroCommand;
 use crate::traits::luro_functions::LuroFunctions;
+
+/// An array of reasons someone would like to marry.
+/// TODO: Load this from disk once it's big enough
+const MARRIAGE_REASONS: [&str; 2] = [
+    "Hey <user>!\n\nIt looks like <author> finally felt it's time to confess their love to you, and have lowered themselves down to you to propose! Do you accept?",
+    "*<author> just opened a box and presented <user> with a shiny tungsten ring! It looks like they want to get closer to each other. Do they accept?*",
+];
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "marry", desc = "Marry a user! Or see who you have married <3")]
@@ -97,7 +106,16 @@ impl LuroCommand for MarryNew {
             EmbedAuthorBuilder::new(format!("{} has proposed!", &slash_author.name)).icon_url(slash_author.clone().try_into()?);
         let mut embed = ctx.default_embed().await?.author(embed_author);
 
-        embed = embed.description(format!("**Hey <@{}>!**\n\nIt looks like <@{}> finally felt it's time to confess their love to you, and have lowered themselves down to you to propose! Do you accept?", self.marry.resolved.id, &slash_author.user_id));
+        {
+            let mut rng = thread_rng();
+            let reason = MARRIAGE_REASONS
+                .choose(&mut rng)
+                .context("Expected to be able to choose a random reason")?
+                .replace("<user>", &format!("<@{}>", &self.marry.resolved.id))
+                .replace("<author>", &format!("<@{}>", &slash_author.user_id));
+            embed = embed.description(reason);
+        }
+
         embed = embed.field(EmbedFieldBuilder::new("Their Reason", self.reason.clone()));
         ctx.components(button("marry", "Do you accept?"));
 
