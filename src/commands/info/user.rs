@@ -161,7 +161,7 @@ impl LuroCommand for InfoUser {
             if let Some(export) = self.gdpr_export && export {
                 if let Some(user_specified) = self.user {
                     // TODO: Add privilege esc tally to the person
-                    return ctx.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", ctx.author()?.id, user_specified.resolved.id)).respond().await
+                    return ctx.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.author()?.id)).respond().await
                 }
     
                 ctx.attachments = Some(vec![Attachment::from_bytes(
