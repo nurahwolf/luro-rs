@@ -220,6 +220,7 @@ impl LuroCommand for InfoUser {
                     toml::to_string_pretty(&user_data)?.as_bytes().to_vec(),
                     1
                 )]);
+                ctx.ephemeral();
             }
         }
 
