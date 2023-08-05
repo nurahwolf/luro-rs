@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use std::{convert::TryInto, fmt::Write, time::Duration};
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::id::{marker::GenericMarker, Id};
+use twilight_model::{id::{marker::GenericMarker, Id}, http::attachment::Attachment};
 use twilight_util::{
     builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource},
     snowflake::Snowflake
@@ -26,7 +26,9 @@ pub struct InfoUser {
     /// Just show user details, not guild details
     user_only: Option<bool>,
     /// Hide the user's avatar, so that there is more space for the details
-    hide_avatar: Option<bool>
+    hide_avatar: Option<bool>,
+    /// Set this if you want a copy of your data.
+    gdpr_export: Option<bool>,
 }
 
 #[async_trait]
@@ -206,12 +208,27 @@ impl LuroCommand for InfoUser {
                 true => writeln!(description, "\n**User Data**\n{user_data_description}")?,
                 false => embed = embed.field(EmbedFieldBuilder::new("User Data", user_data_description))
             }
+
+            if let Some(export) = self.gdpr_export && export {
+                if let Some(user_specified) = self.user {
+                    // TODO: Add privilege esc tally to the person
+                    return ctx.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", ctx.author()?.id, user_specified.resolved.id)).respond().await
+                }
+    
+                ctx.attachments = Some(vec![Attachment::from_bytes(
+                    format!("gdpr-export-{}.txt", ctx.author()?.id),
+                    toml::to_string_pretty(&user_data)?.as_bytes().to_vec(),
+                    1
+                )]);
+            }
         }
 
         if description.len() > 4096 {
             description.truncate(4093);
             description.push_str("...")
         }
+
+
 
         embed = embed.field(EmbedFieldBuilder::new("Timestamps", timestamp).inline());
         embed = embed.description(description);
