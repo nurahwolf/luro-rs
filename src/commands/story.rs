@@ -1,12 +1,17 @@
 use std::{convert::TryInto, path::Path};
 
+use anyhow::Context;
 use async_trait::async_trait;
 
 use rand::Rng;
 use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_util::builder::embed::EmbedFooterBuilder;
+use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
+use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
+use twilight_model::channel::message::Component;
+use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
+use crate::COLOUR_DANGER;
 use crate::{models::GlobalData, models::LuroSlash, STORIES_FILE_PATH};
 
 use crate::traits::luro_command::LuroCommand;
@@ -86,6 +91,35 @@ impl LuroCommand for StoryCommand {
 
         }
 
-        ctx.embed(embed.build())?.respond().await
+        let button = button("story", "Delete this cursed thing");
+
+        ctx.embed(embed.build())?.components(button).respond().await
     }
+
+    async fn handle_component(_: MessageComponentInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        let embed = EmbedBuilder::new()
+            .color(COLOUR_DANGER)
+            .title("REDACTED")
+            .description(format!(
+                "There used to be a story here, but <@{}> found it too cursed for their eyes.",
+                ctx.interaction.author_id().context("Expected interaction author")?
+            ))
+            .build();
+
+        ctx.embed(embed)?.components(vec![]).update().respond().await
+    }
+}
+
+/// Return a button
+fn button(custom_id: impl Into<String>, label: impl Into<String>) -> Vec<Component> {
+    Vec::from([Component::ActionRow(ActionRow {
+        components: Vec::from([Component::Button(Button {
+            custom_id: Some(custom_id.into()),
+            disabled: false,
+            emoji: None,
+            label: Some(label.into()),
+            style: ButtonStyle::Danger,
+            url: None
+        })])
+    })])
 }

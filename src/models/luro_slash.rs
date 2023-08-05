@@ -1,10 +1,6 @@
 use std::{mem, str::FromStr};
 
 use crate::{
-    commands::{
-        base64::{Base64Decode, Base64Encode},
-        moderator::warn::ModeratorWarnCommand, marry::MarryNew
-    },
     models::{GuildSetting, LuroSlash},
     traits::luro_functions::LuroFunctions,
     ACCENT_COLOUR
@@ -30,7 +26,6 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::traits::luro_command::LuroCommand;
 use crate::{
-    commands::{boop::BoopCommand, heck::add::HeckAddCommand},
     LuroContext
 };
 
@@ -91,57 +86,6 @@ impl LuroSlash {
         };
 
         Ok(())
-    }
-
-    /// Handle incoming component interaction
-    pub async fn handle_component(self) -> anyhow::Result<()> {
-        let data = match self.interaction.data {
-            Some(InteractionData::MessageComponent(ref data)) => data.clone(),
-            _ => return Err(anyhow!("expected message component data"))
-        };
-
-        info!(
-            "Received component interaction - {} - {}",
-            self.author()?.name,
-            data.custom_id
-        );
-
-        match &*data.custom_id {
-            "boop" => BoopCommand::handle_component(data, self).await,
-            "decode" => Base64Decode::handle_component(data, self).await,
-            "encode" => Base64Encode::handle_component(data, self).await,
-            "marry" => MarryNew::handle_component(data, self).await,
-            "heck-setting" => HeckAddCommand::handle_component(data, self).await,
-            name => {
-                warn!(name = name, "received unknown component");
-                self.unknown_command_response().await
-            }
-        }
-    }
-
-    /// Handle incoming modal interaction
-    pub async fn handle_modal(self) -> anyhow::Result<()> {
-        let custom_id = match self.interaction.data {
-            Some(InteractionData::ModalSubmit(ref data)) => CustomId::from_str(&data.custom_id)?,
-            _ => return Err(anyhow!("expected modal submit data"))
-        };
-        let data = self.parse_modal_data(&mut self.interaction.clone())?;
-
-        match &*custom_id.name {
-            "heck-add" => HeckAddCommand::handle_model(data, self).await,
-            "mod-warn" => ModeratorWarnCommand::handle_model(data, self).await,
-            name => {
-                warn!(name = name, "received unknown component");
-
-                // TODO: Make this a response type.
-                let embed = self
-                    .default_embed()
-                    .await?
-                    .title("IT'S FUCKED")
-                    .description("Will finish this at some point");
-                self.embeds(vec![embed.build()])?.respond().await
-            }
-        }
     }
 
     /// Parse incoming [`ModalSubmit`] interaction and return the inner data.
