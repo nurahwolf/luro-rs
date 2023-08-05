@@ -34,7 +34,12 @@ pub struct InfoUser {
 #[async_trait]
 impl LuroCommand for InfoUser {
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        if let Some(export) = self.gdpr_export && export {
+            ctx.ephemeral();
+        }
         ctx.deferred().await?;
+
+
         let mut embed = ctx.default_embed().await?;
         let mut description = String::new();
         // The user we are interested in is the interaction author, unless a user was specified
@@ -153,6 +158,18 @@ impl LuroCommand for InfoUser {
         let mut user_data_description = String::new();
         {
             let user_data = UserData::get_user_settings(&ctx.luro, &author.id).await?;
+            if let Some(export) = self.gdpr_export && export {
+                if let Some(user_specified) = self.user {
+                    // TODO: Add privilege esc tally to the person
+                    return ctx.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", ctx.author()?.id, user_specified.resolved.id)).respond().await
+                }
+    
+                ctx.attachments = Some(vec![Attachment::from_bytes(
+                    format!("gdpr-export-{}.txt", ctx.author()?.id),
+                    toml::to_string_pretty(&user_data)?.as_bytes().to_vec(),
+                    1
+                )]);
+            }
 
             writeln!(user_data_description, "- Total Words Said: `{}`", user_data.wordcount)?;
             writeln!(user_data_description, "- Total Characters Said: `{}`", user_data.averagesize)?;
@@ -207,20 +224,6 @@ impl LuroCommand for InfoUser {
             match user_data_description.len() > 1024 {
                 true => writeln!(description, "\n**User Data**\n{user_data_description}")?,
                 false => embed = embed.field(EmbedFieldBuilder::new("User Data", user_data_description))
-            }
-
-            if let Some(export) = self.gdpr_export && export {
-                if let Some(user_specified) = self.user {
-                    // TODO: Add privilege esc tally to the person
-                    return ctx.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", ctx.author()?.id, user_specified.resolved.id)).respond().await
-                }
-    
-                ctx.attachments = Some(vec![Attachment::from_bytes(
-                    format!("gdpr-export-{}.txt", ctx.author()?.id),
-                    toml::to_string_pretty(&user_data)?.as_bytes().to_vec(),
-                    1
-                )]);
-                ctx.ephemeral();
             }
         }
 
