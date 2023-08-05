@@ -56,7 +56,7 @@ impl LuroFramework {
                     .context("Expected to find user's data in the cache")?;
                 data.moderation_actions.push(UserActions {
                     action_type: vec![UserActionType::Kick],
-                    guild_id: Some(event.guild_id.context("Expected this to be a guild")?),
+                    guild_id: Some(guild.id),
                     reason: reason.clone(),
                     responsible_user: *user_id
                 });
