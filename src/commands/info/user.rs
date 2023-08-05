@@ -91,7 +91,7 @@ impl LuroCommand for InfoUser {
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
             if let Ok(member) = ctx.luro.twilight_client.guild_member(guild_id, author.id).await {
                     let member = member.model().await?;
-                    let slash_member = SlashUser::from_member(&member.user, member.avatar, Some(guild_id));
+                    let slash_member = SlashUser::from_member(&member, Some(guild_id));
                     let mut guild_information = String::new();
                     let guild = ctx.luro.twilight_client.guild(guild_id).await?.model().await?;
                     embed = embed.author(EmbedAuthorBuilder::new(slash_member.name).icon_url(slash_author.clone().try_into()?));

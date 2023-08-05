@@ -1,13 +1,12 @@
 use std::convert::TryInto;
 
 use twilight_model::{
-    guild::Member,
+    guild::{Member, PartialMember},
     id::{
         marker::{GuildMarker, UserMarker},
         Id
     },
-    user::{CurrentUser, User},
-    util::ImageHash
+    user::{CurrentUser, User}
 };
 use twilight_util::builder::embed::{image_source::ImageSourceUrlError, ImageSource};
 
@@ -29,10 +28,12 @@ impl From<CurrentUser> for SlashUser {
         let mut slash_user = Self {
             user_id: user.id,
             user_avatar: user.avatar,
+            user_global_name: None,
             user_banner: user.banner,
             user_name: user.name.clone(),
             user_discriminator: user.discriminator,
             member_avatar: None,
+            member_nickname: None,
             guild_id: None,
             avatar: "".to_owned(),
             banner: None,
@@ -50,9 +51,11 @@ impl From<User> for SlashUser {
             user_id: user.id,
             user_avatar: user.avatar,
             user_banner: user.banner,
+            user_global_name: user.global_name.clone(),
             user_name: user.name.clone(),
             user_discriminator: user.discriminator,
             member_avatar: None,
+            member_nickname: None,
             guild_id: None,
             avatar: "".to_owned(),
             banner: None,
@@ -70,9 +73,11 @@ impl From<&User> for SlashUser {
             user_id: user.id,
             user_avatar: user.avatar,
             user_banner: user.banner,
+            user_global_name: user.global_name.clone(),
             user_name: user.name.clone(),
             user_discriminator: user.discriminator,
             member_avatar: None,
+            member_nickname: None,
             guild_id: None,
             avatar: "".to_owned(),
             banner: None,
@@ -103,9 +108,11 @@ impl SlashUser {
             user_id,
             user_avatar: member.user.avatar,
             user_banner: member.user.banner,
+            user_global_name: member.user.global_name.clone(),
             user_name: member.user.name.clone(),
             user_discriminator: member.user.discriminator,
             member_avatar: member.avatar,
+            member_nickname: member.nick.clone(),
             guild_id: Some(guild_id),
             avatar: "".to_owned(),
             name: "".to_owned(),
@@ -126,7 +133,9 @@ impl SlashUser {
             user_banner: user.banner,
             user_name: user.name.clone(),
             user_discriminator: user.discriminator,
+            user_global_name: user.global_name.clone(),
             member_avatar: None,
+            member_nickname: None,
             guild_id: None,
             avatar: "".to_owned(),
             name: "".to_owned(),
@@ -138,18 +147,41 @@ impl SlashUser {
     }
 
     /// Return some information from an existing or already fetched member
-    pub fn from_member(user: &User, member_avatar: Option<ImageHash>, guild_id: Option<Id<GuildMarker>>) -> Self {
+    pub fn from_member(member: &Member, guild_id: Option<Id<GuildMarker>>) -> Self {
+        let mut slash_user = Self {
+            user_id: member.user.id,
+            user_avatar: member.user.avatar,
+            user_banner: member.user.banner,
+            user_global_name: member.user.global_name.clone(),
+            user_name: member.user.name.clone(),
+            user_discriminator: member.user.discriminator,
+            member_avatar: member.avatar,
+            member_nickname: member.nick.clone(),
+            guild_id,
+            avatar: "".to_owned(),
+            name: "".to_owned(),
+            banner: None
+        };
+
+        slash_user.format();
+        slash_user
+    }
+
+    /// Return some information from an existing or already fetched member
+    pub fn from_partialmember(user: &User, member: &PartialMember, guild_id: Option<Id<GuildMarker>>) -> Self {
         let mut slash_user = Self {
             user_id: user.id,
             user_avatar: user.avatar,
             user_banner: user.banner,
+            user_global_name: user.global_name.clone(),
             user_name: user.name.clone(),
             user_discriminator: user.discriminator,
-            member_avatar,
+            member_avatar: member.avatar,
+            member_nickname: member.nick.clone(),
             guild_id,
             avatar: "".to_owned(),
-            banner: None,
-            name: "".to_owned()
+            name: "".to_owned(),
+            banner: None
         };
 
         slash_user.format();
@@ -201,7 +233,11 @@ impl SlashUser {
     }
 
     pub fn name(&mut self) -> &mut Self {
-        self.name = if self.user_discriminator == 0 {
+        self.name = if let Some(member_nick) = &self.member_nickname {
+            member_nick.clone()
+        } else if let Some(global_name) = &self.user_global_name {
+            global_name.clone()
+        } else if self.user_discriminator == 0 {
             self.user_name.clone()
         } else {
             format!("{}#{}", self.user_name, self.user_discriminator)

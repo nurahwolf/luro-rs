@@ -36,7 +36,7 @@ impl LuroSlash {
         kicked_user: User,
         reason: &String
     ) -> Result<EmbedBuilder, Error> {
-        let moderator = SlashUser::from_member(&moderator.user, moderator.avatar, Some(guild.id));
+        let moderator = SlashUser::from_member(&moderator, Some(guild.id));
         let victim = SlashUser::from(kicked_user);
 
         let embed_author = EmbedAuthorBuilder::new(format!("Kicked by {} - {}", moderator.name, moderator.user_id))

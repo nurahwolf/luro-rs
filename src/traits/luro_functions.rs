@@ -42,7 +42,7 @@ pub trait LuroFunctions {
                     Some(user) => user,
                     None => return Err(anyhow!("Expected user object within member"))
                 };
-                Ok((user, SlashUser::from_member(user, member.avatar, interaction.guild_id)))
+                Ok((user, SlashUser::from_partialmember(user, member, interaction.guild_id)))
             }
             None => match interaction.user {
                 Some(ref user) => Ok((user, SlashUser::from(user))),

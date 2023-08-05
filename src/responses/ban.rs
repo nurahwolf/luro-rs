@@ -39,7 +39,7 @@ impl LuroSlash {
         reason: &String,
         period: &String
     ) -> Result<EmbedBuilder, Error> {
-        let moderator = SlashUser::from_member(&moderator.user, moderator.avatar, Some(guild.id));
+        let moderator = SlashUser::from_member(&moderator, Some(guild.id));
         let victim = SlashUser::from(banned_user);
 
         let embed_author = EmbedAuthorBuilder::new(format!("Banned by {} - {}", moderator.name, moderator.user_id))
