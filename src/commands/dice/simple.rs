@@ -114,9 +114,9 @@ impl LuroCommand for DiceSimpleCommand {
         }
 
         if let Some(ephemeral) = self.ephemeral && ephemeral {
-            ctx.ephemeral().respond_checked(result_string).await
+            ctx.content(result_string).ephemeral().respond().await
         } else {
-            ctx.respond_checked(result_string).await
+            ctx.content(result_string).respond().await
         }
     }
 }

@@ -1,4 +1,4 @@
-use std::{mem};
+use std::mem;
 
 use crate::{
     models::{GuildSetting, LuroSlash},
@@ -25,11 +25,7 @@ use twilight_model::{
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::traits::luro_command::LuroCommand;
-use crate::{
-    LuroContext
-};
-
-
+use crate::LuroContext;
 
 impl LuroFunctions for LuroSlash {}
 
@@ -222,7 +218,72 @@ impl LuroSlash {
     }
 
     /// Using the data contained within this struct, respond to an interaction.
-    pub async fn respond(&self) -> anyhow::Result<()> {
+    pub async fn respond(&mut self) -> anyhow::Result<()> {
+        // Check to make sure fields are not too big, if they are send them as a file instead
+        if let Some(content) = &mut self.content {
+            if content.len() > 2000 {
+                // Defer the message if it is not already
+                // if self.interaction_response_type != InteractionResponseType::DeferredChannelMessageWithSource {
+                //     self.deferred().await?;
+                // }
+
+                self.attachments = Some(vec![Attachment::from_bytes(
+                    "fucking-huge-file.txt".to_owned(),
+                    content.as_bytes().to_vec(),
+                    1
+                )]);
+                content.truncate(1997);
+                content.push_str("...");
+            }
+        }
+
+        if let Some(embeds) = &mut self.embeds {
+            let mut files_present = false;
+            let mut file_id = 0;
+            let mut files = vec![];
+            let mut modified_embeds = vec![];
+
+            for embed in embeds {
+                if let Some(description) = &mut embed.description {
+                    if description.len() > 4096 {
+                        file_id += 1;
+
+                        files.push(Attachment::from_bytes(
+                            format!("Embed-{file_id}.txt"),
+                            description.as_bytes().to_vec(),
+                            file_id
+                        ));
+
+                        description.truncate(4093);
+                        description.push_str("...");
+                        files_present = true;
+                    }
+                }
+
+                for field in &mut embed.fields {
+                    if field.value.len() > 1000 {
+                        file_id += 1;
+
+                        files.push(Attachment::from_bytes(
+                            format!("Field-{file_id}.txt"),
+                            field.value.as_bytes().to_vec(),
+                            file_id
+                        ));
+
+                        field.value.truncate(4093);
+                        field.value.push_str("...");
+                        files_present = true;
+                    }
+                }
+
+                modified_embeds.push(embed.clone())
+            }
+
+            if files_present {
+                self.attachments = Some(files);
+            }
+        }
+
         if self.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource {
             let client = self.interaction_client();
             let mut response = client
@@ -247,26 +308,6 @@ impl LuroSlash {
         }
 
         Ok(())
-    }
-
-    /// Respond but check to make sure the message body fits, otherwise send the result as a file.
-    /// This WILL defer the interaction if it matches, if not already deferred.
-    pub async fn respond_checked(&mut self, content: String) -> anyhow::Result<()> {
-        if content.len() > 2000 {
-            // Defer the message if it is not already
-            if self.interaction_response_type != InteractionResponseType::DeferredChannelMessageWithSource {
-                self.deferred().await?;
-            }
-
-            self.attachments = Some(vec![Attachment::from_bytes(
-                "fucking-huge-file.txt".to_owned(),
-                content.as_bytes().to_vec(),
-                1
-            )]);
-            self.respond().await
-        } else {
-            self.clone().content(content).respond().await
-        }
     }
 
     /// Send a message, useful if you do not want to consume the interaction.
