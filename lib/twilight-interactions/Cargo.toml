@@ -1,0 +1,27 @@
+[package]
+name = "twilight-interactions"
+version = "0.15.2"
+description = "Macros and utilities to make Discord Interactions easy to use with Twilight."
+categories = ["parsing", "config", "asynchronous"]
+keywords = ["twilight", "discord", "slash-command"]
+authors = ["baptiste0928"]
+readme = "README.md"
+homepage = "https://github.com/baptiste0928/twilight-interactions#readme"
+repository = "https://github.com/baptiste0928/twilight-interactions"
+documentation = "https://docs.rs/twilight-interactions"
+edition = "2021"
+rust-version = "1.67"
+license = "ISC"
+include = ["src/**/*", "README.md"]
+
+[features]
+default = ["derive"]
+derive = ["twilight-interactions-derive"]
+
+[dependencies]
+twilight-model = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
+twilight-interactions-derive = { version = "=0.15.2", path = "../twilight-interactions-derive", optional = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

@@ -46,7 +46,7 @@ pub trait LuroFunctions {
             }
             None => match interaction.user {
                 Some(ref user) => Ok((user, SlashUser::from(user))),
-                None => return Err(anyhow!("No interaction member or user present"))
+                None => Err(anyhow!("No interaction member or user present"))
             }
         }
     }

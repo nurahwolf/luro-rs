@@ -106,7 +106,12 @@ impl LuroCommand for MarryNew {
             .respond()
             .await?;
 
-        let response = ctx.interaction_client().response(&ctx.interaction.token).await?.model().await?;
+        let response = ctx
+            .interaction_client()
+            .response(&ctx.interaction.token)
+            .await?
+            .model()
+            .await?;
 
         ctx.luro.command_cache.insert(
             response.id,
@@ -120,7 +125,7 @@ impl LuroCommand for MarryNew {
         Ok(())
     }
 
-    async fn handle_component(_: MessageComponentInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(_: Box<MessageComponentInteractionData>, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let interaction_author = ctx.author()?;
         let message = match ctx.interaction.message.clone() {
             Some(message) => message,
@@ -180,11 +185,12 @@ impl LuroCommand for MarryNew {
                     );
                 }
 
-
                 ctx.content(format!(
                     "Congratulations <@{}> & <@{}>!!!",
                     &command_data.author, &command_data.user_in_command
-                )).components(vec![]).update()
+                ))
+                .components(vec![])
+                .update()
                 .respond()
                 .await
             }

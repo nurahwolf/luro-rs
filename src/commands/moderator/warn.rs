@@ -145,7 +145,7 @@ impl LuroCommand for ModeratorWarnCommand {
                     .luro
                     .twilight_client
                     .create_message(channel.id)
-                    .embeds(&[embed.clone().build()])?
+                    .embeds(&[embed.clone().build()])
                     .await;
                 match victim_dm {
                     Ok(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline()),

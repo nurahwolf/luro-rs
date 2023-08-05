@@ -36,7 +36,7 @@ impl LuroWebhook {
         Ok(self
             .luro
             .twilight_client
-            .create_webhook(channel_id, WEBHOOK_NAME)?
+            .create_webhook(channel_id, WEBHOOK_NAME)
             .await?
             .model()
             .await?)

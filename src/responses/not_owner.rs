@@ -1,8 +1,3 @@
-
-
-
-
-
 use tracing::warn;
 use twilight_model::id::marker::{GuildMarker, UserMarker};
 use twilight_model::id::Id;

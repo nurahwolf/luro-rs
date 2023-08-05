@@ -45,7 +45,7 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Handle a component interaction. This could be a button or other form of interaciton
-    async fn handle_component(_data: MessageComponentInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
@@ -94,7 +94,10 @@ pub trait LuroCommand: CommandModel {
         Ok((invoked_channel, interaction_author, interaction_member))
     }
 
-    fn parse_component_data(self, interaction: &mut Interaction) -> Result<MessageComponentInteractionData, anyhow::Error> {
+    fn parse_component_data(
+        self,
+        interaction: &mut Interaction
+    ) -> Result<Box<MessageComponentInteractionData>, anyhow::Error> {
         match mem::take(&mut interaction.data) {
             Some(InteractionData::MessageComponent(data)) => Ok(data),
             _ => bail!("unable to parse modal data, received unknown data type")

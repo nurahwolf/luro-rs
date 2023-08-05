@@ -9,7 +9,6 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use tracing::{debug, trace};
 use twilight_model::{
-    application::command::Command,
     id::{marker::GuildMarker, Id},
     user::User
 };
@@ -23,10 +22,6 @@ use self::{add::HeckAddCommand, info::HeckInfo, someone::HeckSomeoneCommand};
 pub mod add;
 mod info;
 mod someone;
-
-pub fn commands() -> Vec<Command> {
-    vec![HeckCommands::create_command().into()]
-}
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(

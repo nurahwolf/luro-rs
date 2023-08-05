@@ -96,7 +96,7 @@ impl LuroCommand for StoryCommand {
         ctx.embed(embed.build())?.components(button).respond().await
     }
 
-    async fn handle_component(_: MessageComponentInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(_: Box<MessageComponentInteractionData>, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let embed = EmbedBuilder::new()
             .color(COLOUR_DANGER)
             .title("REDACTED")

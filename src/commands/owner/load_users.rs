@@ -1,13 +1,9 @@
-
-
 use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::models::{LuroSlash, UserData};
 
-
 use crate::traits::luro_command::LuroCommand;
-use crate::traits::toml::LuroTOML;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(

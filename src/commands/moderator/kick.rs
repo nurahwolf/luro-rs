@@ -126,7 +126,7 @@ impl LuroCommand for KickCommand {
             .luro
             .twilight_client
             .create_message(user_to_ban_dm.id)
-            .embeds(&[embed.clone().build()])?
+            .embeds(&[embed.clone().build()])
             .await;
 
         match victim_dm {

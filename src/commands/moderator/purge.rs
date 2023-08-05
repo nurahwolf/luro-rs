@@ -35,7 +35,7 @@ impl LuroCommand for PurgeCommand {
                 .luro
                 .twilight_client
                 .channel_messages(channel.id)
-                .limit(1)?
+                .limit(1)
                 .await?
                 .model()
                 .await?;
@@ -48,12 +48,12 @@ impl LuroCommand for PurgeCommand {
                 .luro
                 .twilight_client
                 .channel_messages(channel.id)
-                .limit(self.amount.try_into().unwrap())?
+                .limit(self.amount.try_into().unwrap())
                 .await?
                 .model()
                 .await?;
             let message_ids = messages.into_iter().map(|messages| messages.id).collect::<Vec<_>>();
-            ctx.luro.twilight_client.delete_messages(channel.id, &message_ids)?.await?;
+            ctx.luro.twilight_client.delete_messages(channel.id, &message_ids).await?;
         }
 
         ctx.content("Done!!".to_owned()).ephemeral().respond().await

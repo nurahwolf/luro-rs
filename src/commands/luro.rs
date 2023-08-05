@@ -1,9 +1,7 @@
 use async_trait::async_trait;
 
-use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::guild::Permissions;
-
 use crate::models::LuroSlash;
+use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -25,12 +23,7 @@ impl LuroCommand for LuroCommands {
 }
 
 #[derive(CommandModel, CreateCommand)]
-#[command(
-    name = "stats",
-    desc = "Get some stats for your character sheet",
-    dm_permission = false,
-    default_permissions = "Self::default_permissions"
-)]
+#[command(name = "nickname", desc = "Change my nickname! Or clear it.", dm_permission = false)]
 pub struct LuroNicknameCommand {
     /// Set my nickname to this! Leave me blank to clear my nickname
     name: Option<String>
@@ -38,10 +31,6 @@ pub struct LuroNicknameCommand {
 
 #[async_trait]
 impl LuroCommand for LuroNicknameCommand {
-    fn default_permissions() -> Permissions {
-        Permissions::MANAGE_NICKNAMES
-    }
-
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
@@ -51,7 +40,7 @@ impl LuroCommand for LuroNicknameCommand {
         ctx.luro
             .twilight_client
             .update_current_member(guild_id)
-            .nick(self.name.as_deref())?
+            .nick(self.name.as_deref())
             .await?;
         ctx.content("Done!").ephemeral().respond().await
     }

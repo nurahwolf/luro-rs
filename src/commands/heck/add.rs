@@ -7,7 +7,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::{message_component::MessageComponentInteractionData, modal::ModalInteractionData},
     channel::message::{
-        component::{ActionRow, SelectMenu, SelectMenuOption, TextInput, TextInputStyle},
+        component::{ActionRow, SelectMenu, SelectMenuOption, SelectMenuType, TextInput, TextInputStyle},
         Component
     }
 };
@@ -52,7 +52,7 @@ impl LuroCommand for HeckAddCommand {
             .await
     }
 
-    async fn handle_component(data: MessageComponentInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(data: Box<MessageComponentInteractionData>, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let mut heck_id = 0;
         let mut field = vec![];
         let interaction_channel = ctx.channel()?;
@@ -177,7 +177,7 @@ impl LuroCommand for HeckAddCommand {
                 disabled: false,
                 max_values: None,
                 min_values: None,
-                options: vec![
+                options: Some(vec![
                     SelectMenuOption {
                         default: false,
                         description: Some("Can only be used in this guild".to_owned()),
@@ -192,8 +192,10 @@ impl LuroCommand for HeckAddCommand {
                         label: "Global Heck".to_owned(),
                         value: "heck-add-global".to_owned()
                     },
-                ],
-                placeholder: Some("Choose if this is a global or guild specific heck".to_owned())
+                ]),
+                placeholder: Some("Choose if this is a global or guild specific heck".to_owned()),
+                channel_types: None,
+                kind: SelectMenuType::Text
             })]
         })];
 

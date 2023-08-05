@@ -132,7 +132,7 @@ impl LuroCommand for WordcountCommand {
                 usize::try_from(count.checked_ilog10().unwrap_or(0) + 1)
             ) {
                 if word_size.len() > 1000 {
-                    break
+                    break;
                 }
 
                 if digits < count {
@@ -160,7 +160,7 @@ impl LuroCommand for WordcountCommand {
         let mut word_length = 1;
         for (word, count) in most_used_words {
             if most_used.len() > 1000 {
-                break
+                break;
             }
 
             if let Ok(length) = usize::try_from(count.checked_ilog10().unwrap_or(0) + 1) {

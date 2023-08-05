@@ -51,14 +51,14 @@ impl LuroCommand for AbuseCommand {
             .luro
             .twilight_client
             .execute_webhook(webhook.id, &webhook_token)
-            .username(&slash_author.name)?
+            .username(&slash_author.name)
             .avatar_url(&slash_author.avatar);
 
         if let Some(embed_wanted) = self.embed && embed_wanted {
-            webhook_message.embeds(&[embed.clone()])?.await?
+            webhook_message.embeds(&[embed.clone()]).await?
 
         } else {
-            webhook_message.content(&self.message)?.await?
+            webhook_message.content(&self.message).await?
         };
 
         ctx.embed(embed)?.ephemeral().respond().await

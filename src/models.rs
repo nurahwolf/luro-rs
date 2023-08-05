@@ -2,7 +2,8 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
     iter::Peekable,
     num::NonZeroU64,
-    str::Chars, time::{SystemTime}
+    str::Chars,
+    time::SystemTime
 };
 
 use dashmap::DashMap;
@@ -152,7 +153,7 @@ pub struct Hecks {
 pub struct LuroCommandCache {
     pub author: Id<UserMarker>,
     pub user_in_command: Id<UserMarker>,
-    pub reason: String,
+    pub reason: String
 }
 
 /// The core of Luro. Used to handle our global state and generally wrapped in an [Arc].

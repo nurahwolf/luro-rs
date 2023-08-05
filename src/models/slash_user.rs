@@ -216,11 +216,11 @@ impl SlashUser {
         user_id: Id<UserMarker>
     ) -> anyhow::Result<Self> {
         match guild_id {
-            Some(guild_id) => match Self::client_fetch_member(&ctx, guild_id, user_id).await {
+            Some(guild_id) => match Self::client_fetch_member(ctx, guild_id, user_id).await {
                 Ok(member) => Ok(member.1),
-                Err(_) => Ok(SlashUser::client_fetch_user(&ctx, user_id).await?.1)
+                Err(_) => Ok(SlashUser::client_fetch_user(ctx, user_id).await?.1)
             },
-            None => Ok(SlashUser::client_fetch_user(&ctx, user_id).await?.1)
+            None => Ok(SlashUser::client_fetch_user(ctx, user_id).await?.1)
         }
     }
 }

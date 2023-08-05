@@ -88,9 +88,9 @@ impl LuroCommand for ModifyRoleCommand {
                 let request = Request::builder(&Route::UpdateRolePositions {
                     guild_id: guild.id.get()
                 })
-                .json(&positions)?
+                .json(&positions)
                 .build();
-                ctx.luro.twilight_client.request::<EmptyBody>(request).await?;
+                ctx.luro.twilight_client.request::<EmptyBody>(request?).await?;
             }
 
             // If we are updating the position based on an exact number
@@ -102,9 +102,9 @@ impl LuroCommand for ModifyRoleCommand {
                 let request = Request::builder(&Route::UpdateRolePositions {
                     guild_id: guild.id.get()
                 })
-                .json(&positions)?
+                .json(&positions)
                 .build();
-                ctx.luro.twilight_client.request::<EmptyBody>(request).await?;
+                ctx.luro.twilight_client.request::<EmptyBody>(request?).await?;
             }
 
             if let Some(ref name) = self.name {

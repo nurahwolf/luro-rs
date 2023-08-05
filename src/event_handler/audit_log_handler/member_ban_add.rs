@@ -22,7 +22,7 @@ impl LuroFramework {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let banned_user_id = Id::new(event.target_id.context("No user ID found for banned user")?.get());
-        let (_, slash_author) = SlashUser::client_fetch_user(&self, banned_user_id).await?;
+        let (_, slash_author) = SlashUser::client_fetch_user(self, banned_user_id).await?;
 
         embed = embed
             .thumbnail(slash_author.clone().try_into()?)

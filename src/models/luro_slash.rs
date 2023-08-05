@@ -24,7 +24,6 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::traits::luro_command::LuroCommand;
 use crate::LuroContext;
 
 impl LuroFunctions for LuroSlash {}
@@ -288,16 +287,16 @@ impl LuroSlash {
             let client = self.interaction_client();
             let mut response = client
                 .update_response(&self.interaction.token)
-                .embeds(self.embeds.as_deref())?
-                .components(self.components.as_deref())?
+                .embeds(self.embeds.as_deref())
+                .components(self.components.as_deref())
                 .allowed_mentions(self.allowed_mentions.as_ref());
 
             if let Some(content) = &self.content && !content.is_empty() {
-                response = response.content(Some(content))?;
+                response = response.content(Some(content));
             }
 
             if let Some(attachments) = &self.attachments {
-                response = response.attachments(attachments)?
+                response = response.attachments(attachments)
             }
 
             response.await?;
@@ -319,15 +318,15 @@ impl LuroSlash {
             .create_message(self.interaction.channel.as_ref().unwrap().id);
 
         if let Some(embeds) = &self.embeds {
-            message = message.embeds(embeds)?
+            message = message.embeds(embeds)
         }
 
         if let Some(content) = &self.content {
-            message = message.content(content)?
+            message = message.content(content)
         }
 
         if let Some(components) = &self.components {
-            message = message.components(components)?
+            message = message.components(components)
         }
 
         if let Some(flags) = &self.flags {

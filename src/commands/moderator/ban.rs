@@ -155,7 +155,7 @@ impl LuroCommand for BanCommand {
             .luro
             .twilight_client
             .create_message(user_to_ban_dm.id)
-            .embeds(&[embed.clone().build()])?
+            .embeds(&[embed.clone().build()])
             .await;
 
         match victim_dm {
@@ -167,9 +167,9 @@ impl LuroCommand for BanCommand {
             .luro
             .twilight_client
             .create_ban(guild_id, user_to_remove.id)
-            .delete_message_seconds(self.purge.value().try_into()?)?;
+            .delete_message_seconds(self.purge.value().try_into()?);
         if !reason.is_empty() {
-            ban = ban.reason(&reason)?
+            ban = ban.reason(&reason)
         }
         ban.await?;
 

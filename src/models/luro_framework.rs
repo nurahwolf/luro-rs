@@ -125,7 +125,7 @@ impl LuroFramework {
                 tracing_subscriber,
                 settings,
                 guild_id: None,
-                command_cache: Default::default(),
+                command_cache: Default::default()
             }
             .into(),
             shards
@@ -168,7 +168,7 @@ impl LuroFramework {
 
         self.twilight_client
             .create_message(log_channel)
-            .embeds(&[embed.build()])?
+            .embeds(&[embed.build()])
             .await?;
 
         debug!("Successfully sent to log channel");
@@ -197,7 +197,7 @@ impl LuroFramework {
 
         self.twilight_client
             .create_message(log_channel)
-            .embeds(&[embed.build()])?
+            .embeds(&[embed.build()])
             .await?;
 
         debug!("Successfully sent to log channel");
