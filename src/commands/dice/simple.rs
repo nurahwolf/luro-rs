@@ -1,10 +1,12 @@
 use async_trait::async_trait;
 use std::fmt::Write;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
-    models::{LuroSlash, Roll, RollResult, RollValue},
-    traits::luro_command::LuroCommand
+    models::{LuroResponse, Roll, RollResult, RollValue},
+    traits::luro_command::LuroCommand,
+    LuroContext
 };
 
 #[derive(CommandModel, CreateCommand)]
@@ -48,7 +50,7 @@ pub struct DiceSimpleCommand {
 
 #[async_trait]
 impl LuroCommand for DiceSimpleCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
         let mut roll = format!("{}d{}", self.dice, self.sides);
 
         if let Some(operation) = self.keep_highest {
@@ -87,6 +89,7 @@ impl LuroCommand for DiceSimpleCommand {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
+        let (author, _) = ctx.get_interaction_author(&slash)?;
         let mut result_string = if let Some(mut reason) = self.reason {
             if !reason.starts_with('\\') {
                 reason = format!("```{reason}```")
@@ -97,9 +100,7 @@ impl LuroCommand for DiceSimpleCommand {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                ctx.author()?.id,
-                result.string_result,
-                result.dice_total
+                author.id, result.string_result, result.dice_total
             )
         } else {
             format!("**Result:** `{}`\n**Total:** `{}`", result.string_result, result.dice_total)
@@ -114,9 +115,9 @@ impl LuroCommand for DiceSimpleCommand {
         }
 
         if let Some(ephemeral) = self.ephemeral && ephemeral {
-            ctx.content(result_string).ephemeral().respond().await
+            slash.content(result_string).ephemeral();ctx.respond(&mut slash).await
         } else {
-            ctx.content(result_string).respond().await
+            slash.content(result_string);ctx.respond(&mut slash).await
         }
     }
 }

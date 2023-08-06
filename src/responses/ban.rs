@@ -6,19 +6,21 @@ use twilight_model::{
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{
-    models::{LuroSlash, SlashUser},
+    framework::LuroFramework,
+    models::{LuroResponse, SlashUser},
     COLOUR_DANGER
 };
 
-impl LuroSlash {
+impl LuroFramework {
     pub async fn ban_response(
-        mut self,
+        &self,
         guild: Guild,
         moderator: Member,
         banned_user: User,
         reason: &String,
         period: &String,
-        success: bool
+        success: bool,
+        slash: &mut LuroResponse
     ) -> anyhow::Result<()> {
         let mut embed = self.ban_embed(guild, moderator, banned_user, reason, period).await?;
         if success {
@@ -27,7 +29,8 @@ impl LuroSlash {
             embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
         }
 
-        self.embed(embed.build())?.respond().await
+        slash.embed(embed.build())?;
+        self.respond(slash).await
     }
 
     /// An embed formatted to show a banned user

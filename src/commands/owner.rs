@@ -1,9 +1,11 @@
+use anyhow::Context;
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::LuroSlash;
+use crate::LuroContext;
 
+use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 
 use self::abuse::AbuseCommand;
@@ -63,13 +65,12 @@ pub enum OwnerCommands {
 
 #[async_trait]
 impl LuroCommand for OwnerCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let interaction_author = ctx.author()?;
+    async fn run_commands(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
         let mut owner_match = false;
 
         // We are using global data for this one in case an owner was removed from the application live
-        for owner in &ctx.luro.global_data.read().owners {
-            if interaction_author.id == owner.id {
+        for owner in &ctx.data_global.read().owners {
+            if slash.interaction.author_id().context("Expected interaction author ID")? == owner.id {
                 owner_match = true
             }
         }
@@ -77,10 +78,9 @@ impl LuroCommand for OwnerCommands {
         // If we don't have a match, bitch at the user
         if !owner_match {
             return ctx
-                .clone()
                 .not_owner_response(
-                    &interaction_author.id,
-                    &ctx.interaction.guild_id,
+                    &slash.interaction.author_id().context("Expected interaction author ID")?,
+                    &slash.interaction.guild_id.clone(),
                     match self {
                         Self::Save(_) => "owner_save",
                         Self::Log(_) => "owner_log",
@@ -94,25 +94,26 @@ impl LuroCommand for OwnerCommands {
                         Self::ClearWarning(_) => "owner_clearwarning",
                         Self::Guilds(_) => "owner_guilds",
                         Self::GetMessage(_) => "owner_getmessage"
-                    }
+                    },
+                    &mut slash
                 )
                 .await;
         }
 
         // We know the user is good, so call the appropriate subcommand.
         match self {
-            Self::Save(command) => command.run_command(ctx).await,
-            Self::Log(command) => command.run_command(ctx).await,
-            Self::Assign(command) => command.run_command(ctx).await,
-            Self::Modify(command) => command.run_command(ctx).await,
-            Self::Commands(command) => command.run_command(ctx).await,
-            Self::Reload(command) => command.run_command(ctx).await,
-            Self::SaveGuilds(command) => command.run_command(ctx).await,
-            Self::Abuse(command) => command.run_command(ctx).await,
-            Self::LoadUsers(command) => command.run_command(ctx).await,
-            Self::ClearWarning(command) => command.run_command(ctx).await,
-            Self::Guilds(command) => command.run_command(ctx).await,
-            Self::GetMessage(command) => command.run_command(ctx).await
+            Self::Save(command) => command.run_command(ctx, slash).await,
+            Self::Log(command) => command.run_command(ctx, slash).await,
+            Self::Assign(command) => command.run_command(ctx, slash).await,
+            Self::Modify(command) => command.run_command(ctx, slash).await,
+            Self::Commands(command) => command.run_command(ctx, slash).await,
+            Self::Reload(command) => command.run_command(ctx, slash).await,
+            Self::SaveGuilds(command) => command.run_command(ctx, slash).await,
+            Self::Abuse(command) => command.run_command(ctx, slash).await,
+            Self::LoadUsers(command) => command.run_command(ctx, slash).await,
+            Self::ClearWarning(command) => command.run_command(ctx, slash).await,
+            Self::Guilds(command) => command.run_command(ctx, slash).await,
+            Self::GetMessage(command) => command.run_command(ctx, slash).await
         }
     }
 }

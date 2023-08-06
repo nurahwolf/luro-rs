@@ -13,7 +13,10 @@ use twilight_model::{
     user::User
 };
 
-use crate::{models::Heck, models::LuroSlash, LuroContext};
+use crate::{
+    models::{Heck, LuroResponse},
+    LuroContext
+};
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -40,18 +43,18 @@ pub enum HeckCommands {
 
 #[async_trait]
 impl LuroCommand for HeckCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: &LuroContext, slash: LuroResponse) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
-            Self::Add(command) => command.run_command(ctx).await,
-            Self::Someone(command) => command.run_command(ctx).await,
-            Self::Info(command) => command.run_command(ctx).await
+            Self::Add(command) => command.run_command(ctx, slash).await,
+            Self::Someone(command) => command.run_command(ctx, slash).await,
+            Self::Info(command) => command.run_command(ctx, slash).await
         }
     }
 }
 
 /// Open the database as writable in case we need to reload the hecks
-async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMarker>>) -> anyhow::Result<()> {
+async fn check_hecks_are_present(ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> anyhow::Result<()> {
     debug!("checking to make sure hecks are present");
     let (are_sfw_hecks_empty, are_nsfw_hecks_empty);
 
@@ -60,7 +63,7 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
             trace!("checking if guild hecks are present");
             {
                 let guild_data = ctx
-                    .guild_data
+                    .data_guild
                     .get(&guild_id)
                     .ok_or_else(|| Error::msg("There is no guild data available! Are you sure there are guild hecks here?"))?;
                 are_sfw_hecks_empty = guild_data.hecks.sfw_heck_ids.is_empty();
@@ -69,7 +72,7 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
 
             if are_sfw_hecks_empty || are_nsfw_hecks_empty {
                 debug!("some hecks are empty, so we are reloading them");
-                let guild = ctx.guild_data.entry(guild_id);
+                let guild = ctx.data_guild.entry(guild_id);
                 guild.and_modify(|guild| {
                     if are_sfw_hecks_empty {
                         guild.hecks.reload_sfw_heck_ids()
@@ -83,7 +86,7 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
         }
         None => {
             trace!("checking if global hecks are present");
-            let mut global_data = ctx.global_data.upgradable_read();
+            let mut global_data = ctx.data_global.upgradable_read();
             are_sfw_hecks_empty = global_data.hecks.sfw_heck_ids.is_empty();
             are_nsfw_hecks_empty = global_data.hecks.nsfw_heck_ids.is_empty();
 
@@ -117,7 +120,7 @@ async fn get_heck(
     // Check to make sure our hecks are present, if not reload them
     // NOTE: This sets guild_id to false if we don't need to check for global hecks
     let (heck, heck_id);
-    check_hecks_are_present(ctx.clone(), guild_id).await?;
+    check_hecks_are_present(ctx, guild_id).await?;
 
     // A heck type to remove if we can't find it
     let no_heck = (
@@ -135,7 +138,7 @@ async fn get_heck(
 
         {
             let mut guild_settings = ctx
-                .guild_data
+                .data_guild
                 .get_mut(&guild_id)
                 .ok_or_else(|| Error::msg("There are no settings for this guild. Blame Nurah."))?;
 
@@ -186,7 +189,7 @@ async fn get_heck(
     } else {
         debug!("user wants a global heck");
         // Use our specified ID if it is present, otherwise generate a random ID
-        let mut global_data = ctx.global_data.write();
+        let mut global_data = ctx.data_global.write();
         // Try to use the id specified by the user, otherwise generate a random ID
         let heck_id = match id {
             Some(id) => id.try_into()?,

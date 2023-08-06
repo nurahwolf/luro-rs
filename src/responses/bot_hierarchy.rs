@@ -1,13 +1,16 @@
 use tracing::warn;
+
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::framework::LuroFramework;
+use crate::models::LuroResponse;
 
-impl LuroSlash {
-    pub async fn bot_hierarchy_response(mut self, bot_username: &String) -> anyhow::Result<()> {
-        self.embed(bot_hierarchy_embed(bot_username).build())?.respond().await
+impl LuroFramework {
+    pub async fn bot_hierarchy_response(&self, bot_username: &String, slash: &mut LuroResponse) -> anyhow::Result<()> {
+        slash.embed(bot_hierarchy_embed(bot_username).build())?;
+        self.respond(slash).await
     }
 }
 

@@ -1,15 +1,14 @@
 use anyhow::Error;
-use twilight_http::client::InteractionClient;
+
 use twilight_model::http::interaction::InteractionResponse;
-use twilight_model::{application::interaction::Interaction, http::interaction::InteractionResponseType};
+use twilight_model::http::interaction::InteractionResponseType;
 use twilight_util::builder::InteractionResponseDataBuilder;
 
+use crate::models::LuroResponse;
+use crate::LuroContext;
+
 /// A simple function to respond with `ChannelMessageWithSource`
-pub async fn respond_to_interaction(
-    interaction_client: &InteractionClient<'_>,
-    interaction: &Interaction,
-    content: String
-) -> Result<(), Error> {
+pub async fn respond_to_interaction(ctx: &LuroContext, slash: LuroResponse, content: String) -> Result<(), Error> {
     let data = InteractionResponseDataBuilder::new().content(content).build();
 
     let response = InteractionResponse {
@@ -17,8 +16,9 @@ pub async fn respond_to_interaction(
         data: Some(data)
     };
 
-    interaction_client
-        .create_response(interaction.id, &interaction.token, &response)
+    slash
+        .interaction_client(&ctx.twilight_client, &slash.interaction.application_id)
+        .create_response(slash.interaction.id, &slash.interaction.token, &response)
         .await?;
 
     Ok(())

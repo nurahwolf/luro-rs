@@ -1,9 +1,11 @@
 use async_trait::async_trait;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
-    models::{LuroSlash, Roll, RollResult, RollValue},
-    traits::luro_command::LuroCommand
+    models::{LuroResponse, Roll, RollResult, RollValue},
+    traits::luro_command::LuroCommand,
+    LuroContext
 };
 
 #[derive(CommandModel, CreateCommand)]
@@ -19,7 +21,8 @@ pub struct DiceRollCommand {
 
 #[async_trait]
 impl LuroCommand for DiceRollCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+        let (author, _) = ctx.get_interaction_author(&slash)?;
         let result = Roll::roll_inline(&self.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
@@ -34,9 +37,7 @@ impl LuroCommand for DiceRollCommand {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                ctx.author()?.id,
-                result.string_result,
-                result.dice_total
+                author.id, result.string_result, result.dice_total
             )
         } else {
             format!("**Result:** `{}`\n**Total:** `{}`", result.string_result, result.dice_total)
@@ -51,9 +52,9 @@ impl LuroCommand for DiceRollCommand {
         }
 
         if let Some(ephemeral) = self.ephemeral && ephemeral {
-            ctx.content(result_string).ephemeral().respond().await
+            slash.content(result_string).ephemeral();ctx.respond(&mut slash).await
         } else {
-            ctx.content(result_string).respond().await
+            slash.content(result_string);ctx.respond(&mut slash).await
         }
     }
 }

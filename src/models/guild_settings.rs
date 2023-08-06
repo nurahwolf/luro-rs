@@ -3,13 +3,12 @@ use std::path::Path;
 use tracing::warn;
 use twilight_model::id::{marker::GuildMarker, Id};
 
+use crate::framework::LuroFramework;
 use crate::models::GuildSetting;
 use crate::LuroContext;
 
 use crate::traits::toml::LuroTOML;
 use crate::GUILDSETTINGS_FILE_PATH;
-
-use super::LuroFramework;
 
 impl LuroTOML for GuildSetting {}
 
@@ -18,7 +17,7 @@ impl GuildSetting {
     pub async fn get_guild_settings(ctx: &LuroFramework, guild_id: &Id<GuildMarker>) -> anyhow::Result<Self> {
         // Check to see if our data is present. if it is, return early
         {
-            if let Some(settings) = ctx.guild_data.get(guild_id) {
+            if let Some(settings) = ctx.data_guild.get(guild_id) {
                 return Ok(settings.clone());
             }
         }
@@ -32,7 +31,7 @@ impl GuildSetting {
 
         // Now insert it into our context
         {
-            ctx.guild_data.insert(*guild_id, guild_settings.clone());
+            ctx.data_guild.insert(*guild_id, guild_settings.clone());
         }
 
         // Return the settings loaded from disk
@@ -50,7 +49,7 @@ impl GuildSetting {
 
         {
             let mut new_guild_settings = ctx
-                .guild_data
+                .data_guild
                 .get_mut(guild_id)
                 .context("Expected to have a guild in the cache!")?;
 

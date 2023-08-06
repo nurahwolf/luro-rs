@@ -4,7 +4,8 @@ use tracing::{debug, info, warn};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{
-    models::{LuroFramework, LuroMessage, LuroMessageSource, SlashUser, UserData},
+    framework::LuroFramework,
+    models::{LuroMessage, LuroMessageSource, SlashUser, UserData},
     COLOUR_DANGER
 };
 

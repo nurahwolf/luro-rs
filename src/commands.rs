@@ -1,8 +1,8 @@
-use std::str::FromStr;
+use std::sync::Arc;
 
-use anyhow::anyhow;
-use tracing::info;
+use tracing::error;
 use tracing::warn;
+
 use twilight_interactions::command::CreateCommand;
 
 use self::dice::DiceCommands;
@@ -16,14 +16,14 @@ use self::{
     say::SayCommand, story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand
 };
 
-use anyhow::bail;
-
 use twilight_model::application::interaction::InteractionData;
 
 use crate::commands::base64::{Base64Decode, Base64Encode};
 use crate::commands::heck::add::HeckAddCommand;
 use crate::commands::marry::MarryNew;
-use crate::models::{Commands, CustomId, LuroSlash};
+use crate::framework::LuroFramework;
+use crate::models::Commands;
+use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 use crate::BOT_NAME;
 
@@ -84,86 +84,81 @@ impl Commands {
     }
 }
 
-impl LuroSlash {
+impl LuroFramework {
     /// Handle incoming command interaction.
-    pub async fn handle_command(self) -> anyhow::Result<()> {
-        let data = match self.interaction.data.clone() {
-            Some(InteractionData::ApplicationCommand(data)) => *data,
-            _ => bail!("expected application command data")
+    pub async fn handle_command(self: &Arc<Self>, mut slash: LuroResponse) -> anyhow::Result<()> {
+        let data = match slash.interaction.data {
+            Some(InteractionData::ApplicationCommand(ref data)) => *data.clone(),
+            _ => {
+                error!("Failing to handle interaction due to no interaction data");
+                return Ok(());
+            }
         };
 
         // TODO: CONSTANT match for bot name...
         match data.name.as_str() {
-            "about" => AboutCommand::new(data).await?.run_command(self).await,
-            "say" => SayCommand::new(data).await?.run_command(self).await,
-            "info" => InfoCommands::new(data).await?.run_commands(self).await,
-            "hello" => HelloCommand::new(data).await?.run_command(self).await,
-            "count" => CountCommand::new(data).await?.run_command(self).await,
-            "mod" => ModeratorCommands::new(data).await?.run_commands(self).await,
-            "music" => MusicCommands::new(data).await?.run_commands(self).await,
-            "boop" => BoopCommand::new(data).await?.run_command(self).await,
-            "owner" => OwnerCommands::new(data).await?.run_commands(self).await,
-            "heck" => HeckCommands::new(data).await?.run_commands(self).await,
-            "lewd" => LewdCommands::new(data).await?.run_commands(self).await,
-            "base64" => Base64Commands::new(data).await?.run_commands(self).await,
-            "story" => StoryCommand::new(data).await?.run_command(self).await,
-            "uwu" => UwUCommand::new(data).await?.run_command(self).await,
-            "wordcount" => WordcountCommand::new(data).await?.run_command(self).await,
-            "roll" => DiceCommands::new(data).await?.run_commands(self).await,
-            "luro" => LuroCommands::new(data).await?.run_commands(self).await,
-            "marry" => MarryCommands::new(data).await?.run_commands(self).await,
-            _ => self.unknown_command_response().await
+            "about" => AboutCommand::new(data).await?.run_command(self, slash).await,
+            "say" => SayCommand::new(data).await?.run_command(self, slash).await,
+            "info" => InfoCommands::new(data).await?.run_commands(self, slash).await,
+            "hello" => HelloCommand::new(data).await?.run_command(self, slash).await,
+            "count" => CountCommand::new(data).await?.run_command(self, slash).await,
+            "mod" => ModeratorCommands::new(data).await?.run_commands(self, slash).await,
+            "music" => MusicCommands::new(data).await?.run_commands(self, slash).await,
+            "boop" => BoopCommand::new(data).await?.run_command(self, slash).await,
+            "owner" => OwnerCommands::new(data).await?.run_commands(self, slash).await,
+            "heck" => HeckCommands::new(data).await?.run_commands(self, slash).await,
+            "lewd" => LewdCommands::new(data).await?.run_commands(self, slash).await,
+            "base64" => Base64Commands::new(data).await?.run_commands(self, slash).await,
+            "story" => StoryCommand::new(data).await?.run_command(self, slash).await,
+            "uwu" => UwUCommand::new(data).await?.run_command(self, slash).await,
+            "wordcount" => WordcountCommand::new(data).await?.run_command(self, slash).await,
+            "roll" => DiceCommands::new(data).await?.run_commands(self, slash).await,
+            "luro" => LuroCommands::new(data).await?.run_commands(self, slash).await,
+            "marry" => MarryCommands::new(data).await?.run_commands(self, slash).await,
+            _ => self.unknown_command_response(&mut slash).await
         }
     }
 
     /// Handle incoming component interaction
-    pub async fn handle_component(self) -> anyhow::Result<()> {
-        let data = match self.interaction.data {
+    pub async fn handle_component(self: &Arc<Self>, mut slash: LuroResponse) -> anyhow::Result<()> {
+        let data = match slash.interaction.data {
             Some(InteractionData::MessageComponent(ref data)) => data.clone(),
-            _ => return Err(anyhow!("expected message component data"))
+            _ => {
+                error!("Failing to handle interaction due to no interaction data");
+                return Ok(());
+            }
         };
 
-        info!(
-            "Received component interaction - {} - {}",
-            self.author()?.name,
-            data.custom_id
-        );
-
         match &*data.custom_id {
-            "boop" => BoopCommand::handle_component(data, self).await,
-            "decode" => Base64Decode::handle_component(data, self).await,
-            "encode" => Base64Encode::handle_component(data, self).await,
-            "marry" => MarryNew::handle_component(data, self).await,
-            "story" => StoryCommand::handle_component(data, self).await,
-            "heck-setting" => HeckAddCommand::handle_component(data, self).await,
+            "boop" => BoopCommand::handle_component(data, self, &mut slash).await,
+            "decode" => Base64Decode::handle_component(data, self, &mut slash).await,
+            "encode" => Base64Encode::handle_component(data, self, &mut slash).await,
+            "marry" => MarryNew::handle_component(data, self, &mut slash).await,
+            "story" => StoryCommand::handle_component(data, self, &mut slash).await,
+            "heck-setting" => HeckAddCommand::handle_component(data, self, &mut slash).await,
             name => {
                 warn!(name = name, "received unknown component");
-                self.unknown_command_response().await
+                self.unknown_command_response(&mut slash).await
             }
         }
     }
 
     /// Handle incoming modal interaction
-    pub async fn handle_modal(self) -> anyhow::Result<()> {
-        let custom_id = match self.interaction.data {
-            Some(InteractionData::ModalSubmit(ref data)) => CustomId::from_str(&data.custom_id)?,
-            _ => return Err(anyhow!("expected modal submit data"))
+    pub async fn handle_modal(self: &Arc<Self>, slash: LuroResponse) -> anyhow::Result<()> {
+        let data = match &slash.interaction.data {
+            Some(InteractionData::ModalSubmit(data)) => data.clone(),
+            _ => {
+                error!("Failing to handle interaction due to no interaction data");
+                return Ok(());
+            }
         };
-        let data = self.parse_modal_data(&mut self.interaction.clone())?;
 
-        match &*custom_id.name {
-            "heck-add" => HeckAddCommand::handle_model(data, self).await,
-            "mod-warn" => ModeratorWarnCommand::handle_model(data, self).await,
+        match &*data.custom_id {
+            "heck-add" => HeckAddCommand::handle_model(data, self, slash).await,
+            "mod-warn" => ModeratorWarnCommand::handle_model(data, self, slash).await,
             name => {
                 warn!(name = name, "received unknown component");
-
-                // TODO: Make this a response type.
-                let embed = self
-                    .default_embed()
-                    .await?
-                    .title("IT'S FUCKED")
-                    .description("Will finish this at some point");
-                self.embeds(vec![embed.build()])?.respond().await
+                Ok(())
             }
         }
     }

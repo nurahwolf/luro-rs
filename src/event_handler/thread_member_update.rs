@@ -1,7 +1,7 @@
 use tracing::info;
 use twilight_model::gateway::payload::incoming::ThreadMemberUpdate;
 
-use crate::models::LuroFramework;
+use crate::framework::LuroFramework;
 
 impl LuroFramework {
     pub async fn listener_thread_member_update(&self, event: Box<ThreadMemberUpdate>) -> anyhow::Result<()> {

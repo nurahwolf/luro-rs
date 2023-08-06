@@ -1,18 +1,20 @@
 use std::{convert::TryInto, path::Path};
 
-use anyhow::Context;
 use async_trait::async_trait;
 
 use rand::Rng;
 use tracing::info;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
+
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
-use crate::COLOUR_DANGER;
-use crate::{models::GlobalData, models::LuroSlash, STORIES_FILE_PATH};
+use crate::models::LuroResponse;
+use crate::{models::GlobalData, STORIES_FILE_PATH};
+use crate::{LuroContext, COLOUR_DANGER};
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
@@ -31,7 +33,7 @@ pub struct StoryCommand {
 
 #[async_trait]
 impl LuroCommand for StoryCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
         let mut is_empty = false;
         let new_stories = GlobalData::get_stories(Path::new(STORIES_FILE_PATH)).await?.stories;
         let stories;
@@ -39,13 +41,13 @@ impl LuroCommand for StoryCommand {
         let story_id;
 
         {
-            if ctx.luro.global_data.read().stories.is_empty() {
+            if ctx.data_global.read().stories.is_empty() {
                 is_empty = true;
             };
         }
 
         {
-            let mut global_data = ctx.luro.global_data.write();
+            let mut global_data = ctx.data_global.write();
 
             if is_empty {
                 info!("Out of random stories to get, so reloading config...");
@@ -69,19 +71,19 @@ impl LuroCommand for StoryCommand {
             Some(story) => story,
             None => {
                 return ctx
-                    .internal_error_response("There is no story with that ID.".to_owned())
+                    .internal_error_response("There is no story with that ID.".to_owned(), &mut slash)
                     .await
             }
         };
 
         // Make sure we are in a size limit to send as plaintext, otherwise we are sending as an embed...
         if let Some(plaintext) = self.plaintext && plaintext && story.description.len() < 2000 {
-            return ctx.content(&story.description).respond().await
+            slash.content(&story.description);
+            return ctx.respond(&mut slash).await
         };
 
         let mut embed = ctx
-            .default_embed()
-            .await?
+            .default_embed(&slash.interaction.guild_id)
             .title(&story.title)
             .description(&story.description)
             .footer(EmbedFooterBuilder::new(format!("Story ID: {story_id}")));
@@ -93,20 +95,27 @@ impl LuroCommand for StoryCommand {
 
         let button = button("story", "Delete this cursed thing");
 
-        ctx.embed(embed.build())?.components(button).respond().await
+        slash.embed(embed.build())?.components(button);
+        ctx.respond(&mut slash).await
     }
 
-    async fn handle_component(_: Box<MessageComponentInteractionData>, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(
+        _: Box<MessageComponentInteractionData>,
+        ctx: &LuroContext,
+        slash: &mut LuroResponse
+    ) -> anyhow::Result<()> {
+        let (_, slash_author) = ctx.get_interaction_author(slash)?;
         let embed = EmbedBuilder::new()
             .color(COLOUR_DANGER)
             .title("REDACTED")
             .description(format!(
                 "There used to be a story here, but <@{}> found it too cursed for their eyes.",
-                ctx.interaction.author_id().context("Expected interaction author")?
+                slash_author.user_id
             ))
             .build();
 
-        ctx.embed(embed)?.components(vec![]).update().respond().await
+        slash.embed(embed)?.components(vec![]).update();
+        ctx.respond(slash).await
     }
 }
 

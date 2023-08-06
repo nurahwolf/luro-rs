@@ -5,7 +5,8 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::{models::GuildSetting, models::LuroSlash};
+use crate::models::{GuildSetting, LuroResponse};
+use crate::LuroContext;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -14,11 +15,11 @@ pub struct HeckInfo {}
 
 #[async_trait]
 impl LuroCommand for HeckInfo {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::new().title("Heck Information - Global");
         let mut global_details = String::new();
         {
-            let global_data = ctx.luro.global_data.read();
+            let global_data = ctx.data_global.read();
             writeln!(global_details, "**GLOBAL SFW HECKS:** {}", global_data.hecks.sfw_hecks.len())?;
             writeln!(
                 global_details,
@@ -39,9 +40,9 @@ impl LuroCommand for HeckInfo {
 
         embed = embed.field(EmbedFieldBuilder::new("Global Stats", global_details).inline());
 
-        if let Some(guild_id) = ctx.interaction.guild_id {
+        if let Some(guild_id) = slash.interaction.guild_id {
             let mut guild_details = String::new();
-            let guild_settings = GuildSetting::get_guild_settings(&ctx.luro, &guild_id).await?;
+            let guild_settings = GuildSetting::get_guild_settings(ctx, &guild_id).await?;
             writeln!(guild_details, "**GUILD SFW HECKS:** {}", guild_settings.hecks.sfw_hecks.len())?;
             writeln!(
                 guild_details,
@@ -61,6 +62,7 @@ impl LuroCommand for HeckInfo {
             embed = embed.field(EmbedFieldBuilder::new("Guild Stats", guild_details).inline());
         }
 
-        ctx.embed(embed.build())?.respond().await
+        slash.embed(embed.build())?;
+        ctx.respond(&mut slash).await
     }
 }

@@ -1,7 +1,7 @@
-use anyhow::Context;
 use async_trait::async_trait;
 
 use tracing::debug;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     guild::Permissions,
@@ -11,8 +11,9 @@ use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
     functions::parse_string_to_u32,
-    models::{GuildSetting, LuroSlash, RoleOrdering},
-    traits::luro_command::LuroCommand
+    models::{GuildSetting, LuroResponse, RoleOrdering},
+    traits::luro_command::LuroCommand,
+    LuroContext
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -43,12 +44,12 @@ impl LuroCommand for GuildSettingsCommand {
         Permissions::MANAGE_GUILD
     }
 
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        let guild_id = match ctx.interaction.guild_id {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+        let guild_id = match slash.interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return ctx.not_guild_response().await
+            None => return ctx.not_guild_response(&mut slash).await
         };
-        let guild = ctx.luro.twilight_client.guild(guild_id).await?.model().await?;
+        let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
         // Attempt to get the first role after @everyone, otherwise fall back to @everyone
         let mut roles: Vec<_> = guild.roles.iter().map(RoleOrdering::from).collect();
         roles.sort_by(|a, b| b.cmp(a));
@@ -70,12 +71,12 @@ impl LuroCommand for GuildSettingsCommand {
         } else {
             None
         };
-        let mut embed = ctx.default_embed().await?;
+        let mut embed = ctx.default_embed(&slash.interaction.guild_id);
         embed = embed.title(format!("Guild Setting - {}", guild.name));
 
         // Create a new guild settings object
         let mut guild_settings = if let Some(clear_settings) = self.clear_settings && clear_settings {
-            GuildSetting::get_guild_settings(&ctx.luro, &ctx.interaction.guild_id.context("Expected Guild ID")?).await?
+            GuildSetting::get_guild_settings(ctx, &guild_id).await?
         } else { GuildSetting::default() };
 
         guild_settings.accent_colour = highest_role_colour;
@@ -101,7 +102,7 @@ impl LuroCommand for GuildSettingsCommand {
         }
 
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
-        let guild_settings = GuildSetting::modify_guild_settings(&ctx.luro, &guild_id, &guild_settings).await?;
+        let guild_settings = GuildSetting::modify_guild_settings(ctx, &guild_id, &guild_settings).await?;
 
         embed = embed.field(
             EmbedFieldBuilder::new(
@@ -130,10 +131,10 @@ impl LuroCommand for GuildSettingsCommand {
                 embed.field(EmbedFieldBuilder::new("Thread Log Channel", format!("<#{thread_events_log_channel}>")).inline())
         }
 
-        ctx.luro
-            .send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator)
+        ctx.send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator)
             .await?;
 
-        ctx.embed(embed.build())?.respond().await
+        slash.embed(embed.build())?;
+        ctx.respond(&mut slash).await
     }
 }

@@ -9,8 +9,9 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder};
 
 use crate::{
     commands::heck::{format_heck, get_heck},
-    models::{LuroSlash, SlashUser},
-    traits::luro_command::LuroCommand
+    models::{LuroResponse, SlashUser},
+    traits::luro_command::LuroCommand,
+    LuroContext
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -28,23 +29,25 @@ pub struct HeckSomeoneCommand {
 
 #[async_trait]
 impl LuroCommand for HeckSomeoneCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+        let (author, _) = ctx.get_interaction_author(&slash)?;
+
         // Is the channel the interaction called in NSFW?
-        let nsfw = ctx.channel()?.nsfw.unwrap_or(false);
+        let nsfw = ctx.channel(&slash)?.nsfw.unwrap_or(false);
 
         debug!("attempting to get a heck");
-        let (heck, heck_id) = get_heck(&ctx.luro, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
+        let (heck, heck_id) = get_heck(ctx, self.id, slash.interaction.guild_id, self.global, nsfw).await?;
 
         debug!("attempting to format the returned heck");
-        let formatted_heck = format_heck(&heck, &ctx.author()?, &self.user.resolved).await;
+        let formatted_heck = format_heck(&heck, author, &self.user.resolved).await;
 
         // This first attempts to get them from the guild if they are a member, otherwise resorts to fetching their user.
-        let slash_author = match ctx.interaction.guild_id {
-            Some(guild_id) => match SlashUser::client_fetch_member(&ctx.luro, guild_id, Id::new(heck.author_id)).await {
+        let slash_author = match slash.interaction.guild_id {
+            Some(guild_id) => match SlashUser::client_fetch_member(ctx, guild_id, Id::new(heck.author_id)).await {
                 Ok(slash_author) => slash_author.1,
-                Err(_) => SlashUser::client_fetch_user(&ctx.luro, Id::new(heck.author_id)).await?.1
+                Err(_) => SlashUser::client_fetch_user(ctx, Id::new(heck.author_id)).await?.1
             },
-            None => SlashUser::client_fetch_user(&ctx.luro, Id::new(heck.author_id)).await?.1
+            None => SlashUser::client_fetch_user(ctx, Id::new(heck.author_id)).await?.1
         };
 
         let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", slash_author.name))
@@ -55,10 +58,10 @@ impl LuroCommand for HeckSomeoneCommand {
         debug!("creating our response");
         if let Some(plaintext) = self.plaintext && plaintext {
             trace!("user wanted plaintext");
-            ctx.content(formatted_heck.heck_message).respond().await
+            slash.content(formatted_heck.heck_message);ctx.respond(&mut slash).await
         } else {
             trace!("user wanted embed");
-            let mut embed = ctx.default_embed().await?
+            let mut embed = ctx.default_embed(&slash.interaction.guild_id)
             .description(formatted_heck.heck_message)
             .author(embed_author);
         if nsfw {
@@ -70,7 +73,8 @@ impl LuroCommand for HeckSomeoneCommand {
                 "Heck ID {heck_id} - SFW Heck"
             )))
         }
-            ctx.content(format!("<@{}>", self.user.resolved.id)).embed(embed.build())?.respond().await
+            slash.content(format!("<@{}>", self.user.resolved.id)).embed(embed.build())?;
+ctx.respond(&mut slash).await
         }
     }
 }

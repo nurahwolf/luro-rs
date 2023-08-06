@@ -3,7 +3,7 @@ use twilight_model::gateway::payload::incoming::ThreadUpdate;
 
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::models::LuroFramework;
+use crate::framework::LuroFramework;
 
 impl LuroFramework {
     pub async fn response_thread_update(&self, event: &ThreadUpdate) -> anyhow::Result<()> {

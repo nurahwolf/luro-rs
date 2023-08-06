@@ -1,16 +1,19 @@
 use tracing::warn;
+
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::framework::LuroFramework;
+use crate::models::LuroResponse;
 
-impl LuroSlash {
+impl LuroFramework {
     pub async fn invalid_heck_response(
-        mut self,
+        &self,
         missing_user: bool,
         missing_author: bool,
-        heck_message: &str
+        heck_message: &str,
+        slash: &mut LuroResponse
     ) -> anyhow::Result<()> {
         let mut embed = invalid_heck_embed(heck_message);
 
@@ -20,7 +23,9 @@ impl LuroSlash {
         if missing_author {
             embed = embed.field(EmbedFieldBuilder::new("Missing Value", "`<author>`").inline())
         };
-        self.embed(embed.build())?.respond().await
+        slash.embed(embed.build())?;
+
+        self.respond(slash).await
     }
 }
 

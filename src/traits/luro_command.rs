@@ -2,6 +2,8 @@ use anyhow::bail;
 use anyhow::{Context, Error};
 use async_trait::async_trait;
 
+use twilight_model::application::interaction::Interaction;
+
 use std::mem;
 use twilight_interactions::command::CommandModel;
 
@@ -9,17 +11,15 @@ use twilight_model::application::interaction::InteractionData;
 
 use twilight_model::{
     application::interaction::{
-        application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData,
-        Interaction
+        application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData
     },
     channel::Channel,
     guild::{PartialMember, Permissions},
-    id::{marker::GuildMarker, Id},
     user::User
 };
-use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{models::LuroSlash, LuroContext};
+use crate::models::LuroResponse;
+use crate::LuroContext;
 
 /// Add some custom functionality around [CommandModel]
 #[async_trait]
@@ -35,23 +35,27 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Run the command
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.not_implemented_response().await
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+        ctx.not_implemented_response(&mut slash).await
     }
 
     /// Run a command group
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.not_implemented_response().await
+    async fn run_commands(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+        ctx.not_implemented_response(&mut slash).await
     }
 
     /// Handle a component interaction. This could be a button or other form of interaciton
-    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.not_implemented_response().await
+    async fn handle_component(
+        _data: Box<MessageComponentInteractionData>,
+        ctx: &LuroContext,
+        slash: &mut LuroResponse
+    ) -> anyhow::Result<()> {
+        ctx.not_implemented_response(slash).await
     }
 
     /// Create and respond to a button interaction
-    async fn handle_model(_data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.not_implemented_response().await
+    async fn handle_model(_data: ModalInteractionData, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+        ctx.not_implemented_response(&mut slash).await
     }
 
     /// The default permissions a user needs to run this command
@@ -102,16 +106,6 @@ pub trait LuroCommand: CommandModel {
             Some(InteractionData::MessageComponent(data)) => Ok(data),
             _ => bail!("unable to parse modal data, received unknown data type")
         }
-    }
-
-    /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
-    fn default_embed(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {
-        ctx.default_embed(&guild_id)
-    }
-
-    /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
-    fn accent_colour(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u32 {
-        ctx.accent_colour(&guild_id)
     }
 
     // TODO: WTF is this?

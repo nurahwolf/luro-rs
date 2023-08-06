@@ -3,8 +3,9 @@ use tracing_subscriber::filter;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
-use crate::models::LuroSlash;
+use crate::LuroContext;
 
+use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "log", desc = "Set Luro's global log level, useful for debugging")]
@@ -31,48 +32,35 @@ pub enum LogLevel {
 
 #[async_trait]
 impl LuroCommand for LogCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
         let (_, level) = match self.level {
             LogLevel::Trace => (
-                ctx.luro
-                    .tracing_subscriber
-                    .modify(|filter| *filter = filter::LevelFilter::TRACE)?,
+                ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::TRACE)?,
                 "TRACE"
             ),
             LogLevel::Debug => (
-                ctx.luro
-                    .tracing_subscriber
-                    .modify(|filter| *filter = filter::LevelFilter::DEBUG)?,
+                ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::DEBUG)?,
                 "DEBUG"
             ),
             LogLevel::Info => (
-                ctx.luro
-                    .tracing_subscriber
-                    .modify(|filter| *filter = filter::LevelFilter::INFO)?,
+                ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::INFO)?,
                 "INFO"
             ),
             LogLevel::Warn => (
-                ctx.luro
-                    .tracing_subscriber
-                    .modify(|filter| *filter = filter::LevelFilter::WARN)?,
+                ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::WARN)?,
                 "WARN"
             ),
             LogLevel::Error => (
-                ctx.luro
-                    .tracing_subscriber
-                    .modify(|filter| *filter = filter::LevelFilter::ERROR)?,
+                ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::ERROR)?,
                 "ERROR"
             ),
             LogLevel::Off => (
-                ctx.luro
-                    .tracing_subscriber
-                    .modify(|filter| *filter = filter::LevelFilter::OFF)?,
+                ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::OFF)?,
                 "OFF"
             )
         };
 
-        ctx.content(format!("Luro's log level is now set to {}!", level))
-            .respond()
-            .await
+        slash.content(format!("Luro's log level is now set to {}!", level));
+        ctx.respond(&mut slash).await
     }
 }

@@ -8,8 +8,9 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::models::LuroSlash;
+use crate::LuroContext;
 
+use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -39,16 +40,15 @@ struct Position {
 
 #[async_trait]
 impl LuroCommand for ModifyRoleCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
         let (mut role_selected, mut role_position) = (None, None);
 
         // Guild to modify
         let guild = ctx
-            .luro
             .twilight_client
-            .guild(match ctx.interaction.guild_id {
+            .guild(match slash.interaction.guild_id {
                 Some(guild_id) => guild_id,
-                None => return ctx.not_guild_response().await
+                None => return ctx.not_guild_response(&mut slash).await
             })
             .await?
             .model()
@@ -70,7 +70,7 @@ impl LuroCommand for ModifyRoleCommand {
         if let Some(mut role_selected) = role_selected {
             let mut number = 1;
             let mut updated_role_list = Vec::new();
-            let mut update_role = ctx.luro.twilight_client.update_role(guild.id, role_selected.id);
+            let mut update_role = ctx.twilight_client.update_role(guild.id, role_selected.id);
 
             for role in guild.roles {
                 info!(role.name);
@@ -90,7 +90,7 @@ impl LuroCommand for ModifyRoleCommand {
                 })
                 .json(&positions)
                 .build();
-                ctx.luro.twilight_client.request::<EmptyBody>(request?).await?;
+                ctx.twilight_client.request::<EmptyBody>(request?).await?;
             }
 
             // If we are updating the position based on an exact number
@@ -104,7 +104,7 @@ impl LuroCommand for ModifyRoleCommand {
                 })
                 .json(&positions)
                 .build();
-                ctx.luro.twilight_client.request::<EmptyBody>(request?).await?;
+                ctx.twilight_client.request::<EmptyBody>(request?).await?;
             }
 
             if let Some(ref name) = self.name {
@@ -131,7 +131,7 @@ impl LuroCommand for ModifyRoleCommand {
             }
 
             let updated_role = update_role.await?.model().await?;
-            let mut embed = ctx.default_embed().await?;
+            let mut embed = ctx.default_embed(&slash.interaction.guild_id);
             let mut description = String::new();
             writeln!(description, "**Role:** <@&{0}> - {0}", updated_role.id)?;
             writeln!(description, "**Position:** {}", updated_role.position)?;
@@ -153,10 +153,12 @@ impl LuroCommand for ModifyRoleCommand {
             }
 
             // TODO: Return an embed with new role information
-            ctx.embed(embed.build())?.ephemeral().respond().await
+            slash.embed(embed.build())?.ephemeral();
+            ctx.respond(&mut slash).await
         } else {
             // TODO: Make this a response type
-            ctx.content("No role found".to_owned()).ephemeral().respond().await
+            slash.content("No role found".to_owned()).ephemeral();
+            ctx.respond(&mut slash).await
         }
     }
 }

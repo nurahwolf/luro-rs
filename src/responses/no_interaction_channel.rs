@@ -1,13 +1,13 @@
 use tracing::error;
+
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
-use crate::COLOUR_DANGER;
+use crate::{framework::LuroFramework, models::LuroResponse, COLOUR_DANGER};
 
-use crate::models::LuroSlash;
-
-impl LuroSlash {
-    pub async fn no_interaction_channel_response(mut self) -> anyhow::Result<()> {
-        self.embed(no_interaction_channel_embed().build())?.respond().await
+impl LuroFramework {
+    pub async fn no_interaction_channel_response(&self, slash: &mut LuroResponse) -> anyhow::Result<()> {
+        slash.embed(no_interaction_channel_embed().build())?;
+        self.respond(slash).await
     }
 }
 

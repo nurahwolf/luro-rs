@@ -1,13 +1,16 @@
 use tracing::warn;
+
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::framework::LuroFramework;
+use crate::models::LuroResponse;
 
-impl LuroSlash {
-    pub async fn unable_to_get_guild_response(mut self) -> anyhow::Result<()> {
-        self.embed(unable_to_get_guild_embed().build())?.respond().await
+impl LuroFramework {
+    pub async fn unable_to_get_guild_response(&self, slash: &mut LuroResponse) -> anyhow::Result<()> {
+        slash.embed(unable_to_get_guild_embed().build())?;
+        self.respond(slash).await
     }
 }
 

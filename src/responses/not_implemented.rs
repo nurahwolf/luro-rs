@@ -1,14 +1,17 @@
 use tracing::error;
+
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::framework::LuroFramework;
+use crate::models::LuroResponse;
 
-impl LuroSlash {
+impl LuroFramework {
     /// A response returned by default when a command does not exist within Luro.
-    pub async fn not_implemented_response(mut self) -> anyhow::Result<()> {
-        self.embed(not_implemented_embed().build())?.ephemeral().respond().await
+    pub async fn not_implemented_response(&self, slash: &mut LuroResponse) -> anyhow::Result<()> {
+        slash.embed(not_implemented_embed().build())?.ephemeral();
+        self.respond(slash).await
     }
 }
 

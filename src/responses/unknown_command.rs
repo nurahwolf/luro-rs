@@ -1,14 +1,17 @@
 use tracing::error;
+
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::framework::LuroFramework;
+use crate::models::LuroResponse;
 
-impl LuroSlash {
+impl LuroFramework {
     /// A response sent when Luro receives a command it does not have a handler for
-    pub async fn unknown_command_response(mut self) -> anyhow::Result<()> {
-        self.embed(unknown_command_embed().build())?.respond().await
+    pub async fn unknown_command_response(&self, slash: &mut LuroResponse) -> anyhow::Result<()> {
+        slash.embed(unknown_command_embed().build())?;
+        self.respond(slash).await
     }
 }
 

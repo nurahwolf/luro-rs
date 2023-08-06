@@ -10,6 +10,7 @@ use std::path::Path;
 use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
 
+use crate::framework::LuroFramework;
 use crate::models::UserData;
 use crate::LuroContext;
 use crate::USERDATA_FILE_PATH;
@@ -28,31 +29,31 @@ impl UserData {
 
     /// This function just gets user settings and ensures it is in Luro's context.
     pub async fn get_user_settings<'a>(ctx: &'a LuroContext, user_id: &Id<UserMarker>) -> anyhow::Result<Self> {
-        match ctx.user_data.get(user_id) {
+        match ctx.data_user.get(user_id) {
             Some(user_data) => Ok(user_data.clone()),
             None => {
                 let user_settings = Self::get(Path::new(&Self::path(user_id))).await?;
                 {
-                    ctx.user_data.insert(*user_id, user_settings.clone());
+                    ctx.data_user.insert(*user_id, user_settings.clone());
                 }
-                Ok(ctx.user_data.get(user_id).context("Expected to find user_data")?.clone())
+                Ok(ctx.data_user.get(user_id).context("Expected to find user_data")?.clone())
             }
         }
     }
 
     /// This function gets user settings and ensures it is in Luro's context, returning a context that can be modified.
     pub async fn modify_user_settings<'a>(
-        ctx: &'a LuroContext,
+        ctx: &'a LuroFramework,
         user_id: &Id<UserMarker>
     ) -> anyhow::Result<RefMut<'a, Id<UserMarker>, UserData>> {
-        match ctx.user_data.get_mut(user_id) {
+        match ctx.data_user.get_mut(user_id) {
             Some(user_data) => Ok(user_data),
             None => {
                 let user_settings = Self::get(Path::new(&Self::path(user_id))).await?;
                 {
-                    ctx.user_data.insert(*user_id, user_settings.clone());
+                    ctx.data_user.insert(*user_id, user_settings.clone());
                 }
-                Ok(ctx.user_data.get_mut(user_id).context("Expected to find user_data")?)
+                Ok(ctx.data_user.get_mut(user_id).context("Expected to find user_data")?)
             }
         }
     }

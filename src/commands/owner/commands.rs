@@ -1,10 +1,12 @@
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
+
 use twilight_model::id::{marker::GenericMarker, Id};
 
-use crate::models::LuroSlash;
+use crate::LuroContext;
 
+use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -17,15 +19,15 @@ pub struct OwnerCommandsCommand {
 
 #[async_trait]
 impl LuroCommand for OwnerCommandsCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        let application = ctx.luro.twilight_client.current_user_application().await?.model().await?;
-        let client = ctx.luro.twilight_client.interaction(application.id);
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+        let application = ctx.twilight_client.current_user_application().await?.model().await?;
+        let client = ctx.twilight_client.interaction(application.id);
 
         client.set_guild_commands(Id::new(self.guild.get()), &[]).await?;
 
-        ctx.content(format!("Commands set to null in guild <#{}>", self.guild))
-            .ephemeral()
-            .respond()
-            .await
+        slash
+            .content(format!("Commands set to null in guild <#{}>", self.guild))
+            .ephemeral();
+        ctx.respond(&mut slash).await
     }
 }

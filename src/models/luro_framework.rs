@@ -42,7 +42,7 @@ use super::{Commands, LuroLogChannel};
 
 impl LuroFunctions for LuroFramework {}
 
-impl LuroFramework {
+impl LuroV2 {
     /// Creates a new framework builder, this is a shortcut to FrameworkBuilder.
     pub async fn builder(
         intents: Intents,
@@ -132,127 +132,10 @@ impl LuroFramework {
         ))
     }
 
-    /// Attempts to send to a log channel if it is present.
-    pub async fn send_log_channel(
-        &self,
-        guild_id: &Option<Id<GuildMarker>>,
-        embed: EmbedBuilder,
-        log_channel: LuroLogChannel
-    ) -> anyhow::Result<()> {
-        debug!("Attempting to send to log channel");
-        let guild_id = match guild_id {
-            Some(data) => data,
-            None => return Ok(())
-        };
-        let guild_data = match self.guild_data.get(guild_id) {
-            Some(data) => data,
-            None => return Ok(())
-        };
-        let log_channel = match log_channel {
-            LuroLogChannel::Catchall => guild_data.catchall_log_channel,
-            LuroLogChannel::Message => guild_data.message_events_log_channel,
-            LuroLogChannel::Moderator => guild_data.moderator_actions_log_channel,
-            LuroLogChannel::Thread => guild_data.thread_events_log_channel
-        };
-
-        let log_channel = match log_channel {
-            Some(data) => data,
-            None => match guild_data.catchall_log_channel {
-                Some(channel) => channel,
-                None => {
-                    warn!("Guild {guild_id} does not have a catchall channel defined");
-                    return Ok(());
-                }
-            }
-        };
-
-        self.twilight_client
-            .create_message(log_channel)
-            .embeds(&[embed.build()])
-            .await?;
-
-        debug!("Successfully sent to log channel");
-        Ok(())
-    }
-
-    /// Attempts to send to a moderator log channel if it is present.
-    pub async fn send_moderator_log_channel(
-        &self,
-        guild_id: &Option<Id<GuildMarker>>,
-        embed: EmbedBuilder
-    ) -> anyhow::Result<()> {
-        debug!("Attempting to send to log channel");
-        let guild_id = match guild_id {
-            Some(data) => data,
-            None => return Ok(())
-        };
-        let guild_data = match self.guild_data.get(guild_id) {
-            Some(data) => data,
-            None => return Ok(())
-        };
-        let log_channel = match guild_data.moderator_actions_log_channel {
-            Some(data) => data,
-            None => return Ok(())
-        };
-
-        self.twilight_client
-            .create_message(log_channel)
-            .embeds(&[embed.build()])
-            .await?;
-
-        debug!("Successfully sent to log channel");
-        Ok(())
-    }
-
-    /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
-    pub fn default_embed(&self, guild_id: &Option<Id<GuildMarker>>) -> EmbedBuilder {
-        EmbedBuilder::new().color(self.accent_colour(guild_id))
-    }
-
-    /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
-    pub fn accent_colour(&self, guild_id: &Option<Id<GuildMarker>>) -> u32 {
-        if let Some(guild_id) = guild_id {
-            let guild_settings = self.guild_data.get(guild_id);
-
-            if let Some(guild_settings) = guild_settings {
-                // Check to see if a custom colour is defined
-                if let Some(custom_accent_colour) = guild_settings.accent_colour_custom {
-                    return custom_accent_colour;
-                };
-
-                if guild_settings.accent_colour != 0 {
-                    return guild_settings.accent_colour;
-                }
-            }
-        };
-
-        ACCENT_COLOUR
-    }
-
     /// Gets the [interaction client](InteractionClient) using this framework's
     /// [http client](Client) and [application id](ApplicationMarker)
     pub fn interaction_client(&self) -> InteractionClient {
         self.twilight_client.interaction(self.settings.read().application_id)
-    }
-    /// Register commands to the Discord API.
-    pub async fn register_commands(&self, application_id: Id<ApplicationMarker>) -> anyhow::Result<()> {
-        let client = self.twilight_client.interaction(application_id);
-
-        match client
-            .set_global_commands(
-                &Commands::default_commands()
-                    .global_commands
-                    .into_values()
-                    .collect::<Vec<Command>>()
-            )
-            .await
-        {
-            Ok(command_result) => Ok(info!(
-                "Successfully registered {} global commands!",
-                command_result.model().await?.len()
-            )),
-            Err(why) => Err(why.into())
-        }
     }
 }
 

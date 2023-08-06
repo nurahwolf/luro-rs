@@ -1,46 +1,24 @@
 use std::mem;
 
-use crate::{
-    models::{GuildSetting, LuroSlash},
-    traits::luro_functions::LuroFunctions,
-    ACCENT_COLOUR
-};
+use crate::models::LuroResponse;
 use anyhow::anyhow;
-use tracing::{debug, error, warn};
+
 use twilight_gateway::MessageSender;
-use twilight_http::{client::InteractionClient, Response};
+use twilight_http::{client::InteractionClient, Client};
 
 use twilight_model::{
-    application::interaction::{modal::ModalInteractionData, Interaction, InteractionData, InteractionType},
-    channel::{
-        message::{AllowedMentions, Component, Embed, MentionType, MessageFlags},
-        Channel, Message
-    },
+    application::interaction::{modal::ModalInteractionData, Interaction, InteractionData},
+    channel::message::{AllowedMentions, Component, Embed, MentionType, MessageFlags},
     http::{
         attachment::Attachment,
         interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType}
     },
-    user::User
+    id::{marker::ApplicationMarker, Id}
 };
-use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::LuroContext;
-
-impl LuroFunctions for LuroSlash {}
-
-impl LuroSlash {
-    /// Create a new interaction response. Note that not setting anything else will not cause a response to be sent!
-    /// This is set with some defaults:
-    /// - AllowedMentions - All
-    /// - InteractionResponseType - [`InteractionResponseType::ChannelMessageWithSource`]
-    pub fn new(ctx: LuroContext, interaction: Interaction, shard: MessageSender) -> Self {
-        debug!(id = ?interaction.id, "Processing {} interaction", interaction.kind.kind());
-
-        // TODO: Set allowed_mentions to actually allow all
+impl LuroResponse {
+    pub fn new(interaction: Interaction, shard: MessageSender) -> Self {
         Self {
-            luro: ctx,
-            interaction,
-            shard,
             interaction_response_type: InteractionResponseType::ChannelMessageWithSource,
             allowed_mentions: Some(AllowedMentions {
                 parse: vec![MentionType::Everyone, MentionType::Roles, MentionType::Users],
@@ -48,39 +26,18 @@ impl LuroSlash {
                 roles: Vec::new(),
                 users: Vec::new()
             }),
-            attachments: None,
-            choices: None,
-            components: None,
-            content: None,
-            custom_id: None,
-            embeds: None,
-            flags: None,
-            title: None,
-            tts: None
+            attachments: Default::default(),
+            choices: Default::default(),
+            components: Default::default(),
+            content: Default::default(),
+            custom_id: Default::default(),
+            embeds: Default::default(),
+            flags: Default::default(),
+            title: Default::default(),
+            tts: Default::default(),
+            interaction,
+            shard
         }
-    }
-
-    // Handle an interaction
-    pub async fn handle(self) -> anyhow::Result<()> {
-        let response = match self.interaction.kind {
-            InteractionType::ApplicationCommand => self.clone().handle_command().await,
-            InteractionType::MessageComponent => self.clone().handle_component().await,
-            InteractionType::ModalSubmit => self.clone().handle_modal().await,
-            other => {
-                warn!("received unexpected {} interaction", other.kind());
-                Ok(())
-            }
-        };
-
-        if let Err(why) = response {
-            error!(error = ?why, "error while processing interaction");
-            // Attempt to send an error response
-            if let Err(send_fail) = self.clone().internal_error_response(why.to_string()).await {
-                error!(error = ?send_fail, "Failed to respond to the interaction with an error response");
-            };
-        };
-
-        Ok(())
     }
 
     /// Parse incoming [`ModalSubmit`] interaction and return the inner data.
@@ -128,13 +85,13 @@ impl LuroSlash {
     }
 
     /// Set the title of a response
-    pub fn title(mut self, title: String) -> Self {
+    pub fn title(&mut self, title: String) -> &mut Self {
         self.title = Some(title);
         self
     }
 
     /// Set the custom_id of a response
-    pub fn custom_id(mut self, custom_id: impl Into<String>) -> Self {
+    pub fn custom_id(&mut self, custom_id: impl Into<String>) -> &mut Self {
         self.custom_id = Some(custom_id.into());
         self
     }
@@ -158,25 +115,10 @@ impl LuroSlash {
         self
     }
 
-    /// Create an interaction client
-    pub fn interaction_client(&self) -> InteractionClient {
-        self.luro.twilight_client.interaction(self.interaction.application_id)
-    }
-
     /// Set [InteractionResponseType::DeferredChannelMessageWithSource]
     pub fn set_deferred(&mut self) -> &mut Self {
         self.interaction_response_type = InteractionResponseType::DeferredChannelMessageWithSource;
         self
-    }
-
-    /// Set's the response type to be sent as a response to a deferred message and acknowledge this interaction.
-    pub async fn deferred(&mut self) -> anyhow::Result<&mut Self> {
-        // TODO: Check to make sure we are responding to an interaction, otherwise this type cannot be used
-        self.interaction_response_type = InteractionResponseType::DeferredChannelMessageWithSource;
-        self.interaction_client()
-            .create_response(self.interaction.id, &self.interaction.token, &self.interaction_response())
-            .await?;
-        Ok(self)
     }
 
     /// Set the response to be a model
@@ -217,7 +159,7 @@ impl LuroSlash {
     }
 
     /// Using the data contained within this struct, respond to an interaction.
-    pub async fn respond(&mut self) -> anyhow::Result<()> {
+    pub async fn respond(mut self, twilight_client: &Client, slash: LuroResponse) -> anyhow::Result<()> {
         // Check to make sure fields are not too big, if they are send them as a file instead
         if let Some(content) = &mut self.content {
             if content.len() > 2000 {
@@ -284,16 +226,16 @@ impl LuroSlash {
         }
 
         if self.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource {
-            let client = self.interaction_client();
+            let client = self.interaction_client(twilight_client, &slash.interaction.application_id);
             let mut response = client
-                .update_response(&self.interaction.token)
+                .update_response(&slash.interaction.token)
                 .embeds(self.embeds.as_deref())
                 .components(self.components.as_deref())
                 .allowed_mentions(self.allowed_mentions.as_ref());
 
             if let Some(content) = &self.content && !content.is_empty() {
-                response = response.content(Some(content));
-            }
+                        response = response.content(Some(content));
+                    }
 
             if let Some(attachments) = &self.attachments {
                 response = response.attachments(attachments)
@@ -301,88 +243,20 @@ impl LuroSlash {
 
             response.await?;
         } else {
-            self.interaction_client()
-                .create_response(self.interaction.id, &self.interaction.token, &self.interaction_response())
+            self.interaction_client(twilight_client, &slash.interaction.application_id)
+                .create_response(slash.interaction.id, &slash.interaction.token, &self.interaction_response())
                 .await?;
         }
 
         Ok(())
     }
 
-    /// Send a message, useful if you do not want to consume the interaction.
-    pub async fn send_message(&self) -> anyhow::Result<Response<Message>> {
-        //TODO: Change this to not unwrap and error handle
-        let mut message = self
-            .luro
-            .twilight_client
-            .create_message(self.interaction.channel.as_ref().unwrap().id);
-
-        if let Some(embeds) = &self.embeds {
-            message = message.embeds(embeds)
-        }
-
-        if let Some(content) = &self.content {
-            message = message.content(content)
-        }
-
-        if let Some(components) = &self.components {
-            message = message.components(components)
-        }
-
-        if let Some(flags) = &self.flags {
-            message = message.flags(*flags)
-        }
-
-        if let Some(interaction_message) = &self.interaction.message {
-            message = message.reply(interaction_message.id)
-        }
-
-        Ok(message.await?)
-    }
-
-    /// Get the interaction author.
-    pub fn author(&self) -> anyhow::Result<User> {
-        Ok(match &self.interaction.member {
-            Some(member) => member
-                .user
-                .clone()
-                .ok_or_else(|| anyhow!("Unable to find the user that executed this command"))?,
-            None => self
-                .interaction
-                .user
-                .clone()
-                .ok_or_else(|| anyhow!("Unable to find the user that executed this command"))?
-        })
-    }
-
-    /// Get the interaction channel.
-    pub fn channel(&self) -> anyhow::Result<Channel> {
-        self.interaction
-            .channel
-            .clone()
-            .ok_or_else(|| anyhow!("Unable to get the channel this interaction was ran in"))
-    }
-
-    /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
-    pub async fn default_embed(&self) -> anyhow::Result<EmbedBuilder> {
-        Ok(EmbedBuilder::new().color(self.accent_colour().await?))
-    }
-
-    /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
-    pub async fn accent_colour(&self) -> anyhow::Result<u32> {
-        if let Some(guild_id) = &self.interaction.guild_id {
-            let guild_settings = GuildSetting::get_guild_settings(&self.luro, guild_id).await?;
-
-            // Check to see if a custom colour is defined
-            if let Some(custom_accent_colour) = guild_settings.accent_colour_custom {
-                return Ok(custom_accent_colour);
-            };
-
-            if guild_settings.accent_colour != 0 {
-                return Ok(guild_settings.accent_colour);
-            }
-        };
-
-        Ok(ACCENT_COLOUR)
+    /// Create an interaction client
+    pub fn interaction_client<'a>(
+        &'a self,
+        twilight_client: &'a Client,
+        application_id: &'a Id<ApplicationMarker>
+    ) -> InteractionClient {
+        twilight_client.interaction(*application_id)
     }
 }

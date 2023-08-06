@@ -1,15 +1,20 @@
 use tracing::error;
+
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::framework::LuroFramework;
+use crate::models::LuroResponse;
 
-impl LuroSlash {
-    pub async fn bot_missing_permission_response(mut self, permission_missing: &String) -> anyhow::Result<()> {
-        self.embed(bot_missing_permission_embed(permission_missing).build())?
-            .respond()
-            .await
+impl LuroFramework {
+    pub async fn bot_missing_permission_response(
+        &self,
+        permission_missing: &String,
+        slash: &mut LuroResponse
+    ) -> anyhow::Result<()> {
+        slash.embed(bot_missing_permission_embed(permission_missing).build())?;
+        self.respond(slash).await
     }
 }
 

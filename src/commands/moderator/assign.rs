@@ -1,10 +1,12 @@
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+
 use twilight_model::id::{marker::RoleMarker, Id};
 
-use crate::models::LuroSlash;
+use crate::LuroContext;
 
+use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -21,24 +23,22 @@ pub struct AssignCommand {
 
 #[async_trait]
 impl LuroCommand for AssignCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        let author = ctx.author()?;
-
-        // User to action
-        let user = if let Some(user) = self.user { user.resolved } else { author };
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+        let guild_id = slash.interaction.guild_id;
+        let (author, _slash_author) = ctx.get_specified_user_or_author(&self.user, &slash)?;
 
         // Guild to modify
-        let guild_id = match ctx.interaction.guild_id {
+        let guild_id = match guild_id {
             Some(guild_id) => guild_id,
-            None => return ctx.not_guild_response().await
+            None => return ctx.not_guild_response(&mut slash).await
         };
 
-        ctx.luro
-            .twilight_client
-            .add_guild_member_role(guild_id, user.id, self.role)
+        ctx.twilight_client
+            .add_guild_member_role(guild_id, author.id, self.role)
             .await?;
 
         // TODO: Real response
-        ctx.content("All good!".to_owned()).respond().await
+        slash.content("All good!".to_owned());
+        ctx.respond(&mut slash).await
     }
 }

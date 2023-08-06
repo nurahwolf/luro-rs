@@ -8,8 +8,9 @@ use twilight_model::id::{marker::UserMarker, Id};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder};
 
 use crate::{
-    models::{LuroSlash, UserData},
-    traits::{luro_command::LuroCommand, luro_functions::LuroFunctions}
+    models::{LuroResponse, UserData},
+    traits::luro_command::LuroCommand,
+    LuroContext
 };
 use std::{convert::TryInto, fmt::Write, iter::FromIterator};
 
@@ -28,17 +29,17 @@ pub struct WordcountCommand {
 
 #[async_trait]
 impl LuroCommand for WordcountCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
         let mut wordcount: usize = Default::default();
         let mut averagesize: usize = Default::default();
         let mut wordsize: BTreeMap<usize, usize> = Default::default();
         let mut words: BTreeMap<String, usize> = Default::default();
-        let mut embed = ctx.default_embed().await?;
+        let mut embed = ctx.default_embed(&slash.interaction.guild_id);
         let mut content = String::new();
         let mut digits = 0;
         let global = match self.global {
             Some(global) => {
-                ctx.deferred().await?;
+                ctx.deferred(&mut slash).await?;
                 global
             }
             None => false
@@ -53,7 +54,7 @@ impl LuroCommand for WordcountCommand {
         if global {
             let mut most_said_words: BTreeMap<Id<UserMarker>, usize> = Default::default();
             let mut user_ids = vec![];
-            for user_data in ctx.luro.user_data.iter() {
+            for user_data in ctx.data_user.iter() {
                 user_ids.push(*user_data.key());
 
                 wordcount += user_data.wordcount;
@@ -88,9 +89,9 @@ impl LuroCommand for WordcountCommand {
             }
             writeln!(content, "-----")?;
         } else {
-            let (user, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
+            let (user, slash_author) = ctx.get_specified_user_or_author(&self.user, &slash)?;
             let author = EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.try_into()?);
-            let user_data = UserData::get_user_settings(&ctx.luro, &user.id).await?;
+            let user_data = UserData::get_user_settings(ctx, &user.id).await?;
             embed = embed.author(author);
             wordcount = user_data.wordcount;
             averagesize = user_data.averagesize;
@@ -114,11 +115,13 @@ impl LuroCommand for WordcountCommand {
                         content,
                         "-----\nSpecifically, the word `{word}` has been said about `{word_count}` times!"
                     )?;
-                    return ctx.embed(embed.description(content).build())?.respond().await;
+                    slash.embed(embed.description(content).build())?;
+                    return ctx.respond(&mut slash).await;
                 }
                 None => {
                     content = format!("The word `{word}` has never been said, as far as I can see!");
-                    return ctx.content(content).respond().await;
+                    slash.content(content);
+                    return ctx.respond(&mut slash).await;
                 }
             }
         };
@@ -180,6 +183,7 @@ impl LuroCommand for WordcountCommand {
             content.truncate(4093);
             content.push_str("...")
         }
-        ctx.embed(embed.description(content).build())?.respond().await
+        slash.embed(embed.description(content).build())?;
+        ctx.respond(&mut slash).await
     }
 }

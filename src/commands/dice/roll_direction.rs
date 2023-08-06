@@ -1,9 +1,11 @@
 use async_trait::async_trait;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
-    models::{LuroSlash, Roll},
-    traits::luro_command::LuroCommand
+    models::{LuroResponse, Roll},
+    traits::luro_command::LuroCommand,
+    LuroContext
 };
 
 #[derive(CommandModel, CreateCommand)]
@@ -15,11 +17,11 @@ pub struct DiceRollDirectionCommand {
 
 #[async_trait]
 impl LuroCommand for DiceRollDirectionCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
         if let Some(ephemeral) = self.ephemeral && ephemeral {
-            ctx.content(Roll::roll_direction()).ephemeral().respond().await
+            slash.content(Roll::roll_direction()).ephemeral();ctx.respond(&mut slash).await
         } else {
-            ctx.content(Roll::roll_direction()).respond().await
+            slash.content(Roll::roll_direction());ctx.respond(&mut slash).await
         }
     }
 }

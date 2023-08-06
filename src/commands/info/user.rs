@@ -13,8 +13,8 @@ use twilight_util::{
 };
 
 use crate::{
-    models::{LuroSlash, RoleOrdering, SlashUser, UserActionType, UserData},
-    traits::luro_functions::LuroFunctions
+    models::{LuroResponse, RoleOrdering, SlashUser, UserActionType, UserData},
+    LuroContext
 };
 
 use crate::traits::luro_command::LuroCommand;
@@ -36,16 +36,17 @@ pub struct InfoUser {
 
 #[async_trait]
 impl LuroCommand for InfoUser {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+        let guild_id = slash.interaction.guild_id;
         if let Some(export) = self.gdpr_export && export {
-            ctx.ephemeral();
+            slash.ephemeral();
         }
-        ctx.deferred().await?;
+        ctx.deferred(&mut slash).await?;
 
-        let mut embed = ctx.default_embed().await?;
+        let mut embed = ctx.default_embed(&slash.interaction.guild_id);
         let mut description = String::new();
         // The user we are interested in is the interaction author, unless a user was specified
-        let (author, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
+        let (author, slash_author) = ctx.get_specified_user_or_author(&self.user, &slash)?;
         let user_timestamp = Duration::from_millis(author.id.timestamp().unsigned_abs());
         let mut timestamp = format!("- Joined discord on <t:{0}> - <t:{0}:R>\n", user_timestamp.as_secs());
 
@@ -85,21 +86,21 @@ impl LuroCommand for InfoUser {
         // Some additional details if we are a guild
         let guild_id = match self.guild {
             Some(guild_specified) => Some(Id::new(guild_specified.get())),
-            None => ctx.interaction.guild_id
+            None => guild_id
         };
 
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
-            if let Ok(member) = ctx.luro.twilight_client.guild_member(guild_id, author.id).await {
+            if let Ok(member) = ctx.twilight_client.guild_member(guild_id, author.id).await {
                     let member = member.model().await?;
                     let slash_member = SlashUser::from_member(&member, Some(guild_id));
                     let mut guild_information = String::new();
-                    let guild = ctx.luro.twilight_client.guild(guild_id).await?.model().await?;
+                    let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
                     embed = embed.author(EmbedAuthorBuilder::new(slash_member.name).icon_url(slash_author.clone().try_into()?));
                     if let Some(hide_avatar) = self.hide_avatar && hide_avatar {
                     } else {
                         embed = embed.thumbnail(slash_author.clone().try_into()?);
                     }
-                    let member = ctx.luro.twilight_cache.member(guild_id, author.id).context("Expected to find member in cache")?;
+                    let member = ctx.twilight_cache.member(guild_id, author.id).context("Expected to find member in cache")?;
                     let mut user_roles = vec![];
                     for member_role in member.roles() {
                         for guild_role in guild.roles.clone() {
@@ -159,14 +160,15 @@ impl LuroCommand for InfoUser {
         // USER DATA SECTION
         let mut user_data_description = String::new();
         {
-            let user_data = UserData::get_user_settings(&ctx.luro, &author.id).await?;
+            let user_data = UserData::get_user_settings(ctx, &author.id).await?;
             if let Some(export) = self.gdpr_export && export {
                 if let Some(user_specified) = self.user {
                     // TODO: Add privilege esc tally to the person
-                    return ctx.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.author()?.id)).respond().await
+                    slash.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, slash.interaction.author_id().context("Expected to get interaction author ID")?));
+                    return ctx.respond(&mut slash).await
                 }
-                ctx.attachments = Some(vec![Attachment::from_bytes(
-                    format!("gdpr-export-{}.txt", ctx.author()?.id),
+                slash.attachments = Some(vec![Attachment::from_bytes(
+                    format!("gdpr-export-{}.txt", slash.interaction.author_id().context("Expected to get interaction author ID")?),
                     toml::to_string_pretty(&user_data)?.as_bytes().to_vec(),
                     1
                 )]);
@@ -239,6 +241,7 @@ impl LuroCommand for InfoUser {
 
         embed = embed.field(EmbedFieldBuilder::new("Timestamps", timestamp).inline());
         embed = embed.description(description);
-        ctx.embed(embed.build())?.respond().await
+        slash.embed(embed.build())?;
+        ctx.respond(&mut slash).await
     }
 }

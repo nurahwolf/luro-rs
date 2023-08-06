@@ -1,6 +1,6 @@
 use twilight_model::gateway::payload::incoming::ThreadCreate;
 
-use crate::models::LuroFramework;
+use crate::framework::LuroFramework;
 
 impl LuroFramework {
     pub async fn listener_thread_create(&self, event: Box<ThreadCreate>) -> anyhow::Result<()> {
