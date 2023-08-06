@@ -9,9 +9,8 @@ use self::stop::StopCommand;
 use self::volume::VolumeCommand;
 use self::{join::JoinCommand, leave::LeaveCommand, play::PlayCommand};
 
-use crate::LuroContext;
+use crate::models::LuroSlash;
 
-use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 mod info;
 mod join;
@@ -45,17 +44,17 @@ pub enum MusicCommands {
 
 #[async_trait]
 impl LuroCommand for MusicCommands {
-    async fn run_commands(self, ctx: &LuroContext, slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
-            Self::Play(command) => command.run_command(ctx, slash).await,
-            Self::Join(command) => command.run_command(ctx, slash).await,
-            Self::Leave(command) => command.run_command(ctx, slash).await,
-            Self::Pause(command) => command.run_command(ctx, slash).await,
-            Self::Seek(command) => command.run_command(ctx, slash).await,
-            Self::Volume(command) => command.run_command(ctx, slash).await,
-            Self::Stop(command) => command.run_command(ctx, slash).await,
-            Self::Info(command) => command.run_command(ctx, slash).await
+            Self::Play(command) => command.run_command(ctx).await,
+            Self::Join(command) => command.run_command(ctx).await,
+            Self::Leave(command) => command.run_command(ctx).await,
+            Self::Pause(command) => command.run_command(ctx).await,
+            Self::Seek(command) => command.run_command(ctx).await,
+            Self::Volume(command) => command.run_command(ctx).await,
+            Self::Stop(command) => command.run_command(ctx).await,
+            Self::Info(command) => command.run_command(ctx).await
         }
     }
 }

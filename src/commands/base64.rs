@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context};
+use anyhow::anyhow;
 use async_trait::async_trait;
 use std::str;
 
@@ -14,7 +14,7 @@ use twilight_model::{
     }
 };
 
-use crate::{models::LuroResponse, LuroContext, REGEX_CODE_BLOCK};
+use crate::{models::LuroSlash, REGEX_CODE_BLOCK};
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
@@ -28,11 +28,11 @@ pub enum Base64Commands {
 
 #[async_trait]
 impl LuroCommand for Base64Commands {
-    async fn run_commands(self, ctx: &LuroContext, slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
-            Self::Decode(command) => command.run_command(ctx, slash).await,
-            Self::Encode(command) => command.run_command(ctx, slash).await
+            Self::Decode(command) => command.run_command(ctx).await,
+            Self::Encode(command) => command.run_command(ctx).await
         }
     }
 }
@@ -47,26 +47,20 @@ pub struct Base64Decode {
 
 #[async_trait]
 impl LuroCommand for Base64Decode {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let button = button("encode".to_owned(), "Encode".to_owned());
         let decoded = format!("```\n{}\n```", decode(&self.string)?);
 
         if decoded.len() > 1000 {
-            let embed = ctx.default_embed(&slash.interaction.guild_id).description(decoded);
-            slash.embed(embed.build())?.components(button);
-            ctx.respond(&mut slash).await
+            let embed = ctx.default_embed().await?.description(decoded);
+            ctx.embed(embed.build())?.components(button).respond().await
         } else {
-            slash.content(decoded).components(button);
-            ctx.respond(&mut slash).await
+            ctx.content(decoded).components(button).respond().await
         }
     }
 
-    async fn handle_component(
-        _data: Box<MessageComponentInteractionData>,
-        ctx: &LuroContext,
-        slash: &mut LuroResponse
-    ) -> anyhow::Result<()> {
-        response(ctx, true, slash).await
+    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+        response(ctx, true).await
     }
 }
 
@@ -82,7 +76,7 @@ pub struct Base64Encode {
 
 #[async_trait]
 impl LuroCommand for Base64Encode {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let button = button("decode".to_owned(), "Decode".to_owned());
         debug!("Recevied {} string", self.string.len());
         let encoded = if let Some(bait) = self.bait && bait {
@@ -92,21 +86,15 @@ impl LuroCommand for Base64Encode {
         };
 
         if encoded.len() > 1000 {
-            let embed = ctx.default_embed(&slash.interaction.guild_id).description(encoded);
-            slash.embed(embed.build())?.components(button);
-            ctx.respond(&mut slash).await
+            let embed = ctx.default_embed().await?.description(encoded);
+            ctx.embed(embed.build())?.components(button).respond().await
         } else {
-            slash.content(encoded).components(button);
-            ctx.respond(&mut slash).await
+            ctx.content(encoded).components(button).respond().await
         }
     }
 
-    async fn handle_component(
-        _data: Box<MessageComponentInteractionData>,
-        ctx: &LuroContext,
-        slash: &mut LuroResponse
-    ) -> anyhow::Result<()> {
-        response(ctx, false, slash).await
+    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+        response(ctx, false).await
     }
 }
 
@@ -136,14 +124,8 @@ fn button(custom_id: String, label: String) -> Vec<Component> {
 
 /// Extract the message within an embed, otherwise fallback to message content
 /// Returns formatted content depending on the requested operation and optionally an embed if the interaction contained an embed
-async fn extract_message(
-    ctx: &LuroContext,
-    decode_operation: bool,
-    slash: &mut LuroResponse
-) -> anyhow::Result<(String, Option<Embed>)> {
-    let message = slash.interaction.message.clone();
-
-    let (message, embed) = if let Some(message) = &message {
+async fn extract_message(ctx: &LuroSlash, decode_operation: bool) -> anyhow::Result<(String, Option<Embed>)> {
+    let (message, embed) = if let Some(ref message) = ctx.interaction.message {
         if let Some(embed) = message.embeds.first() {
             match embed.description.clone() {
                 Some(description) => (description, Some(embed)),
@@ -170,11 +152,13 @@ async fn extract_message(
     // Some fancy trickery. Our first group type is for if there is a hidden 'secret', which means we should mention the person if they click the button. If it is not present (group 2) then we just act normal.
     let (secret, capture) = if let Some(capture) = captures.get(1) {
         if decode_operation {
-            slash.content(format!(
-                "Looks like <@{}> just got baited into revealing the message...",
-                slash.interaction.author_id().context("Expected interaction user id")?
-            ));
-            ctx.send_message(slash).await?;
+            ctx.clone()
+                .content(format!(
+                    "Looks like <@{}> just got baited into revealing the message...",
+                    ctx.author()?.id
+                ))
+                .send_message()
+                .await?;
         }
         ("s", capture.as_str())
     } else if let Some(capture) = captures.get(2) {
@@ -192,8 +176,8 @@ async fn extract_message(
     Ok((content, embed.cloned()))
 }
 
-async fn response(ctx: &LuroContext, decode_operation: bool, slash: &mut LuroResponse) -> anyhow::Result<()> {
-    let (content, interaction_embed) = extract_message(ctx, decode_operation, slash).await?;
+async fn response(mut ctx: LuroSlash, decode_operation: bool) -> anyhow::Result<()> {
+    let (content, interaction_embed) = extract_message(&ctx, decode_operation).await?;
     let button = if !decode_operation {
         button("decode".to_owned(), "Decode".to_owned())
     } else {
@@ -203,16 +187,23 @@ async fn response(ctx: &LuroContext, decode_operation: bool, slash: &mut LuroRes
     if let Some(mut embed) = interaction_embed {
         // If an embed is already defined, modify and return it
         embed.description = Some(content);
-        slash.embed(embed)?.content(String::new()).components(button).update();
-        ctx.respond(slash).await
+        ctx.embed(embed)?
+            .content(String::new())
+            .components(button)
+            .update()
+            .respond()
+            .await
     } else if content.len() > 1000 {
         // If our string is over 1000 characters, return an embed
-        let embed = ctx.default_embed(&slash.interaction.guild_id).description(content).build();
-        slash.embed(embed)?.content(String::new()).components(button).update();
-        ctx.respond(slash).await
+        let embed = ctx.default_embed().await?.description(content).build();
+        ctx.embed(embed)?
+            .content(String::new())
+            .components(button)
+            .update()
+            .respond()
+            .await
     } else {
         // Otherwise, just return it as text
-        slash.content(content).components(button).update();
-        ctx.respond(slash).await
+        ctx.content(content).components(button).update().respond().await
     }
 }

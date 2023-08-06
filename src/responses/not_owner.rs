@@ -1,25 +1,22 @@
 use tracing::warn;
-
 use twilight_model::id::marker::{GuildMarker, UserMarker};
 use twilight_model::id::Id;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::framework::LuroFramework;
-use crate::models::{LuroResponse, UserActionType, UserActions, UserData};
+use crate::models::{LuroSlash, UserActionType, UserActions, UserData};
 
-impl LuroFramework {
+impl LuroSlash {
     pub async fn not_owner_response(
-        &self,
+        mut self,
         user_id: &Id<UserMarker>,
         guild_id: &Option<Id<GuildMarker>>,
-        command_name: impl Into<String>,
-        slash: &mut LuroResponse
+        command_name: impl Into<String>
     ) -> anyhow::Result<()> {
         let command = command_name.into();
         {
-            let mut user_data = UserData::modify_user_settings(self, user_id).await?;
+            let mut user_data = UserData::modify_user_settings(&self.luro, user_id).await?;
             user_data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::Kick],
                 guild_id: *guild_id,
@@ -28,8 +25,7 @@ impl LuroFramework {
             });
             user_data.write_user_data(user_id).await?;
         }
-        slash.embed(not_owner_embed(user_id, &command).build())?;
-        self.respond(slash).await
+        self.embed(not_owner_embed(user_id, &command).build())?.respond().await
     }
 }
 

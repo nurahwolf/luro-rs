@@ -4,12 +4,10 @@ use anyhow::Error;
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
-
 use twilight_model::guild::Permissions;
 
-use crate::LuroContext;
+use crate::models::LuroSlash;
 
-use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -29,22 +27,25 @@ impl LuroCommand for PurgeCommand {
         Permissions::MANAGE_MESSAGES
     }
 
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
-        let channel = ctx.channel(&slash)?;
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        let channel = ctx.channel()?;
 
         if self.amount == 1 {
             let message = ctx
+                .luro
                 .twilight_client
                 .channel_messages(channel.id)
                 .limit(1)
                 .await?
                 .model()
                 .await?;
-            ctx.twilight_client
+            ctx.luro
+                .twilight_client
                 .delete_message(channel.id, message.first().ok_or_else(|| Error::msg("No messages found"))?.id)
                 .await?;
         } else {
             let messages = ctx
+                .luro
                 .twilight_client
                 .channel_messages(channel.id)
                 .limit(self.amount.try_into().unwrap())
@@ -52,10 +53,9 @@ impl LuroCommand for PurgeCommand {
                 .model()
                 .await?;
             let message_ids = messages.into_iter().map(|messages| messages.id).collect::<Vec<_>>();
-            ctx.twilight_client.delete_messages(channel.id, &message_ids).await?;
+            ctx.luro.twilight_client.delete_messages(channel.id, &message_ids).await?;
         }
 
-        slash.content("Done!!".to_owned()).ephemeral();
-        ctx.respond(&mut slash).await
+        ctx.content("Done!!".to_owned()).ephemeral().respond().await
     }
 }

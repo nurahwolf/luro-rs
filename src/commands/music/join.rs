@@ -7,7 +7,7 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::{models::LuroResponse, LuroContext};
+use crate::models::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -24,14 +24,12 @@ pub struct JoinCommand {
 
 #[async_trait]
 impl LuroCommand for JoinCommand {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
-        let guild_id = ctx.get_guild_id(&slash)?;
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        let guild_id = ctx.interaction.guild_id.unwrap();
 
-        slash
-            .shard
+        ctx.shard
             .command(&UpdateVoiceState::new(guild_id, Some(self.channel), false, false))?;
 
-        slash.content(format!("Joined <#{}>!", self.channel));
-        ctx.respond(&mut slash).await
+        ctx.content(format!("Joined <#{}>!", self.channel)).respond().await
     }
 }

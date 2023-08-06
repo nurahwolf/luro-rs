@@ -1,20 +1,17 @@
 use tracing::debug;
-
 use twilight_model::gateway::payload::incoming::ThreadDelete;
 
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::framework::LuroFramework;
-use crate::models::LuroLogChannel;
+use crate::models::LuroFramework;
 
 impl LuroFramework {
     // TODO: Change this to a response type
     pub async fn response_thread_deleted(&self, event: &ThreadDelete) -> anyhow::Result<()> {
         let embed = self.embed_thread_deleted(event);
-        self.send_log_channel(&Some(event.guild_id), embed, LuroLogChannel::Moderator)
-            .await
+        self.send_moderator_log_channel(&Some(event.guild_id), embed).await
     }
 
     /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.

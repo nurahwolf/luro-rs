@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tracing::error;
 use twilight_gateway::{Event, MessageSender};
 
-use crate::framework::LuroFramework;
+use crate::models::{LuroFramework, LuroSlash};
 
 mod audit_log_handler;
 mod ban_add;
@@ -19,11 +19,11 @@ mod thread_members_update;
 mod thread_update;
 
 impl LuroFramework {
-    pub async fn handle_event(self: Arc<Self>, shard: MessageSender, event: Event) -> anyhow::Result<()> {
+    pub async fn handle_event(self: Arc<Self>, event: Event, shard: MessageSender) -> anyhow::Result<()> {
         // events we want an IMMEDIATE resposne to, such as if we don't want the cache to be updated yet.
         let callback = match event.clone() {
-            Event::MessageUpdate(event) => self.message_update_handler(*event).await,
-            Event::MessageDelete(event) => self.message_delete_listener(event).await,
+            Event::MessageUpdate(message) => self.message_update_handler(*message).await,
+            Event::MessageDelete(message) => self.message_delete_listener(message).await,
             _ => Ok(())
         };
 
@@ -36,11 +36,11 @@ impl LuroFramework {
         self.twilight_cache.update(&event);
 
         let callback = match event {
-            Event::Ready(event) => self.ready_listener(event, shard).await,
-            Event::MessageCreate(event) => self.message_create_listener(*event).await,
-            Event::InteractionCreate(event) => self.handle_interaction(shard, event).await,
-            Event::GuildAuditLogEntryCreate(event) => self.audit_log_handler(event).await,
-            Event::BanAdd(event) => self.ban_add_listener(event).await,
+            Event::Ready(ready) => self.ready_listener(ready, shard).await,
+            Event::MessageCreate(message) => self.message_create_listener(*message).await,
+            Event::InteractionCreate(interaction) => LuroSlash::new(self, interaction.0, shard).handle().await,
+            Event::GuildAuditLogEntryCreate(entry) => self.audit_log_handler(entry).await,
+            Event::BanAdd(ban) => self.ban_add_listener(ban).await,
             Event::ThreadCreate(event) => self.listener_thread_create(event).await,
             Event::ThreadDelete(event) => self.listener_thread_delete(event).await,
             Event::ThreadListSync(event) => self.listener_thread_list_sync(event).await,

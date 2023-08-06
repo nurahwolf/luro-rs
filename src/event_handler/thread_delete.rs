@@ -1,6 +1,6 @@
 use twilight_model::gateway::payload::incoming::ThreadDelete;
 
-use crate::framework::LuroFramework;
+use crate::models::LuroFramework;
 
 impl LuroFramework {
     pub async fn listener_thread_delete(&self, event: ThreadDelete) -> anyhow::Result<()> {

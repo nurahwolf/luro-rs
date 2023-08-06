@@ -1,13 +1,12 @@
-use crate::{LuroContext, USERDATA_FILE_PATH};
+use crate::traits::luro_functions::LuroFunctions;
+use crate::USERDATA_FILE_PATH;
 use anyhow::Context;
 use async_trait::async_trait;
 use std::convert::TryInto;
 use std::fmt::Write;
 use std::path::Path;
-
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::modal::ModalInteractionData;
-
 use twilight_model::channel::message::component::{ActionRow, TextInput, TextInputStyle};
 use twilight_model::channel::message::Component;
 use twilight_model::guild::Permissions;
@@ -16,7 +15,7 @@ use twilight_model::id::Id;
 use twilight_util::builder::embed::{EmbedAuthorBuilder, ImageSource};
 use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder};
 
-use crate::models::{LuroLogChannel, LuroResponse, UserActionType, UserActions, UserData};
+use crate::models::{LuroSlash, SlashUser, UserActionType, UserActions, UserData};
 
 use crate::traits::luro_command::LuroCommand;
 use crate::traits::toml::LuroTOML;
@@ -39,17 +38,16 @@ impl LuroCommand for ModeratorWarnCommand {
         Permissions::MANAGE_MESSAGES
     }
 
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let user_id = self.user.resolved.id;
 
         if !self.new {
-            let user_data = UserData::modify_user_settings(ctx, &user_id).await?.clone();
+            let user_data = UserData::modify_user_settings(&ctx.luro, &user_id).await?.clone();
             if user_data.warnings.is_empty() {
-                slash.content("No warnings for that user!");
-                return ctx.respond(&mut slash).await;
+                return ctx.content("No warnings for that user!").respond().await;
             }
 
-            let (_, slash_author) = ctx.get_interaction_author(&slash)?;
+            let slash_author = SlashUser::client_fetch_user(&ctx.luro, user_id).await?.1;
             let embed_author = EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.try_into()?);
             let mut warnings_formatted = String::new();
             for (warning, user_id) in &user_data.warnings {
@@ -57,15 +55,15 @@ impl LuroCommand for ModeratorWarnCommand {
             }
 
             let embed = ctx
-                .default_embed(&slash.interaction.guild_id)
+                .luro
+                .default_embed(&ctx.interaction.guild_id)
                 .author(embed_author)
                 .description(warnings_formatted)
                 .footer(EmbedFooterBuilder::new(format!(
                     "User has a total of {} warnings.",
                     user_data.warnings.len()
                 )));
-            slash.embed(embed.build())?;
-            return ctx.respond(&mut slash).await;
+            return ctx.embed(embed.build())?.respond().await;
         }
 
         let components = vec![
@@ -95,23 +93,31 @@ impl LuroCommand for ModeratorWarnCommand {
             }),
         ];
 
-        slash
-            .custom_id("mod-warn".to_owned())
+        ctx.custom_id("mod-warn".to_owned())
             .title("Add your warning below!".to_owned())
             .components(components)
-            .model();
-
-        ctx.respond(&mut slash).await
+            .model()
+            .respond()
+            .await
     }
 
-    async fn handle_model(data: ModalInteractionData, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
-        let (author, slash_author) = ctx.get_interaction_author(&slash)?;
+    async fn handle_model(data: ModalInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        let author = ctx.author()?;
         let warning = ctx.parse_modal_field_required(&data, "mod-warn-text")?;
         let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
         let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id);
 
-        let mut embed = ctx.default_embed(&slash.interaction.guild_id);
+        let slash_author = SlashUser::client_fetch(
+            &ctx.luro,
+            ctx.interaction.guild_id,
+            ctx.interaction
+                .author_id()
+                .context("Expected to get the interaction author's ID")?
+        )
+        .await?;
+
+        let mut embed = ctx.luro.default_embed(&ctx.interaction.guild_id);
         let embed_author = EmbedAuthorBuilder::new(format!("Warning by {}", slash_author.name))
             .icon_url(ImageSource::url(slash_author.avatar)?)
             .build();
@@ -120,10 +126,10 @@ impl LuroCommand for ModeratorWarnCommand {
             .description(format!("Warning Created for <@{user_id}>\n```{warning}```"));
 
         {
-            let mut user_data = UserData::modify_user_settings(ctx, &user_id).await?;
+            let mut user_data = UserData::modify_user_settings(&ctx.luro, &user_id).await?;
             user_data.warnings.push((warning.to_owned(), author.id));
 
-            ctx.data_user.insert(user_id, user_data.clone());
+            ctx.luro.user_data.insert(user_id, user_data.clone());
             user_data.write(Path::new(&path)).await?;
 
             embed = embed.footer(EmbedFooterBuilder::new(format!(
@@ -132,10 +138,11 @@ impl LuroCommand for ModeratorWarnCommand {
             )));
         }
 
-        match ctx.twilight_client.create_private_channel(user_id).await {
+        match ctx.luro.twilight_client.create_private_channel(user_id).await {
             Ok(channel) => {
                 let channel = channel.model().await?;
                 let victim_dm = ctx
+                    .luro
                     .twilight_client
                     .create_message(channel.id)
                     .embeds(&[embed.clone().build()])
@@ -148,30 +155,38 @@ impl LuroCommand for ModeratorWarnCommand {
             Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
         };
 
-        ctx.send_log_channel(&slash.interaction.guild_id, embed.clone(), LuroLogChannel::Moderator)
+        ctx.luro
+            .send_moderator_log_channel(&ctx.interaction.guild_id, embed.clone())
             .await?;
 
         {
-            let mut reward = UserData::modify_user_settings(ctx, &author.id).await?;
+            let _ = UserData::modify_user_settings(&ctx.luro, &author.id).await?;
+            let _ = UserData::modify_user_settings(&ctx.luro, &user_id).await?;
+            // Reward the person who actioned the ban
             let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author.id);
-            reward.moderation_actions_performed += 1;
-            reward.write(Path::new(&path)).await?;
-        }
-
-        {
+            let data = &mut ctx
+                .luro
+                .user_data
+                .get_mut(&author.id)
+                .context("Expected to find user's data in the cache")?;
+            data.moderation_actions_performed += 1;
+            data.write(Path::new(&path)).await?;
             // Record the punishment
-            let mut warned = UserData::modify_user_settings(ctx, &user_id).await?;
             let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_id);
-            warned.moderation_actions.push(UserActions {
+            let data = &mut ctx
+                .luro
+                .user_data
+                .get_mut(&user_id)
+                .context("Expected to find user's data in the cache")?;
+            data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::Warn],
-                guild_id: Some(slash.interaction.guild_id.context("Expected this to be a guild")?),
+                guild_id: Some(ctx.interaction.guild_id.context("Expected this to be a guild")?),
                 reason: warning.to_owned(),
                 responsible_user: author.id
             });
-            warned.write(Path::new(&path)).await?;
+            data.write(Path::new(&path)).await?;
         }
 
-        slash.embed(embed.build())?;
-        ctx.respond(&mut slash).await
+        ctx.embed(embed.build())?.respond().await
     }
 }

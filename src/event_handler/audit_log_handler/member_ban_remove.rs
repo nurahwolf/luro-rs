@@ -4,8 +4,7 @@ use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
 use crate::{
-    framework::LuroFramework,
-    models::{LuroLogChannel, SlashUser},
+    models::{LuroFramework, SlashUser},
     COLOUR_SUCCESS
 };
 
@@ -38,6 +37,6 @@ impl LuroFramework {
             }
         }
         embed = embed.description(description);
-        self.send_log_channel(&Some(guild.id), embed, LuroLogChannel::Moderator).await
+        self.send_moderator_log_channel(&Some(guild.id), embed).await
     }
 }

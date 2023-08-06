@@ -3,9 +3,8 @@ use rand::Rng;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::LuroContext;
+use crate::models::LuroSlash;
 
-use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "muzzle", desc = "Put a muzzle on a user")]
@@ -16,7 +15,7 @@ pub struct MuzzleCommand {
 
 #[async_trait]
 impl LuroCommand for MuzzleCommand {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         // TODO: Load these from a text file
         let responses = ["<user> just got muzzled for a few seconds!!",
         "<user> just got slapped on the muzzle and told to hush.",
@@ -184,12 +183,8 @@ impl LuroCommand for MuzzleCommand {
             .get(choice)
             .unwrap()
             .replace("<user>", format!("<@{}>", self.user.resolved.id).as_str())
-            .replace(
-                "<author>",
-                format!("<@{}>", ctx.get_interaction_author(&slash)?.0.id.to_string()).as_str()
-            );
+            .replace("<author>", format!("<@{}>", ctx.author()?.id).as_str());
 
-        slash.content(response);
-        ctx.respond(&mut slash).await
+        ctx.content(response).respond().await
     }
 }

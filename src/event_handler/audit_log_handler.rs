@@ -4,7 +4,7 @@ use tracing::warn;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::audit_log::AuditLogEventType};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder, ImageSource};
 
-use crate::{framework::LuroFramework, models::SlashUser};
+use crate::models::{LuroFramework, SlashUser};
 
 mod member_ban_add;
 mod member_ban_remove;
@@ -17,16 +17,15 @@ impl LuroFramework {
             Some(guild_id) => guild_id,
             None => {
                 warn!("Expected a guild to be present when handling an audit log event");
-                return Ok(());
+                return Ok(())
             }
         };
-
         let mut embed = self.default_embed(&Some(guild_id));
 
         match event.user_id {
             Some(action_user_id) => {
                 {
-                    if action_user_id == self.data_global.read().current_user.id {
+                    if action_user_id == self.global_data.read().current_user.id {
                         // Event done by the bot, so no need to report it again
                         return Ok(());
                     }
@@ -38,7 +37,7 @@ impl LuroFramework {
                     let embed_author = EmbedAuthorBuilder::new(format!("Performed by {} - {}", slash_author.name, author.id))
                         .icon_url(ImageSource::url(slash_author.avatar)?)
                         .build();
-
+    
                     embed = embed.author(embed_author)
                 }
             }

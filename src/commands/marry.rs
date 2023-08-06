@@ -7,19 +7,17 @@ use async_trait::async_trait;
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
-
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
 
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder};
 
-use crate::models::{LuroCommandCache, LuroResponse, SlashUser, UserData, UserMarriages};
-use crate::LuroContext;
+use crate::models::{LuroCommandCache, LuroSlash, SlashUser, UserData, UserMarriages};
 
 use crate::traits::luro_command::LuroCommand;
+use crate::traits::luro_functions::LuroFunctions;
 
 /// An array of reasons someone would like to marry.
 /// TODO: Load this from disk once it's big enough
@@ -39,11 +37,11 @@ pub enum MarryCommands {
 
 #[async_trait]
 impl LuroCommand for MarryCommands {
-    async fn run_commands(self, ctx: &LuroContext, slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
-            Self::New(command) => command.run_command(ctx, slash).await,
-            Self::Marriages(command) => command.run_command(ctx, slash).await
+            Self::New(command) => command.run_command(ctx).await,
+            Self::Marriages(command) => command.run_command(ctx).await
         }
     }
 }
@@ -57,16 +55,16 @@ pub struct MarryMarriages {
 
 #[async_trait]
 impl LuroCommand for MarryMarriages {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let mut content = String::new();
-        let (_, slash_author) = ctx.get_specified_user_or_author(&self.user, &slash)?;
-        let user_data = UserData::get_user_settings(ctx, &slash_author.user_id).await?;
+        let (_, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
+        let user_data = UserData::get_user_settings(&ctx.luro, &slash_author.user_id).await?;
         let embed_author =
             EmbedAuthorBuilder::new(format!("{}'s marriages", slash_author.name)).icon_url(slash_author.try_into()?);
-        let mut embed = ctx.default_embed(&slash.interaction.guild_id).author(embed_author);
+        let mut embed = ctx.default_embed().await?.author(embed_author);
 
         for (_, marriage) in user_data.marriages.iter() {
-            match ctx.twilight_cache.user(marriage.user) {
+            match ctx.luro.twilight_cache.user(marriage.user) {
                 Some(marriage_user) => writeln!(
                     content,
                     "{} - <@{}>```{}```",
@@ -80,8 +78,7 @@ impl LuroCommand for MarryMarriages {
             false => embed = embed.description(content)
         }
 
-        slash.embed(embed.build())?;
-        ctx.respond(&mut slash).await
+        ctx.embed(embed.build())?.respond().await
     }
 }
 
@@ -96,20 +93,18 @@ pub struct MarryNew {
 
 #[async_trait]
 impl LuroCommand for MarryNew {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
-        let mut response = slash.clone();
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let slash_author = SlashUser::client_fetch(
-            ctx,
-            slash.interaction.guild_id,
-            slash
-                .interaction
+            &ctx.luro,
+            ctx.interaction.guild_id,
+            ctx.interaction
                 .author_id()
                 .context("Expected to find user who invoked command")?
         )
         .await?;
         let embed_author =
             EmbedAuthorBuilder::new(format!("{} has proposed!", &slash_author.name)).icon_url(slash_author.clone().try_into()?);
-        let mut embed = ctx.default_embed(&slash.interaction.guild_id).author(embed_author);
+        let mut embed = ctx.default_embed().await?.author(embed_author);
 
         {
             let mut rng = thread_rng();
@@ -122,22 +117,21 @@ impl LuroCommand for MarryNew {
         }
 
         embed = embed.field(EmbedFieldBuilder::new("Their Reason", self.reason.clone()));
-        response.components(button("marry", "Do you accept?"));
+        ctx.components(button("marry", "Do you accept?"));
 
-        response
-            .embed(embed.build())?
-            .content(format!("<@{}>", self.marry.resolved.id.clone()));
-
-        ctx.respond(&mut slash).await?;
+        ctx.embed(embed.build())?
+            .content(format!("<@{}>", self.marry.resolved.id.clone()))
+            .respond()
+            .await?;
 
         let response = ctx
-            .interaction_client(&slash)
-            .response(&slash.interaction.token)
+            .interaction_client()
+            .response(&ctx.interaction.token)
             .await?
             .model()
             .await?;
 
-        ctx.data_command.insert(
+        ctx.luro.command_cache.insert(
             response.id,
             LuroCommandCache {
                 author: slash_author.user_id,
@@ -149,53 +143,43 @@ impl LuroCommand for MarryNew {
         Ok(())
     }
 
-    async fn handle_component(
-        _: Box<MessageComponentInteractionData>,
-        ctx: &LuroContext,
-        slash: &mut LuroResponse
-    ) -> anyhow::Result<()> {
-        let slash_author = SlashUser::client_fetch(
-            ctx,
-            slash.interaction.guild_id,
-            slash
-                .interaction
-                .author_id()
-                .context("Expected to find user who invoked command")?
-        )
-        .await?;
-        let message = match slash.interaction.message.clone() {
+    async fn handle_component(_: Box<MessageComponentInteractionData>, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        let interaction_author = ctx.author()?;
+        let message = match ctx.interaction.message.clone() {
             Some(message) => message,
             None => {
-                slash
+                return ctx
                     .content("Could not check if you can marry - Original interaction not found")
-                    .ephemeral();
-                return ctx.respond(slash).await;
+                    .ephemeral()
+                    .respond()
+                    .await
             }
         };
 
-        let command_data = match ctx.data_command.get(&message.id) {
+        let command_data = match ctx.clone().luro.command_cache.get(&message.id) {
             Some(command_data) => command_data.clone(),
             None => {
-                slash
+                return ctx
                     .content("Could not check if you can marry - No data in my cache")
-                    .ephemeral();
-                return ctx.respond(slash).await;
+                    .ephemeral()
+                    .respond()
+                    .await
             }
         };
 
-        match slash_author.user_id == command_data.user_in_command {
+        match interaction_author.id == command_data.user_in_command {
             false => {
-                slash.content(format!(
+                ctx.content(format!(
                     "Bruh. <@{}> just attempted to snipe the marriage.",
-                    &slash_author.user_id
-                ));
-
-                ctx.respond(slash).await
+                    &interaction_author.id
+                ))
+                .respond()
+                .await
             }
             true => {
                 // Modify the proposer
                 {
-                    let mut user_data = UserData::modify_user_settings(ctx, &command_data.author).await?;
+                    let mut user_data = UserData::modify_user_settings(&ctx.luro, &command_data.author).await?;
                     user_data.marriages.insert(
                         command_data.user_in_command,
                         UserMarriages {
@@ -208,7 +192,7 @@ impl LuroCommand for MarryNew {
 
                 // Modify the proposee
                 {
-                    let mut user_data = UserData::modify_user_settings(ctx, &command_data.user_in_command).await?;
+                    let mut user_data = UserData::modify_user_settings(&ctx.luro, &command_data.user_in_command).await?;
                     user_data.marriages.insert(
                         command_data.author,
                         UserMarriages {
@@ -219,14 +203,14 @@ impl LuroCommand for MarryNew {
                     );
                 }
 
-                slash
-                    .content(format!(
-                        "Congratulations <@{}> & <@{}>!!!",
-                        &command_data.author, &command_data.user_in_command
-                    ))
-                    .components(vec![])
-                    .update();
-                ctx.respond(slash).await
+                ctx.content(format!(
+                    "Congratulations <@{}> & <@{}>!!!",
+                    &command_data.author, &command_data.user_in_command
+                ))
+                .components(vec![])
+                .update()
+                .respond()
+                .await
             }
         }
     }

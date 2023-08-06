@@ -26,7 +26,7 @@ impl LuroCommand for LewdCommands {
 
         // Call the appropriate subcommand.
         match self {
-            Self::NSFW(command) => command.run_command(ctx, slash).await,
+            Self::NSFW(command) => command.run_command(ctx).await
         }
     }
 }
@@ -49,6 +49,6 @@ impl LuroCommand for FursonaNSFWCommand {
             self.message
         };
 
-        slash.content(content);ctx.respond(&mut slash).await
+        ctx.content(content).respond().await
     }
 }

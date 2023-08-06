@@ -4,13 +4,11 @@ use anyhow::Context;
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-
 use twilight_util::builder::embed::EmbedAuthorBuilder;
 
-use crate::models::{LuroResponse, SlashUser};
-use crate::LuroContext;
+use crate::models::SlashUser;
 
-use crate::models::LuroWebhook;
+use crate::{models::LuroSlash, models::LuroWebhook};
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -27,12 +25,11 @@ pub struct AbuseCommand {
 
 #[async_trait]
 impl LuroCommand for AbuseCommand {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
-        let luro_webhook = LuroWebhook::new(ctx.clone()).await?;
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        let luro_webhook = LuroWebhook::new(ctx.luro.clone()).await?;
         let webhook = luro_webhook
             .get_webhook(
-                slash
-                    .interaction
+                ctx.interaction
                     .channel
                     .clone()
                     .context("Could not get channel the interaction is in")?
@@ -41,15 +38,17 @@ impl LuroCommand for AbuseCommand {
             .await?;
         let webhook_token = webhook.token.context("Expected webhook token")?;
 
-        let (_, slash_author) = SlashUser::client_fetch_user(ctx, self.user.resolved.id).await?;
+        let (_, slash_author) = SlashUser::client_fetch_user(&ctx.luro, self.user.resolved.id).await?;
 
         let embed = ctx
-            .default_embed(&slash.interaction.guild_id)
+            .default_embed()
+            .await?
             .description(&self.message)
             .author(EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.clone().try_into()?))
             .build();
 
         let webhook_message = ctx
+            .luro
             .twilight_client
             .execute_webhook(webhook.id, &webhook_token)
             .username(&slash_author.name)
@@ -62,7 +61,6 @@ impl LuroCommand for AbuseCommand {
             webhook_message.content(&self.message).await?
         };
 
-        slash.embed(embed)?.ephemeral();
-        ctx.respond(&mut slash).await
+        ctx.embed(embed)?.ephemeral().respond().await
     }
 }

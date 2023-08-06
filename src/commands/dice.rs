@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::LuroContext;
+use crate::models::LuroSlash;
 
 mod help;
 mod roll;
@@ -10,7 +10,6 @@ mod roll_direction;
 mod simple;
 mod stats;
 
-use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 
 use self::help::DiceHelpCommand;
@@ -35,14 +34,14 @@ pub enum DiceCommands {
 
 #[async_trait]
 impl LuroCommand for DiceCommands {
-    async fn run_commands(self, ctx: &LuroContext, slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
-            Self::Roll(command) => command.run_command(ctx, slash).await,
-            Self::RollDirection(command) => command.run_command(ctx, slash).await,
-            Self::Stats(command) => command.run_command(ctx, slash).await,
-            Self::Help(command) => command.run_command(ctx, slash).await,
-            Self::Simple(command) => command.run_command(ctx, slash).await
+            Self::Roll(command) => command.run_command(ctx).await,
+            Self::RollDirection(command) => command.run_command(ctx).await,
+            Self::Stats(command) => command.run_command(ctx).await,
+            Self::Help(command) => command.run_command(ctx).await,
+            Self::Simple(command) => command.run_command(ctx).await
         }
     }
 }

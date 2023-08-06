@@ -1,15 +1,11 @@
-use crate::{
-    framework::LuroFramework,
-    models::{LuroLogChannel, SlashUser},
-    USERDATA_FILE_PATH
-};
+use crate::{models::SlashUser, USERDATA_FILE_PATH};
 use anyhow::Context;
 use std::{fmt::Write, path::Path, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
 use crate::{
-    models::{UserActionType, UserActions, UserData},
+    models::{LuroFramework, UserActionType, UserActions, UserData},
     traits::toml::LuroTOML,
     COLOUR_DANGER
 };
@@ -47,7 +43,7 @@ impl LuroFramework {
                 // Reward the person who actioned the ban
                 let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_id);
                 let data = &mut self
-                    .data_user
+                    .user_data
                     .get_mut(user_id)
                     .context("Expected to find user's data in the cache")?;
                 data.moderation_actions_performed += 1;
@@ -55,7 +51,7 @@ impl LuroFramework {
                 // Record the punishment
                 let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &kicked_user_id);
                 let data = &mut self
-                    .data_user
+                    .user_data
                     .get_mut(user_id)
                     .context("Expected to find user's data in the cache")?;
                 data.moderation_actions.push(UserActions {
@@ -68,6 +64,6 @@ impl LuroFramework {
             }
         }
         embed = embed.description(description);
-        self.send_log_channel(&Some(guild.id), embed, LuroLogChannel::Moderator).await
+        self.send_moderator_log_channel(&Some(guild.id), embed).await
     }
 }

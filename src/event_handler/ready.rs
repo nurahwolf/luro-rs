@@ -43,7 +43,7 @@ impl LuroFramework {
             info!("Primary Owner: {}", owner.name);
         }
         let mut owners = String::new();
-        for owner in &self.data_global.read().owners {
+        for owner in &self.global_data.read().owners {
             if owners.is_empty() {
                 owners.push_str(&owner.name)
             } else {
@@ -65,7 +65,7 @@ impl LuroFramework {
 
         //         match luro.global_commands.try_read() {
         //             Ok(commands) => {
-        //                 match commands::register_global_commands(&slash.interaction_client, commands.clone())
+        //                 match commands::register_global_commands(&interaction_client, commands.clone())
         //                     .await
         //                 {
         //                     Ok(commands) => info!("Registered {} global commands", commands.len()),

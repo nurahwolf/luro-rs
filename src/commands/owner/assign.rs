@@ -1,12 +1,10 @@
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-
 use twilight_model::id::{marker::RoleMarker, Id};
 
-use crate::LuroContext;
+use crate::models::LuroSlash;
 
-use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -25,35 +23,41 @@ pub struct AssignCommand {
 
 #[async_trait]
 impl LuroCommand for AssignCommand {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
-        let guild_id = slash.interaction.guild_id;
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        let interaction_user = ctx.author()?;
 
-        let (user, _slash_user) = ctx.get_specified_user_or_author(&self.user, &slash)?;
-        let user_id = user.id;
+        // User to action
+        let user = if let Some(user) = self.user {
+            user.resolved
+        } else {
+            interaction_user
+        };
 
         // Guild to modify
-        let guild_id = match guild_id {
+        let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return ctx.not_guild_response(&mut slash).await
+            None => return ctx.not_guild_response().await
         };
 
         // If the user wants' to remove a role
         if let Some(remove) = self.remove && remove {
             match ctx
+            .luro
             .twilight_client
             .remove_guild_member_role(guild_id, user.id, self.role)
             .await {
-                Ok(_) => {slash.content(format!("Role <@&{}> removed from <@{}>!", self.role, &user_id)).ephemeral();ctx.respond(&mut slash).await},
-                Err(why) => ctx.internal_error_response(why.to_string(), &mut slash).await
+                Ok(_) => ctx.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.id)).ephemeral().respond().await,
+                Err(why) => ctx.internal_error_response(why.to_string()).await
             }
         } else {
         // Otherwise we just assign a role as expected
         match ctx
+            .luro
             .twilight_client
             .add_guild_member_role(guild_id, user.id, self.role)
             .await {
-                Ok(_) => {slash.content(format!("Role <@&{}> assigned to <@{}>!", self.role, &user_id)).ephemeral();ctx.respond(&mut slash).await},
-                Err(why) => ctx.internal_error_response(why.to_string(), &mut slash).await
+                Ok(_) => ctx.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.id)).ephemeral().respond().await,
+                Err(why) => ctx.internal_error_response(why.to_string()).await
             }
         }
     }

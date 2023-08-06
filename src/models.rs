@@ -6,11 +6,17 @@ use std::{
     time::SystemTime
 };
 
+use dashmap::DashMap;
+use hyper::client::HttpConnector;
+use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
+use tracing::metadata::LevelFilter;
+use tracing_subscriber::{reload::Handle, Registry};
+use twilight_cache_inmemory::InMemoryCache;
 
 use twilight_gateway::MessageSender;
 use twilight_http::Client;
-
+use twilight_lavalink::Lavalink;
 use twilight_model::{
     application::{
         command::{Command, CommandOptionChoice},
@@ -36,9 +42,10 @@ mod global_data;
 mod guild_permissions;
 mod guild_settings;
 mod hecks;
+mod luro_framework;
 mod luro_message;
 mod luro_permissions;
-mod luro_response;
+mod luro_slash;
 mod luro_webhook;
 mod member_roles;
 mod role_ordering;
@@ -149,6 +156,33 @@ pub struct LuroCommandCache {
     pub reason: String
 }
 
+/// The core of Luro. Used to handle our global state and generally wrapped in an [Arc].
+#[derive(Debug)]
+pub struct LuroFramework {
+    /// Luro's own cache for command evokation
+    pub command_cache: DashMap<Id<MessageMarker>, LuroCommandCache>,
+    /// HTTP client used for making outbound API requests
+    pub hyper_client: hyper::Client<HttpConnector>,
+    /// Lavalink client, for playing music
+    pub lavalink: Lavalink,
+    /// Twilight's client for interacting with the Discord API
+    pub twilight_client: Client,
+    /// Twilight's cache
+    pub twilight_cache: InMemoryCache,
+    /// The global tracing subscriber, for allowing manipulation within commands
+    pub tracing_subscriber: Handle<LevelFilter, Registry>,
+    /// Settings that are stored on disk and meant to be modified by the user
+    pub settings: RwLock<Settings>,
+    /// Data that may be accessed globally, including DMs
+    pub global_data: RwLock<GlobalData>,
+    /// Data that is specific to a guild
+    pub guild_data: DashMap<Id<GuildMarker>, GuildSetting>,
+    /// Data that is specific to a user
+    pub user_data: DashMap<Id<UserMarker>, UserData>,
+    /// Guild ID that can be set for some operations,
+    pub guild_id: Option<Id<GuildMarker>>
+}
+
 /// Calculate the permissions of a member with information from the cache.
 pub struct LuroPermissions<'a> {
     twilight_client: &'a Client,
@@ -186,8 +220,11 @@ pub struct LuroMessage {
 }
 
 /// Some nice stuff about formatting a response, ready to send via twilight's client
-#[derive(Debug, Clone)]
-pub struct LuroResponse {
+#[derive(Clone, Debug)]
+pub struct LuroSlash {
+    // /// Luro's context, used for utility such as setting the embed accent colour and for sending our response near the end.
+    pub luro: LuroContext,
+    /// Interaction we are handling
     pub interaction: Interaction,
     pub shard: MessageSender,
     /// The interaction response type for our response. Defaults to [`InteractionResponseType::ChannelMessageWithSource`].

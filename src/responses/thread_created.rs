@@ -3,7 +3,7 @@ use twilight_model::gateway::payload::incoming::ThreadCreate;
 
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::framework::LuroFramework;
+use crate::models::LuroFramework;
 
 impl LuroFramework {
     // TODO: Change this to a response type

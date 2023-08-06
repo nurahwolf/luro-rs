@@ -4,9 +4,8 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::LuroContext;
+use crate::models::LuroSlash;
 
-use crate::models::LuroResponse;
 use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -18,9 +17,9 @@ pub struct OwnerGuildsCommand {
 
 #[async_trait]
 impl LuroCommand for OwnerGuildsCommand {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let mut guilds = String::new();
-        for guild in ctx.twilight_cache.iter().guilds() {
+        for guild in ctx.luro.twilight_cache.iter().guilds() {
             if let Some(show_id) = self.show_id && show_id {
                 writeln!(guilds, "{} - <#{1}> - {1}", guild.name(), guild.id())?
             } else {
@@ -29,11 +28,11 @@ impl LuroCommand for OwnerGuildsCommand {
         }
 
         let embed = ctx
-            .default_embed(&slash.interaction.guild_id)
+            .default_embed()
+            .await?
             .title("All the guilds I am in!")
             .description(guilds);
 
-        slash.embed(embed.build())?.ephemeral();
-        ctx.respond(&mut slash).await
+        ctx.embed(embed.build())?.ephemeral().respond().await
     }
 }

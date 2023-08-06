@@ -1,9 +1,7 @@
 use async_trait::async_trait;
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::{LuroResponse, UserData};
-use crate::LuroContext;
+use crate::models::{LuroSlash, UserData};
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -16,14 +14,14 @@ pub struct OwnerLoadUsers {}
 
 #[async_trait]
 impl LuroCommand for OwnerLoadUsers {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
-        ctx.deferred(&mut slash).await?;
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.deferred().await?;
 
         let mut loaded = 0;
         let mut errors = 0;
 
-        for user in ctx.twilight_cache.iter().users() {
-            match UserData::modify_user_settings(ctx, &user.id).await {
+        for user in ctx.luro.twilight_cache.iter().users() {
+            match UserData::modify_user_settings(&ctx.luro, &user.id).await {
                 Ok(mut user_data) => {
                     user_data.accent_color = user.accent_color;
                     user_data.avatar = user.avatar;
@@ -51,17 +49,17 @@ impl LuroCommand for OwnerLoadUsers {
         }
 
         if errors != 0 {
-            slash
-                .content(format!(
-                    "Loaded {loaded} users! I failed to load a total of `{errors}` users though. Sorry!"
-                ))
-                .ephemeral();
-            ctx.respond(&mut slash).await
+            ctx.content(format!(
+                "Loaded {loaded} users! I failed to load a total of `{errors}` users though. Sorry!"
+            ))
+            .ephemeral()
+            .respond()
+            .await
         } else {
-            slash
-                .content(format!("Loaded {loaded} users with no errors! Awesome!"))
-                .ephemeral();
-            ctx.respond(&mut slash).await
+            ctx.content(format!("Loaded {loaded} users with no errors! Awesome!"))
+                .ephemeral()
+                .respond()
+                .await
         }
     }
 }

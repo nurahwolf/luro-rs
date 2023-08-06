@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Error;
 use twilight_model::gateway::payload::incoming::MessageCreate;
 
-use crate::framework::LuroFramework;
+use crate::models::LuroFramework;
 
 impl LuroFramework {
     pub async fn message_create_listener(self: &Arc<Self>, message: MessageCreate) -> Result<(), Error> {

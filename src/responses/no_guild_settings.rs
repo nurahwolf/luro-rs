@@ -1,21 +1,14 @@
 use tracing::error;
-
 use twilight_model::id::{marker::GuildMarker, Id};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::framework::LuroFramework;
-use crate::models::LuroResponse;
+use crate::models::LuroSlash;
 
-impl LuroFramework {
-    pub async fn no_guild_settings_response(
-        &mut self,
-        guild_id: Id<GuildMarker>,
-        slash: &mut LuroResponse
-    ) -> anyhow::Result<()> {
-        slash.embed(no_guild_settings_embed(guild_id).build())?;
-        self.respond(slash).await
+impl LuroSlash {
+    pub async fn no_guild_settings_response(mut self, guild_id: Id<GuildMarker>) -> anyhow::Result<()> {
+        self.embed(no_guild_settings_embed(guild_id).build())?.respond().await
     }
 }
 

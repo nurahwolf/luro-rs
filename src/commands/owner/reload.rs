@@ -5,8 +5,9 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
-    models::{GuildSetting, Hecks, LuroResponse},
-    LuroContext, GUILDSETTINGS_FILE_PATH, HECK_FILE_PATH
+    models::LuroSlash,
+    models::{GuildSetting, Hecks},
+    GUILDSETTINGS_FILE_PATH, HECK_FILE_PATH
 };
 
 use crate::traits::luro_command::LuroCommand;
@@ -21,25 +22,24 @@ pub struct ReloadCommand {}
 
 #[async_trait]
 impl LuroCommand for ReloadCommand {
-    async fn run_command(self, ctx: &LuroContext, mut slash: LuroResponse) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let hecks = Hecks::get(Path::new(HECK_FILE_PATH)).await?;
 
         {
-            let global_data = &ctx.data_global;
+            let global_data = &ctx.luro.global_data;
             global_data.write().hecks = hecks
         }
 
-        for guild_setting in &ctx.data_guild {
+        for guild_setting in &ctx.luro.guild_data {
             let guild_settings = GuildSetting::get(Path::new(&format!(
                 "{0}/{1}/guild_settings.toml",
                 GUILDSETTINGS_FILE_PATH,
                 guild_setting.key()
             )))
             .await?;
-            ctx.data_guild.entry(*guild_setting.key()).insert_entry(guild_settings);
+            ctx.luro.guild_data.entry(*guild_setting.key()).insert_entry(guild_settings);
         }
 
-        slash.content("Reloaded data from disk!".to_owned());
-        ctx.respond(&mut slash).await
+        ctx.content("Reloaded data from disk!".to_owned()).respond().await
     }
 }
