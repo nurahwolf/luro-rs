@@ -1,55 +1,26 @@
-[package]
-name = "luro"
-version = "0.0.1"
+[workspace]
+members = [
+    "luro",
+    "luro-model",
+    "twilight-interactions",
+    "twilight-interactions-derive"
+]
+resolver = "2"
+
+[workspace.package]
 authors = ["Nurah Wolfo <nurah@wolfo.tech>"]
-edition = "2018"
+categories = ["asynchronous"]
 description = "A furry discord bot"
+edition = "2021"
+keywords = ["async", "twilight", "discord", "slash-command"]
+license = "MIT"
 readme = "README.md"
 repository = "https://github.com/nurahwolf/luro-rs"
-license = "MIT"
-keywords = ["async", "twilight", "discord", "slash-command"]
-categories = ["asynchronous"]
+version = "0.0.1"
 
-[dependencies]
-# Twilight Specific
+[workspace.dependencies]
+# Twilight
 twilight-model = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-gateway  = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-util  = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", features = ["builder", "permission-calculator", "snowflake"] }
-twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-lavalink = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
 
-# Twilight third part
-twilight-interactions = { path = "lib/twilight-interactions" }
-
-# Tracing
-tracing = "0.1"
-tracing-appender = "0.2.2"
-tracing-subscriber = "0.3.17"
-
-# Others
-async-trait = "0.1"
-parking_lot = "0.12"
-futures-util = "0.3.28"
-anyhow = "1.0.71"
-hyper = "0.14.27"
-serde_json = "1.0.102"
-serde = "1.0.171"
-toml = "0.7.6"
-rand = "0.8.5"
-git2 = "0.17.2"
-memory-stats = "1.1.0"
-base64 = "0.21.2"
-regex = "1.9.1"
-dotenv = "0.15.0"
-uwuify = "0.2.2"
-dashmap = "5.5.0"
-
-[dependencies.tokio]
-version = "1"
-default-features = false
-features = ["sync"]
-
-[dev-dependencies]
-futures = "0.3"
-tokio = { version = "1", features = ["full"] }
+# Twilight third party
+twilight-interactions = { path = "twilight-interactions" }

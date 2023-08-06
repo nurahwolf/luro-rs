@@ -4,16 +4,10 @@ use twilight_interactions::command::{
     CommandInputData, CommandModel, CommandOption, ResolvedMentionable, ResolvedUser,
 };
 use twilight_model::{
-    interaction::{
-        application_command::{
-            CommandData, CommandDataOption, CommandOptionValue,
-        },
-        InteractionChannel, InteractionMember, InteractionDataResolved,
-    },
     guild::{MemberFlags, Permissions},
     id::Id,
     user::User,
-    util::Timestamp,
+    util::Timestamp, application::interaction::{application_command::{CommandDataOption, CommandOptionValue}, InteractionMember, InteractionDataResolved},
 };
 
 #[derive(CommandModel, Debug, PartialEq, Eq)]
@@ -91,6 +85,8 @@ fn test_command_model() {
         verified: None,
         accent_color: None,
         banner: None,
+        avatar_decoration: None,
+        global_name: None,
     };
 
     let resolved_user = ResolvedUser {

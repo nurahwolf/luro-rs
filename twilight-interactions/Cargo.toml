@@ -19,8 +19,8 @@ default = ["derive"]
 derive = ["twilight-interactions-derive"]
 
 [dependencies]
-twilight-model = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-interactions-derive = { version = "=0.15.2", path = "../twilight-interactions-derive", optional = true }
+twilight-model = { workspace = true }
+twilight-interactions-derive = { path = "../twilight-interactions-derive", optional = true }
 
 [package.metadata.docs.rs]
 all-features = true

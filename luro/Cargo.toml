@@ -1,0 +1,57 @@
+[package]
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+keywords.workspace = true
+license.workspace = true
+name = "luro-twilight"
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+# Core
+async-trait = "0.1"
+tokio = { version = "1", default-features = false, features = ["sync", "rt-multi-thread"] }
+
+# Twilight Specific
+twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
+twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
+twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
+twilight-lavalink = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
+twilight-model = { workspace = true }
+twilight-util = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", features = [
+    "builder",
+    "permission-calculator",
+    "snowflake",
+] }
+
+# Twilight third party
+twilight-interactions = { workspace = true }
+
+# Tracing
+tracing = "0.1"
+tracing-appender = "0.2.2"
+tracing-subscriber = "0.3.17"
+
+# Others
+parking_lot = "0.12"
+futures-util = "0.3.28"
+anyhow = "1.0.71"
+hyper = "0.14.27"
+serde_json = "1.0.102"
+serde = "1.0.171"
+toml = "0.7.6"
+rand = "0.8.5"
+git2 = "0.17.2"
+memory-stats = "1.1.0"
+base64 = "0.21.2"
+regex = "1.9.1"
+dotenv = "0.15.0"
+uwuify = "0.2.2"
+dashmap = "5.5.0"
+
+[dev-dependencies]
+futures = "0.3"
+tokio = { version = "1", features = ["full"] }
