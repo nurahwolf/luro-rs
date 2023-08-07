@@ -8,7 +8,7 @@ use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "config",
-    desc = "For every user in the cache, load their data from the database. This is SLOW!"
+    desc = "Print out information about my configuration. You can override some options at runtime too."
 )]
 pub struct ConfigCommand {}
 

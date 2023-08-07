@@ -33,7 +33,7 @@ pub struct StoryCommand {
 impl LuroCommand for StoryCommand {
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let mut is_empty = false;
-        let new_stories = GlobalData::get_stories(Path::new(STORIES_FILE_PATH)).await?.stories;
+        let new_stories;
         let stories;
         let story;
         let story_id;
@@ -42,6 +42,10 @@ impl LuroCommand for StoryCommand {
             if ctx.luro.global_data.read().stories.is_empty() {
                 is_empty = true;
             };
+        }
+
+        {
+            new_stories = GlobalData::get_stories(Path::new(STORIES_FILE_PATH)).await?.stories;
         }
 
         {
