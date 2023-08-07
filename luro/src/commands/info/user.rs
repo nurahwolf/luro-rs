@@ -2,6 +2,7 @@ use anyhow::Context;
 use async_trait::async_trait;
 use std::{convert::TryInto, fmt::Write, time::Duration};
 
+use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::attachment::Attachment,
@@ -13,7 +14,7 @@ use twilight_util::{
 };
 
 use crate::{
-    models::{LuroSlash, RoleOrdering, SlashUser, UserActionType, UserData},
+    models::{LuroSlash, RoleOrdering, SlashUser, UserData},
     traits::luro_functions::LuroFunctions
 };
 

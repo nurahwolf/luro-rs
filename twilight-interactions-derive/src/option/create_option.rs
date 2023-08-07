@@ -9,13 +9,11 @@ pub fn impl_create_option(input: DeriveInput) -> Result<TokenStream> {
     let input_span = input.span();
 
     let (variants, kind) = match input.data {
-        syn::Data::Enum(syn::DataEnum { variants, .. }) => {
-            ParsedVariant::from_variants(variants, input_span)?
-        }
+        syn::Data::Enum(syn::DataEnum { variants, .. }) => ParsedVariant::from_variants(variants, input_span)?,
         _ => {
             return Err(Error::new(
                 input_span,
-                "`#[derive(CommandOption)] can only be applied to enums",
+                "`#[derive(CommandOption)] can only be applied to enums"
             ))
         }
     };
@@ -66,17 +64,17 @@ fn choice_variant(variant: &ParsedVariant) -> TokenStream {
                 )
             }
         }
-        None => quote! { ::std::option::Option::None },
+        None => quote! { ::std::option::Option::None }
     };
     let value = match &variant.attribute.value {
         ChoiceValue::String(val) => quote! { ::std::convert::From::from(#val) },
         ChoiceValue::Int(val) => val.to_token_stream(),
-        ChoiceValue::Number(val) => val.to_token_stream(),
+        ChoiceValue::Number(val) => val.to_token_stream()
     };
     let type_path = match variant.kind {
         ChoiceKind::String => quote! { String },
         ChoiceKind::Integer => quote! { Integer },
-        ChoiceKind::Number => quote! { Number },
+        ChoiceKind::Number => quote! { Number }
     };
 
     quote! {
@@ -94,7 +92,7 @@ fn command_option(kind: ChoiceKind) -> TokenStream {
     let opt_kind = match kind {
         ChoiceKind::String => quote! { String },
         ChoiceKind::Integer => quote! { Integer },
-        ChoiceKind::Number => quote! { Number },
+        ChoiceKind::Number => quote! { Number }
     };
 
     quote! {

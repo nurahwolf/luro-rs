@@ -3,6 +3,7 @@ use std::{convert::TryInto, path::Path};
 
 use anyhow::Context;
 use async_trait::async_trait;
+use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
 use tracing::debug;
 
 use twilight_http::request::AuditLogReason;
@@ -11,7 +12,7 @@ use twilight_model::guild::Permissions;
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{
-    models::{GuildPermissions, LuroSlash, UserActionType, UserActions, UserData},
+    models::{GuildPermissions, LuroSlash, UserData},
     traits::luro_command::LuroCommand
 };
 
@@ -174,31 +175,23 @@ impl LuroCommand for BanCommand {
         ban.await?;
 
         {
-            let _ = UserData::modify_user_settings(&ctx.luro, &author.user.id).await?;
-            let _ = UserData::modify_user_settings(&ctx.luro, &user_to_remove.id).await?;
-            // Reward the person who actioned the ban
-            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author.user.id);
-            let data = &mut ctx
-                .luro
-                .user_data
-                .get_mut(&author.user.id)
-                .context("Expected to find user's data in the cache")?;
-            data.moderation_actions_performed += 1;
-            data.write(Path::new(&path)).await?;
+            let mut reward = UserData::modify_user_settings(&ctx.luro, &author_user.id).await?;
+            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author_user.id);
+            reward.moderation_actions_performed += 1;
+            reward.write(Path::new(&path)).await?;
+        }
+
+        {
             // Record the punishment
+            let mut banned = UserData::modify_user_settings(&ctx.luro, &user_to_remove.id).await?;
             let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_to_remove.id);
-            let data = &mut ctx
-                .luro
-                .user_data
-                .get_mut(&user_to_remove.id)
-                .context("Expected to find user's data in the cache")?;
-            data.moderation_actions.push(UserActions {
+            banned.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::Ban],
                 guild_id: Some(guild_id),
                 reason,
-                responsible_user: author.user.id
+                responsible_user: author_user.id
             });
-            data.write(Path::new(&path)).await?;
+            banned.write(Path::new(&path)).await?;
         }
 
         // If an alert channel is defined, send a message there

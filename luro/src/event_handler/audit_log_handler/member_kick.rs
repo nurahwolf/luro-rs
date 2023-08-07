@@ -1,11 +1,12 @@
 use crate::{models::SlashUser, USERDATA_FILE_PATH};
 use anyhow::Context;
+use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
 use std::{fmt::Write, path::Path, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
 use crate::{
-    models::{LuroFramework, UserActionType, UserActions, UserData},
+    models::{LuroFramework, UserData},
     traits::toml::LuroTOML,
     COLOUR_DANGER
 };

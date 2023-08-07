@@ -5,6 +5,7 @@ use std::time::SystemTime;
 use anyhow::Context;
 use async_trait::async_trait;
 
+use luro_model::user_marriages::UserMarriages;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -14,7 +15,7 @@ use twilight_model::channel::message::Component;
 
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder};
 
-use crate::models::{LuroCommandCache, LuroSlash, SlashUser, UserData, UserMarriages};
+use crate::models::{LuroCommandCache, LuroSlash, SlashUser, UserData};
 
 use crate::traits::luro_command::LuroCommand;
 use crate::traits::luro_functions::LuroFunctions;

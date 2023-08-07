@@ -2,12 +2,12 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
     iter::Peekable,
     num::NonZeroU64,
-    str::Chars,
-    time::SystemTime
+    str::Chars
 };
 
 use dashmap::DashMap;
 use hyper::client::HttpConnector;
+use luro_model::{luro_message_source::LuroMessageSource, user_actions::UserActions, user_marriages::UserMarriages};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use tracing::metadata::LevelFilter;
@@ -107,6 +107,7 @@ pub struct GuildPermissions<'a> {
 
 /// Settings that are specific to a guild
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[deprecated]
 pub struct GuildSetting {
     /// The Guild's name
     pub guild_name: String,
@@ -130,6 +131,7 @@ pub struct GuildSetting {
 
 /// A specific heck, used in [Hecks]. This contains the message itself, and the user ID of the author.
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[deprecated]
 pub struct Heck {
     pub heck_message: String,
     pub author_id: u64
@@ -138,6 +140,7 @@ pub struct Heck {
 /// Structure for `heck.toml`
 /// We have two hecks, one that is slowly drained (so we only get a heck once) and another used to get explicit hecks.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[deprecated]
 pub struct Hecks {
     /// A vector containing all SFW hecks
     pub sfw_hecks: Vec<Heck>,
@@ -190,14 +193,6 @@ pub struct LuroPermissions<'a> {
     member_id: Id<UserMarker>,
     member_roles: MemberRoles,
     is_owner: bool
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum LuroMessageSource {
-    MessageUpdate,
-    MessageDelete,
-    MessageCreate,
-    None
 }
 
 pub enum LuroLogChannel {
@@ -359,6 +354,7 @@ pub struct Stories {
 
 /// A story, which is simply a title and content both as strings
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[deprecated]
 pub struct Story {
     pub title: String,
     pub description: String
@@ -427,34 +423,6 @@ pub struct UserData {
     /// The user's marriages
     #[serde(default)]
     pub marriages: HashMap<Id<UserMarker>, UserMarriages>
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct UserMarriages {
-    pub timestamp: SystemTime,
-    pub user: Id<UserMarker>,
-    pub reason: String
-}
-
-/// Bans recorded against a user
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct UserActions {
-    /// The type of action this is
-    pub action_type: Vec<UserActionType>,
-    /// The guild that the action took place
-    pub guild_id: Option<Id<GuildMarker>>,
-    /// The reason that the action took place
-    pub reason: String,
-    /// Who performed this action
-    pub responsible_user: Id<UserMarker>
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum UserActionType {
-    Ban,
-    Kick,
-    Warn,
-    PrivilegeEscalation
 }
 
 mod slash_user;

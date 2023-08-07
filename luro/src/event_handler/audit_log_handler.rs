@@ -17,7 +17,7 @@ impl LuroFramework {
             Some(guild_id) => guild_id,
             None => {
                 warn!("Expected a guild to be present when handling an audit log event");
-                return Ok(())
+                return Ok(());
             }
         };
         let mut embed = self.default_embed(&Some(guild_id));
@@ -37,7 +37,7 @@ impl LuroFramework {
                     let embed_author = EmbedAuthorBuilder::new(format!("Performed by {} - {}", slash_author.name, author.id))
                         .icon_url(ImageSource::url(slash_author.avatar)?)
                         .build();
-    
+
                     embed = embed.author(embed_author)
                 }
             }

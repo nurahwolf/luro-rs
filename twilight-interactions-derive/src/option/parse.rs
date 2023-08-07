@@ -8,28 +8,20 @@ pub struct ParsedVariant {
     pub span: Span,
     pub ident: Ident,
     pub attribute: VariantAttribute,
-    pub kind: ChoiceKind,
+    pub kind: ChoiceKind
 }
 
 impl ParsedVariant {
     /// Parse an iterator of syn [`Variant`].
     ///
     /// The inferred [`OptionKind`] is also returned.
-    pub fn from_variants(
-        variants: impl IntoIterator<Item = Variant>,
-        input_span: Span,
-    ) -> Result<(Vec<Self>, ChoiceKind)> {
+    pub fn from_variants(variants: impl IntoIterator<Item = Variant>, input_span: Span) -> Result<(Vec<Self>, ChoiceKind)> {
         let mut iter = variants.into_iter();
 
         // Parse the fist variant to infer the type
         let first = match iter.next() {
             Some(variant) => Self::from_variant(variant, None)?,
-            None => {
-                return Err(Error::new(
-                    input_span,
-                    "enum must have at least one variant",
-                ))
-            }
+            None => return Err(Error::new(input_span, "enum must have at least one variant"))
         };
         let choice_kind = first.kind;
 
@@ -48,24 +40,19 @@ impl ParsedVariant {
     fn from_variant(variant: Variant, kind: Option<ChoiceKind>) -> Result<Self> {
         match variant.fields {
             Fields::Unit => (),
-            _ => return Err(Error::new(variant.span(), "variant must be a unit variant")),
+            _ => return Err(Error::new(variant.span(), "variant must be a unit variant"))
         }
 
         let attribute = match find_attr(&variant.attrs, "option") {
             Some(attr) => VariantAttribute::parse(attr, kind)?,
-            None => {
-                return Err(Error::new(
-                    variant.span(),
-                    "missing required #[option(...)] attribute",
-                ))
-            }
+            None => return Err(Error::new(variant.span(), "missing required #[option(...)] attribute"))
         };
 
         Ok(Self {
             span: variant.span(),
             ident: variant.ident,
             kind: attribute.value.kind(),
-            attribute,
+            attribute
         })
     }
 }
@@ -77,7 +64,7 @@ pub struct VariantAttribute {
     /// Localizations dictionary for the choice name
     pub name_localizations: Option<syn::Path>,
     /// Value of the choice
-    pub value: ChoiceValue,
+    pub value: ChoiceValue
 }
 
 impl VariantAttribute {
@@ -91,26 +78,18 @@ impl VariantAttribute {
 
         let name = match parser.get("name") {
             Some(val) => parse_name(val)?,
-            None => return Err(Error::new(attr.span(), "missing required attribute `name`")),
+            None => return Err(Error::new(attr.span(), "missing required attribute `name`"))
         };
-        let name_localizations = parser
-            .get("name_localizations")
-            .map(parse_path)
-            .transpose()?;
+        let name_localizations = parser.get("name_localizations").map(parse_path).transpose()?;
         let value = match parser.get("value") {
             Some(val) => ChoiceValue::parse(val, kind)?,
-            None => {
-                return Err(Error::new(
-                    attr.span(),
-                    "missing required attribute `value`",
-                ))
-            }
+            None => return Err(Error::new(attr.span(), "missing required attribute `value`"))
         };
 
         Ok(Self {
             name,
             name_localizations,
-            value,
+            value
         })
     }
 }
@@ -120,7 +99,7 @@ impl VariantAttribute {
 pub enum ChoiceValue {
     String(String),
     Int(i64),
-    Number(f64),
+    Number(f64)
 }
 
 impl ChoiceValue {
@@ -133,7 +112,7 @@ impl ChoiceValue {
             _ => {
                 return Err(Error::new(
                     val.inner().span(),
-                    "invalid attribute type, expected string, integer or float",
+                    "invalid attribute type, expected string, integer or float"
                 ))
             }
         };
@@ -143,7 +122,7 @@ impl ChoiceValue {
             if parsed.kind() != kind {
                 return Err(Error::new(
                     val.inner().span(),
-                    format!("invalid attribute type, expected {}", kind.name()),
+                    format!("invalid attribute type, expected {}", kind.name())
                 ));
             }
         }
@@ -156,7 +135,7 @@ impl ChoiceValue {
         match self {
             ChoiceValue::String(_) => ChoiceKind::String,
             ChoiceValue::Int(_) => ChoiceKind::Integer,
-            ChoiceValue::Number(_) => ChoiceKind::Number,
+            ChoiceValue::Number(_) => ChoiceKind::Number
         }
     }
 }
@@ -166,7 +145,7 @@ impl ChoiceValue {
 pub enum ChoiceKind {
     String,
     Integer,
-    Number,
+    Number
 }
 
 impl ChoiceKind {
@@ -175,7 +154,7 @@ impl ChoiceKind {
         match self {
             ChoiceKind::String => "string",
             ChoiceKind::Integer => "integer",
-            ChoiceKind::Number => "float",
+            ChoiceKind::Number => "float"
         }
     }
 }
@@ -188,9 +167,6 @@ fn parse_name(val: &AttrValue) -> Result<String> {
     // https://discord.com/developers/docs/interactions/application-commands#application-command-object-application-command-option-choice-structure
     match val.chars().count() {
         1..=100 => Ok(val),
-        _ => Err(Error::new(
-            span,
-            "name must be between 1 and 100 characters",
-        )),
+        _ => Err(Error::new(span, "name must be between 1 and 100 characters"))
     }
 }

@@ -3,15 +3,14 @@ use crate::{
     traits::toml::LuroTOML,
     USERDATA_FILE_PATH
 };
+use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
+
 use anyhow::Context;
 use std::{convert::TryInto, fmt::Write, path::Path, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{
-    models::{LuroFramework, UserActionType, UserActions},
-    COLOUR_DANGER
-};
+use crate::{models::LuroFramework, COLOUR_DANGER};
 
 impl LuroFramework {
     pub async fn subhandle_member_ban_add(

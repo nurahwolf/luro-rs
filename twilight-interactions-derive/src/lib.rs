@@ -23,7 +23,7 @@ pub fn command_model(input: TokenStream) -> TokenStream {
 
     match command::impl_command_model(input) {
         Ok(output) => output.into(),
-        Err(error) => command::dummy_command_model(ident, error).into(),
+        Err(error) => command::dummy_command_model(ident, error).into()
     }
 }
 
@@ -38,7 +38,7 @@ pub fn create_command(input: TokenStream) -> TokenStream {
 
     match command::impl_create_command(input) {
         Ok(output) => output.into(),
-        Err(error) => command::dummy_create_command(ident, error).into(),
+        Err(error) => command::dummy_create_command(ident, error).into()
     }
 }
 
@@ -53,7 +53,7 @@ pub fn command_option(input: TokenStream) -> TokenStream {
 
     match option::impl_command_option(input) {
         Ok(output) => output.into(),
-        Err(error) => option::dummy_command_option(ident, error).into(),
+        Err(error) => option::dummy_command_option(ident, error).into()
     }
 }
 
@@ -68,6 +68,6 @@ pub fn create_option(input: TokenStream) -> TokenStream {
 
     match option::impl_create_option(input) {
         Ok(output) => output.into(),
-        Err(error) => option::dummy_create_option(ident, error).into(),
+        Err(error) => option::dummy_create_option(ident, error).into()
     }
 }

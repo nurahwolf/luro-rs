@@ -179,6 +179,16 @@ impl LuroSlash {
         Ok(self)
     }
 
+    /// Set's the response type to be sent as a response to a deferred component and acknowledge this interaction.
+    pub async fn deferred_component(&mut self) -> anyhow::Result<&mut Self> {
+        // TODO: Check to make sure we are responding to an interaction, otherwise this type cannot be used
+        self.interaction_response_type = InteractionResponseType::DeferredUpdateMessage;
+        self.interaction_client()
+            .create_response(self.interaction.id, &self.interaction.token, &self.interaction_response())
+            .await?;
+        Ok(self)
+    }
+
     /// Set the response to be a model
     pub fn model(&mut self) -> &mut Self {
         self.interaction_response_type = InteractionResponseType::Modal;
@@ -283,7 +293,9 @@ impl LuroSlash {
             }
         }
 
-        if self.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource {
+        if self.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
+            || self.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
+        {
             let client = self.interaction_client();
             let mut response = client
                 .update_response(&self.interaction.token)

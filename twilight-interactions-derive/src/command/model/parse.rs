@@ -4,10 +4,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{spanned::Spanned, Attribute, Error, Lit, Result, Type};
 
-use crate::parse::{
-    extract_option, extract_type, find_attr, parse_desc, parse_name, parse_path, AttrValue,
-    NamedAttrs,
-};
+use crate::parse::{extract_option, extract_type, find_attr, parse_desc, parse_name, parse_path, AttrValue, NamedAttrs};
 
 /// Parsed struct field
 pub struct StructField {
@@ -16,7 +13,7 @@ pub struct StructField {
     pub ty: Type,
     pub raw_attrs: Vec<Attribute>,
     pub attributes: FieldAttribute,
-    pub kind: FieldType,
+    pub kind: FieldType
 }
 
 /// Type of a parsed struct field
@@ -24,7 +21,7 @@ pub struct StructField {
 pub enum FieldType {
     Autocomplete,
     Optional,
-    Required,
+    Required
 }
 
 impl StructField {
@@ -32,23 +29,18 @@ impl StructField {
     pub fn from_field(field: syn::Field) -> Result<Self> {
         let (kind, ty) = match extract_option(&field.ty) {
             Some(ty) => match extract_type(&ty, "AutocompleteValue") {
-                Some(_) => {
-                    return Err(Error::new(
-                        ty.span(),
-                        "`AutocompleteValue` can not be wrapped in `Option<T>`",
-                    ))
-                }
-                None => (FieldType::Optional, ty),
+                Some(_) => return Err(Error::new(ty.span(), "`AutocompleteValue` can not be wrapped in `Option<T>`")),
+                None => (FieldType::Optional, ty)
             },
             None => match extract_type(&field.ty, "AutocompleteValue") {
                 Some(ty) => (FieldType::Autocomplete, ty),
-                None => (FieldType::Required, field.ty.clone()),
-            },
+                None => (FieldType::Required, field.ty.clone())
+            }
         };
 
         let attributes = match find_attr(&field.attrs, "command") {
             Some(attr) => FieldAttribute::parse(attr)?,
-            None => FieldAttribute::default(),
+            None => FieldAttribute::default()
         };
 
         Ok(Self {
@@ -57,7 +49,7 @@ impl StructField {
             ty,
             raw_attrs: field.attrs,
             attributes,
-            kind,
+            kind
         })
     }
 
@@ -71,7 +63,7 @@ impl FieldType {
     pub fn required(&self) -> bool {
         match self {
             Self::Required => true,
-            Self::Autocomplete | Self::Optional => false,
+            Self::Autocomplete | Self::Optional => false
         }
     }
 }
@@ -93,7 +85,7 @@ pub struct TypeAttribute {
     /// Whether the command is available in DMs.
     pub dm_permission: Option<bool>,
     /// Whether the command is nsfw.
-    pub nsfw: Option<bool>,
+    pub nsfw: Option<bool>
 }
 
 impl TypeAttribute {
@@ -107,33 +99,18 @@ impl TypeAttribute {
             "desc_localizations",
             "default_permissions",
             "dm_permission",
-            "nsfw",
+            "nsfw"
         ]);
 
         attr.parse_nested_meta(|meta| parser.parse(meta))?;
 
-        let autocomplete = parser
-            .get("autocomplete")
-            .map(|v| v.parse_bool())
-            .transpose()?;
+        let autocomplete = parser.get("autocomplete").map(|v| v.parse_bool()).transpose()?;
         let name = parser.get("name").map(parse_name).transpose()?;
-        let name_localizations = parser
-            .get("name_localizations")
-            .map(parse_path)
-            .transpose()?;
+        let name_localizations = parser.get("name_localizations").map(parse_path).transpose()?;
         let desc = parser.get("desc").map(parse_desc).transpose()?;
-        let desc_localizations = parser
-            .get("desc_localizations")
-            .map(parse_path)
-            .transpose()?;
-        let default_permissions = parser
-            .get("default_permissions")
-            .map(parse_path)
-            .transpose()?;
-        let dm_permission = parser
-            .get("dm_permission")
-            .map(|v| v.parse_bool())
-            .transpose()?;
+        let desc_localizations = parser.get("desc_localizations").map(parse_path).transpose()?;
+        let default_permissions = parser.get("default_permissions").map(parse_path).transpose()?;
+        let dm_permission = parser.get("dm_permission").map(|v| v.parse_bool()).transpose()?;
         let nsfw = parser.get("nsfw").map(|v| v.parse_bool()).transpose()?;
 
         Ok(Self {
@@ -144,7 +121,7 @@ impl TypeAttribute {
             desc_localizations,
             default_permissions,
             dm_permission,
-            nsfw,
+            nsfw
         })
     }
 }
@@ -171,7 +148,7 @@ pub struct FieldAttribute {
     /// Maximum string length
     pub max_length: Option<u16>,
     /// Minimum string length
-    pub min_length: Option<u16>,
+    pub min_length: Option<u16>
 }
 
 impl FieldAttribute {
@@ -187,21 +164,15 @@ impl FieldAttribute {
             "max_value",
             "min_value",
             "max_length",
-            "min_length",
+            "min_length"
         ]);
 
         attr.parse_nested_meta(|meta| parser.parse(meta))?;
 
         let rename = parser.get("rename").map(parse_name).transpose()?;
-        let name_localizations = parser
-            .get("name_localizations")
-            .map(parse_path)
-            .transpose()?;
+        let name_localizations = parser.get("name_localizations").map(parse_path).transpose()?;
         let desc = parser.get("desc").map(parse_desc).transpose()?;
-        let desc_localizations = parser
-            .get("desc_localizations")
-            .map(parse_path)
-            .transpose()?;
+        let desc_localizations = parser.get("desc_localizations").map(parse_path).transpose()?;
         let autocomplete = parser
             .get("autocomplete")
             .map(|val| val.parse_bool())
@@ -212,22 +183,10 @@ impl FieldAttribute {
             .map(ChannelType::parse_attr)
             .transpose()?
             .unwrap_or_default();
-        let max_value = parser
-            .get("max_value")
-            .map(CommandOptionValue::parse_attr)
-            .transpose()?;
-        let min_value = parser
-            .get("min_value")
-            .map(CommandOptionValue::parse_attr)
-            .transpose()?;
-        let max_length = parser
-            .get("max_length")
-            .map(|val| val.parse_int())
-            .transpose()?;
-        let min_length = parser
-            .get("min_length")
-            .map(|val| val.parse_int())
-            .transpose()?;
+        let max_value = parser.get("max_value").map(CommandOptionValue::parse_attr).transpose()?;
+        let min_value = parser.get("min_value").map(CommandOptionValue::parse_attr).transpose()?;
+        let max_length = parser.get("max_length").map(|val| val.parse_int()).transpose()?;
+        let min_length = parser.get("min_length").map(|val| val.parse_int()).transpose()?;
 
         Ok(Self {
             rename,
@@ -239,14 +198,14 @@ impl FieldAttribute {
             max_value,
             min_value,
             max_length,
-            min_length,
+            min_length
         })
     }
 
     pub fn name_default(&self, default: String) -> String {
         match &self.rename {
             Some(name) => name.clone(),
-            None => default,
+            None => default
         }
     }
 }
@@ -265,7 +224,7 @@ pub enum ChannelType {
     PrivateThread,
     GuildStageVoice,
     GuildDirectory,
-    GuildForum,
+    GuildForum
 }
 
 impl ChannelType {
@@ -274,9 +233,7 @@ impl ChannelType {
         let span = attr.inner().span();
         let val = attr.parse_string()?;
 
-        val.split_whitespace()
-            .map(|value| ChannelType::parse(value, span))
-            .collect()
+        val.split_whitespace().map(|value| ChannelType::parse(value, span)).collect()
     }
 
     /// Parse a single string as a [`ChannelType`]
@@ -295,10 +252,7 @@ impl ChannelType {
             "guild_stage_voice" => Ok(Self::GuildStageVoice),
             "guild_directory" => Ok(Self::GuildDirectory),
             "guild_forum" => Ok(Self::GuildForum),
-            invalid => Err(Error::new(
-                span,
-                format!("`{invalid}` is not a valid channel type"),
-            )),
+            invalid => Err(Error::new(span, format!("`{invalid}` is not a valid channel type")))
         }
     }
 }
@@ -307,7 +261,7 @@ impl ChannelType {
 #[derive(Clone, Copy)]
 pub enum CommandOptionValue {
     Integer(i64),
-    Number(f64),
+    Number(f64)
 }
 
 impl CommandOptionValue {
@@ -318,8 +272,8 @@ impl CommandOptionValue {
             Lit::Float(inner) => Ok(Self::Number(inner.base10_parse()?)),
             _ => Err(Error::new(
                 attr.inner().span(),
-                "invalid attribute type, expected integer or float",
-            )),
+                "invalid attribute type, expected integer or float"
+            ))
         }
     }
 }
@@ -351,7 +305,7 @@ pub fn channel_type(kind: &ChannelType) -> TokenStream {
         ChannelType::GuildDirectory => {
             quote!(::twilight_model::channel::ChannelType::GuildDirectory)
         }
-        ChannelType::GuildForum => quote!(::twilight_model::channel::ChannelType::GuildForum),
+        ChannelType::GuildForum => quote!(::twilight_model::channel::ChannelType::GuildForum)
     }
 }
 
@@ -371,10 +325,10 @@ pub fn command_option_value(value: Option<CommandOptionValue>) -> TokenStream {
 /// Convert an [`Option<T>`] into a [`TokenStream`]
 pub fn optional<T>(value: Option<T>) -> TokenStream
 where
-    T: ToTokens,
+    T: ToTokens
 {
     match value {
         Some(value) => quote!(::std::option::Option::Some(#value)),
-        None => quote!(::std::option::Option::None),
+        None => quote!(::std::option::Option::None)
     }
 }

@@ -24,6 +24,7 @@ mod abuse;
 mod assign;
 mod clear_warnings;
 mod commands;
+mod config;
 mod get_message;
 mod guilds;
 mod load_users;
@@ -32,7 +33,6 @@ mod modify_role;
 mod reload;
 mod save;
 mod save_guilds;
-mod config;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]
@@ -62,7 +62,7 @@ pub enum OwnerCommands {
     #[command(name = "get_message")]
     GetMessage(Box<OwnerGetMessage>),
     #[command(name = "config")]
-    Config(ConfigCommand),
+    Config(ConfigCommand)
 }
 
 #[async_trait]

@@ -5,7 +5,7 @@ use syn::{DeriveInput, Error, FieldsNamed, Result};
 use super::parse::{optional, FieldType, StructField, TypeAttribute};
 use crate::{
     command::model::parse::{channel_type, command_option_value},
-    parse::find_attr,
+    parse::find_attr
 };
 
 /// Implementation of `CommandModel` derive macro
@@ -15,12 +15,12 @@ pub fn impl_command_model(input: DeriveInput, fields: Option<FieldsNamed>) -> Re
     let where_clause = &generics.where_clause;
     let fields = match fields {
         Some(fields) => StructField::from_fields(fields)?,
-        None => Vec::new(),
+        None => Vec::new()
     };
 
     let autocomplete = match find_attr(&input.attrs, "command") {
         Some(attr) => TypeAttribute::parse(attr)?.autocomplete.unwrap_or(false),
-        None => false,
+        None => false
     };
 
     for field in &fields {
@@ -28,7 +28,7 @@ pub fn impl_command_model(input: DeriveInput, fields: Option<FieldsNamed>) -> Re
         if autocomplete && ![FieldType::Autocomplete, FieldType::Optional].contains(&field.kind) {
             return Err(Error::new(
                 field.span,
-                "autocomplete models only supports `Option` or `AutocompleteValue` field type",
+                "autocomplete models only supports `Option` or `AutocompleteValue` field type"
             ));
         }
 
@@ -138,7 +138,7 @@ fn field_constructor(field: &StructField) -> TokenStream {
                 Some(value) => value,
                 None => ::twilight_interactions::command::AutocompleteValue::None,
             }
-        },
+        }
     }
 }
 

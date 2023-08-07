@@ -1,10 +1,11 @@
+use luro_model::luro_message_source::LuroMessageSource;
 use std::{fmt::Write, sync::Arc};
 use tracing::{debug, info, warn};
 
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{
-    models::{LuroFramework, LuroMessage, LuroMessageSource, SlashUser, UserData},
+    models::{LuroFramework, LuroMessage, SlashUser, UserData},
     COLOUR_DANGER
 };
 

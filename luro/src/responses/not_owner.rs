@@ -1,3 +1,5 @@
+use luro_model::user_actions::UserActions;
+use luro_model::user_actions_type::UserActionType;
 use tracing::warn;
 use twilight_model::id::marker::{GuildMarker, UserMarker};
 use twilight_model::id::Id;
@@ -5,7 +7,7 @@ use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::models::{LuroSlash, UserActionType, UserActions, UserData};
+use crate::models::{LuroSlash, UserData};
 
 impl LuroSlash {
     pub async fn not_owner_response(

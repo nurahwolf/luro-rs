@@ -10,13 +10,11 @@ pub fn impl_command_option(input: DeriveInput) -> Result<TokenStream> {
     let input_span = input.span();
 
     let (variants, kind) = match input.data {
-        syn::Data::Enum(DataEnum { variants, .. }) => {
-            ParsedVariant::from_variants(variants, input_span)?
-        }
+        syn::Data::Enum(DataEnum { variants, .. }) => ParsedVariant::from_variants(variants, input_span)?,
         _ => {
             return Err(Error::new(
                 input_span,
-                "`#[derive(CommandOption)] can only be applied to enums",
+                "`#[derive(CommandOption)] can only be applied to enums"
             ))
         }
     };
@@ -29,7 +27,7 @@ pub fn impl_command_option(input: DeriveInput) -> Result<TokenStream> {
     let choice_ty = match kind {
         ChoiceKind::String => quote! { &'static str },
         ChoiceKind::Integer => quote! { i64 },
-        ChoiceKind::Number => quote! { f64 },
+        ChoiceKind::Number => quote! { f64 }
     };
 
     Ok(quote! {
@@ -105,7 +103,7 @@ fn parsed_init(kind: ChoiceKind) -> TokenStream {
 fn match_expr(kind: ChoiceKind) -> TokenStream {
     match kind {
         ChoiceKind::String => quote!(parsed.as_str()),
-        _ => quote!(&parsed),
+        _ => quote!(&parsed)
     }
 }
 
@@ -118,7 +116,7 @@ fn variant_match_arm(variant: &ParsedVariant) -> TokenStream {
         ChoiceValue::Int(val) => val.to_token_stream(),
         // https://stackoverflow.com/questions/45875142/what-are-the-alternatives-to-pattern-matching-floating-point-numbers
         // https://rust-lang.github.io/rust-clippy/master/index.html#float_cmp
-        ChoiceValue::Number(val) => quote! { val if (val - #val).abs() < f64::EPSILON },
+        ChoiceValue::Number(val) => quote! { val if (val - #val).abs() < f64::EPSILON }
     };
 
     quote_spanned! {span=>
@@ -133,7 +131,7 @@ fn value_match_arm(variant: &ParsedVariant) -> TokenStream {
     let value = match &variant.attribute.value {
         ChoiceValue::String(val) => val.to_token_stream(),
         ChoiceValue::Int(val) => val.to_token_stream(),
-        ChoiceValue::Number(val) => val.to_token_stream(),
+        ChoiceValue::Number(val) => val.to_token_stream()
     };
 
     quote_spanned! {span=>

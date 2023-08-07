@@ -11,3 +11,6 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
+twilight-model = { workspace = true }
+serde = { workspace = true }
+dashmap = { workspace = true, features = ["serde"]}

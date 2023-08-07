@@ -2,7 +2,7 @@
 
 use std::{
     error::Error,
-    fmt::{Display, Formatter, Result as FmtResult},
+    fmt::{Display, Formatter, Result as FmtResult}
 };
 
 use twilight_model::{application::command::CommandOptionType, channel::ChannelType};
@@ -20,7 +20,7 @@ pub enum ParseError {
     /// This error is only returned when parsing subcommands.
     EmptyOptions,
     /// Error when parsing a command option.
-    Option(ParseOptionError),
+    Option(ParseOptionError)
 }
 
 impl Error for ParseError {}
@@ -29,7 +29,7 @@ impl Display for ParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             ParseError::EmptyOptions => write!(f, "received an empty option list"),
-            ParseError::Option(error) => error.fmt(f),
+            ParseError::Option(error) => error.fmt(f)
         }
     }
 }
@@ -42,7 +42,7 @@ pub struct ParseOptionError {
     /// The name of the option field that caused the error.
     pub field: String,
     /// The type of the error.
-    pub kind: ParseOptionErrorType,
+    pub kind: ParseOptionErrorType
 }
 
 impl Error for ParseOptionError {}
@@ -71,7 +71,7 @@ impl Display for ParseOptionError {
             ParseOptionErrorType::LookupFailed(id) => write!(f, "failed to resolve `{id}`"),
             ParseOptionErrorType::UnknownField => write!(f, "unknown field"),
             ParseOptionErrorType::UnknownSubcommand => write!(f, "unknown subcommand"),
-            ParseOptionErrorType::RequiredField => write!(f, "missing required field"),
+            ParseOptionErrorType::RequiredField => write!(f, "missing required field")
         }
     }
 }
@@ -98,5 +98,5 @@ pub enum ParseOptionErrorType {
     /// Received an unknown option field.
     UnknownField,
     /// Received an unknown subcommand.
-    UnknownSubcommand,
+    UnknownSubcommand
 }

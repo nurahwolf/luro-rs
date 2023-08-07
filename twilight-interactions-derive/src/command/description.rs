@@ -6,13 +6,10 @@ pub fn get_description(
     desc_localizations: &Option<syn::Path>,
     desc: &Option<String>,
     span: proc_macro2::Span,
-    attrs: &[syn::Attribute],
+    attrs: &[syn::Attribute]
 ) -> syn::Result<proc_macro2::TokenStream> {
     if desc.is_some() && desc_localizations.is_some() {
-        return Err(syn::Error::new(
-            span,
-            "You can't specify `desc` and `desc_localizations`.",
-        ));
+        return Err(syn::Error::new(span, "You can't specify `desc` and `desc_localizations`."));
     }
 
     let desc = match desc_localizations {
@@ -25,7 +22,7 @@ pub fn get_description(
         None => {
             let desc = match desc {
                 Some(desc) => desc.clone(),
-                None => parse_doc(attrs, span)?,
+                None => parse_doc(attrs, span)?
             };
 
             quote! { (::std::convert::From::from(#desc), None) }

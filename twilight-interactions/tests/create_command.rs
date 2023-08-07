@@ -1,13 +1,11 @@
 use std::{borrow::Cow, collections::HashMap};
 
-use twilight_interactions::command::{
-    ApplicationCommandData, CreateCommand, CreateOption, ResolvedUser,
-};
+use twilight_interactions::command::{ApplicationCommandData, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::application::interaction::InteractionChannel;
 use twilight_model::{
     application::command::{CommandOption, CommandOptionType, CommandOptionValue},
     channel::ChannelType,
-    guild::Permissions,
+    guild::Permissions
 };
 
 /// Demo command for testing purposes
@@ -21,7 +19,7 @@ use twilight_model::{
 )]
 struct DemoCommand<'a, T>
 where
-    T: CreateOption,
+    T: CreateOption
 {
     /// This should be overwritten
     #[command(rename = "member", desc = "A member")]
@@ -40,7 +38,7 @@ where
     /// Generic field
     generic: Option<T>,
     /// More text
-    cow: Option<Cow<'a, str>>,
+    cow: Option<Cow<'a, str>>
 }
 
 fn demo_permissions() -> Permissions {
@@ -72,7 +70,7 @@ fn test_create_command() {
             name: "member".into(),
             name_localizations: None,
             options: None,
-            required: Some(true),
+            required: Some(true)
         },
         CommandOption {
             autocomplete: Some(false),
@@ -88,7 +86,7 @@ fn test_create_command() {
             name: "text".into(),
             name_localizations: None,
             options: None,
-            required: Some(true),
+            required: Some(true)
         },
         CommandOption {
             autocomplete: Some(true),
@@ -104,7 +102,7 @@ fn test_create_command() {
             name: "number".into(),
             name_localizations: None,
             options: None,
-            required: Some(true),
+            required: Some(true)
         },
         CommandOption {
             autocomplete: Some(false),
@@ -120,7 +118,7 @@ fn test_create_command() {
             name: "channel".into(),
             name_localizations: None,
             options: None,
-            required: Some(false),
+            required: Some(false)
         },
         CommandOption {
             autocomplete: Some(false),
@@ -136,7 +134,7 @@ fn test_create_command() {
             name: "generic".into(),
             name_localizations: None,
             options: None,
-            required: Some(false),
+            required: Some(false)
         },
         CommandOption {
             autocomplete: Some(false),
@@ -152,7 +150,7 @@ fn test_create_command() {
             name: "cow".into(),
             name_localizations: None,
             options: None,
-            required: Some(false),
+            required: Some(false)
         },
     ];
 
@@ -167,7 +165,7 @@ fn test_create_command() {
         default_member_permissions: Some(Permissions::SEND_MESSAGES),
         dm_permission: Some(false),
         group: false,
-        nsfw: Some(true),
+        nsfw: Some(true)
     };
 
     assert_eq!(DemoCommand::<i64>::create_command(), expected);
@@ -185,7 +183,7 @@ fn test_unit_create_command() {
         default_member_permissions: None,
         dm_permission: None,
         group: false,
-        nsfw: None,
+        nsfw: None
     };
 
     assert_eq!(UnitCommand::create_command(), expected);

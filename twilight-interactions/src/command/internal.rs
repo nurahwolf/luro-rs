@@ -8,10 +8,8 @@
 use std::collections::HashMap;
 
 use twilight_model::{
-    application::command::{
-        CommandOption, CommandOptionChoice, CommandOptionType, CommandOptionValue,
-    },
-    channel::ChannelType,
+    application::command::{CommandOption, CommandOptionChoice, CommandOptionType, CommandOptionValue},
+    channel::ChannelType
 };
 
 /// Convert a type to [`HashMap<String, String>`].
@@ -22,11 +20,9 @@ pub fn convert_localizations<I, K, V>(item: I) -> HashMap<String, String>
 where
     I: IntoIterator<Item = (K, V)>,
     K: ToString,
-    V: ToString,
+    V: ToString
 {
-    item.into_iter()
-        .map(|(k, v)| (k.to_string(), v.to_string()))
-        .collect()
+    item.into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
 }
 
 /// Data to create a command option from.
@@ -52,7 +48,7 @@ pub struct CreateOptionData {
     /// and `NUMBER` option types.
     pub autocomplete: bool,
     /// Data of the command option.
-    pub data: CommandOptionData,
+    pub data: CommandOptionData
 }
 
 /// Data of a command option.
@@ -74,7 +70,7 @@ pub struct CommandOptionData {
     /// Minimum value length. Only for `STRING` option type.
     pub max_length: Option<u16>,
     /// Maximum value length. Only for `STRING` option type.
-    pub min_length: Option<u16>,
+    pub min_length: Option<u16>
 }
 
 /// Builder to convert a [`CreateOptionData`] into a [`CommandOption`].
@@ -82,7 +78,7 @@ pub struct CreateOptionBuilder {
     kind: CommandOptionType,
     option: CreateOptionData,
     choices: Option<Vec<CommandOptionChoice>>,
-    options: Option<Vec<CommandOption>>,
+    options: Option<Vec<CommandOption>>
 }
 
 impl CreateOptionBuilder {
@@ -92,7 +88,7 @@ impl CreateOptionBuilder {
             kind,
             option,
             choices: None,
-            options: None,
+            options: None
         }
     }
 
@@ -126,7 +122,7 @@ impl CreateOptionBuilder {
             name: self.option.name,
             name_localizations: self.option.name_localizations,
             options: self.options,
-            required: self.option.required,
+            required: self.option.required
         }
     }
 }

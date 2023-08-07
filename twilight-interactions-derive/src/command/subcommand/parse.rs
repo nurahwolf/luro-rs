@@ -8,22 +8,16 @@ pub struct ParsedVariant {
     pub span: Span,
     pub ident: Ident,
     pub attribute: VariantAttribute,
-    pub inner: TypePath,
+    pub inner: TypePath
 }
 
 impl ParsedVariant {
     /// Parse an iterator of syn [`Variant`].
-    pub fn from_variants(
-        variants: impl IntoIterator<Item = Variant>,
-        input_span: Span,
-    ) -> Result<Vec<Self>> {
+    pub fn from_variants(variants: impl IntoIterator<Item = Variant>, input_span: Span) -> Result<Vec<Self>> {
         let variants: Vec<_> = variants.into_iter().collect();
 
         if variants.is_empty() {
-            return Err(Error::new(
-                input_span,
-                "enum must have at least one variant",
-            ));
+            return Err(Error::new(input_span, "enum must have at least one variant"));
         }
 
         variants.into_iter().map(Self::from_variant).collect()
@@ -34,42 +28,29 @@ impl ParsedVariant {
         let span = variant.span();
         let fields = match variant.fields {
             Fields::Unnamed(fields) => fields,
-            _ => return Err(Error::new(span, "variant must be an unnamed variant")),
+            _ => return Err(Error::new(span, "variant must be an unnamed variant"))
         };
 
         if fields.unnamed.len() != 1 {
-            return Err(Error::new(
-                span,
-                "variant must have exactly one unnamed field",
-            ));
+            return Err(Error::new(span, "variant must have exactly one unnamed field"));
         }
 
         let inner = match &fields.unnamed[0].ty {
             // Safety: len is checked above
             Type::Path(ty) => ty.clone(),
-            other => {
-                return Err(Error::new(
-                    other.span(),
-                    "unsupported type, expected a type path",
-                ))
-            }
+            other => return Err(Error::new(other.span(), "unsupported type, expected a type path"))
         };
 
         let attribute = match find_attr(&variant.attrs, "command") {
             Some(attr) => VariantAttribute::parse(attr)?,
-            None => {
-                return Err(Error::new(
-                    span,
-                    "missing required #[command(..)] attribute",
-                ))
-            }
+            None => return Err(Error::new(span, "missing required #[command(..)] attribute"))
         };
 
         Ok(Self {
             span,
             ident: variant.ident,
             attribute,
-            inner,
+            inner
         })
     }
 }
@@ -77,7 +58,7 @@ impl ParsedVariant {
 /// Parsed variant attribute
 pub struct VariantAttribute {
     /// Name of the subcommand
-    pub name: String,
+    pub name: String
 }
 
 impl VariantAttribute {
@@ -89,7 +70,7 @@ impl VariantAttribute {
 
         let name = match parser.get("name") {
             Some(val) => parse_name(val)?,
-            None => return Err(Error::new(attr.span(), "missing required attribute `name`")),
+            None => return Err(Error::new(attr.span(), "missing required attribute `name`"))
         };
 
         Ok(Self { name })
@@ -111,7 +92,7 @@ pub struct TypeAttribute {
     /// Whether the command is available in DMs.
     pub dm_permission: Option<bool>,
     /// Whether the command is nsfw.
-    pub nsfw: Option<bool>,
+    pub nsfw: Option<bool>
 }
 
 impl TypeAttribute {
@@ -124,32 +105,20 @@ impl TypeAttribute {
             "desc_localizations",
             "default_permissions",
             "dm_permission",
-            "nsfw",
+            "nsfw"
         ]);
 
         attr.parse_nested_meta(|meta| parser.parse(meta))?;
 
         let name = match parser.get("name") {
             Some(val) => parse_name(val)?,
-            None => return Err(Error::new(attr.span(), "missing required attribute `name`")),
+            None => return Err(Error::new(attr.span(), "missing required attribute `name`"))
         };
-        let name_localizations = parser
-            .get("name_localizations")
-            .map(parse_path)
-            .transpose()?;
+        let name_localizations = parser.get("name_localizations").map(parse_path).transpose()?;
         let desc = parser.get("desc").map(parse_desc).transpose()?;
-        let desc_localizations = parser
-            .get("desc_localizations")
-            .map(parse_path)
-            .transpose()?;
-        let default_permissions = parser
-            .get("default_permissions")
-            .map(parse_path)
-            .transpose()?;
-        let dm_permission = parser
-            .get("dm_permission")
-            .map(|v| v.parse_bool())
-            .transpose()?;
+        let desc_localizations = parser.get("desc_localizations").map(parse_path).transpose()?;
+        let default_permissions = parser.get("default_permissions").map(parse_path).transpose()?;
+        let dm_permission = parser.get("dm_permission").map(|v| v.parse_bool()).transpose()?;
         let nsfw = parser.get("nsfw").map(|v| v.parse_bool()).transpose()?;
 
         Ok(Self {
@@ -159,7 +128,7 @@ impl TypeAttribute {
             desc_localizations,
             default_permissions,
             dm_permission,
-            nsfw,
+            nsfw
         })
     }
 }

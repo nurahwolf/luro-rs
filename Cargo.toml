@@ -25,3 +25,16 @@ twilight-model = { git = "https://github.com/twilight-rs/twilight.git", branch =
 
 # Twilight third party
 twilight-interactions = { path = "twilight-interactions" }
+
+# Core
+anyhow = "1"
+serde = "1"
+dashmap = "5"
+tokio = { version = "1", default-features = false, features = ["sync", "rt-multi-thread", "fs"] }
+# TODO: MOVE TO DATABASE
+toml = "0.7"
+tracing = "0.1"
+
+[workspace.dev-dependencies]
+futures = "0.3"
+tokio = { version = "1", features = ["full"] }

@@ -1,10 +1,7 @@
+use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
 use std::path::Path;
 
-use crate::{
-    models::{UserActionType, UserActions},
-    traits::toml::LuroTOML,
-    USERDATA_FILE_PATH
-};
+use crate::{traits::toml::LuroTOML, USERDATA_FILE_PATH};
 use anyhow::Context;
 use async_trait::async_trait;
 
@@ -145,31 +142,23 @@ impl LuroCommand for KickCommand {
             .await?;
 
         {
-            let _ = UserData::modify_user_settings(&ctx.luro, &author.user.id).await?;
-            let _ = UserData::modify_user_settings(&ctx.luro, &user_to_remove.id).await?;
-            // Reward the person who actioned the ban
-            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author.user.id);
-            let data = &mut ctx
-                .luro
-                .user_data
-                .get_mut(&author.user.id)
-                .context("Expected to find user's data in the cache")?;
-            data.moderation_actions_performed += 1;
-            data.write(Path::new(&path)).await?;
+            let mut reward = UserData::modify_user_settings(&ctx.luro, &author_user.id).await?;
+            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author_user.id);
+            reward.moderation_actions_performed += 1;
+            reward.write(Path::new(&path)).await?;
+        }
+
+        {
             // Record the punishment
+            let mut kicked = UserData::modify_user_settings(&ctx.luro, &user_to_remove.id).await?;
             let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_to_remove.id);
-            let data = &mut ctx
-                .luro
-                .user_data
-                .get_mut(&user_to_remove.id)
-                .context("Expected to find user's data in the cache")?;
-            data.moderation_actions.push(UserActions {
+            kicked.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::Kick],
                 guild_id: Some(guild_id),
                 reason,
-                responsible_user: author.user.id
+                responsible_user: author_user.id
             });
-            data.write(Path::new(&path)).await?;
+            kicked.write(Path::new(&path)).await?;
         }
 
         ctx.embed(embed.build())?.respond().await

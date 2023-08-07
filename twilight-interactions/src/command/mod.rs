@@ -89,10 +89,7 @@ mod localizations;
 #[doc(hidden)]
 pub mod internal;
 
-pub use command_model::{
-    AutocompleteValue, CommandInputData, CommandModel, CommandOption, ResolvedMentionable,
-    ResolvedUser,
-};
+pub use command_model::{AutocompleteValue, CommandInputData, CommandModel, CommandOption, ResolvedMentionable, ResolvedUser};
 pub use create_command::{ApplicationCommandData, CreateCommand, CreateOption};
 pub use localizations::{DescriptionLocalizations, NameLocalizations};
 #[cfg(feature = "derive")]

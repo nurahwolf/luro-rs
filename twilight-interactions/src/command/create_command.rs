@@ -1,14 +1,17 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use twilight_model::{
-    application::{command::{Command, CommandOption, CommandOptionType, CommandType}, interaction::InteractionChannel},
+    application::{
+        command::{Command, CommandOption, CommandOptionType, CommandType},
+        interaction::InteractionChannel
+    },
     channel::Attachment,
     guild::{Permissions, Role},
     id::{
         marker::{AttachmentMarker, ChannelMarker, GenericMarker, RoleMarker, UserMarker},
-        Id,
+        Id
     },
-    user::User,
+    user::User
 };
 
 use super::{internal::CreateOptionData, ResolvedMentionable, ResolvedUser};
@@ -166,7 +169,7 @@ pub struct ApplicationCommandData {
     /// Whether the command is a subcommand group.
     pub group: bool,
     /// Whether the command is nsfw.
-    pub nsfw: Option<bool>,
+    pub nsfw: Option<bool>
 }
 
 impl From<ApplicationCommandData> for Command {
@@ -184,7 +187,7 @@ impl From<ApplicationCommandData> for Command {
             kind: CommandType::ChatInput,
             nsfw: item.nsfw,
             options: item.options,
-            version: Id::new(1),
+            version: Id::new(1)
         }
     }
 }
@@ -198,17 +201,13 @@ impl From<ApplicationCommandData> for CommandOption {
             description_localizations: item.description_localizations,
             required: None,
             autocomplete: false,
-            data: Default::default(),
+            data: Default::default()
         };
 
         if item.group {
-            data.builder(CommandOptionType::SubCommandGroup)
-                .options(item.options)
-                .build()
+            data.builder(CommandOptionType::SubCommandGroup).options(item.options).build()
         } else {
-            data.builder(CommandOptionType::SubCommand)
-                .options(item.options)
-                .build()
+            data.builder(CommandOptionType::SubCommand).options(item.options).build()
         }
     }
 }

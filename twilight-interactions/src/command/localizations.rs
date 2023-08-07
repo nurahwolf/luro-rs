@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 pub struct DescriptionLocalizations {
     pub fallback: String,
-    pub localizations: HashMap<String, String>,
+    pub localizations: HashMap<String, String>
 }
 
 impl DescriptionLocalizations {
@@ -10,14 +10,14 @@ impl DescriptionLocalizations {
     where
         I: IntoIterator<Item = (K, V)>,
         K: ToString,
-        V: ToString,
+        V: ToString
     {
         Self {
             fallback: fallback.to_string(),
             localizations: localizations
                 .into_iter()
                 .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
+                .collect()
         }
     }
 }
@@ -29,13 +29,13 @@ impl NameLocalizations {
     where
         I: IntoIterator<Item = (K, V)>,
         K: ToString,
-        V: ToString,
+        V: ToString
     {
         Self(
             localizations
                 .into_iter()
                 .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
+                .collect()
         )
     }
 }

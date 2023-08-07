@@ -1,35 +1,35 @@
 use std::collections::HashMap;
 
 use twilight_interactions::command::{
-    ApplicationCommandData, CommandInputData, CommandModel, CreateCommand, DescriptionLocalizations,
+    ApplicationCommandData, CommandInputData, CommandModel, CreateCommand, DescriptionLocalizations
 };
 use twilight_model::{
     application::{
         command::{CommandOption, CommandOptionType},
-        interaction::application_command::{CommandDataOption, CommandOptionValue},
+        interaction::application_command::{CommandDataOption, CommandOptionValue}
     },
-    guild::Permissions,
+    guild::Permissions
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "one", desc = "Command one")]
 struct CommandOne {
     /// An option
-    option: String,
+    option: String
 }
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "two", desc = "Command two")]
 struct CommandTwo {
     /// An option
-    option: String,
+    option: String
 }
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "three", desc = "Command three")]
 struct CommandThree {
     /// An option
-    option: String,
+    option: String
 }
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -38,7 +38,7 @@ enum SubCommandGroup {
     #[command(name = "two")]
     Two(CommandTwo),
     #[command(name = "three")]
-    Three(CommandThree),
+    Three(CommandThree)
 }
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -51,7 +51,7 @@ enum SubCommand {
     #[command(name = "one")]
     One(CommandOne),
     #[command(name = "group")]
-    Group(Box<SubCommandGroup>),
+    Group(Box<SubCommandGroup>)
 }
 
 fn subcommand_desc() -> DescriptionLocalizations {
@@ -66,57 +66,50 @@ fn subcommand_permissions() -> Permissions {
 fn test_subcommand_model() {
     let subcommand_options = vec![CommandDataOption {
         name: "option".into(),
-        value: CommandOptionValue::String("test".into()),
+        value: CommandOptionValue::String("test".into())
     }];
 
     let command_options = vec![CommandDataOption {
         name: "one".into(),
-        value: CommandOptionValue::SubCommand(subcommand_options),
+        value: CommandOptionValue::SubCommand(subcommand_options)
     }];
 
     let data = CommandInputData {
         options: command_options,
-        resolved: None,
+        resolved: None
     };
 
     let result = SubCommand::from_interaction(data).unwrap();
 
-    assert_eq!(
-        SubCommand::One(CommandOne {
-            option: "test".into()
-        }),
-        result
-    );
+    assert_eq!(SubCommand::One(CommandOne { option: "test".into() }), result);
 }
 
 #[test]
 fn test_subcommand_group_model() {
     let subcommand_options = vec![CommandDataOption {
         name: "option".into(),
-        value: CommandOptionValue::String("test".into()),
+        value: CommandOptionValue::String("test".into())
     }];
 
     let subcommand_group_options = vec![CommandDataOption {
         name: "three".into(),
-        value: CommandOptionValue::SubCommand(subcommand_options),
+        value: CommandOptionValue::SubCommand(subcommand_options)
     }];
 
     let command_options = vec![CommandDataOption {
         name: "group".into(),
-        value: CommandOptionValue::SubCommandGroup(subcommand_group_options),
+        value: CommandOptionValue::SubCommandGroup(subcommand_group_options)
     }];
 
     let data = CommandInputData {
         options: command_options,
-        resolved: None,
+        resolved: None
     };
 
     let result = SubCommand::from_interaction(data).unwrap();
 
     assert_eq!(
-        SubCommand::Group(Box::new(SubCommandGroup::Three(CommandThree {
-            option: "test".into()
-        }))),
+        SubCommand::Group(Box::new(SubCommandGroup::Three(CommandThree { option: "test".into() }))),
         result
     );
 }
@@ -137,7 +130,7 @@ fn test_create_subcommand() {
         name: "option".into(),
         name_localizations: None,
         options: None,
-        required: Some(true),
+        required: Some(true)
     }];
 
     let subcommand_group = vec![
@@ -155,7 +148,7 @@ fn test_create_subcommand() {
             name: "two".into(),
             name_localizations: None,
             options: Some(command_options.clone()),
-            required: None,
+            required: None
         },
         CommandOption {
             autocomplete: Some(false),
@@ -171,7 +164,7 @@ fn test_create_subcommand() {
             name: "three".into(),
             name_localizations: None,
             options: Some(command_options.clone()),
-            required: None,
+            required: None
         },
     ];
 
@@ -190,7 +183,7 @@ fn test_create_subcommand() {
             name: "one".into(),
             name_localizations: None,
             options: Some(command_options),
-            required: None,
+            required: None
         },
         CommandOption {
             autocomplete: Some(false),
@@ -206,7 +199,7 @@ fn test_create_subcommand() {
             name: "group".into(),
             name_localizations: None,
             options: Some(subcommand_group),
-            required: None,
+            required: None
         },
     ];
 
@@ -219,7 +212,7 @@ fn test_create_subcommand() {
         default_member_permissions: Some(Permissions::empty()),
         dm_permission: None,
         group: true,
-        nsfw: None,
+        nsfw: None
     };
 
     assert_eq!(SubCommand::create_command(), expected);
