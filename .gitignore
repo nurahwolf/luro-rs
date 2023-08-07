@@ -6,7 +6,7 @@
 /target
 
 # Luro Specific
-/data
+/data*
 
 # Lavalink
 !/lavalink/application.yml
