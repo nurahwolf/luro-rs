@@ -12,11 +12,13 @@ const GUILDSETTINGS_FILE_PATH: &str = "data/guilds";
 /// A folder where <user/user_id.toml> are stored
 const USERDATA_FILE_PATH: &str = "data/user";
 use luro_model::constants::BOT_OWNERS;
+use luro_model::functions::{deserialize_heck, serialize_heck};
 use luro_model::heck::Heck;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
 use luro_model::story::Story;
 use luro_model::types::{Hecks, LuroUserData, Stories};
 use luro_model::{guild_setting::GuildSetting, luro_user::LuroUser};
+use serde::Deserialize;
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{fs, io::AsyncReadExt};
 use tracing::{error, info, warn};
@@ -24,6 +26,14 @@ use tracing::{error, info, warn};
 use crate::TomlDatabaseDriver;
 
 const GDPR_DELETE: &str = "gdpr_delete = \"THE USER REQUESTED ALL OF THEIR DATA TO BE DELETED\"";
+
+/// Due to Toml's bullshit, this is needed so we can make sure the primary key is a fucking string.
+/// This is why you use real databases. 
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct HeckToml {
+    #[serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck", default)]
+    hecks: Hecks
+}
 
 impl TomlDatabaseDriver {
     // A simple function used to make sure our data path and other needed files exist
@@ -160,75 +170,75 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
     }
 
     async fn add_sfw_heck(&self, heck: &Heck) -> anyhow::Result<()> {
-        let data: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
-        let total_hecks = data.len() + 1;
-        data.entry(total_hecks).insert(heck.clone());
+        let data: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        let total_hecks = data.hecks.len() + 1;
+        data.hecks.entry(total_hecks).insert(heck.clone());
         Self::write(data, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn get_sfw_hecks(&self) -> anyhow::Result<Hecks> {
-        let hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
-        Ok(hecks)
+        let hecks: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        Ok(hecks.hecks)
     }
 
     async fn modify_sfw_heck(&self, id: usize, heck: &Heck) -> anyhow::Result<()> {
-        let data: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
-        data.entry(id).insert(heck.clone());
+        let data: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        data.hecks.entry(id).insert(heck.clone());
         Self::write(data, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn modify_sfw_hecks(&self, modified_hecks: Vec<(usize, Heck)>) -> anyhow::Result<()> {
-        let data: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        let data: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
         for (heck_id, modified_heck) in modified_hecks {
-            data.entry(heck_id).insert(modified_heck);
+            data.hecks.entry(heck_id).insert(modified_heck);
         }
         Self::write(data, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn remove_sfw_heck(&self, id: usize) -> anyhow::Result<()> {
-        let data: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
-        data.remove(&id);
+        let data: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        data.hecks.remove(&id);
         Self::write(data, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn save_sfw_hecks(&self, hecks: &Hecks) -> anyhow::Result<()> {
-        Self::write(hecks, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
+        Self::write(HeckToml { hecks: hecks.clone() }, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn add_nsfw_heck(&self, heck: &Heck) -> anyhow::Result<()> {
-        let data: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
-        let total_hecks = data.len() + 1;
-        data.entry(total_hecks).insert(heck.clone());
+        let data: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        let total_hecks = data.hecks.len() + 1;
+        data.hecks.entry(total_hecks).insert(heck.clone());
         Self::write(data, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     async fn get_nsfw_hecks(&self) -> anyhow::Result<Hecks> {
-        let hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
-        Ok(hecks)
+        let hecks: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        Ok(hecks.hecks)
     }
 
     async fn modify_nsfw_heck(&self, id: usize, heck: &Heck) -> anyhow::Result<()> {
-        let data: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
-        data.entry(id).insert(heck.clone());
+        let data: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        data.hecks.entry(id).insert(heck.clone());
         Self::write(data, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     async fn modify_nsfw_hecks(&self, modified_hecks: Vec<(usize, Heck)>) -> anyhow::Result<()> {
-        let data: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        let data: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
         for (heck_id, modified_heck) in modified_hecks {
-            data.entry(heck_id).insert(modified_heck);
+            data.hecks.entry(heck_id).insert(modified_heck);
         }
         Self::write(data, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     async fn remove_nsfw_heck(&self, id: usize) -> anyhow::Result<()> {
-        let data: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
-        data.remove(&id);
+        let data: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        data.hecks.remove(&id);
         Self::write(data, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     async fn save_nsfw_hecks(&self, hecks: &Hecks) -> anyhow::Result<()> {
-        Self::write(hecks, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
+        Self::write(HeckToml { hecks: hecks.clone()}, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     // TODO

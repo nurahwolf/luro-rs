@@ -33,7 +33,7 @@ impl LuroCommand for HeckSomeoneCommand {
         // Is the channel the interaction called in NSFW?
         let nsfw = ctx.channel()?.nsfw.unwrap_or(false);
 
-        debug!("attempting to get a heck");
+        // Attempt to get a heck
         let (heck, heck_id) = get_heck(&ctx.framework, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
 
         debug!("attempting to format the returned heck");

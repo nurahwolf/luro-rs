@@ -5,14 +5,16 @@ use twilight_model::{
 };
 
 use crate::{
-    functions::{deserialize_heck, serialize_heck},
+    functions::{deserialize_heck, serialize_heck, deserialize_heck_id, serialize_heck_id},
     types::Hecks
 };
 
 /// Settings that are specific to a guild
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct GuildSetting {
+    #[serde(deserialize_with = "deserialize_heck_id", serialize_with = "serialize_heck_id", default)]
     pub available_random_nsfw_hecks: Vec<usize>,
+    #[serde(deserialize_with = "deserialize_heck_id", serialize_with = "serialize_heck_id", default)]
     pub available_random_sfw_hecks: Vec<usize>,
     /// The Guild's name
     pub guild_name: String,
