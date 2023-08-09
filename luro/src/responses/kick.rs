@@ -7,9 +7,9 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedField
 
 use crate::{models::SlashUser, ACCENT_COLOUR};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
-impl LuroSlash {
+impl Slash {
     pub async fn kick_response(
         mut self,
         guild: Guild,

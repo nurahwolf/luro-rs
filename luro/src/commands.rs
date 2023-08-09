@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::anyhow;
+
 use tracing::info;
 use tracing::warn;
 use twilight_interactions::command::CreateCommand;
@@ -23,7 +24,8 @@ use twilight_model::application::interaction::InteractionData;
 use crate::commands::base64::{Base64Decode, Base64Encode};
 use crate::commands::heck::add::HeckAddCommand;
 use crate::commands::marry::MarryNew;
-use crate::models::{Commands, CustomId, LuroSlash};
+use crate::models::{Commands, CustomId};
+use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
 use crate::BOT_NAME;
 
@@ -84,7 +86,7 @@ impl Commands {
     }
 }
 
-impl LuroSlash {
+impl Slash {
     /// Handle incoming command interaction.
     pub async fn handle_command(self) -> anyhow::Result<()> {
         let data = match self.interaction.data.clone() {

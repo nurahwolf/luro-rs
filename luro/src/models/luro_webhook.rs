@@ -3,18 +3,24 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::{LuroContext, WEBHOOK_NAME};
+use crate::{LuroFramework, WEBHOOK_NAME};
 
 use super::LuroWebhook;
 
 impl LuroWebhook {
-    pub async fn new(luro: LuroContext) -> anyhow::Result<Self> {
-        Ok(Self { luro })
+    pub async fn new(framework: LuroFramework) -> anyhow::Result<Self> {
+        Ok(Self { framework })
     }
 
     // Get a webhook for a channel, or create it if it does not exist
     pub async fn get_webhook(self, channel_id: Id<ChannelMarker>) -> anyhow::Result<Webhook> {
-        let webhooks = self.luro.twilight_client.channel_webhooks(channel_id).await?.model().await?;
+        let webhooks = self
+            .framework
+            .twilight_client
+            .channel_webhooks(channel_id)
+            .await?
+            .model()
+            .await?;
         let mut webhook = None;
 
         for wh in webhooks {
@@ -34,7 +40,7 @@ impl LuroWebhook {
 
     pub async fn create_webhook(self, channel_id: Id<ChannelMarker>) -> anyhow::Result<Webhook> {
         Ok(self
-            .luro
+            .framework
             .twilight_client
             .create_webhook(channel_id, WEBHOOK_NAME)
             .await?

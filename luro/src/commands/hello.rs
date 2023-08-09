@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
@@ -11,7 +11,7 @@ pub struct HelloCommand {}
 
 #[async_trait]
 impl LuroCommand for HelloCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let content = match ctx.interaction.author_id() {
             Some(author_id) => format!(
                 "Hello World! I am **{}**. It's nice to meet you, <@{}>!",
@@ -20,7 +20,7 @@ impl LuroCommand for HelloCommand {
             ),
             None => format!(
                 "Hello World! I am **{}**. It's nice to meet you, but unfortunately I cannot see your name :(",
-                ctx.luro.twilight_client.current_user().await?.model().await?.name
+                ctx.framework.twilight_client.current_user().await?.model().await?.name
             )
         };
 

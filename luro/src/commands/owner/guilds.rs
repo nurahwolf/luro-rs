@@ -4,7 +4,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -17,9 +17,9 @@ pub struct OwnerGuildsCommand {
 
 #[async_trait]
 impl LuroCommand for OwnerGuildsCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut guilds = String::new();
-        for guild in ctx.luro.twilight_cache.iter().guilds() {
+        for guild in ctx.framework.twilight_cache.iter().guilds() {
             if let Some(show_id) = self.show_id && show_id {
                 writeln!(guilds, "{} - <#{1}> - {1}", guild.name(), guild.id())?
             } else {

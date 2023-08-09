@@ -13,22 +13,20 @@ version.workspace = true
 [dependencies]
 # Luro Specific
 luro-model = { path = "../luro-model"}
+luro-database = { path = "../luro-database" }
+
 
 # Core
 async-trait = "0.1"
 tokio = { workspace = true }
 
 # Twilight Specific
-twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-lavalink = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
+twilight-cache-inmemory = { workspace = true }
+twilight-gateway = { workspace = true }
+twilight-http = { workspace = true }
+twilight-lavalink = { workspace = true }
 twilight-model = { workspace = true }
-twilight-util = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", features = [
-    "builder",
-    "permission-calculator",
-    "snowflake",
-] }
+twilight-util = { workspace = true }
 
 # Twilight third party
 twilight-interactions = { workspace = true }
@@ -36,13 +34,13 @@ twilight-interactions = { workspace = true }
 # Tracing
 tracing = { workspace = true }
 tracing-appender = "0.2.2"
-tracing-subscriber = "0.3.17"
+tracing-subscriber = { workspace = true }
 
 # Others
-parking_lot = "0.12"
+parking_lot = { workspace = true }
 futures-util = "0.3.28"
 anyhow = { workspace = true }
-hyper = "0.14.27"
+hyper = { workspace = true }
 serde_json = "1.0.102"
 serde = { workspace = true }
 toml = { workspace = true }

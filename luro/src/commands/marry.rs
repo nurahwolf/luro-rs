@@ -1,5 +1,7 @@
+use crate::commands::anyhow;
 use std::convert::TryInto;
 use std::fmt::Write;
+use std::mem;
 use std::time::SystemTime;
 
 use anyhow::Context;
@@ -10,13 +12,15 @@ use rand::seq::SliceRandom;
 use rand::thread_rng;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
+use twilight_model::application::interaction::InteractionData;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
 
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder};
 
-use crate::models::{LuroCommandCache, LuroSlash, SlashUser, UserData};
+use crate::models::SlashUser;
 
+use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
 use crate::traits::luro_functions::LuroFunctions;
 
@@ -38,7 +42,7 @@ pub enum MarryCommands {
 
 #[async_trait]
 impl LuroCommand for MarryCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::New(command) => command.run_command(ctx).await,
@@ -56,16 +60,16 @@ pub struct MarryMarriages {
 
 #[async_trait]
 impl LuroCommand for MarryMarriages {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut content = String::new();
         let (_, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
-        let user_data = UserData::get_user_settings(&ctx.luro, &slash_author.user_id).await?;
+        let user_data = ctx.framework.database.get_user(&slash_author.user_id).await?;
         let embed_author =
             EmbedAuthorBuilder::new(format!("{}'s marriages", slash_author.name)).icon_url(slash_author.try_into()?);
         let mut embed = ctx.default_embed().await?.author(embed_author);
 
         for (_, marriage) in user_data.marriages.iter() {
-            match ctx.luro.twilight_cache.user(marriage.user) {
+            match ctx.framework.twilight_cache.user(marriage.user) {
                 Some(marriage_user) => writeln!(
                     content,
                     "{} - <@{}>```{}```",
@@ -94,9 +98,9 @@ pub struct MarryNew {
 
 #[async_trait]
 impl LuroCommand for MarryNew {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let slash_author = SlashUser::client_fetch(
-            &ctx.luro,
+            &ctx.framework,
             ctx.interaction.guild_id,
             ctx.interaction
                 .author_id()
@@ -132,21 +136,14 @@ impl LuroCommand for MarryNew {
             .model()
             .await?;
 
-        ctx.luro.command_cache.insert(
-            response.id,
-            LuroCommandCache {
-                author: slash_author.user_id,
-                user_in_command: self.marry.resolved.id,
-                reason: self.reason.clone()
-            }
-        );
+        ctx.framework.database.command_data.insert(response.id, ctx.interaction);
 
         Ok(())
     }
 
-    async fn handle_component(_: Box<MessageComponentInteractionData>, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(_: Box<MessageComponentInteractionData>, mut ctx: Slash) -> anyhow::Result<()> {
         let interaction_author = ctx.author()?;
-        let message = match ctx.interaction.message.clone() {
+        let _message = match ctx.interaction.message.clone() {
             Some(message) => message,
             None => {
                 return ctx
@@ -157,18 +154,12 @@ impl LuroCommand for MarryNew {
             }
         };
 
-        let command_data = match ctx.clone().luro.command_cache.get(&message.id) {
-            Some(command_data) => command_data.clone(),
-            None => {
-                return ctx
-                    .content("Could not check if you can marry - No data in my cache")
-                    .ephemeral()
-                    .respond()
-                    .await
-            }
+        let old_interaction = match mem::take(&mut ctx.interaction.data) {
+            Some(InteractionData::ApplicationCommand(data)) => Self::new(*data).await?,
+            _ => return Err(anyhow!("unable to parse modal data, received unknown data type"))
         };
 
-        match interaction_author.id == command_data.user_in_command {
+        match interaction_author.id == old_interaction.marry.resolved.id {
             false => {
                 ctx.content(format!(
                     "Bruh. <@{}> just attempted to snipe the marriage.",
@@ -180,33 +171,33 @@ impl LuroCommand for MarryNew {
             true => {
                 // Modify the proposer
                 {
-                    let mut user_data = UserData::modify_user_settings(&ctx.luro, &command_data.author).await?;
+                    let mut user_data = ctx.framework.database.get_user(&interaction_author.id).await?;
                     user_data.marriages.insert(
-                        command_data.user_in_command,
+                        old_interaction.marry.resolved.id,
                         UserMarriages {
                             timestamp: SystemTime::now(),
-                            user: command_data.user_in_command,
-                            reason: command_data.reason.clone()
+                            user: old_interaction.marry.resolved.id,
+                            reason: old_interaction.reason.clone()
                         }
                     );
                 }
 
                 // Modify the proposee
                 {
-                    let mut user_data = UserData::modify_user_settings(&ctx.luro, &command_data.user_in_command).await?;
+                    let mut user_data = ctx.framework.database.get_user(&old_interaction.marry.resolved.id).await?;
                     user_data.marriages.insert(
-                        command_data.author,
+                        interaction_author.id,
                         UserMarriages {
                             timestamp: SystemTime::now(),
-                            user: command_data.author,
-                            reason: command_data.reason.clone()
+                            user: interaction_author.id,
+                            reason: old_interaction.reason.clone()
                         }
                     );
                 }
 
                 ctx.content(format!(
                     "Congratulations <@{}> & <@{}>!!!",
-                    &command_data.author, &command_data.user_in_command
+                    &interaction_author.id, &old_interaction.marry.resolved.id
                 ))
                 .components(vec![])
                 .update()

@@ -5,7 +5,7 @@ use twilight_model::{
     channel::message::component::{ActionRow, Button, ButtonStyle, Component}
 };
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -15,7 +15,7 @@ pub struct BoopCommand {}
 
 #[async_trait]
 impl LuroCommand for BoopCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
@@ -30,7 +30,7 @@ impl LuroCommand for BoopCommand {
         ctx.content("Boop Count: 0".to_owned()).components(components).respond().await
     }
 
-    async fn handle_component(_data: Box<MessageComponentInteractionData>, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(_data: Box<MessageComponentInteractionData>, mut ctx: Slash) -> anyhow::Result<()> {
         // Get message and parse number
         let message = ctx.interaction.message.clone().unwrap();
 

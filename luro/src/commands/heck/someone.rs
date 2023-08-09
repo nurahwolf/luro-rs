@@ -9,7 +9,8 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder};
 
 use crate::{
     commands::heck::{format_heck, get_heck},
-    models::{LuroSlash, SlashUser},
+    models::SlashUser,
+    slash::Slash,
     traits::luro_command::LuroCommand
 };
 
@@ -28,23 +29,33 @@ pub struct HeckSomeoneCommand {
 
 #[async_trait]
 impl LuroCommand for HeckSomeoneCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         // Is the channel the interaction called in NSFW?
         let nsfw = ctx.channel()?.nsfw.unwrap_or(false);
 
         debug!("attempting to get a heck");
-        let (heck, heck_id) = get_heck(&ctx.luro, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
+        let (heck, heck_id) = get_heck(&ctx.framework, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
 
         debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, &ctx.author()?, &self.user.resolved).await;
 
         // This first attempts to get them from the guild if they are a member, otherwise resorts to fetching their user.
         let slash_author = match ctx.interaction.guild_id {
-            Some(guild_id) => match SlashUser::client_fetch_member(&ctx.luro, guild_id, Id::new(heck.author_id)).await {
-                Ok(slash_author) => slash_author.1,
-                Err(_) => SlashUser::client_fetch_user(&ctx.luro, Id::new(heck.author_id)).await?.1
-            },
-            None => SlashUser::client_fetch_user(&ctx.luro, Id::new(heck.author_id)).await?.1
+            Some(guild_id) => {
+                match SlashUser::client_fetch_member(&ctx.framework, guild_id, Id::new(heck.author_id.get())).await {
+                    Ok(slash_author) => slash_author.1,
+                    Err(_) => {
+                        SlashUser::client_fetch_user(&ctx.framework, Id::new(heck.author_id.get()))
+                            .await?
+                            .1
+                    }
+                }
+            }
+            None => {
+                SlashUser::client_fetch_user(&ctx.framework, Id::new(heck.author_id.get()))
+                    .await?
+                    .1
+            }
         };
 
         let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", slash_author.name))

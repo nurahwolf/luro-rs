@@ -1,29 +1,49 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::anyhow;
-use luro_model::constants::{GUILDSETTINGS_FILE_PATH, NSFW_STORIES_FILE_PATH, SFW_STORIES_FILE_PATH};
-use luro_model::constants::{NSFW_HECK_FILE_PATH, SFW_HECK_FILE_PATH, USERDATA_FILE_PATH};
+/// Where the heck toml file lives. Can be overriden elsewhere if desired.
+const SFW_HECK_FILE_PATH: &str = "data/sfw_hecks.toml";
+const NSFW_HECK_FILE_PATH: &str = "data/nsfw_hecks.toml";
+/// Where the stories toml file lives. Can be overriden elsewhere if desired.
+const SFW_STORIES_FILE_PATH: &str = "data/nsfw_stories.toml";
+const NSFW_STORIES_FILE_PATH: &str = "data/sfw_stories.toml";
+/// A folder where <guild/guild_id.toml> are stored
+const GUILDSETTINGS_FILE_PATH: &str = "data/guilds";
+/// A folder where <user/user_id.toml> are stored
+const USERDATA_FILE_PATH: &str = "data/user";
+use luro_model::constants::BOT_OWNERS;
 use luro_model::heck::Heck;
+use luro_model::luro_database_driver::LuroDatabaseDriver;
 use luro_model::story::Story;
-use luro_model::types::{Hecks, Stories};
+use luro_model::types::{Hecks, LuroUserData, Stories};
 use luro_model::{guild_setting::GuildSetting, luro_user::LuroUser};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 use tokio::{fs, io::AsyncReadExt};
-use tracing::{debug, info, warn};
+use tracing::{error, info, warn};
 
-use crate::LuroDatabaseDriver;
+use crate::TomlDatabaseDriver;
 
 const GDPR_DELETE: &str = "gdpr_delete = \"THE USER REQUESTED ALL OF THEIR DATA TO BE DELETED\"";
 
-/// Defaults to the toml driver
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct TomlDatabaseDriver {}
-
 impl TomlDatabaseDriver {
+    // A simple function used to make sure our data path and other needed files exist
+    pub async fn start() -> anyhow::Result<()> {
+        let path_to_data = PathBuf::from("./data"); //env::current_dir().expect("Invaild executing directory").join("/data");
+
+        // Initialise /data folder for toml. Otherwise it panics.
+        if !path_to_data.exists() {
+            tracing::warn!("/data folder does not exist, creating it...");
+            fs::create_dir(path_to_data).await?;
+            tracing::info!("/data folder successfully created!");
+        }
+
+        Ok(())
+    }
+
     /// Gets the specified [Path], which should be a toml file. If it does not exist, it will be created.
     async fn get<'de, T>(path: &Path) -> anyhow::Result<T>
     where
-        T: Default + Serialize + DeserializeOwned
+        T: Default + Serialize + DeserializeOwned + std::fmt::Debug
     {
         // Check to make sure our path exists, if not then create a new heck file
         if !path.exists() {
@@ -48,7 +68,13 @@ impl TomlDatabaseDriver {
         }
 
         // Serialise into a Heck type
-        Ok(toml::from_str::<T>(&contents)?)
+        match toml::from_str::<T>(&contents) {
+            Ok(ok) => Ok(ok),
+            Err(why) => {
+                error!(why = ?why, "Failed to serialised the type {:?}", T::default());
+                Err(why.into())
+            }
+        }
     }
 
     async fn gdpr_delete(path: &Path) -> anyhow::Result<()> {
@@ -81,7 +107,7 @@ impl TomlDatabaseDriver {
             fs::create_dir_all(path.parent().unwrap()).await?
         }
 
-        debug!("Path {} has bee updated with new data", path.to_string_lossy());
+        info!("Path {} has bee updated with new data", path.to_string_lossy());
         Ok(fs::write(path, struct_to_toml_string).await?)
     }
 }
@@ -127,7 +153,8 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
         Self::gdpr_delete(Path::new(&path)).await
     }
 
-    async fn modify_guild(&self, id: u64, user: &GuildSetting) -> anyhow::Result<()> {
+    /// Modify the guild settings and flush it to disk. This WILL overwrite all data locally!
+    async fn update_guild(&self, id: u64, user: &GuildSetting) -> anyhow::Result<()> {
         let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &id);
         Self::write(user, Path::new(&path)).await
     }
@@ -361,5 +388,13 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
             None => Err(anyhow!("Heck with ID {id} not present!"))
         };
         data
+    }
+
+    async fn get_staff(&self) -> anyhow::Result<LuroUserData> {
+        let staff_users: LuroUserData = Default::default();
+        for staff in BOT_OWNERS {
+            staff_users.insert(staff, self.get_user(staff.get()).await?);
+        }
+        Ok(staff_users)
     }
 }

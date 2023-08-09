@@ -8,7 +8,7 @@ use twilight_model::id::{marker::UserMarker, Id};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder};
 
 use crate::{
-    models::{LuroSlash, UserData},
+    slash::Slash,
     traits::{luro_command::LuroCommand, luro_functions::LuroFunctions}
 };
 use std::{convert::TryInto, fmt::Write, iter::FromIterator};
@@ -28,7 +28,7 @@ pub struct WordcountCommand {
 
 #[async_trait]
 impl LuroCommand for WordcountCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut wordcount: usize = Default::default();
         let mut averagesize: usize = Default::default();
         let mut wordsize: BTreeMap<usize, usize> = Default::default();
@@ -53,15 +53,15 @@ impl LuroCommand for WordcountCommand {
         if global {
             let mut most_said_words: BTreeMap<Id<UserMarker>, usize> = Default::default();
             let mut user_ids = vec![];
-            for user_data in ctx.luro.user_data.iter() {
-                user_ids.push(*user_data.key());
+            for (id, user_data) in ctx.framework.database.user_data.clone() {
+                user_ids.push(id);
 
                 wordcount += user_data.wordcount;
                 averagesize += user_data.averagesize;
 
                 for (word, count) in user_data.words.clone().into_iter() {
                     *words.entry(word).or_insert(0) += count;
-                    *most_said_words.entry(*user_data.key()).or_insert(0) += count;
+                    *most_said_words.entry(id).or_insert(0) += count;
                 }
 
                 for (size, count) in user_data.wordsize.clone().into_iter() {
@@ -90,7 +90,7 @@ impl LuroCommand for WordcountCommand {
         } else {
             let (user, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
             let author = EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.try_into()?);
-            let user_data = UserData::get_user_settings(&ctx.luro, &user.id).await?;
+            let user_data = ctx.framework.database.get_user(&user.id).await?;
             embed = embed.author(author);
             wordcount = user_data.wordcount;
             averagesize = user_data.averagesize;

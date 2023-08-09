@@ -14,7 +14,7 @@ use twilight_model::{
     }
 };
 
-use crate::{models::LuroSlash, REGEX_CODE_BLOCK};
+use crate::{slash::Slash, REGEX_CODE_BLOCK};
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
@@ -28,7 +28,7 @@ pub enum Base64Commands {
 
 #[async_trait]
 impl LuroCommand for Base64Commands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Decode(command) => command.run_command(ctx).await,
@@ -47,7 +47,7 @@ pub struct Base64Decode {
 
 #[async_trait]
 impl LuroCommand for Base64Decode {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let button = button("encode".to_owned(), "Encode".to_owned());
         let decoded = format!("```\n{}\n```", decode(&self.string)?);
 
@@ -59,7 +59,7 @@ impl LuroCommand for Base64Decode {
         }
     }
 
-    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: Slash) -> anyhow::Result<()> {
         response(ctx, true).await
     }
 }
@@ -76,7 +76,7 @@ pub struct Base64Encode {
 
 #[async_trait]
 impl LuroCommand for Base64Encode {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let button = button("decode".to_owned(), "Decode".to_owned());
         debug!("Recevied {} string", self.string.len());
         let encoded = if let Some(bait) = self.bait && bait {
@@ -93,7 +93,7 @@ impl LuroCommand for Base64Encode {
         }
     }
 
-    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: Slash) -> anyhow::Result<()> {
         response(ctx, false).await
     }
 }
@@ -124,7 +124,7 @@ fn button(custom_id: String, label: String) -> Vec<Component> {
 
 /// Extract the message within an embed, otherwise fallback to message content
 /// Returns formatted content depending on the requested operation and optionally an embed if the interaction contained an embed
-async fn extract_message(ctx: &LuroSlash, decode_operation: bool) -> anyhow::Result<(String, Option<Embed>)> {
+async fn extract_message(ctx: &Slash, decode_operation: bool) -> anyhow::Result<(String, Option<Embed>)> {
     let (message, embed) = if let Some(ref message) = ctx.interaction.message {
         if let Some(embed) = message.embeds.first() {
             match embed.description.clone() {
@@ -176,7 +176,7 @@ async fn extract_message(ctx: &LuroSlash, decode_operation: bool) -> anyhow::Res
     Ok((content, embed.cloned()))
 }
 
-async fn response(mut ctx: LuroSlash, decode_operation: bool) -> anyhow::Result<()> {
+async fn response(mut ctx: Slash, decode_operation: bool) -> anyhow::Result<()> {
     let (content, interaction_embed) = extract_message(&ctx, decode_operation).await?;
     let button = if !decode_operation {
         button("decode".to_owned(), "Decode".to_owned())

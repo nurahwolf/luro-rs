@@ -18,9 +18,8 @@ luro-model = { path = "../luro-model" }
 twilight-model = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
-toml = { workspace = true }
 tracing = { workspace = true }
-
+toml = { workspace = true }
 [features]
-default = ["toml-db"]
-toml-db = []
+default = ["toml-driver"]
+toml-driver = []

@@ -731,9 +731,19 @@ dependencies = [
 name = "luro-model"
 version = "0.0.1"
 dependencies = [
+ "anyhow",
  "dashmap",
+ "hyper",
+ "parking_lot 0.12.1",
  "serde",
+ "tracing",
+ "tracing-subscriber",
+ "twilight-cache-inmemory",
+ "twilight-gateway",
+ "twilight-http",
+ "twilight-lavalink",
  "twilight-model",
+ "twilight-util",
 ]
 
 [[package]]
@@ -749,6 +759,7 @@ dependencies = [
  "futures-util",
  "git2",
  "hyper",
+ "luro-database",
  "luro-model",
  "memory-stats",
  "parking_lot 0.12.1",

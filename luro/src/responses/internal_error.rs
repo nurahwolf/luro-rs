@@ -2,9 +2,9 @@ use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
-impl LuroSlash {
+impl Slash {
     /// A response returned by default when a command does not exist within Luro.
     pub async fn internal_error_response(&mut self, error: String) -> anyhow::Result<()> {
         if (self

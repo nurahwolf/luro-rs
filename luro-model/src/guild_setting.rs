@@ -4,18 +4,25 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::types::Hecks;
+use crate::{
+    functions::{deserialize_heck, serialize_heck},
+    types::Hecks
+};
 
 /// Settings that are specific to a guild
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct GuildSetting {
+    pub available_random_nsfw_hecks: Vec<usize>,
+    pub available_random_sfw_hecks: Vec<usize>,
     /// The Guild's name
     pub guild_name: String,
     /// Commands registered to a guild
     pub commands: Vec<Command>,
     /// Private NSFW hecks for this specific guild
+    #[serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck", default)]
     pub nsfw_hecks: Hecks,
     /// Private SFW hecks for this specific guild
+    #[serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck", default)]
     pub sfw_hecks: Hecks,
     /// Guild Accent Colour, which is the first colour role within a guild
     pub accent_colour: u32,

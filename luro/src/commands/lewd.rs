@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -22,7 +22,7 @@ pub enum LewdCommands {
 
 #[async_trait]
 impl LuroCommand for LewdCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         let interaction_channel = ctx.channel()?;
 
         // TODO: Create a response type for this

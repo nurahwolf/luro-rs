@@ -3,9 +3,9 @@ use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
-impl LuroSlash {
+impl Slash {
     pub async fn invalid_heck_response(
         mut self,
         missing_user: bool,

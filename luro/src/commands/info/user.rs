@@ -2,7 +2,7 @@ use anyhow::Context;
 use async_trait::async_trait;
 use std::{convert::TryInto, fmt::Write, time::Duration};
 
-use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
+use luro_model::user_actions_type::UserActionType;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::attachment::Attachment,
@@ -14,7 +14,8 @@ use twilight_util::{
 };
 
 use crate::{
-    models::{LuroSlash, RoleOrdering, SlashUser, UserData},
+    models::{RoleOrdering, SlashUser},
+    slash::Slash,
     traits::luro_functions::LuroFunctions
 };
 
@@ -37,7 +38,7 @@ pub struct InfoUser {
 
 #[async_trait]
 impl LuroCommand for InfoUser {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         if let Some(export) = self.gdpr_export && export {
             ctx.ephemeral();
         }
@@ -90,17 +91,17 @@ impl LuroCommand for InfoUser {
         };
 
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
-            if let Ok(member) = ctx.luro.twilight_client.guild_member(guild_id, author.id).await {
+            if let Ok(member) = ctx.framework.twilight_client.guild_member(guild_id, author.id).await {
                     let member = member.model().await?;
                     let slash_member = SlashUser::from_member(&member, Some(guild_id));
                     let mut guild_information = String::new();
-                    let guild = ctx.luro.twilight_client.guild(guild_id).await?.model().await?;
+                    let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
                     embed = embed.author(EmbedAuthorBuilder::new(slash_member.name).icon_url(slash_author.clone().try_into()?));
                     if let Some(hide_avatar) = self.hide_avatar && hide_avatar {
                     } else {
                         embed = embed.thumbnail(slash_author.clone().try_into()?);
                     }
-                    let member = ctx.luro.twilight_cache.member(guild_id, author.id).context("Expected to find member in cache")?;
+                    let member = ctx.framework.twilight_cache.member(guild_id, author.id).context("Expected to find member in cache")?;
                     let mut user_roles = vec![];
                     for member_role in member.roles() {
                         for guild_role in guild.roles.clone() {
@@ -160,7 +161,7 @@ impl LuroCommand for InfoUser {
         // USER DATA SECTION
         let mut user_data_description = String::new();
         {
-            let user_data = UserData::get_user_settings(&ctx.luro, &author.id).await?;
+            let user_data = ctx.framework.database.get_user(&slash_author.user_id).await?;
             if let Some(export) = self.gdpr_export && export {
                 if let Some(user_specified) = self.user {
                     // TODO: Add privilege esc tally to the person

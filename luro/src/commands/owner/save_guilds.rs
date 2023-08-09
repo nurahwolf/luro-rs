@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -15,15 +15,15 @@ pub struct SaveGuildsCommand {}
 
 #[async_trait]
 impl LuroCommand for SaveGuildsCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        let mut total = 0;
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+        // let mut total = 0;
 
-        for guild_setting in &ctx.luro.guild_data {
-            guild_setting.flush_to_disk(guild_setting.key()).await?;
-            total += 1;
-        }
+        // for guild_setting in &ctx.framework.database.g {
+        //     guild_setting.flush_to_disk(guild_setting.key()).await?;
+        //     total += 1;
+        // }
 
-        ctx.content(format!("Saved {total} guilds to disk!"))
+        ctx.content(format!("Saved {} guilds to disk!", 0))
             .ephemeral()
             .respond()
             .await

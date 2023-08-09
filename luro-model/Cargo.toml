@@ -11,6 +11,16 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-twilight-model = { workspace = true }
-serde = { workspace = true }
+anyhow = { workspace = true }
 dashmap = { workspace = true, features = ["serde"]}
+serde = { workspace = true }
+twilight-cache-inmemory = { workspace = true }
+twilight-http = { workspace = true }
+twilight-lavalink = { workspace = true }
+twilight-model = { workspace = true }
+tracing-subscriber = { workspace = true }
+hyper = { workspace = true }
+twilight-gateway = { workspace = true }
+tracing = { workspace = true }
+parking_lot = { workspace = true }
+twilight-util = { workspace = true }

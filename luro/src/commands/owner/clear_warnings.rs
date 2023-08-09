@@ -1,15 +1,11 @@
 use std::convert::TryFrom;
-use std::path::Path;
 
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::models::{LuroSlash, UserData};
-use crate::USERDATA_FILE_PATH;
-
+use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
-use crate::traits::toml::LuroTOML;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "clear_warnings", desc = "Clears a user's warning by ID.")]
@@ -24,10 +20,8 @@ pub struct OwnerClearWarning {
 
 #[async_trait]
 impl LuroCommand for OwnerClearWarning {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, self.user.resolved.id);
-        let path = Path::new(&path);
-        let mut user_data = UserData::get_user_settings(&ctx.luro, &self.user.resolved.id).await?;
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+        let mut user_data = ctx.framework.database.get_user(&self.user.resolved.id).await?;
         if user_data.warnings.is_empty() {
             return ctx.content("User has no warnings you stupid idiot!").respond().await;
         }
@@ -66,9 +60,7 @@ impl LuroCommand for OwnerClearWarning {
             user_data.moderation_actions.drain(..);
         }
 
-        ctx.luro.user_data.insert(self.user.resolved.id, user_data.clone());
-        user_data.write(path).await?;
-
+        ctx.framework.database.modify_user(&self.user.resolved.id, &user_data).await?;
         ctx.content("Warning removed!").ephemeral().respond().await
     }
 }

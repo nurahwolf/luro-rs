@@ -3,6 +3,7 @@ use std::convert::TryInto;
 use anyhow::{anyhow, Error};
 use async_trait::async_trait;
 
+use luro_model::heck::Heck;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::{message_component::MessageComponentInteractionData, modal::ModalInteractionData},
@@ -14,8 +15,7 @@ use twilight_model::{
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder};
 
 use crate::{
-    models::LuroSlash,
-    models::{GuildSetting, Heck},
+    slash::Slash,
     traits::{luro_command::LuroCommand, luro_functions::LuroFunctions},
     ACCENT_COLOUR
 };
@@ -30,7 +30,7 @@ impl LuroCommand for HeckAddCommand {
     ///
     /// This modal is only shown if the user has not specified a reason in the
     /// initial command.
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: Slash) -> anyhow::Result<()> {
         let components = vec![Component::ActionRow(ActionRow {
             components: vec![Component::TextInput(TextInput {
                 custom_id: "heck-text".to_owned(),
@@ -52,8 +52,8 @@ impl LuroCommand for HeckAddCommand {
             .await
     }
 
-    async fn handle_component(data: Box<MessageComponentInteractionData>, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        let mut heck_id = 0;
+    async fn handle_component(data: Box<MessageComponentInteractionData>, mut ctx: Slash) -> anyhow::Result<()> {
+        let heck_id;
         let mut field = vec![];
         let interaction_channel = ctx.channel()?;
         let interaction_author = ctx.author()?;
@@ -83,25 +83,25 @@ impl LuroCommand for HeckAddCommand {
         let components = message.components;
 
         // Create our heck based on the data we have received
-        let mut heck = vec![Heck {
+        let heck = Heck {
             heck_message: heck_embed
                 .clone()
                 .description
                 .ok_or_else(|| Error::msg("Could not find the new heck in the embed"))?,
-            author_id: interaction_author.id.get()
-        }];
+            author_id: interaction_author.id
+        };
 
         // Based on our component data, should this be added as a global heck or a guild heck?
         if global.contains("heck-add-global") {
-            let mut heck_db = ctx.luro.global_data.write();
-
             if interaction_channel.nsfw.unwrap_or(false) {
-                heck_db.hecks.nsfw_hecks.append(&mut heck);
-                heck_id = heck_db.hecks.nsfw_hecks.len();
+                heck_id = ctx.framework.database.nsfw_hecks.len() + 1;
+                ctx.framework.database.modify_heck(heck_id, &heck, true).await?;
+                ctx.framework.database.nsfw_hecks.insert(heck_id, heck);
                 heck_author.name = "Global Heck Created - NSFW Heck".to_owned();
             } else {
-                heck_db.hecks.sfw_hecks.append(&mut heck);
-                heck_id = heck_db.hecks.sfw_hecks.len();
+                heck_id = ctx.framework.database.sfw_hecks.len() + 1;
+                ctx.framework.database.modify_heck(heck_id, &heck, false).await?;
+                ctx.framework.database.sfw_hecks.insert(heck_id, heck);
                 heck_author.name = "Global Heck Created - SFW Heck".to_owned();
             };
             field.append(&mut vec![EmbedFieldBuilder::new("Global Heck", "Just created")
@@ -113,23 +113,18 @@ impl LuroCommand for HeckAddCommand {
                 None => return Err(anyhow!("This place is not a guild. You can only use this option in a guild."))
             };
 
-            // Make sure guild settings are present
-            GuildSetting::get_guild_settings(&ctx.luro, &guild_id).await?;
-
-            let heck_db = ctx.luro.guild_data.entry(guild_id);
+            let guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
 
             if interaction_channel.nsfw.unwrap_or(false) {
-                heck_db.and_modify(|guild| {
-                    heck_id = guild.hecks.nsfw_hecks.len();
-                    guild.hecks.sfw_hecks.append(&mut heck)
-                });
+                heck_id = guild_settings.nsfw_hecks.len();
+                guild_settings.nsfw_hecks.insert(heck_id, heck);
+                ctx.framework.database.update_guild(guild_id, &guild_settings).await?;
 
                 heck_author.name = "Guild Heck Created - NSFW Heck".to_owned()
             } else {
-                heck_db.and_modify(|guild| {
-                    heck_id = guild.hecks.sfw_hecks.len();
-                    guild.hecks.sfw_hecks.append(&mut heck)
-                });
+                heck_id = guild_settings.sfw_hecks.len();
+                guild_settings.sfw_hecks.insert(heck_id, heck);
+                ctx.framework.database.update_guild(guild_id, &guild_settings).await?;
 
                 heck_author.name = "Guild Heck Created - SFW Heck".to_owned()
             };
@@ -151,7 +146,7 @@ impl LuroCommand for HeckAddCommand {
         ctx.embed(heck_embed)?.components(components).update().respond().await
     }
 
-    async fn handle_model(data: ModalInteractionData, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model(data: ModalInteractionData, mut ctx: Slash) -> anyhow::Result<()> {
         let (_author, slash_author) = ctx.get_interaction_author(&ctx.interaction)?;
         let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
 

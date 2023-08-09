@@ -5,12 +5,9 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
-use crate::{
-    models::{LuroSlash, SlashUser},
-    COLOUR_DANGER
-};
+use crate::{models::SlashUser, slash::Slash, COLOUR_DANGER};
 
-impl LuroSlash {
+impl Slash {
     pub async fn ban_response(
         mut self,
         guild: Guild,

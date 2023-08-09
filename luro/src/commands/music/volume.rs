@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Volume;
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -16,10 +16,10 @@ pub struct VolumeCommand {
 
 #[async_trait]
 impl LuroCommand for VolumeCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
-        let player = ctx.luro.lavalink.player(guild_id).await.unwrap();
+        let player = ctx.framework.lavalink.player(guild_id).await.unwrap();
         player.send(Volume::from((guild_id, self.volume)))?;
 
         ctx.content(format!("Set the volume to {}", self.volume)).respond().await

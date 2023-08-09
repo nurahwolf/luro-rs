@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -67,13 +67,13 @@ pub enum OwnerCommands {
 
 #[async_trait]
 impl LuroCommand for OwnerCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         let interaction_author = ctx.author()?;
         let mut owner_match = false;
 
         // We are using global data for this one in case an owner was removed from the application live
-        for owner in &ctx.luro.global_data.read().owners {
-            if interaction_author.id == owner.id {
+        for (id, _) in ctx.framework.database.staff.clone().into_iter() {
+            if interaction_author.id == id {
                 owner_match = true
             }
         }

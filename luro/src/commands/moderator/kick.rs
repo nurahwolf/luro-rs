@@ -1,18 +1,14 @@
-use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
-use std::path::Path;
+use luro_model::{luro_log_channel::LuroLogChannel, user_actions::UserActions, user_actions_type::UserActionType};
 
-use crate::{traits::toml::LuroTOML, USERDATA_FILE_PATH};
-use anyhow::Context;
+use crate::slash::Slash;
+
 use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::guild::Permissions;
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{
-    models::{GuildPermissions, LuroSlash, UserData},
-    traits::luro_command::LuroCommand
-};
+use crate::{models::GuildPermissions, traits::luro_command::LuroCommand};
 
 use super::Reason;
 
@@ -34,7 +30,7 @@ pub struct KickCommand {
 
 #[async_trait]
 impl LuroCommand for KickCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         ctx.deferred().await?;
 
         let mut reason = match self.reason {
@@ -65,7 +61,7 @@ impl LuroCommand for KickCommand {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await
         };
-        let guild = ctx.luro.twilight_client.guild(guild_id).await?.model().await?;
+        let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
         let author_user = match &ctx.interaction.member {
             Some(member) => match &member.user {
                 Some(user) => user,
@@ -74,13 +70,13 @@ impl LuroCommand for KickCommand {
             None => return ctx.not_guild_response().await
         };
         let author = ctx
-            .luro
+            .framework
             .twilight_client
             .guild_member(guild_id, author_user.id)
             .await?
             .model()
             .await?;
-        let permissions = GuildPermissions::new(&ctx.luro.twilight_client, &guild_id).await?;
+        let permissions = GuildPermissions::new(&ctx.framework.twilight_client, &guild_id).await?;
         let author_permissions = permissions.member(author.user.id, &author.roles).await?;
         let member_permissions = permissions.member(user_to_remove.id, &member_to_remove.roles).await?;
         let bot_permissions = permissions.current_member().await?;
@@ -105,12 +101,12 @@ impl LuroCommand for KickCommand {
         }
 
         if member_highest_role >= bot_permissions.highest_role() {
-            let global_data = ctx.luro.global_data.read().clone();
-            return ctx.bot_hierarchy_response(&global_data.current_user.name).await;
+            let name = ctx.framework.database.current_user.read().unwrap().clone().name;
+            return ctx.bot_hierarchy_response(&name).await;
         }
 
         // Checks passed, now let's action the user
-        let user_to_ban_dm = match ctx.luro.twilight_client.create_private_channel(user_to_remove.id).await {
+        let user_to_ban_dm = match ctx.framework.twilight_client.create_private_channel(user_to_remove.id).await {
             Ok(channel) => channel.model().await?,
             Err(_) => return ctx.kick_response(guild, author, user_to_remove, &reason, false).await
         };
@@ -120,7 +116,7 @@ impl LuroCommand for KickCommand {
             .await?;
 
         let victim_dm = ctx
-            .luro
+            .framework
             .twilight_client
             .create_message(user_to_ban_dm.id)
             .embeds(&[embed.clone().build()])
@@ -131,35 +127,29 @@ impl LuroCommand for KickCommand {
             Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
         }
 
-        ctx.luro
+        ctx.framework
             .twilight_client
             .remove_guild_member(guild_id, user_to_remove.id)
             .await?;
 
         // If an alert channel is defined, send a message there
-        ctx.luro
-            .send_log_channel(&Some(guild_id), embed.clone(), crate::models::LuroLogChannel::Moderator)
+        ctx.framework
+            .send_log_channel(&Some(guild_id), embed.clone(), LuroLogChannel::Moderator)
             .await?;
 
-        {
-            let mut reward = UserData::modify_user_settings(&ctx.luro, &author_user.id).await?;
-            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &author_user.id);
-            reward.moderation_actions_performed += 1;
-            reward.write(Path::new(&path)).await?;
-        }
+        let mut reward = ctx.framework.database.get_user(&author_user.id).await?;
+        reward.moderation_actions_performed += 1;
+        ctx.framework.database.modify_user(&author_user.id, &reward).await?;
 
-        {
-            // Record the punishment
-            let mut kicked = UserData::modify_user_settings(&ctx.luro, &user_to_remove.id).await?;
-            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_to_remove.id);
-            kicked.moderation_actions.push(UserActions {
-                action_type: vec![UserActionType::Kick],
-                guild_id: Some(guild_id),
-                reason,
-                responsible_user: author_user.id
-            });
-            kicked.write(Path::new(&path)).await?;
-        }
+        // Record the punishment
+        let mut warned = ctx.framework.database.get_user(&user_to_remove.id).await?;
+        warned.moderation_actions.push(UserActions {
+            action_type: vec![UserActionType::Kick],
+            guild_id: ctx.interaction.guild_id,
+            reason,
+            responsible_user: author_user.id
+        });
+        ctx.framework.database.modify_user(&user_to_remove.id, &warned).await?;
 
         ctx.embed(embed.build())?.respond().await
     }

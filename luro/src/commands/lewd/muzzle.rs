@@ -3,7 +3,7 @@ use rand::Rng;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -15,7 +15,7 @@ pub struct MuzzleCommand {
 
 #[async_trait]
 impl LuroCommand for MuzzleCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         // TODO: Load these from a text file
         let responses = ["<user> just got muzzled for a few seconds!!",
         "<user> just got slapped on the muzzle and told to hush.",

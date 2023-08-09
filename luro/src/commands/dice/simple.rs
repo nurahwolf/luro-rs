@@ -3,7 +3,8 @@ use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
-    models::{LuroSlash, Roll, RollResult, RollValue},
+    models::{Roll, RollResult, RollValue},
+    slash::Slash,
     traits::luro_command::LuroCommand
 };
 
@@ -48,7 +49,7 @@ pub struct DiceSimpleCommand {
 
 #[async_trait]
 impl LuroCommand for DiceSimpleCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut roll = format!("{}d{}", self.dice, self.sides);
 
         if let Some(operation) = self.keep_highest {

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
@@ -11,13 +11,17 @@ pub struct CountCommand {}
 
 #[async_trait]
 impl LuroCommand for CountCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let content;
 
         {
-            let mut global_data = ctx.luro.global_data.write();
-            global_data.count += 1;
-            content = format!("Here is your number: {}", global_data.count);
+            match ctx.framework.database.count.write() {
+                Ok(mut count) => {
+                    *count += 1;
+                    content = format!("Here is your number: {}", count);
+                }
+                Err(_) => content = "Count is poisoned :(".to_owned()
+            };
         }
 
         ctx.content(content).respond().await

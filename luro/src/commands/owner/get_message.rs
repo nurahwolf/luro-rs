@@ -4,8 +4,9 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource};
 
-use crate::models::{LuroSlash, SlashUser, UserData};
+use crate::models::SlashUser;
 
+use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -19,14 +20,14 @@ pub struct OwnerGetMessage {
 
 #[async_trait]
 impl LuroCommand for OwnerGetMessage {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let message_id = Id::new(self.message_id.parse()?);
         let mut embed = ctx.default_embed().await?;
-        let ((_, slash_author), channel_id, message_id) = match ctx.luro.twilight_cache.message(message_id) {
+        let ((_, slash_author), channel_id, message_id) = match ctx.framework.twilight_cache.message(message_id) {
             Some(message) => {
                 embed = embed.description(message.content());
                 (
-                    SlashUser::client_fetch_user(&ctx.luro, message.author()).await?,
+                    SlashUser::client_fetch_user(&ctx.framework, message.author()).await?,
                     message.channel_id(),
                     message.id()
                 )
@@ -43,7 +44,7 @@ impl LuroCommand for OwnerGetMessage {
                             .await
                     }
                 };
-                let user_data = UserData::get_user_settings(&ctx.luro, &user.resolved.id).await?;
+                let user_data = ctx.framework.database.get_user(&user.resolved.id).await?;
                 let message = match user_data.messages.get(&message_id) {
                     Some(message) => message,
                     None => {
@@ -61,7 +62,7 @@ impl LuroCommand for OwnerGetMessage {
                 }
 
                 (
-                    SlashUser::client_fetch_user(&ctx.luro, user.resolved.id).await?,
+                    SlashUser::client_fetch_user(&ctx.framework, user.resolved.id).await?,
                     message.channel_id,
                     message.id
                 )

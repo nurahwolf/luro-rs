@@ -1,17 +1,11 @@
-use crate::{models::SlashUser, USERDATA_FILE_PATH};
+use crate::{framework::Framework, models::SlashUser, COLOUR_DANGER};
 use anyhow::Context;
-use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
-use std::{fmt::Write, path::Path, sync::Arc};
+use luro_model::{luro_database_driver::LuroDatabaseDriver, user_actions::UserActions, user_actions_type::UserActionType};
+use std::{fmt::Write, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
-use crate::{
-    models::{LuroFramework, UserData},
-    traits::toml::LuroTOML,
-    COLOUR_DANGER
-};
-
-impl LuroFramework {
+impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn subhandle_member_kick(
         self: &Arc<Self>,
         mut embed: EmbedBuilder,
@@ -39,29 +33,19 @@ impl LuroFramework {
                 writeln!(description, "```{reason}```")?
             }
             if let Some(user_id) = &event.user_id {
-                let _ = UserData::modify_user_settings(self, user_id).await?;
-                let _ = UserData::modify_user_settings(self, &kicked_user_id).await?;
-                // Reward the person who actioned the ban
-                let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &user_id);
-                let data = &mut self
-                    .user_data
-                    .get_mut(user_id)
-                    .context("Expected to find user's data in the cache")?;
-                data.moderation_actions_performed += 1;
-                data.write(Path::new(&path)).await?;
+                let mut reward = self.database.get_user(user_id).await?;
+                reward.moderation_actions_performed += 1;
+                self.database.modify_user(user_id, &reward).await?;
+
                 // Record the punishment
-                let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &kicked_user_id);
-                let data = &mut self
-                    .user_data
-                    .get_mut(user_id)
-                    .context("Expected to find user's data in the cache")?;
-                data.moderation_actions.push(UserActions {
+                let mut banned = self.database.get_user(&kicked_user_id).await?;
+                banned.moderation_actions.push(UserActions {
                     action_type: vec![UserActionType::Kick],
                     guild_id: Some(guild.id),
                     reason: reason.clone(),
-                    responsible_user: *user_id
+                    responsible_user: kicked_user_id
                 });
-                data.write(Path::new(&path)).await?;
+                self.database.modify_user(&kicked_user_id, &banned).await?;
             }
         }
         embed = embed.description(description);

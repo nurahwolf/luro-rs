@@ -8,7 +8,7 @@ use twilight_lavalink::{
     model::Play
 };
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -24,10 +24,10 @@ pub struct PlayCommand {
 
 #[async_trait]
 impl LuroCommand for PlayCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
-        let player = ctx.luro.lavalink.player(guild_id).await.unwrap();
+        let player = ctx.framework.lavalink.player(guild_id).await.unwrap();
         let (parts, body) = twilight_lavalink::http::load_track(
             player.node().config().address,
             &self.song,
@@ -35,7 +35,7 @@ impl LuroCommand for PlayCommand {
         )?
         .into_parts();
         let req = Request::from_parts(parts, Body::from(body));
-        let res = ctx.luro.hyper_client.request(req).await?;
+        let res = ctx.framework.hyper_client.request(req).await?;
         let response_bytes = hyper::body::to_bytes(res.into_body()).await?;
         let loaded = serde_json::from_slice::<LoadedTracks>(&response_bytes)?;
 

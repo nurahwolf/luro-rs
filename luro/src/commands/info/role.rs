@@ -3,8 +3,9 @@ use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentionable};
 
-use crate::models::{LuroSlash, RoleOrdering};
+use crate::models::RoleOrdering;
 
+use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand)]
@@ -16,10 +17,10 @@ pub struct InfoRole {
 
 #[async_trait]
 impl LuroCommand for InfoRole {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut embed;
         {
-            let role = match ctx.luro.twilight_cache.role(self.role.id().cast()) {
+            let role = match ctx.framework.twilight_cache.role(self.role.id().cast()) {
                 Some(role) => role,
                 None => return ctx.clone().content("Role not found!").ephemeral().respond().await
             };
@@ -27,7 +28,7 @@ impl LuroCommand for InfoRole {
             let mut description: String = String::new();
 
             embed = embed.title(&role.name);
-            let roles = ctx.luro.twilight_client.roles(role.guild_id()).await?.model().await?;
+            let roles = ctx.framework.twilight_client.roles(role.guild_id()).await?.model().await?;
             let mut roles: Vec<_> = roles.iter().map(RoleOrdering::from).collect();
             roles.sort_by(|a, b| b.cmp(a));
             for guild_role in roles {

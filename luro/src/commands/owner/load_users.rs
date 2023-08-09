@@ -1,8 +1,8 @@
 use async_trait::async_trait;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::{LuroSlash, UserData};
-
+use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -14,14 +14,14 @@ pub struct OwnerLoadUsers {}
 
 #[async_trait]
 impl LuroCommand for OwnerLoadUsers {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         ctx.deferred().await?;
 
         let mut loaded = 0;
         let mut errors = 0;
 
-        for user in ctx.luro.twilight_cache.iter().users() {
-            match UserData::modify_user_settings(&ctx.luro, &user.id).await {
+        for user in ctx.framework.twilight_cache.iter().users() {
+            match ctx.framework.database.get_user(&user.id).await {
                 Ok(mut user_data) => {
                     user_data.accent_color = user.accent_color;
                     user_data.avatar = user.avatar;
@@ -38,7 +38,7 @@ impl LuroCommand for OwnerLoadUsers {
                     user_data.public_flags = user.public_flags;
                     user_data.system = user.system;
                     user_data.verified = user.verified;
-                    if user_data.write_user_data(&user.id).await.is_err() {
+                    if ctx.framework.database.modify_user(&user.id, &user_data).await.is_err() {
                         errors += 1
                     }
 

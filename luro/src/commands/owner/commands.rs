@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::GenericMarker, Id};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -17,9 +17,15 @@ pub struct OwnerCommandsCommand {
 
 #[async_trait]
 impl LuroCommand for OwnerCommandsCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        let application = ctx.luro.twilight_client.current_user_application().await?.model().await?;
-        let client = ctx.luro.twilight_client.interaction(application.id);
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+        let application = ctx
+            .framework
+            .twilight_client
+            .current_user_application()
+            .await?
+            .model()
+            .await?;
+        let client = ctx.framework.twilight_client.interaction(application.id);
 
         client.set_guild_commands(Id::new(self.guild.get()), &[]).await?;
 

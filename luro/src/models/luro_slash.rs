@@ -1,11 +1,9 @@
-use std::mem;
+use std::{mem, sync::Arc};
 
-use crate::{
-    models::{GuildSetting, LuroSlash},
-    traits::luro_functions::LuroFunctions,
-    ACCENT_COLOUR
-};
+use crate::{framework::Framework, slash::Slash, traits::luro_functions::LuroFunctions, ACCENT_COLOUR};
 use anyhow::anyhow;
+use luro_database::TomlDatabaseDriver;
+use luro_model::luro_database_driver::LuroDatabaseDriver;
 use tracing::{debug, error, warn};
 use twilight_gateway::MessageSender;
 use twilight_http::{client::InteractionClient, Response};
@@ -24,21 +22,23 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::LuroContext;
+impl LuroFunctions for Slash {}
 
-impl LuroFunctions for LuroSlash {}
-
-impl LuroSlash {
+impl Slash {
     /// Create a new interaction response. Note that not setting anything else will not cause a response to be sent!
     /// This is set with some defaults:
     /// - AllowedMentions - All
     /// - InteractionResponseType - [`InteractionResponseType::ChannelMessageWithSource`]
-    pub fn new(ctx: LuroContext, interaction: Interaction, shard: MessageSender) -> Self {
+    pub fn new<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<TomlDatabaseDriver>>,
+        interaction: Interaction,
+        shard: MessageSender
+    ) -> Self {
         debug!(id = ?interaction.id, "Processing {} interaction", interaction.kind.kind());
 
         // TODO: Set allowed_mentions to actually allow all
         Self {
-            luro: ctx,
+            framework: ctx,
             interaction,
             shard,
             interaction_response_type: InteractionResponseType::ChannelMessageWithSource,
@@ -160,7 +160,7 @@ impl LuroSlash {
 
     /// Create an interaction client
     pub fn interaction_client(&self) -> InteractionClient {
-        self.luro.twilight_client.interaction(self.interaction.application_id)
+        self.framework.twilight_client.interaction(self.interaction.application_id)
     }
 
     /// Set [InteractionResponseType::DeferredChannelMessageWithSource]
@@ -325,7 +325,7 @@ impl LuroSlash {
     pub async fn send_message(&self) -> anyhow::Result<Response<Message>> {
         //TODO: Change this to not unwrap and error handle
         let mut message = self
-            .luro
+            .framework
             .twilight_client
             .create_message(self.interaction.channel.as_ref().unwrap().id);
 
@@ -383,7 +383,7 @@ impl LuroSlash {
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     pub async fn accent_colour(&self) -> anyhow::Result<u32> {
         if let Some(guild_id) = &self.interaction.guild_id {
-            let guild_settings = GuildSetting::get_guild_settings(&self.luro, guild_id).await?;
+            let guild_settings = self.framework.database.get_guild(guild_id).await?;
 
             // Check to see if a custom colour is defined
             if let Some(custom_accent_colour) = guild_settings.accent_colour_custom {

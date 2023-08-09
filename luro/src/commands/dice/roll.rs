@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
-    models::{LuroSlash, Roll, RollResult, RollValue},
+    models::{Roll, RollResult, RollValue},
+    slash::Slash,
     traits::luro_command::LuroCommand
 };
 
@@ -19,7 +20,7 @@ pub struct DiceRollCommand {
 
 #[async_trait]
 impl LuroCommand for DiceRollCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let result = Roll::roll_inline(&self.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)

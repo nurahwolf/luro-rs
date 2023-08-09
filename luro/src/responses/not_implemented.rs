@@ -3,9 +3,9 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
-impl LuroSlash {
+impl Slash {
     /// A response returned by default when a command does not exist within Luro.
     pub async fn not_implemented_response(mut self) -> anyhow::Result<()> {
         self.embed(not_implemented_embed().build())?.ephemeral().respond().await

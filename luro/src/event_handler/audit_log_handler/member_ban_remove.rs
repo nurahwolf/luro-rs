@@ -1,14 +1,12 @@
 use anyhow::Context;
+use luro_model::luro_database_driver::LuroDatabaseDriver;
 use std::{fmt::Write, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
-use crate::{
-    models::{LuroFramework, SlashUser},
-    COLOUR_SUCCESS
-};
+use crate::{framework::Framework, models::SlashUser, COLOUR_SUCCESS};
 
-impl LuroFramework {
+impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn subhandle_member_ban_remove(
         self: &Arc<Self>,
         mut embed: EmbedBuilder,

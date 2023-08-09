@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -23,7 +23,7 @@ pub struct AssignCommand {
 
 #[async_trait]
 impl LuroCommand for AssignCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let interaction_user = ctx.author()?;
 
         // User to action
@@ -42,7 +42,7 @@ impl LuroCommand for AssignCommand {
         // If the user wants' to remove a role
         if let Some(remove) = self.remove && remove {
             match ctx
-            .luro
+            .framework
             .twilight_client
             .remove_guild_member_role(guild_id, user.id, self.role)
             .await {
@@ -52,7 +52,7 @@ impl LuroCommand for AssignCommand {
         } else {
         // Otherwise we just assign a role as expected
         match ctx
-            .luro
+            .framework
             .twilight_client
             .add_guild_member_role(guild_id, user.id, self.role)
             .await {

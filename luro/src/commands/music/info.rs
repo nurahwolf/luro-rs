@@ -4,7 +4,7 @@ use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -13,7 +13,7 @@ pub struct InfoCommand {}
 
 #[async_trait]
 impl LuroCommand for InfoCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await
@@ -21,7 +21,7 @@ impl LuroCommand for InfoCommand {
 
         let mut description = String::new();
 
-        let stats = ctx.luro.lavalink.player(guild_id).await?.node().stats().await;
+        let stats = ctx.framework.lavalink.player(guild_id).await?.node().stats().await;
         writeln!(
             description,
             "**Consumption:** `{}` cores assigned - `{:.2}` lavalink load - `{:.2}` system load",

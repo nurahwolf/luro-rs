@@ -1,5 +1,6 @@
-use std::convert::TryInto;
+use std::{convert::TryInto, sync::Arc};
 
+use luro_model::luro_database_driver::LuroDatabaseDriver;
 use twilight_model::{
     guild::{Member, PartialMember},
     id::{
@@ -10,7 +11,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::{image_source::ImageSourceUrlError, ImageSource};
 
-use crate::LuroContext;
+use crate::framework::Framework;
 
 use super::SlashUser;
 
@@ -97,8 +98,8 @@ impl SlashUser {
     }
 
     /// Fetch a member using the client. Useful for when you need some additional information
-    pub async fn client_fetch_member(
-        ctx: &LuroContext,
+    pub async fn client_fetch_member<D: LuroDatabaseDriver>(
+        ctx: &Arc<Framework<D>>,
         guild_id: Id<GuildMarker>,
         user_id: Id<UserMarker>
     ) -> anyhow::Result<(Member, Self)> {
@@ -124,7 +125,10 @@ impl SlashUser {
     }
 
     /// Fetch a user using the client. Useful for when you need some additional information
-    pub async fn client_fetch_user(ctx: &LuroContext, user_id: Id<UserMarker>) -> anyhow::Result<(User, Self)> {
+    pub async fn client_fetch_user<D: LuroDatabaseDriver>(
+        ctx: &Arc<Framework<D>>,
+        user_id: Id<UserMarker>
+    ) -> anyhow::Result<(User, Self)> {
         let user = ctx.twilight_client.user(user_id).await?.model().await?;
 
         let mut slash_user = Self {
@@ -246,8 +250,8 @@ impl SlashUser {
     }
 
     /// Attempts to fetch the member of the supplied guild_id, otherwise returns the user. This JUST returns the slash_user context.
-    pub async fn client_fetch(
-        ctx: &LuroContext,
+    pub async fn client_fetch<D: LuroDatabaseDriver>(
+        ctx: &Arc<Framework<D>>,
         guild_id: Option<Id<GuildMarker>>,
         user_id: Id<UserMarker>
     ) -> anyhow::Result<Self> {

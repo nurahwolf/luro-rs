@@ -2,19 +2,28 @@
 
 use anyhow::Context;
 use dotenv::dotenv;
+use framework::Framework;
 use futures_util::StreamExt;
-use models::LuroFramework;
+use luro_database::TomlDatabaseDriver;
+use luro_model::luro_database_driver::LuroDatabaseDriver;
 use std::{env, sync::Arc};
 use tracing::metadata::LevelFilter;
-use tracing_subscriber::{fmt, prelude::__tracing_subscriber_SubscriberExt, reload, util::SubscriberInitExt};
+use tracing_subscriber::{
+    fmt,
+    prelude::__tracing_subscriber_SubscriberExt,
+    reload::{self, Layer},
+    util::SubscriberInitExt,
+    Registry
+};
 use twilight_gateway::{stream::ShardEventStream, Intents};
-use twilight_model::id::{marker::UserMarker, Id};
 
 pub mod commands;
 pub mod event_handler;
+pub mod framework;
 pub mod functions;
 pub mod models;
 pub mod responses;
+pub mod slash;
 pub mod traits;
 
 /// Where the config toml file lives. Can be overriden elsewhere if desired.
@@ -59,8 +68,6 @@ pub const BOT_NAME: &str = "luro";
 pub const FILTER: LevelFilter = LevelFilter::INFO;
 // Luro's intents. Can be set to all, but rather spammy.
 pub const INTENTS: Intents = Intents::all();
-// Luro's primary owner
-pub const BOT_OWNERS: [Id<UserMarker>; 2] = [Id::new(373524896187416576), Id::new(138791390279630849)];
 /// Luro's main accent colour
 pub const ACCENT_COLOUR: u32 = 0xDABEEF;
 /// Luro's DANGER colour
@@ -80,34 +87,30 @@ pub const DATA_PATH: &str = "data/";
 /// The log path. By default this is a sub directory of DATA_PATH
 pub const LOG_PATH: &str = "data/log/";
 
-// TYPES
-// =========
-/// A shorthand to [LuroFramework] wrapped in an [Arc].
-pub type LuroContext = Arc<LuroFramework>;
+/// A shorthand to [Framework] wrapped in an [Arc].
+pub type LuroFramework = Arc<Framework<TomlDatabaseDriver>>;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv().ok();
-    let (filter, reload_handle) = reload::Layer::new(FILTER);
+    let driver = TomlDatabaseDriver {};
+    let (filter, tracing_subscriber) = reload::Layer::new(FILTER);
     let (token, lavalink_host, lavalink_auth, intents) = (
         env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
         env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
         INTENTS
     );
-    // Create the framework
-    let (luro, mut shards) = LuroFramework::builder(intents, lavalink_auth, lavalink_host, token, reload_handle).await?;
 
-    // Initialise the tracing subscriber
-    let file_appender =
-        tracing_appender::rolling::hourly(LOG_PATH, format!("{}.log", luro.global_data.read().current_user.name));
-    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-    let layer = fmt::layer().with_writer(non_blocking);
-    tracing_subscriber::registry()
-        .with(filter)
-        .with(layer)
-        .with(fmt::Layer::default())
-        .init();
+    // Create the framework
+    let (luro, mut shards) =
+        Framework::builder(driver, intents, lavalink_auth, lavalink_host, token, tracing_subscriber).await?;
+    
+    // Initialise tracing for logs
+    init_tracing_subscriber(filter, &luro.database.current_user.read().unwrap().name);
+
+    // Start the configured database
+    TomlDatabaseDriver::start().await?;
 
     // Work on our events
     let mut stream = ShardEventStream::new(shards.iter_mut());
@@ -125,8 +128,19 @@ async fn main() -> anyhow::Result<()> {
             Ok(event) => event
         };
 
-        tokio::spawn(luro.clone().handle_event(event, shard.sender()));
+        tokio::spawn(luro.clone().event_handler(event, shard.sender()));
     }
 
     Ok(())
+}
+
+fn init_tracing_subscriber(filter: Layer<LevelFilter, Registry>, name: &String) {
+    let file_appender = tracing_appender::rolling::hourly(LOG_PATH, format!("{name}.log"));
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    let layer = fmt::layer().with_writer(non_blocking);
+    tracing_subscriber::registry()
+        .with(filter)
+        .with(layer)
+        .with(fmt::Layer::default())
+        .init();
 }

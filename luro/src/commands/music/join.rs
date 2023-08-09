@@ -7,7 +7,7 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -24,7 +24,7 @@ pub struct JoinCommand {
 
 #[async_trait]
 impl LuroCommand for JoinCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
         ctx.shard

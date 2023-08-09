@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 mod help;
 mod roll;
@@ -34,7 +34,7 @@ pub enum DiceCommands {
 
 #[async_trait]
 impl LuroCommand for DiceCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Roll(command) => command.run_command(ctx).await,

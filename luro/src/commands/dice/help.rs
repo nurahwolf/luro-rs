@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{models::LuroSlash, traits::luro_command::LuroCommand};
+use crate::{slash::Slash, traits::luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "help", desc = "Information for how to roll your dice")]
@@ -13,7 +13,7 @@ pub struct DiceHelpCommand {
 
 #[async_trait]
 impl LuroCommand for DiceHelpCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let description = "Roll some dice with a brief explanation of the output all on one line, such as `1d20 = [13] = 13`.";
 
         let shortmode_help = [
@@ -71,8 +71,9 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
     "
         ];
         let embed = ctx
-            .luro
+            .framework
             .default_embed(&ctx.interaction.guild_id)
+            .await
             .title("Dice helper")
             .description(description)
             .field(EmbedFieldBuilder::new(shortmode_help[0], shortmode_help[1]))

@@ -3,7 +3,7 @@ use tracing_subscriber::filter;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -31,40 +31,40 @@ pub enum LogLevel {
 
 #[async_trait]
 impl LuroCommand for LogCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let (_, level) = match self.level {
             LogLevel::Trace => (
-                ctx.luro
+                ctx.framework
                     .tracing_subscriber
                     .modify(|filter| *filter = filter::LevelFilter::TRACE)?,
                 "TRACE"
             ),
             LogLevel::Debug => (
-                ctx.luro
+                ctx.framework
                     .tracing_subscriber
                     .modify(|filter| *filter = filter::LevelFilter::DEBUG)?,
                 "DEBUG"
             ),
             LogLevel::Info => (
-                ctx.luro
+                ctx.framework
                     .tracing_subscriber
                     .modify(|filter| *filter = filter::LevelFilter::INFO)?,
                 "INFO"
             ),
             LogLevel::Warn => (
-                ctx.luro
+                ctx.framework
                     .tracing_subscriber
                     .modify(|filter| *filter = filter::LevelFilter::WARN)?,
                 "WARN"
             ),
             LogLevel::Error => (
-                ctx.luro
+                ctx.framework
                     .tracing_subscriber
                     .modify(|filter| *filter = filter::LevelFilter::ERROR)?,
                 "ERROR"
             ),
             LogLevel::Off => (
-                ctx.luro
+                ctx.framework
                     .tracing_subscriber
                     .modify(|filter| *filter = filter::LevelFilter::OFF)?,
                 "OFF"

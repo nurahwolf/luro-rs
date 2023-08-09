@@ -5,7 +5,7 @@ use twilight_lavalink::model::Pause;
 
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -14,10 +14,10 @@ pub struct PauseCommand {}
 
 #[async_trait]
 impl LuroCommand for PauseCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
-        let player = ctx.luro.lavalink.player(guild_id).await.unwrap();
+        let player = ctx.framework.lavalink.player(guild_id).await.unwrap();
         let paused = player.paused();
         player.send(Pause::from((guild_id, !paused)))?;
 

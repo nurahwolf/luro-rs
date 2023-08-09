@@ -3,9 +3,9 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-use crate::models::LuroSlash;
+use crate::slash::Slash;
 
-impl LuroSlash {
+impl Slash {
     pub async fn not_guild_response(mut self) -> anyhow::Result<()> {
         self.embed(not_guild_embed().build())?.respond().await
     }

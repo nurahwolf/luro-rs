@@ -1,24 +1,24 @@
+use luro_model::luro_database_driver::LuroDatabaseDriver;
 use tracing::debug;
 use twilight_model::gateway::payload::incoming::ThreadDelete;
 
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::COLOUR_DANGER;
+use crate::{framework::Framework, COLOUR_DANGER};
 
-use crate::models::LuroFramework;
-
-impl LuroFramework {
+impl<D: LuroDatabaseDriver> Framework<D> {
     // TODO: Change this to a response type
     pub async fn response_thread_deleted(&self, event: &ThreadDelete) -> anyhow::Result<()> {
-        let embed = self.embed_thread_deleted(event);
+        let embed = self.embed_thread_deleted(event).await;
         self.send_moderator_log_channel(&Some(event.guild_id), embed).await
     }
 
     /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-    pub fn embed_thread_deleted(&self, event: &ThreadDelete) -> EmbedBuilder {
+    pub async fn embed_thread_deleted(&self, event: &ThreadDelete) -> EmbedBuilder {
         debug!(thread = ?event, "Thread Deleted!");
         let mut embed = self
             .default_embed(&Some(event.guild_id))
+            .await
             .color(COLOUR_DANGER)
             .title("Thread Deleted!");
 

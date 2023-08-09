@@ -8,7 +8,8 @@ use twilight_util::builder::embed::EmbedAuthorBuilder;
 
 use crate::models::SlashUser;
 
-use crate::{models::LuroSlash, models::LuroWebhook};
+use crate::models::LuroWebhook;
+use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -25,8 +26,8 @@ pub struct AbuseCommand {
 
 #[async_trait]
 impl LuroCommand for AbuseCommand {
-    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
-        let luro_webhook = LuroWebhook::new(ctx.luro.clone()).await?;
+    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+        let luro_webhook = LuroWebhook::new(ctx.framework.clone()).await?;
         let webhook = luro_webhook
             .get_webhook(
                 ctx.interaction
@@ -38,7 +39,7 @@ impl LuroCommand for AbuseCommand {
             .await?;
         let webhook_token = webhook.token.context("Expected webhook token")?;
 
-        let (_, slash_author) = SlashUser::client_fetch_user(&ctx.luro, self.user.resolved.id).await?;
+        let (_, slash_author) = SlashUser::client_fetch_user(&ctx.framework, self.user.resolved.id).await?;
 
         let embed = ctx
             .default_embed()
@@ -48,7 +49,7 @@ impl LuroCommand for AbuseCommand {
             .build();
 
         let webhook_message = ctx
-            .luro
+            .framework
             .twilight_client
             .execute_webhook(webhook.id, &webhook_token)
             .username(&slash_author.name)

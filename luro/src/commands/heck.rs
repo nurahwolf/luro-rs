@@ -3,19 +3,18 @@ use std::convert::TryInto;
 use anyhow::Error;
 
 use async_trait::async_trait;
+use luro_model::{constants::PRIMARY_BOT_OWNER, heck::Heck};
 use rand::Rng;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use tracing::{debug, trace};
+use tracing::debug;
 use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User
 };
 
-use crate::{models::Heck, models::LuroSlash, LuroContext};
-
-use crate::traits::luro_command::LuroCommand;
+use crate::{slash::Slash, traits::luro_command::LuroCommand, LuroFramework};
 
 use self::{add::HeckAddCommand, info::HeckInfo, someone::HeckSomeoneCommand};
 
@@ -40,7 +39,7 @@ pub enum HeckCommands {
 
 #[async_trait]
 impl LuroCommand for HeckCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Add(command) => command.run_command(ctx).await,
@@ -51,53 +50,29 @@ impl LuroCommand for HeckCommands {
 }
 
 /// Open the database as writable in case we need to reload the hecks
-async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMarker>>) -> anyhow::Result<()> {
-    debug!("checking to make sure hecks are present");
-    let (are_sfw_hecks_empty, are_nsfw_hecks_empty);
-
+async fn check_hecks_are_present(ctx: LuroFramework, guild_id: Option<Id<GuildMarker>>) -> anyhow::Result<()> {
     match guild_id {
         Some(guild_id) => {
-            trace!("checking if guild hecks are present");
-            {
-                let guild_data = ctx
-                    .guild_data
-                    .get(&guild_id)
-                    .ok_or_else(|| Error::msg("There is no guild data available! Are you sure there are guild hecks here?"))?;
-                are_sfw_hecks_empty = guild_data.hecks.sfw_heck_ids.is_empty();
-                are_nsfw_hecks_empty = guild_data.hecks.nsfw_heck_ids.is_empty();
+            let guild_data = ctx.database.get_guild(&guild_id).await?;
+
+            if guild_data.available_random_nsfw_hecks.is_empty() {
+                ctx.database.reload_guild_heck_ids(&guild_id, true).await?;
             }
 
-            if are_sfw_hecks_empty || are_nsfw_hecks_empty {
-                debug!("some hecks are empty, so we are reloading them");
-                let guild = ctx.guild_data.entry(guild_id);
-                guild.and_modify(|guild| {
-                    if are_sfw_hecks_empty {
-                        guild.hecks.reload_sfw_heck_ids()
-                    };
-
-                    if are_nsfw_hecks_empty {
-                        guild.hecks.reload_nsfw_heck_ids()
-                    };
-                });
+            if guild_data.available_random_sfw_hecks.is_empty() {
+                ctx.database.reload_guild_heck_ids(&guild_id, false).await?;
             }
         }
         None => {
-            trace!("checking if global hecks are present");
-            let mut global_data = ctx.global_data.upgradable_read();
-            are_sfw_hecks_empty = global_data.hecks.sfw_heck_ids.is_empty();
-            are_nsfw_hecks_empty = global_data.hecks.nsfw_heck_ids.is_empty();
+            let nsfw_hecks = ctx.database.get_hecks(true).await?;
+            let sfw_hecks = ctx.database.get_hecks(false).await?;
 
-            if are_sfw_hecks_empty || are_nsfw_hecks_empty {
-                debug!("some hecks are empty, so we are reloading them");
-                global_data.with_upgraded(|data| {
-                    if are_sfw_hecks_empty {
-                        data.hecks.reload_sfw_heck_ids()
-                    };
+            if nsfw_hecks.is_empty() {
+                ctx.database.reload_global_heck_ids(true).await?;
+            }
 
-                    if are_nsfw_hecks_empty {
-                        data.hecks.reload_nsfw_heck_ids()
-                    };
-                });
+            if sfw_hecks.is_empty() {
+                ctx.database.reload_global_heck_ids(false).await?;
             }
         }
     };
@@ -108,7 +83,7 @@ async fn check_hecks_are_present(ctx: LuroContext, guild_id: Option<Id<GuildMark
 
 /// Open the database as writeable and remove a NSFW heck from it, returning the heck removed
 async fn get_heck(
-    ctx: &LuroContext,
+    ctx: &LuroFramework,
     id: Option<i64>,
     guild_id: Option<Id<GuildMarker>>,
     global: bool,
@@ -116,117 +91,88 @@ async fn get_heck(
 ) -> anyhow::Result<(Heck, usize)> {
     // Check to make sure our hecks are present, if not reload them
     // NOTE: This sets guild_id to false if we don't need to check for global hecks
-    let (heck, heck_id);
+    let heck_id;
     check_hecks_are_present(ctx.clone(), guild_id).await?;
 
     // A heck type to remove if we can't find it
     let no_heck = (
         Heck {
             heck_message: "No hecks found!".to_string(),
-            author_id: 97003404601094144
+            author_id: PRIMARY_BOT_OWNER
         },
         69
     );
 
     if !global {
-        let new_guild_settings;
         let guild_id =
             guild_id.ok_or_else(|| Error::msg("Guild ID is not present. You can only use this option in a guild."))?;
 
-        {
-            let mut guild_settings = ctx
-                .guild_data
-                .get_mut(&guild_id)
-                .ok_or_else(|| Error::msg("There are no settings for this guild. Blame Nurah."))?;
+        let guild_settings = ctx.database.get_guild(&guild_id).await?;
 
-            heck_id = match id {
-                Some(id) => id.try_into()?,
-                None => {
-                    let id = rand::thread_rng().gen_range(
-                        0..if nsfw {
-                            let len = guild_settings.hecks.nsfw_heck_ids.len();
-                            if len == 0 {
-                                return Ok(no_heck);
-                            }
-                            len
-                        } else {
-                            let len = guild_settings.hecks.sfw_heck_ids.len();
-                            if len == 0 {
-                                return Ok(no_heck);
-                            }
-                            len
-                        }
-                    );
-
-                    if nsfw {
-                        guild_settings.hecks.nsfw_heck_ids.remove(id)
-                    } else {
-                        guild_settings.hecks.sfw_heck_ids.remove(id)
+        heck_id = match id {
+            Some(id) => usize::try_from(id)?,
+            None => rand::thread_rng().gen_range(
+                0..if nsfw {
+                    let len = guild_settings.nsfw_hecks.len();
+                    if len == 0 {
+                        return Ok(no_heck);
                     }
+                    len
+                } else {
+                    let len = guild_settings.sfw_hecks.len();
+                    if len == 0 {
+                        return Ok(no_heck);
+                    }
+                    len
                 }
-            };
+            )
+        };
 
-            heck = if nsfw {
-                guild_settings.hecks.nsfw_hecks.get(heck_id).cloned()
-            } else {
-                guild_settings.hecks.sfw_hecks.get(heck_id).cloned()
-            };
+        let heck = ctx.database.get_heck(&heck_id, nsfw).await;
 
-            new_guild_settings = guild_settings.clone()
-        }
-
-        debug!("Saving new heck to disk");
-        new_guild_settings.flush_to_disk(&guild_id).await?;
-
-        debug!("heck created, returning");
         Ok(match heck {
-            Some(heck) => (heck, heck_id),
-            None => no_heck
+            Ok(heck) => (heck, heck_id),
+            Err(_) => (
+                Heck {
+                    heck_message: "No hecks found!".to_string(),
+                    author_id: PRIMARY_BOT_OWNER
+                },
+                69
+            )
         })
     } else {
         debug!("user wants a global heck");
         // Use our specified ID if it is present, otherwise generate a random ID
-        let mut global_data = ctx.global_data.write();
+        let _nsfw_hecks = ctx.database.get_hecks(true).await?;
+        let _sfw_hecks = ctx.database.get_hecks(false).await?;
         // Try to use the id specified by the user, otherwise generate a random ID
         let heck_id = match id {
             Some(id) => id.try_into()?,
-            None => {
-                let id = rand::thread_rng().gen_range(
-                    0..if nsfw {
-                        let len = global_data.hecks.nsfw_heck_ids.len();
-                        if len == 0 {
-                            return Ok(no_heck);
-                        }
-                        len
-                    } else {
-                        let len = global_data.hecks.sfw_heck_ids.len();
-                        if len == 0 {
-                            return Ok(no_heck);
-                        }
-                        len
+            None => rand::thread_rng().gen_range(
+                0..if nsfw {
+                    let len = ctx.database.available_random_nsfw_hecks.read().unwrap().len();
+                    if len == 0 {
+                        return Ok(no_heck);
                     }
-                );
-
-                if nsfw {
-                    global_data.hecks.nsfw_heck_ids.remove(id)
+                    len
                 } else {
-                    global_data.hecks.sfw_heck_ids.remove(id)
+                    let len = ctx.database.available_random_sfw_hecks.read().unwrap().len();
+                    if len == 0 {
+                        return Ok(no_heck);
+                    }
+                    len
                 }
-            }
+            )
         };
 
-        let heck = if nsfw {
-            global_data.hecks.nsfw_hecks.get(heck_id)
-        } else {
-            global_data.hecks.sfw_hecks.get(heck_id)
-        };
+        let heck = ctx.database.get_heck(&heck_id, nsfw).await;
 
         Ok(match heck {
-            Some(heck) => (heck.clone(), heck_id),
-            None => (
+            Ok(heck) => (heck, heck_id),
+            Err(_) => (
                 Heck {
                     heck_message: "No hecks found!".to_string(),
-                    author_id: 97003404601094144
+                    author_id: PRIMARY_BOT_OWNER
                 },
                 69
             )

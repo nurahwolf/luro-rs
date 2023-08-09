@@ -1,3 +1,4 @@
+use luro_model::luro_database_driver::LuroDatabaseDriver;
 use tracing::{debug, info};
 use twilight_gateway::MessageSender;
 use twilight_model::gateway::{
@@ -5,9 +6,9 @@ use twilight_model::gateway::{
     presence::{ActivityType, MinimalActivity, Status}
 };
 
-use crate::{models::GuildSetting, LuroFramework};
+use crate::framework::Framework;
 
-impl LuroFramework {
+impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn ready_listener(&self, ready: Box<Ready>, shard: MessageSender) -> anyhow::Result<()> {
         let mut presence_string = "/about".to_owned();
         info!("Luro is now ready!");
@@ -43,42 +44,19 @@ impl LuroFramework {
             info!("Primary Owner: {}", owner.name);
         }
         let mut owners = String::new();
-        for owner in &self.global_data.read().owners {
+        let staff = self.database.get_staff().await?;
+
+        for staff in staff.iter() {
             if owners.is_empty() {
-                owners.push_str(&owner.name)
+                owners.push_str(staff.name.as_ref().unwrap())
             } else {
-                owners.push_str(format!(", {}", owner.name).as_str())
+                owners.push_str(format!(", {}", staff.name.as_ref().unwrap()).as_str())
             }
         }
         info!("Owners:        {owners}");
 
         debug!("Attempting to register guild settings");
         self.register_commands(application.id).await?;
-
-        for guild in ready.guilds {
-            GuildSetting::get_guild_settings(self, &guild.id).await?;
-        }
-
-        // match luro.application.try_read() {
-        //     Ok(application_data) => {
-        //         let interaction_client = luro.twilight_client.interaction(application_data.id);
-
-        //         match luro.global_commands.try_read() {
-        //             Ok(commands) => {
-        //                 match commands::register_global_commands(&interaction_client, commands.clone())
-        //                     .await
-        //                 {
-        //                     Ok(commands) => info!("Registered {} global commands", commands.len()),
-        //                     Err(why) => warn!("Failed to register global commands - {why}"),
-        //                 };
-        //             }
-        //             Err(why) => warn!(?why, "Failed to get the list of global commands"),
-        //         };
-        //     }
-        //     Err(why) => {
-        //         warn!("Failed to read application data, no commands were registered: {why}")
-        //     }
-        // }
 
         Ok(())
     }

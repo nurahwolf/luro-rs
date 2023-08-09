@@ -7,9 +7,9 @@ use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::models::{LuroSlash, UserData};
+use crate::slash::Slash;
 
-impl LuroSlash {
+impl Slash {
     pub async fn not_owner_response(
         mut self,
         user_id: &Id<UserMarker>,
@@ -18,14 +18,14 @@ impl LuroSlash {
     ) -> anyhow::Result<()> {
         let command = command_name.into();
         {
-            let mut user_data = UserData::modify_user_settings(&self.luro, user_id).await?;
+            let mut user_data = self.framework.database.get_user(user_id).await?;
             user_data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::Kick],
                 guild_id: *guild_id,
                 reason: format!("Attempted to run the {} command", &command),
                 responsible_user: *user_id
             });
-            user_data.write_user_data(user_id).await?;
+            self.framework.database.modify_user(user_id, &user_data).await?;
         }
         self.embed(not_owner_embed(user_id, &command).build())?.respond().await
     }

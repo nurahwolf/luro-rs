@@ -1,16 +1,17 @@
 use std::sync::Arc;
 
+use luro_model::luro_database_driver::LuroDatabaseDriver;
 use tracing::warn;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::audit_log::AuditLogEventType};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder, ImageSource};
 
-use crate::models::{LuroFramework, SlashUser};
+use crate::{framework::Framework, models::SlashUser};
 
 mod member_ban_add;
 mod member_ban_remove;
 mod member_kick;
 
-impl LuroFramework {
+impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn audit_log_handler(self: Arc<Self>, event: Box<GuildAuditLogEntryCreate>) -> anyhow::Result<()> {
         // Make sure this interaction was a guild
         let guild_id = match event.guild_id {
@@ -20,12 +21,12 @@ impl LuroFramework {
                 return Ok(());
             }
         };
-        let mut embed = self.default_embed(&Some(guild_id));
+        let mut embed = self.default_embed(&event.guild_id).await;
 
         match event.user_id {
             Some(action_user_id) => {
                 {
-                    if action_user_id == self.global_data.read().current_user.id {
+                    if action_user_id == self.database.current_user.read().unwrap().id {
                         // Event done by the bot, so no need to report it again
                         return Ok(());
                     }

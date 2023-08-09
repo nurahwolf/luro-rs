@@ -19,7 +19,8 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{models::LuroSlash, LuroContext};
+use crate::slash::Slash;
+use crate::LuroFramework;
 
 /// Add some custom functionality around [CommandModel]
 #[async_trait]
@@ -35,22 +36,22 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Run the command
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: Slash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
     /// Run a command group
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
     /// Handle a component interaction. This could be a button or other form of interaciton
-    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: Slash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
     /// Create and respond to a button interaction
-    async fn handle_model(_data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model(_data: ModalInteractionData, ctx: Slash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
@@ -105,13 +106,13 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
-    fn default_embed(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {
-        ctx.default_embed(&guild_id)
+    async fn default_embed(&self, ctx: &LuroFramework, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {
+        ctx.default_embed(&guild_id).await
     }
 
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
-    fn accent_colour(&self, ctx: &LuroContext, guild_id: Option<Id<GuildMarker>>) -> u32 {
-        ctx.accent_colour(&guild_id)
+    async fn accent_colour(&self, ctx: &LuroFramework, guild_id: Option<Id<GuildMarker>>) -> u32 {
+        ctx.accent_colour(&guild_id).await
     }
 
     // TODO: WTF is this?
