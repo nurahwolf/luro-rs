@@ -15,7 +15,7 @@ use tracing_subscriber::{
     util::SubscriberInitExt,
     Registry
 };
-use twilight_gateway::{stream::ShardEventStream, Intents};
+use twilight_gateway::{stream::ShardEventStream, Intents, error::ReceiveMessageErrorType};
 
 pub mod commands;
 pub mod event_handler;
@@ -122,8 +122,17 @@ async fn main() -> anyhow::Result<()> {
                     break;
                 }
 
-                tracing::warn!(?error, "error while receiving event");
-                continue;
+                match error.kind() {
+                    ReceiveMessageErrorType::Deserializing { event } => {
+                        tracing::warn!("Failed to deserialise an object. Check DEBUG for the raw output");
+                        tracing::debug!(?event, "error while deserialising event");
+                        continue;
+                    },
+                    _ => {
+                        tracing::warn!(?error, "error while receiving event");
+                        continue;
+                    }
+                }
             }
             Ok(event) => event
         };
@@ -134,8 +143,8 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn init_tracing_subscriber(filter: Layer<LevelFilter, Registry>, name: &String) {
-    let file_appender = tracing_appender::rolling::hourly(LOG_PATH, format!("{name}.log"));
+fn init_tracing_subscriber(filter: Layer<LevelFilter, Registry>, file_name: &String) {
+    let file_appender = tracing_appender::rolling::hourly(LOG_PATH, format!("{file_name}.log"));
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
     let layer = fmt::layer().with_writer(non_blocking);
     tracing_subscriber::registry()
