@@ -8,7 +8,7 @@ use twilight_model::{
     id::{
         marker::{ApplicationMarker, GuildMarker},
         Id
-    }
+    }, http::attachment::Attachment
 };
 use twilight_util::builder::embed::EmbedBuilder;
 
@@ -50,14 +50,43 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 }
             }
         };
+            let mut embed = embed.build();
+            let mut file_id = 0;
+            let mut files = vec![];
 
-        self.twilight_client
-            .create_message(log_channel)
-            .embeds(&[embed.build()])
-            .await?;
+                if let Some(description) = &mut embed.description {
+                    if description.len() > 4096 {
+                        file_id += 1;
 
-        debug!("Successfully sent to log channel");
-        Ok(())
+                        files.push(Attachment::from_bytes(
+                            format!("Embed-{file_id}.txt"),
+                            description.as_bytes().to_vec(),
+                            file_id
+                        ));
+
+                        description.truncate(4093);
+                        description.push_str("...");
+                    }
+                }
+
+                for field in &mut embed.fields {
+                    if field.value.len() > 1000 {
+                        file_id += 1;
+
+                        files.push(Attachment::from_bytes(
+                            format!("Field-{file_id}.txt"),
+                            field.value.as_bytes().to_vec(),
+                            file_id
+                        ));
+
+                        field.value.truncate(997);
+                        field.value.push_str("...");
+                    }
+                }
+            
+            self.twilight_client.create_message(log_channel).embeds(&[embed]).attachments(&files).await?;
+
+            Ok(())
     }
 
     /// Attempts to send to a moderator log channel if it is present.

@@ -23,7 +23,8 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 return Ok(());
             };
             let slash_user = SlashUser::from(author);
-            let embed_author = EmbedAuthorBuilder::new(slash_user.name).icon_url(ImageSource::url(slash_user.avatar)?);
+            let embed_author = EmbedAuthorBuilder::new(format!("{} - {}", slash_user.name, slash_user.user_id))
+                .icon_url(ImageSource::url(slash_user.avatar)?);
             embed = embed.author(embed_author)
         }
 
@@ -151,7 +152,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         self: &Arc<Self>,
         message: &LuroMessage,
         mut embed: EmbedBuilder,
-        mut description: String
+        description: String
     ) -> anyhow::Result<EmbedBuilder> {
         match message.guild_id {
             Some(guild_id) => {
@@ -166,11 +167,6 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     message.channel_id, message.id
                 ))
             }
-        }
-
-        if description.len() > 4096 {
-            description.truncate(4093);
-            description.push_str("...")
         }
 
         embed = embed.field(EmbedFieldBuilder::new("Channel", format!("<#{}>", message.channel_id)).inline());

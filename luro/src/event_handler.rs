@@ -7,6 +7,7 @@ use twilight_gateway::{Event, MessageSender};
 
 mod audit_log_handler;
 mod ban_add;
+mod bulk_message_delete;
 mod message_create;
 mod message_delete;
 mod message_update;
@@ -28,6 +29,7 @@ impl Framework<TomlDatabaseDriver> {
         let callback = match event.clone() {
             Event::MessageUpdate(message) => self.message_update_handler(*message).await,
             Event::MessageDelete(message) => self.message_delete_listener(message).await,
+            Event::MessageDeleteBulk(event) => self.listener_bulk_message_delete(event).await,
             _ => Ok(())
         };
 
