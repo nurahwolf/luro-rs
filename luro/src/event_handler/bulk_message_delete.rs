@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use anyhow::Error;
 use luro_model::{luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel};
 use twilight_model::gateway::payload::incoming::MessageDeleteBulk;
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource, EmbedBuilder};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{framework::Framework, models::SlashUser, COLOUR_DANGER};
 impl<D: LuroDatabaseDriver> Framework<D> {
@@ -31,13 +31,6 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 .clone();
 
             if field_count >= 25 {
-                embeds.push(embed);
-                embed = self
-                    .default_embed(&event.guild_id)
-                    .await
-                    .title("Bulk Message Delete")
-                    .color(COLOUR_DANGER);
-                field_count = 0;
                 if message_authors.len() == 1 {
                     let author = message_authors.values().last().unwrap();
                     embed = embed.author(
@@ -45,6 +38,14 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                             .icon_url(ImageSource::url(author.avatar.clone())?)
                     )
                 }
+                embeds.push(embed);
+                embed = self
+                    .default_embed(&event.guild_id)
+                    .await
+                    .title("Bulk Message Delete")
+                    .color(COLOUR_DANGER);
+                field_count = 0;
+
             }
 
             field_count += 1;
