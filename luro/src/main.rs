@@ -114,6 +114,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Work on our events
     let mut stream = ShardEventStream::new(shards.iter_mut());
+
     while let Some((shard, event)) = stream.next().await {
         let event = match event {
             Err(error) => {
@@ -137,7 +138,7 @@ async fn main() -> anyhow::Result<()> {
             Ok(event) => event
         };
 
-        tokio::spawn(luro.clone().event_handler(event, shard.sender()));
+        tokio::spawn(luro.clone().event_handler(event, shard.sender(), shard.latency().clone()));
     }
 
     Ok(())

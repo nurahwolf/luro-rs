@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use luro_database::TomlDatabaseDriver;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
 use tracing::{debug, error, warn};
-use twilight_gateway::MessageSender;
+use twilight_gateway::{MessageSender, Latency};
 use twilight_http::{client::InteractionClient, Response};
 
 use twilight_model::{
@@ -32,7 +32,8 @@ impl Slash {
     pub fn new<D: LuroDatabaseDriver>(
         ctx: Arc<Framework<TomlDatabaseDriver>>,
         interaction: Interaction,
-        shard: MessageSender
+        shard: MessageSender,
+        latency: Latency
     ) -> Self {
         debug!(id = ?interaction.id, "Processing {} interaction", interaction.kind.kind());
 
@@ -56,7 +57,8 @@ impl Slash {
             embeds: None,
             flags: None,
             title: None,
-            tts: None
+            tts: None,
+            latency
         }
     }
 

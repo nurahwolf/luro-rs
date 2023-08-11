@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use luro_database::TomlDatabaseDriver;
-use twilight_gateway::MessageSender;
+use twilight_gateway::{MessageSender, Latency};
 use twilight_model::{
     application::{command::CommandOptionChoice, interaction::Interaction},
     channel::message::{AllowedMentions, Component, Embed, MessageFlags},
@@ -45,5 +45,6 @@ pub struct Slash {
     /// For [`InteractionResponseType::Modal`], title of the modal.
     pub title: Option<String>,
     /// Whether the response is TTS.
-    pub tts: Option<bool>
+    pub tts: Option<bool>,
+    pub latency: Latency
 }

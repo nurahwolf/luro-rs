@@ -3,7 +3,7 @@ use std::sync::Arc;
 use luro_database::TomlDatabaseDriver;
 
 use tracing::error;
-use twilight_gateway::{Event, MessageSender};
+use twilight_gateway::{Event, MessageSender, Latency};
 
 mod audit_log_handler;
 mod ban_add;
@@ -24,7 +24,7 @@ use crate::slash::Slash;
 use super::Framework;
 
 impl Framework<TomlDatabaseDriver> {
-    pub async fn event_handler(self: Arc<Self>, event: Event, shard: MessageSender) -> anyhow::Result<()> {
+    pub async fn event_handler(self: Arc<Self>, event: Event, shard: MessageSender, latency: Latency) -> anyhow::Result<()> {
         // events we want an IMMEDIATE resposne to, such as if we don't want the cache to be updated yet.
         let callback = match event.clone() {
             Event::MessageUpdate(message) => self.message_update_handler(*message).await,
@@ -45,7 +45,7 @@ impl Framework<TomlDatabaseDriver> {
             Event::Ready(ready) => self.ready_listener(ready, shard).await,
             Event::MessageCreate(message) => self.message_create_listener(*message).await,
             Event::InteractionCreate(interaction) => {
-                Slash::new::<TomlDatabaseDriver>(self, interaction.0, shard).handle().await
+                Slash::new::<TomlDatabaseDriver>(self, interaction.0, shard, latency).handle().await
             }
             Event::GuildAuditLogEntryCreate(entry) => self.audit_log_handler(entry).await,
             Event::BanAdd(ban) => self.ban_add_listener(ban).await,

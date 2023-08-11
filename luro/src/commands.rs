@@ -11,6 +11,7 @@ use self::info::InfoCommands;
 use self::luro::LuroCommands;
 use self::marry::MarryCommands;
 use self::moderator::warn::ModeratorWarnCommand;
+use self::ping::PingCommand;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
@@ -47,6 +48,7 @@ mod say;
 mod story;
 mod uwu;
 mod wordcount;
+mod ping;
 // pub mod fursona;
 
 impl Commands {
@@ -76,6 +78,7 @@ impl Commands {
         init.global_commands.insert("uwu", UwUCommand::create_command().into());
         init.global_commands.insert("roll", DiceCommands::create_command().into());
         init.global_commands.insert("marry", MarryCommands::create_command().into());
+        init.global_commands.insert("ping", PingCommand::create_command().into());
         init.global_commands.insert(BOT_NAME, LuroCommands::create_command().into());
 
         init.global_commands
@@ -114,6 +117,7 @@ impl Slash {
             "roll" => DiceCommands::new(data).await?.run_commands(self).await,
             "luro" => LuroCommands::new(data).await?.run_commands(self).await,
             "marry" => MarryCommands::new(data).await?.run_commands(self).await,
+            "ping" => PingCommand::new(data).await?.run_command(self).await,
             _ => self.unknown_command_response().await
         }
     }
