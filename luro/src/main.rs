@@ -105,7 +105,7 @@ async fn main() -> anyhow::Result<()> {
     // Create the framework
     let (luro, mut shards) =
         Framework::builder(driver, intents, lavalink_auth, lavalink_host, token, tracing_subscriber).await?;
-    
+
     // Initialise tracing for logs
     init_tracing_subscriber(filter, &luro.database.current_user.read().unwrap().name);
 

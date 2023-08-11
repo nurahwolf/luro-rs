@@ -20,6 +20,16 @@ use crate::{
     ACCENT_COLOUR
 };
 
+#[cfg(not(feature = "toml-driver"))]
+fn format_heck_id(input: usize) -> usize {
+    input
+}
+
+#[cfg(feature = "toml-driver")]
+fn format_heck_id(input: usize) -> String {
+    input.to_string()
+}
+
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(name = "add", desc = "Add a heck", dm_permission = true)]
 pub struct HeckAddCommand {}
@@ -96,12 +106,12 @@ impl LuroCommand for HeckAddCommand {
             if interaction_channel.nsfw.unwrap_or(false) {
                 heck_id = ctx.framework.database.nsfw_hecks.len() + 1;
                 ctx.framework.database.modify_heck(heck_id, &heck, true).await?;
-                ctx.framework.database.nsfw_hecks.insert(heck_id, heck);
+                ctx.framework.database.nsfw_hecks.insert(format_heck_id(heck_id), heck);
                 heck_author.name = "Global Heck Created - NSFW Heck".to_owned();
             } else {
                 heck_id = ctx.framework.database.sfw_hecks.len() + 1;
                 ctx.framework.database.modify_heck(heck_id, &heck, false).await?;
-                ctx.framework.database.sfw_hecks.insert(heck_id, heck);
+                ctx.framework.database.sfw_hecks.insert(format_heck_id(heck_id), heck);
                 heck_author.name = "Global Heck Created - SFW Heck".to_owned();
             };
             field.append(&mut vec![EmbedFieldBuilder::new("Global Heck", "Just created")
@@ -117,13 +127,13 @@ impl LuroCommand for HeckAddCommand {
 
             if interaction_channel.nsfw.unwrap_or(false) {
                 heck_id = guild_settings.nsfw_hecks.len();
-                guild_settings.nsfw_hecks.insert(heck_id, heck);
+                guild_settings.nsfw_hecks.insert(format_heck_id(heck_id), heck);
                 ctx.framework.database.update_guild(guild_id, &guild_settings).await?;
 
                 heck_author.name = "Guild Heck Created - NSFW Heck".to_owned()
             } else {
                 heck_id = guild_settings.sfw_hecks.len();
-                guild_settings.sfw_hecks.insert(heck_id, heck);
+                guild_settings.sfw_hecks.insert(format_heck_id(heck_id), heck);
                 ctx.framework.database.update_guild(guild_id, &guild_settings).await?;
 
                 heck_author.name = "Guild Heck Created - SFW Heck".to_owned()

@@ -72,7 +72,8 @@ impl LuroCommand for OwnerCommands {
         let mut owner_match = false;
 
         // We are using global data for this one in case an owner was removed from the application live
-        for (id, _) in ctx.framework.database.staff.clone().into_iter() {
+
+        for (id, _) in ctx.framework.database.get_staff().await? {
             if interaction_author.id == id {
                 owner_match = true
             }

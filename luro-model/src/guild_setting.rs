@@ -5,26 +5,32 @@ use twilight_model::{
 };
 
 use crate::{
-    functions::{deserialize_heck, serialize_heck, deserialize_heck_id, serialize_heck_id},
+    functions::{deserialize_heck_id, serialize_heck_id},
     types::Hecks
 };
 
 /// Settings that are specific to a guild
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct GuildSetting {
+    #[cfg(feature = "toml-driver")]
     #[serde(deserialize_with = "deserialize_heck_id", serialize_with = "serialize_heck_id", default)]
     pub available_random_nsfw_hecks: Vec<usize>,
+    #[cfg(not(feature = "toml-driver"))]
+    pub available_random_nsfw_hecks: Vec<usize>,
+    #[cfg(feature = "toml-driver")]
     #[serde(deserialize_with = "deserialize_heck_id", serialize_with = "serialize_heck_id", default)]
+    pub available_random_sfw_hecks: Vec<usize>,
+    #[cfg(not(feature = "toml-driver"))]
     pub available_random_sfw_hecks: Vec<usize>,
     /// The Guild's name
     pub guild_name: String,
     /// Commands registered to a guild
     pub commands: Vec<Command>,
     /// Private NSFW hecks for this specific guild
-    #[serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck", default)]
+    #[serde(default)]
     pub nsfw_hecks: Hecks,
     /// Private SFW hecks for this specific guild
-    #[serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck", default)]
+    #[serde(default)]
     pub sfw_hecks: Hecks,
     /// Guild Accent Colour, which is the first colour role within a guild
     pub accent_colour: u32,

@@ -77,7 +77,6 @@ pub struct GuildPermissions<'a> {
     guild: Guild
 }
 
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LuroCommandCache {
     pub author: Id<UserMarker>,

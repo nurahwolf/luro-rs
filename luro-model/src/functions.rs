@@ -14,7 +14,7 @@ pub fn deserialize_heck_id<'de, D>(deserializer: D) -> Result<Vec<usize>, D::Err
 where
     D: Deserializer<'de>
 {
-    let input =  Vec::<String>::deserialize(deserializer)?;
+    let input = Vec::<String>::deserialize(deserializer)?;
 
     let data = input.into_iter().map(|vec| vec.parse().unwrap_or(0)).collect::<Vec<usize>>();
 

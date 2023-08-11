@@ -155,6 +155,7 @@ impl Slash {
 
         match &*custom_id.name {
             "heck-add" => HeckAddCommand::handle_model(data, self).await,
+            "story-add" => StoryCommand::handle_model(data, self).await,
             "mod-warn" => ModeratorWarnCommand::handle_model(data, self).await,
             name => {
                 warn!(name = name, "received unknown component");

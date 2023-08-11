@@ -34,6 +34,16 @@ pub enum HeckCommands {
     Info(HeckInfo)
 }
 
+#[cfg(not(feature = "toml-driver"))]
+fn format_heck_id(input: usize) -> usize {
+    input
+}
+
+#[cfg(feature = "toml-driver")]
+fn format_heck_id(input: usize) -> String {
+    input.to_string()
+}
+
 #[async_trait]
 impl LuroCommand for HeckCommands {
     async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
@@ -104,11 +114,13 @@ async fn get_heck(
             };
 
             if heck_id == 0 {
-                if hecks.is_empty() { return Ok((no_heck, 69)) }
+                if hecks.is_empty() {
+                    return Ok((no_heck, 69));
+                }
                 heck_id = rand::thread_rng().gen_range(0..hecks.len())
             }
 
-            let heck = match hecks.get(&heck_id) {
+            let heck = match hecks.get(&format_heck_id(heck_id)) {
                 Some(heck) => (heck.clone(), heck_id),
                 None => (no_heck, 69)
             };
@@ -121,21 +133,27 @@ async fn get_heck(
             let guild_settings = ctx.database.get_guild(&guild_id).await?;
 
             if heck_id == 0 {
-                heck_id = rand::thread_rng().gen_range(0..match nsfw {
-                    true => {
-                        if guild_settings.nsfw_hecks.is_empty() { return Ok((no_heck, 69)) }
-                        guild_settings.nsfw_hecks.len()
-                    },
-                    false => {
-                        if guild_settings.sfw_hecks.is_empty() { return Ok((no_heck, 69)) }
-                        guild_settings.sfw_hecks.len()
-                    },
-                })
+                heck_id = rand::thread_rng().gen_range(
+                    0..match nsfw {
+                        true => {
+                            if guild_settings.nsfw_hecks.is_empty() {
+                                return Ok((no_heck, 69));
+                            }
+                            guild_settings.nsfw_hecks.len()
+                        }
+                        false => {
+                            if guild_settings.sfw_hecks.is_empty() {
+                                return Ok((no_heck, 69));
+                            }
+                            guild_settings.sfw_hecks.len()
+                        }
+                    }
+                )
             }
 
             let heck = match nsfw {
-                true => guild_settings.nsfw_hecks.get(&heck_id),
-                false => guild_settings.sfw_hecks.get(&heck_id)
+                true => guild_settings.nsfw_hecks.get(&format_heck_id(heck_id)),
+                false => guild_settings.sfw_hecks.get(&format_heck_id(heck_id))
             };
 
             match heck {

@@ -24,3 +24,7 @@ twilight-gateway = { workspace = true }
 tracing = { workspace = true }
 parking_lot = { workspace = true }
 twilight-util = { workspace = true }
+
+[features]
+default = ["toml-driver"]
+toml-driver = []

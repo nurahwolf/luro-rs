@@ -12,7 +12,6 @@ use twilight_model::{
 };
 
 use crate::{
-    functions::{deserialize_heck, deserialize_story, serialize_heck, serialize_story},
     guild_setting::GuildSetting,
     heck::Heck,
     luro_database_driver::LuroDatabaseDriver,
@@ -34,14 +33,12 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub current_user: RwLock<CurrentUser>,
     pub driver: D,
     pub guild_data: GuildData,
-    #[serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck", default)]
+    #[serde(default)]
     pub nsfw_hecks: Hecks,
-    #[serde(deserialize_with = "deserialize_story", serialize_with = "serialize_story", default)]
     pub nsfw_stories: Stories,
     pub staff: LuroUserData,
-    #[serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck", default)]
+    #[serde(default)]
     pub sfw_hecks: Hecks,
-    #[serde(deserialize_with = "deserialize_story", serialize_with = "serialize_story", default)]
     pub sfw_stories: Stories,
     pub user_data: LuroUserData
 }
@@ -127,11 +124,11 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         match nsfw {
             true => {
                 self.driver.modify_nsfw_heck(id, heck).await?;
-                Ok(self.nsfw_hecks.insert(id, heck.clone()))
+                Ok(self.nsfw_hecks.insert(id.to_string(), heck.clone()))
             }
             false => {
                 self.driver.modify_nsfw_heck(id, heck).await?;
-                Ok(self.nsfw_hecks.insert(id, heck.clone()))
+                Ok(self.nsfw_hecks.insert(id.to_string(), heck.clone()))
             }
         }
     }
@@ -144,7 +141,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
                 let mut old_hecks = vec![];
                 self.driver.modify_nsfw_hecks(hecks.clone()).await?;
                 for (heck_id, heck) in hecks {
-                    self.nsfw_hecks.insert(heck_id, heck.clone());
+                    self.nsfw_hecks.insert(heck_id.to_string(), heck.clone());
                     old_hecks.push((heck_id, heck))
                 }
                 Ok(old_hecks)
@@ -153,7 +150,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
                 let mut old_hecks = vec![];
                 self.driver.modify_sfw_hecks(hecks.clone()).await?;
                 for (heck_id, heck) in hecks {
-                    self.sfw_hecks.insert(heck_id, heck.clone());
+                    self.sfw_hecks.insert(heck_id.to_string(), heck.clone());
                     old_hecks.push((heck_id, heck))
                 }
                 Ok(old_hecks)
@@ -167,11 +164,11 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         match nsfw {
             true => {
                 self.driver.modify_nsfw_story(id, story.clone()).await?;
-                Ok(self.nsfw_stories.insert(id, story.clone()))
+                Ok(self.nsfw_stories.insert(id.to_string(), story.clone()))
             }
             false => {
                 self.driver.modify_sfw_story(id, story.clone()).await?;
-                Ok(self.sfw_stories.insert(id, story.clone()))
+                Ok(self.sfw_stories.insert(id.to_string(), story.clone()))
             }
         }
     }
@@ -184,7 +181,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
                 let mut old_stories = vec![];
                 self.driver.modify_nsfw_stories(stories.clone()).await?;
                 for (id, story) in stories {
-                    self.nsfw_stories.insert(id, story.clone());
+                    self.nsfw_stories.insert(id.to_string(), story.clone());
                     old_stories.push((id, story))
                 }
                 Ok(old_stories)
@@ -193,7 +190,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
                 let mut old_stories = vec![];
                 self.driver.modify_sfw_stories(stories.clone()).await?;
                 for (id, story) in stories {
-                    self.sfw_stories.insert(id, story.clone());
+                    self.sfw_stories.insert(id.to_string(), story.clone());
                     old_stories.push((id, story))
                 }
                 Ok(old_stories)
@@ -204,11 +201,11 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get a story from the cache, otherwise gets the user from the database
     pub async fn get_story(&self, id: &usize, nsfw: bool) -> anyhow::Result<Story> {
         match nsfw {
-            true => match self.nsfw_stories.get(id) {
+            true => match self.nsfw_stories.get(&id.to_string()) {
                 Some(data) => Ok(data.clone()),
                 None => self.driver.get_nsfw_story(id).await
             },
-            false => match self.sfw_stories.get(id) {
+            false => match self.sfw_stories.get(&id.to_string()) {
                 Some(data) => Ok(data.clone()),
                 None => self.driver.get_sfw_story(id).await
             }
@@ -226,11 +223,11 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get a heck from the cache, otherwise gets the user from the database
     pub async fn get_heck(&self, id: &usize, nsfw: bool) -> anyhow::Result<Heck> {
         match nsfw {
-            true => match self.nsfw_hecks.get(id) {
+            true => match self.nsfw_hecks.get(&id.to_string()) {
                 Some(data) => Ok(data.clone()),
                 None => self.driver.get_nsfw_heck(id).await
             },
-            false => match self.sfw_hecks.get(id) {
+            false => match self.sfw_hecks.get(&id.to_string()) {
                 Some(data) => Ok(data.clone()),
                 None => self.driver.get_sfw_heck(id).await
             }
@@ -278,8 +275,8 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
 
         for (heck_id, _) in hecks {
             match nsfw {
-                true => heck_db.push(heck_id),
-                false => heck_db.push(heck_id)
+                true => heck_db.push(heck_id.parse()?),
+                false => heck_db.push(heck_id.parse()?)
             }
         }
         mem::drop(heck_db);
@@ -293,12 +290,12 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         match nsfw {
             true => {
                 for (heck_id, _) in guild_setings.nsfw_hecks {
-                    guild_setings.available_random_nsfw_hecks.push(heck_id)
+                    guild_setings.available_random_nsfw_hecks.push(heck_id.parse()?)
                 }
             }
             false => {
                 for (heck_id, _) in guild_setings.sfw_hecks {
-                    guild_setings.available_random_sfw_hecks.push(heck_id)
+                    guild_setings.available_random_sfw_hecks.push(heck_id.parse()?)
                 }
             }
         }

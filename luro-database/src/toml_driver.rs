@@ -5,35 +5,25 @@ use anyhow::anyhow;
 const SFW_HECK_FILE_PATH: &str = "data/sfw_hecks.toml";
 const NSFW_HECK_FILE_PATH: &str = "data/nsfw_hecks.toml";
 /// Where the stories toml file lives. Can be overriden elsewhere if desired.
-const SFW_STORIES_FILE_PATH: &str = "data/nsfw_stories.toml";
-const NSFW_STORIES_FILE_PATH: &str = "data/sfw_stories.toml";
+const SFW_STORIES_FILE_PATH: &str = "data/sfw_stories.toml";
+const NSFW_STORIES_FILE_PATH: &str = "data/nsfw_stories.toml";
 /// A folder where <guild/guild_id.toml> are stored
 const GUILDSETTINGS_FILE_PATH: &str = "data/guilds";
 /// A folder where <user/user_id.toml> are stored
 const USERDATA_FILE_PATH: &str = "data/user";
 use luro_model::constants::BOT_OWNERS;
-use luro_model::functions::{deserialize_heck, serialize_heck};
 use luro_model::heck::Heck;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
 use luro_model::story::Story;
 use luro_model::types::{Hecks, LuroUserData, Stories};
 use luro_model::{guild_setting::GuildSetting, luro_user::LuroUser};
-use serde::Deserialize;
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{fs, io::AsyncReadExt};
-use tracing::{error, info, warn};
+use tracing::{debug, error, warn};
 
 use crate::TomlDatabaseDriver;
 
 const GDPR_DELETE: &str = "gdpr_delete = \"THE USER REQUESTED ALL OF THEIR DATA TO BE DELETED\"";
-
-/// Due to Toml's bullshit, this is needed so we can make sure the primary key is a fucking string.
-/// This is why you use real databases. 
-#[derive(Serialize, Deserialize, Default, Debug)]
-pub struct HeckToml {
-    #[serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck", default)]
-    hecks: Hecks
-}
 
 impl TomlDatabaseDriver {
     // A simple function used to make sure our data path and other needed files exist
@@ -74,7 +64,7 @@ impl TomlDatabaseDriver {
 
         // If we could read it, then let standard output know
         if let Ok(size) = file_opened.read_to_string(&mut contents).await {
-            info!("Read file {} of length {size}", path.to_string_lossy());
+            debug!("Read file {} of length {size}", path.to_string_lossy());
         }
 
         // Serialise into a Heck type
@@ -117,7 +107,7 @@ impl TomlDatabaseDriver {
             fs::create_dir_all(path.parent().unwrap()).await?
         }
 
-        info!("Path {} has bee updated with new data", path.to_string_lossy());
+        debug!("Path {} has bee updated with new data", path.to_string_lossy());
         Ok(fs::write(path, struct_to_toml_string).await?)
     }
 }
@@ -170,75 +160,75 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
     }
 
     async fn add_sfw_heck(&self, heck: &Heck) -> anyhow::Result<()> {
-        let data: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
-        let total_hecks = data.hecks.len() + 1;
-        data.hecks.entry(total_hecks).insert(heck.clone());
+        let data: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        let total_hecks = data.len() + 1;
+        data.entry(total_hecks.to_string()).insert(heck.clone());
         Self::write(data, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn get_sfw_hecks(&self) -> anyhow::Result<Hecks> {
-        let hecks: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
-        Ok(hecks.hecks)
+        let hecks: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        Ok(hecks)
     }
 
     async fn modify_sfw_heck(&self, id: usize, heck: &Heck) -> anyhow::Result<()> {
-        let data: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
-        data.hecks.entry(id).insert(heck.clone());
+        let data: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        data.entry(id.to_string()).insert(heck.clone());
         Self::write(data, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn modify_sfw_hecks(&self, modified_hecks: Vec<(usize, Heck)>) -> anyhow::Result<()> {
-        let data: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        let data: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
         for (heck_id, modified_heck) in modified_hecks {
-            data.hecks.entry(heck_id).insert(modified_heck);
+            data.entry(heck_id.to_string()).insert(modified_heck);
         }
         Self::write(data, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn remove_sfw_heck(&self, id: usize) -> anyhow::Result<()> {
-        let data: HeckToml = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
-        data.hecks.remove(&id);
+        let data: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
+        data.remove(&id.to_string());
         Self::write(data, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn save_sfw_hecks(&self, hecks: &Hecks) -> anyhow::Result<()> {
-        Self::write(HeckToml { hecks: hecks.clone() }, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
+        Self::write(hecks, Path::new(Path::new(SFW_HECK_FILE_PATH))).await
     }
 
     async fn add_nsfw_heck(&self, heck: &Heck) -> anyhow::Result<()> {
-        let data: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
-        let total_hecks = data.hecks.len() + 1;
-        data.hecks.entry(total_hecks).insert(heck.clone());
+        let data: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        let total_hecks = data.len() + 1;
+        data.entry(total_hecks.to_string()).insert(heck.clone());
         Self::write(data, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     async fn get_nsfw_hecks(&self) -> anyhow::Result<Hecks> {
-        let hecks: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
-        Ok(hecks.hecks)
+        let hecks: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        Ok(hecks)
     }
 
     async fn modify_nsfw_heck(&self, id: usize, heck: &Heck) -> anyhow::Result<()> {
-        let data: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
-        data.hecks.entry(id).insert(heck.clone());
+        let data: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        data.entry(id.to_string()).insert(heck.clone());
         Self::write(data, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     async fn modify_nsfw_hecks(&self, modified_hecks: Vec<(usize, Heck)>) -> anyhow::Result<()> {
-        let data: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        let data: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
         for (heck_id, modified_heck) in modified_hecks {
-            data.hecks.entry(heck_id).insert(modified_heck);
+            data.entry(heck_id.to_string()).insert(modified_heck);
         }
         Self::write(data, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     async fn remove_nsfw_heck(&self, id: usize) -> anyhow::Result<()> {
-        let data: HeckToml = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
-        data.hecks.remove(&id);
+        let data: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
+        data.remove(&id.to_string());
         Self::write(data, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     async fn save_nsfw_hecks(&self, hecks: &Hecks) -> anyhow::Result<()> {
-        Self::write(HeckToml { hecks: hecks.clone()}, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
+        Self::write(hecks, Path::new(Path::new(NSFW_HECK_FILE_PATH))).await
     }
 
     // TODO
@@ -261,7 +251,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
     async fn add_sfw_story(&self, story: &Story) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(SFW_STORIES_FILE_PATH)).await?;
         let total_stories = data.len() + 1;
-        data.entry(total_stories).insert(story.clone());
+        data.entry(total_stories.to_string()).insert(story.clone());
         Self::write(data, Path::new(Path::new(SFW_STORIES_FILE_PATH))).await
     }
 
@@ -269,7 +259,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
         let data: Stories = Self::get(Path::new(SFW_STORIES_FILE_PATH)).await?;
         let mut total_stories = data.len() + 1;
         for story in stories {
-            data.entry(total_stories).insert(story.clone());
+            data.entry(total_stories.to_string()).insert(story.clone());
             total_stories += 1;
         }
         Self::write(data, Path::new(Path::new(SFW_STORIES_FILE_PATH))).await
@@ -282,7 +272,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
 
     async fn get_sfw_story(&self, id: &usize) -> anyhow::Result<Story> {
         let data: Stories = Self::get(Path::new(SFW_STORIES_FILE_PATH)).await?;
-        let story = match data.get(id) {
+        let story = match data.get(&id.to_string()) {
             Some(story) => Ok(story.clone()),
             None => Err(anyhow!("Story with ID {id} not present!"))
         };
@@ -291,20 +281,20 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
 
     async fn modify_sfw_story(&self, id: usize, story: Story) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
-        data.entry(id).insert(story.clone());
+        data.entry(id.to_string()).insert(story.clone());
         Self::write(data, Path::new(Path::new(NSFW_STORIES_FILE_PATH))).await
     }
 
     async fn remove_sfw_story(&self, id: usize) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
-        data.remove(&id);
+        data.remove(&id.to_string());
         Self::write(data, Path::new(Path::new(NSFW_STORIES_FILE_PATH))).await
     }
 
     async fn save_sfw_story(&self, story: Story) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
         let total_stories = data.len() + 1;
-        data.entry(total_stories).insert(story.clone());
+        data.entry(total_stories.to_string()).insert(story.clone());
         Self::write(data, Path::new(Path::new(NSFW_STORIES_FILE_PATH))).await
     }
 
@@ -315,7 +305,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
     async fn add_nsfw_story(&self, story: &Story) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
         let total_stories = data.len() + 1;
-        data.entry(total_stories).insert(story.clone());
+        data.entry(total_stories.to_string()).insert(story.clone());
         Self::write(data, Path::new(Path::new(NSFW_STORIES_FILE_PATH))).await
     }
 
@@ -323,7 +313,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
         let mut total_stories = data.len() + 1;
         for story in stories {
-            data.entry(total_stories).insert(story.clone());
+            data.entry(total_stories.to_string()).insert(story.clone());
             total_stories += 1;
         }
         Self::write(data, Path::new(Path::new(NSFW_STORIES_FILE_PATH))).await
@@ -336,7 +326,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
 
     async fn get_nsfw_story(&self, id: &usize) -> anyhow::Result<Story> {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
-        let story = match data.get(id) {
+        let story = match data.get(&id.to_string()) {
             Some(story) => Ok(story.clone()),
             None => Err(anyhow!("Story with ID {id} not present!"))
         };
@@ -345,20 +335,20 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
 
     async fn modify_nsfw_story(&self, id: usize, story: Story) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
-        data.entry(id).insert(story.clone());
+        data.entry(id.to_string()).insert(story.clone());
         Self::write(data, Path::new(Path::new(NSFW_STORIES_FILE_PATH))).await
     }
 
     async fn remove_nsfw_story(&self, id: usize) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
-        data.remove(&id);
+        data.remove(&id.to_string());
         Self::write(data, Path::new(Path::new(NSFW_STORIES_FILE_PATH))).await
     }
 
     async fn save_nsfw_story(&self, story: Story) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
         let total_stories = data.len() + 1;
-        data.entry(total_stories).insert(story.clone());
+        data.entry(total_stories.to_string()).insert(story.clone());
         Self::write(data, Path::new(Path::new(NSFW_STORIES_FILE_PATH))).await
     }
 
@@ -369,7 +359,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
     async fn modify_nsfw_stories(&self, modified_stories: Vec<(usize, Story)>) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(NSFW_STORIES_FILE_PATH)).await?;
         for (id, story) in modified_stories {
-            data.entry(id).insert(story);
+            data.entry(id.to_string()).insert(story);
         }
         Self::write(data, Path::new(Path::new(NSFW_STORIES_FILE_PATH))).await
     }
@@ -377,14 +367,14 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
     async fn modify_sfw_stories(&self, modified_stories: Vec<(usize, Story)>) -> anyhow::Result<()> {
         let data: Stories = Self::get(Path::new(SFW_STORIES_FILE_PATH)).await?;
         for (id, story) in modified_stories {
-            data.entry(id).insert(story);
+            data.entry(id.to_string()).insert(story);
         }
         Self::write(data, Path::new(Path::new(SFW_STORIES_FILE_PATH))).await
     }
 
     async fn get_sfw_heck(&self, id: &usize) -> anyhow::Result<Heck> {
         let data: Hecks = Self::get(Path::new(NSFW_HECK_FILE_PATH)).await?;
-        let data = match data.get(id) {
+        let data = match data.get(&id.to_string()) {
             Some(data) => Ok(data.clone()),
             None => Err(anyhow!("Heck with ID {id} not present!"))
         };
@@ -393,7 +383,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
 
     async fn get_nsfw_heck(&self, id: &usize) -> anyhow::Result<Heck> {
         let data: Hecks = Self::get(Path::new(SFW_HECK_FILE_PATH)).await?;
-        let data = match data.get(id) {
+        let data = match data.get(&id.to_string()) {
             Some(data) => Ok(data.clone()),
             None => Err(anyhow!("Heck with ID {id} not present!"))
         };

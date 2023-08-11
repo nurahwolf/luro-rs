@@ -10,10 +10,16 @@ use twilight_model::{
 use crate::{guild_setting::GuildSetting, heck::Heck, luro_user::LuroUser, story::Story};
 
 /// A simple wrapper around stories. Primary key is the ID of the story.
+#[cfg(not(feature = "toml-driver"))]
 pub type Stories = DashMap<usize, Story>;
+#[cfg(feature = "toml-driver")]
+pub type Stories = DashMap<String, Story>;
 
 /// A [DashMap] containing a [Heck], with an index of the heck ID
+#[cfg(not(feature = "toml-driver"))]
 pub type Hecks = DashMap<usize, Heck>;
+#[cfg(feature = "toml-driver")]
+pub type Hecks = DashMap<String, Heck>;
 
 /// A [DashMap] containing guild specific settings ([GuildSetting]), keyed by [GuildMarker].
 pub type GuildData = DashMap<Id<GuildMarker>, GuildSetting>;

@@ -56,3 +56,7 @@ dashmap = { workspace = true }
 [dev-dependencies]
 futures = "0.3"
 tokio = { workspace = true }
+
+[features]
+default = ["toml-driver"]
+toml-driver = []
