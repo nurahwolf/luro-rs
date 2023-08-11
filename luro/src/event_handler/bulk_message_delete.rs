@@ -45,19 +45,20 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     .title("Bulk Message Delete")
                     .color(COLOUR_DANGER);
                 field_count = 0;
-
             }
 
             field_count += 1;
             if !message.content().is_empty() {
                 embed = embed.field(EmbedFieldBuilder::new(
+                    "",
                     format!(
-                        "{} - {} - <t:{}:R>",
-                        message_author.name,
+                        "<@{}> - <#{}> - <t:{}:R> - `{}`\n{}",
                         message_author.user_id,
-                        message.timestamp().as_secs()
-                    ),
-                    message.content()
+                        message.channel_id(),
+                        message.timestamp().as_secs(),
+                        message.id(),
+                        message.content(),
+                    )
                 ))
             }
         }
