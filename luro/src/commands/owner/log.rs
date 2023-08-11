@@ -15,7 +15,7 @@ pub struct LogCommand {
 
 #[derive(CommandOption, CreateOption, Clone, Debug, PartialEq, Eq)]
 pub enum LogLevel {
-    #[option(name = "TRACE - Holy shit, if you are using this something is FUCKED", value = "trace")]
+    #[option(name = "TRACE - If you are using this something is FUCKED", value = "trace")]
     Trace,
     #[option(name = "DEBUG - Extra information to know when it broke", value = "debug")]
     Debug,
