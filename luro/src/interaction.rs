@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use std::sync::Arc;
 
 use luro_builder::response::LuroResponse;
@@ -7,30 +6,30 @@ use tracing::error;
 use twilight_http::client::InteractionClient;
 use twilight_http::Error;
 use twilight_http::Response;
-use twilight_interactions::command::ResolvedUser;
 use twilight_model::application::interaction::Interaction;
 use twilight_model::channel::Message;
 use twilight_model::http::interaction::InteractionResponseType;
 use twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource;
 use twilight_model::http::interaction::InteractionResponseType::DeferredUpdateMessage;
-use twilight_model::user::User;
 
 use crate::framework::Framework;
-use crate::models::SlashUser;
 use crate::ACCENT_COLOUR;
 
 mod user_utils;
+mod parse_modal_field;
+mod send_log_message;
+mod parsers;
 
 /// Some nice stuff about formatting a response, ready to send via twilight's client
 #[derive(Clone, Debug)]
-pub struct LuroInteraction {
+pub struct LuroSlash {
     /// The framework for being able to respond to an interaction
     pub framework: Arc<Framework<TomlDatabaseDriver>>,
     /// The client is wrapped around this interaction
     pub interaction: Interaction
 }
 
-impl LuroInteraction {
+impl LuroSlash {
     /// Create a client wrapped around an interaction. Note that not setting anything else will not cause a response to be sent!
     /// This is set with some defaults:
     /// - AllowedMentions - All
@@ -115,5 +114,49 @@ impl LuroInteraction {
         };
 
         ACCENT_COLOUR
+    }
+
+    /// Send a message in the same channel as the interaction
+    /// 
+    /// #PANIC
+    /// This function panics if its called in a ping function... No idea why you would try that, but please don't.
+    pub async fn send_message<F>(&self, response: F) -> Result<Response<Message>, Error>
+    where
+        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse
+    {
+        let mut r = LuroResponse::default();
+        response(&mut r);
+
+        let mut create_message = self.
+            framework.twilight_client
+            .create_message(self.interaction.channel.as_ref().unwrap().id)
+            .allowed_mentions(r.allowed_mentions.as_ref());
+
+        if let Some(attachments) = &r.attachments {
+            create_message = create_message.attachments(attachments);
+        }
+        if let Some(components) = &r.components {
+            create_message = create_message.components(components);
+        }
+        if let Some(content) = &r.content {
+            create_message = create_message.content(content);
+        }
+        if let Some(embeds) = &r.embeds {
+            create_message = create_message.embeds(embeds);
+        }
+        if let Some(flags) = r.flags {
+            create_message = create_message.flags(flags);
+        }
+        if let Some(reply) = r.reply {
+            create_message = create_message.reply(reply);
+        }
+        if let Some(stickers) = &r.stickers {
+            create_message = create_message.sticker_ids(stickers);
+        }
+        if let Some(tts) = r.tts {
+            create_message = create_message.tts(tts);
+        }
+
+        create_message.await
     }
 }

@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use tracing_subscriber::filter;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
@@ -29,7 +29,7 @@ pub enum LogLevel {
     Off
 }
 
-#[async_trait]
+
 impl LuroCommand for LogCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let (_, level) = match self.level {

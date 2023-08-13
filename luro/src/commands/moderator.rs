@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
@@ -67,7 +67,7 @@ pub enum ModeratorCommands {
     Warn(ModeratorWarnCommand)
 }
 
-#[async_trait]
+
 impl LuroCommand for ModeratorCommands {
     async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.

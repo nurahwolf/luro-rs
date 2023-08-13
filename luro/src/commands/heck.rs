@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-use async_trait::async_trait;
+
 use luro_model::{constants::PRIMARY_BOT_OWNER, heck::Heck};
 use rand::Rng;
 
@@ -44,7 +44,7 @@ fn format_heck_id(input: usize) -> String {
     input.to_string()
 }
 
-#[async_trait]
+
 impl LuroCommand for HeckCommands {
     async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.

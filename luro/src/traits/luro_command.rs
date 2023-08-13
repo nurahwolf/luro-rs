@@ -1,6 +1,8 @@
+use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::{Context, Error};
-use async_trait::async_trait;
+use tracing::error;
+
 
 use std::mem;
 use twilight_interactions::command::CommandModel;
@@ -19,11 +21,11 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 
+use crate::interaction::LuroSlash;
 use crate::slash::Slash;
 use crate::LuroFramework;
 
 /// Add some custom functionality around [CommandModel]
-#[async_trait]
 pub trait LuroCommand: CommandModel {
     /// Create a command that can be executed with Twilight
     // fn commands() -> Vec<Command> {
@@ -32,7 +34,12 @@ pub trait LuroCommand: CommandModel {
 
     /// Create a new command and get it's data from the interaction
     async fn new(data: CommandData) -> anyhow::Result<Self> {
-        Self::from_interaction(data.into()).context("failed to parse command data")
+        match Self::from_interaction(data.into()) {
+            Ok(ok) => Ok(ok),
+            Err(why) => {
+                Err(anyhow!("Got interaction data, but failed to parse it to the command type specified: {why}"))
+            },
+        }
     }
 
     /// Run the command
@@ -46,12 +53,12 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Handle a component interaction. This could be a button or other form of interaciton
-    async fn handle_component(_data: Box<MessageComponentInteractionData>, ctx: Slash) -> anyhow::Result<()> {
+    async fn handle_component(self, _data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
     /// Create and respond to a button interaction
-    async fn handle_model(_data: ModalInteractionData, ctx: Slash) -> anyhow::Result<()> {
+    async fn handle_model(self, _data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
@@ -95,15 +102,15 @@ pub trait LuroCommand: CommandModel {
         Ok((invoked_channel, interaction_author, interaction_member))
     }
 
-    fn parse_component_data(
-        self,
-        interaction: &mut Interaction
-    ) -> Result<Box<MessageComponentInteractionData>, anyhow::Error> {
-        match mem::take(&mut interaction.data) {
-            Some(InteractionData::MessageComponent(data)) => Ok(data),
-            _ => bail!("unable to parse modal data, received unknown data type")
-        }
-    }
+    // fn parse_component_data(
+    //     self,
+    //     interaction: &mut Interaction
+    // ) -> Result<Box<MessageComponentInteractionData>, anyhow::Error> {
+    //     match mem::take(&mut interaction.data) {
+    //         Some(InteractionData::MessageComponent(data)) => Ok(data),
+    //         _ => bail!("unable to parse modal data, received unknown data type")
+    //     }
+    // }
 
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
     async fn default_embed(&self, ctx: &LuroFramework, guild_id: Option<Id<GuildMarker>>) -> EmbedBuilder {

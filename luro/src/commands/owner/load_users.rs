@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -12,7 +12,7 @@ use crate::traits::luro_command::LuroCommand;
 )]
 pub struct OwnerLoadUsers {}
 
-#[async_trait]
+
 impl LuroCommand for OwnerLoadUsers {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         ctx.deferred().await?;

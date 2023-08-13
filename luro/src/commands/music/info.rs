@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -11,7 +11,7 @@ use crate::traits::luro_command::LuroCommand;
 #[command(name = "info", desc = "Information about the music player", dm_permission = false)]
 pub struct InfoCommand {}
 
-#[async_trait]
+
 impl LuroCommand for InfoCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = match ctx.interaction.guild_id {

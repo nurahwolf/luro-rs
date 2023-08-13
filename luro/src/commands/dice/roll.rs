@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
@@ -18,7 +18,7 @@ pub struct DiceRollCommand {
     ephemeral: Option<bool>
 }
 
-#[async_trait]
+
 impl LuroCommand for DiceRollCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let result = Roll::roll_inline(&self.dice, false).unwrap_or(RollResult {

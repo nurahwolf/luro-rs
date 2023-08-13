@@ -4,9 +4,9 @@ use twilight_model::{application::interaction::Interaction, user::User};
 
 use crate::models::SlashUser;
 
-use super::LuroInteraction;
+use super::LuroSlash;
 
-impl LuroInteraction {
+impl LuroSlash {
     /// Get and return useful information about the interaction author
     pub fn get_interaction_author<'a>(&'a self, interaction: &'a Interaction) -> anyhow::Result<(&User, SlashUser)> {
         match &interaction.member {

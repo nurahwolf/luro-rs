@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{slash::Slash, traits::luro_command::LuroCommand};
@@ -17,7 +17,7 @@ pub enum InfoCommands {
     Role(InfoRole)
 }
 
-#[async_trait]
+
 impl LuroCommand for InfoCommands {
     async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         match self {

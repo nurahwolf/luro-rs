@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
@@ -18,7 +18,7 @@ pub struct OwnerGetMessage {
     user: Option<ResolvedUser>
 }
 
-#[async_trait]
+
 impl LuroCommand for OwnerGetMessage {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let message_id = Id::new(self.message_id.parse()?);

@@ -1,7 +1,7 @@
 use crate::slash::Slash;
 use std::convert::TryInto;
 
-use async_trait::async_trait;
+
 use luro_model::{luro_log_channel::LuroLogChannel, user_actions::UserActions, user_actions_type::UserActionType};
 use tracing::debug;
 
@@ -45,7 +45,7 @@ pub enum TimeToBan {
     SevenDays
 }
 
-#[async_trait]
+
 impl LuroCommand for BanCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         ctx.deferred().await?;

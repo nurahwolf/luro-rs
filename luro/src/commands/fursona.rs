@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser, AutocompleteValue};
 
@@ -14,7 +14,7 @@ pub enum LewdCommands {
     NSFW(FursonaNSFWCommand)
 }
 
-#[async_trait]
+
 impl LuroCommand for LewdCommands {
     async fn run_commands(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let interaction_channel = ctx.channel()?;
@@ -40,7 +40,7 @@ pub struct FursonaNSFWCommand {
     name: AutocompleteValue<String>,
 }
 
-#[async_trait]
+
 impl LuroCommand for FursonaNSFWCommand {
     async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let content = if let Some(user) = self.user {

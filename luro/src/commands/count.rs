@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -9,7 +9,7 @@ use crate::traits::luro_command::LuroCommand;
 #[command(name = "count", desc = "Test to see if the framework is globally mutable")]
 pub struct CountCommand {}
 
-#[async_trait]
+
 impl LuroCommand for CountCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let content;

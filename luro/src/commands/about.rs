@@ -2,7 +2,7 @@ use std::convert::TryInto;
 use std::fmt::Write;
 use std::path::Path;
 
-use async_trait::async_trait;
+
 use git2::{ErrorCode, Repository};
 use luro_model::constants::PRIMARY_BOT_OWNER;
 use memory_stats::memory_stats;
@@ -23,7 +23,7 @@ pub struct AboutCommand {
     cache: Option<bool>
 }
 
-#[async_trait]
+
 impl LuroCommand for AboutCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         ctx.ephemeral().deferred().await?;

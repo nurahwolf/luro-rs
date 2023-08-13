@@ -4,7 +4,7 @@ use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use twilight_model::{
     id::{
-        marker::{GuildMarker, UserMarker},
+        marker::{GuildMarker, UserMarker, MessageMarker},
         Id
     },
     oauth::Application,
@@ -28,7 +28,8 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub available_random_nsfw_hecks: RwLock<Vec<usize>>,
     pub available_random_sfw_hecks: RwLock<Vec<usize>>,
     pub application: RwLock<Application>,
-    pub command_data: CommandManager,
+    pub command_data: CommandManager<Id<MessageMarker>>,
+    pub modal_interaction_data: CommandManager<String>,
     pub count: RwLock<usize>,
     pub current_user: RwLock<CurrentUser>,
     pub driver: D,
@@ -60,7 +61,8 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             sfw_stories: Default::default(),
             user_data: Default::default(),
             available_random_nsfw_hecks: Default::default(),
-            available_random_sfw_hecks: Default::default()
+            available_random_sfw_hecks: Default::default(),
+            modal_interaction_data: Default::default(),
         }
     }
 

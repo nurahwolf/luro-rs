@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -42,7 +42,7 @@ pub enum MusicCommands {
     Info(InfoCommand)
 }
 
-#[async_trait]
+
 impl LuroCommand for MusicCommands {
     async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.

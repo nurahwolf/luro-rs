@@ -1,7 +1,6 @@
 use std::convert::TryInto;
 
-use anyhow::{anyhow, Error};
-use async_trait::async_trait;
+use anyhow::{anyhow, Context, Error};
 
 use luro_model::heck::Heck;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -15,6 +14,7 @@ use twilight_model::{
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder};
 
 use crate::{
+    interaction::LuroSlash,
     slash::Slash,
     traits::{luro_command::LuroCommand, luro_functions::LuroFunctions},
     ACCENT_COLOUR
@@ -34,7 +34,6 @@ fn format_heck_id(input: usize) -> String {
 #[command(name = "add", desc = "Add a heck", dm_permission = true)]
 pub struct HeckAddCommand {}
 
-#[async_trait]
 impl LuroCommand for HeckAddCommand {
     /// Modal that asks the user to enter a reason for the kick.
     ///
@@ -62,11 +61,14 @@ impl LuroCommand for HeckAddCommand {
             .await
     }
 
-    async fn handle_component(data: Box<MessageComponentInteractionData>, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn handle_component(self, data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+        let interaction = &ctx.interaction;
+        let interaction_author = interaction.author().context("Expected to get interaction author")?;
+        let interaction_channel = interaction.channel.clone().unwrap();
+        let nsfw = interaction_channel.nsfw.unwrap_or(false);
+
         let heck_id;
         let mut field = vec![];
-        let interaction_channel = ctx.channel()?;
-        let interaction_author = ctx.author()?;
 
         // Get interaction data
         // TODO: Don't get data in the command
@@ -84,13 +86,12 @@ impl LuroCommand for HeckAddCommand {
         let mut heck_embed = message
             .embeds
             .first()
-            .ok_or_else(|| Error::msg("Unable to find the original message"))?
+            .ok_or_else(|| Error::msg("Unable to find the original heck embed"))?
             .clone();
         let mut heck_author = heck_embed
             .clone()
             .author
             .ok_or_else(|| Error::msg("No author in our heck embed"))?;
-        let components = message.components;
 
         // Create our heck based on the data we have received
         let heck = Heck {
@@ -103,7 +104,7 @@ impl LuroCommand for HeckAddCommand {
 
         // Based on our component data, should this be added as a global heck or a guild heck?
         if global.contains("heck-add-global") {
-            if interaction_channel.nsfw.unwrap_or(false) {
+            if nsfw {
                 heck_id = ctx.framework.database.nsfw_hecks.len() + 1;
                 ctx.framework.database.modify_heck(heck_id, &heck, true).await?;
                 ctx.framework.database.nsfw_hecks.insert(format_heck_id(heck_id), heck);
@@ -125,7 +126,7 @@ impl LuroCommand for HeckAddCommand {
 
             let guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
 
-            if interaction_channel.nsfw.unwrap_or(false) {
+            if nsfw {
                 heck_id = guild_settings.nsfw_hecks.len();
                 guild_settings.nsfw_hecks.insert(format_heck_id(heck_id), heck);
                 ctx.framework.database.update_guild(guild_id, &guild_settings).await?;
@@ -153,10 +154,10 @@ impl LuroCommand for HeckAddCommand {
         heck_embed.author = Some(heck_author);
 
         // Finally, repond with an updated message
-        ctx.embed(heck_embed)?.components(components).update().respond().await
+        ctx.respond(|response| response.add_embed(heck_embed).components(|c| c).update()).await
     }
 
-    async fn handle_model(data: ModalInteractionData, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn handle_model(self, data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         let (_author, slash_author) = ctx.get_interaction_author(&ctx.interaction)?;
         let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
 
@@ -204,6 +205,10 @@ impl LuroCommand for HeckAddCommand {
             })]
         })];
 
-        ctx.embed(embed.build())?.components(components).respond().await
+        ctx.respond(|response| {
+            response.components = Some(components);
+            response.add_embed(embed.build())
+        })
+        .await
     }
 }

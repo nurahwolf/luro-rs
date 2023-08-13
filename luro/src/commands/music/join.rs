@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -22,7 +22,7 @@ pub struct JoinCommand {
     channel: Id<ChannelMarker>
 }
 
-#[async_trait]
+
 impl LuroCommand for JoinCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();

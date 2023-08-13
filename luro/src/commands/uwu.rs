@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use uwuifier::uwuify_str_sse;
@@ -13,7 +13,7 @@ pub struct UwUCommand {
     message: String
 }
 
-#[async_trait]
+
 impl LuroCommand for UwUCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let uwu = if cfg!(target_feature = "sse4.1") {

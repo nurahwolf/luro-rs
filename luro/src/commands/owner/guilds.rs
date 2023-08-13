@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -15,7 +15,7 @@ pub struct OwnerGuildsCommand {
     show_id: Option<bool>
 }
 
-#[async_trait]
+
 impl LuroCommand for OwnerGuildsCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut guilds = String::new();

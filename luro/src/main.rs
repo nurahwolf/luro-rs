@@ -1,4 +1,5 @@
 #![feature(let_chains)]
+#![feature(async_fn_in_trait)]
 
 use anyhow::Context;
 use dotenv::dotenv;

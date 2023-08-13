@@ -2,7 +2,7 @@ use luro_model::{luro_log_channel::LuroLogChannel, user_actions::UserActions, us
 
 use crate::slash::Slash;
 
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::guild::Permissions;
@@ -28,7 +28,7 @@ pub struct KickCommand {
     pub details: Option<String>
 }
 
-#[async_trait]
+
 impl LuroCommand for KickCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         ctx.deferred().await?;

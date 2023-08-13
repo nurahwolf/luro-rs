@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Destroy;
@@ -11,7 +11,7 @@ use crate::traits::luro_command::LuroCommand;
 #[command(name = "leave", desc = "Leave voice in a guild", dm_permission = false)]
 pub struct LeaveCommand {}
 
-#[async_trait]
+
 impl LuroCommand for LeaveCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();

@@ -64,8 +64,19 @@ impl Slash {
 
     // Handle an interaction
     pub async fn handle(self) -> anyhow::Result<()> {
-        let response = match self.interaction.kind {
-            InteractionType::ApplicationCommand => self.clone().handle_command().await,
+        let interaction = &self.interaction;
+        let response = match interaction.kind {
+            InteractionType::ApplicationCommand => {
+                // Attempt to get the original message to save it to our cache
+                self.clone().handle_command().await?;
+                if let Ok(response) = self.interaction_client().response(&interaction.token).await {
+                    self.framework
+                        .database
+                        .command_data
+                        .insert(response.model().await?.id, interaction.clone());
+                };
+                Ok(())
+            }
             InteractionType::MessageComponent => self.clone().handle_component().await,
             InteractionType::ModalSubmit => self.clone().handle_modal().await,
             other => {
@@ -77,26 +88,12 @@ impl Slash {
         if let Err(why) = response {
             error!(error = ?why, "error while processing interaction");
             // Attempt to send an error response
-            if let Err(send_fail) = self.clone().internal_error_response(why.to_string()).await {
+            if let Err(send_fail) = self.clone().internal_error_response(format!("{:?}", why.to_string())).await {
                 error!(error = ?send_fail, "Failed to respond to the interaction with an error response");
             };
         };
 
         Ok(())
-    }
-
-    /// Parse incoming [`ModalSubmit`] interaction and return the inner data.
-    ///
-    /// This takes a mutable [`Interaction`] since the inner [`ModalInteractionData`]
-    /// is replaced with [`None`] to avoid useless clones.
-    ///
-    /// [`ModalSubmit`]: twilight_model::application::interaction::InteractionType::ModalSubmit
-    /// [`ModalInteractionData`]: twilight_model::application::interaction::modal::ModalInteractionData
-    pub fn parse_modal_data(&self, interaction: &mut Interaction) -> anyhow::Result<ModalInteractionData> {
-        match mem::take(&mut interaction.data) {
-            Some(InteractionData::ModalSubmit(data)) => Ok(data),
-            _ => Err(anyhow!("unable to parse modal data, received unknown data type"))
-        }
     }
 
     /// Add an embed to the response. An error is returned if there are over 10 embeds already.

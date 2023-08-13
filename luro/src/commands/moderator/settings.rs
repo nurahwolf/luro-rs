@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use luro_model::luro_log_channel::LuroLogChannel;
 use tracing::debug;
@@ -33,7 +33,7 @@ pub struct GuildSettingsCommand {
     pub moderator_actions_log_channel: Option<Id<ChannelMarker>>
 }
 
-#[async_trait]
+
 impl LuroCommand for GuildSettingsCommand {
     fn default_permissions() -> Permissions {
         Permissions::MANAGE_GUILD

@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentionable};
@@ -15,7 +15,7 @@ pub struct InfoRole {
     role: ResolvedMentionable
 }
 
-#[async_trait]
+
 impl LuroCommand for InfoRole {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut embed;

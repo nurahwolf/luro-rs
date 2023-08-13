@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use async_trait::async_trait;
+
 use tracing::{debug, trace};
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -27,7 +27,7 @@ pub struct HeckSomeoneCommand {
     pub plaintext: Option<bool>
 }
 
-#[async_trait]
+
 impl LuroCommand for HeckSomeoneCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         // Is the channel the interaction called in NSFW?

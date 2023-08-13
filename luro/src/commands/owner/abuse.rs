@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use anyhow::Context;
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_util::builder::embed::EmbedAuthorBuilder;
@@ -24,7 +24,7 @@ pub struct AbuseCommand {
     embed: Option<bool>
 }
 
-#[async_trait]
+
 impl LuroCommand for AbuseCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let luro_webhook = LuroWebhook::new(ctx.framework.clone()).await?;

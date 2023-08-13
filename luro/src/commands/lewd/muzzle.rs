@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use rand::Rng;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -13,7 +13,7 @@ pub struct MuzzleCommand {
     user: ResolvedUser
 }
 
-#[async_trait]
+
 impl LuroCommand for MuzzleCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         // TODO: Load these from a text file

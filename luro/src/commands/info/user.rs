@@ -1,5 +1,5 @@
 use anyhow::Context;
-use async_trait::async_trait;
+
 use std::{convert::TryInto, fmt::Write, time::Duration};
 
 use luro_model::user_actions_type::UserActionType;
@@ -36,7 +36,7 @@ pub struct InfoUser {
     gdpr_export: Option<bool>
 }
 
-#[async_trait]
+
 impl LuroCommand for InfoUser {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         if let Some(export) = self.gdpr_export && export {

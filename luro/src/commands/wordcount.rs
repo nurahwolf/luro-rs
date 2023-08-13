@@ -1,17 +1,15 @@
 use std::{collections::BTreeMap, convert::TryFrom};
 
 use anyhow::Context;
-use async_trait::async_trait;
 
-use luro_builder::embed::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::UserMarker, Id};
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder};
+
 
 use crate::{
-    interaction::LuroInteraction,
+    interaction::LuroSlash,
     slash::Slash,
-    traits::{luro_command::LuroCommand, luro_functions::LuroFunctions}
+    traits::luro_command::LuroCommand
 };
 use std::{convert::TryInto, fmt::Write, iter::FromIterator};
 
@@ -28,10 +26,9 @@ pub struct WordcountCommand {
     global: Option<bool>
 }
 
-#[async_trait]
 impl LuroCommand for WordcountCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        let ctx = LuroInteraction::new(ctx.framework, ctx.interaction);
+        let ctx = LuroSlash::new(ctx.framework, ctx.interaction);
         let accent_colour = ctx.accent_colour().await;
         let slash_author;
         let mut wordcount: usize = Default::default();

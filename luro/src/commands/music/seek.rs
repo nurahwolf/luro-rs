@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Seek;
@@ -13,7 +13,7 @@ pub struct SeekCommand {
     position: i64
 }
 
-#[async_trait]
+
 impl LuroCommand for SeekCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();

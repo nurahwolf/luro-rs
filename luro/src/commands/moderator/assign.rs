@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
@@ -19,7 +19,7 @@ pub struct AssignCommand {
     user: Option<ResolvedUser>
 }
 
-#[async_trait]
+
 impl LuroCommand for AssignCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let author = ctx.author()?;

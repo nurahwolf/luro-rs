@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -20,7 +20,7 @@ pub enum LewdCommands {
     Muzzle(MuzzleCommand)
 }
 
-#[async_trait]
+
 impl LuroCommand for LewdCommands {
     async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         let interaction_channel = ctx.channel()?;

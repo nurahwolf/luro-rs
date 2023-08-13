@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use anyhow::Error;
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::guild::Permissions;
@@ -21,7 +21,7 @@ pub struct PurgeCommand {
     amount: i64
 }
 
-#[async_trait]
+
 impl LuroCommand for PurgeCommand {
     fn default_permissions() -> Permissions {
         Permissions::MANAGE_MESSAGES

@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -47,7 +47,7 @@ pub struct DiceSimpleCommand {
     divide: Option<i64>
 }
 
-#[async_trait]
+
 impl LuroCommand for DiceSimpleCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut roll = format!("{}d{}", self.dice, self.sides);

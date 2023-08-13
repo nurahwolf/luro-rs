@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -32,7 +32,7 @@ pub enum DiceCommands {
     Simple(DiceSimpleCommand)
 }
 
-#[async_trait]
+
 impl LuroCommand for DiceCommands {
     async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.

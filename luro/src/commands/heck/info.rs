@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -12,7 +12,7 @@ use crate::traits::luro_command::LuroCommand;
 #[command(name = "info", desc = "Information on the current heck database", dm_permission = true)]
 pub struct HeckInfo {}
 
-#[async_trait]
+
 impl LuroCommand for HeckInfo {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::new().title("Heck Information - Global");

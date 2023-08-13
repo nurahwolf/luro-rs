@@ -1,7 +1,7 @@
 use std::fmt::Write;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::EmbedFieldBuilder;
@@ -13,7 +13,7 @@ use crate::traits::luro_command::LuroCommand;
 #[command(name = "ping", desc = "See my ping!")]
 pub struct PingCommand {}
 
-#[async_trait]
+
 impl LuroCommand for PingCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await?.description("🏓 Pinging!");

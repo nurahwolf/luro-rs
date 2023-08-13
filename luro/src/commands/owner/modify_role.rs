@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use serde::Serialize;
 use std::fmt::Write;
 use tracing::info;
@@ -37,7 +37,7 @@ struct Position {
     position: i64
 }
 
-#[async_trait]
+
 impl LuroCommand for ModifyRoleCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let (mut role_selected, mut role_position) = (None, None);

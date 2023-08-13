@@ -1,10 +1,12 @@
+use crate::interaction::LuroSlash;
 use crate::slash::Slash;
-use crate::traits::luro_functions::LuroFunctions;
 use crate::USERDATA_FILE_PATH;
 
+use anyhow::Context;
+use luro_builder::embed::EmbedBuilder;
+use luro_model::luro_log_channel::LuroLogChannel;
 use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
 
-use async_trait::async_trait;
 use std::convert::TryInto;
 use std::fmt::Write;
 
@@ -15,8 +17,8 @@ use twilight_model::channel::message::Component;
 use twilight_model::guild::Permissions;
 use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
-use twilight_util::builder::embed::{EmbedAuthorBuilder, ImageSource};
-use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder};
+use twilight_util::builder::embed::EmbedAuthorBuilder;
+use twilight_util::builder::embed::EmbedFooterBuilder;
 
 use crate::models::SlashUser;
 
@@ -35,7 +37,6 @@ pub struct ModeratorWarnCommand {
     user: ResolvedUser
 }
 
-#[async_trait]
 impl LuroCommand for ModeratorWarnCommand {
     fn default_permissions() -> Permissions {
         Permissions::MANAGE_MESSAGES
@@ -105,9 +106,8 @@ impl LuroCommand for ModeratorWarnCommand {
             .await
     }
 
-    async fn handle_model(data: ModalInteractionData, mut ctx: Slash) -> anyhow::Result<()> {
-        ctx.deferred_component().await?;
-        let author = ctx.author()?;
+    async fn handle_model(self, data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+        let author = ctx.interaction.author().context("Expected to get interaction author")?;
         let warning = ctx.parse_modal_field_required(&data, "mod-warn-text")?;
         let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
@@ -115,22 +115,20 @@ impl LuroCommand for ModeratorWarnCommand {
 
         let slash_author = SlashUser::client_fetch(&ctx.framework, ctx.interaction.guild_id, author.id).await?;
 
-        let mut embed = ctx.framework.default_embed(&ctx.interaction.guild_id).await;
-        let embed_author = EmbedAuthorBuilder::new(format!("Warning by {}", slash_author.name))
-            .icon_url(ImageSource::url(slash_author.avatar)?)
-            .build();
-        embed = embed
-            .author(embed_author)
-            .description(format!("Warning Created for <@{user_id}>\n```{warning}```"));
-
         let mut user_data = ctx.framework.database.get_user(&user_id).await?;
         user_data.warnings.push((warning.to_owned(), author.id));
         ctx.framework.database.modify_user(&user_id, &user_data).await?;
 
-        embed = embed.footer(EmbedFooterBuilder::new(format!(
-            "User has a total of {} warnings.",
-            user_data.warnings.len()
-        )));
+        let mut embed = EmbedBuilder::default();
+        embed
+            .description(format!("Warning Created for <@{user_id}>\n```{warning}```"))
+            .colour(ctx.accent_colour().await)
+            .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
+            .author(|author| {
+                author
+                    .name(format!("Warning by {}", slash_author.name))
+                    .icon_url(slash_author.avatar)
+            });
 
         match ctx.framework.twilight_client.create_private_channel(user_id).await {
             Ok(channel) => {
@@ -139,21 +137,17 @@ impl LuroCommand for ModeratorWarnCommand {
                     .framework
                     .twilight_client
                     .create_message(channel.id)
-                    .embeds(&[embed.clone().build()])
+                    .embeds(&[embed.clone().into()])
                     .await;
                 match victim_dm {
-                    Ok(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline()),
-                    Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
+                    Ok(_) => embed.field(|f| f.field("DM Sent", "Successful", true)),
+                    Err(_) => embed.field(|f| f.field("DM Sent", "Failed", true)),
                 }
             }
-            Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
+            Err(_) => embed.field(|f| f.field("DM Sent", "Failed", true))
         };
 
-        let response = ctx.embed(embed.clone().build())?.respond().await;
-
-        ctx.framework
-            .send_moderator_log_channel(&ctx.interaction.guild_id, embed)
-            .await?;
+        ctx.send_log_channel(LuroLogChannel::Moderator, |r|r.add_embed(embed.clone())).await?;
 
         let mut reward = ctx.framework.database.get_user(&author.id).await?;
         reward.moderation_actions_performed += 1;
@@ -169,6 +163,6 @@ impl LuroCommand for ModeratorWarnCommand {
         });
         ctx.framework.database.modify_user(&user_id, &warned).await?;
 
-        response
+        ctx.respond(|response| response.add_embed(embed)).await
     }
 }

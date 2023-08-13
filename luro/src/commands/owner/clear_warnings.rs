@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
@@ -18,7 +18,7 @@ pub struct OwnerClearWarning {
     pub clear_punishments: Option<bool>
 }
 
-#[async_trait]
+
 impl LuroCommand for OwnerClearWarning {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let mut user_data = ctx.framework.database.get_user(&self.user.resolved.id).await?;

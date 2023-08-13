@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
@@ -11,7 +11,7 @@ pub struct DiceHelpCommand {
     ephemeral: Option<bool>
 }
 
-#[async_trait]
+
 impl LuroCommand for DiceHelpCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let description = "Roll some dice with a brief explanation of the output all on one line, such as `1d20 = [13] = 13`.";

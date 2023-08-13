@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -65,7 +65,7 @@ pub enum OwnerCommands {
     Config(ConfigCommand)
 }
 
-#[async_trait]
+
 impl LuroCommand for OwnerCommands {
     async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
         let interaction_author = ctx.author()?;

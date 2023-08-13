@@ -1,7 +1,6 @@
 use std::convert::TryInto;
 
 use anyhow::Context;
-use async_trait::async_trait;
 
 use luro_model::story::Story;
 use rand::Rng;
@@ -24,6 +23,7 @@ fn format_story_id(input: usize) -> usize {
 fn format_story_id(input: usize) -> String {
     input.to_string()
 }
+use crate::interaction::LuroSlash;
 use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
 use crate::traits::luro_functions::LuroFunctions;
@@ -45,9 +45,8 @@ pub struct StoryCommand {
     add: Option<bool>
 }
 
-#[async_trait]
 impl LuroCommand for StoryCommand {
-    async fn handle_model(data: ModalInteractionData, ctx: Slash) -> anyhow::Result<()> {
+    async fn handle_model(self, data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         let nsfw = ctx.interaction.channel.clone().unwrap().nsfw.unwrap_or(false);
         let id = match nsfw {
             true => ctx.framework.database.nsfw_stories.len() + 1,
@@ -166,7 +165,7 @@ impl LuroCommand for StoryCommand {
         ctx.embed(embed.build())?.components(button).respond().await
     }
 
-    async fn handle_component(_: Box<MessageComponentInteractionData>, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn handle_component(self, _: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
         let embed = EmbedBuilder::new()
             .color(COLOUR_DANGER)
             .title("REDACTED")
@@ -176,7 +175,8 @@ impl LuroCommand for StoryCommand {
             ))
             .build();
 
-        ctx.embed(embed)?.components(vec![]).update().respond().await
+        ctx.respond(|response| response.add_embed(embed).components(|c| c).update())
+            .await
     }
 }
 

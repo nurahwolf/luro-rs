@@ -1,6 +1,8 @@
+use std::mem;
 use std::str::FromStr;
 
 use anyhow::anyhow;
+use anyhow::Context;
 
 use tracing::info;
 use tracing::warn;
@@ -25,10 +27,12 @@ use twilight_model::application::interaction::InteractionData;
 use crate::commands::base64::{Base64Decode, Base64Encode};
 use crate::commands::heck::add::HeckAddCommand;
 use crate::commands::marry::MarryNew;
+use crate::interaction::LuroSlash;
 use crate::models::{Commands, CustomId};
 use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
 use crate::BOT_NAME;
+use crate::COLOUR_DANGER;
 
 mod about;
 mod base64;
@@ -123,54 +127,82 @@ impl Slash {
     }
 
     /// Handle incoming component interaction
+    /// 
+    /// SAFETY: There is an unwrap here, but the type is always present on MessageComponent
+    /// which is the only type this function is called on
     pub async fn handle_component(self) -> anyhow::Result<()> {
-        let data = match self.interaction.data {
-            Some(InteractionData::MessageComponent(ref data)) => data.clone(),
-            _ => return Err(anyhow!("expected message component data"))
+        let ctx = LuroSlash::new(self.framework, self.interaction);
+        let data = ctx.parse_component_data(&mut ctx.interaction.clone())?;
+        let interaction = &ctx.interaction;
+
+        let original_interaction = ctx
+            .framework
+            .database
+            .command_data
+            .get(&interaction.message.as_ref().unwrap().id)
+            .context("Expected to get original interaction")?
+            .clone();
+
+        let command = match original_interaction.data {
+            Some(InteractionData::ApplicationCommand(data)) => *data,
+            _ => return Err(anyhow!("unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}", original_interaction.data))
         };
 
-        info!(
-            "Received component interaction - {} - {}",
-            self.author()?.name,
-            data.custom_id
-        );
+        if let Some(author) = interaction.author() {
+            info!(
+                "Received component interaction - {} - {}",
+                author.name,
+                data.custom_id
+            );
+        }
 
         match &*data.custom_id {
-            "boop" => BoopCommand::handle_component(data, self).await,
-            "decode" => Base64Decode::handle_component(data, self).await,
-            "encode" => Base64Encode::handle_component(data, self).await,
-            "marry" => MarryNew::handle_component(data, self).await,
-            "story" => StoryCommand::handle_component(data, self).await,
-            "heck-setting" => HeckAddCommand::handle_component(data, self).await,
+            "boop" => BoopCommand::new(command).await?.handle_component(data, ctx).await,
+            "decode" | "encode" => Base64Commands::new(command).await?.handle_component(data, ctx).await,
+            "marry-accept" | "marry-deny" => MarryCommands::new(command).await?.handle_component(data, ctx).await,
+            "story" => StoryCommand::new(command).await?.handle_component(data, ctx).await,
+            "heck-setting" => HeckCommands::new(command).await?.handle_component(data, ctx).await,
             name => {
                 warn!(name = name, "received unknown component");
-                self.unknown_command_response().await
+                ctx.unknown_command_response().await
             }
         }
     }
 
     /// Handle incoming modal interaction
     pub async fn handle_modal(self) -> anyhow::Result<()> {
-        let custom_id = match self.interaction.data {
-            Some(InteractionData::ModalSubmit(ref data)) => CustomId::from_str(&data.custom_id)?,
-            _ => return Err(anyhow!("expected modal submit data"))
-        };
-        let data = self.parse_modal_data(&mut self.interaction.clone())?;
+        let ctx = LuroSlash::new(self.framework, self.interaction);
+        let data = ctx.parse_modal_data(&mut ctx.interaction.clone())?;
 
-        match &*custom_id.name {
-            "heck-add" => HeckAddCommand::handle_model(data, self).await,
-            "story-add" => StoryCommand::handle_model(data, self).await,
-            "mod-warn" => ModeratorWarnCommand::handle_model(data, self).await,
+        let original_interaction = ctx
+            .framework
+            .database
+            .modal_interaction_data
+            .get(&data.custom_id)
+            .context("Expected to get original interaction")?
+            .clone();
+
+        let command = match original_interaction.data {
+            Some(InteractionData::ApplicationCommand(data)) => *data,
+            _ => return Err(anyhow!("unable to parse modal data, received unknown data type"))
+        };
+
+        match &*data.custom_id {
+            "heck-add" => HeckAddCommand::new(command).await?.handle_model(data, ctx).await,
+            "story-add" => StoryCommand::new(command).await?.handle_model(data, ctx).await,
+            "mod-warn" => ModeratorWarnCommand::new(command).await?.handle_model(data, ctx).await,
             name => {
                 warn!(name = name, "received unknown component");
 
                 // TODO: Make this a response type.
-                let embed = self
-                    .default_embed()
-                    .await?
-                    .title("IT'S FUCKED")
-                    .description("Will finish this at some point");
-                self.embeds(vec![embed.build()])?.respond().await
+                ctx.respond(|r| {
+                    r.embed(|e| {
+                        e.colour(COLOUR_DANGER)
+                            .title("IT'S FUCKED")
+                            .description("Thanks for firing off this modal! Unfortuantely, my creator forgot to finish it...")
+                    })
+                })
+                .await
             }
         }
     }

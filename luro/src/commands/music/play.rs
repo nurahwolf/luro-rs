@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 use hyper::{Body, Request};
 
 use tracing::info;
@@ -22,7 +22,7 @@ pub struct PlayCommand {
     song: String
 }
 
-#[async_trait]
+
 impl LuroCommand for PlayCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();

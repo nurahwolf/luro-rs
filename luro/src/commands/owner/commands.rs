@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::GenericMarker, Id};
@@ -15,7 +15,7 @@ pub struct OwnerCommandsCommand {
     guild: Id<GenericMarker>
 }
 
-#[async_trait]
+
 impl LuroCommand for OwnerCommandsCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let application = ctx

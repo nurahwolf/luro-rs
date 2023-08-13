@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use luro_builder::response::LuroResponse;
 use luro_database::TomlDatabaseDriver;
 use twilight_gateway::{Latency, MessageSender};
 use twilight_model::{
@@ -13,6 +12,7 @@ use crate::framework::Framework;
 
 /// Some nice stuff about formatting a response, ready to send via twilight's client
 #[derive(Clone, Debug)]
+#[deprecated]
 pub struct Slash {
     // /// Luro's context, used for utility such as setting the embed accent colour and for sending our response near the end.
     pub framework: Arc<Framework<TomlDatabaseDriver>>,

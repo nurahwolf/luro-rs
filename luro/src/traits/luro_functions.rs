@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use async_trait::async_trait;
+
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{
     application::interaction::{modal::ModalInteractionData, Interaction},
@@ -9,7 +9,7 @@ use twilight_model::{
 use crate::models::SlashUser;
 
 /// A simple trait that implements a bunch of handy features in one place, such as getting a user's avatar. This can be included on other models to make getting date easier.
-#[async_trait]
+
 pub trait LuroFunctions {
     /// Parse a field from [`ModalInteractionData`].
     ///

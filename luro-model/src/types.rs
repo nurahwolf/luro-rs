@@ -27,5 +27,7 @@ pub type GuildData = DashMap<Id<GuildMarker>, GuildSetting>;
 /// A [DashMap] containing user specific settings ([LuroUser]), keyed by [UserMarker].
 pub type LuroUserData = DashMap<Id<UserMarker>, LuroUser>;
 
-/// A [DashMap] containing an [Interaction], keyed by [MessageMarker]. This is primarily used for recalling interactions in the future
-pub type CommandManager = DashMap<Id<MessageMarker>, Interaction>;
+/// A [DashMap] containing an [Interaction], keyed by a generic marker. This is primarily used for recalling interactions in the future
+pub type CommandManager<T> = DashMap<T, Interaction>;
+pub type MessageInteractionManager = CommandManager<Id<MessageMarker>>;
+pub type ModalInteractionManager = CommandManager<String>;

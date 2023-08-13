@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Volume;
@@ -14,7 +14,7 @@ pub struct VolumeCommand {
     volume: i64
 }
 
-#[async_trait]
+
 impl LuroCommand for VolumeCommand {
     async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
