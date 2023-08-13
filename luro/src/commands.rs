@@ -44,11 +44,11 @@ mod marry;
 mod moderator;
 mod music;
 mod owner;
+mod ping;
 mod say;
 mod story;
 mod uwu;
 mod wordcount;
-mod ping;
 // pub mod fursona;
 
 impl Commands {

@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use luro_database::TomlDatabaseDriver;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
 use tracing::{debug, error, warn};
-use twilight_gateway::{MessageSender, Latency};
+use twilight_gateway::{Latency, MessageSender};
 use twilight_http::{client::InteractionClient, Response};
 
 use twilight_model::{

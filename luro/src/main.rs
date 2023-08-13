@@ -15,12 +15,13 @@ use tracing_subscriber::{
     util::SubscriberInitExt,
     Registry
 };
-use twilight_gateway::{stream::ShardEventStream, Intents, error::ReceiveMessageErrorType};
+use twilight_gateway::{error::ReceiveMessageErrorType, stream::ShardEventStream, Intents};
 
 pub mod commands;
 pub mod event_handler;
 pub mod framework;
 pub mod functions;
+pub mod interaction;
 pub mod models;
 pub mod responses;
 pub mod slash;
@@ -128,7 +129,7 @@ async fn main() -> anyhow::Result<()> {
                         tracing::warn!("Failed to deserialise an object. Check DEBUG for the raw output");
                         tracing::debug!(?event, "error while deserialising event");
                         continue;
-                    },
+                    }
                     _ => {
                         tracing::warn!(?error, "error while receiving event");
                         continue;

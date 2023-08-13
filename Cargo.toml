@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "luro",
+    "luro-builder",
     "luro-database",
     "luro-model",
     "twilight-interactions",

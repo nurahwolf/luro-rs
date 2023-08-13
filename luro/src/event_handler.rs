@@ -3,7 +3,7 @@ use std::sync::Arc;
 use luro_database::TomlDatabaseDriver;
 
 use tracing::error;
-use twilight_gateway::{Event, MessageSender, Latency};
+use twilight_gateway::{Event, Latency, MessageSender};
 
 mod audit_log_handler;
 mod ban_add;
@@ -45,7 +45,9 @@ impl Framework<TomlDatabaseDriver> {
             Event::Ready(ready) => self.ready_listener(ready, shard).await,
             Event::MessageCreate(message) => self.message_create_listener(*message).await,
             Event::InteractionCreate(interaction) => {
-                Slash::new::<TomlDatabaseDriver>(self, interaction.0, shard, latency).handle().await
+                Slash::new::<TomlDatabaseDriver>(self, interaction.0, shard, latency)
+                    .handle()
+                    .await
             }
             Event::GuildAuditLogEntryCreate(entry) => self.audit_log_handler(entry).await,
             Event::BanAdd(ban) => self.ban_add_listener(ban).await,

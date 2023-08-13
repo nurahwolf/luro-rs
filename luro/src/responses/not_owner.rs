@@ -20,7 +20,7 @@ impl Slash {
         {
             let mut user_data = self.framework.database.get_user(user_id).await?;
             user_data.moderation_actions.push(UserActions {
-                action_type: vec![UserActionType::Kick],
+                action_type: vec![UserActionType::PrivilegeEscalation],
                 guild_id: *guild_id,
                 reason: format!("Attempted to run the {} command", &command),
                 responsible_user: *user_id

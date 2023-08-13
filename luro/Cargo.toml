@@ -12,8 +12,9 @@ version.workspace = true
 
 [dependencies]
 # Luro Specific
-luro-model = { path = "../luro-model"}
+luro-model = { path = "../luro-model" }
 luro-database = { path = "../luro-database" }
+luro-builder = { path = "../luro-builder" }
 
 
 # Core
