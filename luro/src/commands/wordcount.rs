@@ -2,13 +2,14 @@ use std::{collections::BTreeMap, convert::TryFrom};
 
 use anyhow::Context;
 
+use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::interaction::InteractionResponseType,
     id::{marker::UserMarker, Id}
 };
 
-use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand};
+use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand, functions::padding_calculator};
 use std::{convert::TryInto, fmt::Write, iter::FromIterator};
 
 #[derive(CommandModel, CreateCommand)]
@@ -36,7 +37,6 @@ impl LuroCommand for WordcountCommand {
         let mut wordsize: BTreeMap<usize, usize> = Default::default();
         let mut words: BTreeMap<String, usize> = Default::default();
         let mut content = String::new();
-        let mut digits = 0;
         let global = self.global.unwrap_or(false);
         // How many items we should get
         let limit = match self.limit {
@@ -113,68 +113,75 @@ impl LuroCommand for WordcountCommand {
                                 e.description(content)
                                     .colour(accent_colour)
                                     .author(|author| author.name(slash_author.name).icon_url(slash_author.avatar))
-                            })
+                            }).response_type(response)
                         })
                         .await;
                 }
                 None => {
                     content = format!("The word `{word}` has never been said, as far as I can see!");
-                    return ctx.respond(|r| r.content(content)).await;
+                    return ctx.respond(|r| r.content(content).response_type(response)
+                ).await;
                 }
             }
         };
 
         // Word size field
-        let mut count_size = 0;
         let mut word_size = String::new();
-        for (size, count) in wordsize.iter().take(limit) {
-            if let (Ok(size), Ok(count)) = (
-                usize::try_from(size.checked_ilog10().unwrap_or(0) + 1),
-                usize::try_from(count.checked_ilog10().unwrap_or(0) + 1)
-            ) {
-                if word_size.len() > 1000 {
-                    break;
-                }
+        let mut number_lengths = vec![];
+        let mut common_word_length = Vec::from_iter(wordsize);
+        common_word_length.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
+        common_word_length.truncate(limit);
+        // First loop is for calculating total length
+        for (length, total) in &common_word_length {
+            // Convert to base 10
+            let total = match usize::try_from(total.checked_ilog10().unwrap_or(1)) {
+                Ok(total) => total + 1,
+                Err(_) => continue,
+            };
 
-                if digits < count {
-                    digits = count
-                }
-                if count_size < size {
-                    count_size = size
-                }
-            }
-            writeln!(
-                word_size,
-                "`{:^2$}` words with `{:^3$}` characters",
-                count, size, digits, count_size
-            )?;
+            let length = match usize::try_from(length.checked_ilog10().unwrap_or(1)) {
+                Ok(length) => length + 1,
+                Err(_) => continue,
+            };
+
+            number_lengths.push((total, length))
         }
-        word_size.truncate(1024);
+
+        let padding = padding_calculator(number_lengths.clone());
+        // Now loop through again, using our calculated padding
+        for (length, total) in &common_word_length {
+            let total_padding = padding.0;
+            let length_padding = padding.1;
+
+            info!("{total} needs {total_padding} padding - {length} needs {length_padding} padding");
+            writeln!(word_size, "- `{total:^total_padding$}` words with `{length:^length_padding$}` characters")?;
+        }
+        info!("{:?}", word_size);
 
         // Most used words field
         let mut most_used = String::new();
         let mut most_used_words = Vec::from_iter(words);
         most_used_words.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
         most_used_words.truncate(limit);
-        digits = 0;
-        let mut word_length = 1;
-        for (word, count) in most_used_words {
-            if most_used.len() > 1000 {
-                break;
-            }
 
-            if let Ok(length) = usize::try_from(count.checked_ilog10().unwrap_or(0) + 1) {
-                if digits < length {
-                    digits = length
-                }
-            }
-
-            if word_length < word.len() {
-                word_length = word.len()
-            }
-            writeln!(most_used, "`{:^3$}` said `{:^2$}` times", word, count, digits, word_length)?;
+        let mut number_lengths = vec![];
+        // First loop is for calculating total length
+        for (word, count) in &most_used_words {
+            // Convert to base 10
+            let count = match usize::try_from(count.checked_ilog10().unwrap_or(1)) {
+                Ok(total) => total,
+                Err(_) => continue,
+            };
+            number_lengths.push((word.len(), count))
         }
-        most_used.truncate(1024);
+
+        let padding = padding_calculator(number_lengths.clone());
+        for (word, count) in &most_used_words {
+            let word_padding = padding.0;
+            let count_padding = padding.1;
+
+            writeln!(most_used, "- `{word:^word_padding$}` words with `{count:^count_padding$}` characters")?;
+        }
 
         ctx.respond(|r| {
             r.embed(|embed| {

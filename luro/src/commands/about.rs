@@ -6,8 +6,8 @@ use luro_builder::embed::EmbedBuilder;
 use luro_model::constants::PRIMARY_BOT_OWNER;
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::http::interaction::InteractionResponseType;
 
+use crate::functions::padding_calculator;
 use crate::interaction::LuroSlash;
 use crate::models::SlashUser;
 
@@ -19,63 +19,101 @@ pub struct AboutCommand {
     /// Show memory stats
     memory: Option<bool>,
     /// Show cache stats,
-    cache: Option<bool>
+    cache: Option<bool>,
+    /// Show as the user's username instead of ID,
+    show_username: Option<bool>
 }
 
 impl LuroCommand for AboutCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let response = InteractionResponseType::DeferredChannelMessageWithSource;
-        ctx.acknowledge_interaction(false).await?;
-
         // Variables
-        let mut embed = EmbedBuilder::default();
-        embed.colour(ctx.accent_colour().await);
-        let mut description = String::new();
-        let mut framework_owners_list = String::new();
-        let current_user = ctx.framework.twilight_client.current_user().await?.model().await?;
-        let slash_author = SlashUser::from(current_user);
-        let version = env!("CARGO_PKG_VERSION").to_string();
-
+        let mut description =
+            "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n"
+                .to_owned();
         let staff = ctx.framework.database.get_staff().await?;
-        for staff in staff.iter() {
-            if framework_owners_list.is_empty() {
-                write!(
-                    framework_owners_list,
-                    "`{}` - <@{}>",
-                    staff.name.clone().unwrap_or("unknown".to_owned()),
-                    staff.id.unwrap_or(PRIMARY_BOT_OWNER)
-                )?;
-                continue;
-            }
+        let current_user = ctx.framework.twilight_client.current_user().await?.model().await?;
+        let mut embed = EmbedBuilder::default();
+        let slash_author = SlashUser::from(current_user);
 
-            write!(
-                framework_owners_list,
-                ", `{}` - <@{}>",
-                staff.name.clone().unwrap_or("unknown".to_owned()),
-                staff.id.unwrap_or(PRIMARY_BOT_OWNER)
-            )?;
-        }
-        writeln!(
-            description,
-            "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist."
-        )?;
-        writeln!(description, "**\nVersion:** `{}`", version)?;
-
-        // If we are git
-        if let Ok(repo) = Repository::open(Path::new(env!("CARGO_MANIFEST_DIR")).join("..")) {
-            let branch = get_current_branch(&repo);
-            let revision = get_head_revision(&repo);
-
-            writeln!(description, "**Branch:** `{}`", branch)?;
-            writeln!(description, "**Revision:** `{}`", revision)?;
-        }
-
+        // Configuration
+        embed.colour(ctx.accent_colour().await);
         embed.title(&slash_author.name);
         embed.thumbnail(|thumbnail| thumbnail.url(slash_author.avatar));
         embed.footer(|footer| footer.text("Written in twilight.rs!"));
-        // if let Some(git_url) = &ctx.data().config.read().await.git_url {
-        //     embed.url(git_url);
-        // }
+
+        // Build our line processor for calculating padding
+        let mut description_builder = vec![];
+        description_builder.push(("- Version:", format!("`{}`", env!("CARGO_PKG_VERSION").to_string())));
+        if let Ok(repo) = Repository::open(Path::new(env!("CARGO_MANIFEST_DIR")).join("..")) {
+            description_builder.push(("- Branch:", format!("`{}`", get_current_branch(&repo))));
+            description_builder.push(("- Revision:", format!("`{}`", get_head_revision(&repo))));
+        }
+        let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
+        let (_, suffix_len, total_len) = padding_calculator(word_sizes);
+        for (prefix, suffix) in description_builder {
+            let caculated_padding = (total_len - prefix.len()) + suffix_len + 1;
+            writeln!(description, "{prefix}{suffix:>caculated_padding$}")?;
+        }
+        embed.description(description);
+
+        if self.cache.unwrap_or_default() {
+            let mut cache = String::new();
+            let mut description_builder = vec![];
+            let stats = ctx.framework.twilight_cache.stats();
+            writeln!(cache, "```")?;
+
+            if stats.guilds() != 0 {
+                description_builder.push(("- Guilds:", stats.guilds().to_string()));
+            }
+            if stats.channels() != 0 {
+                description_builder.push(("- Channels:", stats.channels().to_string()));
+            }
+            if stats.emojis() != 0 {
+                description_builder.push(("- Emojis:", stats.emojis().to_string()));
+            }
+            if stats.members() != 0 {
+                description_builder.push(("- Members:", stats.members().to_string()));
+            }
+            if stats.presences() != 0 {
+                description_builder.push(("- Presences:", stats.presences().to_string()));
+            }
+            if stats.roles() != 0 {
+                description_builder.push(("- Roles:", stats.roles().to_string()));
+            }
+            if stats.unavailable_guilds() != 0 {
+                description_builder.push(("- Unavailable Guilds:", stats.unavailable_guilds().to_string()));
+            }
+            if stats.guilds() != 0 {
+                description_builder.push(("- Users:", stats.users().to_string()));
+            }
+            if stats.voice_states() != 0 {
+                description_builder.push(("- Voice States:", stats.voice_states().to_string()));
+            }
+
+            let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
+            let (_, suffix_len, total_len) = padding_calculator(word_sizes);
+            for (prefix, suffix) in description_builder {
+                let caculated_padding = (total_len - prefix.len()) + suffix_len + 1;
+                writeln!(cache, "{prefix}{suffix:>caculated_padding$}")?;
+            }
+            writeln!(cache, "```")?;
+            embed.field(|field| field.field("Cache Stats", &cache, false));
+        }
+
+        if self.memory.unwrap_or_default() && let Some(usage) = memory_stats() {
+            let mut memory =  String::new();
+            let mut description_builder = vec![];
+            description_builder.push(("- Physical memory usage:", format!("`{} MB`", usage.physical_mem / 1024 / 1024)));
+            description_builder.push(("- Virtual memory usage:", format!("`{} MB`", usage.virtual_mem / 1024 / 1024)));
+            let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
+            let (_, suffix_len, total_len) = padding_calculator(word_sizes);
+            for (prefix, suffix) in description_builder {
+                let caculated_padding = (total_len - prefix.len()) + suffix_len + 1;
+                writeln!(memory, "{prefix}{suffix:>caculated_padding$}")?;
+            }
+            embed.field(|field|field.field("Memory Stats", &memory, true));
+        }
+
         if let Some(application_owner) = &ctx
             .framework
             .twilight_client
@@ -85,75 +123,24 @@ impl LuroCommand for AboutCommand {
             .await?
             .owner
         {
-            writeln!(
-                description,
-                "**Primary Owner:** `{}` - <@{}>",
-                application_owner.name, application_owner.id
-            )?;
-        };
-
-        if !framework_owners_list.is_empty() {
-            writeln!(description, "**Administrators:** {}", framework_owners_list)?;
-        }
-        writeln!(description, "")?;
-
-        if let Some(memory) = self.memory && memory {
-            let mut memory_description = String::new();
-            if let Some(usage) = memory_stats() {
-                writeln!(
-                    memory_description,
-                    "**Physical memory usage:** `{} MB`",
-                    usage.physical_mem / 1024 / 1024
-                )?;
-                writeln!(
-                    memory_description,
-                    "**Virtual memory usage:** `{} MB`",
-                    usage.virtual_mem / 1024 / 1024
-                )?;
-            };
-            embed.field(|field|field.field("Memory Stats", &memory_description, true));
+            embed.field(|field| {
+                match self.show_username.unwrap_or_default() {
+                    true => field.field("My Creator!", &format!("- {}", application_owner.name), true),
+                    false => field.field("My Creator!", &format!("- <@{}>", application_owner.id), true),
+                }
+            });
         }
 
-        if let Some(cache_stats) = self.cache && cache_stats {
-            let mut cache_stats = String::new();
-            let stats = ctx.framework.twilight_cache.stats();
-            if stats.guilds() != 0 {
-                writeln!(cache_stats, "**Guilds:** `{}`", stats.guilds())?;
+        let mut staff_list = String::new();
+        for staff in staff.iter() {
+            match self.show_username.unwrap_or_default() {
+                true => writeln!(staff_list, "- {}", &staff.name.clone().unwrap_or("unknown".to_owned()))?,
+                false => writeln!(staff_list, "- <@{}>", staff.id.unwrap_or(PRIMARY_BOT_OWNER))?,
             }
-            if stats.channels() != 0 {
-                writeln!(cache_stats, "**Channels:** `{}`", stats.channels())?;
-            }
-            if stats.emojis() != 0 {
-                writeln!(cache_stats, "**Emojis:** `{}`", stats.emojis())?;
-            }
-            if stats.members() != 0 {
-                writeln!(cache_stats, "**Members:** `{}`", stats.members())?;
-            }
-            if stats.presences() != 0 {
-                writeln!(cache_stats, "**Presences:** `{}`", stats.presences())?;
-            }
-            if stats.roles() != 0 {
-                writeln!(cache_stats, "**Roles:** `{}`", stats.roles())?;
-            }
-            if stats.unavailable_guilds() != 0 {
-                writeln!(
-                    cache_stats,
-                    "**Unavailable Guilds:** `{}`",
-                    stats.unavailable_guilds()
-                )?;
-            }
-            if stats.guilds() != 0 {
-                writeln!(cache_stats, "**Users:** `{}`", stats.users())?;
-            }
-            if stats.voice_states() != 0 {
-                writeln!(cache_stats, "**Voice States:** `{}`", stats.voice_states())?;
-            }
-            embed.field(|field|field.field("Cache Stats", &cache_stats, true));
         }
+        embed.field(|field| field.field("Those with 'Administrator' access!", &staff_list, false));
 
-        embed.description(description);
-
-        ctx.respond(|r| r.add_embed(embed).response_type(response)).await
+        ctx.respond(|r| r.add_embed(embed)).await
     }
 }
 
