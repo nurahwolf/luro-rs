@@ -19,7 +19,7 @@ mod thread_member_update;
 mod thread_members_update;
 mod thread_update;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use super::Framework;
 
@@ -44,11 +44,7 @@ impl Framework<TomlDatabaseDriver> {
         let callback = match event {
             Event::Ready(ready) => self.ready_listener(ready, shard).await,
             Event::MessageCreate(message) => self.message_create_listener(*message).await,
-            Event::InteractionCreate(interaction) => {
-                Slash::new::<TomlDatabaseDriver>(self, interaction.0, shard, latency)
-                    .handle()
-                    .await
-            }
+            Event::InteractionCreate(interaction) => LuroSlash::new(self, interaction.0, shard, latency).handle().await,
             Event::GuildAuditLogEntryCreate(entry) => self.audit_log_handler(entry).await,
             Event::BanAdd(ban) => self.ban_add_listener(ban).await,
             Event::ThreadCreate(event) => self.listener_thread_create(event).await,

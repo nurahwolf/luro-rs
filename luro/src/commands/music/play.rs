@@ -1,4 +1,3 @@
-
 use hyper::{Body, Request};
 
 use tracing::info;
@@ -8,7 +7,7 @@ use twilight_lavalink::{
     model::Play
 };
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -22,9 +21,8 @@ pub struct PlayCommand {
     song: String
 }
 
-
 impl LuroCommand for PlayCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
         let player = ctx.framework.lavalink.player(guild_id).await.unwrap();
@@ -64,6 +62,6 @@ impl LuroCommand for PlayCommand {
             content = "Didn't find any results".to_owned();
         }
 
-        ctx.content(content).respond().await
+        ctx.respond(|r| r.content(content)).await
     }
 }

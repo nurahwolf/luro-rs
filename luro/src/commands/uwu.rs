@@ -1,9 +1,7 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use uwuifier::uwuify_str_sse;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
@@ -13,16 +11,15 @@ pub struct UwUCommand {
     message: String
 }
 
-
 impl LuroCommand for UwUCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let uwu = if cfg!(target_feature = "sse4.1") {
             unsafe { sse_uwu(&self.message) }
         } else {
             arm_uwu()
         };
 
-        ctx.content(uwu).respond().await
+        ctx.respond(|r| r.content(uwu)).await
     }
 }
 

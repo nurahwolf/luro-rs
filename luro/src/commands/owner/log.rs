@@ -1,9 +1,8 @@
-
 use tracing_subscriber::filter;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -29,9 +28,8 @@ pub enum LogLevel {
     Off
 }
 
-
 impl LuroCommand for LogCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let (_, level) = match self.level {
             LogLevel::Trace => (
                 ctx.framework
@@ -71,8 +69,7 @@ impl LuroCommand for LogCommand {
             )
         };
 
-        ctx.content(format!("Luro's log level is now set to {}!", level))
-            .respond()
+        ctx.respond(|r| r.content(format!("Luro's log level is now set to {}!", level)).ephemeral())
             .await
     }
 }

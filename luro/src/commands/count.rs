@@ -1,17 +1,14 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "count", desc = "Test to see if the framework is globally mutable")]
 pub struct CountCommand {}
 
-
 impl LuroCommand for CountCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let content;
 
         {
@@ -24,6 +21,6 @@ impl LuroCommand for CountCommand {
             };
         }
 
-        ctx.content(content).respond().await
+        ctx.respond(|r| r.content(content)).await
     }
 }

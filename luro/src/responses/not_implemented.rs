@@ -4,14 +4,6 @@ use tracing::error;
 use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
-use crate::slash::Slash;
-
-impl Slash {
-    /// A response returned by default when a command does not exist within Luro.
-    pub async fn not_implemented_response(mut self) -> anyhow::Result<()> {
-        self.embed(not_implemented_embed().into())?.ephemeral().respond().await
-    }
-}
 
 impl LuroSlash {
     /// A response returned by default when a command does not exist within Luro.

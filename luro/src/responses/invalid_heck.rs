@@ -4,26 +4,6 @@ use tracing::warn;
 use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
-use crate::slash::Slash;
-
-impl Slash {
-    pub async fn invalid_heck_response(
-        mut self,
-        missing_user: bool,
-        missing_author: bool,
-        heck_message: &str
-    ) -> anyhow::Result<()> {
-        let mut embed = invalid_heck_embed(heck_message);
-
-        if missing_user {
-            embed.field(|field| field.field("Missing Value", "`<user>`", true));
-        };
-        if missing_author {
-            embed.field(|field| field.field("Missing Value", "`<author>`", true));
-        };
-        self.embed(embed.into())?.respond().await
-    }
-}
 
 impl LuroSlash {
     pub async fn invalid_heck_response(

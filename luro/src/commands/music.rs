@@ -1,5 +1,3 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use self::info::InfoCommand;
@@ -9,7 +7,7 @@ use self::stop::StopCommand;
 use self::volume::VolumeCommand;
 use self::{join::JoinCommand, leave::LeaveCommand, play::PlayCommand};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 mod info;
@@ -42,9 +40,8 @@ pub enum MusicCommands {
     Info(InfoCommand)
 }
 
-
 impl LuroCommand for MusicCommands {
-    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Play(command) => command.run_command(ctx).await,

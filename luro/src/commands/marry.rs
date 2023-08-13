@@ -1,28 +1,22 @@
-use crate::commands::anyhow;
 use crate::interaction::LuroSlash;
-use std::convert::TryInto;
+
 use std::fmt::Write;
-use std::mem;
 use std::time::SystemTime;
 
 use anyhow::Context;
 
+use luro_builder::embed::EmbedBuilder;
 use luro_model::user_marriages::UserMarriages;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
-use twilight_model::application::interaction::InteractionData;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
 
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder};
-
 use crate::models::SlashUser;
 
-use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
-use crate::traits::luro_functions::LuroFunctions;
 
 /// An array of reasons someone would like to marry.
 /// TODO: Load this from disk once it's big enough
@@ -41,7 +35,7 @@ pub enum MarryCommands {
 }
 
 impl LuroCommand for MarryCommands {
-    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::New(command) => command.run_command(ctx).await,
@@ -54,20 +48,6 @@ impl LuroCommand for MarryCommands {
             Self::New(command) => (command.marry, command.reason),
             Self::Marriages(_) => return ctx.unknown_command_response().await
         };
-
-        if &data.custom_id == "marry-deny" {
-            return ctx
-                .respond(|response| {
-                    response
-                        .content(format!(
-                            "It looks like <@{}> will never know what true love is like...",
-                            &marry.resolved.id
-                        ))
-                        .update()
-                        .components(|c| c)
-                })
-                .await;
-        }
 
         let interaction_author = ctx
             .interaction
@@ -85,6 +65,20 @@ impl LuroCommand for MarryCommands {
                 .await
             }
             true => {
+                if &data.custom_id == "marry-deny" {
+                    return ctx
+                        .respond(|response| {
+                            response
+                                .content(format!(
+                                    "It looks like <@{}> will never know what true love is like...",
+                                    &marry.resolved.id
+                                ))
+                                .update()
+                                .components(|c| c)
+                        })
+                        .await;
+                }
+
                 // Modify the proposer
                 {
                     let mut user_data = ctx.framework.database.get_user(&interaction_author).await?;
@@ -134,13 +128,18 @@ pub struct MarryMarriages {
 }
 
 impl LuroCommand for MarryMarriages {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let mut content = String::new();
         let (_, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
         let user_data = ctx.framework.database.get_user(&slash_author.user_id).await?;
-        let embed_author =
-            EmbedAuthorBuilder::new(format!("{}'s marriages", slash_author.name)).icon_url(slash_author.try_into()?);
-        let mut embed = ctx.default_embed().await?.author(embed_author);
+        let mut embed = EmbedBuilder::default();
+        embed
+            .author(|author| {
+                author
+                    .name(format!("{}'s marriages", slash_author.name))
+                    .icon_url(slash_author.avatar)
+            })
+            .colour(ctx.accent_colour().await);
 
         for (_, marriage) in user_data.marriages.iter() {
             match ctx.framework.twilight_cache.user(marriage.user) {
@@ -153,11 +152,11 @@ impl LuroCommand for MarryMarriages {
             }
         }
         match content.is_empty() {
-            true => embed = embed.description("Looks like they have no marriages yet :("),
-            false => embed = embed.description(content)
-        }
+            true => embed.description("Looks like they have no marriages yet :("),
+            false => embed.description(content)
+        };
 
-        ctx.embed(embed.build())?.respond().await
+        ctx.respond(|r| r.add_embed(embed)).await
     }
 }
 
@@ -171,7 +170,7 @@ pub struct MarryNew {
 }
 
 impl LuroCommand for MarryNew {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let slash_author = SlashUser::client_fetch(
             &ctx.framework,
             ctx.interaction.guild_id,
@@ -180,9 +179,14 @@ impl LuroCommand for MarryNew {
                 .context("Expected to find user who invoked command")?
         )
         .await?;
-        let embed_author =
-            EmbedAuthorBuilder::new(format!("{} has proposed!", &slash_author.name)).icon_url(slash_author.clone().try_into()?);
-        let mut embed = ctx.default_embed().await?.author(embed_author);
+        let mut embed = EmbedBuilder::default();
+        embed
+            .author(|author| {
+                author
+                    .name(format!("{} has marriproposed!", slash_author.name))
+                    .icon_url(slash_author.avatar)
+            })
+            .colour(ctx.accent_colour().await);
 
         {
             let mut rng = thread_rng();
@@ -191,27 +195,16 @@ impl LuroCommand for MarryNew {
                 .context("Expected to be able to choose a random reason")?
                 .replace("<user>", &format!("<@{}>", &self.marry.resolved.id))
                 .replace("<author>", &format!("<@{}>", &slash_author.user_id));
-            embed = embed.description(reason);
+            embed.description(reason);
         }
 
-        embed = embed.field(EmbedFieldBuilder::new("Their Reason", self.reason.clone()));
-        ctx.components(buttons());
-
-        ctx.embed(embed.build())?
-            .content(format!("<@{}>", self.marry.resolved.id.clone()))
-            .respond()
-            .await?;
-
-        let response = ctx
-            .interaction_client()
-            .response(&ctx.interaction.token)
-            .await?
-            .model()
-            .await?;
-
-        ctx.framework.database.command_data.insert(response.id, ctx.interaction);
-
-        Ok(())
+        embed.field(|f| f.field("Their Reason", &self.reason, true));
+        ctx.respond(|r| {
+            r.add_embed(embed)
+                .content(format!("<@{}>", &self.marry.resolved.id))
+                .add_components(buttons())
+        })
+        .await
     }
 }
 

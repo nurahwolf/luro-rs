@@ -1,6 +1,4 @@
-
-
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::traits::luro_command::LuroCommand;
@@ -12,9 +10,8 @@ pub enum LuroCommands {
     Nickname(LuroNicknameCommand)
 }
 
-
 impl LuroCommand for LuroCommands {
-    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Nickname(command) => command.run_command(ctx).await
@@ -29,9 +26,8 @@ pub struct LuroNicknameCommand {
     name: Option<String>
 }
 
-
 impl LuroCommand for LuroNicknameCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await
@@ -42,6 +38,6 @@ impl LuroCommand for LuroNicknameCommand {
             .update_current_member(guild_id)
             .nick(self.name.as_deref())
             .await?;
-        ctx.content("Done!").ephemeral().respond().await
+        ctx.respond(|r| r.content("Done!!").ephemeral()).await
     }
 }

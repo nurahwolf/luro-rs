@@ -2,11 +2,10 @@ use std::convert::TryInto;
 
 use anyhow::Error;
 
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::guild::Permissions;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -21,14 +20,13 @@ pub struct PurgeCommand {
     amount: i64
 }
 
-
 impl LuroCommand for PurgeCommand {
     fn default_permissions() -> Permissions {
         Permissions::MANAGE_MESSAGES
     }
 
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        let channel = ctx.channel()?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let channel = ctx.interaction.channel.as_ref().unwrap();
 
         if self.amount == 1 {
             let message = ctx
@@ -59,6 +57,6 @@ impl LuroCommand for PurgeCommand {
                 .await?;
         }
 
-        ctx.content("Done!!".to_owned()).ephemeral().respond().await
+        ctx.respond(|r| r.content("Done!!").ephemeral()).await
     }
 }

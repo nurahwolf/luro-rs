@@ -1,6 +1,6 @@
 use twilight_model::channel::message::{component::ActionRow, Component};
 
-use super::{ComponentBuilder, button::ButtonBuilder};
+use super::{button::ButtonBuilder, ComponentBuilder};
 
 pub struct ActionRowBuilder(ActionRow);
 
@@ -30,7 +30,9 @@ impl ActionRowBuilder {
 
 impl Default for ActionRowBuilder {
     fn default() -> Self {
-        Self(ActionRow { components: Default::default() })
+        Self(ActionRow {
+            components: Default::default()
+        })
     }
 }
 

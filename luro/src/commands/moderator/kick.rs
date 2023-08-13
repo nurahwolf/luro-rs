@@ -1,11 +1,9 @@
 use luro_model::{luro_log_channel::LuroLogChannel, user_actions::UserActions, user_actions_type::UserActionType};
 
-use crate::slash::Slash;
-
-
+use crate::interaction::LuroSlash;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::guild::Permissions;
+use twilight_model::{guild::Permissions, http::interaction::InteractionResponseType};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{models::GuildPermissions, traits::luro_command::LuroCommand};
@@ -28,10 +26,10 @@ pub struct KickCommand {
     pub details: Option<String>
 }
 
-
 impl LuroCommand for KickCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        ctx.deferred().await?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let response = InteractionResponseType::DeferredChannelMessageWithSource;
+        ctx.respond(|r| r.response_type(response)).await?;
 
         let mut reason = match self.reason {
             Reason::ArtScam => "[Art Scam]".to_owned(),
@@ -47,7 +45,13 @@ impl LuroCommand for KickCommand {
         }
 
         if reason.is_empty() {
-            return ctx.content("You need to specify a reason, dork!").ephemeral().respond().await;
+            return ctx
+                .respond(|r| {
+                    r.content("You need to specify a reason, dork!")
+                        .ephemeral()
+                        .response_type(response)
+                })
+                .await;
         }
 
         let user_to_remove = self.user.resolved;
@@ -150,7 +154,6 @@ impl LuroCommand for KickCommand {
             responsible_user: author_user.id
         });
         ctx.framework.database.modify_user(&user_to_remove.id, &warned).await?;
-
-        ctx.embed(embed.build())?.respond().await
+        ctx.respond(|r| r.add_embed(embed.build()).response_type(response)).await
     }
 }

@@ -1,22 +1,22 @@
 use anyhow::Context;
+use luro_builder::response::LuroResponse;
 
 use std::{convert::TryInto, fmt::Write, time::Duration};
 
 use luro_model::user_actions_type::UserActionType;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
-    http::attachment::Attachment,
+    http::{attachment::Attachment, interaction::InteractionResponseType},
     id::{marker::GenericMarker, Id}
 };
 use twilight_util::{
-    builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource},
+    builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource},
     snowflake::Snowflake
 };
 
 use crate::{
-    models::{RoleOrdering, SlashUser},
-    slash::Slash,
-    traits::luro_functions::LuroFunctions
+    interaction::LuroSlash,
+    models::{RoleOrdering, SlashUser}
 };
 
 use crate::traits::luro_command::LuroCommand;
@@ -36,15 +36,19 @@ pub struct InfoUser {
     gdpr_export: Option<bool>
 }
 
-
 impl LuroCommand for InfoUser {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        if let Some(export) = self.gdpr_export && export {
-            ctx.ephemeral();
-        }
-        ctx.deferred().await?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let response = InteractionResponseType::DeferredChannelMessageWithSource;
+        ctx.respond(|r| {
+            if let Some(export) = self.gdpr_export && export {
+                r.ephemeral();
+            }
+            r.response_type(response)
+        })
+        .await?;
 
-        let mut embed = ctx.default_embed().await?;
+        let mut response = LuroResponse::default();
+        let mut embed = EmbedBuilder::new().color(ctx.accent_colour().await);
         let mut description = String::new();
         // The user we are interested in is the interaction author, unless a user was specified
         let (author, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
@@ -165,10 +169,10 @@ impl LuroCommand for InfoUser {
             if let Some(export) = self.gdpr_export && export {
                 if let Some(user_specified) = self.user {
                     // TODO: Add privilege esc tally to the person
-                    return ctx.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.author()?.id)).respond().await
+                    return ctx.respond(|r|r.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.interaction.author_id().unwrap()))).await
                 }
-                ctx.attachments = Some(vec![Attachment::from_bytes(
-                    format!("gdpr-export-{}.txt", ctx.author()?.id),
+                response.attachments = Some(vec![Attachment::from_bytes(
+                    format!("gdpr-export-{}.txt", ctx.interaction.author_id().unwrap()),
                     toml::to_string_pretty(&user_data)?.as_bytes().to_vec(),
                     1
                 )]);
@@ -241,6 +245,7 @@ impl LuroCommand for InfoUser {
 
         embed = embed.field(EmbedFieldBuilder::new("Timestamps", timestamp).inline());
         embed = embed.description(description);
-        ctx.embed(embed.build())?.respond().await
+        response.add_embed(embed.build());
+        ctx.create_response(&response).await
     }
 }

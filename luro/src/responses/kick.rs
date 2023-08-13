@@ -7,11 +7,11 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedField
 
 use crate::{models::SlashUser, ACCENT_COLOUR};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
-impl Slash {
+impl LuroSlash {
     pub async fn kick_response(
-        mut self,
+        &self,
         guild: Guild,
         moderator: Member,
         banned_user: User,
@@ -25,7 +25,7 @@ impl Slash {
             embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
         }
 
-        self.embed(embed.build())?.respond().await
+        self.respond(|r| r.add_embed(embed.build())).await
     }
 
     /// Embed showing that a member got banned

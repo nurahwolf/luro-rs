@@ -1,20 +1,18 @@
-
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "info", desc = "Information on the current heck database", dm_permission = true)]
 pub struct HeckInfo {}
 
-
 impl LuroCommand for HeckInfo {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::new().title("Heck Information - Global");
         let mut global_details = String::new();
         {
@@ -60,6 +58,6 @@ impl LuroCommand for HeckInfo {
             embed = embed.field(EmbedFieldBuilder::new("Guild Stats", guild_details).inline());
         }
 
-        ctx.embed(embed.build())?.respond().await
+        ctx.respond(|r| r.add_embed(embed.build())).await
     }
 }

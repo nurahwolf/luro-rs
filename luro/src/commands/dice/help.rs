@@ -1,8 +1,7 @@
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{slash::Slash, traits::luro_command::LuroCommand};
+use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "help", desc = "Information for how to roll your dice")]
@@ -11,9 +10,8 @@ pub struct DiceHelpCommand {
     ephemeral: Option<bool>
 }
 
-
 impl LuroCommand for DiceHelpCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let description = "Roll some dice with a brief explanation of the output all on one line, such as `1d20 = [13] = 13`.";
 
         let shortmode_help = [
@@ -70,6 +68,7 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
 ```
     "
         ];
+        //TODO: New builder
         let embed = ctx
             .framework
             .default_embed(&ctx.interaction.guild_id)
@@ -82,10 +81,12 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
             .field(EmbedFieldBuilder::new(keep_help[0], keep_help[1]))
             .field(EmbedFieldBuilder::new(drop_help[0], drop_help[1]));
 
-        if let Some(ephemeral) = self.ephemeral && ephemeral {
-                ctx.embed(embed.build())?.ephemeral().respond().await
-            } else {
-                ctx.embed(embed.build())?.respond().await
-            }
+        ctx.respond(|r| {
+            if let Some(ephemeral) = self.ephemeral && ephemeral {
+                    r.ephemeral();
+                }
+            r.add_embed(embed.build())
+        })
+        .await
     }
 }

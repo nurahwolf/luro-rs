@@ -1,4 +1,4 @@
-
+use luro_builder::embed::EmbedBuilder;
 use serde::Serialize;
 use std::fmt::Write;
 use tracing::info;
@@ -6,9 +6,8 @@ use tracing::info;
 use twilight_http::{request::Request, response::marker::EmptyBody, routing::Route};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
-use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -37,9 +36,8 @@ struct Position {
     position: i64
 }
 
-
 impl LuroCommand for ModifyRoleCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let (mut role_selected, mut role_position) = (None, None);
 
         // Guild to modify
@@ -131,32 +129,34 @@ impl LuroCommand for ModifyRoleCommand {
             }
 
             let updated_role = update_role.await?.model().await?;
-            let mut embed = ctx.default_embed().await?;
+            let mut embed = EmbedBuilder::default();
             let mut description = String::new();
             writeln!(description, "**Role:** <@&{0}> - {0}", updated_role.id)?;
             writeln!(description, "**Position:** {}", updated_role.position)?;
             write!(description, "**Permissons:**\n```{:?}```", updated_role.permissions)?;
 
-            embed = embed.title(updated_role.name);
-            embed = embed.description(description);
+            embed
+                .title(updated_role.name)
+                .description(description)
+                .colour(ctx.accent_colour().await);
             if updated_role.color != 0 {
-                embed = embed.color(role_selected.color);
+                embed.colour(role_selected.color);
             }
             if updated_role.hoist {
-                embed = embed.field(EmbedFieldBuilder::new("Hoisted", "True").inline())
+                embed.field(|f| f.field("Hoisted", "True", true));
             }
             if updated_role.managed {
-                embed = embed.field(EmbedFieldBuilder::new("Managed", "True").inline())
+                embed.field(|f| f.field("Managed", "True", true));
             }
             if updated_role.mentionable {
-                embed = embed.field(EmbedFieldBuilder::new("Mentionable", "True").inline())
+                embed.field(|f| f.field("Mentionable", "True", true));
             }
 
             // TODO: Return an embed with new role information
-            ctx.embed(embed.build())?.ephemeral().respond().await
+            ctx.respond(|r| r.add_embed(embed).ephemeral()).await
         } else {
             // TODO: Make this a response type
-            ctx.content("No role found".to_owned()).ephemeral().respond().await
+            ctx.respond(|r| r.content("No role found").ephemeral()).await
         }
     }
 }

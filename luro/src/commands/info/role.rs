@@ -1,11 +1,10 @@
-
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentionable};
 
 use crate::models::RoleOrdering;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand)]
@@ -15,19 +14,15 @@ pub struct InfoRole {
     role: ResolvedMentionable
 }
 
-
 impl LuroCommand for InfoRole {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        let mut embed;
-        {
-            let role = match ctx.framework.twilight_cache.role(self.role.id().cast()) {
-                Some(role) => role,
-                None => return ctx.clone().content("Role not found!").ephemeral().respond().await
-            };
-            embed = ctx.default_embed().await?;
-            let mut description: String = String::new();
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let mut description: String = String::new();
+        let role = match ctx.framework.twilight_cache.role(self.role.id().cast()) {
+            Some(role) => role,
+            None => return ctx.respond(|r| r.content("No role found! Sorry...").ephemeral()).await
+        };
 
-            embed = embed.title(&role.name);
+        {
             let roles = ctx.framework.twilight_client.roles(role.guild_id()).await?.model().await?;
             let mut roles: Vec<_> = roles.iter().map(RoleOrdering::from).collect();
             roles.sort_by(|a, b| b.cmp(a));
@@ -38,10 +33,9 @@ impl LuroCommand for InfoRole {
                 }
                 writeln!(description, "<@&{}>", guild_role.id)?;
             }
-
-            embed = embed.description(description)
         }
-
-        ctx.embed(embed.build())?.respond().await
+        let accent_colour = ctx.accent_colour().await;
+        ctx.respond(|r| r.embed(|e| e.description(description).title(role.name.clone()).colour(accent_colour)))
+            .await
     }
 }

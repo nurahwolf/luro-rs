@@ -1,8 +1,6 @@
-
-
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use self::{
     ban::BanCommand, kick::KickCommand, purge::PurgeCommand, settings::GuildSettingsCommand, warn::ModeratorWarnCommand
@@ -67,9 +65,8 @@ pub enum ModeratorCommands {
     Warn(ModeratorWarnCommand)
 }
 
-
 impl LuroCommand for ModeratorCommands {
-    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Ban(command) => command.run_command(ctx).await,

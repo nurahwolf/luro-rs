@@ -1,13 +1,7 @@
 use anyhow::anyhow;
-use anyhow::bail;
-use anyhow::{Context, Error};
-use tracing::error;
+use anyhow::Error;
 
-
-use std::mem;
 use twilight_interactions::command::CommandModel;
-
-use twilight_model::application::interaction::InteractionData;
 
 use twilight_model::{
     application::interaction::{
@@ -22,7 +16,6 @@ use twilight_model::{
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::interaction::LuroSlash;
-use crate::slash::Slash;
 use crate::LuroFramework;
 
 /// Add some custom functionality around [CommandModel]
@@ -36,19 +29,19 @@ pub trait LuroCommand: CommandModel {
     async fn new(data: CommandData) -> anyhow::Result<Self> {
         match Self::from_interaction(data.into()) {
             Ok(ok) => Ok(ok),
-            Err(why) => {
-                Err(anyhow!("Got interaction data, but failed to parse it to the command type specified: {why}"))
-            },
+            Err(why) => Err(anyhow!(
+                "Got interaction data, but failed to parse it to the command type specified: {why}"
+            ))
         }
     }
 
     /// Run the command
-    async fn run_command(self, ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
     /// Run a command group
-    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 

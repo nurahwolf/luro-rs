@@ -2,7 +2,7 @@ use dashmap::DashMap;
 use twilight_model::{
     application::interaction::Interaction,
     id::{
-        marker::{GuildMarker, MessageMarker, UserMarker},
+        marker::{GuildMarker, UserMarker},
         Id
     }
 };
@@ -27,7 +27,5 @@ pub type GuildData = DashMap<Id<GuildMarker>, GuildSetting>;
 /// A [DashMap] containing user specific settings ([LuroUser]), keyed by [UserMarker].
 pub type LuroUserData = DashMap<Id<UserMarker>, LuroUser>;
 
-/// A [DashMap] containing an [Interaction], keyed by a generic marker. This is primarily used for recalling interactions in the future
-pub type CommandManager<T> = DashMap<T, Interaction>;
-pub type MessageInteractionManager = CommandManager<Id<MessageMarker>>;
-pub type ModalInteractionManager = CommandManager<String>;
+/// A [DashMap] containing an [Interaction], keyed by a [String]. Generally the message ID, but can be other markers too. This is primarily used for recalling interactions in the future
+pub type CommandManager = DashMap<String, Interaction>;

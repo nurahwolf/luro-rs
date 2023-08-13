@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 
 use luro_model::story::Story;
 use rand::Rng;
@@ -10,7 +10,8 @@ use twilight_model::application::interaction::message_component::MessageComponen
 use twilight_model::application::interaction::modal::ModalInteractionData;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle};
 use twilight_model::channel::message::Component;
-use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
+use twilight_model::http::interaction::InteractionResponseType;
+use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
@@ -24,9 +25,7 @@ fn format_story_id(input: usize) -> String {
     input.to_string()
 }
 use crate::interaction::LuroSlash;
-use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
-use crate::traits::luro_functions::LuroFunctions;
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "story",
@@ -37,8 +36,6 @@ pub struct StoryCommand {
     id: Option<i64>,
     /// Set to true if you don't want the story to be in an embed
     plaintext: Option<bool>,
-    /// Set to true to be given some details about the stories, like total amount
-    info: Option<bool>,
     /// Set to true if you want a NSFW story in particular. Set to false for a SFW story.
     nsfw: Option<bool>,
     /// Set this to true if you want to add a story. All other options are ignored.
@@ -70,7 +67,7 @@ impl LuroCommand for StoryCommand {
         Ok(())
     }
 
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         if let Some(add) = self.add && add {
             let components = vec![Component::ActionRow(ActionRow {
                 components: vec![Component::TextInput(TextInput {
@@ -95,15 +92,10 @@ impl LuroCommand for StoryCommand {
                 value: None
             })]
             })];
-            return ctx.custom_id("story-add".to_owned())
-                .title("Copy and paste your cursed thing below...".to_owned())
-                .components(components)
-                .model()
-                .respond()
-                .await
+            return ctx.respond(|response|
+                response.add_components(components).custom_id("story-add").response_type(InteractionResponseType::Modal).title("Copy and paste your cursed thing below...")
+            ).await
         }
-
-        let mut embed = ctx.default_embed().await?;
         let channel_nsfw = ctx.interaction.channel.clone().unwrap().nsfw;
         let nsfw = if let Some(nsfw) = self.nsfw {
             match nsfw {
@@ -111,7 +103,7 @@ impl LuroCommand for StoryCommand {
                 true => {
                     if let Some(channel_nsfw) = channel_nsfw {
                         if !channel_nsfw {
-                            return ctx.content("This is a SFW channel you dumb shit").ephemeral().respond().await;
+                            return ctx.respond(|r| r.content("This is a SFW channel you dumb shit")).await;
                         }
                     }
                     true
@@ -127,42 +119,33 @@ impl LuroCommand for StoryCommand {
             story_id.try_into().unwrap()
         } else {
             if stories.is_empty() {
-                return ctx
-                    .content("No stories have been added yet! Sorry...")
-                    .ephemeral()
-                    .respond()
-                    .await;
+                return ctx.respond(|r| r.content("No stories of this type has been added!")).await;
             }
             rand::thread_rng().gen_range(0..stories.len()) + 1
         });
 
         let story = match stories.get(&story_id) {
             Some(story) => story,
-            None => {
-                return ctx
-                    .internal_error_response("There is no story with that ID.".to_owned())
-                    .await
-            }
+            None => return ctx.internal_error_response(anyhow!("There is no story with that ID.")).await
         };
 
         // Make sure we are in a size limit to send as plaintext, otherwise we are sending as an embed...
         if let Some(plaintext) = self.plaintext && plaintext && story.description.len() < 2000 {
-            return ctx.content(&story.description).respond().await
+            return ctx.respond(|r|r.content(story.description.clone())).await;
         };
 
-        embed = embed
-            .title(&story.title)
-            .description(&story.description)
-            .footer(EmbedFooterBuilder::new(format!("Story ID: {story_id}")));
-
-        if let Some(info) = self.info && info {
-            embed = embed.footer(EmbedFooterBuilder::new(format!("Story ID: {story_id} - Total Number of Stories {}", stories.len())));
-
-        }
-
-        let button = button("story", "Delete this cursed thing");
-
-        ctx.embed(embed.build())?.components(button).respond().await
+        let accent_colour = ctx.accent_colour().await;
+        ctx.respond(|r| {
+            r.embed(|embed| {
+                embed
+                    .title(&story.title)
+                    .description(&story.description)
+                    .footer(|f| f.text(format!("Story ID: {story_id} - Total Number of Stories {}", stories.len())))
+                    .colour(accent_colour)
+            })
+            .add_components(button("story", "Delete this cursed thing"))
+        })
+        .await
     }
 
     async fn handle_component(self, _: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {

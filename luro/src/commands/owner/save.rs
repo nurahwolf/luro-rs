@@ -1,8 +1,6 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -10,9 +8,8 @@ use crate::traits::luro_command::LuroCommand;
 #[command(name = "save", desc = "Flush data to disk")]
 pub struct SaveCommand {}
 
-
 impl LuroCommand for SaveCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        ctx.content("Flushed data to disk!".to_owned()).respond().await
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.respond(|r| r.content("Flushed data to disk!").ephemeral()).await
     }
 }

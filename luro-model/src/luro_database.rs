@@ -3,8 +3,9 @@ use std::{mem, sync::RwLock};
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use twilight_model::{
+    application::interaction::Interaction,
     id::{
-        marker::{GuildMarker, UserMarker, MessageMarker},
+        marker::{GuildMarker, UserMarker},
         Id
     },
     oauth::Application,
@@ -28,8 +29,8 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub available_random_nsfw_hecks: RwLock<Vec<usize>>,
     pub available_random_sfw_hecks: RwLock<Vec<usize>>,
     pub application: RwLock<Application>,
-    pub command_data: CommandManager<Id<MessageMarker>>,
-    pub modal_interaction_data: CommandManager<String>,
+    pub command_data: CommandManager,
+    pub modal_interaction_data: CommandManager,
     pub count: RwLock<usize>,
     pub current_user: RwLock<CurrentUser>,
     pub driver: D,
@@ -62,7 +63,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             user_data: Default::default(),
             available_random_nsfw_hecks: Default::default(),
             available_random_sfw_hecks: Default::default(),
-            modal_interaction_data: Default::default(),
+            modal_interaction_data: Default::default()
         }
     }
 
@@ -303,5 +304,13 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         }
 
         Ok(())
+    }
+
+    pub async fn save_interaction(&self, key: &str, interaction: &Interaction) -> anyhow::Result<()> {
+        self.driver.save_interaction(interaction, key).await
+    }
+
+    pub async fn get_interaction(&self, key: &str) -> anyhow::Result<Interaction> {
+        self.driver.get_interaction(key).await
     }
 }

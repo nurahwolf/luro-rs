@@ -1,50 +1,49 @@
 use std::fmt::Write;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::Instant;
 
-
-
+use luro_builder::embed::EmbedBuilder;
+use luro_builder::response::LuroResponse;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "ping", desc = "See my ping!")]
 pub struct PingCommand {}
 
-
 impl LuroCommand for PingCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        let mut embed = ctx.default_embed().await?.description("🏓 Pinging!");
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let mut embed = EmbedBuilder::default();
+        embed.colour(ctx.accent_colour().await).description("🏓 Pinging!");
         if let Some(average) = ctx.latency.average() {
-            embed = embed.field(
-                EmbedFieldBuilder::new(
+            embed.field(|f| {
+                f.field(
                     "Average Latency",
-                    format!("`{}` milliseconds", average.as_millis().to_string())
+                    &format!("`{}` milliseconds", average.as_millis().to_string()),
+                    true
                 )
-                .inline()
-            )
+            });
         }
 
         if let Some(average) = ctx.latency.received() {
-            embed = embed.field(
-                EmbedFieldBuilder::new(
+            embed.field(|f| {
+                f.field(
                     "Last Acknowledgement",
-                    format!("{} milliseconds ago", average.elapsed().as_millis(),)
+                    &format!("{} milliseconds ago", average.elapsed().as_millis()),
+                    true
                 )
-                .inline()
-            )
+            });
         }
 
         if let Some(average) = ctx.latency.sent() {
-            embed = embed.field(
-                EmbedFieldBuilder::new(
-                    "Heartbeat Sent",
-                    format!("{} milliseconds ago", average.elapsed().as_millis(),)
+            embed.field(|f| {
+                f.field(
+                    "Hearbeat Sent",
+                    &format!("{} milliseconds ago", average.elapsed().as_millis()),
+                    true
                 )
-                .inline()
-            )
+            });
         }
 
         let mut num = 0;
@@ -54,36 +53,43 @@ impl LuroCommand for PingCommand {
             writeln!(heartbeats, "{num} - {} milliseconds", heartbeat.as_millis())?
         }
         if !heartbeats.is_empty() {
-            embed = embed.field(EmbedFieldBuilder::new(
-                "Heartbeats",
-                format!(
-                    "**Total Heartbeats Recorded:** `{}`\n```{heartbeats}```",
-                    ctx.latency.periods().to_string()
+            embed.field(|f| {
+                f.field(
+                    "Hearbeats",
+                    &format!(
+                        "**Total Heartbeats Recorded:** `{}`\n```{heartbeats}```",
+                        ctx.latency.periods().to_string()
+                    ),
+                    false
                 )
-            ))
+            });
         }
 
         let start = Instant::now();
-        ctx.embed(embed.build())?.respond().await?;
+        let mut response = LuroResponse::default();
+        response.add_embed(embed);
+        ctx.create_response(&response).await?;
         let sent = format!(
             "Pong!\n`Send MESSAGE` API request achnowledged and received in `{}` milliseconds!",
             start.elapsed().as_millis()
         );
+        response.content(sent.clone());
 
-        ctx.set_deferred().content(sent.clone()).respond().await?;
+        ctx.update_response(&response).await?;
 
         // A random command to check latency time
         if let Some(author) = ctx.interaction.author() {
             let start = Instant::now();
             let _ = ctx.framework.twilight_client.user(author.id).await?.model().await?;
-            let response = format!(
+            let user = format!(
                 "{}\n`Get USER` API request achnowledged and received in `{}` milliseconds!",
                 sent,
                 start.elapsed().as_millis()
             );
-            ctx.set_deferred().content(response).respond().await
-        } else {
-            Ok(())
+            response.content(user);
+            ctx.update_response(&response).await?;
         }
+
+        Ok(())
     }
 }

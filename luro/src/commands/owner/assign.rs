@@ -1,9 +1,7 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -21,16 +19,15 @@ pub struct AssignCommand {
     remove: Option<bool>
 }
 
-
 impl LuroCommand for AssignCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        let interaction_user = ctx.author()?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let interaction_user = ctx.interaction.author().unwrap();
 
         // User to action
         let user = if let Some(user) = self.user {
             user.resolved
         } else {
-            interaction_user
+            interaction_user.clone()
         };
 
         // Guild to modify
@@ -46,8 +43,8 @@ impl LuroCommand for AssignCommand {
             .twilight_client
             .remove_guild_member_role(guild_id, user.id, self.role)
             .await {
-                Ok(_) => ctx.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.id)).ephemeral().respond().await,
-                Err(why) => ctx.internal_error_response(why.to_string()).await
+                Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.id)).ephemeral()).await,
+                Err(why) => ctx.internal_error_response(why.into()).await
             }
         } else {
         // Otherwise we just assign a role as expected
@@ -56,8 +53,8 @@ impl LuroCommand for AssignCommand {
             .twilight_client
             .add_guild_member_role(guild_id, user.id, self.role)
             .await {
-                Ok(_) => ctx.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.id)).ephemeral().respond().await,
-                Err(why) => ctx.internal_error_response(why.to_string()).await
+                Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.id)).ephemeral()).await,
+                Err(why) => ctx.internal_error_response(why.into()).await
             }
         }
     }

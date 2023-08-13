@@ -3,6 +3,8 @@ use std::sync::Arc;
 use luro_builder::response::LuroResponse;
 use luro_database::TomlDatabaseDriver;
 use tracing::error;
+use twilight_gateway::Latency;
+use twilight_gateway::MessageSender;
 use twilight_http::client::InteractionClient;
 use twilight_http::Error;
 use twilight_http::Response;
@@ -15,10 +17,11 @@ use twilight_model::http::interaction::InteractionResponseType::DeferredUpdateMe
 use crate::framework::Framework;
 use crate::ACCENT_COLOUR;
 
-mod user_utils;
+mod handle;
 mod parse_modal_field;
-mod send_log_message;
 mod parsers;
+mod send_log_message;
+mod user_utils;
 
 /// Some nice stuff about formatting a response, ready to send via twilight's client
 #[derive(Clone, Debug)]
@@ -26,7 +29,9 @@ pub struct LuroSlash {
     /// The framework for being able to respond to an interaction
     pub framework: Arc<Framework<TomlDatabaseDriver>>,
     /// The client is wrapped around this interaction
-    pub interaction: Interaction
+    pub interaction: Interaction,
+    pub shard: MessageSender,
+    pub latency: Latency
 }
 
 impl LuroSlash {
@@ -34,8 +39,18 @@ impl LuroSlash {
     /// This is set with some defaults:
     /// - AllowedMentions - All
     /// - InteractionResponseType - [`InteractionResponseType::ChannelMessageWithSource`]
-    pub fn new(framework: Arc<Framework<TomlDatabaseDriver>>, interaction: Interaction) -> Self {
-        Self { framework, interaction }
+    pub fn new(
+        framework: Arc<Framework<TomlDatabaseDriver>>,
+        interaction: Interaction,
+        shard: MessageSender,
+        latency: Latency
+    ) -> Self {
+        Self {
+            framework,
+            interaction,
+            shard,
+            latency
+        }
     }
 
     /// Create a response to an interaction.
@@ -50,7 +65,7 @@ impl LuroSlash {
         if r.interaction_response_type == DeferredChannelMessageWithSource
             || r.interaction_response_type == DeferredUpdateMessage
         {
-            self.update_response(r).await?;
+            self.update_response(&r).await?;
             return Ok(());
         }
 
@@ -70,7 +85,7 @@ impl LuroSlash {
         Ok(())
     }
 
-    pub async fn update_response(&self, response: LuroResponse) -> Result<Response<Message>, Error> {
+    pub async fn update_response(&self, response: &LuroResponse) -> Result<Response<Message>, Error> {
         let client = self.interaction_client();
         let update_response = client
             .update_response(&self.interaction.token)
@@ -86,8 +101,10 @@ impl LuroSlash {
     ///
     /// Use this for operations that take a long time. Generally its best to send this as soon as the reaction has been received.
     pub async fn acknowledge_interaction(&self) -> anyhow::Result<()> {
-        let mut response = LuroResponse::default();
-        response.interaction_response_type = InteractionResponseType::DeferredChannelMessageWithSource;
+        let response = LuroResponse {
+            interaction_response_type: InteractionResponseType::DeferredChannelMessageWithSource,
+            ..Default::default()
+        };
 
         self.create_response(&response).await
     }
@@ -117,7 +134,7 @@ impl LuroSlash {
     }
 
     /// Send a message in the same channel as the interaction
-    /// 
+    ///
     /// #PANIC
     /// This function panics if its called in a ping function... No idea why you would try that, but please don't.
     pub async fn send_message<F>(&self, response: F) -> Result<Response<Message>, Error>
@@ -127,8 +144,9 @@ impl LuroSlash {
         let mut r = LuroResponse::default();
         response(&mut r);
 
-        let mut create_message = self.
-            framework.twilight_client
+        let mut create_message = self
+            .framework
+            .twilight_client
             .create_message(self.interaction.channel.as_ref().unwrap().id)
             .allowed_mentions(r.allowed_mentions.as_ref());
 

@@ -1,10 +1,7 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::slash::Slash;
-
 use crate::interaction::LuroSlash;
+
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "say", desc = "Make me say garbage!")]
@@ -15,11 +12,8 @@ pub struct SayCommand {
     user: Option<ResolvedUser>
 }
 
-
 impl LuroCommand for SayCommand {
-    async fn run_command(self, ctx: Slash) -> anyhow::Result<()> {
-        let ctx = LuroSlash::new(ctx.framework, ctx.interaction);
-
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let content = if let Some(user) = self.user {
             format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
         } else {

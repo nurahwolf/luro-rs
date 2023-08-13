@@ -1,8 +1,5 @@
-use std::fmt::Write;
 use anyhow::{anyhow, Context};
-use luro_builder::embed::EmbedBuilder;
-use luro_builder::embed::embed_field::EmbedFieldBuilder;
-use luro_builder::message;
+
 use luro_builder::response::LuroResponse;
 
 use std::str;
@@ -13,7 +10,7 @@ use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
 
-use crate::{interaction::LuroSlash, slash::Slash};
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
@@ -26,7 +23,7 @@ pub enum Base64Commands {
 }
 
 impl LuroCommand for Base64Commands {
-    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Decode(command) => command.run_command(ctx).await,
@@ -43,12 +40,8 @@ impl LuroCommand for Base64Commands {
         };
 
         let response = match data.custom_id.as_str() {
-            "decode" => {
-                response(&ctx, &input, true).await?
-            },
-            "encode" => {
-                response(&ctx, &input, false).await?
-            },
+            "decode" => response(&ctx, &input, true).await?,
+            "encode" => response(&ctx, &input, false).await?,
             _ => {
                 warn!("No match");
                 return Ok(());
@@ -81,8 +74,7 @@ pub struct Base64Decode {
 }
 
 impl LuroCommand for Base64Decode {
-    async fn run_command(self, ctx: Slash) -> anyhow::Result<()> {
-        let ctx = LuroSlash::new(ctx.framework, ctx.interaction);
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.create_response(&decode_response(&ctx, &decode(&self.string)?).await?)
             .await
     }
@@ -98,8 +90,7 @@ pub struct Base64Encode {
 }
 
 impl LuroCommand for Base64Encode {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        let ctx = LuroSlash::new(ctx.framework, ctx.interaction);
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.create_response(&encode_response(&ctx, &encode(&self.string)).await?)
             .await
     }
@@ -121,7 +112,9 @@ fn decode(input: &str) -> anyhow::Result<String> {
             Ok(decoded_string) => Ok(decoded_string),
             Err(why) => Err(anyhow!("Failed to convert bytes into string - {why}"))
         },
-        Err(_) => Ok(format!("Don't be a cunt, I know that this is not base64 you bitch\n\n{input}"))
+        Err(_) => Ok(format!(
+            "Don't be a cunt, I know that this is not base64 you bitch\n\n{input}"
+        ))
     };
     info!("Result - `{:?}`", result);
     result

@@ -1,11 +1,10 @@
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::message_component::MessageComponentInteractionData,
     channel::message::component::{ActionRow, Button, ButtonStyle, Component}
 };
 
-use crate::{slash::Slash, interaction::LuroSlash};
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -13,9 +12,8 @@ use crate::traits::luro_command::LuroCommand;
 #[command(name = "boop", desc = "Boop the Bot!")]
 pub struct BoopCommand {}
 
-
 impl LuroCommand for BoopCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
@@ -27,7 +25,7 @@ impl LuroCommand for BoopCommand {
             })])
         })]);
 
-        ctx.content("Boop Count: 0".to_owned()).components(components).respond().await
+        ctx.respond(|r| r.content("Boop Count: 0").add_components(components)).await
     }
 
     async fn handle_component(self, _data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
@@ -41,7 +39,8 @@ impl LuroCommand for BoopCommand {
             Err(_) => 0
         };
 
-        ctx.respond(|r|r.content(format!("Boop Count: {}", value_number)).update()).await
+        ctx.respond(|r| r.content(format!("Boop Count: {}", value_number)).update())
+            .await
     }
 }
 

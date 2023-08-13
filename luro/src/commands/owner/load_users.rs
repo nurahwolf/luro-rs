@@ -1,8 +1,7 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::http::interaction::InteractionResponseType;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -12,10 +11,10 @@ use crate::traits::luro_command::LuroCommand;
 )]
 pub struct OwnerLoadUsers {}
 
-
 impl LuroCommand for OwnerLoadUsers {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        ctx.deferred().await?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let response = InteractionResponseType::DeferredChannelMessageWithSource;
+        ctx.respond(|r| r.response_type(response)).await?;
 
         let mut loaded = 0;
         let mut errors = 0;
@@ -48,18 +47,15 @@ impl LuroCommand for OwnerLoadUsers {
             }
         }
 
-        if errors != 0 {
-            ctx.content(format!(
-                "Loaded {loaded} users! I failed to load a total of `{errors}` users though. Sorry!"
-            ))
-            .ephemeral()
-            .respond()
-            .await
-        } else {
-            ctx.content(format!("Loaded {loaded} users with no errors! Awesome!"))
-                .ephemeral()
-                .respond()
-                .await
-        }
+        ctx.respond(|r| {
+            match errors != 0 {
+                true => r.content(format!(
+                    "Loaded {loaded} users! I failed to load a total of `{errors}` users though. Sorry!"
+                )),
+                false => r.content(format!("Loaded {loaded} users with no errors! Awesome!"))
+            };
+            r.ephemeral()
+        })
+        .await
     }
 }

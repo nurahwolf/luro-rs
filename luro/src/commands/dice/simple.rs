@@ -1,10 +1,9 @@
-
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
+    interaction::LuroSlash,
     models::{Roll, RollResult, RollValue},
-    slash::Slash,
     traits::luro_command::LuroCommand
 };
 
@@ -47,9 +46,8 @@ pub struct DiceSimpleCommand {
     divide: Option<i64>
 }
 
-
 impl LuroCommand for DiceSimpleCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let mut roll = format!("{}d{}", self.dice, self.sides);
 
         if let Some(operation) = self.keep_highest {
@@ -98,7 +96,7 @@ impl LuroCommand for DiceSimpleCommand {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                ctx.author()?.id,
+                ctx.interaction.author_id().unwrap(),
                 result.string_result,
                 result.dice_total
             )
@@ -114,10 +112,12 @@ impl LuroCommand for DiceSimpleCommand {
             result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
         }
 
-        if let Some(ephemeral) = self.ephemeral && ephemeral {
-            ctx.content(result_string).ephemeral().respond().await
-        } else {
-            ctx.content(result_string).respond().await
-        }
+        ctx.respond(|r| {
+            if let Some(ephemeral) = self.ephemeral && ephemeral {
+                r.ephemeral();
+            }
+            r.content(result_string)
+        })
+        .await
     }
 }

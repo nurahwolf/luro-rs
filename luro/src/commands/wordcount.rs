@@ -5,12 +5,7 @@ use anyhow::Context;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::UserMarker, Id};
 
-
-use crate::{
-    interaction::LuroSlash,
-    slash::Slash,
-    traits::luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand};
 use std::{convert::TryInto, fmt::Write, iter::FromIterator};
 
 #[derive(CommandModel, CreateCommand)]
@@ -27,8 +22,7 @@ pub struct WordcountCommand {
 }
 
 impl LuroCommand for WordcountCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        let ctx = LuroSlash::new(ctx.framework, ctx.interaction);
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let accent_colour = ctx.accent_colour().await;
         let slash_author;
         let mut wordcount: usize = Default::default();

@@ -29,7 +29,6 @@ mod guild_permissions;
 mod luro_framework;
 mod luro_message;
 mod luro_permissions;
-mod luro_slash;
 mod luro_webhook;
 mod member_roles;
 mod role_ordering;

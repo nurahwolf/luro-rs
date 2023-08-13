@@ -1,9 +1,8 @@
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
+    interaction::LuroSlash,
     models::{Roll, RollResult, RollValue},
-    slash::Slash,
     traits::luro_command::LuroCommand
 };
 
@@ -18,9 +17,8 @@ pub struct DiceRollCommand {
     ephemeral: Option<bool>
 }
 
-
 impl LuroCommand for DiceRollCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let result = Roll::roll_inline(&self.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
@@ -35,7 +33,7 @@ impl LuroCommand for DiceRollCommand {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                ctx.author()?.id,
+                ctx.interaction.author_id().unwrap(),
                 result.string_result,
                 result.dice_total
             )
@@ -51,10 +49,12 @@ impl LuroCommand for DiceRollCommand {
             result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
         }
 
-        if let Some(ephemeral) = self.ephemeral && ephemeral {
-            ctx.content(result_string).ephemeral().respond().await
-        } else {
-            ctx.content(result_string).respond().await
-        }
+        ctx.respond(|r| {
+            if let Some(ephemeral) = self.ephemeral && ephemeral {
+                r.ephemeral();
+            }
+            r.content(result_string)
+        })
+        .await
     }
 }

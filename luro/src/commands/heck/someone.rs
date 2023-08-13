@@ -1,16 +1,12 @@
-use std::convert::TryInto;
-
-
-use tracing::{debug, trace};
+use tracing::debug;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder};
 
 use crate::{
     commands::heck::{format_heck, get_heck},
+    interaction::LuroSlash,
     models::SlashUser,
-    slash::Slash,
     traits::luro_command::LuroCommand
 };
 
@@ -27,17 +23,17 @@ pub struct HeckSomeoneCommand {
     pub plaintext: Option<bool>
 }
 
-
 impl LuroCommand for HeckSomeoneCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Is the channel the interaction called in NSFW?
-        let nsfw = ctx.channel()?.nsfw.unwrap_or(false);
+        let interaction = &ctx.interaction;
+        let nsfw = interaction.channel.as_ref().unwrap().nsfw.unwrap_or(false);
 
         // Attempt to get a heck
         let (heck, heck_id) = get_heck(&ctx.framework, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
 
         debug!("attempting to format the returned heck");
-        let formatted_heck = format_heck(&heck, &ctx.author()?, &self.user.resolved).await;
+        let formatted_heck = format_heck(&heck, interaction.author().as_ref().unwrap(), &self.user.resolved).await;
 
         // This first attempts to get them from the guild if they are a member, otherwise resorts to fetching their user.
         let slash_author = match ctx.interaction.guild_id {
@@ -58,30 +54,17 @@ impl LuroCommand for HeckSomeoneCommand {
             }
         };
 
-        let embed_author = EmbedAuthorBuilder::new(format!("Heck created by {}", slash_author.name))
-            .icon_url(slash_author.try_into()?)
-            .build();
-
         // Create our response, depending on if the user wants a plaintext heck or not
-        debug!("creating our response");
         if let Some(plaintext) = self.plaintext && plaintext {
-            trace!("user wanted plaintext");
-            ctx.content(formatted_heck.heck_message).respond().await
+            ctx.respond(|r|r.content(formatted_heck.heck_message)).await
         } else {
-            trace!("user wanted embed");
-            let mut embed = ctx.default_embed().await?
-            .description(formatted_heck.heck_message)
-            .author(embed_author);
-        if nsfw {
-            embed = embed.footer(EmbedFooterBuilder::new(format!(
-                "Heck ID {heck_id} - NSFW Heck"
-            )))
-        } else {
-            embed = embed.footer(EmbedFooterBuilder::new(format!(
-                "Heck ID {heck_id} - SFW Heck"
-            )))
-        }
-            ctx.content(format!("<@{}>", self.user.resolved.id)).embed(embed.build())?.respond().await
+            let accent_colour = ctx.accent_colour().await;
+            ctx.respond(|r|r.content(format!("<@{}>", self.user.resolved.id)).embed(|e|e.description(formatted_heck.heck_message).colour(accent_colour).author(|author|author.name(format!("Heck created by {}", slash_author.name)).icon_url(slash_author.avatar)).footer(|f|{
+                match nsfw {
+                    true => f.text(format!("Heck ID {heck_id} - NSFW Heck")),
+                    false => f.text(format!("Heck ID {heck_id} - SFW Heck")),
+                }
+            }))).await
         }
     }
 }

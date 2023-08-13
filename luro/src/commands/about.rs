@@ -1,17 +1,15 @@
-use std::convert::TryInto;
 use std::fmt::Write;
 use std::path::Path;
 
-
 use git2::{ErrorCode, Repository};
+use luro_builder::embed::EmbedBuilder;
 use luro_model::constants::PRIMARY_BOT_OWNER;
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_util::builder::embed::{EmbedFieldBuilder, EmbedFooterBuilder};
 
+use crate::interaction::LuroSlash;
 use crate::models::SlashUser;
 
-use crate::slash::Slash;
 use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -23,12 +21,12 @@ pub struct AboutCommand {
     cache: Option<bool>
 }
 
-
 impl LuroCommand for AboutCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        ctx.ephemeral().deferred().await?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        ctx.acknowledge_interaction().await?;
         // Variables
-        let mut embed = ctx.default_embed().await?;
+        let mut embed = EmbedBuilder::default();
+        embed.colour(ctx.accent_colour().await);
         let mut description = String::new();
         let mut framework_owners_list = String::new();
         let current_user = ctx.framework.twilight_client.current_user().await?.model().await?;
@@ -69,9 +67,9 @@ impl LuroCommand for AboutCommand {
             writeln!(description, "**Revision:** `{}`", revision)?;
         }
 
-        embed = embed.title(&slash_author.name);
-        embed = embed.thumbnail(slash_author.clone().try_into()?);
-        embed = embed.footer(EmbedFooterBuilder::new("Written in twilight.rs!"));
+        embed.title(&slash_author.name);
+        embed.thumbnail(|thumbnail| thumbnail.url(slash_author.avatar));
+        embed.footer(|footer| footer.text("Written in twilight.rs!"));
         // if let Some(git_url) = &ctx.data().config.read().await.git_url {
         //     embed.url(git_url);
         // }
@@ -110,7 +108,7 @@ impl LuroCommand for AboutCommand {
                     usage.virtual_mem / 1024 / 1024
                 )?;
             };
-            embed = embed.field(EmbedFieldBuilder::new("Memory Stats", memory_description).inline())
+            embed.field(|field|field.field("Memory Stats", &memory_description, true));
         }
 
         if let Some(cache_stats) = self.cache && cache_stats {
@@ -147,12 +145,12 @@ impl LuroCommand for AboutCommand {
             if stats.voice_states() != 0 {
                 writeln!(cache_stats, "**Voice States:** `{}`", stats.voice_states())?;
             }
-            embed = embed.field(EmbedFieldBuilder::new("Cache Stats", cache_stats).inline())
+            embed.field(|field|field.field("Cache Stats", &cache_stats, true));
         }
 
-        embed = embed.description(description);
+        embed.description(description);
 
-        ctx.embed(embed.build())?.respond().await
+        ctx.respond(|response| response.add_embed(embed)).await
     }
 }
 

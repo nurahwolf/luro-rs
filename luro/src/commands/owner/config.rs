@@ -1,4 +1,3 @@
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::traits::luro_command::LuroCommand;
@@ -9,6 +8,5 @@ use crate::traits::luro_command::LuroCommand;
     desc = "Print out information about my configuration. You can override some options at runtime too."
 )]
 pub struct ConfigCommand {}
-
 
 impl LuroCommand for ConfigCommand {}

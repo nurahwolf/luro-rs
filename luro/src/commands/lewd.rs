@@ -1,8 +1,6 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -20,18 +18,9 @@ pub enum LewdCommands {
     Muzzle(MuzzleCommand)
 }
 
-
 impl LuroCommand for LewdCommands {
-    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
-        let interaction_channel = ctx.channel()?;
-
-        // TODO: Create a response type for this
-        // TODO: Check for both
-        if let Some(nsfw) = interaction_channel.nsfw && !nsfw {
-            return ctx.nsfw_in_sfw_response().await
-        }
-
-        if interaction_channel.nsfw.is_none() {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        if !ctx.interaction.channel.as_ref().unwrap().nsfw.unwrap_or_default() {
             return ctx.nsfw_in_sfw_response().await;
         }
 

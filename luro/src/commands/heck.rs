@@ -1,17 +1,22 @@
 use anyhow::Error;
 
-
 use luro_model::{constants::PRIMARY_BOT_OWNER, heck::Heck};
 use rand::Rng;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use twilight_model::{
+    application::interaction::modal::ModalInteractionData,
+    channel::message::{
+        component::{ActionRow, SelectMenu, SelectMenuOption, SelectMenuType},
+        Component
+    },
     id::{marker::GuildMarker, Id},
     user::User
 };
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder};
 
-use crate::{slash::Slash, traits::luro_command::LuroCommand, LuroFramework};
+use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand, LuroFramework, ACCENT_COLOUR};
 
 use self::{add::HeckAddCommand, info::HeckInfo, someone::HeckSomeoneCommand};
 
@@ -44,15 +49,69 @@ fn format_heck_id(input: usize) -> String {
     input.to_string()
 }
 
-
 impl LuroCommand for HeckCommands {
-    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Add(command) => command.run_command(ctx).await,
             Self::Someone(command) => command.run_command(ctx).await,
             Self::Info(command) => command.run_command(ctx).await
         }
+    }
+
+    async fn handle_model(self, data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+        let (_author, slash_author) = ctx.get_interaction_author(&ctx.interaction)?;
+        let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
+
+        match (heck_text.contains("<user>"), heck_text.contains("<author>")) {
+            (true, true) => (),
+            (true, false) => return ctx.invalid_heck_response(true, false, heck_text).await,
+            (false, true) => return ctx.invalid_heck_response(false, true, heck_text).await,
+            (false, false) => return ctx.invalid_heck_response(false, false, heck_text).await
+        };
+
+        // Send a success message.
+        let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", slash_author.name))
+            .icon_url(slash_author.try_into()?)
+            .build();
+        let embed = EmbedBuilder::new()
+            .color(ACCENT_COLOUR)
+            .description(heck_text)
+            .author(embed_author);
+
+        let components = vec![Component::ActionRow(ActionRow {
+            components: vec![Component::SelectMenu(SelectMenu {
+                custom_id: "heck-setting".to_owned(),
+                disabled: false,
+                max_values: None,
+                min_values: None,
+                options: Some(vec![
+                    SelectMenuOption {
+                        default: false,
+                        description: Some("Can only be used in this guild".to_owned()),
+                        emoji: None,
+                        label: "Guild Specific Heck".to_owned(),
+                        value: "heck-add-guild".to_owned()
+                    },
+                    SelectMenuOption {
+                        default: false,
+                        description: Some("Can be used globally, including DMs and other servers".to_owned()),
+                        emoji: None,
+                        label: "Global Heck".to_owned(),
+                        value: "heck-add-global".to_owned()
+                    },
+                ]),
+                placeholder: Some("Choose if this is a global or guild specific heck".to_owned()),
+                channel_types: None,
+                kind: SelectMenuType::Text
+            })]
+        })];
+
+        ctx.respond(|response| {
+            response.components = Some(components);
+            response.add_embed(embed.build())
+        })
+        .await
     }
 }
 

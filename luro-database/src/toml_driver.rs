@@ -11,15 +11,18 @@ const NSFW_STORIES_FILE_PATH: &str = "data/nsfw_stories.toml";
 const GUILDSETTINGS_FILE_PATH: &str = "data/guilds";
 /// A folder where <user/user_id.toml> are stored
 const USERDATA_FILE_PATH: &str = "data/user";
+/// A toml file containing interactions, so that we can respond to them in the future post restart
+const INTERACTION_FILE_PATH: &str = "data/interactions.toml";
 use luro_model::constants::BOT_OWNERS;
 use luro_model::heck::Heck;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
 use luro_model::story::Story;
-use luro_model::types::{Hecks, LuroUserData, Stories};
+use luro_model::types::{CommandManager, Hecks, LuroUserData, Stories};
 use luro_model::{guild_setting::GuildSetting, luro_user::LuroUser};
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{fs, io::AsyncReadExt};
 use tracing::{debug, error, warn};
+use twilight_model::application::interaction::Interaction;
 
 use crate::TomlDatabaseDriver;
 
@@ -396,5 +399,20 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
             staff_users.insert(staff, self.get_user(staff.get()).await?);
         }
         Ok(staff_users)
+    }
+
+    async fn save_interaction(&self, interaction: &Interaction, key: &str) -> anyhow::Result<()> {
+        let data: CommandManager = Self::get(Path::new(INTERACTION_FILE_PATH)).await?;
+        data.entry(key.to_string()).insert(interaction.clone());
+        Self::write(data, Path::new(Path::new(INTERACTION_FILE_PATH))).await
+    }
+
+    async fn get_interaction(&self, key: &str) -> anyhow::Result<twilight_model::application::interaction::Interaction> {
+        let data: CommandManager = Self::get(Path::new(INTERACTION_FILE_PATH)).await?;
+        let data = match data.get(&key.to_string()) {
+            Some(data) => Ok(data.clone()),
+            None => Err(anyhow!("Interaction with ID {key} not present!"))
+        };
+        data
     }
 }

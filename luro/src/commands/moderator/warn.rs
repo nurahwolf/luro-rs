@@ -1,11 +1,11 @@
 use crate::interaction::LuroSlash;
-use crate::slash::Slash;
 use crate::USERDATA_FILE_PATH;
 
 use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
 use luro_model::luro_log_channel::LuroLogChannel;
 use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
+use twilight_model::http::interaction::InteractionResponseType;
 
 use std::convert::TryInto;
 use std::fmt::Write;
@@ -42,13 +42,13 @@ impl LuroCommand for ModeratorWarnCommand {
         Permissions::MANAGE_MESSAGES
     }
 
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let user_id = self.user.resolved.id;
 
         if !self.new {
             let user_data = ctx.framework.database.get_user(&user_id).await?;
             if user_data.warnings.is_empty() {
-                return ctx.content("No warnings for that user!").respond().await;
+                return ctx.respond(|r| r.content("No warnings for that user!")).await;
             }
 
             let slash_author = SlashUser::client_fetch_user(&ctx.framework, user_id).await?.1;
@@ -68,7 +68,7 @@ impl LuroCommand for ModeratorWarnCommand {
                     "User has a total of {} warnings.",
                     user_data.warnings.len()
                 )));
-            return ctx.embed(embed.build())?.respond().await;
+            return ctx.respond(|r| r.add_embed(embed.build())).await;
         }
 
         let components = vec![
@@ -98,12 +98,14 @@ impl LuroCommand for ModeratorWarnCommand {
             }),
         ];
 
-        ctx.custom_id("mod-warn".to_owned())
-            .title("Add your warning below!".to_owned())
-            .components(components)
-            .model()
-            .respond()
-            .await
+        ctx.respond(|response| {
+            response
+                .title("Add your warning below!")
+                .custom_id("mod-warn")
+                .add_components(components)
+                .response_type(InteractionResponseType::Modal)
+        })
+        .await
     }
 
     async fn handle_model(self, data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
@@ -141,13 +143,14 @@ impl LuroCommand for ModeratorWarnCommand {
                     .await;
                 match victim_dm {
                     Ok(_) => embed.field(|f| f.field("DM Sent", "Successful", true)),
-                    Err(_) => embed.field(|f| f.field("DM Sent", "Failed", true)),
+                    Err(_) => embed.field(|f| f.field("DM Sent", "Failed", true))
                 }
             }
             Err(_) => embed.field(|f| f.field("DM Sent", "Failed", true))
         };
 
-        ctx.send_log_channel(LuroLogChannel::Moderator, |r|r.add_embed(embed.clone())).await?;
+        ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))
+            .await?;
 
         let mut reward = ctx.framework.database.get_user(&author.id).await?;
         reward.moderation_actions_performed += 1;

@@ -1,19 +1,16 @@
-
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "info", desc = "Information about the music player", dm_permission = false)]
 pub struct InfoCommand {}
 
-
 impl LuroCommand for InfoCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await
@@ -36,14 +33,17 @@ impl LuroCommand for InfoCommand {
             stats.memory.free / 1024 / 1024
         )?;
 
-        let embed = ctx
-            .default_embed()
-            .await?
-            .title("Lavalink Music Stats")
-            .description(description)
-            .field(EmbedFieldBuilder::new("Total Players", stats.players.to_string()).inline())
-            .field(EmbedFieldBuilder::new("Playing Players", stats.playing_players.to_string()).inline())
-            .field(EmbedFieldBuilder::new("Uptime", stats.uptime.to_string()).inline());
-        ctx.embed(embed.build())?.respond().await
+        let accent_colour = ctx.accent_colour().await;
+        ctx.respond(|response| {
+            response.embed(|embed| {
+                embed
+                    .description(description)
+                    .field(|f| f.field("Total Players", &stats.players.to_string(), true))
+                    .field(|f| f.field("Players playing Music", &stats.playing_players.to_string(), true))
+                    .field(|f| f.field("Uptime", &stats.uptime.to_string(), true))
+                    .colour(accent_colour)
+            })
+        })
+        .await
     }
 }

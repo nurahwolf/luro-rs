@@ -1,10 +1,8 @@
 use std::fmt::Write;
 
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -15,9 +13,8 @@ pub struct OwnerGuildsCommand {
     show_id: Option<bool>
 }
 
-
 impl LuroCommand for OwnerGuildsCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let mut guilds = String::new();
         for guild in ctx.framework.twilight_cache.iter().guilds() {
             if let Some(show_id) = self.show_id && show_id {
@@ -27,12 +24,15 @@ impl LuroCommand for OwnerGuildsCommand {
             }
         }
 
-        let embed = ctx
-            .default_embed()
-            .await?
-            .title("All the guilds I am in!")
-            .description(guilds);
-
-        ctx.embed(embed.build())?.ephemeral().respond().await
+        let accent_colour = ctx.accent_colour().await;
+        ctx.respond(|r| {
+            r.embed(|embed| {
+                embed
+                    .title("All the guilds that I am in")
+                    .description(guilds)
+                    .colour(accent_colour)
+            })
+        })
+        .await
     }
 }

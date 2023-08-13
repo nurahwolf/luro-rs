@@ -1,32 +1,24 @@
-use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
+use anyhow::Error;
+use luro_builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
-impl Slash {
+impl LuroSlash {
     /// A response returned by default when a command does not exist within Luro.
-    pub async fn internal_error_response(&mut self, error: String) -> anyhow::Result<()> {
-        if (self
-            .embed(internal_error_embed(error.clone()).build())?
-            .ephemeral()
-            .respond()
-            .await)
-            .is_err()
-        {
-            self.set_deferred().respond().await
-        } else {
-            Ok(())
-        }
+    pub async fn internal_error_response(&self, error: Error) -> anyhow::Result<()> {
+        self.respond(|respond| respond.add_embed(internal_error_embed(error)).ephemeral())
+            .await
     }
 }
 
-fn internal_error_embed(error: String) -> EmbedBuilder {
-    EmbedBuilder::new()
+fn internal_error_embed(error: Error) -> EmbedBuilder {
+    let mut embed = EmbedBuilder::default();
+    embed
         .title("It's fucked")
-        .color(COLOUR_DANGER)
-        .description(format!("```{error}```"))
-        .footer(EmbedFooterBuilder::new(
-            "Okay, Houston, I believe we've had a problem here ..."
-        ))
+        .colour(COLOUR_DANGER)
+        .description(format!("```{:#?}```", error.to_string()))
+        .footer(|footer| footer.text("Okay, Houston, I believe we've had a problem here ..."));
+    embed
 }

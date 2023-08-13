@@ -1,9 +1,7 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::GenericMarker, Id};
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -15,9 +13,8 @@ pub struct OwnerCommandsCommand {
     guild: Id<GenericMarker>
 }
 
-
 impl LuroCommand for OwnerCommandsCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let application = ctx
             .framework
             .twilight_client
@@ -28,10 +25,10 @@ impl LuroCommand for OwnerCommandsCommand {
         let client = ctx.framework.twilight_client.interaction(application.id);
 
         client.set_guild_commands(Id::new(self.guild.get()), &[]).await?;
-
-        ctx.content(format!("Commands set to null in guild <#{}>", self.guild))
-            .ephemeral()
-            .respond()
-            .await
+        ctx.respond(|r| {
+            r.content(format!("Commands set to null in guild <#{}>", self.guild))
+                .ephemeral()
+        })
+        .await
     }
 }

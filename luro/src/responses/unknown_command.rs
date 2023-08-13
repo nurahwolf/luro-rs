@@ -4,14 +4,6 @@ use tracing::error;
 use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
-use crate::slash::Slash;
-
-impl Slash {
-    /// A response sent when Luro receives a command it does not have a handler for
-    pub async fn unknown_command_response(mut self) -> anyhow::Result<()> {
-        self.embed(unknown_command_embed().into())?.respond().await
-    }
-}
 
 impl LuroSlash {
     /// A response sent when Luro receives a command it does not have a handler for

@@ -1,3 +1,5 @@
+use twilight_model::application::interaction::Interaction;
+
 use crate::{
     guild_setting::GuildSetting,
     heck::Heck,
@@ -50,6 +52,8 @@ pub trait LuroDatabaseDriver {
     async fn save_sfw_story(&self, story: Story) -> anyhow::Result<()>;
     async fn save_user(&self, id: u64, user: &LuroUser) -> anyhow::Result<()>;
     async fn get_staff(&self) -> anyhow::Result<LuroUserData>;
+    async fn save_interaction(&self, interaction: &Interaction, key: &str) -> anyhow::Result<()>;
+    async fn get_interaction(&self, key: &str) -> anyhow::Result<Interaction>;
     // TODO
     async fn get_users(&self) -> LuroUserData;
     async fn save_users(&self) -> LuroUserData;

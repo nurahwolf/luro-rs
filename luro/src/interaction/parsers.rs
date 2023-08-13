@@ -1,12 +1,14 @@
 use anyhow::anyhow;
 use std::mem;
 
-use twilight_model::application::interaction::{modal::ModalInteractionData, Interaction, InteractionData, message_component::MessageComponentInteractionData};
+use twilight_model::application::interaction::{
+    message_component::MessageComponentInteractionData, modal::ModalInteractionData, Interaction, InteractionData
+};
 
 use super::LuroSlash;
 
 impl LuroSlash {
-        /// Parse incoming [`ModalSubmit`] interaction and return the inner data.
+    /// Parse incoming [`ModalSubmit`] interaction and return the inner data.
     ///
     /// This takes a mutable [`Interaction`] since the inner [`ModalInteractionData`]
     /// is replaced with [`None`] to avoid useless clones.

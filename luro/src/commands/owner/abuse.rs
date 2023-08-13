@@ -1,15 +1,12 @@
-use std::convert::TryInto;
-
 use anyhow::Context;
 
-
+use luro_builder::embed::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_util::builder::embed::EmbedAuthorBuilder;
 
 use crate::models::SlashUser;
 
+use crate::interaction::LuroSlash;
 use crate::models::LuroWebhook;
-use crate::slash::Slash;
 
 use crate::traits::luro_command::LuroCommand;
 
@@ -24,9 +21,8 @@ pub struct AbuseCommand {
     embed: Option<bool>
 }
 
-
 impl LuroCommand for AbuseCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let luro_webhook = LuroWebhook::new(ctx.framework.clone()).await?;
         let webhook = luro_webhook
             .get_webhook(
@@ -41,12 +37,11 @@ impl LuroCommand for AbuseCommand {
 
         let (_, slash_author) = SlashUser::client_fetch_user(&ctx.framework, self.user.resolved.id).await?;
 
-        let embed = ctx
-            .default_embed()
-            .await?
+        let mut embed = EmbedBuilder::default();
+        embed
+            .colour(ctx.accent_colour().await)
             .description(&self.message)
-            .author(EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.clone().try_into()?))
-            .build();
+            .author(|author| author.name(&slash_author.name).icon_url(&slash_author.avatar));
 
         let webhook_message = ctx
             .framework
@@ -55,13 +50,11 @@ impl LuroCommand for AbuseCommand {
             .username(&slash_author.name)
             .avatar_url(&slash_author.avatar);
 
-        if let Some(embed_wanted) = self.embed && embed_wanted {
-            webhook_message.embeds(&[embed.clone()]).await?
-
-        } else {
-            webhook_message.content(&self.message).await?
+        match self.embed.unwrap_or_default() {
+            true => webhook_message.embeds(&[embed.clone().into()]).await?,
+            false => webhook_message.content(&self.message).await?
         };
 
-        ctx.embed(embed)?.ephemeral().respond().await
+        ctx.respond(|response| response.add_embed(embed)).await
     }
 }

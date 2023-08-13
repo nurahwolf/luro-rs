@@ -1,7 +1,6 @@
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{slash::Slash, traits::luro_command::LuroCommand};
+use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand};
 
 use self::{role::InfoRole, user::InfoUser};
 
@@ -17,9 +16,8 @@ pub enum InfoCommands {
     Role(InfoRole)
 }
 
-
 impl LuroCommand for InfoCommands {
-    async fn run_commands(self, ctx: Slash) -> anyhow::Result<()> {
+    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         match self {
             Self::User(command) => command.run_command(ctx).await,
             Self::Role(command) => command.run_command(ctx).await

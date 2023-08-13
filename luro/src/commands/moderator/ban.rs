@@ -1,13 +1,12 @@
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 use std::convert::TryInto;
-
 
 use luro_model::{luro_log_channel::LuroLogChannel, user_actions::UserActions, user_actions_type::UserActionType};
 use tracing::debug;
 
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
-use twilight_model::guild::Permissions;
+use twilight_model::{guild::Permissions, http::interaction::InteractionResponseType};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{models::GuildPermissions, traits::luro_command::LuroCommand};
@@ -45,10 +44,10 @@ pub enum TimeToBan {
     SevenDays
 }
 
-
 impl LuroCommand for BanCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
-        ctx.deferred().await?;
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let response = InteractionResponseType::DeferredChannelMessageWithSource;
+        ctx.respond(|r| r.response_type(response)).await?;
 
         let mut reason = match self.reason {
             Reason::ArtScam => "[Art Scam]".to_owned(),
@@ -64,7 +63,9 @@ impl LuroCommand for BanCommand {
         }
 
         if reason.is_empty() {
-            return ctx.content("You need to specify a reason, dork!").ephemeral().respond().await;
+            return ctx
+                .respond(|r| r.content("You need to specify a reason, dork!").ephemeral())
+                .await;
         }
 
         let period_string = match self.purge {
@@ -189,6 +190,6 @@ impl LuroCommand for BanCommand {
             .send_log_channel(&Some(guild_id), embed.clone(), LuroLogChannel::Moderator)
             .await?;
 
-        ctx.embed(embed.build())?.respond().await
+        ctx.respond(|r| r.add_embed(embed.build()).response_type(response)).await
     }
 }

@@ -3,11 +3,11 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
-impl Slash {
-    pub async fn user_hierarchy_response(mut self, username: &String) -> anyhow::Result<()> {
-        self.embed(user_hierarchy_embed(username).build())?.respond().await
+impl LuroSlash {
+    pub async fn user_hierarchy_response(&self, username: &String) -> anyhow::Result<()> {
+        self.respond(|r| r.add_embed(user_hierarchy_embed(username).build())).await
     }
 }
 

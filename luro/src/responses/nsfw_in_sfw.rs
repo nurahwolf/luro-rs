@@ -3,11 +3,11 @@ use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
 use crate::COLOUR_DANGER;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
-impl Slash {
-    pub async fn nsfw_in_sfw_response(mut self) -> anyhow::Result<()> {
-        self.embed(nsfw_in_sfw_embed().build())?.respond().await
+impl LuroSlash {
+    pub async fn nsfw_in_sfw_response(&self) -> anyhow::Result<()> {
+        self.respond(|r| r.add_embed(nsfw_in_sfw_embed().build())).await
     }
 }
 

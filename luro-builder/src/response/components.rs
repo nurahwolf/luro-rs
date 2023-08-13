@@ -13,7 +13,7 @@ impl LuroResponse {
         components(&mut c);
         match &mut self.components {
             Some(components) => components.push(c.into()),
-            None => self.components = Some(c.into()),
+            None => self.components = Some(c.into())
         };
         self
     }
@@ -21,8 +21,8 @@ impl LuroResponse {
     pub fn add_components(&mut self, components: impl Into<Vec<Component>>) -> &mut Self {
         match &mut self.components {
             Some(existing) => existing.append(&mut components.into()),
-            None => self.components = Some(components.into()),
+            None => self.components = Some(components.into())
         };
-        self 
+        self
     }
 }

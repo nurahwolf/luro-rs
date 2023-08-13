@@ -1,9 +1,7 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Seek;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
 use crate::traits::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -13,14 +11,13 @@ pub struct SeekCommand {
     position: i64
 }
 
-
 impl LuroCommand for SeekCommand {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
         let player = ctx.framework.lavalink.player(guild_id).await.unwrap();
         player.send(Seek::from((guild_id, self.position * 1000)))?;
 
-        ctx.content(format!("Seeked to {}s", self.position)).respond().await
+        ctx.respond(|r| r.content(format!("Seeked to {}s", self.position))).await
     }
 }

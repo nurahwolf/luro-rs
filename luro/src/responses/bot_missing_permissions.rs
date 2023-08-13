@@ -3,12 +3,11 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 
-impl Slash {
-    pub async fn bot_missing_permission_response(mut self, permission_missing: &String) -> anyhow::Result<()> {
-        self.embed(bot_missing_permission_embed(permission_missing).build())?
-            .respond()
+impl LuroSlash {
+    pub async fn bot_missing_permission_response(&self, permission_missing: &String) -> anyhow::Result<()> {
+        self.respond(|r| r.add_embed(bot_missing_permission_embed(permission_missing).build()))
             .await
     }
 }

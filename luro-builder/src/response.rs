@@ -11,8 +11,6 @@ use twilight_model::{
     }
 };
 
-use crate::components::ComponentBuilder;
-
 /// Luro's response builder. This is a nice builder for putting together different type of responses and then sending them in sane ways.
 /// When used in Luro, this allows for responding to deferred messages, responding to interactions and creating new messages all from the same parts.
 ///
@@ -82,9 +80,12 @@ impl Default for LuroResponse {
     }
 }
 
-mod content;
-mod embed;
 mod components;
+mod content;
+mod custom_id;
+mod embed;
+mod response_type;
+mod title;
 
 impl LuroResponse {
     /// Returns an ['InteractionResponse'] based on the variables of this structure. Only used for interaction responses.
@@ -118,6 +119,12 @@ impl LuroResponse {
     /// Responds to the interaction author by default.
     pub fn reply(&mut self, id: &Id<MessageMarker>) -> &mut Self {
         self.reply = Some(*id);
+        self
+    }
+
+    /// Set the message so that it can only be viewed by the person invoking the command. Has no effect on non-interaction messages.
+    pub fn ephemeral(&mut self) -> &mut Self {
+        self.flags = Some(MessageFlags::EPHEMERAL);
         self
     }
 }

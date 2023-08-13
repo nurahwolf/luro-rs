@@ -1,4 +1,7 @@
-use twilight_model::channel::message::{component::{Button, ButtonStyle}, embed::EmbedField, ReactionType, Component};
+use twilight_model::channel::message::{
+    component::{Button, ButtonStyle},
+    Component, ReactionType
+};
 
 /// A nicer way to create fields. By default you should just use the 'field' function, however you can also use the split function calls if it is neater for your use case
 pub struct ButtonBuilder(Button);

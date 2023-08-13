@@ -1,12 +1,10 @@
-
-
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFieldBuilder, ImageSource};
+use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::models::SlashUser;
 
-use crate::slash::Slash;
+use crate::interaction::LuroSlash;
 use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -18,11 +16,10 @@ pub struct OwnerGetMessage {
     user: Option<ResolvedUser>
 }
 
-
 impl LuroCommand for OwnerGetMessage {
-    async fn run_command(self, mut ctx: Slash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let message_id = Id::new(self.message_id.parse()?);
-        let mut embed = ctx.default_embed().await?;
+        let mut embed = EmbedBuilder::new().color(ctx.accent_colour().await);
         let ((_, slash_author), channel_id, message_id) = match ctx.framework.twilight_cache.message(message_id) {
             Some(message) => {
                 embed = embed.description(message.content());
@@ -37,10 +34,10 @@ impl LuroCommand for OwnerGetMessage {
                     Some(user) => user,
                     None => {
                         return ctx
-                            .clone()
-                            .content("Message not found! Try specifying a user ID if you know who sent it.")
-                            .ephemeral()
-                            .respond()
+                            .respond(|r| {
+                                r.content("Message not found! Try specifying a user ID if you know who sent it.")
+                                    .ephemeral()
+                            })
                             .await
                     }
                 };
@@ -49,10 +46,10 @@ impl LuroCommand for OwnerGetMessage {
                     Some(message) => message,
                     None => {
                         return ctx
-                            .clone()
-                            .content("Looks like the user does not have the message ID you provided, sorry.")
-                            .ephemeral()
-                            .respond()
+                            .respond(|r| {
+                                r.content("Looks like the user does not have the message ID you provided, sorry.")
+                                    .ephemeral()
+                            })
                             .await
                     }
                 };
@@ -73,6 +70,6 @@ impl LuroCommand for OwnerGetMessage {
         embed = embed.field(EmbedFieldBuilder::new("Channel", format!("<#{}>", channel_id)).inline());
         embed = embed.field(EmbedFieldBuilder::new("Message ID", message_id.to_string()).inline());
 
-        ctx.embed(embed.build())?.respond().await
+        ctx.respond(|r| r.add_embed(embed.build()).ephemeral()).await
     }
 }
