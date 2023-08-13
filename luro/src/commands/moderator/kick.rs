@@ -29,7 +29,7 @@ pub struct KickCommand {
 impl LuroCommand for KickCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let response = InteractionResponseType::DeferredChannelMessageWithSource;
-        ctx.respond(|r| r.response_type(response)).await?;
+        ctx.acknowledge_interaction(false).await?;
 
         let mut reason = match self.reason {
             Reason::ArtScam => "[Art Scam]".to_owned(),

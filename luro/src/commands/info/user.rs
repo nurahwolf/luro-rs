@@ -38,14 +38,8 @@ pub struct InfoUser {
 
 impl LuroCommand for InfoUser {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let response = InteractionResponseType::DeferredChannelMessageWithSource;
-        ctx.respond(|r| {
-            if let Some(export) = self.gdpr_export && export {
-                r.ephemeral();
-            }
-            r.response_type(response)
-        })
-        .await?;
+        let response_type = InteractionResponseType::DeferredChannelMessageWithSource;
+        ctx.acknowledge_interaction(self.gdpr_export.unwrap_or_default()).await?;
 
         let mut response = LuroResponse::default();
         let mut embed = EmbedBuilder::new().color(ctx.accent_colour().await);
@@ -245,7 +239,7 @@ impl LuroCommand for InfoUser {
 
         embed = embed.field(EmbedFieldBuilder::new("Timestamps", timestamp).inline());
         embed = embed.description(description);
-        response.add_embed(embed.build());
+        response.add_embed(embed.build()).response_type(response_type);
         ctx.create_response(&response).await
     }
 }

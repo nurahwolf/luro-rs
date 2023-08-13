@@ -3,7 +3,10 @@ use std::{collections::BTreeMap, convert::TryFrom};
 use anyhow::Context;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::id::{marker::UserMarker, Id};
+use twilight_model::{
+    http::interaction::InteractionResponseType,
+    id::{marker::UserMarker, Id}
+};
 
 use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand};
 use std::{convert::TryInto, fmt::Write, iter::FromIterator};
@@ -23,6 +26,9 @@ pub struct WordcountCommand {
 
 impl LuroCommand for WordcountCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let response = InteractionResponseType::DeferredChannelMessageWithSource;
+        ctx.acknowledge_interaction(false).await?;
+
         let accent_colour = ctx.accent_colour().await;
         let slash_author;
         let mut wordcount: usize = Default::default();
@@ -31,14 +37,7 @@ impl LuroCommand for WordcountCommand {
         let mut words: BTreeMap<String, usize> = Default::default();
         let mut content = String::new();
         let mut digits = 0;
-        let global = match self.global {
-            Some(global) => {
-                // NOTE: Yes, I know this defers it even when the user selects false. It's a nice way to test deferred...
-                ctx.acknowledge_interaction().await?;
-                global
-            }
-            None => false
-        };
+        let global = self.global.unwrap_or(false);
         // How many items we should get
         let limit = match self.limit {
             Some(limit) => limit.try_into().context("Failed to convert i64 into usize")?,
@@ -177,8 +176,8 @@ impl LuroCommand for WordcountCommand {
         }
         most_used.truncate(1024);
 
-        ctx.respond(|response| {
-            response.embed(|embed| {
+        ctx.respond(|r| {
+            r.embed(|embed| {
                 embed
                     .author(|author| author.name(slash_author.name).icon_url(slash_author.avatar))
                     .description(content)
@@ -187,6 +186,7 @@ impl LuroCommand for WordcountCommand {
                     .footer(|footer| footer.text(""))
                     .colour(accent_colour)
             })
+            .response_type(response)
         })
         .await
     }

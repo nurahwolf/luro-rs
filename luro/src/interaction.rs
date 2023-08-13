@@ -10,6 +10,7 @@ use twilight_http::Error;
 use twilight_http::Response;
 use twilight_model::application::interaction::Interaction;
 use twilight_model::channel::Message;
+use twilight_model::channel::message::MessageFlags;
 use twilight_model::http::interaction::InteractionResponseType;
 use twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource;
 use twilight_model::http::interaction::InteractionResponseType::DeferredUpdateMessage;
@@ -100,9 +101,10 @@ impl LuroSlash {
     /// Acknowledge the interaction, showing a loading state. This will then be updated later.
     ///
     /// Use this for operations that take a long time. Generally its best to send this as soon as the reaction has been received.
-    pub async fn acknowledge_interaction(&self) -> anyhow::Result<()> {
+    pub async fn acknowledge_interaction(&self, deferred: bool) -> anyhow::Result<()> {
         let response = LuroResponse {
             interaction_response_type: InteractionResponseType::DeferredChannelMessageWithSource,
+            flags: if deferred { Some(MessageFlags::EPHEMERAL) } else { None },
             ..Default::default()
         };
 

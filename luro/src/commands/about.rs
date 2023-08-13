@@ -6,6 +6,7 @@ use luro_builder::embed::EmbedBuilder;
 use luro_model::constants::PRIMARY_BOT_OWNER;
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::http::interaction::InteractionResponseType;
 
 use crate::interaction::LuroSlash;
 use crate::models::SlashUser;
@@ -23,7 +24,9 @@ pub struct AboutCommand {
 
 impl LuroCommand for AboutCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.acknowledge_interaction().await?;
+        let response = InteractionResponseType::DeferredChannelMessageWithSource;
+        ctx.acknowledge_interaction(false).await?;
+
         // Variables
         let mut embed = EmbedBuilder::default();
         embed.colour(ctx.accent_colour().await);
@@ -150,7 +153,7 @@ impl LuroCommand for AboutCommand {
 
         embed.description(description);
 
-        ctx.respond(|response| response.add_embed(embed)).await
+        ctx.respond(|r| r.add_embed(embed).response_type(response)).await
     }
 }
 
