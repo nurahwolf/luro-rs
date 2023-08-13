@@ -1,11 +1,8 @@
-use std::fmt::Write;
 use luro_model::{roll::Roll, roll_result::RollResult, roll_value::RollValue};
+use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{
-    interaction::LuroSlash,
-    luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "simple", desc = "A simpler version, for those not wanting to deal with foruma")]

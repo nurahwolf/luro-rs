@@ -1,14 +1,13 @@
+use luro_builder::embed::EmbedBuilder;
 use luro_model::{
-    luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel, luro_message::LuroMessage,
-    luro_message_source::LuroMessageSource
+    constants::COLOUR_DANGER, luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel,
+    luro_message::LuroMessage, luro_message_source::LuroMessageSource
 };
 use regex::Regex;
 use std::{fmt::Write, sync::Arc};
 use tracing::{debug, info, warn};
 
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
-
-use crate::{framework::Framework, models::SlashUser, COLOUR_DANGER};
+use crate::{framework::Framework, models::SlashUser};
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn response_message_modified(self: &Arc<Self>, message: &LuroMessage) -> anyhow::Result<()> {
@@ -23,9 +22,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 return Ok(());
             };
             let slash_user = SlashUser::from(author);
-            let embed_author = EmbedAuthorBuilder::new(format!("{} - {}", slash_user.name, slash_user.user_id))
-                .icon_url(ImageSource::url(slash_user.avatar)?);
-            embed = embed.author(embed_author)
+            embed.author(|author| author.name(slash_user.name).icon_url(slash_user.avatar));
         }
 
         match message.source {
@@ -39,10 +36,12 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 };
                 match old_message.content().len() > 1024 {
                     true => writeln!(description, "**Original Message:**\n{}\n", old_message.content())?,
-                    false => embed = embed.field(EmbedFieldBuilder::new("Original Message", old_message.content()))
-                }
+                    false => {
+                        embed.create_field("Original Message", old_message.content(), false);
+                    }
+                };
 
-                embed = embed.title("Message Edited");
+                embed.title("Message Edited");
 
                 let user_data;
                 {
@@ -54,15 +53,19 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 match &message.content {
                     Some(content) => match content.len() > 1024 {
                         true => writeln!(description, "**Updated Message:**\n{content}")?,
-                        false => embed = embed.field(EmbedFieldBuilder::new("Updated Message", content))
+                        false => {
+                            embed.create_field("Updated Message", content, false);
+                        }
                     },
                     None => {
                         debug!("No message content, so no need to record it");
                         return Ok(());
                     }
                 }
-                embed = embed.field(
-                    EmbedFieldBuilder::new("Total Edits", format!("Edited `{}` messages!", user_data.message_edits)).inline()
+                embed.create_field(
+                    "Total Edits",
+                    &format!("Edited `{}` messages!", user_data.message_edits),
+                    true
                 );
             }
             LuroMessageSource::MessageDelete => {
@@ -78,8 +81,9 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 }
                 writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
                 let (_, slash_user) = SlashUser::client_fetch_user(self, old_message.author()).await?;
-                let embed_author = EmbedAuthorBuilder::new(slash_user.name).icon_url(ImageSource::url(slash_user.avatar)?);
-                embed = embed.author(embed_author).title("Message Deleted").color(COLOUR_DANGER)
+                embed
+                    .author(|author| author.name(slash_user.name).icon_url(slash_user.avatar))
+                    .colour(COLOUR_DANGER);
             }
             LuroMessageSource::MessageCreate => {
                 let mut content = String::new();
@@ -139,7 +143,10 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         }
 
         match self.embed_message_modified(message, embed, description).await {
-            Ok(embed) => self.send_log_channel(&message.guild_id, embed, LuroLogChannel::Message).await,
+            Ok(embed) => {
+                self.send_log_channel(&message.guild_id, embed.into(), LuroLogChannel::Message)
+                    .await
+            }
             Err(why) => {
                 info!(why = ?why, "Failed to send to guild log channel");
                 Ok(())
@@ -156,22 +163,21 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     ) -> anyhow::Result<EmbedBuilder> {
         match message.guild_id {
             Some(guild_id) => {
-                embed = embed.url(format!(
+                embed.url(format!(
                     "https://discord.com/channels/{guild_id}/{}/{}",
                     message.channel_id, message.id
-                ))
+                ));
             }
             None => {
-                embed = embed.url(format!(
+                embed.url(format!(
                     "https://discord.com/channels/@me/{}/{}",
                     message.channel_id, message.id
-                ))
+                ));
             }
         }
-
-        embed = embed.field(EmbedFieldBuilder::new("Channel", format!("<#{}>", message.channel_id)).inline());
-        embed = embed.field(EmbedFieldBuilder::new("Message ID", message.id.to_string()).inline());
-        embed = embed.description(description);
+        embed.create_field("Channel", &format!("<#{}>", message.channel_id), true);
+        embed.create_field("Message ID", &message.id.to_string(), true);
+        embed.description(description);
         Ok(embed)
     }
 }

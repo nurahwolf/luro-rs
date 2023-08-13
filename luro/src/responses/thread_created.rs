@@ -1,8 +1,7 @@
+use luro_builder::embed::EmbedBuilder;
 use luro_model::{luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel};
 use tracing::debug;
 use twilight_model::gateway::payload::incoming::ThreadCreate;
-
-use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 use crate::framework::Framework;
 
@@ -10,18 +9,19 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     // TODO: Change this to a response type
     pub async fn response_thread_created(&self, event: &ThreadCreate) -> anyhow::Result<()> {
         let embed = self.embed_thread_created(event).await;
-        self.send_log_channel(&event.guild_id, embed, LuroLogChannel::Thread).await
+        self.send_log_channel(&event.guild_id, embed.into(), LuroLogChannel::Thread)
+            .await
     }
 
     /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
     pub async fn embed_thread_created(&self, event: &ThreadCreate) -> EmbedBuilder {
         debug!(thread = ?event, "Thread created");
-        let mut embed = self.default_embed(&event.guild_id).await.title("Thread Created");
+        let mut embed = self.default_embed(&event.guild_id).await;
 
         match &event.name {
-            Some(name) => embed = embed.field(EmbedFieldBuilder::new("Name", format!("{name} - <#{}>", event.id)).inline()),
-            None => embed = embed.field(EmbedFieldBuilder::new("Name", format!("<#{}>", event.id)).inline())
-        }
+            Some(name) => embed.create_field("Name", &format!("{name} - <#{}>", event.id), true),
+            None => embed.create_field("ID", &format!("<#{}>", event.id), true)
+        };
 
         let channel_type = match event.kind {
             twilight_model::channel::ChannelType::GuildText => "GuildText",
@@ -40,9 +40,9 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         };
 
         if let Some(parent_id) = event.parent_id {
-            embed = embed.field(EmbedFieldBuilder::new("Parent Channel", format!("<#{parent_id}>")).inline());
+            embed.create_field("Parent Channel", &format!("<#{parent_id}>"), true);
         }
-        embed = embed.field(EmbedFieldBuilder::new("Type", channel_type).inline());
+        embed.create_field("Type", channel_type, true).title("Thread Created");
         embed
     }
 }

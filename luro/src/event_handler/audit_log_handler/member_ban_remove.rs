@@ -1,8 +1,8 @@
 use anyhow::Context;
+use luro_builder::embed::EmbedBuilder;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
 use std::{fmt::Write, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
-use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
 use crate::{framework::Framework, models::SlashUser, COLOUR_SUCCESS};
 
@@ -17,9 +17,9 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         let unbanned_user_id = Id::new(event.target_id.context("No user ID found for unbanned user")?.get());
         let (_, slash_author) = SlashUser::client_fetch_user(self, unbanned_user_id).await?;
 
-        embed = embed
-            .thumbnail(ImageSource::url(slash_author.avatar)?)
-            .color(COLOUR_SUCCESS)
+        embed
+            .thumbnail(|thumbnail| thumbnail.url(slash_author.avatar))
+            .colour(COLOUR_SUCCESS)
             .title(format!("🔓 Unbanned from {}", guild.name));
         writeln!(
             description,
@@ -34,7 +34,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 writeln!(description, "```{reason}```")?
             }
         }
-        embed = embed.description(description);
+        embed.description(description);
         self.send_moderator_log_channel(&Some(guild.id), embed).await
     }
 }

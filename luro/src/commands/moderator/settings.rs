@@ -101,28 +101,26 @@ impl LuroCommand for GuildSettingsCommand {
 
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
         ctx.framework.database.update_guild(guild_id, &guild_settings).await?;
-        embed.field(|f| {
-            f.field(
-                "Guild Accent Colour",
-                &format!("`{:X}` - <@&{highest_role_id}>", guild_settings.accent_colour),
-                true
-            )
-        });
+        embed.create_field(
+            "Guild Accent Colour",
+            &format!("`{:X}` - <@&{highest_role_id}>", guild_settings.accent_colour),
+            true
+        );
 
         if let Some(accent_colour) = guild_settings.accent_colour_custom {
-            embed.field(|f| f.field("Custom Accent Colour", &format!("`{:X}`", accent_colour), true));
+            embed.create_field("Custom Accent Colour", &format!("`{:X}`", accent_colour), true);
         }
         if let Some(channel) = guild_settings.catchall_log_channel {
-            embed.field(|f| f.field("Catchall Log Channel", &format!("<#{channel}>"), true));
+            embed.create_field("Catchall Log Channel", &format!("<#{channel}>"), true);
         }
         if let Some(channel) = guild_settings.message_events_log_channel {
-            embed.field(|f| f.field("Message Log Channel", &format!("<#{channel}>"), true));
+            embed.create_field("Message Log Channel", &format!("<#{channel}>"), true);
         }
         if let Some(channel) = guild_settings.moderator_actions_log_channel {
-            embed.field(|f| f.field("Moderation Log Channel", &format!("<#{channel}>"), true));
+            embed.create_field("Moderation Log Channel", &format!("<#{channel}>"), true);
         }
         if let Some(channel) = guild_settings.thread_events_log_channel {
-            embed.field(|f| f.field("Thread Log Channel", &format!("<#{channel}>"), true));
+            embed.create_field("Thread Log Channel", &format!("<#{channel}>"), true);
         }
 
         ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))

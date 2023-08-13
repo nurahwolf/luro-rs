@@ -143,13 +143,13 @@ impl LuroCommand for ModifyRoleCommand {
                 embed.colour(role_selected.color);
             }
             if updated_role.hoist {
-                embed.field(|f| f.field("Hoisted", "True", true));
+                embed.create_field("Hoisted", "True", true);
             }
             if updated_role.managed {
-                embed.field(|f| f.field("Managed", "True", true));
+                embed.create_field("Managed", "True", true);
             }
             if updated_role.mentionable {
-                embed.field(|f| f.field("Mentionable", "True", true));
+                embed.create_field("Mentionable", "True", true);
             }
 
             // TODO: Return an embed with new role information

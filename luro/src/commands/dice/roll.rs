@@ -1,9 +1,7 @@
-use luro_model::{roll::Roll, roll_value::RollValue, roll_result::RollResult};
+use luro_model::{roll::Roll, roll_result::RollResult, roll_value::RollValue};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{
-    interaction::LuroSlash, luro_command::LuroCommand,
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "dice", desc = "Roll those freaking dice!!!")]

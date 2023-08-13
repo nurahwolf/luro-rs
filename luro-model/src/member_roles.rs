@@ -1,7 +1,13 @@
 use anyhow::anyhow;
 use tracing::debug;
 use twilight_http::Client;
-use twilight_model::{guild::Role, id::{marker::{GuildMarker, RoleMarker}, Id}};
+use twilight_model::{
+    guild::Role,
+    id::{
+        marker::{GuildMarker, RoleMarker},
+        Id
+    }
+};
 
 /// List of resolved roles of a member.
 pub struct MemberRoles {

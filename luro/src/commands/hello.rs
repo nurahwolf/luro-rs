@@ -1,7 +1,6 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{luro_command::LuroCommand, interaction::LuroSlash};
-
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "hello", desc = "Say hello")]

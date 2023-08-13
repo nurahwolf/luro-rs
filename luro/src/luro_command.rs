@@ -1,6 +1,7 @@
 use anyhow::anyhow;
 use anyhow::Error;
 
+use luro_builder::embed::EmbedBuilder;
 use twilight_interactions::command::CommandModel;
 
 use twilight_model::{
@@ -13,7 +14,6 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User
 };
-use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::interaction::LuroSlash;
 use crate::LuroFramework;

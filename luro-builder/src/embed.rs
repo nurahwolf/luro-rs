@@ -112,6 +112,20 @@ impl EmbedBuilder {
         self
     }
 
+    /// Simply a shorthand to the field function, just directly sets all three fields. Generally the most commonly used one
+    /// NOTE: If the resulting embed is being sent by Luro, it is checked to make sure we are not over 25 fields.
+    /// There is NO check for this in the builder itself!
+    pub fn create_field<S: ToString>(&mut self, name: S, value: S, inline: bool) -> &mut Self {
+        let field = EmbedField {
+            inline,
+            name: name.to_string(),
+            value: value.to_string()
+        };
+
+        self.0.fields.push(field);
+        self
+    }
+
     /// Explicitly set the embed's fields, overwriting all previous fields.
     /// Set to an empty vec to clear fields.
     /// Modify the nested embed of this builder directly if you want to remove / modify a specific field

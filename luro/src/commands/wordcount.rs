@@ -9,7 +9,7 @@ use twilight_model::{
     id::{marker::UserMarker, Id}
 };
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand, functions::padding_calculator};
+use crate::{functions::padding_calculator, interaction::LuroSlash, luro_command::LuroCommand};
 use std::{convert::TryInto, fmt::Write, iter::FromIterator};
 
 #[derive(CommandModel, CreateCommand)]
@@ -113,14 +113,14 @@ impl LuroCommand for WordcountCommand {
                                 e.description(content)
                                     .colour(accent_colour)
                                     .author(|author| author.name(slash_author.name).icon_url(slash_author.avatar))
-                            }).response_type(response)
+                            })
+                            .response_type(response)
                         })
                         .await;
                 }
                 None => {
                     content = format!("The word `{word}` has never been said, as far as I can see!");
-                    return ctx.respond(|r| r.content(content).response_type(response)
-                ).await;
+                    return ctx.respond(|r| r.content(content).response_type(response)).await;
                 }
             }
         };
@@ -136,12 +136,12 @@ impl LuroCommand for WordcountCommand {
             // Convert to base 10
             let total = match usize::try_from(total.checked_ilog10().unwrap_or(1)) {
                 Ok(total) => total + 1,
-                Err(_) => continue,
+                Err(_) => continue
             };
 
             let length = match usize::try_from(length.checked_ilog10().unwrap_or(1)) {
                 Ok(length) => length + 1,
-                Err(_) => continue,
+                Err(_) => continue
             };
 
             number_lengths.push((total, length))
@@ -154,7 +154,10 @@ impl LuroCommand for WordcountCommand {
             let length_padding = padding.1;
 
             info!("{total} needs {total_padding} padding - {length} needs {length_padding} padding");
-            writeln!(word_size, "- `{total:^total_padding$}` words with `{length:^length_padding$}` characters")?;
+            writeln!(
+                word_size,
+                "- `{total:^total_padding$}` words with `{length:^length_padding$}` characters"
+            )?;
         }
         info!("{:?}", word_size);
 
@@ -170,7 +173,7 @@ impl LuroCommand for WordcountCommand {
             // Convert to base 10
             let count = match usize::try_from(count.checked_ilog10().unwrap_or(1)) {
                 Ok(total) => total,
-                Err(_) => continue,
+                Err(_) => continue
             };
             number_lengths.push((word.len(), count))
         }
@@ -180,7 +183,10 @@ impl LuroCommand for WordcountCommand {
             let word_padding = padding.0;
             let count_padding = padding.1;
 
-            writeln!(most_used, "- `{word:^word_padding$}` words with `{count:^count_padding$}` characters")?;
+            writeln!(
+                most_used,
+                "- `{word:^word_padding$}` words with `{count:^count_padding$}` characters"
+            )?;
         }
 
         ctx.respond(|r| {

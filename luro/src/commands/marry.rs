@@ -198,7 +198,7 @@ impl LuroCommand for MarryNew {
             embed.description(reason);
         }
 
-        embed.field(|f| f.field("Their Reason", &self.reason, true));
+        embed.create_field("Their Reason", &self.reason, true);
         ctx.respond(|r| {
             r.add_embed(embed)
                 .content(format!("<@{}>", &self.marry.resolved.id))

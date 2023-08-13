@@ -1,4 +1,3 @@
-
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::luro_command::LuroCommand;

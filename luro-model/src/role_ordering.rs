@@ -1,6 +1,9 @@
 use std::cmp::Ordering;
 
-use twilight_model::{guild::Role, id::{marker::RoleMarker, Id}};
+use twilight_model::{
+    guild::Role,
+    id::{marker::RoleMarker, Id}
+};
 
 /// Compares the position of two roles.
 ///

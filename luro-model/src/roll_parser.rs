@@ -1,6 +1,6 @@
 use std::{iter::Peekable, str::Chars};
 
-use crate::{roll_options::RollOptions, filter_modifier::FilterModifier, roll_ast::RollAst};
+use crate::{filter_modifier::FilterModifier, roll_ast::RollAst, roll_options::RollOptions};
 
 #[derive(Debug)]
 pub struct RollParser<'a> {

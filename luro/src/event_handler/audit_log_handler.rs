@@ -3,7 +3,6 @@ use std::sync::Arc;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
 use tracing::warn;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::audit_log::AuditLogEventType};
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedFooterBuilder, ImageSource};
 
 use crate::{framework::Framework, models::SlashUser};
 
@@ -22,6 +21,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             }
         };
         let mut embed = self.default_embed(&event.guild_id).await;
+        embed.colour(self.accent_colour(&Some(guild_id)).await);
 
         match event.user_id {
             Some(action_user_id) => {
@@ -32,17 +32,10 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     }
                 }
 
-                {
-                    let (author, slash_author) = SlashUser::client_fetch_user(&self, action_user_id).await?;
-
-                    let embed_author = EmbedAuthorBuilder::new(format!("Performed by {} - {}", slash_author.name, author.id))
-                        .icon_url(ImageSource::url(slash_author.avatar)?)
-                        .build();
-
-                    embed = embed.author(embed_author)
-                }
+                let slash_author = SlashUser::client_fetch_user(&self, action_user_id).await?.1;
+                embed.author(|author| author.name(slash_author.name).icon_url(slash_author.avatar))
             }
-            None => embed = embed.footer(EmbedFooterBuilder::new("There is no record who performed this action."))
+            None => embed.footer(|footer| footer.text("There is no record who performed this action."))
         };
 
         let guild = self.twilight_client.guild(guild_id).await?.model().await?;

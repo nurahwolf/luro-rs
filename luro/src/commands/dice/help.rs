@@ -1,5 +1,4 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_util::builder::embed::EmbedFieldBuilder;
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
@@ -68,24 +67,23 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
 ```
     "
         ];
-        //TODO: New builder
-        let embed = ctx
-            .framework
-            .default_embed(&ctx.interaction.guild_id)
-            .await
-            .title("Dice helper")
-            .description(description)
-            .field(EmbedFieldBuilder::new(shortmode_help[0], shortmode_help[1]))
-            .field(EmbedFieldBuilder::new(standard_help[0], standard_help[1]))
-            .field(EmbedFieldBuilder::new(percentile_help[0], percentile_help[1]))
-            .field(EmbedFieldBuilder::new(keep_help[0], keep_help[1]))
-            .field(EmbedFieldBuilder::new(drop_help[0], drop_help[1]));
+        let accent_colour = ctx.accent_colour().await;
 
         ctx.respond(|r| {
             if let Some(ephemeral) = self.ephemeral && ephemeral {
                     r.ephemeral();
                 }
-            r.add_embed(embed.build())
+            r.embed(|embed| {
+                embed
+                    .colour(accent_colour)
+                    .title("Dice Helper")
+                    .description(description)
+                    .create_field(shortmode_help[0], shortmode_help[1], false)
+                    .create_field(standard_help[0], standard_help[1], false)
+                    .create_field(percentile_help[0], percentile_help[1], false)
+                    .create_field(keep_help[0], keep_help[1], false)
+                    .create_field(drop_help[0], drop_help[1], false)
+            })
         })
         .await
     }

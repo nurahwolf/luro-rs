@@ -3,7 +3,6 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
-
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "direction", desc = "Roll for a direction, such as `North East`!")]
 pub struct DiceRollDirectionCommand {

@@ -1,7 +1,10 @@
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 use std::convert::TryInto;
 
-use luro_model::{luro_log_channel::LuroLogChannel, user_actions::UserActions, user_actions_type::UserActionType, guild_permissions::GuildPermissions};
+use luro_model::{
+    guild_permissions::GuildPermissions, luro_log_channel::LuroLogChannel, user_actions::UserActions,
+    user_actions_type::UserActionType
+};
 use tracing::debug;
 
 use twilight_http::request::AuditLogReason;
@@ -185,7 +188,7 @@ impl LuroCommand for BanCommand {
 
         // If an alert channel is defined, send a message there
         ctx.framework
-            .send_log_channel(&Some(guild_id), embed.clone(), LuroLogChannel::Moderator)
+            .send_log_channel(&Some(guild_id), embed.clone().build(), LuroLogChannel::Moderator)
             .await?;
 
         ctx.respond(|r| r.add_embed(embed.build()).response_type(response)).await

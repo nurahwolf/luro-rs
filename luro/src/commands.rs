@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Error;
@@ -5,6 +7,7 @@ use anyhow::Error;
 use tracing::info;
 use tracing::warn;
 use twilight_interactions::command::CreateCommand;
+use twilight_model::application::command::Command;
 
 use self::dice::DiceCommands;
 use self::info::InfoCommands;
@@ -26,7 +29,6 @@ use crate::commands::heck::add::HeckAddCommand;
 
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
-use crate::models::Commands;
 use crate::BOT_NAME;
 
 mod about;
@@ -49,6 +51,15 @@ mod story;
 mod uwu;
 mod wordcount;
 // pub mod fursona;
+
+/// A simple structure containing our commands
+#[derive(Default)]
+pub struct Commands {
+    /// Commands that are available to be registered within guilds
+    pub guild_commands: HashMap<&'static str, Command>,
+    /// Commands that are available to be registered globally
+    pub global_commands: HashMap<&'static str, Command>
+}
 
 impl Commands {
     /// Return a default set of commands to register

@@ -17,33 +17,27 @@ impl LuroCommand for PingCommand {
         let mut embed = EmbedBuilder::default();
         embed.colour(ctx.accent_colour().await).description("🏓 Pinging!");
         if let Some(average) = ctx.latency.average() {
-            embed.field(|f| {
-                f.field(
-                    "Average Latency",
-                    &format!("`{}` milliseconds", average.as_millis().to_string()),
-                    true
-                )
-            });
+            embed.create_field(
+                "Average Latency",
+                &format!("`{}` milliseconds", average.as_millis().to_string()),
+                true
+            );
         }
 
         if let Some(average) = ctx.latency.received() {
-            embed.field(|f| {
-                f.field(
-                    "Last Acknowledgement",
-                    &format!("{} milliseconds ago", average.elapsed().as_millis()),
-                    true
-                )
-            });
+            embed.create_field(
+                "Last Acknowledgement",
+                &format!("{} milliseconds ago", average.elapsed().as_millis()),
+                true
+            );
         }
 
         if let Some(average) = ctx.latency.sent() {
-            embed.field(|f| {
-                f.field(
-                    "Hearbeat Sent",
-                    &format!("{} milliseconds ago", average.elapsed().as_millis()),
-                    true
-                )
-            });
+            embed.create_field(
+                "Hearbeat Sent",
+                &format!("{} milliseconds ago", average.elapsed().as_millis()),
+                true
+            );
         }
 
         let mut num = 0;
@@ -53,16 +47,14 @@ impl LuroCommand for PingCommand {
             writeln!(heartbeats, "{num} - {} milliseconds", heartbeat.as_millis())?
         }
         if !heartbeats.is_empty() {
-            embed.field(|f| {
-                f.field(
-                    "Hearbeats",
-                    &format!(
-                        "**Total Heartbeats Recorded:** `{}`\n```{heartbeats}```",
-                        ctx.latency.periods().to_string()
-                    ),
-                    false
-                )
-            });
+            embed.create_field(
+                "Hearbeats",
+                &format!(
+                    "**Total Heartbeats Recorded:** `{}`\n```{heartbeats}```",
+                    ctx.latency.periods().to_string()
+                ),
+                false
+            );
         }
 
         let start = Instant::now();

@@ -47,7 +47,10 @@ impl LuroCommand for AboutCommand {
             description_builder.push(("- Branch:", format!("`{}`", get_current_branch(&repo))));
             description_builder.push(("- Revision:", format!("`{}`", get_head_revision(&repo))));
         }
-        let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
+        let word_sizes: Vec<(usize, usize)> = description_builder
+            .iter()
+            .map(|(prefix, suffix)| (prefix.len(), suffix.len()))
+            .collect();
         let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
         for (prefix, suffix) in description_builder {
             writeln!(description, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
@@ -88,7 +91,10 @@ impl LuroCommand for AboutCommand {
                 description_builder.push(("- Voice States:", stats.voice_states().to_string()));
             }
 
-            let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
+            let word_sizes: Vec<(usize, usize)> = description_builder
+                .iter()
+                .map(|(prefix, suffix)| (prefix.len(), suffix.len()))
+                .collect();
             let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
             for (prefix, suffix) in description_builder {
                 writeln!(cache, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
@@ -119,11 +125,9 @@ impl LuroCommand for AboutCommand {
             .await?
             .owner
         {
-            embed.field(|field| {
-                match self.show_username.unwrap_or_default() {
-                    true => field.field("My Creator!", &format!("- {}", application_owner.name), true),
-                    false => field.field("My Creator!", &format!("- <@{}>", application_owner.id), true),
-                }
+            embed.field(|field| match self.show_username.unwrap_or_default() {
+                true => field.field("My Creator!", &format!("- {}", application_owner.name), true),
+                false => field.field("My Creator!", &format!("- <@{}>", application_owner.id), true)
             });
         }
 
@@ -131,7 +135,7 @@ impl LuroCommand for AboutCommand {
         for staff in staff.iter() {
             match self.show_username.unwrap_or_default() {
                 true => writeln!(staff_list, "- {}", &staff.name.clone().unwrap_or("unknown".to_owned()))?,
-                false => writeln!(staff_list, "- <@{}>", staff.id.unwrap_or(PRIMARY_BOT_OWNER))?,
+                false => writeln!(staff_list, "- <@{}>", staff.id.unwrap_or(PRIMARY_BOT_OWNER))?
             }
         }
         embed.field(|field| field.field("Those with 'Administrator' access!", &staff_list, false));

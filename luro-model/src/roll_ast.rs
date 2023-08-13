@@ -1,7 +1,7 @@
 use core::fmt;
 use std::{fmt::Display, num::NonZeroU64};
 
-use crate::{filter_modifier::FilterModifier, roll_value::RollValue, roll::Roll};
+use crate::{filter_modifier::FilterModifier, roll::Roll, roll_value::RollValue};
 
 const DEFAULT_SIDES: &str = "20";
 

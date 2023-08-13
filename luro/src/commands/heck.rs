@@ -16,7 +16,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder};
 
-use crate::{interaction::LuroSlash, LuroFramework, ACCENT_COLOUR, luro_command::LuroCommand};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand, LuroFramework, ACCENT_COLOUR};
 
 use self::{add::HeckAddCommand, info::HeckInfo, someone::HeckSomeoneCommand};
 

@@ -7,7 +7,6 @@ use luro_model::luro_log_channel::LuroLogChannel;
 use luro_model::{user_actions::UserActions, user_actions_type::UserActionType};
 use twilight_model::http::interaction::InteractionResponseType;
 
-use std::convert::TryInto;
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -17,8 +16,6 @@ use twilight_model::channel::message::Component;
 use twilight_model::guild::Permissions;
 use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
-use twilight_util::builder::embed::EmbedAuthorBuilder;
-use twilight_util::builder::embed::EmbedFooterBuilder;
 
 use crate::models::SlashUser;
 
@@ -52,23 +49,23 @@ impl LuroCommand for ModeratorWarnCommand {
             }
 
             let slash_author = SlashUser::client_fetch_user(&ctx.framework, user_id).await?.1;
-            let embed_author = EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.try_into()?);
             let mut warnings_formatted = String::new();
             for (warning, user_id) in &user_data.warnings {
                 writeln!(warnings_formatted, "Warning by <@{user_id}>```{warning}```")?
             }
 
-            let embed = ctx
-                .framework
-                .default_embed(&ctx.interaction.guild_id)
-                .await
-                .author(embed_author)
-                .description(warnings_formatted)
-                .footer(EmbedFooterBuilder::new(format!(
-                    "User has a total of {} warnings.",
-                    user_data.warnings.len()
-                )));
-            return ctx.respond(|r| r.add_embed(embed.build())).await;
+            let accent_colour = ctx.accent_colour().await;
+            return ctx
+                .respond(|r| {
+                    r.embed(|embed| {
+                        embed
+                            .author(|author| author.name(slash_author.name).icon_url(slash_author.avatar))
+                            .description(warnings_formatted)
+                            .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
+                            .colour(accent_colour)
+                    })
+                })
+                .await;
         }
 
         let components = vec![
@@ -142,11 +139,11 @@ impl LuroCommand for ModeratorWarnCommand {
                     .embeds(&[embed.clone().into()])
                     .await;
                 match victim_dm {
-                    Ok(_) => embed.field(|f| f.field("DM Sent", "Successful", true)),
-                    Err(_) => embed.field(|f| f.field("DM Sent", "Failed", true))
+                    Ok(_) => embed.create_field("DM Sent", "Successful", true),
+                    Err(_) => embed.create_field("DM Sent", "Failed", true)
                 }
             }
-            Err(_) => embed.field(|f| f.field("DM Sent", "Failed", true))
+            Err(_) => embed.create_field("DM Sent", "Failed", true)
         };
 
         ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))

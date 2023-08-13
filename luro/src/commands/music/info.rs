@@ -38,9 +38,9 @@ impl LuroCommand for InfoCommand {
             response.embed(|embed| {
                 embed
                     .description(description)
-                    .field(|f| f.field("Total Players", &stats.players.to_string(), true))
-                    .field(|f| f.field("Players playing Music", &stats.playing_players.to_string(), true))
-                    .field(|f| f.field("Uptime", &stats.uptime.to_string(), true))
+                    .create_field("Total Players", &stats.players.to_string(), true)
+                    .create_field("Players playing Music", &stats.playing_players.to_string(), true)
+                    .create_field("Uptime", &stats.uptime.to_string(), true)
                     .colour(accent_colour)
             })
         })

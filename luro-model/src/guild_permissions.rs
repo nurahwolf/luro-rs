@@ -1,8 +1,11 @@
 use twilight_http::Client;
-use twilight_model::{id::{
-    marker::{GuildMarker, RoleMarker, UserMarker},
-    Id
-}, guild::Guild};
+use twilight_model::{
+    guild::Guild,
+    id::{
+        marker::{GuildMarker, RoleMarker, UserMarker},
+        Id
+    }
+};
 
 use crate::luro_permissions::LuroPermissions;
 

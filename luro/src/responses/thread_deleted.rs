@@ -1,8 +1,7 @@
+use luro_builder::embed::EmbedBuilder;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
 use tracing::debug;
 use twilight_model::gateway::payload::incoming::ThreadDelete;
-
-use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 use crate::{framework::Framework, COLOUR_DANGER};
 
@@ -16,19 +15,13 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
     pub async fn embed_thread_deleted(&self, event: &ThreadDelete) -> EmbedBuilder {
         debug!(thread = ?event, "Thread Deleted!");
-        let mut embed = self
-            .default_embed(&Some(event.guild_id))
-            .await
-            .color(COLOUR_DANGER)
-            .title("Thread Deleted!");
+        let mut embed = self.default_embed(&Some(event.guild_id)).await;
 
         let channel_type = if let Some(thread) = self.twilight_cache.channel(event.id) {
             match &thread.name {
-                Some(name) => {
-                    embed = embed.field(EmbedFieldBuilder::new("Name", format!("{name} - <#{0}> - {0}", thread.id)).inline())
-                }
-                None => embed = embed.field(EmbedFieldBuilder::new("ID", format!("<#{0}> - {0}", thread.id)).inline())
-            }
+                Some(name) => embed.create_field("Name", &format!("{name} - <#{0}> - {0}", thread.id), true),
+                None => embed.create_field("ID", &format!("<#{0}> - {0}", thread.id), true)
+            };
             match thread.kind {
                 twilight_model::channel::ChannelType::GuildText => "GuildText",
                 twilight_model::channel::ChannelType::Private => "Private",
@@ -45,7 +38,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 _ => "Unknown"
             }
         } else {
-            embed = embed.field(EmbedFieldBuilder::new("ID", format!("<#{0}> - {0}", event.id)).inline());
+            embed.create_field("ID", &format!("<#{0}> - {0}", event.id), true);
             match event.kind {
                 twilight_model::channel::ChannelType::GuildText => "GuildText",
                 twilight_model::channel::ChannelType::Private => "Private",
@@ -62,8 +55,11 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 _ => "Unknown"
             }
         };
-        embed = embed.field(EmbedFieldBuilder::new("Parent Channel", format!("<#{}>", event.parent_id)).inline());
-        embed = embed.field(EmbedFieldBuilder::new("Type", channel_type).inline());
+        embed.create_field("Parent Channel", &format!("<#{}>", event.parent_id), true);
+        embed
+            .create_field("Type", channel_type, true)
+            .colour(COLOUR_DANGER)
+            .title("Thread Deleted!");
         embed
     }
 }

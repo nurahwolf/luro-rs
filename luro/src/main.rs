@@ -23,9 +23,9 @@ pub mod event_handler;
 pub mod framework;
 pub mod functions;
 pub mod interaction;
+pub mod luro_command;
 pub mod models;
 pub mod responses;
-pub mod luro_command;
 
 /// Where the config toml file lives. Can be overriden elsewhere if desired.
 pub const CONFIG_FILE_PATH: &str = "data/config.toml";

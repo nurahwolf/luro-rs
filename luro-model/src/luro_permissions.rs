@@ -3,7 +3,7 @@ use twilight_model::{
     channel::ChannelType,
     guild::Permissions,
     id::{
-        marker::{ChannelMarker, RoleMarker, UserMarker, GuildMarker},
+        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
         Id
     }
 };

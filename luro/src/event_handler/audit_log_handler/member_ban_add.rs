@@ -1,10 +1,10 @@
 use crate::{framework::Framework, models::SlashUser};
-use luro_model::{luro_database_driver::LuroDatabaseDriver, user_actions::UserActions, user_actions_type::UserActionType};
-
 use anyhow::Context;
-use std::{convert::TryInto, fmt::Write, sync::Arc};
+use luro_builder::embed::EmbedBuilder;
+use luro_model::{luro_database_driver::LuroDatabaseDriver, user_actions::UserActions, user_actions_type::UserActionType};
+use std::fmt::Write;
+use std::sync::Arc;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
-use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
@@ -19,10 +19,10 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         let banned_user_id = Id::new(event.target_id.context("No user ID found for banned user")?.get());
         let (_, slash_author) = SlashUser::client_fetch_user(self, banned_user_id).await?;
 
-        embed = embed
-            .thumbnail(slash_author.clone().try_into()?)
-            .color(COLOUR_DANGER)
-            .title(format!("🔨 Banned from {}", guild.name));
+        embed
+            .thumbnail(|thumbnail| thumbnail.url(slash_author.avatar))
+            .title(format!("🔨 Banned from {}", guild.name))
+            .colour(COLOUR_DANGER);
 
         writeln!(
             description,
@@ -52,7 +52,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 self.database.modify_user(&banned_user_id, &banned).await?;
             }
         }
-        embed = embed.description(description);
+        embed.description(description);
 
         self.send_moderator_log_channel(&Some(guild.id), embed).await
     }

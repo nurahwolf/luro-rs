@@ -3,10 +3,9 @@ use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::models::SlashUser;
+use crate::models::{LuroWebhook, SlashUser};
 
 use crate::interaction::LuroSlash;
-use crate::models::LuroWebhook;
 
 use crate::luro_command::LuroCommand;
 
