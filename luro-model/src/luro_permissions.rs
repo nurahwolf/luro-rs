@@ -1,14 +1,24 @@
+use twilight_http::Client;
 use twilight_model::{
     channel::ChannelType,
     guild::Permissions,
     id::{
-        marker::{ChannelMarker, RoleMarker, UserMarker},
+        marker::{ChannelMarker, RoleMarker, UserMarker, GuildMarker},
         Id
     }
 };
 use twilight_util::permission_calculator::PermissionCalculator;
 
-use super::{GuildPermissions, LuroPermissions, MemberRoles, RoleOrdering};
+use crate::{guild_permissions::GuildPermissions, member_roles::MemberRoles, role_ordering::RoleOrdering};
+
+/// Calculate the permissions of a member with information from the cache.
+pub struct LuroPermissions<'a> {
+    twilight_client: &'a Client,
+    guild_id: Id<GuildMarker>,
+    member_id: Id<UserMarker>,
+    member_roles: MemberRoles,
+    is_owner: bool
+}
 
 impl<'a> LuroPermissions<'a> {
     /// Initialize [`GuildPermissions`] from a cache client.

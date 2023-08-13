@@ -1,10 +1,16 @@
 use twilight_http::Client;
-use twilight_model::id::{
+use twilight_model::{id::{
     marker::{GuildMarker, RoleMarker, UserMarker},
     Id
-};
+}, guild::Guild};
 
-use super::{GuildPermissions, LuroPermissions};
+use crate::luro_permissions::LuroPermissions;
+
+/// Calculate the permissions for a given guild.
+pub struct GuildPermissions<'a> {
+    pub twilight_client: &'a Client,
+    pub guild: Guild
+}
 
 impl<'a> GuildPermissions<'a> {
     /// Initialize [`GuildPermissions`] with from a guild.

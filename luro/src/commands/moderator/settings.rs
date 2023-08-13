@@ -1,5 +1,5 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::luro_log_channel::LuroLogChannel;
+use luro_model::{luro_log_channel::LuroLogChannel, role_ordering::RoleOrdering};
 use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -7,7 +7,7 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::{functions::parse_string_to_u32, interaction::LuroSlash, models::RoleOrdering, luro_command::LuroCommand};
+use crate::{functions::parse_string_to_u32, interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(

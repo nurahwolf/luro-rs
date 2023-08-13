@@ -1,8 +1,7 @@
 use std::fmt::Write;
 
+use luro_model::role_ordering::RoleOrdering;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentionable};
-
-use crate::models::RoleOrdering;
 
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;

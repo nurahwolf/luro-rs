@@ -1,12 +1,15 @@
 use anyhow::anyhow;
 use tracing::debug;
 use twilight_http::Client;
-use twilight_model::id::{
-    marker::{GuildMarker, RoleMarker},
-    Id
-};
+use twilight_model::{guild::Role, id::{marker::{GuildMarker, RoleMarker}, Id}};
 
-use super::MemberRoles;
+/// List of resolved roles of a member.
+pub struct MemberRoles {
+    /// Everyone role
+    pub everyone: Role,
+    /// List of roles of the user
+    pub roles: Vec<Role>
+}
 
 impl MemberRoles {
     /// Query roles of a member in the cache.

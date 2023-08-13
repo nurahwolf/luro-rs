@@ -1,15 +1,13 @@
-use crate::interaction::LuroSlash;
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 use std::convert::TryInto;
 
-use luro_model::{luro_log_channel::LuroLogChannel, user_actions::UserActions, user_actions_type::UserActionType};
+use luro_model::{luro_log_channel::LuroLogChannel, user_actions::UserActions, user_actions_type::UserActionType, guild_permissions::GuildPermissions};
 use tracing::debug;
 
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::{guild::Permissions, http::interaction::InteractionResponseType};
 use twilight_util::builder::embed::EmbedFieldBuilder;
-
-use crate::{models::GuildPermissions, luro_command::LuroCommand};
 
 use super::Reason;
 
