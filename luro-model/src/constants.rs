@@ -6,3 +6,11 @@ use twilight_model::id::{marker::UserMarker, Id};
 pub const PRIMARY_BOT_OWNER: Id<UserMarker> = Id::new(373524896187416576);
 // Luro's primary owner(s)
 pub const BOT_OWNERS: [Id<UserMarker>; 2] = [Id::new(373524896187416576), Id::new(138791390279630849)];
+/// Luro's main accent colour
+pub const ACCENT_COLOUR: u32 = 0xDABEEF;
+/// Luro's DANGER colour
+pub const COLOUR_DANGER: u32 = 0xD35F5F;
+/// Transparent embed color (dark theme)
+pub const COLOUR_TRANSPARENT: u32 = 0x2F3136;
+/// Luro's SUCCESS colour
+pub const COLOUR_SUCCESS: u32 = 0xA0D995;

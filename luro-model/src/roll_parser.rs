@@ -1,4 +1,15 @@
-use super::{FilterModifier, RollAst, RollOptions, RollParser};
+use std::{iter::Peekable, str::Chars};
+
+use crate::{roll_options::RollOptions, filter_modifier::FilterModifier, roll_ast::RollAst};
+
+#[derive(Debug)]
+pub struct RollParser<'a> {
+    expr: Peekable<Chars<'a>>,
+    pos: u64,
+    source: String,
+
+    pub advanced: bool
+}
 
 impl<'a> RollParser<'a> {
     pub fn new(expr: &'a str) -> Self {

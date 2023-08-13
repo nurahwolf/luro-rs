@@ -2,7 +2,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "count", desc = "Test to see if the framework is globally mutable")]
 pub struct CountCommand {}

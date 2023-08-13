@@ -5,7 +5,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentio
 use crate::models::RoleOrdering;
 
 use crate::interaction::LuroSlash;
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "role", desc = "Information about a role")]

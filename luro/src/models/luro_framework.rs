@@ -15,11 +15,9 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::{framework::Framework, traits::luro_functions::LuroFunctions, LuroFramework, ACCENT_COLOUR};
+use crate::{framework::Framework, ACCENT_COLOUR};
 
 use super::Commands;
-
-impl LuroFunctions for LuroFramework {}
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     /// Create a response to an interaction.

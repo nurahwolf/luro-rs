@@ -7,7 +7,7 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::{functions::parse_string_to_u32, interaction::LuroSlash, models::RoleOrdering, traits::luro_command::LuroCommand};
+use crate::{functions::parse_string_to_u32, interaction::LuroSlash, models::RoleOrdering, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(

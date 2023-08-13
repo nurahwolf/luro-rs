@@ -7,7 +7,7 @@ use crate::{
     commands::heck::{format_heck, get_heck},
     interaction::LuroSlash,
     models::SlashUser,
-    traits::luro_command::LuroCommand
+    luro_command::LuroCommand
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]

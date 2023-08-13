@@ -3,7 +3,7 @@ use twilight_model::id::{marker::GenericMarker, Id};
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "commands", desc = "By default all this does is deregister commands in a guild")]

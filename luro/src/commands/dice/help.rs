@@ -1,7 +1,7 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "help", desc = "Information for how to roll your dice")]

@@ -16,7 +16,7 @@ use twilight_model::channel::message::Component;
 
 use crate::models::SlashUser;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 /// An array of reasons someone would like to marry.
 /// TODO: Load this from disk once it's big enough

@@ -4,6 +4,7 @@ members = [
     "luro-builder",
     "luro-database",
     "luro-model",
+    "luro-responses",
     "twilight-interactions",
     "twilight-interactions-derive"
 ]
@@ -38,6 +39,8 @@ twilight-util = { git = "https://github.com/twilight-rs/twilight.git", branch = 
     "permission-calculator",
     "snowflake",
 ] }
+
+rand = "0.8.0" # Used for luro-twilight, luro-model
 
 # TODO: MOVE TO DATABASE
 toml = "0.7"

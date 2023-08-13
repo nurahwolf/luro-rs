@@ -1,6 +1,13 @@
 use core::fmt;
+use std::collections::HashSet;
 
-use super::RollOptions;
+#[derive(Debug, Clone)]
+pub struct RollOptions {
+    options: HashSet<String>,
+    lastpos: u64,
+    messages: Vec<String>,
+    source: String
+}
 
 impl RollOptions {
     pub fn new(source: String) -> Self {

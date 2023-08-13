@@ -6,7 +6,7 @@ use twilight_model::{
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(name = "boop", desc = "Boop the Bot!")]

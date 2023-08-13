@@ -1,9 +1,8 @@
+use luro_model::{roll::Roll, roll_value::RollValue, roll_result::RollResult};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
-    interaction::LuroSlash,
-    models::{Roll, RollResult, RollValue},
-    traits::luro_command::LuroCommand
+    interaction::LuroSlash, luro_command::LuroCommand,
 };
 
 #[derive(CommandModel, CreateCommand)]

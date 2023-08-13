@@ -2,7 +2,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "say", desc = "Make me say garbage!")]
 pub struct SayCommand {

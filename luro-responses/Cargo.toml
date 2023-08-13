@@ -1,5 +1,5 @@
 [package]
-name = "luro-builder"
+name = "luro-responses"
 authors.workspace = true
 categories.workspace = true
 description.workspace = true
@@ -13,18 +13,7 @@ version.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# Logging and errors
 anyhow = { workspace = true }
-tracing = { workspace = true }
-
-# Luro Specific
-luro-model = { path = "../luro-model", optional = true }
-twilight-interactions = { workspace = true, optional = true }
-
-# Twilight
-twilight-model = { workspace = true }
-
-[features]
-default = ["luro-model", "auto-trim"]
-luro-model = ["dep:luro-model", "dep:twilight-interactions"]
-auto-trim = []
+tracing= { workspace = true}
+luro-builder = { path = "../luro-builder" }
+luro-model = { path = "../luro-model" }

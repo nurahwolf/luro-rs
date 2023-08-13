@@ -1,8 +1,8 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::interaction::LuroSlash;
+use crate::{luro_command::LuroCommand, interaction::LuroSlash};
 
-use crate::traits::luro_command::LuroCommand;
+
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "hello", desc = "Say hello")]
 pub struct HelloCommand {}

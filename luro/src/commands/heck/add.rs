@@ -12,7 +12,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[cfg(not(feature = "toml-driver"))]
 fn format_heck_id(input: usize) -> usize {

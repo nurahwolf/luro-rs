@@ -8,7 +8,7 @@ use crate::models::SlashUser;
 use crate::interaction::LuroSlash;
 use crate::models::LuroWebhook;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "abuse", desc = "Use a webhook to pretend to be a user", dm_permission = false)]

@@ -3,7 +3,7 @@ use twilight_lavalink::model::Seek;
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "seek", desc = "Seek through the track", dm_permission = false)]
 pub struct SeekCommand {

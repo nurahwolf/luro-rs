@@ -1,10 +1,10 @@
 use std::fmt::Write;
+use luro_model::{roll::Roll, roll_result::RollResult, roll_value::RollValue};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{
     interaction::LuroSlash,
-    models::{Roll, RollResult, RollValue},
-    traits::luro_command::LuroCommand
+    luro_command::LuroCommand
 };
 
 #[derive(CommandModel, CreateCommand)]

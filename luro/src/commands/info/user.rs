@@ -19,7 +19,7 @@ use crate::{
     models::{RoleOrdering, SlashUser}
 };
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "user", desc = "Information about a user")]

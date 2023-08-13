@@ -25,7 +25,7 @@ fn format_story_id(input: usize) -> String {
     input.to_string()
 }
 use crate::interaction::LuroSlash;
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "story",

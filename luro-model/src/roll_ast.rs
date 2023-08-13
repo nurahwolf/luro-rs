@@ -1,9 +1,23 @@
 use core::fmt;
 use std::{fmt::Display, num::NonZeroU64};
 
-use super::{FilterModifier, Roll, RollAst, RollValue};
+use crate::{filter_modifier::FilterModifier, roll_value::RollValue, roll::Roll};
 
 const DEFAULT_SIDES: &str = "20";
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum RollAst {
+    Add(Box<Self>, Box<Self>),
+    Sub(Box<Self>, Box<Self>),
+    Mul(Box<Self>, Box<Self>),
+    Div(Box<Self>, Box<Self>),
+    Mod(Box<Self>, Box<Self>),
+    IDiv(Box<Self>, Box<Self>),
+    Power(Box<Self>, Box<Self>),
+    Minus(Box<Self>),
+    Dice(Option<Box<Self>>, Option<Box<Self>>, FilterModifier<Box<Self>>, u64),
+    Const(String)
+}
 
 impl Display for RollAst {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

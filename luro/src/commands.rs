@@ -25,8 +25,8 @@ use twilight_model::application::interaction::InteractionData;
 use crate::commands::heck::add::HeckAddCommand;
 
 use crate::interaction::LuroSlash;
+use crate::luro_command::LuroCommand;
 use crate::models::Commands;
-use crate::traits::luro_command::LuroCommand;
 use crate::BOT_NAME;
 
 mod about;

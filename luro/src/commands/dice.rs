@@ -8,7 +8,7 @@ mod roll_direction;
 mod simple;
 mod stats;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 use self::help::DiceHelpCommand;
 use self::roll::DiceRollCommand;

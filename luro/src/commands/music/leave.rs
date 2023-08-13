@@ -4,7 +4,7 @@ use twilight_model::gateway::payload::outgoing::UpdateVoiceState;
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "leave", desc = "Leave voice in a guild", dm_permission = false)]
 pub struct LeaveCommand {}

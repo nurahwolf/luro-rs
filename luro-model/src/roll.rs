@@ -2,9 +2,7 @@ use std::{collections::HashMap, num::NonZeroU64};
 
 use rand::RngCore;
 
-use crate::models::RollParser;
-
-use super::{FilterModifier, Roll, RollAst, RollResult};
+use crate::{filter_modifier::FilterModifier, roll_ast::RollAst, roll_result::RollResult, roll_parser::RollParser};
 
 const STAT_ROLL: &str = "4d6l";
 const DIR: &[&str] = &[
@@ -18,6 +16,13 @@ const DIR: &[&str] = &[
     "North West",
     "Stay"
 ];
+
+#[derive(Debug, Clone)]
+pub struct Roll {
+    pub vals: Vec<u64>,
+    pub total: i64,
+    pub sides: NonZeroU64
+}
 
 impl Roll {
     pub fn roll_die(times: u64, sides: NonZeroU64, fm: FilterModifier<u64>, mut rng: impl RngCore) -> Roll {

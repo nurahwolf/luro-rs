@@ -22,7 +22,7 @@ use twilight_util::builder::embed::EmbedFooterBuilder;
 
 use crate::models::SlashUser;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(

@@ -5,7 +5,7 @@ use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedField
 use crate::models::SlashUser;
 
 use crate::interaction::LuroSlash;
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "get_message", desc = "Gets a particular message from the cache, or user's data")]

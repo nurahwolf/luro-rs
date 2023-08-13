@@ -3,7 +3,7 @@ use twilight_lavalink::model::Volume;
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "volume", desc = "Set the volume of the player!", dm_permission = false)]
 pub struct VolumeCommand {

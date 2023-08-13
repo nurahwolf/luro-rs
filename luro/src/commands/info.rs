@@ -1,6 +1,6 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 use self::{role::InfoRole, user::InfoUser};
 

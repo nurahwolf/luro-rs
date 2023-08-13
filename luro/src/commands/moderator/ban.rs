@@ -9,7 +9,7 @@ use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand,
 use twilight_model::{guild::Permissions, http::interaction::InteractionResponseType};
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{models::GuildPermissions, traits::luro_command::LuroCommand};
+use crate::{models::GuildPermissions, luro_command::LuroCommand};
 
 use super::Reason;
 

@@ -3,7 +3,7 @@ use twilight_lavalink::model::Pause;
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "pause", desc = "Pause / Unpause the current playing music", dm_permission = false)]
 pub struct PauseCommand {}

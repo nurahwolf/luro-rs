@@ -9,7 +9,7 @@ use twilight_model::{
     id::{marker::UserMarker, Id}
 };
 
-use crate::{interaction::LuroSlash, traits::luro_command::LuroCommand, functions::padding_calculator};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand, functions::padding_calculator};
 use std::{convert::TryInto, fmt::Write, iter::FromIterator};
 
 #[derive(CommandModel, CreateCommand)]

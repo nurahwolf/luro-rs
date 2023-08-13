@@ -9,7 +9,7 @@ use self::{join::JoinCommand, leave::LeaveCommand, play::PlayCommand};
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 mod info;
 mod join;
 mod leave;

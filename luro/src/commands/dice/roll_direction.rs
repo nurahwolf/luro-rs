@@ -1,6 +1,8 @@
+use luro_model::roll::Roll;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, models::Roll, traits::luro_command::LuroCommand};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "direction", desc = "Roll for a direction, such as `North East`!")]

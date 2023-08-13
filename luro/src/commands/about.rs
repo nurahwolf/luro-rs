@@ -9,9 +9,8 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::functions::padding_calculator;
 use crate::interaction::LuroSlash;
+use crate::luro_command::LuroCommand;
 use crate::models::SlashUser;
-
-use crate::traits::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "about", desc = "Information about me!")]
@@ -49,10 +48,9 @@ impl LuroCommand for AboutCommand {
             description_builder.push(("- Revision:", format!("`{}`", get_head_revision(&repo))));
         }
         let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
-        let (_, suffix_len, total_len) = padding_calculator(word_sizes);
+        let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
         for (prefix, suffix) in description_builder {
-            let caculated_padding = (total_len - prefix.len()) + suffix_len + 1;
-            writeln!(description, "{prefix}{suffix:>caculated_padding$}")?;
+            writeln!(description, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
         }
         embed.description(description);
 
@@ -91,10 +89,9 @@ impl LuroCommand for AboutCommand {
             }
 
             let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
-            let (_, suffix_len, total_len) = padding_calculator(word_sizes);
+            let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
             for (prefix, suffix) in description_builder {
-                let caculated_padding = (total_len - prefix.len()) + suffix_len + 1;
-                writeln!(cache, "{prefix}{suffix:>caculated_padding$}")?;
+                writeln!(cache, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
             }
             writeln!(cache, "```")?;
             embed.field(|field| field.field("Cache Stats", &cache, false));
@@ -106,10 +103,9 @@ impl LuroCommand for AboutCommand {
             description_builder.push(("- Physical memory usage:", format!("`{} MB`", usage.physical_mem / 1024 / 1024)));
             description_builder.push(("- Virtual memory usage:", format!("`{} MB`", usage.virtual_mem / 1024 / 1024)));
             let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
-            let (_, suffix_len, total_len) = padding_calculator(word_sizes);
+            let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
             for (prefix, suffix) in description_builder {
-                let caculated_padding = (total_len - prefix.len()) + suffix_len + 1;
-                writeln!(memory, "{prefix}{suffix:>caculated_padding$}")?;
+                writeln!(memory, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
             }
             embed.field(|field|field.field("Memory Stats", &memory, true));
         }

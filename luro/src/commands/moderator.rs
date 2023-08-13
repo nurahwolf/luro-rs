@@ -5,7 +5,7 @@ use crate::interaction::LuroSlash;
 use self::{
     ban::BanCommand, kick::KickCommand, purge::PurgeCommand, settings::GuildSettingsCommand, warn::ModeratorWarnCommand
 };
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 mod assign;
 mod ban;

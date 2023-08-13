@@ -7,7 +7,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "ping", desc = "See my ping!")]
 pub struct PingCommand {}

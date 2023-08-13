@@ -1,7 +1,11 @@
 use core::fmt;
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
-use super::RollValue;
+#[derive(Debug, PartialEq)]
+pub enum RollValue {
+    Float(f64),
+    Int(i64)
+}
 
 impl From<RollValue> for f64 {
     fn from(v: RollValue) -> Self {

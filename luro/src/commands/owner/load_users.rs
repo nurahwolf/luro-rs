@@ -2,7 +2,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::http::interaction::InteractionResponseType;
 
 use crate::interaction::LuroSlash;
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(

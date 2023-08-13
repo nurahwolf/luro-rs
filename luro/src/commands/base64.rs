@@ -12,7 +12,7 @@ use twilight_model::application::interaction::message_component::MessageComponen
 
 use crate::interaction::LuroSlash;
 
-use crate::traits::luro_command::LuroCommand;
+use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "base64", desc = "Convert to and from base64")]
 pub enum Base64Commands {

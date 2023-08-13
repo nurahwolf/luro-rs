@@ -720,6 +720,8 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "luro-model",
+ "tracing",
+ "twilight-interactions",
  "twilight-model",
 ]
 
@@ -744,15 +746,27 @@ dependencies = [
  "dashmap",
  "hyper",
  "parking_lot 0.12.1",
+ "rand",
  "serde",
  "tracing",
  "tracing-subscriber",
  "twilight-cache-inmemory",
  "twilight-gateway",
  "twilight-http",
+ "twilight-interactions",
  "twilight-lavalink",
  "twilight-model",
  "twilight-util",
+]
+
+[[package]]
+name = "luro-responses"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "luro-builder",
+ "luro-model",
+ "tracing",
 ]
 
 [[package]]
