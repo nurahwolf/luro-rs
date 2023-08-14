@@ -34,7 +34,7 @@ pub enum MarryCommands {
 }
 
 impl LuroCommand for MarryCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::New(command) => command.run_command(ctx).await,
@@ -170,13 +170,7 @@ pub struct MarryNew {
 
 impl LuroCommand for MarryNew {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let slash_author = client_fetch(
-            &ctx.framework,
-            ctx.interaction.guild_id,
-            ctx.interaction
-                .author_id().unwrap()
-        )
-        .await?;
+        let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, ctx.interaction.author_id().unwrap()).await?;
         let mut embed = EmbedBuilder::default();
         embed
             .author(|author| {

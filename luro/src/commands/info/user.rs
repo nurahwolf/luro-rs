@@ -3,7 +3,7 @@ use luro_builder::response::LuroResponse;
 
 use std::{convert::TryInto, fmt::Write, time::Duration};
 
-use luro_model::{role_ordering::RoleOrdering, user_actions_type::UserActionType, slash_user::SlashUser};
+use luro_model::{role_ordering::RoleOrdering, slash_user::SlashUser, user_actions_type::UserActionType};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::{attachment::Attachment, interaction::InteractionResponseType},
@@ -160,7 +160,7 @@ impl LuroCommand for InfoUser {
             if let Some(export) = self.gdpr_export && export {
                 if let Some(user_specified) = self.user {
                     // TODO: Add privilege esc tally to the person
-                    return ctx.respond(|r|r.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.interaction.author_id().unwrap()))).await
+                    return ctx.respond(|r|r.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.interaction.author_id().unwrap())).response_type(response_type)).await
                 }
                 response.attachments = Some(vec![Attachment::from_bytes(
                     format!("gdpr-export-{}.txt", ctx.interaction.author_id().unwrap()),

@@ -3,9 +3,10 @@ use twilight_model::application::interaction::Interaction;
 use crate::{
     guild_setting::GuildSetting,
     heck::Heck,
+    luro_message::LuroMessage,
     luro_user::LuroUser,
     story::Story,
-    types::{GuildData, Hecks, LuroUserData, Stories, Quotes}, luro_message::LuroMessage
+    types::{GuildData, Hecks, LuroUserData, Quotes, Stories}
 };
 
 /// This trait enforces all implementation required to be compatible with [LuroDatabase].

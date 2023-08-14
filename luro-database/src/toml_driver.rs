@@ -20,7 +20,7 @@ use luro_model::heck::Heck;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
 use luro_model::luro_message::LuroMessage;
 use luro_model::story::Story;
-use luro_model::types::{CommandManager, Hecks, LuroUserData, Stories, Quotes};
+use luro_model::types::{CommandManager, Hecks, LuroUserData, Quotes, Stories};
 use luro_model::{guild_setting::GuildSetting, luro_user::LuroUser};
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{fs, io::AsyncReadExt};
@@ -422,7 +422,8 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
     async fn save_quote(&self, quote: &LuroMessage, key: usize) -> anyhow::Result<()> {
         let data: Quotes = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
         data.entry(key.to_string()).insert(quote.clone());
-        Self::write(data, Path::new(Path::new(QUOTES_FILE_PATH))).await    }
+        Self::write(data, Path::new(Path::new(QUOTES_FILE_PATH))).await
+    }
 
     async fn get_quote(&self, key: usize) -> anyhow::Result<LuroMessage> {
         let data: Quotes = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
@@ -437,5 +438,4 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
         let data: Quotes = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
         Ok(data)
     }
-    
 }

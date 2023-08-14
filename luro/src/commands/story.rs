@@ -43,7 +43,7 @@ pub struct StoryCommand {
 }
 
 impl LuroCommand for StoryCommand {
-    async fn handle_model(self, data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         let nsfw = ctx.interaction.channel.clone().unwrap().nsfw.unwrap_or(false);
         let id = match nsfw {
             true => ctx.framework.database.nsfw_stories.len() + 1,

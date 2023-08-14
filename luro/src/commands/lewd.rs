@@ -19,7 +19,7 @@ pub enum LewdCommands {
 }
 
 impl LuroCommand for LewdCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         if !ctx.interaction.channel.as_ref().unwrap().nsfw.unwrap_or_default() {
             return ctx.nsfw_in_sfw_response().await;
         }

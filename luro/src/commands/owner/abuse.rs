@@ -36,8 +36,15 @@ impl LuroCommand for AbuseCommand {
             Some(token) => token,
             None => match ctx.framework.twilight_client.webhook(webhook.id).await?.model().await?.token {
                 Some(token) => token,
-                None => return ctx.respond(|r|r.content("Sorry, I can't setup a webhook here. Probably missing perms.").ephemeral()).await,
-            },
+                None => {
+                    return ctx
+                        .respond(|r| {
+                            r.content("Sorry, I can't setup a webhook here. Probably missing perms.")
+                                .ephemeral()
+                        })
+                        .await
+                }
+            }
         };
 
         let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, self.user.resolved.id).await?;

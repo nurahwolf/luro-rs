@@ -66,7 +66,7 @@ pub enum ModeratorCommands {
 }
 
 impl LuroCommand for ModeratorCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Ban(command) => command.run_command(ctx).await,

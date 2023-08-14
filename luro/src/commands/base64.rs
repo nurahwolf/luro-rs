@@ -23,7 +23,7 @@ pub enum Base64Commands {
 }
 
 impl LuroCommand for Base64Commands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Decode(command) => command.run_command(ctx).await,

@@ -1,9 +1,6 @@
 use twilight_model::{
     channel::Webhook,
-    id::{
-        marker::ChannelMarker,
-        Id
-    }
+    id::{marker::ChannelMarker, Id}
 };
 
 use crate::{LuroFramework, WEBHOOK_NAME};
@@ -15,7 +12,9 @@ pub struct LuroWebhook {
 
 impl LuroWebhook {
     pub async fn new(framework: &LuroFramework) -> anyhow::Result<Self> {
-        Ok(Self { framework: framework.clone() })
+        Ok(Self {
+            framework: framework.clone()
+        })
     }
 
     // Get a webhook for a channel, or create it if it does not exist

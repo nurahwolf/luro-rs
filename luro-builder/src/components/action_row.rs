@@ -1,6 +1,6 @@
 use twilight_model::channel::message::{component::ActionRow, Component};
 
-use super::{button::ButtonBuilder, ComponentBuilder};
+use super::{button::ButtonBuilder, text_input::TextInputBuilder, ComponentBuilder};
 
 pub struct ActionRowBuilder(ActionRow);
 
@@ -24,6 +24,17 @@ impl ActionRowBuilder {
         let mut b = ButtonBuilder::default();
         button(&mut b);
         self.0.components.push(b.into());
+        self
+    }
+
+    /// Create and add a text input
+    pub fn text_input<F>(&mut self, text_input: F) -> &mut Self
+    where
+        F: FnOnce(&mut TextInputBuilder) -> &mut TextInputBuilder
+    {
+        let mut t = TextInputBuilder::default();
+        text_input(&mut t);
+        self.0.components.push(t.into());
         self
     }
 }

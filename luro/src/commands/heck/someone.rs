@@ -5,8 +5,9 @@ use twilight_model::id::Id;
 
 use crate::{
     commands::heck::{format_heck, get_heck},
+    functions::client_fetch,
     interaction::LuroSlash,
-    luro_command::LuroCommand, functions::client_fetch,
+    luro_command::LuroCommand
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]

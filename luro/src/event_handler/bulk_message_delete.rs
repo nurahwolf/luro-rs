@@ -5,7 +5,7 @@ use luro_builder::{embed::EmbedBuilder, response::LuroResponse};
 use luro_model::{luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel};
 use twilight_model::gateway::payload::incoming::MessageDeleteBulk;
 
-use crate::{framework::Framework, COLOUR_DANGER, functions::client_fetch};
+use crate::{framework::Framework, functions::client_fetch, COLOUR_DANGER};
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn listener_bulk_message_delete(self: &Arc<Self>, mut event: MessageDeleteBulk) -> Result<(), Error> {
         // Sort message IDs from oldest to newest, then fetch the messages from cache.

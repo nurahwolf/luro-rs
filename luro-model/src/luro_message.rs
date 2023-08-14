@@ -36,7 +36,7 @@ pub struct LuroMessage {
     #[serde(default)]
     pub partial_member: Option<PartialMember>,
     #[serde(default)]
-    pub message: Option<Message>,
+    pub message: Option<Message>
 }
 
 impl LuroMessage {
@@ -87,7 +87,7 @@ impl From<MessageUpdate> for LuroMessage {
             member: None,
             partial_member: None,
             source: LuroMessageSource::MessageUpdate,
-            message: None,
+            message: None
         }
     }
 }
@@ -106,7 +106,7 @@ impl From<MessageDelete> for LuroMessage {
             member: None,
             partial_member: None,
             source: LuroMessageSource::MessageDelete,
-            message: None,
+            message: None
         }
     }
 }
@@ -125,7 +125,7 @@ impl From<MessageCreate> for LuroMessage {
             member: None,
             partial_member: None,
             source: LuroMessageSource::MessageCreate,
-            message: None,
+            message: None
         }
     }
 }
@@ -144,7 +144,7 @@ impl From<CachedMessage> for LuroMessage {
             member: None,
             partial_member: message.member().cloned(),
             source: LuroMessageSource::CachedMessage,
-            message: None,
+            message: None
         }
     }
 }
@@ -163,8 +163,7 @@ impl From<Message> for LuroMessage {
             luro_user: Some(message.author.into()),
             member: None,
             partial_member: message.member,
-            source: LuroMessageSource::Message,
-
+            source: LuroMessageSource::Message
         }
     }
 }

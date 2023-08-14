@@ -11,7 +11,7 @@ pub enum LuroCommands {
 }
 
 impl LuroCommand for LuroCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Nickname(command) => command.run_command(ctx).await

@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 
+use twilight_cache_inmemory::GuildResource;
 use twilight_model::{
     guild::Role,
     id::{marker::RoleMarker, Id}
@@ -44,6 +45,16 @@ impl PartialOrd for RoleOrdering {
 
 impl From<&Role> for RoleOrdering {
     fn from(role: &Role) -> Self {
+        Self {
+            id: role.id,
+            position: role.position,
+            colour: role.color
+        }
+    }
+}
+
+impl From<GuildResource<Role>> for RoleOrdering {
+    fn from(role: GuildResource<Role>) -> Self {
         Self {
             id: role.id,
             position: role.position,

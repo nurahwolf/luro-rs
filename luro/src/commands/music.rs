@@ -41,7 +41,7 @@ pub enum MusicCommands {
 }
 
 impl LuroCommand for MusicCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Play(command) => command.run_command(ctx).await,

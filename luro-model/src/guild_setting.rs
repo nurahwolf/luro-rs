@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 use twilight_model::{
     application::command::Command,
-    id::{marker::ChannelMarker, Id}
+    id::{
+        marker::{ChannelMarker, RoleMarker},
+        Id
+    }
 };
 
 use crate::{
@@ -43,5 +46,8 @@ pub struct GuildSetting {
     /// Events relating to messages (Create, modify, Delete) are logged here
     pub message_events_log_channel: Option<Id<ChannelMarker>>,
     /// Events relating to moderation (Ban, Kick) are logged here
-    pub moderator_actions_log_channel: Option<Id<ChannelMarker>>
+    pub moderator_actions_log_channel: Option<Id<ChannelMarker>>,
+    #[serde(default)]
+    /// Optional roles to disallow in the self assignable roles module
+    pub assignable_role_blacklist: Vec<Id<RoleMarker>>
 }

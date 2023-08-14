@@ -50,7 +50,7 @@ fn format_heck_id(input: usize) -> String {
 }
 
 impl LuroCommand for HeckCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Add(command) => command.run_command(ctx).await,
@@ -59,7 +59,7 @@ impl LuroCommand for HeckCommands {
         }
     }
 
-    async fn handle_model(self, data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         let (_author, slash_author) = ctx.get_interaction_author(&ctx.interaction)?;
         let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
 

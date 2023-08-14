@@ -7,7 +7,7 @@ use twilight_model::{
     }
 };
 
-use crate::{guild_setting::GuildSetting, heck::Heck, luro_user::LuroUser, story::Story, luro_message::LuroMessage};
+use crate::{guild_setting::GuildSetting, heck::Heck, luro_message::LuroMessage, luro_user::LuroUser, story::Story};
 
 /// A simple wrapper around stories. Primary key is the ID of the story.
 #[cfg(not(feature = "toml-driver"))]

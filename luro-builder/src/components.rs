@@ -1,9 +1,11 @@
 use twilight_model::channel::message::Component;
 
-use self::action_row::ActionRowBuilder;
+use self::{action_row::ActionRowBuilder, select_menu::SelectMenuBuilder, text_input::TextInputBuilder};
 
 mod action_row;
 mod button;
+mod select_menu;
+mod text_input;
 
 #[derive(Default)]
 pub struct ComponentBuilder(Vec<Component>);
@@ -17,6 +19,28 @@ impl ComponentBuilder {
         let mut a = ActionRowBuilder::default();
         action_row(&mut a);
         self.0.push(a.into());
+        self
+    }
+
+    /// Create and add an selection menu
+    pub fn select_menu<F>(&mut self, select_menu: F) -> &mut Self
+    where
+        F: FnOnce(&mut SelectMenuBuilder) -> &mut SelectMenuBuilder
+    {
+        let mut s = SelectMenuBuilder::default();
+        select_menu(&mut s);
+        self.0.push(s.into());
+        self
+    }
+
+    /// Create and add a text input
+    pub fn text_input<F>(&mut self, text_input: F) -> &mut Self
+    where
+        F: FnOnce(&mut TextInputBuilder) -> &mut TextInputBuilder
+    {
+        let mut t = TextInputBuilder::default();
+        text_input(&mut t);
+        self.0.push(t.into());
         self
     }
 }

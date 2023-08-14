@@ -35,7 +35,7 @@ impl Framework<TomlDatabaseDriver> {
 
         // TODO: Really shitty event handler, please change this
         if let Err(why) = callback {
-            error!(why = ?why, "error while handling event");
+            error!("error while handling event - {:#?}", why);
         }
 
         self.lavalink.process(&event).await?;

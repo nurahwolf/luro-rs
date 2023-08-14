@@ -16,9 +16,10 @@ use crate::{
     guild_setting::GuildSetting,
     heck::Heck,
     luro_database_driver::LuroDatabaseDriver,
+    luro_message::LuroMessage,
     luro_user::LuroUser,
     story::Story,
-    types::{CommandManager, GuildData, Hecks, LuroUserData, Stories, Quotes}, luro_message::LuroMessage
+    types::{CommandManager, GuildData, Hecks, LuroUserData, Quotes, Stories}
 };
 
 /// Luro's database context. This itself just handles an abstraction for saving and loading data from whatever database it is using in the backend, depending on the feature selected.

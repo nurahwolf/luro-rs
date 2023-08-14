@@ -14,14 +14,14 @@ pub mod luro_message_source;
 pub mod luro_permissions;
 pub mod luro_user;
 pub mod member_roles;
+pub mod quote;
 pub mod role_ordering;
+pub mod slash_user;
 pub mod story;
 pub mod types;
 pub mod user_actions;
 pub mod user_actions_type;
 pub mod user_marriages;
-pub mod quote;
-pub mod slash_user;
 
 // Dice rolling functionality
 #[cfg(feature = "dice-roller")]

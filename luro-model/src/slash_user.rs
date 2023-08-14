@@ -1,6 +1,14 @@
 use serde::{Deserialize, Serialize};
-use twilight_model::{user::{User, CurrentUser}, guild::{PartialMember, Member}, id::{marker::{GuildMarker, UserMarker}, Id}, util::ImageHash};
-use twilight_util::builder::embed::{ImageSource, image_source::ImageSourceUrlError};
+use twilight_model::{
+    guild::{Member, PartialMember},
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id
+    },
+    user::{CurrentUser, User},
+    util::ImageHash
+};
+use twilight_util::builder::embed::{image_source::ImageSourceUrlError, ImageSource};
 
 use crate::constants::PRIMARY_BOT_OWNER;
 

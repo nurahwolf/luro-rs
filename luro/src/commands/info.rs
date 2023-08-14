@@ -17,7 +17,7 @@ pub enum InfoCommands {
 }
 
 impl LuroCommand for InfoCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         match self {
             Self::User(command) => command.run_command(ctx).await,
             Self::Role(command) => command.run_command(ctx).await

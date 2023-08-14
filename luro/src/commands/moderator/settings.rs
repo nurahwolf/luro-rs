@@ -1,5 +1,6 @@
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{luro_log_channel::LuroLogChannel, role_ordering::RoleOrdering};
+use std::fmt::Write;
 use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -121,6 +122,14 @@ impl LuroCommand for GuildSettingsCommand {
         }
         if let Some(channel) = guild_settings.thread_events_log_channel {
             embed.create_field("Thread Log Channel", &format!("<#{channel}>"), true);
+        }
+
+        let mut blacklist = String::new();
+        for role in guild_settings.assignable_role_blacklist {
+            writeln!(blacklist, "- <@&{role}>")?;
+        }
+        if !blacklist.is_empty() {
+            embed.create_field("Blacklisted Roles from Selfassign", &blacklist, true);
         }
 
         ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))

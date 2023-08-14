@@ -1,3 +1,4 @@
+use luro_model::constants::ACCENT_COLOUR;
 use twilight_model::{
     channel::message::{
         embed::{EmbedAuthor, EmbedField, EmbedImage, EmbedProvider, EmbedThumbnail, EmbedVideo},
@@ -41,7 +42,7 @@ impl Default for EmbedBuilder {
         // Kind (type) may be removed in the future
         Self(Embed {
             author: None,
-            color: None,
+            color: Some(ACCENT_COLOUR),
             description: None,
             fields: Default::default(),
             footer: None,

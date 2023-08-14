@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 use luro_builder::response::LuroResponse;
 use luro_database::TomlDatabaseDriver;
+use tracing::debug;
 use tracing::error;
+use tracing::info;
 use twilight_gateway::Latency;
 use twilight_gateway::MessageSender;
 use twilight_http::client::InteractionClient;
@@ -80,10 +82,20 @@ impl LuroSlash {
 
     /// Create a response. This is used for sending a response to an interaction, as well as to defer interactions.
     pub async fn create_response(&self, response: &LuroResponse) -> anyhow::Result<()> {
-        self.interaction_client()
-            .create_response(self.interaction.id, &self.interaction.token, &response.interaction_response())
-            .await?;
-        Ok(())
+        let request = response.interaction_response();
+        debug!("{:#?}", request);
+        let response = self
+            .interaction_client()
+            .create_response(self.interaction.id, &self.interaction.token, &request)
+            .await;
+
+        match response {
+            Ok(_) => Ok(()),
+            Err(why) => {
+                error!("Failed to respond to interaction - {:#?}", why);
+                Ok(())
+            }
+        }
     }
 
     pub async fn update_response(&self, response: &LuroResponse) -> Result<Response<Message>, Error> {

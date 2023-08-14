@@ -16,7 +16,7 @@ pub enum LewdCommands {
 
 
 impl LuroCommand for LewdCommands {
-    async fn run_commands(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, mut ctx: LuroSlash) -> anyhow::Result<()> {
         let interaction_channel = ctx.channel()?;
 
         if let Some(nsfw) = interaction_channel.nsfw && !nsfw {

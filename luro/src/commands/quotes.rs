@@ -16,7 +16,7 @@ pub enum QuoteCommands {
 }
 
 impl LuroCommand for QuoteCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         match self {
             Self::GetQuote(command) => command.run_command(ctx).await,
             Self::SaveQuote(command) => command.run_command(ctx).await
@@ -70,7 +70,21 @@ impl LuroCommand for GetQuote {
                         .id
                 )
                 .await?;
-            let webhook_token = webhook.token.context("Expected webhook token")?;
+
+            let webhook_token = match webhook.token {
+                Some(token) => token,
+                None => match ctx.framework.twilight_client.webhook(webhook.id).await?.model().await?.token {
+                    Some(token) => token,
+                    None => {
+                        return ctx
+                            .respond(|r| {
+                                r.content("Sorry, I can't setup a webhook here. Probably missing perms.")
+                                    .ephemeral()
+                            })
+                            .await
+                    }
+                }
+            };
 
             ctx.framework
                 .twilight_client

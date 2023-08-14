@@ -1,4 +1,9 @@
+use luro_builder::embed::EmbedBuilder;
+use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::application::interaction::modal::ModalInteractionData;
+use twilight_model::id::marker::{ChannelMarker, MessageMarker};
+use twilight_model::id::Id;
 
 use crate::interaction::LuroSlash;
 
@@ -13,6 +18,7 @@ use self::get_message::OwnerGetMessage;
 use self::guilds::OwnerGuildsCommand;
 use self::load_users::OwnerLoadUsers;
 use self::log::LogCommand;
+use self::modify::Modify;
 use self::modify_role::ModifyRoleCommand;
 use self::save::SaveCommand;
 
@@ -25,6 +31,7 @@ mod get_message;
 mod guilds;
 mod load_users;
 mod log;
+mod modify;
 mod modify_role;
 mod save;
 
@@ -38,7 +45,7 @@ pub enum OwnerCommands {
     #[command(name = "assign")]
     Assign(Box<AssignCommand>),
     #[command(name = "modify_role")]
-    Modify(ModifyRoleCommand),
+    ModifyRole(ModifyRoleCommand),
     #[command(name = "commands")]
     Commands(OwnerCommandsCommand),
     #[command(name = "abuse")]
@@ -52,11 +59,13 @@ pub enum OwnerCommands {
     #[command(name = "get_message")]
     GetMessage(Box<OwnerGetMessage>),
     #[command(name = "config")]
-    Config(ConfigCommand)
+    Config(ConfigCommand),
+    #[command(name = "modify")]
+    Modify(Modify)
 }
 
 impl LuroCommand for OwnerCommands {
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author().unwrap();
         let mut owner_match = false;
 
@@ -84,8 +93,9 @@ impl LuroCommand for OwnerCommands {
                         Self::Guilds(_) => "owner_guilds",
                         Self::LoadUsers(_) => "owner_loadusers",
                         Self::Log(_) => "owner_log",
-                        Self::Modify(_) => "owner_modify",
-                        Self::Save(_) => "owner_save"
+                        Self::ModifyRole(_) => "owner_modify",
+                        Self::Save(_) => "owner_save",
+                        Self::Modify(_) => "owner_modify"
                     }
                 )
                 .await;
@@ -102,8 +112,63 @@ impl LuroCommand for OwnerCommands {
             Self::Guilds(command) => command.run_command(ctx).await,
             Self::LoadUsers(command) => command.run_command(ctx).await,
             Self::Log(command) => command.run_command(ctx).await,
-            Self::Modify(command) => command.run_command(ctx).await,
-            Self::Save(command) => command.run_command(ctx).await
+            Self::ModifyRole(command) => command.run_command(ctx).await,
+            Self::Save(command) => command.run_command(ctx).await,
+            Self::Modify(command) => command.run_command(ctx).await
         }
+    }
+
+    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+        let mut message_id = None;
+        let mut channel_id = None;
+
+        for row in &data.components {
+            for component in &row.components {
+                if let Some(ref value) = component.value && component.custom_id.as_str() == "message-id" {
+                    message_id = Some(value.clone());
+                }
+                if let Some(ref value) = component.value && component.custom_id.as_str() == "channel-id" {
+                    channel_id = Some(value.clone());
+                }
+            }
+        }
+
+        let message_id = match message_id {
+            Some(message_id) => Id::new(message_id.parse()?),
+            None => return ctx.respond(|r| r.content("No message ID!").ephemeral()).await
+        };
+
+        let channel_id = match channel_id {
+            Some(channel_id) => Id::new(channel_id.parse()?),
+            None => return ctx.respond(|r| r.content("No channel ID!").ephemeral()).await
+        };
+
+        let message = ctx
+            .framework
+            .twilight_client
+            .message(channel_id, message_id)
+            .await?
+            .model()
+            .await?;
+        let mut embed = message.embeds.first().unwrap().clone();
+
+        for row in &data.components {
+            for component in &row.components {
+                if let Some(ref value) = component.value && component.custom_id.as_str() == "embed-title" {
+                    embed.title = Some(value.clone());
+                }
+                if let Some(ref value) = component.value && component.custom_id.as_str() == "embed-description" {
+                    embed.description = Some(value.clone());
+                }
+            }
+        }
+
+        ctx.framework
+            .twilight_client
+            .update_message(channel_id, message_id)
+            .embeds(Some(vec![embed]).as_deref())
+            .await?;
+
+        ctx.respond(|r| r.content("All done!").ephemeral()).await
     }
 }

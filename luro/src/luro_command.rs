@@ -35,13 +35,8 @@ pub trait LuroCommand: CommandModel {
         }
     }
 
-    /// Run the command
+    /// Run the command / command group
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.not_implemented_response().await
-    }
-
-    /// Run a command group
-    async fn run_commands(self, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
@@ -51,7 +46,7 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Create and respond to a button interaction
-    async fn handle_model(self, _data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model(_data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 

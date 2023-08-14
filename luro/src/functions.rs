@@ -6,8 +6,8 @@ use luro_model::slash_user::SlashUser;
 use twilight_http::client::InteractionClient;
 use twilight_model::guild::Member;
 use twilight_model::http::interaction::InteractionResponse;
-use twilight_model::id::Id;
 use twilight_model::id::marker::{GuildMarker, UserMarker};
+use twilight_model::id::Id;
 use twilight_model::user::User;
 use twilight_model::{application::interaction::Interaction, http::interaction::InteractionResponseType};
 use twilight_util::builder::InteractionResponseDataBuilder;
@@ -80,56 +80,55 @@ pub async fn client_fetch<D: LuroDatabaseDriver>(
     }
 }
 
+/// Fetch a member using the client. Useful for when you need some additional information
+pub async fn client_fetch_member<D: LuroDatabaseDriver>(
+    ctx: &Arc<Framework<D>>,
+    guild_id: Id<GuildMarker>,
+    user_id: Id<UserMarker>
+) -> anyhow::Result<(Member, SlashUser)> {
+    let member = ctx.twilight_client.guild_member(guild_id, user_id).await?.model().await?;
 
-    /// Fetch a member using the client. Useful for when you need some additional information
-    pub async fn client_fetch_member<D: LuroDatabaseDriver>(
-        ctx: &Arc<Framework<D>>,
-        guild_id: Id<GuildMarker>,
-        user_id: Id<UserMarker>
-    ) -> anyhow::Result<(Member, SlashUser)> {
-        let member = ctx.twilight_client.guild_member(guild_id, user_id).await?.model().await?;
+    let mut slash_user = SlashUser {
+        user_id,
+        user_avatar: member.user.avatar,
+        user_banner: member.user.banner,
+        user_global_name: member.user.global_name.clone(),
+        user_name: member.user.name.clone(),
+        user_discriminator: member.user.discriminator,
+        member_avatar: member.avatar,
+        member_nickname: member.nick.clone(),
+        guild_id: Some(guild_id),
+        avatar: "".to_owned(),
+        name: "".to_owned(),
+        banner: None
+    };
 
-        let mut slash_user = SlashUser {
-            user_id,
-            user_avatar: member.user.avatar,
-            user_banner: member.user.banner,
-            user_global_name: member.user.global_name.clone(),
-            user_name: member.user.name.clone(),
-            user_discriminator: member.user.discriminator,
-            member_avatar: member.avatar,
-            member_nickname: member.nick.clone(),
-            guild_id: Some(guild_id),
-            avatar: "".to_owned(),
-            name: "".to_owned(),
-            banner: None
-        };
+    slash_user.format();
+    Ok((member, slash_user))
+}
 
-        slash_user.format();
-        Ok((member, slash_user))
-    }
+/// Fetch a user using the client. Useful for when you need some additional information
+pub async fn client_fetch_user<D: LuroDatabaseDriver>(
+    ctx: &Arc<Framework<D>>,
+    user_id: Id<UserMarker>
+) -> anyhow::Result<(User, SlashUser)> {
+    let user = ctx.twilight_client.user(user_id).await?.model().await?;
 
-    /// Fetch a user using the client. Useful for when you need some additional information
-    pub async fn client_fetch_user<D: LuroDatabaseDriver>(
-        ctx: &Arc<Framework<D>>,
-        user_id: Id<UserMarker>
-    ) -> anyhow::Result<(User, SlashUser)> {
-        let user = ctx.twilight_client.user(user_id).await?.model().await?;
+    let mut slash_user = SlashUser {
+        user_id,
+        user_avatar: user.avatar,
+        user_banner: user.banner,
+        user_name: user.name.clone(),
+        user_discriminator: user.discriminator,
+        user_global_name: user.global_name.clone(),
+        member_avatar: None,
+        member_nickname: None,
+        guild_id: None,
+        avatar: "".to_owned(),
+        name: "".to_owned(),
+        banner: None
+    };
 
-        let mut slash_user = SlashUser {
-            user_id,
-            user_avatar: user.avatar,
-            user_banner: user.banner,
-            user_name: user.name.clone(),
-            user_discriminator: user.discriminator,
-            user_global_name: user.global_name.clone(),
-            member_avatar: None,
-            member_nickname: None,
-            guild_id: None,
-            avatar: "".to_owned(),
-            name: "".to_owned(),
-            banner: None
-        };
-
-        slash_user.format();
-        Ok((user, slash_user))
-    }
+    slash_user.format();
+    Ok((user, slash_user))
+}

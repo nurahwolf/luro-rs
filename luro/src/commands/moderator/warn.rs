@@ -18,8 +18,6 @@ use twilight_model::guild::Permissions;
 use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
 
-use luro_model::slash_user::SlashUser;
-
 use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -106,7 +104,7 @@ impl LuroCommand for ModeratorWarnCommand {
         .await
     }
 
-    async fn handle_model(self, data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
         let author = ctx.interaction.author().context("Expected to get interaction author")?;
         let warning = ctx.parse_modal_field_required(&data, "mod-warn-text")?;
         let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;

@@ -9,7 +9,6 @@ use tracing::{debug, info, warn};
 
 use crate::{framework::Framework, functions::client_fetch};
 
-
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn response_message_modified(self: &Arc<Self>, message: &LuroMessage) -> anyhow::Result<()> {
         debug!(message = ?message, "Message Modified");

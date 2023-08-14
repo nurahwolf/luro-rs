@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
 use anyhow::anyhow;
-use anyhow::Context;
-use anyhow::Error;
 
 use tracing::info;
 use tracing::warn;
@@ -16,6 +14,7 @@ use self::marry::MarryCommands;
 use self::moderator::warn::ModeratorWarnCommand;
 use self::ping::PingCommand;
 use self::quotes::QuoteCommands;
+use self::rolemenu::RoleCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
@@ -47,11 +46,12 @@ mod moderator;
 mod music;
 mod owner;
 mod ping;
+mod quotes;
+mod rolemenu;
 mod say;
 mod story;
 mod uwu;
 mod wordcount;
-mod quotes;
 // pub mod fursona;
 
 /// A simple structure containing our commands
@@ -93,7 +93,7 @@ impl Commands {
         init.global_commands.insert("ping", PingCommand::create_command().into());
         init.global_commands.insert(BOT_NAME, LuroCommands::create_command().into());
         init.global_commands.insert("quote", QuoteCommands::create_command().into());
-
+        init.global_commands.insert("roles", RoleCommands::create_command().into());
 
         init.global_commands
             .insert("wordcount", WordcountCommand::create_command().into());
@@ -115,26 +115,26 @@ impl LuroSlash {
         match data.name.as_str() {
             "about" => AboutCommand::new(data).await?.run_command(self).await,
             "say" => SayCommand::new(data).await?.run_command(self).await,
-            "info" => InfoCommands::new(data).await?.run_commands(self).await,
+            "info" => InfoCommands::new(data).await?.run_command(self).await,
             "hello" => HelloCommand::new(data).await?.run_command(self).await,
             "count" => CountCommand::new(data).await?.run_command(self).await,
-            "mod" => ModeratorCommands::new(data).await?.run_commands(self).await,
-            "music" => MusicCommands::new(data).await?.run_commands(self).await,
+            "mod" => ModeratorCommands::new(data).await?.run_command(self).await,
+            "music" => MusicCommands::new(data).await?.run_command(self).await,
             "boop" => BoopCommand::new(data).await?.run_command(self).await,
-            "owner" => OwnerCommands::new(data).await?.run_commands(self).await,
-            "heck" => HeckCommands::new(data).await?.run_commands(self).await,
-            "lewd" => LewdCommands::new(data).await?.run_commands(self).await,
-            "base64" => Base64Commands::new(data).await?.run_commands(self).await,
+            "owner" => OwnerCommands::new(data).await?.run_command(self).await,
+            "heck" => HeckCommands::new(data).await?.run_command(self).await,
+            "lewd" => LewdCommands::new(data).await?.run_command(self).await,
+            "base64" => Base64Commands::new(data).await?.run_command(self).await,
             "story" => StoryCommand::new(data).await?.run_command(self).await,
             "uwu" => UwUCommand::new(data).await?.run_command(self).await,
             "wordcount" => WordcountCommand::new(data).await?.run_command(self).await,
-            "roll" => DiceCommands::new(data).await?.run_commands(self).await,
-            "luro" => LuroCommands::new(data).await?.run_commands(self).await,
-            "marry" => MarryCommands::new(data).await?.run_commands(self).await,
+            "roll" => DiceCommands::new(data).await?.run_command(self).await,
+            "luro" => LuroCommands::new(data).await?.run_command(self).await,
+            "marry" => MarryCommands::new(data).await?.run_command(self).await,
             "ping" => PingCommand::new(data).await?.run_command(self).await,
-            "quote" => QuoteCommands::new(data).await?.run_commands(self).await,
-
-            _ => self.unknown_command_response().await
+            "quote" => QuoteCommands::new(data).await?.run_command(self).await,
+            "roles" => RoleCommands::new(data).await?.run_command(self).await,
+            name => self.unknown_command_response_named(name).await
         }
     }
 
@@ -172,9 +172,12 @@ impl LuroSlash {
             "marry-accept" | "marry-deny" => MarryCommands::new(command).await?.handle_component(data, self).await,
             "story" => StoryCommand::new(command).await?.handle_component(data, self).await,
             "heck-setting" => HeckCommands::new(command).await?.handle_component(data, self).await,
+            "role-menu" | "rules-button" | "adult-button" | "bait-button" => {
+                RoleCommands::new(command).await?.handle_component(data, self).await
+            }
             name => {
                 warn!(name = name, "received unknown component");
-                self.unknown_command_response().await
+                self.unknown_command_response_named(name).await
             }
         }
     }
@@ -183,28 +186,27 @@ impl LuroSlash {
     pub async fn handle_modal(self) -> anyhow::Result<()> {
         let data = self.parse_modal_data(&mut self.interaction.clone())?;
 
-        let original_interaction = self
-            .framework
-            .database
-            .modal_interaction_data
-            .get(&data.custom_id)
-            .context("Expected to get original interaction")?
-            .clone();
+        // let original_interaction = self
+        //     .framework
+        //     .database
+        //     .modal_interaction_data
+        //     .get(&data.custom_id)
+        //     .context("Expected to get original interaction")?
+        //     .clone();
 
-        let command = match original_interaction.data {
-            Some(InteractionData::ApplicationCommand(data)) => *data,
-            _ => return Err(anyhow!("unable to parse modal data, received unknown data type"))
-        };
+        // let command = match original_interaction.data {
+        //     Some(InteractionData::ApplicationCommand(data)) => *data,
+        //     _ => return Err(anyhow!("unable to parse modal data, received unknown data type"))
+        // };
 
         match &*data.custom_id {
-            "heck-add" => HeckAddCommand::new(command).await?.handle_model(data, self).await,
-            "story-add" => StoryCommand::new(command).await?.handle_model(data, self).await,
-            "mod-warn" => ModeratorWarnCommand::new(command).await?.handle_model(data, self).await,
+            "heck-add" => HeckAddCommand::handle_model(data, self).await,
+            "story-add" => StoryCommand::handle_model(data, self).await,
+            "mod-warn" => ModeratorWarnCommand::handle_model(data, self).await,
+            "modify-embed" => OwnerCommands::handle_model(data, self).await,
             name => {
                 warn!(name = name, "received unknown component");
-
-                self.internal_error_response(Error::msg("Currently this modal has not been configured. Sorry!"))
-                    .await
+                self.unknown_command_response_named(name).await
             }
         }
     }
