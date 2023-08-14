@@ -18,7 +18,7 @@ use crate::{
     luro_database_driver::LuroDatabaseDriver,
     luro_user::LuroUser,
     story::Story,
-    types::{CommandManager, GuildData, Hecks, LuroUserData, Stories}
+    types::{CommandManager, GuildData, Hecks, LuroUserData, Stories, Quotes}, luro_message::LuroMessage
 };
 
 /// Luro's database context. This itself just handles an abstraction for saving and loading data from whatever database it is using in the backend, depending on the feature selected.
@@ -42,7 +42,8 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     #[serde(default)]
     pub sfw_hecks: Hecks,
     pub sfw_stories: Stories,
-    pub user_data: LuroUserData
+    pub user_data: LuroUserData,
+    pub quotes: Quotes
 }
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
@@ -63,7 +64,8 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             user_data: Default::default(),
             available_random_nsfw_hecks: Default::default(),
             available_random_sfw_hecks: Default::default(),
-            modal_interaction_data: Default::default()
+            modal_interaction_data: Default::default(),
+            quotes: Default::default()
         }
     }
 
@@ -312,5 +314,20 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
 
     pub async fn get_interaction(&self, key: &str) -> anyhow::Result<Interaction> {
         self.driver.get_interaction(key).await
+    }
+
+    pub async fn save_quote(&self, key: usize, quote: &LuroMessage) -> anyhow::Result<()> {
+        self.driver.save_quote(quote, key).await
+    }
+
+    pub async fn get_quote(&self, key: usize) -> anyhow::Result<LuroMessage> {
+        match self.quotes.get(&key.to_string()) {
+            Some(quote) => Ok(quote.clone()),
+            None => self.driver.get_quote(key).await
+        }
+    }
+
+    pub async fn get_quotes(&self) -> anyhow::Result<Quotes> {
+        self.driver.get_quotes().await
     }
 }

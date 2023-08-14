@@ -3,7 +3,7 @@ use luro_builder::response::LuroResponse;
 
 use std::{convert::TryInto, fmt::Write, time::Duration};
 
-use luro_model::{role_ordering::RoleOrdering, user_actions_type::UserActionType};
+use luro_model::{role_ordering::RoleOrdering, user_actions_type::UserActionType, slash_user::SlashUser};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::{attachment::Attachment, interaction::InteractionResponseType},
@@ -14,7 +14,7 @@ use twilight_util::{
     snowflake::Snowflake
 };
 
-use crate::{interaction::LuroSlash, models::SlashUser};
+use crate::interaction::LuroSlash;
 
 use crate::luro_command::LuroCommand;
 

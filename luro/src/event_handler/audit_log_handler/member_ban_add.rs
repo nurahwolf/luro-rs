@@ -1,4 +1,3 @@
-use crate::{framework::Framework, models::SlashUser};
 use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{luro_database_driver::LuroDatabaseDriver, user_actions::UserActions, user_actions_type::UserActionType};
@@ -6,7 +5,7 @@ use std::fmt::Write;
 use std::sync::Arc;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 
-use crate::COLOUR_DANGER;
+use crate::{COLOUR_DANGER, framework::Framework, functions::client_fetch};
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn subhandle_member_ban_add(
@@ -17,7 +16,8 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let banned_user_id = Id::new(event.target_id.context("No user ID found for banned user")?.get());
-        let (_, slash_author) = SlashUser::client_fetch_user(self, banned_user_id).await?;
+        let slash_author = client_fetch(&self, Some(guild.id), banned_user_id).await?;
+
 
         embed
             .thumbnail(|thumbnail| thumbnail.url(slash_author.avatar))

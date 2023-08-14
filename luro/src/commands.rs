@@ -15,6 +15,7 @@ use self::luro::LuroCommands;
 use self::marry::MarryCommands;
 use self::moderator::warn::ModeratorWarnCommand;
 use self::ping::PingCommand;
+use self::quotes::QuoteCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
@@ -50,6 +51,7 @@ mod say;
 mod story;
 mod uwu;
 mod wordcount;
+mod quotes;
 // pub mod fursona;
 
 /// A simple structure containing our commands
@@ -90,6 +92,8 @@ impl Commands {
         init.global_commands.insert("marry", MarryCommands::create_command().into());
         init.global_commands.insert("ping", PingCommand::create_command().into());
         init.global_commands.insert(BOT_NAME, LuroCommands::create_command().into());
+        init.global_commands.insert("quote", QuoteCommands::create_command().into());
+
 
         init.global_commands
             .insert("wordcount", WordcountCommand::create_command().into());
@@ -128,6 +132,8 @@ impl LuroSlash {
             "luro" => LuroCommands::new(data).await?.run_commands(self).await,
             "marry" => MarryCommands::new(data).await?.run_commands(self).await,
             "ping" => PingCommand::new(data).await?.run_command(self).await,
+            "quote" => QuoteCommands::new(data).await?.run_commands(self).await,
+
             _ => self.unknown_command_response().await
         }
     }

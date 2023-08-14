@@ -4,7 +4,7 @@ use luro_model::luro_database_driver::LuroDatabaseDriver;
 use tracing::warn;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::audit_log::AuditLogEventType};
 
-use crate::{framework::Framework, models::SlashUser};
+use crate::{framework::Framework, functions::client_fetch};
 
 mod member_ban_add;
 mod member_ban_remove;
@@ -32,7 +32,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     }
                 }
 
-                let slash_author = SlashUser::client_fetch_user(&self, action_user_id).await?.1;
+                let slash_author = client_fetch(&self, event.guild_id, action_user_id).await?;
                 embed.author(|author| author.name(slash_author.name).icon_url(slash_author.avatar))
             }
             None => embed.footer(|footer| footer.text("There is no record who performed this action."))

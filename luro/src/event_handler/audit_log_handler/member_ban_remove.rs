@@ -4,7 +4,7 @@ use luro_model::luro_database_driver::LuroDatabaseDriver;
 use std::{fmt::Write, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 
-use crate::{framework::Framework, models::SlashUser, COLOUR_SUCCESS};
+use crate::{framework::Framework, COLOUR_SUCCESS, functions::client_fetch};
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn subhandle_member_ban_remove(
@@ -15,7 +15,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let unbanned_user_id = Id::new(event.target_id.context("No user ID found for unbanned user")?.get());
-        let (_, slash_author) = SlashUser::client_fetch_user(self, unbanned_user_id).await?;
+        let slash_author = client_fetch(&self, Some(guild.id), unbanned_user_id).await?;
 
         embed
             .thumbnail(|thumbnail| thumbnail.url(slash_author.avatar))

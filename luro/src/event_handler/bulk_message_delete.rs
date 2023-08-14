@@ -5,7 +5,7 @@ use luro_builder::{embed::EmbedBuilder, response::LuroResponse};
 use luro_model::{luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel};
 use twilight_model::gateway::payload::incoming::MessageDeleteBulk;
 
-use crate::{framework::Framework, models::SlashUser, COLOUR_DANGER};
+use crate::{framework::Framework, COLOUR_DANGER, functions::client_fetch};
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn listener_bulk_message_delete(self: &Arc<Self>, mut event: MessageDeleteBulk) -> Result<(), Error> {
         // Sort message IDs from oldest to newest, then fetch the messages from cache.
@@ -30,7 +30,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             // Save each author in a hash map. If there is only one author per embed, then set them as the embed author.
             let message_author = message_authors
                 .entry(message.author())
-                .or_insert(SlashUser::client_fetch(self, event.guild_id, message.author()).await?)
+                .or_insert(client_fetch(self, event.guild_id, message.author()).await?)
                 .clone();
 
             // We hit the 25 field cap per embed. Let's roll this embed up and start again.

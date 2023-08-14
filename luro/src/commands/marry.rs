@@ -1,3 +1,4 @@
+use crate::functions::client_fetch;
 use crate::interaction::LuroSlash;
 
 use std::fmt::Write;
@@ -13,8 +14,6 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
-
-use crate::models::SlashUser;
 
 use crate::luro_command::LuroCommand;
 
@@ -171,12 +170,11 @@ pub struct MarryNew {
 
 impl LuroCommand for MarryNew {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let slash_author = SlashUser::client_fetch(
+        let slash_author = client_fetch(
             &ctx.framework,
             ctx.interaction.guild_id,
             ctx.interaction
-                .author_id()
-                .context("Expected to find user who invoked command")?
+                .author_id().unwrap()
         )
         .await?;
         let mut embed = EmbedBuilder::default();

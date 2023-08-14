@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{application::interaction::Interaction, user::User};
 
-use crate::models::SlashUser;
+use luro_model::slash_user::SlashUser;
 
 use super::LuroSlash;
 

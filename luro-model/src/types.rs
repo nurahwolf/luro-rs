@@ -7,7 +7,7 @@ use twilight_model::{
     }
 };
 
-use crate::{guild_setting::GuildSetting, heck::Heck, luro_user::LuroUser, story::Story};
+use crate::{guild_setting::GuildSetting, heck::Heck, luro_user::LuroUser, story::Story, luro_message::LuroMessage};
 
 /// A simple wrapper around stories. Primary key is the ID of the story.
 #[cfg(not(feature = "toml-driver"))]
@@ -29,3 +29,9 @@ pub type LuroUserData = DashMap<Id<UserMarker>, LuroUser>;
 
 /// A [DashMap] containing an [Interaction], keyed by a [String]. Generally the message ID, but can be other markers too. This is primarily used for recalling interactions in the future
 pub type CommandManager = DashMap<String, Interaction>;
+
+/// A simple wrapper around quotes. Primary key is the ID of the story.
+#[cfg(not(feature = "toml-driver"))]
+pub type Quotes = DashMap<usize, LuroMessage>;
+#[cfg(feature = "toml-driver")]
+pub type Quotes = DashMap<String, LuroMessage>;

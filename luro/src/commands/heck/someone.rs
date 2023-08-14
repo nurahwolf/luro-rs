@@ -6,8 +6,7 @@ use twilight_model::id::Id;
 use crate::{
     commands::heck::{format_heck, get_heck},
     interaction::LuroSlash,
-    luro_command::LuroCommand,
-    models::SlashUser
+    luro_command::LuroCommand, functions::client_fetch,
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -35,24 +34,7 @@ impl LuroCommand for HeckSomeoneCommand {
         debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, interaction.author().as_ref().unwrap(), &self.user.resolved).await;
 
-        // This first attempts to get them from the guild if they are a member, otherwise resorts to fetching their user.
-        let slash_author = match ctx.interaction.guild_id {
-            Some(guild_id) => {
-                match SlashUser::client_fetch_member(&ctx.framework, guild_id, Id::new(heck.author_id.get())).await {
-                    Ok(slash_author) => slash_author.1,
-                    Err(_) => {
-                        SlashUser::client_fetch_user(&ctx.framework, Id::new(heck.author_id.get()))
-                            .await?
-                            .1
-                    }
-                }
-            }
-            None => {
-                SlashUser::client_fetch_user(&ctx.framework, Id::new(heck.author_id.get()))
-                    .await?
-                    .1
-            }
-        };
+        let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, Id::new(heck.author_id.get())).await?;
 
         // Create our response, depending on if the user wants a plaintext heck or not
         if let Some(plaintext) = self.plaintext && plaintext {

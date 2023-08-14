@@ -1,4 +1,5 @@
 #![feature(async_fn_in_trait)]
+#![feature(let_chains)]
 
 pub mod constants;
 pub mod functions;
@@ -19,6 +20,8 @@ pub mod types;
 pub mod user_actions;
 pub mod user_actions_type;
 pub mod user_marriages;
+pub mod quote;
+pub mod slash_user;
 
 // Dice rolling functionality
 #[cfg(feature = "dice-roller")]

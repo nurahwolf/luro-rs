@@ -1,3 +1,4 @@
+use crate::functions::client_fetch;
 use crate::interaction::LuroSlash;
 use crate::USERDATA_FILE_PATH;
 
@@ -17,7 +18,7 @@ use twilight_model::guild::Permissions;
 use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
 
-use crate::models::SlashUser;
+use luro_model::slash_user::SlashUser;
 
 use crate::luro_command::LuroCommand;
 
@@ -48,7 +49,7 @@ impl LuroCommand for ModeratorWarnCommand {
                 return ctx.respond(|r| r.content("No warnings for that user!")).await;
             }
 
-            let slash_author = SlashUser::client_fetch_user(&ctx.framework, user_id).await?.1;
+            let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, user_id).await?;
             let mut warnings_formatted = String::new();
             for (warning, user_id) in &user_data.warnings {
                 writeln!(warnings_formatted, "Warning by <@{user_id}>```{warning}```")?
@@ -112,7 +113,7 @@ impl LuroCommand for ModeratorWarnCommand {
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
         let _path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id);
 
-        let slash_author = SlashUser::client_fetch(&ctx.framework, ctx.interaction.guild_id, author.id).await?;
+        let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, author.id).await?;
 
         let mut user_data = ctx.framework.database.get_user(&user_id).await?;
         user_data.warnings.push((warning.to_owned(), author.id));

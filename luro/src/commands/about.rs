@@ -4,13 +4,13 @@ use std::path::Path;
 use git2::{ErrorCode, Repository};
 use luro_builder::embed::EmbedBuilder;
 use luro_model::constants::PRIMARY_BOT_OWNER;
+use luro_model::slash_user::SlashUser;
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::functions::padding_calculator;
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
-use crate::models::SlashUser;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "about", desc = "Information about me!")]

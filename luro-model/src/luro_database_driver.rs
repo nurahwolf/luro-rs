@@ -5,7 +5,7 @@ use crate::{
     heck::Heck,
     luro_user::LuroUser,
     story::Story,
-    types::{GuildData, Hecks, LuroUserData, Stories}
+    types::{GuildData, Hecks, LuroUserData, Stories, Quotes}, luro_message::LuroMessage
 };
 
 /// This trait enforces all implementation required to be compatible with [LuroDatabase].
@@ -54,6 +54,9 @@ pub trait LuroDatabaseDriver {
     async fn get_staff(&self) -> anyhow::Result<LuroUserData>;
     async fn save_interaction(&self, interaction: &Interaction, key: &str) -> anyhow::Result<()>;
     async fn get_interaction(&self, key: &str) -> anyhow::Result<Interaction>;
+    async fn save_quote(&self, quote: &LuroMessage, key: usize) -> anyhow::Result<()>;
+    async fn get_quote(&self, key: usize) -> anyhow::Result<LuroMessage>;
+    async fn get_quotes(&self) -> anyhow::Result<Quotes>;
     // TODO
     async fn get_users(&self) -> LuroUserData;
     async fn save_users(&self) -> LuroUserData;

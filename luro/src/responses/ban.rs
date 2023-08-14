@@ -1,11 +1,12 @@
 use anyhow::Error;
+use luro_model::slash_user::SlashUser;
 use twilight_model::{
     guild::{Guild, Member},
     user::User
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
-use crate::{interaction::LuroSlash, models::SlashUser, COLOUR_DANGER};
+use crate::{interaction::LuroSlash, COLOUR_DANGER};
 
 impl LuroSlash {
     pub async fn ban_response(

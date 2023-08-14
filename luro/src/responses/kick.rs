@@ -1,11 +1,10 @@
 use anyhow::Error;
+use luro_model::{constants::ACCENT_COLOUR, slash_user::SlashUser};
 use twilight_model::{
     guild::{Guild, Member},
     user::User
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
-
-use crate::{models::SlashUser, ACCENT_COLOUR};
 
 use crate::interaction::LuroSlash;
 

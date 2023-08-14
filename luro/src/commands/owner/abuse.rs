@@ -3,11 +3,11 @@ use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::models::{LuroWebhook, SlashUser};
-
+use crate::functions::client_fetch;
 use crate::interaction::LuroSlash;
 
 use crate::luro_command::LuroCommand;
+use crate::models::LuroWebhook;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "abuse", desc = "Use a webhook to pretend to be a user", dm_permission = false)]
@@ -22,7 +22,7 @@ pub struct AbuseCommand {
 
 impl LuroCommand for AbuseCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let luro_webhook = LuroWebhook::new(ctx.framework.clone()).await?;
+        let luro_webhook = LuroWebhook::new(&ctx.framework).await?;
         let webhook = luro_webhook
             .get_webhook(
                 ctx.interaction
@@ -32,9 +32,15 @@ impl LuroCommand for AbuseCommand {
                     .id
             )
             .await?;
-        let webhook_token = webhook.token.context("Expected webhook token")?;
+        let webhook_token = match webhook.token {
+            Some(token) => token,
+            None => match ctx.framework.twilight_client.webhook(webhook.id).await?.model().await?.token {
+                Some(token) => token,
+                None => return ctx.respond(|r|r.content("Sorry, I can't setup a webhook here. Probably missing perms.").ephemeral()).await,
+            },
+        };
 
-        let (_, slash_author) = SlashUser::client_fetch_user(&ctx.framework, self.user.resolved.id).await?;
+        let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, self.user.resolved.id).await?;
 
         let mut embed = EmbedBuilder::default();
         embed

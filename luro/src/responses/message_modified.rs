@@ -1,13 +1,14 @@
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{
     constants::COLOUR_DANGER, luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel,
-    luro_message::LuroMessage, luro_message_source::LuroMessageSource
+    luro_message::LuroMessage, luro_message_source::LuroMessageSource, slash_user::SlashUser
 };
 use regex::Regex;
 use std::{fmt::Write, sync::Arc};
 use tracing::{debug, info, warn};
 
-use crate::{framework::Framework, models::SlashUser};
+use crate::{framework::Framework, functions::client_fetch};
+
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn response_message_modified(self: &Arc<Self>, message: &LuroMessage) -> anyhow::Result<()> {
@@ -80,7 +81,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     return Ok(());
                 }
                 writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
-                let (_, slash_user) = SlashUser::client_fetch_user(self, old_message.author()).await?;
+                let slash_user = client_fetch(self, old_message.guild_id(), old_message.author()).await?;
                 embed
                     .author(|author| author.name(slash_user.name).icon_url(slash_user.avatar))
                     .colour(COLOUR_DANGER);
@@ -139,7 +140,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
                 return Ok(());
             }
-            LuroMessageSource::None => return Ok(())
+            _ => return Ok(())
         }
 
         match self.embed_message_modified(message, embed, description).await {

@@ -11,13 +11,16 @@ const NSFW_STORIES_FILE_PATH: &str = "data/nsfw_stories.toml";
 const GUILDSETTINGS_FILE_PATH: &str = "data/guilds";
 /// A folder where <user/user_id.toml> are stored
 const USERDATA_FILE_PATH: &str = "data/user";
+const QUOTES_FILE_PATH: &str = "data/quotes.toml";
+
 /// A toml file containing interactions, so that we can respond to them in the future post restart
 const INTERACTION_FILE_PATH: &str = "data/interactions.toml";
 use luro_model::constants::BOT_OWNERS;
 use luro_model::heck::Heck;
 use luro_model::luro_database_driver::LuroDatabaseDriver;
+use luro_model::luro_message::LuroMessage;
 use luro_model::story::Story;
-use luro_model::types::{CommandManager, Hecks, LuroUserData, Stories};
+use luro_model::types::{CommandManager, Hecks, LuroUserData, Stories, Quotes};
 use luro_model::{guild_setting::GuildSetting, luro_user::LuroUser};
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{fs, io::AsyncReadExt};
@@ -415,4 +418,24 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
         };
         data
     }
+
+    async fn save_quote(&self, quote: &LuroMessage, key: usize) -> anyhow::Result<()> {
+        let data: Quotes = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
+        data.entry(key.to_string()).insert(quote.clone());
+        Self::write(data, Path::new(Path::new(QUOTES_FILE_PATH))).await    }
+
+    async fn get_quote(&self, key: usize) -> anyhow::Result<LuroMessage> {
+        let data: Quotes = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
+        let data = match data.get(&key.to_string()) {
+            Some(data) => Ok(data.clone()),
+            None => Err(anyhow!("Interaction with ID {key} not present!"))
+        };
+        data
+    }
+
+    async fn get_quotes(&self) -> anyhow::Result<Quotes> {
+        let data: Quotes = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
+        Ok(data)
+    }
+    
 }
