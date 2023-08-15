@@ -85,7 +85,7 @@ impl LuroCommand for Get {
                     .colour(accent_colour)
                     .description(quote.content.unwrap_or_default())
                     .author(|author| {
-                        author.name(slash_user.name).icon_url(slash_user.avatar);
+                        author.name(format!("{} - Quote {id}", slash_user.name)).icon_url(slash_user.avatar);
                         match quote.guild_id {
                             Some(guild_id) => author.url(format!(
                                 "https://discord.com/channels/{guild_id}/{}/{}",

@@ -5,13 +5,13 @@ use luro_model::{
 };
 use regex::Regex;
 use std::{fmt::Write, sync::Arc};
-use tracing::{debug, info, warn};
+use tracing::{debug, info, warn, trace};
 
 use crate::{framework::Framework, functions::client_fetch};
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn response_message_modified(self: &Arc<Self>, message: &LuroMessage) -> anyhow::Result<()> {
-        debug!(message = ?message, "Message Modified");
+        trace!(message = ?message, "Message Modified");
 
         let mut description = String::new();
         let mut embed = self.default_embed(&message.guild_id).await;
