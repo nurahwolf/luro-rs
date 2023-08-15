@@ -11,23 +11,24 @@ use twilight_model::{
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
+use self::blacklist::Blacklist;
+
+mod blacklist;
+
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "roles", desc = "Manage your roles. Can also be used to setup a role menu")]
 pub enum RoleCommands {
     #[command(name = "menu")]
     Menu(Menu),
-    #[command(name = "blacklist_add")]
-    BlacklistAdd(BlacklistAdd),
-    #[command(name = "blacklist_remove")]
-    BlacklistRemove(BlacklistRemove)
+    #[command(name = "blacklist")]
+    Blacklist(Blacklist)
 }
 
 impl LuroCommand for RoleCommands {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         match self {
             Self::Menu(command) => command.run_command(ctx).await,
-            Self::BlacklistAdd(command) => command.run_command(ctx).await,
-            Self::BlacklistRemove(command) => command.run_command(ctx).await
+            Self::Blacklist(command) => command.run_command(ctx).await
         }
     }
 
@@ -105,6 +106,10 @@ impl LuroCommand for RoleCommands {
             match role.position > highest_role.position {
                 true => writeln!(too_high_role_list, "- <@&{}>", role.id)?,
                 false => {
+                    if current_roles.contains(role) {
+                        continue;
+                    }
+
                     roles_to_add.push(role.id);
                     writeln!(roles_to_add_string, "- <@&{}>", role.id)?
                 }
@@ -346,88 +351,6 @@ impl LuroCommand for Menu {
                 });
             }
             response
-        })
-        .await
-    }
-}
-
-#[derive(CommandModel, CreateCommand)]
-#[command(name = "blacklist_add", desc = "Add a role to the blacklist")]
-pub struct BlacklistAdd {
-    /// The role to add
-    role: Id<RoleMarker>
-}
-
-impl LuroCommand for BlacklistAdd {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let interaction_author = ctx.interaction.author_id().unwrap();
-        let mut owner_match = false;
-
-        // We are using global data for this one in case an owner was removed from the application live
-
-        for (id, _) in ctx.framework.database.get_staff().await? {
-            if interaction_author == id {
-                owner_match = true
-            }
-        }
-
-        if !owner_match {
-            return ctx
-                .not_owner_response(&interaction_author, &ctx.interaction.guild_id, "role-menu")
-                .await;
-        }
-
-        let mut guild_settings = ctx.framework.database.get_guild(&ctx.interaction.guild_id.unwrap()).await?;
-        guild_settings.assignable_role_blacklist.push(self.role);
-        ctx.framework
-            .database
-            .update_guild(ctx.interaction.guild_id.unwrap(), &guild_settings)
-            .await?;
-
-        ctx.respond(|r| {
-            r.content(format!("Added role <@&{}> to the guild blacklist!", self.role))
-                .ephemeral()
-        })
-        .await
-    }
-}
-
-#[derive(CommandModel, CreateCommand)]
-#[command(name = "blacklist_remove", desc = "Remove a role to the blacklist")]
-pub struct BlacklistRemove {
-    /// The role to remove
-    role: Id<RoleMarker>
-}
-
-impl LuroCommand for BlacklistRemove {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let interaction_author = ctx.interaction.author_id().unwrap();
-        let mut owner_match = false;
-
-        // We are using global data for this one in case an owner was removed from the application live
-
-        for (id, _) in ctx.framework.database.get_staff().await? {
-            if interaction_author == id {
-                owner_match = true
-            }
-        }
-
-        if !owner_match {
-            return ctx
-                .not_owner_response(&interaction_author, &ctx.interaction.guild_id, "role-menu")
-                .await;
-        }
-
-        let mut guild_settings = ctx.framework.database.get_guild(&ctx.interaction.guild_id.unwrap()).await?;
-        guild_settings.assignable_role_blacklist.retain(|&x| x != self.role);
-        ctx.framework
-            .database
-            .update_guild(ctx.interaction.guild_id.unwrap(), &guild_settings)
-            .await?;
-
-        ctx.respond(|r| {
-            r.content(format!("Added role <@&{}> to the guild blacklist!", self.role))
-                .ephemeral()
         })
         .await
     }

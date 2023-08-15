@@ -14,7 +14,7 @@ use self::marry::MarryCommands;
 use self::moderator::warn::ModeratorWarnCommand;
 use self::ping::PingCommand;
 use self::quotes::QuoteCommands;
-use self::rolemenu::RoleCommands;
+use self::roles::RoleCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
@@ -47,7 +47,7 @@ mod music;
 mod owner;
 mod ping;
 mod quotes;
-mod rolemenu;
+mod roles;
 mod say;
 mod story;
 mod uwu;

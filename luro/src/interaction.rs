@@ -4,7 +4,6 @@ use luro_builder::response::LuroResponse;
 use luro_database::TomlDatabaseDriver;
 use tracing::debug;
 use tracing::error;
-use tracing::info;
 use twilight_gateway::Latency;
 use twilight_gateway::MessageSender;
 use twilight_http::client::InteractionClient;

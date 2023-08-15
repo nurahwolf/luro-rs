@@ -1,8 +1,6 @@
-use luro_builder::embed::EmbedBuilder;
-use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
-    application::interaction::message_component::MessageComponentInteractionData, channel::message::component::TextInputStyle,
+    channel::message::component::TextInputStyle,
     http::interaction::InteractionResponseType
 };
 

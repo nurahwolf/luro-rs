@@ -1,8 +1,5 @@
-use luro_builder::embed::EmbedBuilder;
-use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::modal::ModalInteractionData;
-use twilight_model::id::marker::{ChannelMarker, MessageMarker};
 use twilight_model::id::Id;
 
 use crate::interaction::LuroSlash;
