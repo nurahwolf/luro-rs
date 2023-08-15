@@ -1,8 +1,5 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{
-    channel::message::component::TextInputStyle,
-    http::interaction::InteractionResponseType
-};
+use twilight_model::{channel::message::component::TextInputStyle, http::interaction::InteractionResponseType};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 

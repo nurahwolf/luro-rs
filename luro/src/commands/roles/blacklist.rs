@@ -8,19 +8,22 @@ mod add;
 mod remove;
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "blacklist", desc = "Add or remove roles from the blacklist. Needs manage server permissons")]
+#[command(
+    name = "blacklist",
+    desc = "Add or remove roles from the blacklist. Needs manage server permissons"
+)]
 pub enum Blacklist {
     #[command(name = "add")]
     Add(Add),
     #[command(name = "remove")]
-    Remove(Remove),
+    Remove(Remove)
 }
 
 impl LuroCommand for Blacklist {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         match self {
             Self::Add(command) => command.run_command(ctx).await,
-            Self::Remove(command) => command.run_command(ctx).await,
+            Self::Remove(command) => command.run_command(ctx).await
         }
     }
 }
