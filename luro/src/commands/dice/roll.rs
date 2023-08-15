@@ -1,11 +1,11 @@
-use luro_model::{roll::Roll, roll_result::RollResult, roll_value::RollValue};
+use luro_model::{dice_roll::DiceRoll, roll_result::RollResult, roll_value::RollValue};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "dice", desc = "Roll those freaking dice!!!")]
-pub struct DiceRollCommand {
+#[command(name = "roll", desc = "Roll those freaking dice!!!")]
+pub struct Roll {
     /// Standard Dice Notation: 6d20dl2-10 (6x d20 dice, drop lowest 2, take away 10 from result)
     dice: String,
     /// Add context to your role, such as for D&D. Use `\` to not have your reason in a code block.
@@ -14,9 +14,9 @@ pub struct DiceRollCommand {
     ephemeral: Option<bool>
 }
 
-impl LuroCommand for DiceRollCommand {
+impl LuroCommand for Roll {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let result = Roll::roll_inline(&self.dice, false).unwrap_or(RollResult {
+        let result = DiceRoll::roll_inline(&self.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
@@ -47,7 +47,7 @@ impl LuroCommand for DiceRollCommand {
         }
 
         ctx.respond(|r| {
-            if let Some(ephemeral) = self.ephemeral && ephemeral {
+            if self.ephemeral.unwrap_or_default() {
                 r.ephemeral();
             }
             r.content(result_string)

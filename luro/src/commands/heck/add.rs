@@ -4,10 +4,6 @@ use luro_model::heck::Heck;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::message_component::MessageComponentInteractionData,
-    channel::message::{
-        component::{ActionRow, TextInput, TextInputStyle},
-        Component
-    },
     http::interaction::InteractionResponseType
 };
 use twilight_util::builder::embed::EmbedFieldBuilder;
@@ -34,23 +30,20 @@ impl LuroCommand for HeckAddCommand {
     /// This modal is only shown if the user has not specified a reason in the
     /// initial command.
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let components = vec![Component::ActionRow(ActionRow {
-            components: vec![Component::TextInput(TextInput {
-                custom_id: "heck-text".to_owned(),
-                label: "Enter your new heck below".to_owned(),
-                max_length: Some(2048),
-                min_length: Some(20),
-                placeholder: Some("<author> just gave <user> headpats!!".to_owned()),
-                required: Some(true),
-                style: TextInputStyle::Paragraph,
-                value: None
-            })]
-        })];
-
         ctx.respond(|r| {
             r.title("Write your heck below!")
                 .custom_id("heck-add")
-                .add_components(components)
+                .components(|components| {
+                    components.action_row(|row| {
+                        row.text_input(|input| {
+                            input
+                                .custom_id("heck-text")
+                                .label("Enter your new heck below")
+                                .min_length(20)
+                                .placeholder("<author> just gave <user> headpats!!")
+                        })
+                    })
+                })
                 .response_type(InteractionResponseType::Modal)
         })
         .await
@@ -148,7 +141,7 @@ impl LuroCommand for HeckAddCommand {
         // Update the heck embed to state that the heck has been created
         heck_embed.author = Some(heck_author);
 
-        // Finally, repond with an updated message
+        // Finally, repond with an updated message. The strips out the previous components
         ctx.respond(|response| response.add_embed(heck_embed).components(|c| c).update())
             .await
     }

@@ -10,32 +10,31 @@ mod stats;
 
 use crate::luro_command::LuroCommand;
 
-use self::help::DiceHelpCommand;
-use self::roll::DiceRollCommand;
-use self::roll_direction::DiceRollDirectionCommand;
-use self::simple::DiceSimpleCommand;
-use self::stats::DiceStatsCommand;
+use self::help::Help;
+use self::roll::Roll;
+use self::roll_direction::Direction;
+use self::simple::Simple;
+use self::stats::Stats;
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "roll", desc = "Roll those freaking dice!!!")]
+#[command(name = "dice", desc = "Roll those freaking dice!!!")]
 pub enum DiceCommands {
-    #[command(name = "dice")]
-    Roll(DiceRollCommand),
-    #[command(name = "roll_direction")]
-    RollDirection(DiceRollDirectionCommand),
+    #[command(name = "roll")]
+    Roll(Roll),
+    #[command(name = "direction")]
+    Direction(Direction),
     #[command(name = "stats")]
-    Stats(DiceStatsCommand),
+    Stats(Stats),
     #[command(name = "help")]
-    Help(DiceHelpCommand),
+    Help(Help),
     #[command(name = "simple")]
-    Simple(DiceSimpleCommand)
+    Simple(Simple)
 }
 
 impl LuroCommand for DiceCommands {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        // Call the appropriate subcommand.
         match self {
             Self::Roll(command) => command.run_command(ctx).await,
-            Self::RollDirection(command) => command.run_command(ctx).await,
+            Self::Direction(command) => command.run_command(ctx).await,
             Self::Stats(command) => command.run_command(ctx).await,
             Self::Help(command) => command.run_command(ctx).await,
             Self::Simple(command) => command.run_command(ctx).await

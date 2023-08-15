@@ -18,14 +18,14 @@ const DIR: &[&str] = &[
 ];
 
 #[derive(Debug, Clone)]
-pub struct Roll {
+pub struct DiceRoll {
     pub vals: Vec<u64>,
     pub total: i64,
     pub sides: NonZeroU64
 }
 
-impl Roll {
-    pub fn roll_die(times: u64, sides: NonZeroU64, fm: FilterModifier<u64>, mut rng: impl RngCore) -> Roll {
+impl DiceRoll {
+    pub fn roll_die(times: u64, sides: NonZeroU64, fm: FilterModifier<u64>, mut rng: impl RngCore) -> DiceRoll {
         let mut rolls = Vec::new();
         let range = sides.get();
         for _ in 0..times {
@@ -63,7 +63,7 @@ impl Roll {
             }
         }
 
-        Roll {
+        DiceRoll {
             total: rolls.iter().sum::<u64>() as i64,
             vals: rolls,
             sides
@@ -80,7 +80,7 @@ impl Roll {
         DIR[value.total as usize - 1].to_string()
     }
     pub fn roll_stats() -> String {
-        fn roll_stat() -> Roll {
+        fn roll_stat() -> DiceRoll {
             let mut rolls = Vec::new();
             RollParser::new(STAT_ROLL).parse().unwrap().interp(&mut rolls).unwrap();
             rolls.remove(0).1
@@ -118,7 +118,7 @@ impl Roll {
         Ok(result)
     }
 
-    fn replace_rolls(ast: RollAst, lookup: &HashMap<u64, Roll>, func: fn(&Roll) -> String) -> RollAst {
+    fn replace_rolls(ast: RollAst, lookup: &HashMap<u64, DiceRoll>, func: fn(&DiceRoll) -> String) -> RollAst {
         return match ast {
             RollAst::Add(l, r) => RollAst::Add(
                 Box::from(Self::replace_rolls(*l, lookup, func)),

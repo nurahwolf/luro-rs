@@ -45,16 +45,16 @@ impl LuroCommand for HeckInfo {
             let guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
             writeln!(guild_details, "**GUILD SFW HECKS:** {}", guild_settings.sfw_hecks.len())?;
             writeln!(guild_details, "**GUILD NSFW HECKS:** {}", guild_settings.nsfw_hecks.len())?;
-            // writeln!(
-            //     guild_details,
-            //     "**GUILD SFW IDS AVAILABLE:** {}",
-            //     guild_settings.sfw_heck_ids.len()
-            // )?;
-            // writeln!(
-            //     guild_details,
-            //     "**GUILD NSFW IDS AVAILABLE:** {}",
-            //     guild_settings.nsfw_heck_ids.len()
-            // )?;
+            writeln!(
+                guild_details,
+                "**GUILD SFW IDS AVAILABLE:** {}",
+                guild_settings.available_random_sfw_hecks.len()
+            )?;
+            writeln!(
+                guild_details,
+                "**GUILD NSFW IDS AVAILABLE:** {}",
+                guild_settings.available_random_nsfw_hecks.len()
+            )?;
             embed = embed.field(EmbedFieldBuilder::new("Guild Stats", guild_details).inline());
         }
 

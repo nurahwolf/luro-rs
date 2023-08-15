@@ -1,7 +1,9 @@
+use std::fmt::Write;
 use std::{mem, sync::RwLock};
 
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
+use tracing::error;
 use twilight_model::{
     application::interaction::Interaction,
     id::{
@@ -31,7 +33,7 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub available_random_sfw_hecks: RwLock<Vec<usize>>,
     pub application: RwLock<Application>,
     pub command_data: CommandManager,
-    pub modal_interaction_data: CommandManager,
+    pub modal_data: CommandManager,
     pub count: RwLock<usize>,
     pub current_user: RwLock<CurrentUser>,
     pub driver: D,
@@ -65,9 +67,50 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             user_data: Default::default(),
             available_random_nsfw_hecks: Default::default(),
             available_random_sfw_hecks: Default::default(),
-            modal_interaction_data: Default::default(),
+            modal_data: Default::default(),
             quotes: Default::default()
         }
+    }
+
+    /// Flush ALL data held by the database. This will ensure all future hits go back to the raw driver
+    /// 
+    /// NOTE: command_data and modal_data are NOT dropped, by design
+    pub async fn flush(&self) -> anyhow::Result<String> {
+        let mut errors = String::new();
+        // TODO: application, staff and current user are not dropped
+        match self.count.write() {
+            Ok(mut write_lock) => *write_lock = 0,
+            Err(why) => {
+                error!(why = ?why, "Count lock is poisoned");
+                writeln!(errors, "{:#?}", why)?;
+            },
+        }
+
+        match self.available_random_nsfw_hecks.write() {
+            Ok(mut write_lock) => {write_lock.drain(..);},
+            Err(why) => {
+                error!(why = ?why, "Count lock is poisoned");
+                writeln!(errors, "{:#?}", why)?;
+            },
+        }
+
+        match self.available_random_sfw_hecks.write() {
+            Ok(mut write_lock) => {write_lock.drain(..);},
+            Err(why) => {
+                error!(why = ?why, "Count lock is poisoned");
+                writeln!(errors, "{:#?}", why)?;
+            },
+        }
+
+        self.guild_data.clear();
+        self.nsfw_hecks.clear();
+        self.nsfw_stories.clear();
+        self.sfw_hecks.clear();
+        self.sfw_stories.clear();
+        self.user_data.clear();
+        self.quotes.clear();
+
+        Ok(errors)
     }
 
     /// Attempts to get a user from the cache, otherwise gets the user from the database

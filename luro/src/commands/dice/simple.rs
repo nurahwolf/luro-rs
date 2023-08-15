@@ -1,4 +1,4 @@
-use luro_model::{roll::Roll, roll_result::RollResult, roll_value::RollValue};
+use luro_model::{dice_roll::DiceRoll, roll_result::RollResult, roll_value::RollValue};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -6,7 +6,7 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "simple", desc = "A simpler version, for those not wanting to deal with foruma")]
-pub struct DiceSimpleCommand {
+pub struct Simple {
     /// Total number of dice, for example two dice
     #[command(min_value = 1, max_value = 10000)]
     dice: i64,
@@ -43,7 +43,7 @@ pub struct DiceSimpleCommand {
     divide: Option<i64>
 }
 
-impl LuroCommand for DiceSimpleCommand {
+impl LuroCommand for Simple {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let mut roll = format!("{}d{}", self.dice, self.sides);
 
@@ -79,7 +79,7 @@ impl LuroCommand for DiceSimpleCommand {
             write!(roll, "/{operation}")?
         }
 
-        let result = Roll::roll_inline(&roll, false).unwrap_or(RollResult {
+        let result = DiceRoll::roll_inline(&roll, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
@@ -110,7 +110,7 @@ impl LuroCommand for DiceSimpleCommand {
         }
 
         ctx.respond(|r| {
-            if let Some(ephemeral) = self.ephemeral && ephemeral {
+            if self.ephemeral.unwrap_or_default() {
                 r.ephemeral();
             }
             r.content(result_string)

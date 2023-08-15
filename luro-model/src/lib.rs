@@ -27,7 +27,7 @@ pub mod user_marriages;
 #[cfg(feature = "dice-roller")]
 pub mod filter_modifier;
 #[cfg(feature = "dice-roller")]
-pub mod roll;
+pub mod dice_roll;
 #[cfg(feature = "dice-roller")]
 pub mod roll_ast;
 #[cfg(feature = "dice-roller")]

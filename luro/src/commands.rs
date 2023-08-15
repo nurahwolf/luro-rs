@@ -13,7 +13,7 @@ use self::luro::LuroCommands;
 use self::marry::MarryCommands;
 use self::moderator::warn::ModeratorWarnCommand;
 use self::ping::PingCommand;
-use self::quotes::QuoteCommands;
+use self::quote::QuoteCommands;
 use self::roles::RoleCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
@@ -46,7 +46,7 @@ mod moderator;
 mod music;
 mod owner;
 mod ping;
-mod quotes;
+mod quote;
 mod roles;
 mod say;
 mod story;

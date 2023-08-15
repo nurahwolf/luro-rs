@@ -17,7 +17,7 @@ use self::load_users::OwnerLoadUsers;
 use self::log::LogCommand;
 use self::modify::Modify;
 use self::modify_role::ModifyRoleCommand;
-use self::save::SaveCommand;
+use self::flush::Flush;
 
 mod abuse;
 mod assign;
@@ -30,13 +30,13 @@ mod load_users;
 mod log;
 mod modify;
 mod modify_role;
-mod save;
+mod flush;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]
 pub enum OwnerCommands {
-    #[command(name = "save")]
-    Save(SaveCommand),
+    #[command(name = "flush")]
+    Flush(Flush),
     #[command(name = "log")]
     Log(LogCommand),
     #[command(name = "assign")]
@@ -91,7 +91,7 @@ impl LuroCommand for OwnerCommands {
                         Self::LoadUsers(_) => "owner_loadusers",
                         Self::Log(_) => "owner_log",
                         Self::ModifyRole(_) => "owner_modify",
-                        Self::Save(_) => "owner_save",
+                        Self::Flush(_) => "owner_save",
                         Self::Modify(_) => "owner_modify"
                     }
                 )
@@ -110,7 +110,7 @@ impl LuroCommand for OwnerCommands {
             Self::LoadUsers(command) => command.run_command(ctx).await,
             Self::Log(command) => command.run_command(ctx).await,
             Self::ModifyRole(command) => command.run_command(ctx).await,
-            Self::Save(command) => command.run_command(ctx).await,
+            Self::Flush(command) => command.run_command(ctx).await,
             Self::Modify(command) => command.run_command(ctx).await
         }
     }

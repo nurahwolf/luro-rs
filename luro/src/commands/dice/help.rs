@@ -4,12 +4,12 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "help", desc = "Information for how to roll your dice")]
-pub struct DiceHelpCommand {
+pub struct Help {
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
     ephemeral: Option<bool>
 }
 
-impl LuroCommand for DiceHelpCommand {
+impl LuroCommand for Help {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let description = "Roll some dice with a brief explanation of the output all on one line, such as `1d20 = [13] = 13`.";
 
@@ -67,10 +67,10 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
 ```
     "
         ];
-        let accent_colour = ctx.accent_colour().await;
 
+        let accent_colour = ctx.accent_colour().await;
         ctx.respond(|r| {
-            if let Some(ephemeral) = self.ephemeral && ephemeral {
+            if self.ephemeral.unwrap_or_default() {
                     r.ephemeral();
                 }
             r.embed(|embed| {

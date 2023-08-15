@@ -1,7 +1,7 @@
 use core::fmt;
 use std::{fmt::Display, num::NonZeroU64};
 
-use crate::{filter_modifier::FilterModifier, roll::Roll, roll_value::RollValue};
+use crate::{filter_modifier::FilterModifier, dice_roll::DiceRoll, roll_value::RollValue};
 
 const DEFAULT_SIDES: &str = "20";
 
@@ -82,7 +82,7 @@ impl Display for RollAst {
 }
 
 impl RollAst {
-    pub fn interp(self, rolls: &mut Vec<(u64, Roll)>) -> Result<RollValue, String> {
+    pub fn interp(self, rolls: &mut Vec<(u64, DiceRoll)>) -> Result<RollValue, String> {
         Ok(match self {
             RollAst::Add(l, r) => l.interp(rolls)? + r.interp(rolls)?,
             RollAst::Sub(l, r) => l.interp(rolls)? - r.interp(rolls)?,
@@ -124,7 +124,7 @@ impl RollAst {
                         })
                         .swap()?;
 
-                    let roll = Roll::roll_die(
+                    let roll = DiceRoll::roll_die(
                         lv as u64,
                         NonZeroU64::new(rv as u64).ok_or("Can't roll zero sided die")?,
                         fm_int,

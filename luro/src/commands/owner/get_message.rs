@@ -115,7 +115,7 @@ impl LuroCommand for OwnerGetMessage {
                     luro_message.add_partialmember(&message.author, &member);
                 }
                 if let Some(guild_id) = message.guild_id && let Ok(member) = ctx.framework.twilight_client.guild_member(guild_id, message.author.id).await {
-                    luro_message.add_member(&message.author, &member.model().await?);
+                    luro_message.add_member(&message.author, &member.model().await?, &guild_id);
                 }
                 let toml = toml::to_string_pretty(&luro_message)?;
                 ctx.respond(|r| {

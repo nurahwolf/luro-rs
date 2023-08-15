@@ -52,11 +52,12 @@ impl LuroMessage {
         self
     }
 
-    pub fn add_member(&mut self, user: &User, member: &Member) -> &mut Self {
+    pub fn add_member(&mut self, user: &User, member: &Member, guild_id: &Id<GuildMarker>) -> &mut Self {
         self.author_id = Some(user.id);
         self.author = Some(user.clone());
         self.luro_user = Some(user.into());
         self.member = Some(member.clone());
+        self.guild_id = Some(*guild_id);
 
         self
     }
