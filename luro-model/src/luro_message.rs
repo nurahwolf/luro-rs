@@ -14,7 +14,7 @@ use twilight_model::{
 use crate::{luro_message_source::LuroMessageSource, slash_user::SlashUser};
 
 /// Effectively a wrapper around different type of messages, for more streamlined responses
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct LuroMessage {
     #[serde(default)]
     pub author: Option<User>,

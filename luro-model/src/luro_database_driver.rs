@@ -55,7 +55,8 @@ pub trait LuroDatabaseDriver {
     async fn get_staff(&self) -> anyhow::Result<LuroUserData>;
     async fn save_interaction(&self, interaction: &Interaction, key: &str) -> anyhow::Result<()>;
     async fn get_interaction(&self, key: &str) -> anyhow::Result<Interaction>;
-    async fn save_quote(&self, quote: &LuroMessage, key: usize) -> anyhow::Result<()>;
+    async fn save_quote(&self, quote: LuroMessage, key: usize) -> anyhow::Result<()>;
+    async fn save_quotes(&self, quotes: Quotes) -> anyhow::Result<()>;
     async fn get_quote(&self, key: usize) -> anyhow::Result<LuroMessage>;
     async fn get_quotes(&self) -> anyhow::Result<Quotes>;
     // TODO

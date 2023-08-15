@@ -13,7 +13,7 @@ use twilight_util::builder::embed::{image_source::ImageSourceUrlError, ImageSour
 use crate::constants::PRIMARY_BOT_OWNER;
 
 /// Some useful formatting around a user, such as their avatar .
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct SlashUser {
     pub user_id: Id<UserMarker>,
     pub user_avatar: Option<ImageHash>,

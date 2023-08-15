@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use dashmap::DashMap;
 use twilight_model::{
     application::interaction::Interaction,
@@ -31,7 +33,4 @@ pub type LuroUserData = DashMap<Id<UserMarker>, LuroUser>;
 pub type CommandManager = DashMap<String, Interaction>;
 
 /// A simple wrapper around quotes. Primary key is the ID of the story.
-#[cfg(not(feature = "toml-driver"))]
-pub type Quotes = DashMap<usize, LuroMessage>;
-#[cfg(feature = "toml-driver")]
-pub type Quotes = DashMap<String, LuroMessage>;
+pub type Quotes = BTreeMap<usize, LuroMessage>;

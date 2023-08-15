@@ -25,8 +25,8 @@ use crate::{
 };
 
 /// Luro's database context. This itself just handles an abstraction for saving and loading data from whatever database it is using in the backend, depending on the feature selected.
-/// Defaults to the TOML driver backend.
-///
+/// 
+/// NOTE: With the TOML driver, usize keys are serialised as strings!
 #[derive(Debug, Deserialize, Serialize)]
 pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub available_random_nsfw_hecks: RwLock<Vec<usize>>,
@@ -46,7 +46,7 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub sfw_hecks: Hecks,
     pub sfw_stories: Stories,
     pub user_data: LuroUserData,
-    pub quotes: Quotes
+    pub quotes: RwLock<Quotes>,
 }
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
@@ -102,13 +102,20 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             },
         }
 
+        match self.quotes.write() {
+            Ok(mut write_lock) => {write_lock.clear();},
+            Err(why) => {
+                error!(why = ?why, "Count lock is poisoned");
+                writeln!(errors, "{:#?}", why)?;
+            },
+        }
+
         self.guild_data.clear();
         self.nsfw_hecks.clear();
         self.nsfw_stories.clear();
         self.sfw_hecks.clear();
         self.sfw_stories.clear();
         self.user_data.clear();
-        self.quotes.clear();
 
         Ok(errors)
     }
@@ -360,14 +367,26 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         self.driver.get_interaction(key).await
     }
 
-    pub async fn save_quote(&self, key: usize, quote: &LuroMessage) -> anyhow::Result<()> {
+    pub async fn save_quote(&self, key: usize, quote: LuroMessage) -> anyhow::Result<()> {
         self.driver.save_quote(quote, key).await
     }
 
+    pub async fn save_quotes(&self, quotes: Quotes) -> anyhow::Result<()> {
+        self.driver.save_quotes(quotes).await
+    }
+
     pub async fn get_quote(&self, key: usize) -> anyhow::Result<LuroMessage> {
-        match self.quotes.get(&key.to_string()) {
-            Some(quote) => Ok(quote.clone()),
-            None => self.driver.get_quote(key).await
+        let quote = match self.quotes.read() {
+            Ok(quotes) => quotes.get(&key).cloned(),
+            Err(why) => {
+                error!(why = ?why, "Quotes are poisoned! I'm returning the quote from the driver directly, bypassing the cache. This NEEDS to be investigated and fixed!");
+                None
+            },
+        };
+
+        match quote {
+            Some(quote) => Ok(quote),
+            None => self.driver.get_quote(key).await,
         }
     }
 

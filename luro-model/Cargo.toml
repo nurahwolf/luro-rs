@@ -17,7 +17,6 @@ version.workspace = true
 # For feature dice-roller
 rand = { workspace = true, optional = true}
 
-
 anyhow = { workspace = true }
 dashmap = { workspace = true, features = ["serde"]}
 serde = { workspace = true }

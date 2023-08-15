@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::anyhow;
@@ -115,6 +116,30 @@ impl TomlDatabaseDriver {
 
         debug!("Path {} has bee updated with new data", path.to_string_lossy());
         Ok(fs::write(path, struct_to_toml_string).await?)
+    }
+
+    // Serialise a BTreeMap, changing the key from usize to String
+    pub fn serialize_btreemap<T>(input: BTreeMap<usize, T>) -> BTreeMap<String, T> {
+        input
+            .into_iter()
+            .map(|(str_key, value)| (str_key.to_string(), value))
+            .collect::<BTreeMap<String, T>>()
+    }
+
+    // Deserialise a BTreeMap, changing the key from [String] to [usize]
+    pub fn deserialize_btreemap<T>(input: BTreeMap<String, T>) -> anyhow::Result<BTreeMap<usize, T>> {
+        let original_len = input.len();
+        let data = input.into_iter().map(|(key, value)| (match key.parse(){
+            Ok(usize_key) => usize_key,
+            Err(_) => todo!(),
+        }, value)).collect::<BTreeMap<usize, T>>();
+
+        // multiple strings could parse to the same int, e.g "0" and "00"
+        if data.len() < original_len {
+            return Err(anyhow!("detected duplicate integer key"));
+        }
+
+        Ok(data)
     }
 }
 
@@ -419,23 +444,32 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
         data
     }
 
-    async fn save_quote(&self, quote: &LuroMessage, key: usize) -> anyhow::Result<()> {
-        let data: Quotes = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
-        data.entry(key.to_string()).insert(quote.clone());
-        Self::write(data, Path::new(Path::new(QUOTES_FILE_PATH))).await
+    async fn save_quote(&self, quote: LuroMessage, key: usize) -> anyhow::Result<()> {
+        let toml = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
+        let mut data: Quotes = Self::deserialize_btreemap(toml)?;
+        data.insert(key, quote);
+        let toml = Self::serialize_btreemap(data);
+        Self::write(toml, Path::new(Path::new(QUOTES_FILE_PATH))).await
+    }
+
+    async fn save_quotes(&self, quotes: Quotes) -> anyhow::Result<()> {
+        let toml = Self::serialize_btreemap(quotes);
+        Self::write(toml, Path::new(Path::new(QUOTES_FILE_PATH))).await
     }
 
     async fn get_quote(&self, key: usize) -> anyhow::Result<LuroMessage> {
-        let data: Quotes = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
-        let data = match data.get(&key.to_string()) {
+        let toml = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
+        let data: Quotes = Self::deserialize_btreemap(toml)?;
+        let data = match data.get(&key) {
             Some(data) => Ok(data.clone()),
-            None => Err(anyhow!("Interaction with ID {key} not present!"))
+            None => Err(anyhow!("Quote with ID {key} not present!"))
         };
         data
     }
 
     async fn get_quotes(&self) -> anyhow::Result<Quotes> {
-        let data: Quotes = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
+        let toml = Self::get(Path::new(QUOTES_FILE_PATH)).await?;
+        let data: Quotes = Self::deserialize_btreemap(toml)?;
         Ok(data)
     }
 }
