@@ -19,12 +19,12 @@ impl LuroCommand for HeckInfo {
             writeln!(
                 global_details,
                 "**GLOBAL SFW HECKS:** {}",
-                ctx.framework.database.sfw_hecks.len()
+                ctx.framework.database.get_hecks(false).await?.len()
             )?;
             writeln!(
                 global_details,
                 "**GLOBAL NSFW HECKS:** {}",
-                ctx.framework.database.nsfw_hecks.len()
+                ctx.framework.database.get_hecks(true).await?.len()
             )?;
             writeln!(
                 global_details,

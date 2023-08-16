@@ -3,8 +3,7 @@ use anyhow::{anyhow, Context, Error};
 use luro_model::heck::Heck;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
-    application::interaction::message_component::MessageComponentInteractionData,
-    http::interaction::InteractionResponseType
+    application::interaction::message_component::MessageComponentInteractionData, http::interaction::InteractionResponseType
 };
 use twilight_util::builder::embed::EmbedFieldBuilder;
 

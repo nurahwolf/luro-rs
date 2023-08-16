@@ -25,7 +25,7 @@ use crate::{
 };
 
 /// Luro's database context. This itself just handles an abstraction for saving and loading data from whatever database it is using in the backend, depending on the feature selected.
-/// 
+///
 /// NOTE: With the TOML driver, usize keys are serialised as strings!
 #[derive(Debug, Deserialize, Serialize)]
 pub struct LuroDatabase<D: LuroDatabaseDriver> {
@@ -46,7 +46,7 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub sfw_hecks: Hecks,
     pub sfw_stories: Stories,
     pub user_data: LuroUserData,
-    pub quotes: RwLock<Quotes>,
+    pub quotes: RwLock<Quotes>
 }
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
@@ -73,7 +73,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     }
 
     /// Flush ALL data held by the database. This will ensure all future hits go back to the raw driver
-    /// 
+    ///
     /// NOTE: command_data and modal_data are NOT dropped, by design
     pub async fn flush(&self) -> anyhow::Result<String> {
         let mut errors = String::new();
@@ -83,31 +83,37 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             Err(why) => {
                 error!(why = ?why, "Count lock is poisoned");
                 writeln!(errors, "{:#?}", why)?;
-            },
+            }
         }
 
         match self.available_random_nsfw_hecks.write() {
-            Ok(mut write_lock) => {write_lock.drain(..);},
+            Ok(mut write_lock) => {
+                write_lock.drain(..);
+            }
             Err(why) => {
                 error!(why = ?why, "Count lock is poisoned");
                 writeln!(errors, "{:#?}", why)?;
-            },
+            }
         }
 
         match self.available_random_sfw_hecks.write() {
-            Ok(mut write_lock) => {write_lock.drain(..);},
+            Ok(mut write_lock) => {
+                write_lock.drain(..);
+            }
             Err(why) => {
                 error!(why = ?why, "Count lock is poisoned");
                 writeln!(errors, "{:#?}", why)?;
-            },
+            }
         }
 
         match self.quotes.write() {
-            Ok(mut write_lock) => {write_lock.clear();},
+            Ok(mut write_lock) => {
+                write_lock.clear();
+            }
             Err(why) => {
                 error!(why = ?why, "Count lock is poisoned");
                 writeln!(errors, "{:#?}", why)?;
-            },
+            }
         }
 
         self.guild_data.clear();
@@ -381,12 +387,12 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             Err(why) => {
                 error!(why = ?why, "Quotes are poisoned! I'm returning the quote from the driver directly, bypassing the cache. This NEEDS to be investigated and fixed!");
                 None
-            },
+            }
         };
 
         match quote {
             Some(quote) => Ok(quote),
-            None => self.driver.get_quote(key).await,
+            None => self.driver.get_quote(key).await
         }
     }
 

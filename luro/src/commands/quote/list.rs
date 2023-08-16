@@ -18,7 +18,7 @@ impl LuroCommand for List {
                 let mut content = content.to_string();
                 content = match quote.source {
                     LuroMessageSource::Custom => format!("\n- `{id} (Custom)` - {content}"),
-                    _ => format!("\n- `{id}` - {content}"),
+                    _ => format!("\n- `{id}` - {content}")
                 };
                 if content.len() > 75 {
                     let mut split = 75;
@@ -28,8 +28,8 @@ impl LuroCommand for List {
                             true => {
                                 content.truncate(split);
                                 success = true
-                            },
-                            false => split += 1,
+                            }
+                            false => split += 1
                         }
                     }
                     content.push_str("...");

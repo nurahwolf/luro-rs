@@ -1,7 +1,7 @@
 use luro_model::{luro_message::LuroMessage, slash_user::SlashUser};
 use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::id::{Id, marker::ChannelMarker};
+use twilight_model::id::{marker::ChannelMarker, Id};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
@@ -65,7 +65,7 @@ impl LuroCommand for Add {
         let local_quotes = ctx.framework.database.get_quotes().await?;
         let local_quote_id = local_quotes.len();
 
-        ctx.framework.database.save_quote(local_quote_id , quote.clone()).await?;
+        ctx.framework.database.save_quote(local_quote_id, quote.clone()).await?;
 
         ctx.respond(|response| {
             response.embed(|embed| {
@@ -73,7 +73,9 @@ impl LuroCommand for Add {
                     .colour(accent_colour)
                     .description(quote.content.unwrap_or_default())
                     .author(|author| {
-                        author.name(format!("{} - Quote {local_quote_id}", slash_user.name)).icon_url(slash_user.avatar);
+                        author
+                            .name(format!("{} - Quote {local_quote_id}", slash_user.name))
+                            .icon_url(slash_user.avatar);
                         match quote.guild_id {
                             Some(guild_id) => author.url(format!(
                                 "https://discord.com/channels/{guild_id}/{}/{}",

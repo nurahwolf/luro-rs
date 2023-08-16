@@ -2,13 +2,13 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
-use self::{get::Get, add::Add, list::List, sort::Sort, remove::Remove};
+use self::{add::Add, get::Get, list::List, remove::Remove, sort::Sort};
 
 mod add;
 mod get;
 mod list;
-mod sort;
 mod remove;
+mod sort;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "quote", desc = "Get or save some quotes")]
@@ -32,7 +32,7 @@ impl LuroCommand for QuoteCommands {
             Self::Add(command) => command.run_command(ctx).await,
             Self::List(command) => command.run_command(ctx).await,
             Self::Sort(command) => command.run_command(ctx).await,
-            Self::Remove(command) => command.run_command(ctx).await,
+            Self::Remove(command) => command.run_command(ctx).await
         }
     }
 }

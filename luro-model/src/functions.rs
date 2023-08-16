@@ -99,7 +99,6 @@ where
     Ok(data)
 }
 
-
 pub fn serialize_toml<S, T>(input: &BTreeMap<usize, T>, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -107,7 +106,7 @@ where
 {
     let data = input
         .iter()
-        .map(|(key, value)|(key.to_string(), value))
+        .map(|(key, value)| (key.to_string(), value))
         .collect::<BTreeMap<String, _>>();
 
     s.collect_map(data)

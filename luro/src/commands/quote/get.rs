@@ -3,7 +3,7 @@ use luro_model::slash_user::SlashUser;
 use rand::Rng;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{luro_command::LuroCommand, interaction::LuroSlash, functions::client_fetch, models::LuroWebhook};
+use crate::{functions::client_fetch, interaction::LuroSlash, luro_command::LuroCommand, models::LuroWebhook};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "get", desc = "Get a memorable quote!")]
@@ -85,7 +85,9 @@ impl LuroCommand for Get {
                     .colour(accent_colour)
                     .description(quote.content.unwrap_or_default())
                     .author(|author| {
-                        author.name(format!("{} - Quote {id}", slash_user.name)).icon_url(slash_user.avatar);
+                        author
+                            .name(format!("{} - Quote {id}", slash_user.name))
+                            .icon_url(slash_user.avatar);
                         match quote.guild_id {
                             Some(guild_id) => author.url(format!(
                                 "https://discord.com/channels/{guild_id}/{}/{}",

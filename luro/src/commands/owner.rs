@@ -11,26 +11,26 @@ use self::assign::AssignCommand;
 use self::clear_warnings::OwnerClearWarning;
 use self::commands::OwnerCommandsCommand;
 use self::config::ConfigCommand;
+use self::flush::Flush;
 use self::get_message::OwnerGetMessage;
 use self::guilds::OwnerGuildsCommand;
 use self::load_users::OwnerLoadUsers;
 use self::log::LogCommand;
 use self::modify::Modify;
 use self::modify_role::ModifyRoleCommand;
-use self::flush::Flush;
 
 mod abuse;
 mod assign;
 mod clear_warnings;
 mod commands;
 mod config;
+mod flush;
 mod get_message;
 mod guilds;
 mod load_users;
 mod log;
 mod modify;
 mod modify_role;
-mod flush;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]

@@ -5,7 +5,7 @@ use luro_model::{
 };
 use regex::Regex;
 use std::{fmt::Write, sync::Arc};
-use tracing::{debug, info, warn, trace};
+use tracing::{debug, info, trace, warn};
 
 use crate::{framework::Framework, functions::client_fetch};
 

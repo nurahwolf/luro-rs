@@ -1,7 +1,7 @@
 use luro_model::slash_user::SlashUser;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand, functions::client_fetch};
+use crate::{functions::client_fetch, interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "remove", desc = "Remove a particular quote (Owner Only)!")]
@@ -17,7 +17,7 @@ impl LuroCommand for Remove {
 
         let quote = match quotes.remove(&id) {
             Some(quote) => quote,
-            None => return ctx.respond(|r|r.content("That quote is not present!").ephemeral()).await,
+            None => return ctx.respond(|r| r.content("That quote is not present!").ephemeral()).await
         };
 
         ctx.framework.database.save_quotes(quotes).await?;
@@ -40,7 +40,9 @@ impl LuroCommand for Remove {
                     .colour(accent_colour)
                     .description(quote.content.unwrap_or_default())
                     .author(|author| {
-                        author.name(format!("{} - Quote {id} Removed", slash_user.name)).icon_url(slash_user.avatar);
+                        author
+                            .name(format!("{} - Quote {id} Removed", slash_user.name))
+                            .icon_url(slash_user.avatar);
                         match quote.guild_id {
                             Some(guild_id) => author.url(format!(
                                 "https://discord.com/channels/{guild_id}/{}/{}",
