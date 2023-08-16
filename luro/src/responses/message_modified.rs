@@ -1,13 +1,13 @@
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{
     constants::COLOUR_DANGER, luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel,
-    luro_message::LuroMessage, luro_message_source::LuroMessageSource, slash_user::SlashUser
+    luro_message::LuroMessage, luro_message_source::LuroMessageSource
 };
 use regex::Regex;
 use std::{fmt::Write, sync::Arc};
 use tracing::{debug, info, trace, warn};
 
-use crate::{framework::Framework, functions::client_fetch};
+use crate::framework::Framework;
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn response_message_modified(self: &Arc<Self>, message: &LuroMessage) -> anyhow::Result<()> {
@@ -16,14 +16,17 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         let mut description = String::new();
         let mut embed = self.default_embed(&message.guild_id).await;
 
-        if let Some(author) = message.author.clone() {
-            if author.bot {
-                debug!("User is a bot");
-                return Ok(());
-            };
-            let slash_user = SlashUser::from(author);
-            embed.author(|author| author.name(slash_user.name).icon_url(slash_user.avatar));
-        }
+        if message.user.bot {
+            debug!("User is a bot");
+            return Ok(());
+        };
+
+        embed.author(|author| {
+            author
+                .name(message.user.name())
+                .icon_url(message.user.avatar())
+                .url(message.link())
+        });
 
         match message.source {
             LuroMessageSource::MessageUpdate => {
@@ -80,18 +83,15 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     return Ok(());
                 }
                 writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
-                let slash_user = client_fetch(self, old_message.guild_id(), old_message.author()).await?;
                 embed
-                    .author(|author| author.name(slash_user.name).icon_url(slash_user.avatar))
+                    .author(|author| author.name(message.user.name()).icon_url(message.user.avatar()))
                     .colour(COLOUR_DANGER);
             }
             LuroMessageSource::MessageCreate => {
                 let mut content = String::new();
-                if let Some(embeds) = &message.embeds {
-                    for embed in embeds {
-                        if let Some(ref description) = embed.description {
-                            content.push_str(description)
-                        }
+                for embed in &message.embeds {
+                    if let Some(ref description) = embed.description {
+                        content.push_str(description)
                     }
                 }
 
@@ -99,28 +99,11 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     content.push_str(message_content)
                 }
 
-                if let Some(author) = &message.author && !content.is_empty() {
-                    let mut modified_user_data = self.database.get_user(&author.id).await?;
-
-                    // Add the raw message to the user's data
+                if !content.is_empty() {
+                    let mut modified_user_data = self.database.get_user(&message.author_id.unwrap()).await?;
                     modified_user_data.messages.insert(message.id, message.clone());
-                    if let Some(ref user) = self.twilight_cache.user(author.id) {
-                        modified_user_data.accent_color = user.accent_color;
-                        modified_user_data.avatar = user.avatar;
-                        modified_user_data.banner = user.banner;
-                        modified_user_data.bot = user.bot;
-                        modified_user_data.discriminator = Some(user.discriminator().get());
-                        modified_user_data.email = user.email.clone();
-                        modified_user_data.flags = user.flags;
-                        modified_user_data.id = Some(user.id);
-                        modified_user_data.locale = user.locale.clone();
-                        modified_user_data.mfa_enabled = user.mfa_enabled;
-                        modified_user_data.name = Some(user.name.clone());
-                        modified_user_data.premium_type = user.premium_type;
-                        modified_user_data.public_flags = user.public_flags;
-                        modified_user_data.system = user.system;
-                        modified_user_data.verified = user.verified;
-                    }
+                    modified_user_data.update_lurouser(&message.user);
+
                     // First perform analysis
                     let regex = Regex::new(r"\b[\w-]+\b").unwrap();
                     for capture in regex.captures_iter(&content) {
@@ -134,7 +117,11 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                         *modified_user_data.words.entry(word).or_insert(0) += 1;
                         *modified_user_data.wordsize.entry(size).or_insert(0) += 1;
                     }
-                    self.database.modify_user(&author.id, &modified_user_data).await?;
+
+                    // Save
+                    self.database
+                        .modify_user(&message.author_id.unwrap(), &modified_user_data)
+                        .await?;
                 }
 
                 return Ok(());

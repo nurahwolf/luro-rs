@@ -1,18 +1,15 @@
 use anyhow::Context;
 use luro_builder::response::LuroResponse;
 
-use std::{convert::TryInto, fmt::Write, time::Duration};
+use std::{collections::btree_map::Entry, fmt::Write, time::Duration};
 
-use luro_model::{role_ordering::RoleOrdering, slash_user::SlashUser, user_actions_type::UserActionType};
+use luro_model::{luro_member::LuroMember, role_ordering::RoleOrdering, user_actions_type::UserActionType};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::{attachment::Attachment, interaction::InteractionResponseType},
     id::{marker::GenericMarker, Id}
 };
-use twilight_util::{
-    builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource},
-    snowflake::Snowflake
-};
+use twilight_util::snowflake::Snowflake;
 
 use crate::interaction::LuroSlash;
 
@@ -37,46 +34,51 @@ impl LuroCommand for InfoUser {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let response_type = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(self.gdpr_export.unwrap_or_default()).await?;
+        // The user we are interested in is the interaction author, unless a user was specified
+        let user_id = match self.user {
+            Some(ref user) => user.resolved.id,
+            None => ctx.interaction.author_id().unwrap()
+        };
+        let mut luro_user = ctx.framework.database.get_user(&user_id).await?;
+        let user_timestamp = Duration::from_millis(user_id.timestamp().unsigned_abs());
+
 
         let mut response = LuroResponse::default();
-        let mut embed = EmbedBuilder::new().color(ctx.accent_colour().await);
+        let mut embed = ctx.default_embed().await;
         let mut description = String::new();
-        // The user we are interested in is the interaction author, unless a user was specified
-        let (author, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
-        let user_timestamp = Duration::from_millis(author.id.timestamp().unsigned_abs());
         let mut timestamp = format!("- Joined discord on <t:{0}> - <t:{0}:R>\n", user_timestamp.as_secs());
 
-        embed = embed.author(EmbedAuthorBuilder::new(&slash_author.name).icon_url(slash_author.clone().try_into()?));
+        embed.author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()));
         if let Some(hide_avatar) = self.hide_avatar && hide_avatar {
         } else {
-            embed = embed.thumbnail(slash_author.clone().try_into()?);
+            embed.thumbnail(|thumbnail|thumbnail.url(luro_user.avatar()));
         }
 
-        writeln!(description, "<@{0}> - `{0}`", author.id)?;
-        if let Some(accent_color) = author.accent_color {
-            embed = embed.color(accent_color);
+        writeln!(description, "<@{0}> - `{0}`", user_id)?;
+        if let Some(accent_color) = luro_user.accent_color {
+            embed.colour(accent_color);
             writeln!(description, "- Accent Colour: `{accent_color:X}`")?;
         }
-        if let Some(email) = &author.email {
+        if let Some(email) = &luro_user.email {
             writeln!(description, "- Email: `{}`", email)?;
         }
-        if let Some(locale) = &author.locale {
+        if let Some(locale) = &luro_user.locale {
             writeln!(description, "- Locale: `{}`", locale)?;
         }
-        if let Some(mfa_enabled) = author.mfa_enabled {
-            writeln!(description, "- MFA Enabled: `{mfa_enabled}`")?;
+        if luro_user.mfa_enabled {
+            writeln!(description, "- MFA Enabled: `true`")?;
         }
-        if let Some(system) = author.system {
-            writeln!(description, "- System Account: `{system}`")?;
+        if luro_user.system {
+            writeln!(description, "- System Account: `true`")?;
         }
-        if let Some(verified) = author.verified {
-            writeln!(description, " - Verified Account: `{verified}`")?;
+        if luro_user.verified {
+            writeln!(description, " - Verified Account: `true`")?;
         }
-        if author.bot {
+        if luro_user.bot {
             writeln!(description, " - Bot: `true`")?;
         }
-        if let Some(ref banner) = slash_author.banner {
-            embed = embed.image(ImageSource::url(banner)?);
+        if let Some(ref banner) = luro_user.banner() {
+            embed.image(|i| i.url(banner));
         }
 
         // Some additional details if we are a guild
@@ -86,77 +88,87 @@ impl LuroCommand for InfoUser {
         };
 
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
-            if let Ok(member) = ctx.framework.twilight_client.guild_member(guild_id, author.id).await {
-                    let member = member.model().await?;
-                    let slash_member = SlashUser::from_member(&member, Some(guild_id));
-                    let mut guild_information = String::new();
-                    let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-                    embed = embed.author(EmbedAuthorBuilder::new(slash_member.name).icon_url(slash_author.clone().try_into()?));
-                    if let Some(hide_avatar) = self.hide_avatar && hide_avatar {
-                    } else {
-                        embed = embed.thumbnail(slash_author.clone().try_into()?);
-                    }
-                    let member = ctx.framework.twilight_cache.member(guild_id, author.id).context("Expected to find member in cache")?;
-                    let mut user_roles = vec![];
-                    for member_role in member.roles() {
-                        for guild_role in guild.roles.clone() {
-                            if member_role == &guild_role.id {
-                                user_roles.push(guild_role)
-                            }
-                        }
-                    }
-                    let mut user_roles: Vec<_> = user_roles.iter().map(RoleOrdering::from).collect();
-                    user_roles.sort_by(|a, b| b.cmp(a));
-                    let mut role_list = String::new();
+            let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
+            let member = ctx.framework.twilight_cache.member(guild_id, user_id).context("Expected to find member in cache")?;
 
-                    for role in &user_roles {
-                        if role_list.is_empty() {
-                            write!(role_list, "<@&{}>", role.id)?;
-                            continue;
-                        };
-                        write!(role_list, ", <@&{}>", role.id)?
+            let mut guild_information = String::new();
+            let mut role_list = String::new();
+            let mut user_roles = vec![];
+            for member_role in member.roles() {
+                for guild_role in guild.roles.clone() {
+                    if member_role == &guild_role.id {
+                        user_roles.push(guild_role)
                     }
+                }
+            }
 
-                    if let Some(role) = user_roles.first() {
-                        if role.colour != 0 {
-                            embed = embed.color(role.colour);
-                        }
+            let mut user_roles_modified: Vec<_> = user_roles.iter().map(RoleOrdering::from).collect();
+            user_roles_modified.sort_by(|a, b| b.cmp(a));
+
+            match luro_user.guilds.entry(guild_id) {
+                Entry::Vacant(entry) => {
+                    let entry = entry.insert(LuroMember::from(&ctx.framework.twilight_client.guild_member(guild_id, user_id).await?.model().await?));
+                    for role in user_roles {
+                        entry.roles.insert(role.id, role);
                     }
-                    writeln!(guild_information, "- Roles ({}): {role_list}", user_roles.len())?;
-                    timestamp.push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>\n", member.joined_at().as_secs()).as_str());
-                    if let Some(member_timestamp) = member.premium_since() {
-                        timestamp.push_str(format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.as_secs()).as_str());
+                },
+                Entry::Occupied(mut entry) => {
+                    let entry = entry.get_mut();
+                    for role in user_roles {
+                        entry.roles.insert(role.id, role);
                     }
-                    if let Some(nickname) = member.nick() {
-                        writeln!(guild_information, "**- Nickname:** `{nickname}`")?;            
-                    }
-                    if let Some(deaf) = member.deaf() && deaf {
-                        writeln!(guild_information, "**- Deafened:** `true`")?;            
-                    }
-                    if let Some(mute) = member.mute() && mute {
-                        writeln!(guild_information, "**- Muted:** `true`")?;            
-                    }
-                    if member.pending() {
-                        writeln!(guild_information, "**- Pending:** `true`")?;            
-                    }
-                    if let Some(timestamp) = member.communication_disabled_until() {
-                        writeln!(guild_information, "**- Timed out until:** <t:{}:R>", timestamp.as_secs())?;            
-                    }
-                    // TODO: Once member_banner is a thing in [Member]
-                    // if let Some(banner) = get_member_banner(&member, guild_id, user) {
-                    //     embed = embed.image(ImageSource::url(banner)?)
-                    // }
-                    match guild_information.len() > 1024 {
-                        true => writeln!(description, "\n**Guild Information**\n{guild_information}")?,
-                        false => embed = embed.field(EmbedFieldBuilder::new("Guild Information", guild_information))
-                    }
+                },
+            };
+
+            ctx.framework.database.modify_user(&user_id, &luro_user).await?;
+
+            for role in &user_roles_modified {
+                if role_list.is_empty() {
+                    write!(role_list, "<@&{}>", role.id)?;
+                    continue;
+                };
+                write!(role_list, ", <@&{}>", role.id)?
+            }
+
+            if let Some(role) = user_roles_modified.first() {
+                if role.colour != 0 {
+                    embed.colour(role.colour);
+                }
+            }
+            writeln!(guild_information, "- Roles ({}): {role_list}", user_roles_modified.len())?;
+            timestamp.push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>\n", member.joined_at().as_secs()).as_str());
+            if let Some(member_timestamp) = member.premium_since() {
+                timestamp.push_str(format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.as_secs()).as_str());
+            }
+            if let Some(nickname) = member.nick() {
+                writeln!(guild_information, "**- Nickname:** `{nickname}`")?;            
+            }
+            if let Some(deaf) = member.deaf() && deaf {
+                writeln!(guild_information, "**- Deafened:** `true`")?;            
+            }
+            if let Some(mute) = member.mute() && mute {
+                writeln!(guild_information, "**- Muted:** `true`")?;            
+            }
+            if member.pending() {
+                writeln!(guild_information, "**- Pending:** `true`")?;            
+            }
+            if let Some(timestamp) = member.communication_disabled_until() {
+                writeln!(guild_information, "**- Timed out until:** <t:{}:R>", timestamp.as_secs())?;            
+            }
+            // TODO: Once member_banner is a thing in [Member]
+            // if let Some(banner) = get_member_banner(&member, guild_id, user) {
+            //     embed = embed.image(ImageSource::url(banner)?)
+            // }
+            embed.author(|author| author.name(luro_user.member_name(&guild_id)).icon_url(luro_user.guild_avatar(&guild_id)));
+            match guild_information.len() > 1024 {
+                true => {writeln!(description, "\n**Guild Information**\n{guild_information}")?;},
+                false => {embed.create_field("Guild Information", &guild_information, false);},
             }
         }
 
         // USER DATA SECTION
         let mut user_data_description = String::new();
         {
-            let user_data = ctx.framework.database.get_user(&slash_author.user_id).await?;
             if let Some(export) = self.gdpr_export && export {
                 if let Some(user_specified) = self.user {
                     // TODO: Add privilege esc tally to the person
@@ -164,44 +176,45 @@ impl LuroCommand for InfoUser {
                 }
                 response.attachments = Some(vec![Attachment::from_bytes(
                     format!("gdpr-export-{}.txt", ctx.interaction.author_id().unwrap()),
-                    toml::to_string_pretty(&user_data)?.as_bytes().to_vec(),
+                    toml::to_string_pretty(&luro_user)?.as_bytes().to_vec(),
                     1
                 )]);
             }
 
-            writeln!(user_data_description, "- Total Words Said: `{}`", user_data.wordcount)?;
-            writeln!(user_data_description, "- Total Characters Said: `{}`", user_data.averagesize)?;
+            writeln!(user_data_description, "- Total Words Said: `{}`", luro_user.wordcount)?;
+            writeln!(user_data_description, "- Total Characters Said: `{}`", luro_user.averagesize)?;
 
-            if user_data.moderation_actions_performed != 0 {
+            if luro_user.moderation_actions_performed != 0 {
                 writeln!(
                     user_data_description,
                     "- Performed `{}` moderation actions",
-                    user_data.moderation_actions_performed
+                    luro_user.moderation_actions_performed
                 )?;
             }
 
-            if user_data.message_edits != 0 {
-                writeln!(user_data_description, "- Edited `{}` messages", user_data.message_edits)?;
+            if luro_user.message_edits != 0 {
+                writeln!(user_data_description, "- Edited `{}` messages", luro_user.message_edits)?;
             }
 
-            if !user_data.marriages.is_empty() {
-                writeln!(user_data_description, "- Has `{}` marriages!", user_data.marriages.len())?;
+            if !luro_user.marriages.is_empty() {
+                writeln!(user_data_description, "- Has `{}` marriages!", luro_user.marriages.len())?;
             }
 
-            if !user_data.moderation_actions.is_empty() {
+            if !luro_user.moderation_actions.is_empty() {
                 writeln!(
                     user_data_description,
                     "**Received `{}` punishments**",
-                    user_data.moderation_actions.len()
+                    luro_user.moderation_actions.len()
                 )?;
                 let (mut bans, mut kicks, mut warnings, mut priv_esc) = (0, 0, 0, 0);
-                for punishment in &user_data.moderation_actions {
+                for punishment in &luro_user.moderation_actions {
                     for punishment_type in &punishment.action_type {
                         match punishment_type {
                             UserActionType::Ban => bans += 1,
                             UserActionType::Kick => kicks += 1,
                             UserActionType::Warn => warnings += 1,
-                            UserActionType::PrivilegeEscalation => priv_esc += 1
+                            UserActionType::PrivilegeEscalation => priv_esc += 1,
+                            _ => ()
                         }
                     }
                 }
@@ -219,13 +232,17 @@ impl LuroCommand for InfoUser {
                 }
             }
 
-            if !user_data.warnings.is_empty() {
-                writeln!(user_data_description, "- Has `{}` active warnings", user_data.warnings.len())?;
+            if !luro_user.warnings.is_empty() {
+                writeln!(user_data_description, "- Has `{}` active warnings", luro_user.warnings.len())?;
             }
 
             match user_data_description.len() > 1024 {
-                true => writeln!(description, "\n**User Data**\n{user_data_description}")?,
-                false => embed = embed.field(EmbedFieldBuilder::new("User Data", user_data_description))
+                true => {
+                    writeln!(description, "\n**User Data**\n{user_data_description}")?;
+                }
+                false => {
+                    embed.create_field("User Data", &user_data_description, false);
+                }
             }
         }
 
@@ -234,9 +251,10 @@ impl LuroCommand for InfoUser {
             description.push_str("...")
         }
 
-        embed = embed.field(EmbedFieldBuilder::new("Timestamps", timestamp).inline());
-        embed = embed.description(description);
-        response.add_embed(embed.build()).response_type(response_type);
-        ctx.create_response(&response).await
+        embed.create_field("Timestamps", &timestamp, true);
+        embed.description(description);
+        response.add_embed(embed);
+        ctx.update_response(&response).await?;
+        Ok(())
     }
 }

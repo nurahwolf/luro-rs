@@ -139,15 +139,11 @@ impl LuroCommand for BanCommand {
         // Checks passed, now let's action the user
         let user_to_ban_dm = match ctx.framework.twilight_client.create_private_channel(user_to_remove.id).await {
             Ok(channel) => channel.model().await?,
-            Err(_) => {
-                return ctx
-                    .ban_response(guild, author.clone(), user_to_remove, &reason, &period_string, false)
-                    .await
-            }
+            Err(_) => return ctx.ban_response(guild, user_to_remove, &reason, &period_string, false).await
         };
 
         let mut embed = ctx
-            .ban_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason, &period_string)
+            .ban_embed(guild.clone(), user_to_remove.clone(), &reason, &period_string)
             .await?;
 
         let victim_dm = ctx

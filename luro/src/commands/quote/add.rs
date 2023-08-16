@@ -1,4 +1,4 @@
-use luro_model::{luro_message::LuroMessage, slash_user::SlashUser};
+use luro_model::{luro_message::LuroMessage, luro_user::LuroUser};
 use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::ChannelMarker, Id};
@@ -56,11 +56,11 @@ impl LuroCommand for Add {
 
         if let Some(guild_id) = interaction.guild_id {
             if let Ok(member) = ctx.framework.twilight_client.guild_member(guild_id, quoted_user.id).await {
-                quote.add_member(&quoted_user, &member.model().await?, &guild_id);
+                quote.add_member(&quoted_user, &guild_id, &member.model().await?);
             }
         }
 
-        let slash_user = SlashUser::from(quoted_user);
+        let slash_user = LuroUser::from(&quoted_user);
 
         let local_quotes = ctx.framework.database.get_quotes().await?;
         let local_quote_id = local_quotes.len();
@@ -75,7 +75,7 @@ impl LuroCommand for Add {
                     .author(|author| {
                         author
                             .name(format!("{} - Quote {local_quote_id}", slash_user.name))
-                            .icon_url(slash_user.avatar);
+                            .icon_url(slash_user.avatar());
                         match quote.guild_id {
                             Some(guild_id) => author.url(format!(
                                 "https://discord.com/channels/{guild_id}/{}/{}",

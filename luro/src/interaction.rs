@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use luro_builder::embed::EmbedBuilder;
 use luro_builder::response::LuroResponse;
 use luro_database::TomlDatabaseDriver;
 use tracing::debug;
@@ -72,6 +73,11 @@ impl LuroSlash {
         }
 
         self.create_response(&r).await
+    }
+
+    /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
+    pub async fn default_embed(&self) -> EmbedBuilder {
+        EmbedBuilder::default().colour(self.accent_colour().await).clone()
     }
 
     /// Create an interaction client

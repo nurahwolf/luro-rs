@@ -1,5 +1,5 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{constants::COLOUR_DANGER, role_ordering::RoleOrdering, slash_user::SlashUser};
+use luro_model::{constants::COLOUR_DANGER, role_ordering::RoleOrdering};
 use std::fmt::Write;
 use tracing::{debug, info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -42,16 +42,16 @@ impl LuroCommand for RoleCommands {
 
         let mut embed = EmbedBuilder::default();
         let accent_colour = ctx.accent_colour().await;
-        let author_id = ctx.interaction.author_id().unwrap();
+        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
+
         let guild_id = ctx.interaction.guild_id.unwrap();
         let member = ctx
             .framework
             .twilight_client
-            .guild_member(guild_id, author_id)
+            .guild_member(guild_id, Id::new(luro_user.id))
             .await?
             .model()
             .await?;
-        let slash_author = SlashUser::from_member(&member, Some(guild_id));
         let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
 
         // Get and sort user's roles
@@ -120,7 +120,7 @@ impl LuroCommand for RoleCommands {
             embed.create_field("Selected Roles - Too High", &too_high_role_list, false);
             if let Some(log_channel) = guild_settings.moderator_actions_log_channel {
                 // TODO: Remove hardcoded channel
-                warn!("User {} attempted to escalate their privileges", slash_author.user_id);
+                warn!("User {} attempted to escalate their privileges", luro_user.id);
                 ctx.framework
                     .send_message(&log_channel, |r| {
                         r.embed(|embed| {
@@ -129,9 +129,9 @@ impl LuroCommand for RoleCommands {
                                 .title("Privilege Escalation Attempt")
                                 .description(format!(
                                     "The user <@{}> just attempted to give themselves higher roles than they should have",
-                                    slash_author.user_id
+                                    luro_user.id
                                 ))
-                                .author(|author| author.name(slash_author.name.clone()).icon_url(slash_author.avatar.clone()))
+                                .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()))
                                 .create_field("Roles Attempted", &too_high_role_list, false)
                         })
                         .content("<@&1037361382410170378>")
@@ -213,25 +213,25 @@ impl LuroCommand for RoleCommands {
         embed
             .colour(accent_colour)
             .title("Roles Updated")
-            .author(|author| author.name(slash_author.name.clone()).icon_url(slash_author.avatar));
+            .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()));
 
         ctx.respond(|r| r.add_embed(embed.clone()).ephemeral()).await?;
 
         for role in roles_to_add {
             ctx.framework
                 .twilight_client
-                .add_guild_member_role(guild_id, author_id, role)
+                .add_guild_member_role(guild_id, Id::new(luro_user.id), role)
                 .await?;
         }
 
         for role in roles_to_remove {
             ctx.framework
                 .twilight_client
-                .remove_guild_member_role(guild_id, author_id, role)
+                .remove_guild_member_role(guild_id, Id::new(luro_user.id), role)
                 .await?;
         }
 
-        info!("User {} just updated their roles", slash_author.name);
+        info!("User {} just updated their roles", luro_user.name());
 
         if let Some(log_channel) = guild_settings.catchall_log_channel {
             ctx.framework.send_message(&log_channel, |r| r.add_embed(embed)).await?;
@@ -265,6 +265,8 @@ pub struct Menu {
 impl LuroCommand for Menu {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author_id().unwrap();
+        let luro_user = ctx.framework.database.get_user(&interaction_author).await?;
+
         let mut owner_match = false;
 
         // We are using global data for this one in case an owner was removed from the application live
@@ -282,8 +284,7 @@ impl LuroCommand for Menu {
         }
 
         // SAFETY: This command can only be used in guilds
-        let member = &ctx.interaction.member.clone().unwrap();
-        let slash_user = SlashUser::from_partialmember(&member.user.clone().unwrap(), member, ctx.interaction.guild_id);
+        let _member = &ctx.interaction.member.clone().unwrap();
         let add_buttons = self.rules.is_some() || self.adult.is_some() || self.bait.is_some();
 
         let accent_colour = ctx.accent_colour().await;
@@ -292,7 +293,7 @@ impl LuroCommand for Menu {
                 .embed(|embed| {
                     embed
                         .colour(accent_colour)
-                        .author(|author| author.name(slash_user.name).icon_url(slash_user.avatar));
+                        .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()));
                     match self.description {
                         Some(description) => embed.description(description),
                         None => embed.description("Select the roles you want")

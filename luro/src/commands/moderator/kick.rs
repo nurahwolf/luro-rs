@@ -113,12 +113,10 @@ impl LuroCommand for KickCommand {
         // Checks passed, now let's action the user
         let user_to_ban_dm = match ctx.framework.twilight_client.create_private_channel(user_to_remove.id).await {
             Ok(channel) => channel.model().await?,
-            Err(_) => return ctx.kick_response(guild, author, user_to_remove, &reason, false).await
+            Err(_) => return ctx.kick_response(guild, user_to_remove, &reason, false).await
         };
 
-        let mut embed = ctx
-            .kick_embed(guild.clone(), author.clone(), user_to_remove.clone(), &reason)
-            .await?;
+        let mut embed = ctx.kick_embed(guild.clone(), user_to_remove.clone(), &reason).await?;
 
         let victim_dm = ctx
             .framework

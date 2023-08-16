@@ -3,8 +3,7 @@ use std::path::Path;
 
 use git2::{ErrorCode, Repository};
 use luro_builder::embed::EmbedBuilder;
-use luro_model::constants::PRIMARY_BOT_OWNER;
-use luro_model::slash_user::SlashUser;
+use luro_model::luro_user::LuroUser;
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -32,12 +31,12 @@ impl LuroCommand for AboutCommand {
         let staff = ctx.framework.database.get_staff().await?;
         let current_user = ctx.framework.twilight_client.current_user().await?.model().await?;
         let mut embed = EmbedBuilder::default();
-        let slash_author = SlashUser::from(current_user);
+        let slash_author = LuroUser::from(&current_user);
 
         // Configuration
         embed.colour(ctx.accent_colour().await);
         embed.title(&slash_author.name);
-        embed.thumbnail(|thumbnail| thumbnail.url(slash_author.avatar));
+        embed.thumbnail(|thumbnail| thumbnail.url(slash_author.avatar()));
         embed.footer(|footer| footer.text("Written in twilight.rs!"));
 
         // Build our line processor for calculating padding
@@ -134,8 +133,8 @@ impl LuroCommand for AboutCommand {
         let mut staff_list = String::new();
         for staff in staff.iter() {
             match self.show_username.unwrap_or_default() {
-                true => writeln!(staff_list, "- {}", &staff.name.clone().unwrap_or("unknown".to_owned()))?,
-                false => writeln!(staff_list, "- <@{}>", staff.id.unwrap_or(PRIMARY_BOT_OWNER))?
+                true => writeln!(staff_list, "- {}", &staff.name)?,
+                false => writeln!(staff_list, "- <@{}>", staff.id)?
             }
         }
         embed.field(|field| field.field("Those with 'Administrator' access!", &staff_list, false));

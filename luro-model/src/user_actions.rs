@@ -7,7 +7,7 @@ use twilight_model::id::{
 use crate::user_actions_type::UserActionType;
 
 /// Bans recorded against a user
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct UserActions {
     /// The type of action this is
     pub action_type: Vec<UserActionType>,

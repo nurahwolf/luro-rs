@@ -26,17 +26,18 @@ impl LuroCommand for OwnerLoadUsers {
                     user_data.avatar = user.avatar;
                     user_data.banner = user.banner;
                     user_data.bot = user.bot;
-                    user_data.discriminator = Some(user.discriminator().get());
+                    user_data.discriminator = user.discriminator().get();
+                    user_data.global_name = user.global_name.clone();
                     user_data.email = user.email.clone();
                     user_data.flags = user.flags;
-                    user_data.id = Some(user.id);
+                    user_data.id = user.id.get();
                     user_data.locale = user.locale.clone();
-                    user_data.mfa_enabled = user.mfa_enabled;
-                    user_data.name = Some(user.name.clone());
+                    user_data.mfa_enabled = user.mfa_enabled.unwrap_or_default();
+                    user_data.name = user.name.clone();
                     user_data.premium_type = user.premium_type;
                     user_data.public_flags = user.public_flags;
-                    user_data.system = user.system;
-                    user_data.verified = user.verified;
+                    user_data.system = user.system.unwrap_or_default();
+                    user_data.verified = user.verified.unwrap_or_default();
                     if ctx.framework.database.modify_user(&user.id, &user_data).await.is_err() {
                         errors += 1
                     }

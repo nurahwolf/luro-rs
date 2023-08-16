@@ -60,7 +60,7 @@ impl LuroCommand for HeckCommands {
     }
 
     async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
-        let (_author, slash_author) = ctx.get_interaction_author(&ctx.interaction)?;
+        let luro_user = ctx.get_interaction_author(&ctx.interaction).await?;
         let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
 
         match (heck_text.contains("<user>"), heck_text.contains("<author>")) {
@@ -71,9 +71,7 @@ impl LuroCommand for HeckCommands {
         };
 
         // Send a success message.
-        let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", slash_author.name))
-            .icon_url(slash_author.try_into()?)
-            .build();
+        let embed_author = EmbedAuthorBuilder::new(format!("Brand new heck by {}", luro_user.name())).build();
         let embed = EmbedBuilder::new()
             .color(ACCENT_COLOUR)
             .description(heck_text)

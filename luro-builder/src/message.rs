@@ -18,10 +18,7 @@ impl MessageBuilder {
     {
         let mut e = EmbedBuilder::default();
         embed(&mut e);
-        match &mut self.0.embeds {
-            Some(embeds) => embeds.push(e.into()),
-            None => self.0.embeds = Some(vec![e.into()])
-        }
+        self.0.embeds.push(e.into());
 
         self
     }
@@ -31,7 +28,7 @@ impl MessageBuilder {
     ///
     /// NOTE: This WILL fail to send if more than 10 are present!
     pub fn set_embeds(&mut self, embeds: Vec<Embed>) -> &mut Self {
-        self.0.embeds = Some(embeds);
+        self.0.embeds = embeds;
 
         self
     }

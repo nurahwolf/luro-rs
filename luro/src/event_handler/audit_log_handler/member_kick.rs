@@ -1,4 +1,4 @@
-use crate::{framework::Framework, functions::client_fetch, COLOUR_DANGER};
+use crate::{framework::Framework, COLOUR_DANGER};
 use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{luro_database_driver::LuroDatabaseDriver, user_actions::UserActions, user_actions_type::UserActionType};
@@ -14,17 +14,17 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let kicked_user_id = Id::new(event.target_id.context("No user ID found for kicked user")?.get());
-        let slash_author = client_fetch(self, Some(guild.id), kicked_user_id).await?;
+        let luro_user = self.database.get_user(&kicked_user_id).await?;
 
         embed
-            .thumbnail(|thumbnail| thumbnail.url(slash_author.avatar))
+            .thumbnail(|thumbnail| thumbnail.url(luro_user.avatar()))
             .colour(COLOUR_DANGER)
             .title(format!("👢 Kicked from {}", guild.name));
 
         writeln!(
             description,
             "**User:** <@{kicked_user_id}> - `{}`\n**User ID:** `{kicked_user_id}`",
-            slash_author.name
+            luro_user.name()
         )?;
 
         if let Some(reason) = &event.reason {

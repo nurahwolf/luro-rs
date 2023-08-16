@@ -5,7 +5,7 @@ use std::fmt::Write;
 use std::sync::Arc;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 
-use crate::{framework::Framework, functions::client_fetch, COLOUR_DANGER};
+use crate::{framework::Framework, COLOUR_DANGER};
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn subhandle_member_ban_add(
@@ -16,17 +16,17 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     ) -> anyhow::Result<()> {
         let mut description = String::new();
         let banned_user_id = Id::new(event.target_id.context("No user ID found for banned user")?.get());
-        let slash_author = client_fetch(self, Some(guild.id), banned_user_id).await?;
+        let luro_user = self.database.get_user(&banned_user_id).await?;
 
         embed
-            .thumbnail(|thumbnail| thumbnail.url(slash_author.avatar))
+            .thumbnail(|thumbnail| thumbnail.url(luro_user.avatar()))
             .title(format!("🔨 Banned from {}", guild.name))
             .colour(COLOUR_DANGER);
 
         writeln!(
             description,
             "**User:** <@{banned_user_id}> - `{}`\n**User ID:** `{banned_user_id}`",
-            slash_author.name
+            luro_user.name()
         )?;
 
         if let Some(reason) = &event.reason {

@@ -1,6 +1,4 @@
-use crate::functions::client_fetch;
 use crate::interaction::LuroSlash;
-use crate::USERDATA_FILE_PATH;
 
 use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
@@ -47,7 +45,7 @@ impl LuroCommand for ModeratorWarnCommand {
                 return ctx.respond(|r| r.content("No warnings for that user!")).await;
             }
 
-            let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, user_id).await?;
+            let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
             let mut warnings_formatted = String::new();
             for (warning, user_id) in &user_data.warnings {
                 writeln!(warnings_formatted, "Warning by <@{user_id}>```{warning}```")?
@@ -58,7 +56,7 @@ impl LuroCommand for ModeratorWarnCommand {
                 .respond(|r| {
                     r.embed(|embed| {
                         embed
-                            .author(|author| author.name(slash_author.name).icon_url(slash_author.avatar))
+                            .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()))
                             .description(warnings_formatted)
                             .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
                             .colour(accent_colour)
@@ -109,9 +107,8 @@ impl LuroCommand for ModeratorWarnCommand {
         let warning = ctx.parse_modal_field_required(&data, "mod-warn-text")?;
         let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
-        let _path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, user_id);
 
-        let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, author.id).await?;
+        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
 
         let mut user_data = ctx.framework.database.get_user(&user_id).await?;
         user_data.warnings.push((warning.to_owned(), author.id));
@@ -124,8 +121,8 @@ impl LuroCommand for ModeratorWarnCommand {
             .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
             .author(|author| {
                 author
-                    .name(format!("Warning by {}", slash_author.name))
-                    .icon_url(slash_author.avatar)
+                    .name(format!("Warning by {}", luro_user.name()))
+                    .icon_url(luro_user.avatar())
             });
 
         match ctx.framework.twilight_client.create_private_channel(user_id).await {

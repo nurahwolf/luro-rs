@@ -1,12 +1,10 @@
+use crate::interaction::LuroSlash;
+use crate::luro_command::LuroCommand;
+use luro_model::constants::COLOUR_DANGER;
 use luro_model::luro_message::LuroMessage;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::marker::ChannelMarker;
 use twilight_model::id::Id;
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
-
-use crate::functions::client_fetch;
-use crate::interaction::LuroSlash;
-use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "get_message", desc = "Gets a particular message from the cache, or user's data")]
@@ -16,121 +14,68 @@ pub struct OwnerGetMessage {
     /// If defined, attempts to find the message from this user's data if not found in the cache
     user: Option<ResolvedUser>,
     /// If defined, attempts to use the client to fetch the message
-    channel_id: Option<Id<ChannelMarker>>,
-    /// Convert the message to a [LuroMessage].
-    convert: Option<bool>
+    channel_id: Option<Id<ChannelMarker>>
 }
 
 impl LuroCommand for OwnerGetMessage {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let accent_colour = ctx.accent_colour().await;
         let message_id = Id::new(self.message_id.parse()?);
-        let mut embed = EmbedBuilder::new().color(accent_colour);
+        let channel_id = self.channel_id.unwrap_or(ctx.interaction.clone().channel.unwrap().id);
+        let mut embed = ctx.default_embed().await;
 
-        let (slash_author, channel_id, message_id, message) = if let Some(channel_id) = self.channel_id {
-            let message = ctx
+        // Attempts to fetch in this order
+        // User Data -> Client -> Cache
+        let mut luro_message = match self.user {
+            Some(user) => match ctx
                 .framework
-                .twilight_client
-                .message(channel_id, message_id)
+                .database
+                .get_user(&user.resolved.id)
                 .await?
-                .model()
-                .await?;
-
-            (
-                client_fetch(&ctx.framework, message.guild_id, message.author.id).await?,
-                message.channel_id,
-                message_id,
-                Some(message)
-            )
-        } else {
-            match ctx.framework.twilight_cache.message(message_id) {
-                Some(message) => {
-                    embed = embed.description(message.content());
-                    (
-                        client_fetch(&ctx.framework, message.guild_id(), message.author()).await?,
-                        message.channel_id(),
-                        message.id(),
-                        None
-                    )
-                }
-                None => {
-                    let user = match self.user {
-                        Some(user) => user,
-                        None => {
-                            return ctx
-                                .respond(|r| {
-                                    r.content("Message not found! Try specifying a user ID if you know who sent it.")
-                                        .ephemeral()
-                                })
-                                .await
-                        }
-                    };
-                    let user_data = ctx.framework.database.get_user(&user.resolved.id).await?;
-                    let message = match user_data.messages.get(&message_id) {
-                        Some(message) => message,
-                        None => {
-                            return ctx
-                                .respond(|r| {
-                                    r.content("Looks like the user does not have the message ID you provided, sorry.")
-                                        .ephemeral()
-                                })
-                                .await
-                        }
-                    };
-
-                    if let Some(content) = &message.content {
-                        embed = embed.description(content)
-                    }
-
-                    (
-                        client_fetch(&ctx.framework, ctx.interaction.guild_id, user.resolved.id).await?,
-                        message.channel_id,
-                        message.id,
-                        None
-                    )
-                }
-            }
+                .messages
+                .get(&message_id)
+            {
+                Some(message) => Some(message.clone()),
+                None => None
+            },
+            None => None
         };
 
-        embed = embed.author(EmbedAuthorBuilder::new(slash_author.name).icon_url(ImageSource::url(slash_author.avatar)?));
-        embed = embed.field(EmbedFieldBuilder::new("Channel", format!("<#{}>", channel_id)).inline());
-        embed = embed.field(EmbedFieldBuilder::new("Message ID", message_id.to_string()).inline());
-
-        match self.convert.unwrap_or_default() {
-            true => {
-                let message = match message {
-                    Some(message) => message,
-                    None => {
-                        ctx.framework
-                            .twilight_client
-                            .message(channel_id, message_id)
-                            .await?
-                            .model()
-                            .await?
-                    }
-                };
-
-                let mut luro_message = LuroMessage::from(message.clone());
-                if let Some(member) = message.member {
-                    luro_message.add_partialmember(&message.author, &member);
-                }
-                if let Some(guild_id) = message.guild_id && let Ok(member) = ctx.framework.twilight_client.guild_member(guild_id, message.author.id).await {
-                    luro_message.add_member(&message.author, &member.model().await?, &guild_id);
-                }
-                let toml = toml::to_string_pretty(&luro_message)?;
-                ctx.respond(|r| {
-                    r.embed(|embed| {
-                        embed
-                            .colour(accent_colour)
-                            .title("LuroMessage")
-                            .description(format!("```toml\n{toml}\n```"))
-                    })
-                    .add_embed(embed.build())
-                    .ephemeral()
-                })
-                .await
+        // If not present, try to get from the client
+        if luro_message.is_none() {
+            luro_message = match ctx.framework.twilight_client.message(channel_id, message_id).await {
+                Ok(message) => Some(LuroMessage::from(message.model().await?)),
+                Err(_) => None
             }
-            false => ctx.respond(|r| r.add_embed(embed.build()).ephemeral()).await
         }
+
+        // Last ditch effort, is it in the cache?
+        if luro_message.is_none() {
+            luro_message = match ctx.framework.twilight_cache.message(message_id) {
+                Some(message) => Some(LuroMessage::from(message.clone())),
+                None => None
+            }
+        }
+
+        match luro_message {
+            Some(message) => {
+                let toml = toml::to_string_pretty(&message)?;
+                embed
+                    .author(|author| {
+                        author
+                            .name(message.user.name())
+                            .icon_url(message.user.avatar())
+                            .url(message.link())
+                    })
+                    .description(message.content.unwrap_or_default())
+                    .create_field("Channel", &format!("<#{}>", channel_id), true)
+                    .create_field("Message ID", &message_id.to_string(), true)
+                    .create_field("LuroMessage", &format!("```toml\n{toml}\n```"), false)
+            }
+            None => embed
+                .description("No message found! If it is hard to find, try specifying my optional parameters!")
+                .colour(COLOUR_DANGER)
+        };
+
+        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }
 }

@@ -48,9 +48,9 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         for staff in staff.iter() {
             if owners.is_empty() {
-                owners.push_str(staff.name.as_ref().unwrap())
+                owners.push_str(&staff.name)
             } else {
-                owners.push_str(format!(", {}", staff.name.as_ref().unwrap()).as_str())
+                owners.push_str(format!(", {}", staff.name).as_str())
             }
         }
         info!("Owners:        {owners}");

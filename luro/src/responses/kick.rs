@@ -1,23 +1,13 @@
 use anyhow::Error;
-use luro_model::{constants::ACCENT_COLOUR, slash_user::SlashUser};
-use twilight_model::{
-    guild::{Guild, Member},
-    user::User
-};
+use luro_model::{constants::ACCENT_COLOUR, luro_user::LuroUser};
+use twilight_model::{guild::Guild, user::User};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::interaction::LuroSlash;
 
 impl LuroSlash {
-    pub async fn kick_response(
-        &self,
-        guild: Guild,
-        moderator: Member,
-        banned_user: User,
-        reason: &String,
-        success: bool
-    ) -> anyhow::Result<()> {
-        let mut embed = self.kick_embed(guild, moderator, banned_user, reason).await?;
+    pub async fn kick_response(&self, guild: Guild, banned_user: User, reason: &String, success: bool) -> anyhow::Result<()> {
+        let mut embed = self.kick_embed(guild, banned_user, reason).await?;
         if success {
             embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
         } else {
@@ -28,18 +18,12 @@ impl LuroSlash {
     }
 
     /// Embed showing that a member got banned
-    pub async fn kick_embed(
-        &self,
-        guild: Guild,
-        moderator: Member,
-        kicked_user: User,
-        reason: &String
-    ) -> Result<EmbedBuilder, Error> {
-        let moderator = SlashUser::from_member(&moderator, Some(guild.id));
-        let victim = SlashUser::from(kicked_user);
+    pub async fn kick_embed(&self, guild: Guild, kicked_user: User, reason: &String) -> Result<EmbedBuilder, Error> {
+        let moderator = self.get_interaction_author(&self.interaction).await?;
+        let victim = LuroUser::from(&kicked_user);
 
-        let embed_author = EmbedAuthorBuilder::new(format!("Kicked by {} - {}", moderator.name, moderator.user_id))
-            .icon_url(ImageSource::url(moderator.avatar)?)
+        let embed_author = EmbedAuthorBuilder::new(format!("Kicked by {} - {}", moderator.name, moderator.id))
+            .icon_url(ImageSource::url(moderator.avatar())?)
             .build();
 
         let mut embed = EmbedBuilder::new()
@@ -47,18 +31,15 @@ impl LuroSlash {
             .title(format!("Kicked from {}", guild.name))
             .author(embed_author)
             .field(EmbedFieldBuilder::new("Guild ID", guild.id.to_string()).inline())
-            .thumbnail(ImageSource::url(victim.avatar)?);
+            .thumbnail(ImageSource::url(victim.avatar())?);
 
         if !reason.is_empty() {
             embed = embed.description(format!(
                 "**User:** <@{0}> - {1}\n**User ID:** {0}\n```{reason}```",
-                victim.user_id, victim.name
+                victim.id, victim.name
             ))
         } else {
-            embed = embed.description(format!(
-                "**User:** <@{0}> - {1}\n**User ID:** {0}",
-                victim.user_id, victim.name
-            ))
+            embed = embed.description(format!("**User:** <@{0}> - {1}\n**User ID:** {0}", victim.id, victim.name))
         }
 
         Ok(embed)

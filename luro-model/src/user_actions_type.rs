@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum UserActionType {
     Ban,
     Kick,
     Warn,
-    PrivilegeEscalation
+    PrivilegeEscalation,
+    #[default]
+    None
 }

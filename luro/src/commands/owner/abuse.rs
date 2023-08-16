@@ -3,7 +3,6 @@ use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::functions::client_fetch;
 use crate::interaction::LuroSlash;
 
 use crate::luro_command::LuroCommand;
@@ -47,20 +46,21 @@ impl LuroCommand for AbuseCommand {
             }
         };
 
-        let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, self.user.resolved.id).await?;
+        let luro_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
 
         let mut embed = EmbedBuilder::default();
         embed
             .colour(ctx.accent_colour().await)
             .description(&self.message)
-            .author(|author| author.name(&slash_author.name).icon_url(&slash_author.avatar));
+            .author(|author| author.name(&luro_user.name()).icon_url(&luro_user.avatar()));
 
+        let avatar = luro_user.avatar();
         let webhook_message = ctx
             .framework
             .twilight_client
             .execute_webhook(webhook.id, &webhook_token)
-            .username(&slash_author.name)
-            .avatar_url(&slash_author.avatar);
+            .username(&luro_user.name)
+            .avatar_url(&avatar);
 
         match self.embed.unwrap_or_default() {
             true => webhook_message.embeds(&[embed.clone().into()]).await?,

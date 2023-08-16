@@ -1,9 +1,9 @@
 use anyhow::Context;
-use luro_model::slash_user::SlashUser;
+
 use rand::Rng;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{functions::client_fetch, interaction::LuroSlash, luro_command::LuroCommand, models::LuroWebhook};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand, models::LuroWebhook};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "get", desc = "Get a memorable quote!")]
@@ -27,17 +27,6 @@ impl LuroCommand for Get {
         let quote = match ctx.framework.database.get_quote(id).await {
             Ok(quote) => quote,
             Err(_) => return ctx.respond(|r| r.content("Sorry! Quote was not found :(").ephemeral()).await
-        };
-
-        let slash_user = match quote.luro_user {
-            Some(slash_user) => slash_user,
-            None => match quote.author {
-                Some(user) => SlashUser::from(user),
-                None => match quote.author_id {
-                    Some(author_id) => client_fetch(&ctx.framework, ctx.interaction.guild_id, author_id).await?,
-                    None => Default::default()
-                }
-            }
         };
 
         if self.puppet.unwrap_or_default() {
@@ -70,8 +59,8 @@ impl LuroCommand for Get {
             ctx.framework
                 .twilight_client
                 .execute_webhook(webhook.id, &webhook_token)
-                .username(&slash_user.name)
-                .avatar_url(&slash_user.avatar)
+                .username(&quote.user.name)
+                .avatar_url(&quote.user.avatar())
                 .content(&quote.content.unwrap_or_default())
                 .await?;
 
@@ -86,8 +75,8 @@ impl LuroCommand for Get {
                     .description(quote.content.unwrap_or_default())
                     .author(|author| {
                         author
-                            .name(format!("{} - Quote {id}", slash_user.name))
-                            .icon_url(slash_user.avatar);
+                            .name(format!("{} - Quote {id}", quote.user.name()))
+                            .icon_url(quote.user.avatar());
                         match quote.guild_id {
                             Some(guild_id) => author.url(format!(
                                 "https://discord.com/channels/{guild_id}/{}/{}",

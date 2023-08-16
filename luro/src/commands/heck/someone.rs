@@ -1,11 +1,9 @@
 use tracing::debug;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::id::Id;
 
 use crate::{
     commands::heck::{format_heck, get_heck},
-    functions::client_fetch,
     interaction::LuroSlash,
     luro_command::LuroCommand
 };
@@ -35,14 +33,14 @@ impl LuroCommand for HeckSomeoneCommand {
         debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, interaction.author().as_ref().unwrap(), &self.user.resolved).await;
 
-        let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, Id::new(heck.author_id.get())).await?;
+        let luro_user = ctx.framework.database.get_user(&heck.author_id).await?;
 
         // Create our response, depending on if the user wants a plaintext heck or not
         if let Some(plaintext) = self.plaintext && plaintext {
             ctx.respond(|r|r.content(formatted_heck.heck_message)).await
         } else {
             let accent_colour = ctx.accent_colour().await;
-            ctx.respond(|r|r.content(format!("<@{}>", self.user.resolved.id)).embed(|e|e.description(formatted_heck.heck_message).colour(accent_colour).author(|author|author.name(format!("Heck created by {}", slash_author.name)).icon_url(slash_author.avatar)).footer(|f|{
+            ctx.respond(|r|r.content(format!("<@{}>", self.user.resolved.id)).embed(|e|e.description(formatted_heck.heck_message).colour(accent_colour).author(|author|author.name(format!("Heck created by {}", luro_user.name())).icon_url(luro_user.avatar())).footer(|f|{
                 match nsfw {
                     true => f.text(format!("Heck ID {heck_id} - NSFW Heck")),
                     false => f.text(format!("Heck ID {heck_id} - SFW Heck")),

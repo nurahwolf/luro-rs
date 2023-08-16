@@ -5,7 +5,7 @@ use luro_builder::{embed::EmbedBuilder, response::LuroResponse};
 use luro_model::{luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel};
 use twilight_model::gateway::payload::incoming::MessageDeleteBulk;
 
-use crate::{framework::Framework, functions::client_fetch, COLOUR_DANGER};
+use crate::{framework::Framework, COLOUR_DANGER};
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn listener_bulk_message_delete(self: &Arc<Self>, mut event: MessageDeleteBulk) -> Result<(), Error> {
         // Sort message IDs from oldest to newest, then fetch the messages from cache.
@@ -30,7 +30,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             // Save each author in a hash map. If there is only one author per embed, then set them as the embed author.
             let message_author = message_authors
                 .entry(message.author())
-                .or_insert(client_fetch(self, event.guild_id, message.author()).await?)
+                .or_insert(self.database.get_user(&message.author()).await?)
                 .clone();
 
             // We hit the 25 field cap per embed. Let's roll this embed up and start again.
@@ -38,8 +38,8 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 if let Some(audit_author) = message_authors.values().last() {
                     embed.author(|author| {
                         author
-                            .name(format!("{} - {}", audit_author.name, audit_author.user_id))
-                            .icon_url(audit_author.avatar.clone())
+                            .name(format!("{} - {}", audit_author.name, audit_author.id))
+                            .icon_url(audit_author.avatar())
                     });
                 }
                 message_authors.clear();
@@ -54,7 +54,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 embed.field(|field| {
                     field.value(format!(
                         "<@{}> - <#{}> - <t:{}:R> - `{}`\n{}",
-                        message_author.user_id,
+                        message_author.id,
                         message.channel_id(),
                         message.timestamp().as_secs(),
                         message.id(),
@@ -66,7 +66,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         // If our embed has only one author, set them as the embed author
         if let Some(audit_author) = message_authors.values().last() && message_authors.len() == 1 {
-            embed.author(|author| author.name(format!("{} - {}", audit_author.name, audit_author.user_id)).icon_url(audit_author.avatar.clone()));
+            embed.author(|author| author.name(format!("{} - {}", audit_author.name(), audit_author.id)).icon_url(audit_author.avatar()));
         }
 
         // If no fields were added, that means we were not able to get any messages

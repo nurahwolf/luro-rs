@@ -1,10 +1,9 @@
-use crate::functions::client_fetch;
 use crate::interaction::LuroSlash;
 
 use std::fmt::Write;
 use std::time::SystemTime;
 
-use anyhow::Context;
+use anyhow::{Context, Error};
 
 use luro_builder::embed::EmbedBuilder;
 use luro_model::user_marriages::UserMarriages;
@@ -121,13 +120,12 @@ impl LuroCommand for MarryCommands {
 
         match interaction_author == marry.resolved.id {
             false => {
-                ctx.respond(|respond| {
-                    respond.content(format!(
-                        "Bruh. <@{}> just attempted to snipe the marriage.",
-                        &interaction_author
-                    ))
-                })
-                .await
+                let content = if &data.custom_id == "marry-deny" {
+                    format!("<@{}> has voted to DENY the marriage!", &interaction_author)
+                } else {
+                    format!("<@{}> has voted for the marriage to proceed!", &interaction_author)
+                };
+                ctx.respond(|respond| respond.content(content)).await
             }
             true => {
                 if &data.custom_id == "marry-deny" {
@@ -144,6 +142,19 @@ impl LuroCommand for MarryCommands {
                         .await;
                 }
 
+                let message = ctx
+                    .interaction
+                    .clone()
+                    .message
+                    .ok_or_else(|| Error::msg("Unable to find the original message"))?;
+                // Now get both the embed, and components from the message
+                let embed = message
+                    .embeds
+                    .first()
+                    .ok_or_else(|| Error::msg("Unable to find the original marriage embed"))?
+                    .clone();
+                let proposal = embed.description.ok_or_else(|| Error::msg("No author in our heck embed"))?;
+
                 // Modify the proposer
                 {
                     let mut user_data = ctx.framework.database.get_user(&interaction_author).await?;
@@ -152,7 +163,8 @@ impl LuroCommand for MarryCommands {
                         UserMarriages {
                             timestamp: SystemTime::now(),
                             user: marry.resolved.id,
-                            reason: reason.clone()
+                            reason: reason.clone(),
+                            proposal: proposal.clone()
                         }
                     );
                 }
@@ -165,7 +177,8 @@ impl LuroCommand for MarryCommands {
                         UserMarriages {
                             timestamp: SystemTime::now(),
                             user: interaction_author,
-                            reason: reason.clone()
+                            reason,
+                            proposal
                         }
                     );
                 }
@@ -194,31 +207,42 @@ pub struct MarryMarriages {
 
 impl LuroCommand for MarryMarriages {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let mut content = String::new();
-        let (_, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
-        let user_data = ctx.framework.database.get_user(&slash_author.user_id).await?;
+        let mut marriages = vec![];
+        let luro_user = ctx.get_specified_user_or_author(&self.user, &ctx.interaction).await?;
         let mut embed = EmbedBuilder::default();
         embed
             .author(|author| {
                 author
-                    .name(format!("{}'s marriages", slash_author.name))
-                    .icon_url(slash_author.avatar)
+                    .name(format!("{}'s marriages", luro_user.name()))
+                    .icon_url(luro_user.avatar())
             })
             .colour(ctx.accent_colour().await);
 
-        for (_, marriage) in user_data.marriages.iter() {
-            match ctx.framework.twilight_cache.user(marriage.user) {
-                Some(marriage_user) => writeln!(
-                    content,
-                    "{} - <@{}>```{}```",
-                    marriage_user.name, marriage.user, marriage.reason
-                )?,
-                None => writeln!(content, "<@{}>\n```{}```", marriage.user, marriage.reason)?
-            }
+        for (user, marriage) in luro_user.marriages.iter() {
+            marriages.push((ctx.framework.database.get_user(user).await?, marriage));
         }
-        match content.is_empty() {
-            true => embed.description("Looks like they have no marriages yet :("),
-            false => embed.description(content)
+
+        match marriages.is_empty() {
+            true => {
+                embed.description("Looks like they have no marriages yet :(");
+            }
+            false => match marriages.len() < 25 {
+                true => {
+                    for (user, marriage) in marriages {
+                        embed.create_field(user.name, marriage.reason.clone().unwrap_or(marriage.proposal.clone()), false);
+                    }
+                }
+                false => {
+                    let mut description = String::new();
+                    for (user, marriage) in marriages {
+                        match &marriage.reason {
+                            Some(reason) => writeln!(description, "- {} - <@{}>\n  - {reason}", user.name, user.id),
+                            None => writeln!(description, "- {} - <@{}>\n  - {}", user.name, user.id, marriage.proposal)
+                        }?;
+                    }
+                    embed.description(description);
+                }
+            }
         };
 
         ctx.respond(|r| r.add_embed(embed)).await
@@ -231,32 +255,36 @@ pub struct MarryNew {
     /// Set this if you want to marry someone!
     marry: ResolvedUser,
     /// The reason you wish to marry them!
-    reason: String
+    reason: Option<String>
 }
 
 impl LuroCommand for MarryNew {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let slash_author = client_fetch(&ctx.framework, ctx.interaction.guild_id, ctx.interaction.author_id().unwrap()).await?;
+        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
         let mut embed = EmbedBuilder::default();
         embed
             .author(|author| {
                 author
-                    .name(format!("{} has marriproposed!", slash_author.name))
-                    .icon_url(slash_author.avatar)
+                    .name(format!("{} has proposed!", luro_user.name()))
+                    .icon_url(luro_user.avatar())
             })
             .colour(ctx.accent_colour().await);
 
+        let proposal;
         {
             let mut rng = thread_rng();
-            let reason = MARRIAGE_REASONS
+            proposal = MARRIAGE_REASONS
                 .choose(&mut rng)
                 .context("Expected to be able to choose a random reason")?
                 .replace("<user>", &format!("<@{}>", &self.marry.resolved.id))
-                .replace("<author>", &format!("<@{}>", &slash_author.user_id));
-            embed.description(reason);
+                .replace("<author>", &format!("<@{}>", &luro_user.id));
+            embed.description(proposal.clone());
         }
 
-        embed.create_field("Their Reason", &self.reason, true);
+        if let Some(reason) = self.reason {
+            embed.create_field("Their Reason", &reason, true);
+        }
+
         ctx.respond(|r| {
             r.add_embed(embed)
                 .content(format!("<@{}>", &self.marry.resolved.id))

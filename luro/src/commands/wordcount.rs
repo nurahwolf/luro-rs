@@ -27,11 +27,11 @@ pub struct WordcountCommand {
 
 impl LuroCommand for WordcountCommand {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let luro_user = ctx.get_specified_user_or_author(&self.user, &ctx.interaction).await?;
         let response = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(false).await?;
 
         let accent_colour = ctx.accent_colour().await;
-        let slash_author;
         let mut wordcount: usize = Default::default();
         let mut averagesize: usize = Default::default();
         let mut wordsize: BTreeMap<usize, usize> = Default::default();
@@ -81,14 +81,11 @@ impl LuroCommand for WordcountCommand {
                 content.push_str("...")
             }
             writeln!(content, "-----")?;
-            (_, slash_author) = ctx.get_interaction_author(&ctx.interaction)?;
         } else {
-            (_, slash_author) = ctx.get_specified_user_or_author(&self.user, &ctx.interaction)?;
-            let user_data = ctx.framework.database.get_user(&slash_author.user_id).await?;
-            wordcount = user_data.wordcount;
-            averagesize = user_data.averagesize;
-            wordsize = user_data.wordsize.clone();
-            words = user_data.words.clone();
+            wordcount = luro_user.wordcount;
+            averagesize = luro_user.averagesize;
+            wordsize = luro_user.wordsize.clone();
+            words = luro_user.words.clone();
         };
 
         let averagesize = averagesize.checked_div(wordcount).unwrap_or(0);
@@ -112,7 +109,7 @@ impl LuroCommand for WordcountCommand {
                             r.embed(|e| {
                                 e.description(content)
                                     .colour(accent_colour)
-                                    .author(|author| author.name(slash_author.name).icon_url(slash_author.avatar))
+                                    .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()))
                             })
                             .response_type(response)
                         })
@@ -192,7 +189,7 @@ impl LuroCommand for WordcountCommand {
         ctx.respond(|r| {
             r.embed(|embed| {
                 embed
-                    .author(|author| author.name(slash_author.name).icon_url(slash_author.avatar))
+                    .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()))
                     .description(content)
                     .field(|field| field.field("Word Length", &word_size, true))
                     .field(|field| field.field("Most used words", &most_used, true))

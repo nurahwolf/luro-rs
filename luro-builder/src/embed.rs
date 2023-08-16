@@ -9,7 +9,8 @@ use twilight_model::{
 
 use self::{
     embed_author::EmbedAuthorBuilder, embed_field::EmbedFieldBuilder, embed_footer::EmbedFooterBuilder,
-    embed_provider::EmbedProviderBuilder, embed_thumbnail::EmbedThumbnailBuilder, embed_video::EmbedVideoBuilder
+    embed_image::EmbedImageBuilder, embed_provider::EmbedProviderBuilder, embed_thumbnail::EmbedThumbnailBuilder,
+    embed_video::EmbedVideoBuilder
 };
 
 pub mod embed_author;
@@ -155,11 +156,11 @@ impl EmbedBuilder {
     /// information.
     pub fn image<F>(&mut self, image: F) -> &mut Self
     where
-        F: FnOnce(&mut EmbedFooterBuilder) -> &mut EmbedFooterBuilder
+        F: FnOnce(&mut EmbedImageBuilder) -> &mut EmbedImageBuilder
     {
-        let mut f = EmbedFooterBuilder::default();
-        image(&mut f);
-        self.0.footer = Some(f.into());
+        let mut i = EmbedImageBuilder::default();
+        image(&mut i);
+        self.0.image = Some(i.into());
         self
     }
 

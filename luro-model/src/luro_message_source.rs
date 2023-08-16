@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum LuroMessageSource {
     /// Created from an existing message
     Message,
@@ -15,5 +15,6 @@ pub enum LuroMessageSource {
     /// Created from a message create event
     MessageCreate,
     /// No message :(
+    #[default]
     None
 }

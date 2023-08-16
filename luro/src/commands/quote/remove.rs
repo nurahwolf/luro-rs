@@ -1,7 +1,6 @@
-use luro_model::slash_user::SlashUser;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{functions::client_fetch, interaction::LuroSlash, luro_command::LuroCommand};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "remove", desc = "Remove a particular quote (Owner Only)!")]
@@ -22,17 +21,6 @@ impl LuroCommand for Remove {
 
         ctx.framework.database.save_quotes(quotes).await?;
 
-        let slash_user = match quote.luro_user {
-            Some(slash_user) => slash_user,
-            None => match quote.author {
-                Some(user) => SlashUser::from(user),
-                None => match quote.author_id {
-                    Some(author_id) => client_fetch(&ctx.framework, ctx.interaction.guild_id, author_id).await?,
-                    None => Default::default()
-                }
-            }
-        };
-
         let accent_colour = ctx.accent_colour().await;
         ctx.respond(|response| {
             response.embed(|embed| {
@@ -41,8 +29,8 @@ impl LuroCommand for Remove {
                     .description(quote.content.unwrap_or_default())
                     .author(|author| {
                         author
-                            .name(format!("{} - Quote {id} Removed", slash_user.name))
-                            .icon_url(slash_user.avatar);
+                            .name(format!("{} - Quote {id} Removed", quote.user.name()))
+                            .icon_url(quote.user.avatar());
                         match quote.guild_id {
                             Some(guild_id) => author.url(format!(
                                 "https://discord.com/channels/{guild_id}/{}/{}",
