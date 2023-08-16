@@ -162,7 +162,6 @@ impl LuroCommand for MarryCommands {
                         marry.resolved.id,
                         UserMarriages {
                             timestamp: SystemTime::now(),
-                            user: marry.resolved.id,
                             reason: reason.clone(),
                             proposal: proposal.clone()
                         }
@@ -176,7 +175,6 @@ impl LuroCommand for MarryCommands {
                         interaction_author,
                         UserMarriages {
                             timestamp: SystemTime::now(),
-                            user: interaction_author,
                             reason,
                             proposal
                         }

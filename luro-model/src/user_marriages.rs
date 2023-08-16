@@ -7,8 +7,6 @@ use twilight_model::id::{marker::UserMarker, Id};
 pub struct UserMarriages {
     /// When did they get married?
     pub timestamp: SystemTime,
-    /// Who actually got married
-    pub user: Id<UserMarker>,
     /// The user's optional reason for marrying
     #[serde(default)]
     pub reason: Option<String>,
