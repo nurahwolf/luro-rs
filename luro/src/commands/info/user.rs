@@ -42,7 +42,6 @@ impl LuroCommand for InfoUser {
         let mut luro_user = ctx.framework.database.get_user(&user_id).await?;
         let user_timestamp = Duration::from_millis(user_id.timestamp().unsigned_abs());
 
-
         let mut response = LuroResponse::default();
         let mut embed = ctx.default_embed().await;
         let mut description = String::new();
