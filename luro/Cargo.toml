@@ -11,6 +11,16 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
+# Commands
+luro-dice = { path = "../luro-dice", optional = true }
+
+
+
+
+
+
+
+
 # Luro Specific
 luro-model = { path = "../luro-model" }
 luro-database = { path = "../luro-database" }
@@ -18,7 +28,6 @@ luro-builder = { path = "../luro-builder" }
 
 
 # Core
-async-trait = "0.1"
 tokio = { workspace = true }
 
 # Twilight Specific
@@ -59,5 +68,10 @@ futures = "0.3"
 tokio = { workspace = true }
 
 [features]
-default = ["toml-driver"]
+# Core
+default = ["toml-driver", "all-commands"]
+all-commands = ["command-dice"]
 toml-driver = []
+
+# Commands
+command-dice = ["dep:luro-dice"]

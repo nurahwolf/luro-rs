@@ -20,7 +20,7 @@ derive = ["twilight-interactions-derive"]
 
 [dependencies]
 twilight-model = { workspace = true }
-twilight-interactions-derive = { path = "../twilight-interactions-derive", optional = true }
+twilight-interactions-derive = { workspace = true, optional = true }
 
 [package.metadata.docs.rs]
 all-features = true

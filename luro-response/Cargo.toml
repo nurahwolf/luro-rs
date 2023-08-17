@@ -1,5 +1,5 @@
 [package]
-name = "luro-responses"
+name = "luro-response"
 authors.workspace = true
 categories.workspace = true
 description.workspace = true
@@ -13,7 +13,10 @@ version.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# Core
 anyhow = { workspace = true }
 tracing= { workspace = true}
-luro-builder = { path = "../luro-builder" }
-luro-model = { path = "../luro-model" }
+
+# Luro
+luro-builder = { workspace = true }
+luro-model = { workspace = true }

@@ -1,7 +1,6 @@
 use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
-use twilight_model::id::{marker::UserMarker, Id};
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct UserMarriages {
