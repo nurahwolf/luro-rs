@@ -1,12 +1,13 @@
 [workspace]
 members = [
     "luro",
+    "luro-dice",
     "luro-builder",
     "luro-database",
     "luro-model",
     "luro-responses",
     "twilight-interactions",
-    "twilight-interactions-derive"
+    "twilight-interactions-derive",
 ]
 resolver = "2"
 
@@ -27,7 +28,11 @@ dashmap = "5"
 serde = "1"
 parking_lot = "0.12"
 tracing-subscriber = "0.3.0"
-tokio = { version = "1", default-features = false, features = ["sync", "rt-multi-thread", "fs"] }
+tokio = { version = "1", default-features = false, features = [
+    "sync",
+    "rt-multi-thread",
+    "fs",
+] }
 twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
 twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
 twilight-interactions = { path = "twilight-interactions" }

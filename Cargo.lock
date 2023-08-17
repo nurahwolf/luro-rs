@@ -739,6 +739,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "luro-dice"
+version = "0.0.1"
+dependencies = [
+ "rand",
+]
+
+[[package]]
 name = "luro-model"
 version = "0.0.1"
 dependencies = [
