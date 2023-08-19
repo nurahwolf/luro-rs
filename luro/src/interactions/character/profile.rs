@@ -83,6 +83,16 @@ impl LuroCommand for Profile {
                 .name(format!("Profile by {}", user_data.name()))
         });
 
+        let mut prefix_string = String::new();
+        for (prefix, character_name) in user_data.character_prefix {
+            if self.name == character_name {
+                writeln!(prefix_string, "- `{prefix}`")?
+            }
+        }
+        if !prefix_string.is_empty() {
+            embed.create_field("Character Prefixes", &prefix_string, false);
+        }
+
         ctx.respond(|response| {
             response.add_embed(embed);
             if nsfw && !character.fetishes.is_empty() {

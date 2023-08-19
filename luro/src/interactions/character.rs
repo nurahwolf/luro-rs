@@ -6,13 +6,14 @@ use twilight_model::application::interaction::{modal::ModalInteractionData, mess
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
-use self::{create::Create, profile::Profile, fetish::Fetish, proxy::Proxy, icon::Icon};
+use self::{create::Create, profile::Profile, fetish::Fetish, proxy::Proxy, icon::Icon, send::SendCommand};
 
 mod create;
 mod profile;
 mod fetish;
 mod proxy;
 mod icon;
+mod send;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "character", desc = "Show off your character!")]
@@ -26,7 +27,9 @@ pub enum Character {
     #[command(name = "proxy")]
     Proxy(Proxy),
     #[command(name = "icon")]
-    Icon(Icon)
+    Icon(Icon),
+    #[command(name = "send")]
+    Send(SendCommand)
 }
 
 impl LuroCommand for Character {
@@ -36,7 +39,9 @@ impl LuroCommand for Character {
             Self::Create(command) => command.run_command(ctx).await,
             Self::Fetish(command) => command.run_command(ctx).await,
             Self::Proxy(command) => command.run_command(ctx).await,
-            Self::Icon(command) => command.run_command(ctx).await
+            Self::Icon(command) => command.run_command(ctx).await,
+            Self::Send(command) => command.run_command(ctx).await
+
 
         }
     }

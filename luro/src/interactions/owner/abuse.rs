@@ -55,11 +55,12 @@ impl LuroCommand for AbuseCommand {
             .author(|author| author.name(&luro_user.name()).icon_url(&luro_user.avatar()));
 
         let avatar = luro_user.avatar();
+        let name = luro_user.member_name(&ctx.interaction.guild_id);
         let webhook_message = ctx
             .framework
             .twilight_client
             .execute_webhook(webhook.id, &webhook_token)
-            .username(&luro_user.name)
+            .username(&name)
             .avatar_url(&avatar);
 
         match self.embed.unwrap_or_default() {
@@ -67,6 +68,6 @@ impl LuroCommand for AbuseCommand {
             false => webhook_message.content(&self.message).await?
         };
 
-        ctx.respond(|response| response.add_embed(embed)).await
+        ctx.respond(|response| response.add_embed(embed).ephemeral()).await
     }
 }
