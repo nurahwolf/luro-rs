@@ -6,11 +6,13 @@ use twilight_model::application::interaction::{modal::ModalInteractionData, mess
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
-use self::{create::Create, profile::Profile, fetish::Fetish};
+use self::{create::Create, profile::Profile, fetish::Fetish, proxy::Proxy, icon::Icon};
 
 mod create;
 mod profile;
 mod fetish;
+mod proxy;
+mod icon;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "character", desc = "Show off your character!")]
@@ -20,7 +22,11 @@ pub enum Character {
     #[command(name = "create")]
     Create(Create),
     #[command(name = "fetish")]
-    Fetish(Fetish)
+    Fetish(Fetish),
+    #[command(name = "proxy")]
+    Proxy(Proxy),
+    #[command(name = "icon")]
+    Icon(Icon)
 }
 
 impl LuroCommand for Character {
@@ -28,7 +34,9 @@ impl LuroCommand for Character {
         match self {
             Self::Profile(command) => command.run_command(ctx).await,
             Self::Create(command) => command.run_command(ctx).await,
-            Self::Fetish(command) => command.run_command(ctx).await
+            Self::Fetish(command) => command.run_command(ctx).await,
+            Self::Proxy(command) => command.run_command(ctx).await,
+            Self::Icon(command) => command.run_command(ctx).await
 
         }
     }
@@ -93,7 +101,8 @@ impl LuroCommand for Character {
         .message
         .clone()
         .ok_or_else(|| Error::msg("Unable to find the original message"))?;
-        let user_data = ctx.framework.database.get_user(&message.author.id).await?;
+        let interaction = message.interaction.context("Unable to get the interaction the original message was attached to")?;
+        let user_data = ctx.framework.database.get_user(&interaction.user.id).await?;
         let name = match self {
             Character::Profile(data) => data.name,
             Character::Create(data) => data.name,
@@ -127,27 +136,27 @@ impl LuroCommand for Character {
         }
 
         if !love.is_empty() {
-            embed.create_field("Love", &fav, false);
+            embed.create_field("Love", &love, false);
         }
 
         if !like.is_empty() {
-            embed.create_field("Like", &fav, false);
+            embed.create_field("Like", &like, false);
         }
 
         if !neutral.is_empty() {
-            embed.create_field("Neutral", &fav, false);
+            embed.create_field("Neutral", &neutral, false);
         }
 
         if !dislike.is_empty() {
-            embed.create_field("Dislike", &fav, false);
+            embed.create_field("Dislike", &dislike, false);
         }
 
         if !hate.is_empty() {
-            embed.create_field("Hate", &fav, false);
+            embed.create_field("Hate", &hate, false);
         }
 
         if !limits.is_empty() {
-            embed.create_field("Limits", &fav, false);
+            embed.create_field("Limits", &limits, false);
         }
 
         ctx.respond(|r|r.add_embed(embed).ephemeral()).await

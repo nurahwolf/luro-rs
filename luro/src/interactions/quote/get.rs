@@ -30,7 +30,7 @@ impl LuroCommand for Get {
         };
 
         if self.puppet.unwrap_or_default() {
-            let luro_webhook = LuroWebhook::new(&ctx.framework).await?;
+            let luro_webhook = LuroWebhook::new(ctx.framework.clone());
             let webhook = luro_webhook
                 .get_webhook(
                     ctx.interaction

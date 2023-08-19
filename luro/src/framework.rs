@@ -22,8 +22,9 @@ use twilight_model::{
     }
 };
 
-use crate::{commands::Commands, LuroDatabaseDriver};
-use luro_model::{constants::ACCENT_COLOUR, luro_database::LuroDatabase, luro_log_channel::LuroLogChannel};
+use luro_model::{constants::ACCENT_COLOUR, luro_database::LuroDatabase, luro_log_channel::LuroLogChannel, luro_database_driver::LuroDatabaseDriver};
+
+use crate::interactions::Commands;
 
 /// The core of Luro. Used to handle our global state and generally wrapped in an [Arc].
 #[derive(Debug)]

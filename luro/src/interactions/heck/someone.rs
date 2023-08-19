@@ -3,9 +3,8 @@ use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 use crate::{
-    commands::heck::{format_heck, get_heck},
     interaction::LuroSlash,
-    luro_command::LuroCommand
+    luro_command::LuroCommand, interactions::heck::{get_heck, format_heck}
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]

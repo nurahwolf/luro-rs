@@ -158,7 +158,7 @@ impl LuroCommand for InfoUser {
             // if let Some(banner) = get_member_banner(&member, guild_id, user) {
             //     embed = embed.image(ImageSource::url(banner)?)
             // }
-            embed.author(|author| author.name(luro_user.member_name(&guild_id)).icon_url(luro_user.guild_avatar(&guild_id)));
+            embed.author(|author| author.name(luro_user.member_name(&Some(guild_id))).icon_url(luro_user.guild_avatar(&guild_id)));
             match guild_information.len() > 1024 {
                 true => {writeln!(description, "\n**Guild Information**\n{guild_information}")?;},
                 false => {embed.create_field("Guild Information", &guild_information, false);},

@@ -1,9 +1,8 @@
 use anyhow::Context;
-use luro_builder::components::{button::ButtonBuilder, action_row::ActionRowBuilder};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
-    channel::message::{component::ButtonStyle, Component},
+    channel::message::component::ButtonStyle,
     id::{marker::UserMarker, Id}
 };
 
@@ -84,37 +83,22 @@ impl LuroCommand for Profile {
                 .name(format!("Profile by {}", user_data.name()))
         });
 
-        let mut buttons = vec![];
-        if nsfw && !character.fetishes.is_empty() {
-            buttons.push({
-                let mut button = ButtonBuilder::default();
-                button
-                    .custom_id("character-fetish")
-                    .label("Fetishes")
-                    .style(ButtonStyle::Danger);
-                button
-            })
-        }
-
-        let mut components = vec![];
-        let mut action_row = ActionRowBuilder::default();
-        for (buttons_added, button) in buttons.into_iter().enumerate() {
-            // If there are too many buttons, break
-            if buttons_added > 25 {
-                break;
+        ctx.respond(|response| {
+            response.add_embed(embed);
+            if nsfw && !character.fetishes.is_empty() {
+                response.components(|components| {
+                    components.action_row(|row| {
+                        row.button(|button| {
+                            button
+                                .custom_id("character-fetish")
+                                .label("Fetishes")
+                                .style(ButtonStyle::Danger)
+                        })
+                    })
+                });
             }
-
-            if buttons_added % 5 == 0 {
-                components.push(action_row);
-                action_row = ActionRowBuilder::default();
-            }
-
-            action_row.button(|b| {
-                *b = button;
-                b
-            });
-        }
-        let components: Vec<Component> = components.iter().map(|component|component.into()).collect();
-        ctx.respond(|r| r.add_embed(embed).add_components(components)).await
+            response
+        })
+        .await
     }
 }

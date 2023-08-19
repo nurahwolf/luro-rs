@@ -89,7 +89,9 @@ pub struct LuroUser {
     pub guilds: BTreeMap<Id<GuildMarker>, LuroMember>,
     /// The user's character profiles
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub characters: BTreeMap<String, CharacterProfile>
+    pub characters: BTreeMap<String, CharacterProfile>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
+    pub character_prefix: BTreeMap<String, String>,
 }
 
 impl From<&CurrentUser> for LuroUser {
@@ -261,7 +263,12 @@ impl LuroUser {
     ///
     /// Returns the first match
     /// Member Nickname -> Global Name -> Username -> Legacy Username
-    pub fn member_name(&self, guild_id: &Id<GuildMarker>) -> String {
+    pub fn member_name(&self, guild_id: &Option<Id<GuildMarker>>) -> String {
+        let guild_id = match guild_id {
+            Some(guild_id) => guild_id,
+            None => return self.name(),
+        };
+
         let guild = match self.guilds.get(guild_id) {
             Some(guild) => guild,
             None => return self.name()

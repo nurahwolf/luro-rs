@@ -16,7 +16,8 @@ impl ActionRowBuilder {
         self
     }
 
-    /// Create and add an action row
+    /// Create and add a button to the action row.
+    /// Remember you can only have up to 5!
     pub fn button<F>(&mut self, button: F) -> &mut Self
     where
         F: FnOnce(&mut ButtonBuilder) -> &mut ButtonBuilder

@@ -26,17 +26,13 @@ impl LuroCommand for OwnerGetMessage {
         // Attempts to fetch in this order
         // User Data -> Client -> Cache
         let mut luro_message = match self.user {
-            Some(user) => match ctx
+            Some(user) => ctx
                 .framework
                 .database
                 .get_user(&user.resolved.id)
                 .await?
                 .messages
-                .get(&message_id)
-            {
-                Some(message) => Some(message.clone()),
-                None => None
-            },
+                .get(&message_id).cloned(),
             None => None
         };
 
@@ -50,10 +46,7 @@ impl LuroCommand for OwnerGetMessage {
 
         // Last ditch effort, is it in the cache?
         if luro_message.is_none() {
-            luro_message = match ctx.framework.twilight_cache.message(message_id) {
-                Some(message) => Some(LuroMessage::from(message.clone())),
-                None => None
-            }
+            luro_message = ctx.framework.twilight_cache.message(message_id).map(|message| LuroMessage::from(message.clone()))
         }
 
         match luro_message {

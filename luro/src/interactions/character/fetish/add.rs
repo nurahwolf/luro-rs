@@ -39,7 +39,8 @@ impl LuroCommand for Add {
 
         let character = match user_data.characters.get_mut(&self.name) {
             Some(character) => {
-                character.fetishes.insert(character.fetishes.len() + 1, Fetish {
+                let test = character.fetishes.len() + 1;
+                character.fetishes.insert(test, Fetish {
                     category: self.fetish,
                     description: self.description,
                     list: FetishList::Custom,
@@ -85,27 +86,27 @@ impl LuroCommand for Add {
         }
 
         if !love.is_empty() {
-            embed.create_field("Love", &fav, false);
+            embed.create_field("Love", &love, false);
         }
 
         if !like.is_empty() {
-            embed.create_field("Like", &fav, false);
+            embed.create_field("Like", &like, false);
         }
 
         if !neutral.is_empty() {
-            embed.create_field("Neutral", &fav, false);
+            embed.create_field("Neutral", &neutral, false);
         }
 
         if !dislike.is_empty() {
-            embed.create_field("Dislike", &fav, false);
+            embed.create_field("Dislike", &dislike, false);
         }
 
         if !hate.is_empty() {
-            embed.create_field("Hate", &fav, false);
+            embed.create_field("Hate", &hate, false);
         }
 
         if !limits.is_empty() {
-            embed.create_field("Limits", &fav, false);
+            embed.create_field("Limits", &limits, false);
         }
 
         ctx.respond(|r|r.add_embed(embed).ephemeral()).await

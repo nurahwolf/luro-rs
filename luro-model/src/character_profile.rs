@@ -1,5 +1,8 @@
 use core::fmt;
 use std::collections::BTreeMap;
+use crate::toml_driver::serialize_fetish;
+use crate::toml_driver::deserialize_fetish;
+
 
 use serde::{Deserialize, Serialize};
 use twilight_interactions::command::{CommandOption, CreateOption};
@@ -57,6 +60,9 @@ pub struct CharacterProfile {
     /// A short description for this character
     #[serde(default)]
     pub short_description: String,
+    #[serde(default)]
+    /// A HTTP / HTTPS link to an icon used for their main appearance
+    pub icon: String,
     /// A detailed description for this character
     #[serde(default)]
     pub description: String,
@@ -67,6 +73,7 @@ pub struct CharacterProfile {
     #[serde(default)]
     pub nsfw: bool,
     /// A list of fetishes the character has. NSFW only!
+    #[cfg_attr(feature = "toml-driver", serde(deserialize_with = "deserialize_fetish", serialize_with = "serialize_fetish"))]
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub fetishes: BTreeMap<usize, Fetish>
 }
