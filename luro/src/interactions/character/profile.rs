@@ -73,7 +73,7 @@ impl LuroCommand for Profile {
             "{}\n- **Description:**\n{}",
             character.short_description, character.description
         );
-        if let Some(nsfw_description) = &character.nsfw_description && nsfw {
+        if let Some(nsfw_description) = &character.nsfw_description && nsfw && !nsfw_description.is_empty() {
             writeln!(description, "\n- **NSFW Description:**\n{nsfw_description}")?
         }
         embed.title(format!("Character Profile - {}", self.name));
