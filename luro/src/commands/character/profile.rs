@@ -1,9 +1,9 @@
 use anyhow::Context;
-use luro_builder::components::{button::ButtonBuilder, ComponentBuilder, action_row::ActionRowBuilder};
+use luro_builder::components::{button::ButtonBuilder, action_row::ActionRowBuilder};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
-    channel::message::{component::{Button, ButtonStyle}, Component},
+    channel::message::{component::ButtonStyle, Component},
     id::{marker::UserMarker, Id}
 };
 
@@ -98,8 +98,7 @@ impl LuroCommand for Profile {
 
         let mut components = vec![];
         let mut action_row = ActionRowBuilder::default();
-        let mut buttons_added = 0;
-        for button in buttons {
+        for (buttons_added, button) in buttons.into_iter().enumerate() {
             // If there are too many buttons, break
             if buttons_added > 25 {
                 break;
@@ -114,7 +113,6 @@ impl LuroCommand for Profile {
                 *b = button;
                 b
             });
-            buttons_added += 1;
         }
         let components: Vec<Component> = components.iter().map(|component|component.into()).collect();
         ctx.respond(|r| r.add_embed(embed).add_components(components)).await

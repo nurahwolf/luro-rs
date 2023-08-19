@@ -6,10 +6,11 @@ use twilight_model::application::interaction::{modal::ModalInteractionData, mess
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
-use self::{create::Create, profile::Profile};
+use self::{create::Create, profile::Profile, fetish::Fetish};
 
 mod create;
 mod profile;
+mod fetish;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "character", desc = "Show off your character!")]
@@ -17,14 +18,18 @@ pub enum Character {
     #[command(name = "profile")]
     Profile(Profile),
     #[command(name = "create")]
-    Create(Create)
+    Create(Create),
+    #[command(name = "fetish")]
+    Fetish(Fetish)
 }
 
 impl LuroCommand for Character {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         match self {
             Self::Profile(command) => command.run_command(ctx).await,
-            Self::Create(command) => command.run_command(ctx).await
+            Self::Create(command) => command.run_command(ctx).await,
+            Self::Fetish(command) => command.run_command(ctx).await
+
         }
     }
 
@@ -92,6 +97,7 @@ impl LuroCommand for Character {
         let name = match self {
             Character::Profile(data) => data.name,
             Character::Create(data) => data.name,
+            _ => return ctx.respond(|r|r.content("Invalid command").ephemeral()).await
         };
         let character = user_data.characters.get(&name).context("Could not find that character! Was it deleted?")?;
         embed.title(format!("{name}'s Fetishes"));

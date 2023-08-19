@@ -2,16 +2,24 @@ use core::fmt;
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
+use twilight_interactions::command::{CommandOption, CreateOption};
 /// The different categories of fetishes a user can have
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq, CommandOption, CreateOption)]
 pub enum FetishCategory {
+    #[option(name = "Favourite - Something this character loves to the end of the world", value = "favourite")]
     Favourite,
+    #[option(name = "Favourite - The character loves this!", value = "love")]
     Love,
+    #[option(name = "Favourite - The character likes this", value = "like")]
     Like,
     #[default]
+    #[option(name = "Favourite - The character is neutral on this", value = "neutral")]
     Neutral,
+    #[option(name = "Dislike - The character dislikes this", value = "dislike")]
     Dislike,
+    #[option(name = "Hate - The character hates this", value = "hate")]
     Hate,
+    #[option(name = "Limit - A hard no (limit) that this character refuses to do", value = "limit")]
     Limit
 }
 
