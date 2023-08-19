@@ -24,8 +24,11 @@ pub enum FetishList {
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct Fetish {
+    #[serde(default)]
     pub category: FetishCategory,
+    #[serde(default)]
     pub description: String,
+    #[serde(default)]
     pub list: FetishList
 }
 
@@ -44,13 +47,18 @@ impl fmt::Display for FetishList {
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct CharacterProfile {
     /// A short description for this character
+    #[serde(default)]
     pub short_description: String,
     /// A detailed description for this character
+    #[serde(default)]
     pub description: String,
     /// A detailed description for this character that is only shown in the NSFW profile
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub nsfw_description: Option<String>,
     /// Set to true if there are NSFW details present
+    #[serde(default)]
     pub nsfw: bool,
     /// A list of fetishes the character has. NSFW only!
+    #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub fetishes: BTreeMap<usize, Fetish>
 }
