@@ -25,3 +25,28 @@
 - 'Control what events are logged, and to what channel'
     - Model dropdown where a user can select what should be logged, per channel
     - Should be stored in a hashmap(?)
+
+## Character / Fursona Command
+- Character Profile - Ability to pull up a character profile
+- Character Modify - Modify a profile that the user owns
+    - Modify Image - Add or remove images tied to a character
+    - Modify Settings - Sets some settings for a character
+
+### Character - Profile
+`/character profile name: Nurah nsfw: true, user: @nurah`
+
+**Arguments:** [`name - The profile to fetch`, `nsfw - fetch NSFW version`, `<user - Fetch the profile belonging to another user>`]
+
+Defaults to the user's own profile, otherwise fetches the specified profile name belonging to another user
+
+Error handling:
+- Returns a list of profiles configured if the name does not match
+
+### Character - Modify
+Simply a command group with more specific sub commands
+
+#### Character - Image
+`/character modify name: Nurah nsfw: true, user: @nurah`
+
+**Arguments:** [`name - The profile to fetch`, `nsfw - fetch NSFW version`, `user - Fetch the profile belonging to another user`]
+Simply a command group with more specific sub commands

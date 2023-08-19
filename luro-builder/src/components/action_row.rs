@@ -64,3 +64,12 @@ impl From<ActionRowBuilder> for Component {
         Component::ActionRow(builder.0)
     }
 }
+
+impl From<&ActionRowBuilder> for Component {
+    /// Convert an embed author builder into an embed author.
+    ///
+    /// This is equivalent to calling [`EmbedAuthorBuilder::build`].
+    fn from(builder: &ActionRowBuilder) -> Self {
+        Component::ActionRow(builder.0.clone())
+    }
+}

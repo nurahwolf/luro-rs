@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "luro",
+    "luro-twilight",
     "luro-dice",
     "luro-builder",
     "luro-database",
@@ -26,6 +27,7 @@ version = "0.0.1"
 
 # Project
 luro = { path = "luro" }
+luro-twilight = { path = "luro-twilight" }
 luro-builder = { path = "luro-builder" }
 luro-database = { path = "luro-database" }
 luro-dice = { path = "luro-dice" }

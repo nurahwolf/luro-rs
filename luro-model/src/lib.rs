@@ -22,3 +22,4 @@ pub mod types;
 pub mod user_actions;
 pub mod user_actions_type;
 pub mod user_marriages;
+pub mod character_profile;

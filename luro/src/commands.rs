@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 
 use anyhow::anyhow;
-
 use tracing::info;
 use tracing::warn;
 use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
 
+
+use self::character::Character;
 use self::dice::DiceCommands;
 use self::info::InfoCommands;
 use self::luro::LuroCommands;
@@ -34,6 +35,7 @@ use crate::BOT_NAME;
 mod about;
 mod base64;
 mod boop;
+mod character;
 mod count;
 mod dice;
 mod heck;
@@ -53,6 +55,10 @@ mod story;
 mod uwu;
 mod wordcount;
 // pub mod fursona;
+
+
+
+
 
 /// A simple structure containing our commands
 #[derive(Default)]
@@ -94,6 +100,8 @@ impl Commands {
         init.global_commands.insert(BOT_NAME, LuroCommands::create_command().into());
         init.global_commands.insert("quote", QuoteCommands::create_command().into());
         init.global_commands.insert("roles", RoleCommands::create_command().into());
+        init.global_commands.insert("character", Character::create_command().into());
+
 
         init.global_commands
             .insert("wordcount", WordcountCommand::create_command().into());
@@ -134,6 +142,8 @@ impl LuroSlash {
             "ping" => PingCommand::new(data).await?.run_command(self).await,
             "quote" => QuoteCommands::new(data).await?.run_command(self).await,
             "roles" => RoleCommands::new(data).await?.run_command(self).await,
+            "character" => Character::new(data).await?.run_command(self).await,
+
             name => self.unknown_command_response_named(name).await
         }
     }
@@ -167,6 +177,7 @@ impl LuroSlash {
         }
 
         match &*data.custom_id {
+            "character-fetish" => Character::new(command).await?.handle_component(data, self).await,
             "boop" => BoopCommand::new(command).await?.handle_component(data, self).await,
             "decode" | "encode" => Base64Commands::new(command).await?.handle_component(data, self).await,
             "marry-accept" | "marry-deny" => MarryCommands::new(command).await?.handle_component(data, self).await,
@@ -200,6 +211,7 @@ impl LuroSlash {
         // };
 
         match &*data.custom_id {
+            "character" => Character::handle_model(data, self).await,
             "heck-add" => HeckAddCommand::handle_model(data, self).await,
             "story-add" => StoryCommand::handle_model(data, self).await,
             "mod-warn" => ModeratorWarnCommand::handle_model(data, self).await,
