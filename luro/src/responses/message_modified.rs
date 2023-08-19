@@ -101,6 +101,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
                 if !content.is_empty() {
                     let mut modified_user_data = self.database.get_user(&message.author_id.unwrap()).await?;
+                    modified_user_data.global_name = message.user.global_name.clone();
                     modified_user_data.messages.insert(message.id, message.clone());
                     modified_user_data.update_lurouser(&message.user);
 
