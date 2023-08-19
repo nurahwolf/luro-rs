@@ -8,12 +8,12 @@ use twilight_interactions::command::{CommandOption, CreateOption};
 pub enum FetishCategory {
     #[option(name = "Favourite - Something this character loves to the end of the world", value = "favourite")]
     Favourite,
-    #[option(name = "Favourite - The character loves this!", value = "love")]
+    #[option(name = "Love - The character loves this!", value = "love")]
     Love,
-    #[option(name = "Favourite - The character likes this", value = "like")]
+    #[option(name = "Like - The character likes this", value = "like")]
     Like,
     #[default]
-    #[option(name = "Favourite - The character is neutral on this", value = "neutral")]
+    #[option(name = "Neutral - The character is neutral on this", value = "neutral")]
     Neutral,
     #[option(name = "Dislike - The character dislikes this", value = "dislike")]
     Dislike,
