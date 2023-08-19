@@ -1,6 +1,6 @@
 use std::fmt::Write;
 use anyhow::Context;
-use luro_model::character_profile::FetishCategory;
+use luro_model::character_profile::{FetishCategory, Fetish, FetishList};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{luro_command::LuroCommand, interaction::LuroSlash};
@@ -20,7 +20,12 @@ impl LuroCommand for Add {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let user_id = ctx.interaction.author_id().context("Expected to find the user running this command")?;
-        let user_data = ctx.framework.database.get_user(&user_id).await?;
+        let mut user_data = ctx.framework.database.get_user(&user_id).await?;
+        embed.title(format!("Character Profile - {}", self.name));
+        embed.author(|a| {
+            a.icon_url(user_data.avatar())
+                .name(format!("Profile by {}", user_data.name()))
+        });
 
 
         if user_data.characters.is_empty() {
@@ -32,8 +37,15 @@ impl LuroCommand for Add {
                 .await;
         }
 
-        let character = match user_data.characters.get(&self.name) {
-            Some(character) => character,
+        let character = match user_data.characters.get_mut(&self.name) {
+            Some(character) => {
+                character.fetishes.insert(character.fetishes.len() + 1, Fetish {
+                    category: self.fetish,
+                    description: self.description,
+                    list: FetishList::Custom,
+                });
+                character.clone()
+            },
             None => {
                 let mut characters = String::new();
 
@@ -45,11 +57,8 @@ impl LuroCommand for Add {
                 return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
-        embed.title(format!("Character Profile - {}", self.name));
-        embed.author(|a| {
-            a.icon_url(user_data.avatar())
-                .name(format!("Profile by {}", user_data.name()))
-        });
+        
+        ctx.framework.database.save_user(&user_id, &user_data).await?;
 
         let mut fav = String::new();
         let mut love = String::new();
