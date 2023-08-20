@@ -7,7 +7,3 @@ pub mod message;
 #[cfg(feature = "luro-model")]
 pub mod response;
 pub mod timestamp;
-
-// Luro Specifix
-
-// General

@@ -1,10 +1,7 @@
 use crate::{interaction::LuroSlash, interactions::moderator::{Reason, reason}, luro_command::LuroCommand};
 
-use luro_model::guild_permissions::GuildPermissions;
-use tracing::debug;
-
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
-use twilight_model::{guild::Permissions, id::Id};
+use twilight_model::id::Id;
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
 #[command(name = "fakeban", desc = "Ban a user", dm_permission = false)]
