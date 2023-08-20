@@ -78,10 +78,11 @@ impl LuroSlash {
     /// Send an existing response builder a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
     pub async fn send_respond(&self, response: LuroResponse) -> anyhow::Result<()> {
-        self.respond(|r|{
+        self.respond(|r| {
             *r = response;
             r
-        }).await
+        })
+        .await
     }
 
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour

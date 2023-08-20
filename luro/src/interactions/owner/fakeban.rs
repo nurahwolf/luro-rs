@@ -1,4 +1,8 @@
-use crate::{interaction::LuroSlash, interactions::moderator::{Reason, reason}, luro_command::LuroCommand};
+use crate::{
+    interaction::LuroSlash,
+    interactions::moderator::{reason, Reason},
+    luro_command::LuroCommand
+};
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::id::Id;

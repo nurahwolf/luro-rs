@@ -47,7 +47,11 @@ impl LuroCommand for InfoUser {
         let mut description = String::new();
         let mut timestamp = format!("- Joined discord on <t:{0}> - <t:{0}:R>\n", user_timestamp.as_secs());
 
-        embed.author(|author| author.name(format!("{} - {}", luro_user.name, luro_user.id)).icon_url(luro_user.avatar()));
+        embed.author(|author| {
+            author
+                .name(format!("{} - {}", luro_user.name, luro_user.id))
+                .icon_url(luro_user.avatar())
+        });
         if let Some(hide_avatar) = self.hide_avatar && hide_avatar {
         } else {
             embed.thumbnail(|thumbnail|thumbnail.url(luro_user.avatar()));
@@ -181,7 +185,11 @@ impl LuroCommand for InfoUser {
             }
 
             if !luro_user.characters.is_empty() {
-                writeln!(user_data_description, "- Has `{}` character profiles", luro_user.characters.len())?;
+                writeln!(
+                    user_data_description,
+                    "- Has `{}` character profiles",
+                    luro_user.characters.len()
+                )?;
             }
             writeln!(user_data_description, "- Typed `{}` characters", luro_user.averagesize)?;
             writeln!(user_data_description, "- Has said `{}` words", luro_user.wordcount)?;

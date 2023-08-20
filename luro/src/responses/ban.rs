@@ -53,7 +53,10 @@ impl LuroSlash {
                 punished_user.id, punished_user.name
             ));
         } else {
-            embed.description(format!("**User:** <@{0}> - {1}\n**User ID:** {0}", punished_user.id, punished_user.name));
+            embed.description(format!(
+                "**User:** <@{0}> - {1}\n**User ID:** {0}",
+                punished_user.id, punished_user.name
+            ));
         }
 
         Ok(embed)

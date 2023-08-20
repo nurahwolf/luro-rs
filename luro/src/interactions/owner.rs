@@ -25,6 +25,7 @@ mod assign;
 mod clear_warnings;
 mod commands;
 mod config;
+mod fakeban;
 mod flush;
 mod get_message;
 mod guilds;
@@ -32,7 +33,6 @@ mod load_users;
 mod log;
 mod modify;
 mod modify_role;
-mod fakeban;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]
@@ -118,7 +118,6 @@ impl LuroCommand for OwnerCommands {
             Self::Flush(command) => command.run_command(ctx).await,
             Self::Modify(command) => command.run_command(ctx).await,
             Self::FakeBan(command) => command.run_command(ctx).await
-
         }
     }
 

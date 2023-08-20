@@ -2,9 +2,7 @@ use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand,
 
 use crate::interaction::LuroSlash;
 
-use self::{
-    ban::Ban, kick::Kick, purge::PurgeCommand, settings::GuildSettingsCommand, warn::ModeratorWarnCommand
-};
+use self::{ban::Ban, kick::Kick, purge::PurgeCommand, settings::GuildSettingsCommand, warn::ModeratorWarnCommand};
 use crate::luro_command::LuroCommand;
 
 mod assign;
@@ -94,6 +92,6 @@ pub fn reason(reason: Reason, details: Option<String>) -> String {
             false => reason_string.push_str(&format!(" - {details}"))
         }
     }
-    
+
     reason_string
 }

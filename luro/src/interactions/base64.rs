@@ -75,8 +75,7 @@ pub struct Base64Decode {
 
 impl LuroCommand for Base64Decode {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.send_respond(decode_response(&ctx, &decode(&self.string)?).await?)
-            .await
+        ctx.send_respond(decode_response(&ctx, &decode(&self.string)?).await?).await
     }
 }
 
@@ -91,8 +90,7 @@ pub struct Base64Encode {
 
 impl LuroCommand for Base64Encode {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.send_respond(encode_response(&ctx, &encode(&self.string)).await?)
-            .await
+        ctx.send_respond(encode_response(&ctx, &encode(&self.string)).await?).await
     }
 }
 
