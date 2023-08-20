@@ -1,22 +1,19 @@
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use std::convert::TryInto;
-
 use luro_model::{
     guild_permissions::GuildPermissions, luro_log_channel::LuroLogChannel, user_actions::UserActions,
     user_actions_type::UserActionType
 };
-use tracing::debug;
 
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
-use twilight_model::{guild::Permissions, http::interaction::InteractionResponseType};
-use twilight_util::builder::embed::EmbedFieldBuilder;
+use twilight_model::{guild::Permissions, id::Id};
+
+use crate::{interaction::LuroSlash, interactions::moderator::reason, luro_command::LuroCommand};
 
 use super::Reason;
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
 #[command(name = "ban", desc = "Ban a user", dm_permission = false)]
-pub struct BanCommand {
+pub struct Ban {
     /// The user to ban
     pub user: ResolvedUser,
     /// Message history to purge in seconds. Defaults to 1 day. Max is 604800.
@@ -45,30 +42,22 @@ pub enum TimeToBan {
     SevenDays
 }
 
-impl LuroCommand for BanCommand {
+impl LuroCommand for Ban {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        let response = InteractionResponseType::DeferredChannelMessageWithSource;
-        ctx.acknowledge_interaction(false).await?;
+        let interaction = &ctx.interaction;
+        let author_user_id = interaction.author_id().unwrap();
+        let mut author_user = ctx.framework.database.get_user(&author_user_id).await?;
+        let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
+        let mut response = ctx.acknowledge_interaction(false).await?;
 
-        let mut reason = match self.reason {
-            Reason::ArtScam => "[Art Scam]".to_owned(),
-            Reason::Compromised => "[Compromised Account]".to_owned(),
-            Reason::Custom => String::new(),
-            Reason::Raider => "[Raider]".to_owned(),
-            Reason::Troll => "[Troll]".to_owned(),
-            Reason::Vile => "[Vile]".to_owned()
-        };
-
-        if let Some(details) = self.details {
-            reason.push_str(&format!(" - {details}"))
-        }
-
-        if reason.is_empty() {
-            return ctx
-                .respond(|r| r.content("You need to specify a reason, dork!").ephemeral())
-                .await;
-        }
-
+        let guild_id = interaction.guild_id.unwrap();
+        let permissions = GuildPermissions::new(&ctx.framework.twilight_client, &guild_id).await?;
+        let author_member = interaction.member.as_ref().unwrap();
+        let author_permissions = permissions.member(author_user_id, &author_member.roles).await?;
+        let bot_permissions = permissions.current_member().await?;
+        let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
+        let punished_user_id = Id::new(punished_user.id);
+        let reason = reason(self.reason, self.details);
         let period_string = match self.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),
             TimeToBan::Hour => "Previous Hour".to_string(),
@@ -78,56 +67,30 @@ impl LuroCommand for BanCommand {
             TimeToBan::ThreeDays => "Previous 3 Days".to_string(),
             TimeToBan::SevenDays => "Previous 7 Days".to_string()
         };
-        // Fetch the author and the bot permissions.
-        let guild_id = match ctx.interaction.guild_id {
-            Some(guild_id) => guild_id,
-            None => return ctx.not_guild_response().await
-        };
-        let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-        let author_user = match &ctx.interaction.member {
-            Some(member) => match &member.user {
-                Some(user) => user,
-                None => return ctx.not_guild_response().await
-            },
-            None => return ctx.not_guild_response().await
-        };
-        let author = ctx
-            .framework
-            .twilight_client
-            .guild_member(guild_id, author_user.id)
-            .await?
-            .model()
-            .await?;
-        debug!("Getting permissions of the guild");
-        let permissions = GuildPermissions::new(&ctx.framework.twilight_client, &guild_id).await?;
-        debug!("Getting author permissions");
-        let author_permissions = permissions.member(author.user.id, &author.roles).await?;
-        let user_to_remove = self.user.resolved;
-        debug!("Getting bot permissions");
-        let bot_permissions = permissions.current_member().await?;
+
+        // Permission checks
+        if reason.is_empty() {
+            response.content("You need to specify a reason, dork!").ephemeral();
+            return ctx.send_respond(response).await;
+        }
 
         if !bot_permissions.guild().contains(Permissions::BAN_MEMBERS) {
             return ctx.bot_missing_permission_response(&"BAN_MEMBERS".to_owned()).await;
         }
 
-        if let Some(member_to_remove) = self.user.member {
+        // Checks if we have them recorded as a member of the guild
+        if let Some(punished_member) = self.user.member {
             // The user is a member of the server, so carry out some additional checks.
-            debug!("Getting banned user's permissions");
-            let member_permissions = permissions.member(user_to_remove.id, &member_to_remove.roles).await?;
+            let member_permissions = permissions.member(punished_user_id, &punished_member.roles).await?;
+            let member_highest_role = member_permissions.highest_role();
 
             // Check if the author and the bot have required permissions.
             if member_permissions.is_owner() {
                 return ctx.server_owner_response().await;
             }
 
-            // Check if the role hierarchy allow the author and the bot to perform
-            // the ban.
-            let member_highest_role = member_permissions.highest_role();
-
             if member_highest_role >= author_permissions.highest_role() {
-                return ctx
-                    .user_hierarchy_response(&member_to_remove.nick.unwrap_or(user_to_remove.name.to_owned()))
-                    .await;
+                return ctx.user_hierarchy_response(&punished_user.member_name(&Some(guild_id))).await;
             }
 
             if member_highest_role >= bot_permissions.highest_role() {
@@ -137,56 +100,50 @@ impl LuroCommand for BanCommand {
         };
 
         // Checks passed, now let's action the user
-        let user_to_ban_dm = match ctx.framework.twilight_client.create_private_channel(user_to_remove.id).await {
+        let mut embed = ctx.ban_embed(&guild, &punished_user, &reason, &period_string).await?;
+        let punished_user_dm = match ctx.framework.twilight_client.create_private_channel(punished_user_id).await {
             Ok(channel) => channel.model().await?,
-            Err(_) => return ctx.ban_response(guild, user_to_remove, &reason, &period_string, false).await
+            Err(_) => return ctx.ban_response(&guild, &punished_user, &reason, &period_string, false).await
         };
-
-        let mut embed = ctx
-            .ban_embed(guild.clone(), user_to_remove.clone(), &reason, &period_string)
-            .await?;
 
         let victim_dm = ctx
             .framework
             .twilight_client
-            .create_message(user_to_ban_dm.id)
-            .embeds(&[embed.clone().build()])
+            .create_message(punished_user_dm.id)
+            .embeds(&[embed.clone().into()])
             .await;
 
         match victim_dm {
-            Ok(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline()),
-            Err(_) => embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
-        }
+            Ok(_) => embed.create_field("DM Sent", "Successful", true),
+            Err(_) => embed.create_field("DM Sent", "Failed", true)
+        };
 
-        let mut ban = ctx
-            .framework
-            .twilight_client
-            .create_ban(guild_id, user_to_remove.id)
-            .delete_message_seconds(self.purge.value().try_into()?);
-        if !reason.is_empty() {
-            ban = ban.reason(&reason)
-        }
-        ban.await?;
+        response.add_embed(embed.clone());
+        ctx.send_respond(response).await?;
 
-        let mut reward = ctx.framework.database.get_user(&author_user.id).await?;
-        reward.moderation_actions_performed += 1;
-        ctx.framework.database.modify_user(&author_user.id, &reward).await?;
+        let ban = ctx.framework.twilight_client.create_ban(guild_id, punished_user_id);
+        match reason.is_empty() {
+            true => ban.delete_message_seconds(self.purge as u32).await?,
+            false => ban.delete_message_seconds(self.purge as u32).reason(&reason).await?
+        };
+
+        author_user.moderation_actions_performed += 1;
+        ctx.framework.database.modify_user(&author_user_id, &author_user).await?;
 
         // Record the punishment
-        let mut banned = ctx.framework.database.get_user(&user_to_remove.id).await?;
-        banned.moderation_actions.push(UserActions {
+        punished_user.moderation_actions.push(UserActions {
             action_type: vec![UserActionType::Ban],
             guild_id: Some(guild_id),
             reason,
-            responsible_user: author_user.id
+            responsible_user: author_user_id
         });
-        ctx.framework.database.modify_user(&user_to_remove.id, &banned).await?;
+        ctx.framework.database.modify_user(&punished_user_id, &punished_user).await?;
 
         // If an alert channel is defined, send a message there
         ctx.framework
-            .send_log_channel(&Some(guild_id), embed.clone().build(), LuroLogChannel::Moderator)
+            .send_log_channel(&Some(guild_id), embed.into(), LuroLogChannel::Moderator)
             .await?;
 
-        ctx.respond(|r| r.add_embed(embed.build()).response_type(response)).await
+        Ok(())
     }
 }

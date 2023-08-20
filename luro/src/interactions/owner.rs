@@ -11,6 +11,7 @@ use self::assign::AssignCommand;
 use self::clear_warnings::OwnerClearWarning;
 use self::commands::OwnerCommandsCommand;
 use self::config::ConfigCommand;
+use self::fakeban::FakeBan;
 use self::flush::Flush;
 use self::get_message::OwnerGetMessage;
 use self::guilds::OwnerGuildsCommand;
@@ -31,6 +32,7 @@ mod load_users;
 mod log;
 mod modify;
 mod modify_role;
+mod fakeban;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges uwu!")]
@@ -58,7 +60,9 @@ pub enum OwnerCommands {
     #[command(name = "config")]
     Config(ConfigCommand),
     #[command(name = "modify")]
-    Modify(Modify)
+    Modify(Modify),
+    #[command(name = "fakeban")]
+    FakeBan(FakeBan)
 }
 
 impl LuroCommand for OwnerCommands {
@@ -92,7 +96,8 @@ impl LuroCommand for OwnerCommands {
                         Self::Log(_) => "owner_log",
                         Self::ModifyRole(_) => "owner_modify",
                         Self::Flush(_) => "owner_save",
-                        Self::Modify(_) => "owner_modify"
+                        Self::Modify(_) => "owner_modify",
+                        Self::FakeBan(_) => "owner_fakeban"
                     }
                 )
                 .await;
@@ -111,7 +116,9 @@ impl LuroCommand for OwnerCommands {
             Self::Log(command) => command.run_command(ctx).await,
             Self::ModifyRole(command) => command.run_command(ctx).await,
             Self::Flush(command) => command.run_command(ctx).await,
-            Self::Modify(command) => command.run_command(ctx).await
+            Self::Modify(command) => command.run_command(ctx).await,
+            Self::FakeBan(command) => command.run_command(ctx).await
+
         }
     }
 

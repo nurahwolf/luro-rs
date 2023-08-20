@@ -3,7 +3,7 @@ use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand,
 use crate::interaction::LuroSlash;
 
 use self::{
-    ban::BanCommand, kick::KickCommand, purge::PurgeCommand, settings::GuildSettingsCommand, warn::ModeratorWarnCommand
+    ban::Ban, kick::Kick, purge::PurgeCommand, settings::GuildSettingsCommand, warn::ModeratorWarnCommand
 };
 use crate::luro_command::LuroCommand;
 
@@ -54,9 +54,9 @@ pub enum Reason {
 #[command(name = "mod", desc = "Commands that can be used by moderators", dm_permission = false)]
 pub enum ModeratorCommands {
     #[command(name = "ban")]
-    Ban(BanCommand),
+    Ban(Ban),
     #[command(name = "kick")]
-    Kick(KickCommand),
+    Kick(Kick),
     #[command(name = "purge")]
     Purge(PurgeCommand),
     #[command(name = "settings")]
@@ -76,4 +76,24 @@ impl LuroCommand for ModeratorCommands {
             Self::Warn(command) => command.run_command(ctx).await
         }
     }
+}
+
+pub fn reason(reason: Reason, details: Option<String>) -> String {
+    let mut reason_string = match reason {
+        Reason::ArtScam => "[Art Scam]".to_owned(),
+        Reason::Compromised => "[Compromised Account]".to_owned(),
+        Reason::Custom => String::new(),
+        Reason::Raider => "[Raider]".to_owned(),
+        Reason::Troll => "[Troll]".to_owned(),
+        Reason::Vile => "[Vile]".to_owned()
+    };
+
+    if let Some(details) = details {
+        match reason == Reason::Custom {
+            true => reason_string.push_str(&details.to_string()),
+            false => reason_string.push_str(&format!(" - {details}"))
+        }
+    }
+    
+    reason_string
 }
