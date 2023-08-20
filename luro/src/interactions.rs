@@ -132,7 +132,7 @@ impl LuroSlash {
             "story" => StoryCommand::new(data).await?.run_command(self).await,
             "uwu" => UwUCommand::new(data).await?.run_command(self).await,
             "wordcount" => WordcountCommand::new(data).await?.run_command(self).await,
-            "roll" => DiceCommands::new(data).await?.run_command(self).await,
+            "dice" => DiceCommands::new(data).await?.run_command(self).await,
             "luro" => LuroCommands::new(data).await?.run_command(self).await,
             "marry" => MarryCommands::new(data).await?.run_command(self).await,
             "ping" => PingCommand::new(data).await?.run_command(self).await,
