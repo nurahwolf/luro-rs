@@ -13,6 +13,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
+use twilight_model::id::Id;
 
 use crate::luro_command::LuroCommand;
 
@@ -108,17 +109,22 @@ impl LuroCommand for MarryCommands {
     }
 
     async fn handle_component(self, data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
-        let (marry, reason) = match self {
-            Self::New(command) => (command.marry, command.reason),
+        let interaction_author = ctx.interaction.author_id().unwrap();
+        let message = ctx
+            .interaction
+            .clone()
+            .message
+            .ok_or_else(|| Error::msg("Unable to find the original message"))?;
+        let mut proposer = ctx.framework.database.get_user(&message.author.id).await?;
+        let (mut proposee, reason) = match self {
+            Self::New(command) => (
+                ctx.framework.database.get_user(&command.marry.resolved.id).await?,
+                command.reason
+            ),
             Self::Marriages(_) => return ctx.unknown_command_response().await
         };
 
-        let interaction_author = ctx
-            .interaction
-            .author_id()
-            .context("Expected interaction author to be present")?;
-
-        match interaction_author == marry.resolved.id {
+        match interaction_author == proposee.id {
             false => {
                 let content = if &data.custom_id == "marry-deny" {
                     format!("<@{}> has voted to DENY the marriage!", &interaction_author)
@@ -134,7 +140,7 @@ impl LuroCommand for MarryCommands {
                             response
                                 .content(format!(
                                     "It looks like <@{}> will never know what true love is like...",
-                                    &marry.resolved.id
+                                    &proposer.id
                                 ))
                                 .update()
                                 .components(|c| c)
@@ -142,51 +148,37 @@ impl LuroCommand for MarryCommands {
                         .await;
                 }
 
-                let message = ctx
-                    .interaction
-                    .clone()
-                    .message
-                    .ok_or_else(|| Error::msg("Unable to find the original message"))?;
                 // Now get both the embed, and components from the message
                 let embed = message
                     .embeds
                     .first()
                     .ok_or_else(|| Error::msg("Unable to find the original marriage embed"))?
                     .clone();
+
                 let proposal = embed.description.ok_or_else(|| Error::msg("No author in our heck embed"))?;
 
-                // Modify the proposer
-                {
-                    let mut user_data = ctx.framework.database.get_user(&interaction_author).await?;
-                    user_data.marriages.insert(
-                        marry.resolved.id,
-                        UserMarriages {
-                            timestamp: SystemTime::now(),
-                            reason: reason.clone(),
-                            proposal: proposal.clone()
-                        }
-                    );
-                }
-
-                // Modify the proposee
-                {
-                    let mut user_data = ctx.framework.database.get_user(&marry.resolved.id).await?;
-                    user_data.marriages.insert(
-                        interaction_author,
-                        UserMarriages {
-                            timestamp: SystemTime::now(),
-                            reason,
-                            proposal
-                        }
-                    );
-                }
+                proposee.marriages.insert(
+                    Id::new(proposer.id),
+                    UserMarriages {
+                        timestamp: SystemTime::now(),
+                        reason: reason.clone(),
+                        proposal: proposal.clone()
+                    }
+                );
+                proposer.marriages.insert(
+                    Id::new(proposee.id),
+                    UserMarriages {
+                        timestamp: SystemTime::now(),
+                        reason,
+                        proposal
+                    }
+                );
+                ctx.framework.database.modify_user(&Id::new(proposer.id), &proposer).await?;
+                ctx.framework.database.modify_user(&Id::new(proposee.id), &proposee).await?;
 
                 ctx.respond(|response| {
                     response
-                        .content(format!(
-                            "Congratulations <@{}> & <@{}>!!!",
-                            &interaction_author, &marry.resolved.id
-                        ))
+                        .content(format!("Congratulations <@{}> & <@{}>!!!", &proposer.id, &proposee.id))
                         .components(|c| c)
                         .update()
                 })
