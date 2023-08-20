@@ -91,8 +91,8 @@ pub struct LuroGuild {
     pub widget_enabled: Option<bool>
 }
 
-impl From<Guild> for LuroGuild {
-    fn from(guild: Guild) -> Self {
+impl LuroGuild {
+    pub fn update_guild(&mut self, guild: Guild) -> &mut Self {
         let mut members = vec![];
         let mut role_positions = BTreeMap::new();
         let mut roles = BTreeMap::new();
@@ -105,70 +105,67 @@ impl From<Guild> for LuroGuild {
         for member in guild.members {
             members.push(member.user.id)
         }
+        // TODO: This
+        // self.accent_colour: Default::default();
+        self.afk_channel_id = guild.afk_channel_id;
+        self.afk_timeout = guild.afk_timeout;
+        self.application_id = guild.application_id;
+        self.approximate_member_count = guild.approximate_member_count;
+        self.approximate_presence_count = guild.approximate_presence_count;
+        self.banner = guild.banner;
+        self.channels = guild.channels;
+        self.default_message_notifications = guild.default_message_notifications;
+        self.description = guild.description;
+        self.discovery_splash = guild.discovery_splash;
+        self.emojis = guild.emojis;
+        self.explicit_content_filter = guild.explicit_content_filter;
+        self.features = guild.features;
+        self.icon = guild.icon;
+        self.id = guild.id;
+        self.joined_at = guild.joined_at;
+        self.large = guild.large;
+        self.max_members = guild.max_members;
+        self.max_presences = guild.max_presences;
+        self.max_video_channel_users = guild.max_video_channel_users;
+        self.member_count = guild.member_count;
+        self.members = members;
+        self.mfa_level = guild.mfa_level;
+        self.name = guild.name;
+        self.owner_id = guild.owner_id;
+        self.owner = guild.owner;
+        self.permissions = guild.permissions;
+        self.preferred_locale = guild.preferred_locale;
+        self.premium_progress_bar_enabled = guild.premium_progress_bar_enabled;
+        self.premium_subscription_count = guild.premium_subscription_count;
+        self.premium_tier = guild.premium_tier;
+        self.presences = guild.presences;
+        self.public_updates_channel_id = guild.afk_channel_id;
+        self.roles = roles;
+        self.role_positions = role_positions;
+        self.rules_channel_id = guild.afk_channel_id;
+        self.safety_alerts_channel_id = guild.afk_channel_id;
+        self.splash = guild.splash;
+        self.stage_instances = guild.stage_instances;
+        self.stickers = guild.stickers;
+        self.system_channel_flags = guild.system_channel_flags;
+        self.system_channel_id = guild.afk_channel_id;
+        self.thread_events_log_channel = guild.afk_channel_id;
+        self.threads = guild.threads;
+        self.unavailable = guild.unavailable;
+        self.vanity_url_code = guild.vanity_url_code;
+        self.verification_level = guild.verification_level;
+        self.voice_states = guild.voice_states;
+        self.widget_channel_id = guild.afk_channel_id;
+        self.widget_enabled = guild.widget_enabled;
+        self
+    }
+}
 
-        Self {
-            accent_colour_custom: None,
-            // TODO: This
-            accent_colour: Default::default(),
-            afk_channel_id: guild.afk_channel_id,
-            afk_timeout: guild.afk_timeout,
-            application_id: guild.application_id,
-            approximate_member_count: guild.approximate_member_count,
-            approximate_presence_count: guild.approximate_presence_count,
-            assignable_role_blacklist: Default::default(),
-            banner: guild.banner,
-            catchall_log_channel: None,
-            channels: guild.channels,
-            commands: Default::default(),
-            default_message_notifications: guild.default_message_notifications,
-            description: guild.description,
-            discovery_splash: guild.discovery_splash,
-            emojis: guild.emojis,
-            explicit_content_filter: guild.explicit_content_filter,
-            features: guild.features,
-            icon: guild.icon,
-            id: guild.id,
-            joined_at: guild.joined_at,
-            large: guild.large,
-            max_members: guild.max_members,
-            max_presences: guild.max_presences,
-            max_video_channel_users: guild.max_video_channel_users,
-            member_count: guild.member_count,
-            members,
-            message_events_log_channel: None,
-            mfa_level: guild.mfa_level,
-            moderator_actions_log_channel: None,
-            name: guild.name,
-            nsfw_hecks: Default::default(),
-            nsfw_level: Default::default(),
-            owner_id: guild.owner_id,
-            owner: guild.owner,
-            permissions: guild.permissions,
-            preferred_locale: guild.preferred_locale,
-            premium_progress_bar_enabled: guild.premium_progress_bar_enabled,
-            premium_subscription_count: guild.premium_subscription_count,
-            premium_tier: guild.premium_tier,
-            presences: guild.presences,
-            public_updates_channel_id: guild.afk_channel_id,
-            roles,
-            role_positions,
-            rules_channel_id: guild.afk_channel_id,
-            safety_alerts_channel_id: guild.afk_channel_id,
-            sfw_hecks: Default::default(),
-            splash: guild.splash,
-            stage_instances: guild.stage_instances,
-            stickers: guild.stickers,
-            system_channel_flags: guild.system_channel_flags,
-            system_channel_id: guild.afk_channel_id,
-            thread_events_log_channel: guild.afk_channel_id,
-            threads: guild.threads,
-            unavailable: guild.unavailable,
-            vanity_url_code: guild.vanity_url_code,
-            verification_level: guild.verification_level,
-            voice_states: guild.voice_states,
-            widget_channel_id: guild.afk_channel_id,
-            widget_enabled: guild.widget_enabled
-        }
+impl From<Guild> for LuroGuild {
+    fn from(guild: Guild) -> Self {
+        let mut luro = Self::default();
+        luro.update_guild(guild);
+        luro
     }
 }
 
