@@ -68,8 +68,7 @@ impl Default for LuroResponse {
             allowed_mentions: Some(AllowedMentions {
                 parse: vec![MentionType::Everyone, MentionType::Roles, MentionType::Users],
                 replied_user: false,
-                roles: Vec::new(),
-                users: Vec::new()
+                ..Default::default()
             }),
             choices: Default::default(),
             flags: Default::default(),
