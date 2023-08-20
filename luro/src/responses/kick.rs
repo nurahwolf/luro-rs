@@ -1,46 +1,46 @@
 use anyhow::Error;
+use luro_builder::embed::EmbedBuilder;
 use luro_model::{constants::ACCENT_COLOUR, luro_user::LuroUser};
-use twilight_model::{guild::Guild, user::User};
-use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
+use twilight_model::guild::Guild;
 
 use crate::interaction::LuroSlash;
 
 impl LuroSlash {
-    pub async fn kick_response(&self, guild: Guild, banned_user: User, reason: &String, success: bool) -> anyhow::Result<()> {
-        let mut embed = self.kick_embed(guild, banned_user, reason).await?;
+    pub async fn kick_response(&self, guild: &Guild, punished_user: &LuroUser, reason: &String, success: bool) -> anyhow::Result<()> {
+        let mut embed = self.kick_embed(guild, punished_user, reason).await?;
         if success {
-            embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Successful").inline())
+            embed.create_field("DM Sent", "Successful", true);
         } else {
-            embed = embed.field(EmbedFieldBuilder::new("DM Sent", "Failed").inline())
+            embed.create_field("DM Sent", "Failed", true);
         }
 
-        self.respond(|r| r.add_embed(embed.build())).await
+        self.respond(|r| r.add_embed(embed)).await
     }
 
     /// Embed showing that a member got banned
-    pub async fn kick_embed(&self, guild: Guild, kicked_user: User, reason: &String) -> Result<EmbedBuilder, Error> {
+    pub async fn kick_embed(&self, guild: &Guild, punished_user: &LuroUser, reason: &String) -> Result<EmbedBuilder, Error> {
+        let mut embed = EmbedBuilder::default();
         let moderator = self.get_interaction_author(&self.interaction).await?;
-        let victim = LuroUser::from(&kicked_user);
 
-        let embed_author = EmbedAuthorBuilder::new(format!("Kicked by {} - {}", moderator.name, moderator.id))
-            .icon_url(ImageSource::url(moderator.avatar())?)
-            .build();
+        embed
+            .colour(ACCENT_COLOUR)
+            .title(format!("Banned from {}", guild.name))
+            .author(|author| {
+                author
+                    .icon_url(punished_user.avatar())
+                    .name(format!("Banned by {} - {}", moderator.name(), moderator.id))
+            })
+            .create_field("Guild ID", &guild.id.to_string(), true)
+            .thumbnail(|thumbnail| thumbnail.url(punished_user.avatar()));
 
-        let mut embed = EmbedBuilder::new()
-            .color(ACCENT_COLOUR)
-            .title(format!("Kicked from {}", guild.name))
-            .author(embed_author)
-            .field(EmbedFieldBuilder::new("Guild ID", guild.id.to_string()).inline())
-            .thumbnail(ImageSource::url(victim.avatar())?);
-
-        if !reason.is_empty() {
-            embed = embed.description(format!(
-                "**User:** <@{0}> - {1}\n**User ID:** {0}\n```{reason}```",
-                victim.id, victim.name
-            ))
-        } else {
-            embed = embed.description(format!("**User:** <@{0}> - {1}\n**User ID:** {0}", victim.id, victim.name))
-        }
+            if !reason.is_empty() {
+                embed.description(format!(
+                    "**User:** <@{0}> - {1}\n**User ID:** {0}\n```{reason}```",
+                    punished_user.id, punished_user.name
+                ));
+            } else {
+                embed.description(format!("**User:** <@{0}> - {1}\n**User ID:** {0}", punished_user.id, punished_user.name));
+            }
 
         Ok(embed)
     }

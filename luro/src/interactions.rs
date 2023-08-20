@@ -242,10 +242,9 @@ enum Autocomplete {
 impl Autocomplete {
     async fn run(self, ctx: LuroSlash) -> anyhow::Result<()> {
         match self {
-            Autocomplete::Send(cmd) => cmd.run(ctx).await,
-            Autocomplete::Proxy(cmd) => cmd.run(ctx).await,
-            Autocomplete::Icon(cmd) => cmd.run(ctx).await,
-            Autocomplete::Create(cmd) => cmd.run(ctx).await
+            Autocomplete::Create(cmd) | Autocomplete::Icon(cmd) | Autocomplete::Send(cmd) | Autocomplete::Proxy(cmd) => {
+                cmd.run(ctx).await
+            }
         }
     }
 

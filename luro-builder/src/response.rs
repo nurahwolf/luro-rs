@@ -20,6 +20,7 @@ use twilight_model::{
 /// - Responding to an interaction
 /// - Sending the response as a message update, if [`InteractionResponseType::DeferredChannelMessageWithSource`] is set.
 /// - Sends a new message if no interaction is present.
+#[derive(Clone)]
 pub struct LuroResponse {
     /// The type of users that may be mentioned by the bot
     pub allowed_mentions: Option<AllowedMentions>,

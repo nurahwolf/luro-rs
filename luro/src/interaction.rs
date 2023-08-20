@@ -75,6 +75,15 @@ impl LuroSlash {
         self.create_response(&r).await
     }
 
+    /// Send an existing response builder a response to an interaction.
+    /// This automatically handles if the interaction had been deferred.
+    pub async fn send_respond(&self, response: LuroResponse) -> anyhow::Result<()> {
+        self.respond(|r|{
+            *r = response;
+            r
+        }).await
+    }
+
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
     pub async fn default_embed(&self) -> EmbedBuilder {
         EmbedBuilder::default().colour(self.accent_colour().await).clone()
@@ -86,24 +95,24 @@ impl LuroSlash {
     }
 
     /// Create a response. This is used for sending a response to an interaction, as well as to defer interactions.
-    pub async fn create_response(&self, response: &LuroResponse) -> anyhow::Result<()> {
+    async fn create_response(&self, response: &LuroResponse) -> anyhow::Result<()> {
         let request = response.interaction_response();
         debug!("{:#?}", request);
-        let response = self
+        let response_result = self
             .interaction_client()
             .create_response(self.interaction.id, &self.interaction.token, &request)
             .await;
 
-        match response {
-            Ok(_) => Ok(()),
-            Err(why) => {
+        if let Err(why) = response_result {
+            if self.update_response(response).await.is_err() {
                 error!("Failed to respond to interaction - {:#?}", why);
-                Ok(())
             }
         }
+
+        Ok(())
     }
 
-    pub async fn update_response(&self, response: &LuroResponse) -> Result<Response<Message>, Error> {
+    async fn update_response(&self, response: &LuroResponse) -> Result<Response<Message>, Error> {
         let client = self.interaction_client();
         let update_response = client
             .update_response(&self.interaction.token)
@@ -118,14 +127,15 @@ impl LuroSlash {
     /// Acknowledge the interaction, showing a loading state. This will then be updated later.
     ///
     /// Use this for operations that take a long time. Generally its best to send this as soon as the reaction has been received.
-    pub async fn acknowledge_interaction(&self, deferred: bool) -> anyhow::Result<()> {
+    pub async fn acknowledge_interaction(&self, ephemeral: bool) -> anyhow::Result<LuroResponse> {
         let response = LuroResponse {
             interaction_response_type: InteractionResponseType::DeferredChannelMessageWithSource,
-            flags: if deferred { Some(MessageFlags::EPHEMERAL) } else { None },
+            flags: if ephemeral { Some(MessageFlags::EPHEMERAL) } else { None },
             ..Default::default()
         };
 
-        self.create_response(&response).await
+        self.create_response(&response).await?;
+        Ok(response)
     }
 
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour

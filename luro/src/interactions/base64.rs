@@ -49,7 +49,7 @@ impl LuroCommand for Base64Commands {
         };
 
         if let Some(bait) = bait && bait {
-            ctx.create_response(&response).await?;
+            ctx.send_respond(response).await?;
             ctx.send_message(|response|{
                 response.content(format!("<@{author_id}> got baited..."));
                 if let Some(message) = &ctx.interaction.message {
@@ -58,7 +58,7 @@ impl LuroCommand for Base64Commands {
                 response
             }).await?;
         } else {
-            ctx.create_response(&response).await?;
+            ctx.send_respond(response).await?;
         }
 
         Ok(())
@@ -75,7 +75,7 @@ pub struct Base64Decode {
 
 impl LuroCommand for Base64Decode {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.create_response(&decode_response(&ctx, &decode(&self.string)?).await?)
+        ctx.send_respond(decode_response(&ctx, &decode(&self.string)?).await?)
             .await
     }
 }
@@ -91,7 +91,7 @@ pub struct Base64Encode {
 
 impl LuroCommand for Base64Encode {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
-        ctx.create_response(&encode_response(&ctx, &encode(&self.string)).await?)
+        ctx.send_respond(encode_response(&ctx, &encode(&self.string)).await?)
             .await
     }
 }

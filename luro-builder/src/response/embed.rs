@@ -63,11 +63,10 @@ impl LuroResponse {
 
     #[cfg(feature = "auto-trim")]
     fn check_embed(&mut self) -> &mut Self {
-        let mut file_id = 0;
-        let mut files = vec![];
-        let mut modified_embeds = vec![];
-
         if let Some(embeds) = &mut self.embeds {
+            let mut file_id = 0;
+            let mut files = vec![];
+            let mut modified_embeds = vec![];
             for embed in embeds {
                 if let Some(description) = &mut embed.description {
                     if description.len() > 4096 {
@@ -101,15 +100,11 @@ impl LuroResponse {
 
                 modified_embeds.push(embed.clone())
             }
-        }
+            if !files.is_empty() {
+                self.attachments(files.into_iter());
+            }
 
-        if !files.is_empty() {
-            self.attachments(files.into_iter());
-        }
-
-        match &mut self.embeds {
-            Some(embeds) => embeds.append(&mut modified_embeds),
-            None => self.embeds = Some(modified_embeds)
+            self.embeds = Some(modified_embeds)
         }
         self
     }

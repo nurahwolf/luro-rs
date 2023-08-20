@@ -60,14 +60,14 @@ impl LuroCommand for PingCommand {
         let start = Instant::now();
         let mut response = LuroResponse::default();
         response.add_embed(embed);
-        ctx.create_response(&response).await?;
+        ctx.send_respond(response.clone()).await?;
         let sent = format!(
             "Pong!\n`Send MESSAGE` API request achnowledged and received in `{}` milliseconds!",
             start.elapsed().as_millis()
         );
         response.content(sent.clone());
 
-        ctx.update_response(&response).await?;
+        ctx.send_respond(response.clone()).await?;
 
         // A random command to check latency time
         if let Some(author) = ctx.interaction.author() {
@@ -79,7 +79,7 @@ impl LuroCommand for PingCommand {
                 start.elapsed().as_millis()
             );
             response.content(user);
-            ctx.update_response(&response).await?;
+            ctx.send_respond(response).await?;
         }
 
         Ok(())
