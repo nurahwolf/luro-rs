@@ -47,13 +47,13 @@ impl LuroCommand for InfoUser {
         let mut description = String::new();
         let mut timestamp = format!("- Joined discord on <t:{0}> - <t:{0}:R>\n", user_timestamp.as_secs());
 
-        embed.author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()));
+        embed.author(|author| author.name(format!("{} - {}", luro_user.name, luro_user.id)).icon_url(luro_user.avatar()));
         if let Some(hide_avatar) = self.hide_avatar && hide_avatar {
         } else {
             embed.thumbnail(|thumbnail|thumbnail.url(luro_user.avatar()));
         }
 
-        writeln!(description, "<@{0}> - `{0}`", user_id)?;
+        writeln!(description, "<@{}>", luro_user.id)?;
         if let Some(accent_color) = luro_user.accent_color {
             embed.colour(accent_color);
             writeln!(description, "- Accent Colour: `{accent_color:X}`")?;
@@ -140,19 +140,19 @@ impl LuroCommand for InfoUser {
                 timestamp.push_str(format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.as_secs()).as_str());
             }
             if let Some(nickname) = member.nick() {
-                writeln!(guild_information, "**- Nickname:** `{nickname}`")?;            
+                writeln!(guild_information, "- Nickname: `{nickname}`")?;            
             }
-            if let Some(deaf) = member.deaf() && deaf {
-                writeln!(guild_information, "**- Deafened:** `true`")?;            
+            if member.deaf().unwrap_or_default() {
+                writeln!(guild_information, "- Deafened: `true`")?;            
             }
-            if let Some(mute) = member.mute() && mute {
-                writeln!(guild_information, "**- Muted:** `true`")?;            
+            if member.mute().unwrap_or_default() {
+                writeln!(guild_information, "- Muted: `true`")?;            
             }
             if member.pending() {
-                writeln!(guild_information, "**- Pending:** `true`")?;            
+                writeln!(guild_information, "- Pending: `true`")?;            
             }
             if let Some(timestamp) = member.communication_disabled_until() {
-                writeln!(guild_information, "**- Timed out until:** <t:{}:R>", timestamp.as_secs())?;            
+                writeln!(guild_information, "- Timed out until: <t:{}:R>", timestamp.as_secs())?;            
             }
             // TODO: Once member_banner is a thing in [Member]
             // if let Some(banner) = get_member_banner(&member, guild_id, user) {
@@ -180,8 +180,12 @@ impl LuroCommand for InfoUser {
                 )]);
             }
 
-            writeln!(user_data_description, "- Total Words Said: `{}`", luro_user.wordcount)?;
-            writeln!(user_data_description, "- Total Characters Said: `{}`", luro_user.averagesize)?;
+            if !luro_user.characters.is_empty() {
+                writeln!(user_data_description, "- Has `{}` character profiles", luro_user.characters.len())?;
+            }
+            writeln!(user_data_description, "- Typed `{}` characters", luro_user.averagesize)?;
+            writeln!(user_data_description, "- Has said `{}` words", luro_user.wordcount)?;
+            writeln!(user_data_description, "- Typed `{}` characters", luro_user.averagesize)?;
 
             if luro_user.moderation_actions_performed != 0 {
                 writeln!(
@@ -224,7 +228,7 @@ impl LuroCommand for InfoUser {
                     writeln!(user_data_description, "- Kicked `{kicks}` times")?;
                 }
                 if priv_esc != 0 {
-                    writeln!(user_data_description, "- Attempts Privilege Escalation `{priv_esc}` times")?;
+                    writeln!(user_data_description, "- Attempted Privilege Escalation `{priv_esc}` times")?;
                 }
                 if warnings != 0 {
                     writeln!(user_data_description, "- Warned *(including expired)* `{warnings}` times")?;
@@ -253,7 +257,7 @@ impl LuroCommand for InfoUser {
         embed.create_field("Timestamps", &timestamp, true);
         embed.description(description);
         response.add_embed(embed);
-        ctx.update_response(&response).await?;
+        ctx.send_respond(response).await?;
         Ok(())
     }
 }
