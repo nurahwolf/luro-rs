@@ -8,6 +8,7 @@ impl LuroSlash {
     /// TODO: Refactor this
     pub async fn handle(self) -> anyhow::Result<()> {
         let interaction = &self.interaction;
+
         let response = match interaction.kind {
             InteractionType::ApplicationCommand => {
                 // Attempt to get the original message to save it to our cache
@@ -35,6 +36,17 @@ impl LuroSlash {
                 error!(error = ?send_fail, "Failed to respond to the interaction with an error response");
             };
         };
+
+        // Sync guild data
+        // if let Some(guild_id) = interaction.guild_id {
+        //     let mut guild_data = self.framework.database.get_guild(&guild_id).await?;
+        //     let guild = match self.framework.twilight_client.guild(guild_id).await {
+        //         Ok(guild) => guild.model().await?,
+        //         Err(_) => return Ok(()),
+        //     };
+
+        //     guild_data. = guild.c
+        // }
 
         Ok(())
     }

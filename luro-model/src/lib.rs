@@ -24,3 +24,4 @@ pub mod user_actions_type;
 pub mod user_marriages;
 pub mod character_profile;
 pub mod toml_driver;
+pub mod v2;

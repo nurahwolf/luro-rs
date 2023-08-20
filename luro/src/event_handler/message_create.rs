@@ -39,6 +39,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
             let proxied_message = message.content.replace(first_word, "");
 
+            self.twilight_client.delete_message(message.channel_id, message.id).await?;
             self.twilight_client
                 .execute_webhook(webhook.id, &webhook_token)
                 .username(&format!(
@@ -49,7 +50,6 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 .avatar_url(&character_icon)
                 .await?;
 
-            self.twilight_client.delete_message(message.channel_id, message.id).await?;
         }
 
         self.response_message_modified(&message.clone().into()).await?;
