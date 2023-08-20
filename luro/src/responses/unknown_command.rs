@@ -12,7 +12,7 @@ impl LuroSlash {
                     .colour(COLOUR_DANGER)
                     .description("This command does not exist yet, sorry!")
                     .footer(|footer| footer.text("We had a fucky wucky!"))
-            })
+            }).ephemeral()
         })
         .await
     }
@@ -30,7 +30,7 @@ impl LuroSlash {
                         "The command `{name}` does not yet exist! Really sorry about this! Blame my owner..."
                     ))
                     .footer(|footer| footer.text("We had a fucky wucky!"))
-            })
+            }).ephemeral()
         })
         .await
     }
