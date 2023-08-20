@@ -1,4 +1,4 @@
-use luro_dice::{RollResult, DiceRoll, RollValue};
+use luro_dice::{DiceRoll, RollResult, RollValue};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};

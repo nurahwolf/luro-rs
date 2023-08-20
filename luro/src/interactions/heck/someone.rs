@@ -4,7 +4,8 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 use crate::{
     interaction::LuroSlash,
-    luro_command::LuroCommand, interactions::heck::{get_heck, format_heck}
+    interactions::heck::{format_heck, get_heck},
+    luro_command::LuroCommand
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]

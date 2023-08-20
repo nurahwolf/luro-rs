@@ -1,15 +1,17 @@
+use crate::toml_driver::deserialize_fetish;
+use crate::toml_driver::serialize_fetish;
 use core::fmt;
 use std::collections::BTreeMap;
-use crate::toml_driver::serialize_fetish;
-use crate::toml_driver::deserialize_fetish;
-
 
 use serde::{Deserialize, Serialize};
 use twilight_interactions::command::{CommandOption, CreateOption};
 /// The different categories of fetishes a user can have
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq, CommandOption, CreateOption)]
 pub enum FetishCategory {
-    #[option(name = "Favourite - Something this character loves to the end of the world", value = "favourite")]
+    #[option(
+        name = "Favourite - Something this character loves to the end of the world",
+        value = "favourite"
+    )]
     Favourite,
     #[option(name = "Love - The character loves this!", value = "love")]
     Love,
@@ -63,6 +65,9 @@ pub struct CharacterProfile {
     #[serde(default)]
     /// A HTTP / HTTPS link to an icon used for their main appearance
     pub icon: String,
+    /// An icon that is only shown in NSFW rooms / contexts
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub nsfw_icon: Option<String>,
     /// A detailed description for this character
     #[serde(default)]
     pub description: String,
@@ -73,7 +78,10 @@ pub struct CharacterProfile {
     #[serde(default)]
     pub nsfw: bool,
     /// A list of fetishes the character has. NSFW only!
-    #[cfg_attr(feature = "toml-driver", serde(deserialize_with = "deserialize_fetish", serialize_with = "serialize_fetish"))]
+    #[cfg_attr(
+        feature = "toml-driver",
+        serde(deserialize_with = "deserialize_fetish", serialize_with = "serialize_fetish")
+    )]
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub fetishes: BTreeMap<usize, Fetish>
 }

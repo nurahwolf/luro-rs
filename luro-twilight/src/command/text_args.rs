@@ -5,7 +5,7 @@ use nom::{
     combinator::{iterator, map_opt, ParserIterator},
     error::Error as NomError,
     sequence::{delimited, terminated},
-    Err as NomErr, IResult,
+    Err as NomErr, IResult
 };
 
 type ItemError<'m> = NomError<&'m str>;
@@ -13,37 +13,30 @@ type ItemFn<'m> = fn(&'m str) -> IResult<&'m str, &'m str, ItemError<'m>>;
 
 pub struct TextArgs<'m> {
     iter: ParserIterator<&'m str, ItemError<'m>, ItemFn<'m>>,
-    pub num: Option<u64>,
+    pub num: Option<u64>
 }
 
 impl<'m> TextArgs<'m> {
     pub fn new(content: &'m str, num: Option<u64>) -> Self {
         Self {
             iter: iterator(content, Self::next_item),
-            num,
+            num
         }
     }
 
     pub fn rest(self) -> &'m str {
         match self.iter.finish() {
             Ok((rest, _)) => rest,
-            Err(err) => {
-                match err {
-                    NomErr::Incomplete(_) => "",
-                    NomErr::Error(err) | NomErr::Failure(err) => err.input,
-                }
+            Err(err) => match err {
+                NomErr::Incomplete(_) => "",
+                NomErr::Error(err) | NomErr::Failure(err) => err.input
             }
         }
     }
 
     fn next_item(input: &'m str) -> IResult<&'m str, &'m str, ItemError<'m>> {
-        let quote_delimited = |start: char, end: char| {
-            delimited(
-                ch::char(start),
-                by::take_till1(move |c| c == end),
-                ch::char(end),
-            )
-        };
+        let quote_delimited =
+            |start: char, end: char| delimited(ch::char(start), by::take_till1(move |c| c == end), ch::char(end));
 
         let simple = map_opt(by::take_till(char::is_whitespace), |item: &str| {
             (!item.is_empty()).then_some(item)
@@ -56,7 +49,7 @@ impl<'m> TextArgs<'m> {
             quote_delimited('«', '»'),
             quote_delimited('„', '“'),
             quote_delimited('“', '”'),
-            simple,
+            simple
         );
 
         terminated(alt(options), ch::space0)(input)

@@ -41,10 +41,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
             self.twilight_client
                 .execute_webhook(webhook.id, &webhook_token)
-                .username(&format!(
-                    "{character_name} [{}]",
-                    user_data.member_name(&message.guild_id)
-                ))
+                .username(&format!("{character_name} [{}]", user_data.member_name(&message.guild_id)))
                 .content(&proxied_message)
                 .avatar_url(&character_icon)
                 .await?;

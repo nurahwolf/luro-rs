@@ -1,5 +1,5 @@
+use luro_dice::{DiceRoll, RollResult, RollValue};
 use std::fmt::Write;
-use luro_dice::{RollValue, DiceRoll, RollResult};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};

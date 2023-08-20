@@ -1,19 +1,73 @@
 use anyhow::Context;
 use std::fmt::Write;
-use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_interactions::command::AutocompleteValue;
+use twilight_interactions::command::CommandModel;
+use twilight_interactions::command::CreateCommand;
+use twilight_model::{
+    application::command::{CommandOptionChoice, CommandOptionChoiceValue},
+    http::interaction::InteractionResponseType
+};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand, models::LuroWebhook};
 
-#[derive(CommandModel, CreateCommand)]
-#[command(name = "send", desc = "Send a message as a character!")]
-pub struct SendCommand {
-    /// The fursona that should be proxied
-    pub name: String,
-    /// The message to send
-    pub message: String
+#[derive(CommandModel)]
+#[command(autocomplete = true)]
+pub struct CharacterSendAutocomplete {
+    name: AutocompleteValue<String>
 }
 
-impl LuroCommand for SendCommand {
+impl CharacterSendAutocomplete {
+    pub async fn run(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        let user_id = ctx
+            .interaction
+            .author_id()
+            .context("Expected to find the user running this command")?;
+
+        let user_data = ctx.framework.database.get_user(&user_id).await?;
+        let choices = match self.name {
+            AutocompleteValue::None => user_data
+                .characters
+                .keys()
+                .map(|name| CommandOptionChoice {
+                    name: name.clone(),
+                    name_localizations: None,
+                    value: CommandOptionChoiceValue::String(name.clone())
+                })
+                .collect(),
+            AutocompleteValue::Focused(input) => user_data
+                .characters
+                .keys()
+                .filter_map(|name| match name.contains(&input) {
+                    true => Some(CommandOptionChoice {
+                        name: name.clone(),
+                        name_localizations: None,
+                        value: CommandOptionChoiceValue::String(name.clone())
+                    }),
+                    false => None
+                })
+                .collect(),
+            AutocompleteValue::Completed(_) => vec![]
+        };
+
+        ctx.respond(|response| {
+            response
+                .choices(choices.into_iter())
+                .response_type(InteractionResponseType::ApplicationCommandAutocompleteResult)
+        })
+        .await
+    }
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(name = "send", desc = "Send a message as a character!")]
+pub struct CharacterSend {
+    #[command(desc = "The character that should be proxied", autocomplete = true)]
+    name: String,
+    /// The message to send
+    message: String
+}
+
+impl LuroCommand for CharacterSend {
     async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
         let user_id = ctx
             .interaction

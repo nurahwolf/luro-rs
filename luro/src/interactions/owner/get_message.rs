@@ -32,7 +32,8 @@ impl LuroCommand for OwnerGetMessage {
                 .get_user(&user.resolved.id)
                 .await?
                 .messages
-                .get(&message_id).cloned(),
+                .get(&message_id)
+                .cloned(),
             None => None
         };
 
@@ -46,7 +47,11 @@ impl LuroCommand for OwnerGetMessage {
 
         // Last ditch effort, is it in the cache?
         if luro_message.is_none() {
-            luro_message = ctx.framework.twilight_cache.message(message_id).map(|message| LuroMessage::from(message.clone()))
+            luro_message = ctx
+                .framework
+                .twilight_cache
+                .message(message_id)
+                .map(|message| LuroMessage::from(message.clone()))
         }
 
         match luro_message {

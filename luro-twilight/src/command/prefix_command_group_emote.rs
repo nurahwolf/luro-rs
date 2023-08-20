@@ -5,7 +5,7 @@ use crate::emote::Emote;
 use super::prefix_command_group::PrefixCommandGroup;
 
 pub struct PrefixCommandGroupEmote {
-    pub group: PrefixCommandGroup,
+    pub group: PrefixCommandGroup
 }
 
 impl Display for PrefixCommandGroupEmote {
@@ -20,7 +20,7 @@ impl Display for PrefixCommandGroupEmote {
             PrefixCommandGroup::Twitch => Display::fmt(&Emote::Twitch, f),
             PrefixCommandGroup::Games => f.write_str(":video_game:"),
             PrefixCommandGroup::Utility => f.write_str(":tools:"),
-            PrefixCommandGroup::Songs => f.write_str(":musical_note:"),
+            PrefixCommandGroup::Songs => f.write_str(":musical_note:")
         }
     }
 }

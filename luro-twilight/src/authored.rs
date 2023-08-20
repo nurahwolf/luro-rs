@@ -1,4 +1,11 @@
-use twilight_model::{id::{marker::{ChannelMarker, GuildMarker, UserMarker}, Id}, user::User, channel::Message};
+use twilight_model::{
+    channel::Message,
+    id::{
+        marker::{ChannelMarker, GuildMarker, UserMarker},
+        Id
+    },
+    user::User
+};
 
 pub trait Authored {
     /// Channel id of the event

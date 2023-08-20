@@ -1,6 +1,7 @@
 #![feature(async_fn_in_trait)]
 #![feature(let_chains)]
 
+pub mod character_profile;
 pub mod constants;
 pub mod functions;
 pub mod guild_permissions;
@@ -18,9 +19,8 @@ pub mod member_roles;
 pub mod quote;
 pub mod role_ordering;
 pub mod story;
+pub mod toml_driver;
 pub mod types;
 pub mod user_actions;
 pub mod user_actions_type;
 pub mod user_marriages;
-pub mod character_profile;
-pub mod toml_driver;

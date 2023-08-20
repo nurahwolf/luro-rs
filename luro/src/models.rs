@@ -6,7 +6,7 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::{WEBHOOK_NAME, framework::Framework};
+use crate::{framework::Framework, WEBHOOK_NAME};
 
 /// Used for handling webhooks
 pub struct LuroWebhook<D: LuroDatabaseDriver> {
@@ -15,9 +15,7 @@ pub struct LuroWebhook<D: LuroDatabaseDriver> {
 
 impl<D: LuroDatabaseDriver> LuroWebhook<D> {
     pub fn new(framework: Arc<Framework<D>>) -> Self {
-        Self {
-            framework
-        }
+        Self { framework }
     }
 
     // Get a webhook for a channel, or create it if it does not exist

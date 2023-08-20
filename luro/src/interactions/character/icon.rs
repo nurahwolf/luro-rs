@@ -7,10 +7,12 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "icon", desc = "Set the primary icon for this character")]
 pub struct Icon {
-    /// The fursona that should be proxied
-    pub name: String,
+    #[command(desc = "The character that should be modified", autocomplete = true)]
+    name: String,
     /// The URL the icon should be set to
-    pub url: String,
+    icon: String,
+    /// The URL a NSFW icon
+    nsfw_icon: Option<String>
 }
 
 impl LuroCommand for Icon {
@@ -31,7 +33,10 @@ impl LuroCommand for Icon {
         }
 
         match user_data.characters.get_mut(&self.name) {
-            Some(character) => character.icon = self.url,
+            Some(character) => {
+                character.nsfw_icon = self.nsfw_icon;
+                character.icon = self.icon
+            }
             None => {
                 let mut characters = String::new();
 
@@ -46,6 +51,6 @@ impl LuroCommand for Icon {
 
         ctx.framework.database.modify_user(&user_id, &user_data).await?;
 
-        ctx.respond(|r|r.content("Done!").ephemeral()).await
+        ctx.respond(|r| r.content("Done!").ephemeral()).await
     }
 }

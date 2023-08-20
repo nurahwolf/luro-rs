@@ -3,9 +3,10 @@ use std::collections::HashMap;
 use anyhow::anyhow;
 use tracing::info;
 use tracing::warn;
+use twilight_interactions::command::CommandModel;
 use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
-
+use twilight_model::application::interaction::application_command::CommandData;
 
 use self::character::Character;
 use self::dice::DiceCommands;
@@ -21,6 +22,7 @@ use self::{
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
     say::SayCommand, story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand
 };
+use crate::interactions::character::send::CharacterSendAutocomplete;
 use crate::interactions::heck::add::HeckAddCommand;
 
 use anyhow::bail;
@@ -54,10 +56,6 @@ mod story;
 mod uwu;
 mod wordcount;
 // pub mod fursona;
-
-
-
-
 
 /// A simple structure containing our commands
 #[derive(Default)]
@@ -100,7 +98,6 @@ impl Commands {
         init.global_commands.insert("quote", QuoteCommands::create_command().into());
         init.global_commands.insert("roles", RoleCommands::create_command().into());
         init.global_commands.insert("character", Character::create_command().into());
-
 
         init.global_commands
             .insert("wordcount", WordcountCommand::create_command().into());
@@ -219,6 +216,45 @@ impl LuroSlash {
                 warn!(name = name, "received unknown component");
                 self.unknown_command_response_named(name).await
             }
+        }
+    }
+
+    /// Handle incoming autocomplete
+    pub async fn handle_autocomplete(self) -> anyhow::Result<()> {
+        let data = self.parse_autocomplete_data(&self.interaction)?;
+        Autocomplete::new(*data)?.run(self).await
+    }
+}
+
+#[derive(CommandModel)]
+#[command(autocomplete = true)]
+enum Autocomplete {
+    #[command(name = "send")]
+    Send(CharacterSendAutocomplete),
+    #[command(name = "proxy")]
+    Proxy(CharacterSendAutocomplete),
+    #[command(name = "icon")]
+    Icon(CharacterSendAutocomplete),
+    #[command(name = "create")]
+    Create(CharacterSendAutocomplete)
+}
+
+impl Autocomplete {
+    async fn run(self, ctx: LuroSlash) -> anyhow::Result<()> {
+        match self {
+            Autocomplete::Send(cmd) => cmd.run(ctx).await,
+            Autocomplete::Proxy(cmd) => cmd.run(ctx).await,
+            Autocomplete::Icon(cmd) => cmd.run(ctx).await,
+            Autocomplete::Create(cmd) => cmd.run(ctx).await
+        }
+    }
+
+    fn new(data: CommandData) -> anyhow::Result<Self> {
+        match Self::from_interaction(data.into()) {
+            Ok(ok) => Ok(ok),
+            Err(why) => Err(anyhow!(
+                "Got interaction data, but failed to parse it to the command type specified: {why}"
+            ))
         }
     }
 }

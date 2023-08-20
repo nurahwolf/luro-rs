@@ -1,4 +1,4 @@
-use tracing::{error, warn};
+use tracing::error;
 use twilight_model::application::interaction::InteractionType;
 
 use super::LuroSlash;
@@ -22,10 +22,11 @@ impl LuroSlash {
             }
             InteractionType::MessageComponent => self.clone().handle_component().await,
             InteractionType::ModalSubmit => self.clone().handle_modal().await,
-            other => {
-                warn!("received unexpected {} interaction", other.kind());
-                Ok(())
-            }
+            InteractionType::ApplicationCommandAutocomplete => self.clone().handle_autocomplete().await,
+            _ => todo!() // other => {
+                         //     warn!("received unexpected {} interaction", other.kind());
+                         //     Ok(())
+                         // }
         };
 
         if let Err(why) = response {

@@ -80,6 +80,8 @@ impl Default for LuroResponse {
     }
 }
 
+mod attachments;
+mod choices;
 mod components;
 mod content;
 mod custom_id;

@@ -2,7 +2,8 @@ use anyhow::anyhow;
 use std::mem;
 
 use twilight_model::application::interaction::{
-    message_component::MessageComponentInteractionData, modal::ModalInteractionData, Interaction, InteractionData
+    application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData,
+    Interaction, InteractionData
 };
 
 use super::LuroSlash;
@@ -26,6 +27,15 @@ impl LuroSlash {
         match mem::take(&mut interaction.data) {
             Some(InteractionData::MessageComponent(data)) => Ok(data),
             _ => Err(anyhow!("unable to parse component data, received unexpected data type"))
+        }
+    }
+
+    pub fn parse_autocomplete_data(&self, interaction: &Interaction) -> anyhow::Result<Box<CommandData>> {
+        match &interaction.data {
+            Some(InteractionData::ApplicationCommand(data)) => Ok(data.clone()),
+            _ => Err(anyhow!(
+                "unable to parse application command data, received unexpected data type"
+            ))
         }
     }
 }

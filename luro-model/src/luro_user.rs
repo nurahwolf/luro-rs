@@ -11,7 +11,10 @@ use twilight_model::{
     util::ImageHash
 };
 
-use crate::{luro_member::LuroMember, luro_message::LuroMessage, user_actions::UserActions, user_marriages::UserMarriages, character_profile::CharacterProfile};
+use crate::{
+    character_profile::CharacterProfile, luro_member::LuroMember, luro_message::LuroMessage, user_actions::UserActions,
+    user_marriages::UserMarriages
+};
 
 /// Some nice functionality primarily around [User] and [Member], with some added goodness
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
@@ -91,7 +94,7 @@ pub struct LuroUser {
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub characters: BTreeMap<String, CharacterProfile>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub character_prefix: BTreeMap<String, String>,
+    pub character_prefix: BTreeMap<String, String>
 }
 
 impl From<&CurrentUser> for LuroUser {
@@ -266,7 +269,7 @@ impl LuroUser {
     pub fn member_name(&self, guild_id: &Option<Id<GuildMarker>>) -> String {
         let guild_id = match guild_id {
             Some(guild_id) => guild_id,
-            None => return self.name(),
+            None => return self.name()
         };
 
         let guild = match self.guilds.get(guild_id) {

@@ -14,9 +14,9 @@ pub struct Profile {
     /// The fursona to get
     pub name: String,
     /// The type of profile to fetch. Defaults to the channel type.
-    pub nsfw: Option<bool>,
+    nsfw: Option<bool>,
     /// Fetch the character name from someone else.
-    pub user: Option<Id<UserMarker>>
+    user: Option<Id<UserMarker>>
 }
 
 impl LuroCommand for Profile {
@@ -69,10 +69,11 @@ impl LuroCommand for Profile {
         };
 
         let mut embed = ctx.default_embed().await;
-        let mut description = format!(
-            "{}\n- **Description:**\n{}",
-            character.short_description, character.description
-        );
+        let mut description = format!("{}\n", character.short_description);
+        if !character.description.is_empty() {
+            writeln!(description, "- **Description:**\n{}", character.description)?
+        }
+
         if let Some(nsfw_description) = &character.nsfw_description && nsfw && !nsfw_description.is_empty() {
             writeln!(description, "\n- **NSFW Description:**\n{nsfw_description}")?
         }

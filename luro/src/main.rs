@@ -18,11 +18,11 @@ use tracing_subscriber::{
 use twilight_gateway::{error::ReceiveMessageErrorType, stream::ShardEventStream, Intents};
 
 pub mod commands;
-pub mod interactions;
 pub mod event_handler;
 pub mod framework;
 pub mod functions;
 pub mod interaction;
+pub mod interactions;
 pub mod luro_command;
 pub mod models;
 pub mod responses;

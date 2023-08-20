@@ -22,7 +22,10 @@ use twilight_model::{
     }
 };
 
-use luro_model::{constants::ACCENT_COLOUR, luro_database::LuroDatabase, luro_log_channel::LuroLogChannel, luro_database_driver::LuroDatabaseDriver};
+use luro_model::{
+    constants::ACCENT_COLOUR, luro_database::LuroDatabase, luro_database_driver::LuroDatabaseDriver,
+    luro_log_channel::LuroLogChannel
+};
 
 use crate::interactions::Commands;
 

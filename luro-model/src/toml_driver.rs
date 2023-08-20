@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use serde::{Deserializer, Serializer, Deserialize, de};
+use serde::{de, Deserialize, Deserializer, Serializer};
 use std::collections::BTreeMap;
 
 use crate::character_profile::Fetish;
@@ -7,7 +7,8 @@ use crate::character_profile::Fetish;
 // Serialise a BTreeMap, changing the key from usize to String
 pub fn serialize_fetish<S>(input: &BTreeMap<usize, Fetish>, serializer: S) -> Result<S::Ok, S::Error>
 where
-    S: Serializer {
+    S: Serializer
+{
     let data = input
         .iter()
         .map(|(str_key, value)| (str_key.to_string(), value.clone()))
@@ -53,7 +54,7 @@ where
         .map(|(str_key, value)| (str_key.to_string(), *value))
         .collect::<BTreeMap<String, usize>>();
 
-        serializer.collect_map(data)
+    serializer.collect_map(data)
 }
 
 pub fn deserialize_wordsize<'de, D>(deserializer: D) -> Result<BTreeMap<usize, usize>, D::Error>
@@ -81,34 +82,34 @@ where
     Ok(data)
 }
 
-    // Serialise a BTreeMap, changing the key from usize to String
-    pub fn serialize_btreemap<T>(input: BTreeMap<usize, T>) -> BTreeMap<String, T> {
-        input
-            .into_iter()
-            .map(|(str_key, value)| (str_key.to_string(), value))
-            .collect::<BTreeMap<String, T>>()
+// Serialise a BTreeMap, changing the key from usize to String
+pub fn serialize_btreemap<T>(input: BTreeMap<usize, T>) -> BTreeMap<String, T> {
+    input
+        .into_iter()
+        .map(|(str_key, value)| (str_key.to_string(), value))
+        .collect::<BTreeMap<String, T>>()
+}
+
+// Deserialise a BTreeMap, changing the key from [String] to [usize]
+pub fn deserialize_btreemap<T>(input: BTreeMap<String, T>) -> anyhow::Result<BTreeMap<usize, T>> {
+    let original_len = input.len();
+    let data = input
+        .into_iter()
+        .map(|(key, value)| {
+            (
+                match key.parse() {
+                    Ok(usize_key) => usize_key,
+                    Err(_) => todo!()
+                },
+                value
+            )
+        })
+        .collect::<BTreeMap<usize, T>>();
+
+    // multiple strings could parse to the same int, e.g "0" and "00"
+    if data.len() < original_len {
+        return Err(anyhow!("detected duplicate integer key"));
     }
 
-    // Deserialise a BTreeMap, changing the key from [String] to [usize]
-    pub fn deserialize_btreemap<T>(input: BTreeMap<String, T>) -> anyhow::Result<BTreeMap<usize, T>> {
-        let original_len = input.len();
-        let data = input
-            .into_iter()
-            .map(|(key, value)| {
-                (
-                    match key.parse() {
-                        Ok(usize_key) => usize_key,
-                        Err(_) => todo!()
-                    },
-                    value
-                )
-            })
-            .collect::<BTreeMap<usize, T>>();
-
-        // multiple strings could parse to the same int, e.g "0" and "00"
-        if data.len() < original_len {
-            return Err(anyhow!("detected duplicate integer key"));
-        }
-
-        Ok(data)
-    }
+    Ok(data)
+}

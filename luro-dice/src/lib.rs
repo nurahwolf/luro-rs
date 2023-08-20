@@ -1,4 +1,4 @@
-use std::{num::NonZeroU64, collections::HashSet, iter::Peekable, str::Chars};
+use std::{collections::HashSet, iter::Peekable, num::NonZeroU64, str::Chars};
 
 pub mod dice_roll;
 pub mod filter_modifier;
@@ -23,7 +23,6 @@ pub enum FilterModifier<T> {
     DropHighest(T),
     None
 }
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum RollAst {
