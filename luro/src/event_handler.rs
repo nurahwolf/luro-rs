@@ -60,15 +60,6 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             error!(why = ?why, "error while handling event");
         }
 
-        // Update guild and user data
-        // TODO: Lessen how much this is checked lol
-        if let Some(guild_id) = &event.guild_id() {
-            let mut guild_settings = self.database.get_guild(guild_id).await?;
-            let guild = self.twilight_client.guild(*guild_id).await?.model().await?;
-            guild_settings.update_guild(guild);
-            self.database.save_guild(guild_id, &guild_settings).await?;
-        }
-
         Ok(())
     }
 }

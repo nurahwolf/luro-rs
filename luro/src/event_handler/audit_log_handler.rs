@@ -44,7 +44,13 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             AuditLogEventType::MemberBanAdd => self.subhandle_member_ban_add(embed, &guild, &event).await,
             AuditLogEventType::MemberKick => self.subhandle_member_kick(embed, &guild, &event).await,
             AuditLogEventType::MemberBanRemove => self.subhandle_member_ban_remove(embed, &guild, &event).await,
-            _ => Ok(())
+            _ => {
+                let mut guild_settings = self.database.get_guild(&guild_id).await?;
+                let guild = self.twilight_client.guild(guild_id).await?.model().await?;
+                guild_settings.update_guild(guild);
+                self.database.save_guild(&guild_id, &guild_settings).await?;
+                Ok(())
+            }
         }
     }
 }
