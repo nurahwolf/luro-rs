@@ -1,7 +1,8 @@
 use std::collections::BTreeMap;
 
-use luro_model::heck::Hecks;
 use serde::Serializer;
+
+use crate::heck::Hecks;
 
 pub fn serialize_heck<S>(input: &Hecks, s: S) -> Result<S::Ok, S::Error>
 where

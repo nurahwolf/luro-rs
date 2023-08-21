@@ -6,10 +6,10 @@ use luro_model::{
     heck::{Heck, Hecks},
     message::LuroMessage,
     story::Story,
-    user::LuroUser,
-    CommandManager, Quotes, Stories
+    user::{LuroUser, LuroUsers},
+    CommandManager, Quotes, Stories, BOT_OWNERS
 };
-use std::{collections::BTreeMap, path::Path};
+use std::{collections::{BTreeMap, HashMap}, path::Path};
 use twilight_model::application::interaction::Interaction;
 
 use super::{
@@ -291,8 +291,15 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
         Self::write(user, Path::new(&path)).await
     }
 
-    async fn get_staff(&self) -> anyhow::Result<luro_model::user::LuroUsers> {
-        todo!()
+    async fn get_staff(&self) -> anyhow::Result<LuroUsers> {
+        let mut staff = HashMap::new();
+        for id in BOT_OWNERS {
+            let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &id);
+            let data: LuroUser = Self::get(Path::new(&path)).await?;
+            staff.insert(id, data);
+        }
+
+        Ok(staff)
     }
 
     async fn save_interaction(&self, interaction: &Interaction, key: &str) -> anyhow::Result<()> {

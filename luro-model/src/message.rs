@@ -134,6 +134,7 @@ pub struct LuroMessage {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interaction: Option<MessageInteraction>,
     /// Type of message.
+    #[serde(default = "default_kind")]
     pub kind: MessageType,
     /// [`Channel`]s mentioned in the message.
     ///
@@ -406,14 +407,14 @@ impl Default for LuroMessage {
             application: Default::default(),
             application_id: Default::default(),
             attachments: Default::default(),
-            channel_id: Id::new(0),
+            channel_id: Id::new(1),
             components: Default::default(),
             content: Default::default(),
             edited_timestamp: Default::default(),
             embeds: Default::default(),
             flags: Default::default(),
             guild_id: Default::default(),
-            id: Id::new(0),
+            id: Id::new(1),
             interaction: Default::default(),
             kind: MessageType::Regular,
             mention_channels: Default::default(),
@@ -432,4 +433,8 @@ impl Default for LuroMessage {
             webhook_id: Default::default()
         }
     }
+}
+
+fn default_kind() -> MessageType {
+    MessageType::Regular
 }

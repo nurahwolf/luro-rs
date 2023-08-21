@@ -18,10 +18,17 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
 
         match data {
             Some(data) => Ok(data),
-            None => {
+            None => Ok({
                 info!(id = ?id, "guild is not in the cache, fetching from disk");
-                self.driver.get_guild(id.get()).await
-            }
+                let data = self.driver.get_guild(id.get()).await?;
+                match self.guild_data.write() {
+                    Ok(mut guild) => {
+                        guild.insert(*id, data.clone());
+                    }
+                    Err(why) => warn!(why = ?why, "user_data lock is poisoned! Please investigate!")
+                }
+                data
+            })
         }
     }
 }

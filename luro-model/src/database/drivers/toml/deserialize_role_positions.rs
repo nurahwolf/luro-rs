@@ -2,12 +2,13 @@ use std::collections::BTreeMap;
 
 use serde::{de, Deserialize, Deserializer};
 
-pub fn deserialize_toml<'de, D, T>(deserializer: D) -> Result<BTreeMap<usize, T>, D::Error>
+use crate::role::LuroRolePositions;
+
+pub fn deserialize_role_positions<'de, D>(deserializer: D) -> Result<LuroRolePositions, D::Error>
 where
-    D: Deserializer<'de>,
-    T: serde::Deserialize<'de>
+    D: Deserializer<'de>
 {
-    let str_map = BTreeMap::<String, T>::deserialize(deserializer)?;
+    let str_map = BTreeMap::<String, _>::deserialize(deserializer)?;
     let original_len = str_map.len();
     let data = {
         str_map
@@ -19,7 +20,7 @@ where
                     &"a non-negative integer"
                 ))
             })
-            .collect::<Result<BTreeMap<usize, T>, _>>()?
+            .collect::<Result<BTreeMap<_, _>, _>>()?
     };
     // multiple strings could parse to the same int, e.g "0" and "00"
     if data.len() < original_len {

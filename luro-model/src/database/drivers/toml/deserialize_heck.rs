@@ -1,9 +1,10 @@
 use std::collections::BTreeMap;
 
-use luro_model::Stories;
 use serde::{de, Deserialize, Deserializer};
 
-pub fn deserialize_story<'de, D>(deserializer: D) -> Result<Stories, D::Error>
+use crate::heck::Hecks;
+
+pub fn deserialize_heck<'de, D>(deserializer: D) -> Result<Hecks, D::Error>
 where
     D: Deserializer<'de>
 {

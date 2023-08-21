@@ -20,6 +20,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 return Ok(());
             }
         };
+
         let mut embed = self.default_embed(&event.guild_id).await;
         embed.colour(self.accent_colour(&Some(guild_id)).await);
 

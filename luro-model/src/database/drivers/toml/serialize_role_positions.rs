@@ -1,9 +1,11 @@
 use std::collections::BTreeMap;
 
-use luro_model::Stories;
 use serde::Serializer;
 
-pub fn serialize_story<S>(input: &Stories, s: S) -> Result<S::Ok, S::Error>
+use crate::role::LuroRolePositions;
+
+
+pub fn serialize_role_positions<S>(input: &LuroRolePositions, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer
 {
