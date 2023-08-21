@@ -16,9 +16,15 @@ use serde::{de::DeserializeOwned, Serialize};
 use tokio::{fs, io::AsyncReadExt};
 use tracing::{debug, error, warn};
 
-mod deserialize_quotes;
+mod deserialize_heck;
+mod deserialize_story;
+mod deserialize_toml;
 mod driver;
-mod serialize_quotes;
+mod serialize_heck;
+mod serialize_story;
+mod serialize_toml;
+mod toml_deserializer;
+mod toml_serializer;
 
 /// Defaults to the toml driver
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]

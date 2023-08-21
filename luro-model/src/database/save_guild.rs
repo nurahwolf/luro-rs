@@ -18,7 +18,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         };
 
         if ok {
-            self.driver.save_guild(id.get(), guild).await?;
+            self.driver.save_guild(id.get(), guild.clone()).await?;
         }
 
         data

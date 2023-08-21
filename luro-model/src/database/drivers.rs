@@ -34,9 +34,9 @@ pub trait LuroDatabaseDriver: Clone {
     async fn remove_heck(&self, id: usize, nsfw: bool) -> anyhow::Result<()>;
     async fn remove_story(&self, id: usize, nsfw: bool) -> anyhow::Result<()>;
     async fn remove_user(&self, id: u64) -> anyhow::Result<()>;
-    async fn save_guild(&self, id: u64, guild: &LuroGuild) -> anyhow::Result<()>;
-    async fn save_hecks(&self, hecks: &Hecks, nsfw: bool) -> anyhow::Result<()>;
-    async fn save_stories(&self, stories: &Stories, nsfw: bool) -> anyhow::Result<()>;
+    async fn save_guild(&self, id: u64, guild: LuroGuild) -> anyhow::Result<()>;
+    async fn save_hecks(&self, hecks: Hecks, nsfw: bool) -> anyhow::Result<()>;
+    async fn save_stories(&self, stories: Stories, nsfw: bool) -> anyhow::Result<()>;
     async fn save_story(&self, story: &Story, nsfw: bool) -> anyhow::Result<()>;
     async fn save_user(&self, id: u64, user: &LuroUser) -> anyhow::Result<()>;
     async fn get_staff(&self) -> anyhow::Result<LuroUsers>;
