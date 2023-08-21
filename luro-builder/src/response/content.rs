@@ -19,7 +19,8 @@ impl LuroResponse {
 
     #[cfg(feature = "auto-trim")]
     pub fn check_content(&mut self) -> &mut Self {
-        use luro_model::constants::ACCENT_COLOUR;
+        use luro_model::ACCENT_COLOUR;
+
         if let Some(mut content) = self.content.clone() {
             // Can we convert this to an embed?
             if content.len() > 2000 && content.len() < 4096 {

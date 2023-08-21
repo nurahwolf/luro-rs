@@ -1,7 +1,6 @@
 #![feature(async_fn_in_trait)]
 #![feature(let_chains)]
 
-pub mod character_profile;
 use std::collections::{BTreeMap, HashMap};
 
 use message::LuroMessage;

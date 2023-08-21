@@ -178,8 +178,8 @@ impl LuroCommand for MarryCommands {
                         proposal
                     }
                 );
-                ctx.framework.database.modify_user(&Id::new(proposer.id), &proposer).await?;
-                ctx.framework.database.modify_user(&Id::new(proposee.id), &proposee).await?;
+                ctx.framework.database.save_user(&Id::new(proposer.id), &proposer).await?;
+                ctx.framework.database.save_user(&Id::new(proposee.id), &proposee).await?;
 
                 ctx.respond(|response| {
                     response

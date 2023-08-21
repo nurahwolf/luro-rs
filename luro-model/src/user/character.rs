@@ -61,14 +61,17 @@ pub struct CharacterProfile {
     /// A short description for this character
     #[serde(default)]
     pub short_description: String,
-    #[serde(default)]
     /// A HTTP / HTTPS link to an icon used for their main appearance
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub icon: String,
+    /// A HTTP / HTTPS link to an icon used for their main appearance
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nsfw_icon: Option<String>,
     /// A detailed description for this character
     #[serde(default)]
     pub description: String,
     /// A detailed description for this character that is only shown in the NSFW profile
-    #[serde(skip_serializing_if = "Option::is_none", default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nsfw_description: Option<String>,
     /// Set to true if there are NSFW details present
     #[serde(default)]

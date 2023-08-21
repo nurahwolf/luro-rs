@@ -1,5 +1,4 @@
 use luro_dice::{DiceRoll, RollResult, RollValue};
-use luro_dice::{DiceRoll, RollResult, RollValue};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};

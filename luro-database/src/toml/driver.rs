@@ -9,7 +9,10 @@ use luro_model::{
     user::{LuroUser, LuroUsers},
     CommandManager, Quotes, Stories, BOT_OWNERS
 };
-use std::{collections::{BTreeMap, HashMap}, path::Path};
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::Path
+};
 use twilight_model::application::interaction::Interaction;
 
 use super::{

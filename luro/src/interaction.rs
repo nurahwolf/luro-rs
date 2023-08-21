@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use luro_builder::embed::EmbedBuilder;
 use luro_builder::response::LuroResponse;
-use luro_database::toml::TomlDatabaseDriver;
 use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::debug;
 use tracing::error;
@@ -26,8 +25,6 @@ mod parse_modal_field;
 mod parsers;
 mod send_log_message;
 mod user_utils;
-
-pub type LuroContext = LuroSlash<TomlDatabaseDriver>;
 
 /// Some nice stuff about formatting a response, ready to send via twilight's client
 #[derive(Clone, Debug)]

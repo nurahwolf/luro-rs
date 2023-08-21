@@ -1,3 +1,6 @@
+use anyhow::Context;
+use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::user::character::{Fetish, FetishCategory, FetishList};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -40,13 +43,15 @@ impl LuroCommand for Add {
         let character = match user_data.characters.get_mut(&self.name) {
             Some(character) => {
                 let test = character.fetishes.len() + 1;
-                character.fetishes.insert(test, Fetish {
-                    category: self.fetish,
-                    description: self.description,
-                    list: FetishList::Custom,
-                });
+                character.fetishes.insert(
+                    test,
+                    Fetish {
+                        category: self.fetish,
+                        description: self.description,
+                        list: FetishList::Custom
+                    }
+                );
                 character.clone()
-            }
             }
             None => {
                 let mut characters = String::new();
@@ -55,7 +60,10 @@ impl LuroCommand for Add {
                     writeln!(characters, "- {character_name}: {}", character.short_description)?
                 }
 
-                let response = format!("I'm afraid that you have no characters with the name `{}`! You have the following characters:\n{}", self.name, characters);
+                let response = format!(
+                    "I'm afraid that you have no characters with the name `{}`! You have the following characters:\n{}",
+                    self.name, characters
+                );
                 return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };

@@ -1,4 +1,5 @@
 use anyhow::Context;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::AutocompleteValue;
 use twilight_interactions::command::CommandModel;
@@ -17,7 +18,7 @@ pub struct CharacterSendAutocomplete {
 }
 
 impl CharacterSendAutocomplete {
-    pub async fn run(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    pub async fn run<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let user_id = ctx
             .interaction
             .author_id()
@@ -68,7 +69,7 @@ pub struct CharacterSend {
 }
 
 impl LuroCommand for CharacterSend {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let user_id = ctx
             .interaction
             .author_id()

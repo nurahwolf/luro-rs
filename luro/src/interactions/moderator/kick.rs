@@ -108,19 +108,19 @@ impl LuroCommand for Kick {
         punished_user.moderation_actions.push(UserActions {
             action_type: vec![UserActionType::Kick],
             guild_id: Some(guild_id),
-            reason,
+            reason: reason.clone(),
             responsible_user: author_user_id
         });
-        ctx.framework.database.mod_user(&punished_user_id, &punished_user).await?;
+        ctx.framework.database.save_user(&punished_user_id, &punished_user).await?;
 
         // If an alert channel is defined, send a message there
         ctx.framework
-            .send_log_channel(&Some(guild_id), embed.into(), LuroLogChannel::Moderator)
+            .send_log_channel(&Some(guild_id), embed.clone().into(), LuroLogChannel::Moderator)
             .await?;
 
-        let mut reward = ctx.framework.database.get_user(&author_user.id).await?;
+        let mut reward = ctx.framework.database.get_user(&author_user_id).await?;
         reward.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&author_user.id, &reward).await?;
+        ctx.framework.database.save_user(&author_user_id, &reward).await?;
 
         // Record the punishment
         punished_user.moderation_actions.push(UserActions {

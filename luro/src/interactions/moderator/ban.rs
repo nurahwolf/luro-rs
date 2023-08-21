@@ -5,15 +5,12 @@ use luro_model::{
     legacy::guild_permissions::GuildPermissions,
     user::{actions::UserActions, actions_type::UserActionType}
 };
-use std::convert::TryInto;
 
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::{guild::Permissions, id::Id};
 
-use crate::{interaction::LuroSlash, interactions::moderator::reason, luro_command::LuroCommand};
-
-use super::Reason;
+use super::{reason, Reason};
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
 #[command(name = "ban", desc = "Ban a user", dm_permission = false)]

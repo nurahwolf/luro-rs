@@ -23,8 +23,8 @@ use self::{
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
     say::SayCommand, story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand
 };
-use crate::interactions::character::send::CharacterSendAutocomplete;
 use crate::interaction::LuroSlash;
+use crate::interactions::character::send::CharacterSendAutocomplete;
 use crate::interactions::heck::add::HeckAddCommand;
 
 use anyhow::bail;
@@ -241,7 +241,7 @@ enum Autocomplete {
 }
 
 impl Autocomplete {
-    async fn run(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
             Autocomplete::Create(cmd) | Autocomplete::Icon(cmd) | Autocomplete::Send(cmd) | Autocomplete::Proxy(cmd) => {
                 cmd.run(ctx).await

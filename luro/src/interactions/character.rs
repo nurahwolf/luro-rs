@@ -16,8 +16,6 @@ use self::{create::Create, fetish::Fetish, icon::Icon, profile::Profile, proxy::
 mod create;
 mod fetish;
 mod icon;
-mod fetish;
-mod icon;
 mod profile;
 mod proxy;
 pub mod send;
@@ -101,7 +99,11 @@ impl LuroCommand for Character {
         ctx.respond(|response| response.add_embed(embed)).await
     }
 
-    async fn handle_component<D: LuroDatabaseDriver>(self, _data: Box<MessageComponentInteractionData>, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn handle_component<D: LuroDatabaseDriver>(
+        self,
+        _data: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>
+    ) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let message = ctx
             .interaction

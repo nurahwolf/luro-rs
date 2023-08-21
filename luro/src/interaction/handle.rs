@@ -1,5 +1,5 @@
 use luro_model::database::drivers::LuroDatabaseDriver;
-use tracing::{error, warn};
+use tracing::error;
 use twilight_model::application::interaction::InteractionType;
 
 use super::LuroSlash;

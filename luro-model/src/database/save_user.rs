@@ -6,9 +6,7 @@ use crate::user::LuroUser;
 use super::{drivers::LuroDatabaseDriver, LuroDatabase};
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
-
-
-        /// Saves a user, overwriting whatever value used to exist
+    /// Saves a user, overwriting whatever value used to exist
     /// Returns the old users data if it existed
     pub async fn save_user(&self, id: &Id<UserMarker>, user: &LuroUser) -> anyhow::Result<Option<LuroUser>> {
         let (ok, data) = match self.user_data.write() {

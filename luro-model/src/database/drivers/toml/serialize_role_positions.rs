@@ -4,7 +4,6 @@ use serde::Serializer;
 
 use crate::role::LuroRolePositions;
 
-
 pub fn serialize_role_positions<S>(input: &LuroRolePositions, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer

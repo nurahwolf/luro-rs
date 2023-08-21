@@ -3,6 +3,7 @@ use crate::{
     interactions::moderator::{reason, Reason},
     luro_command::LuroCommand
 };
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::id::Id;
@@ -39,7 +40,7 @@ pub enum TimeToBan {
 }
 
 impl LuroCommand for FakeBan {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
         let punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
         let mut response = ctx.acknowledge_interaction(false).await?;

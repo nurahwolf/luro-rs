@@ -1,3 +1,4 @@
+use crate::interactions::LuroDatabaseDriver;
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -20,7 +21,7 @@ pub struct Guild {
 }
 
 impl LuroCommand for Guild {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut luro_guild = String::new();
         let mut guild_description = String::new();
         let guild_id = match self.guild {
@@ -31,10 +32,10 @@ impl LuroCommand for Guild {
         let guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
         let mut embed = ctx.default_embed().await;
         embed
-            .title(&guild_settings.guild_name)
+            .title(&guild_settings.name)
             .colour(guild_settings.accent_colour_custom.unwrap_or(guild_settings.accent_colour));
 
-        writeln!(luro_guild, "- Guild Name: {}", &guild_settings.guild_name)?;
+        writeln!(luro_guild, "- Guild Name: {}", &guild_settings.name)?;
         if !guild_settings.commands.is_empty() {
             writeln!(luro_guild, "- Guild Commands: {:#?}", guild_settings.commands)?;
         }
