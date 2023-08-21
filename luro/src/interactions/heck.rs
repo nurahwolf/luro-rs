@@ -39,16 +39,6 @@ pub enum HeckCommands {
     Info(HeckInfo)
 }
 
-#[cfg(not(feature = "toml-driver"))]
-fn format_heck_id(input: usize) -> usize {
-    input
-}
-
-#[cfg(feature = "toml-driver")]
-fn format_heck_id(input: usize) -> String {
-    input.to_string()
-}
-
 impl LuroCommand for HeckCommands {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // Call the appropriate subcommand.

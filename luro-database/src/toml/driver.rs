@@ -85,7 +85,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
         };
 
         let data: Hecks = Self::get(path).await?;
-        let data = match data.get(&id) {
+        let data = match data.get(id) {
             Some(data) => Ok(data.clone()),
             None => Err(anyhow!("Heck with ID {id} not present!"))
         };
@@ -109,7 +109,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
         };
 
         let data: Stories = Self::get(path).await?;
-        let story = match data.get(&id) {
+        let story = match data.get(id) {
             Some(story) => Ok(story.clone()),
             None => Err(anyhow!("Story with ID {id} not present!"))
         };

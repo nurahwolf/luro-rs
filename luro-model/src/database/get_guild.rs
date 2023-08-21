@@ -9,7 +9,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get a user from the cache, otherwise gets the user from the database
     pub async fn get_guild(&self, id: &Id<GuildMarker>) -> anyhow::Result<LuroGuild> {
         let data = match self.guild_data.read() {
-            Ok(data) => data.get(id).map(|d| d.clone()),
+            Ok(data) => data.get(id).cloned(),
             Err(why) => {
                 warn!(why = ?why, "guild_data lock is poisoned! Please investigate!");
                 None

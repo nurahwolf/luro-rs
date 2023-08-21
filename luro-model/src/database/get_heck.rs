@@ -9,8 +9,8 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     pub async fn get_heck(&self, id: &usize, nsfw: bool) -> anyhow::Result<Option<Heck>> {
         let data = match self.hecks.read() {
             Ok(data) => match nsfw {
-                true => data.nsfw.get(id).map(|d| d.clone()),
-                false => data.sfw.get(id).map(|d| d.clone())
+                true => data.nsfw.get(id).cloned(),
+                false => data.sfw.get(id).cloned()
             },
             Err(why) => {
                 warn!(why = ?why, "hecks lock is poisoned! Please investigate!");
@@ -30,7 +30,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
                     },
                     Err(why) => warn!(why = ?why, "hecks lock is poisoned! Please investigate!")
                 }
-                data.get(id).map(|d| d.clone())
+                data.get(id).cloned()
             }
         })
     }

@@ -9,7 +9,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get a user from the cache, otherwise gets the user from the database
     pub async fn get_user(&self, id: &Id<UserMarker>) -> anyhow::Result<LuroUser> {
         let data = match self.user_data.read() {
-            Ok(data) => data.get(id).map(|d| d.clone()),
+            Ok(data) => data.get(id).cloned(),
             Err(why) => {
                 warn!(why = ?why, "user_data lock is poisoned! Please investigate!");
                 None

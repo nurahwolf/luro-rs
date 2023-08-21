@@ -15,15 +15,6 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::COLOUR_DANGER;
 
-#[cfg(not(feature = "toml-driver"))]
-fn format_story_id(input: usize) -> usize {
-    input
-}
-
-#[cfg(feature = "toml-driver")]
-fn format_story_id(input: usize) -> String {
-    input.to_string()
-}
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
 use luro_model::database::drivers::LuroDatabaseDriver;

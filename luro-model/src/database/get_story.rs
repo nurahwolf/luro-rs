@@ -9,8 +9,8 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     pub async fn get_story(&self, id: &usize, nsfw: bool) -> anyhow::Result<Story> {
         let data = match self.stories.read() {
             Ok(data) => match nsfw {
-                true => data.nsfw.get(id).map(|d| d.clone()),
-                false => data.sfw.get(id).map(|d| d.clone())
+                true => data.nsfw.get(id).cloned(),
+                false => data.sfw.get(id).cloned()
             },
 
             Err(why) => {
