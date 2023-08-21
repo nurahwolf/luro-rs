@@ -1,8 +1,8 @@
-use tracing::warn;
-use twilight_interactions::command::{CommandModel, CreateCommand};
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
 use luro_model::database::drivers::LuroDatabaseDriver;
+use tracing::warn;
+use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -19,13 +19,13 @@ impl LuroCommand for OwnerLoadUsers {
         let mut errors = 0;
 
         for user in ctx.framework.twilight_cache.iter().users() {
-            let mut user_data = match ctx.framework.database.get_user(&user.id).await {
+            let mut user_data = match ctx.framework.database.get_user(&user.id, &ctx.framework.twilight_client).await {
                 Ok(data) => data,
                 Err(why) => {
                     warn!(why = ?why, "Failed to fetch {:#?} user for the following reason:", user.id);
                     errors += 1;
                     continue;
-                },
+                }
             };
 
             user_data.update_user(&user);

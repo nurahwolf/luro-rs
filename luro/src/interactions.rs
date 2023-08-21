@@ -14,7 +14,6 @@ use self::dice::DiceCommands;
 use self::info::InfoCommands;
 use self::luro::LuroCommands;
 use self::marry::MarryCommands;
-use self::moderator::warn::ModeratorWarnCommand;
 use self::ping::PingCommand;
 use self::quote::QuoteCommands;
 use self::roles::RoleCommands;
@@ -211,7 +210,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             "character" => Character::handle_model(data, self).await,
             "heck-add" => HeckAddCommand::handle_model(data, self).await,
             "story-add" => StoryCommand::handle_model(data, self).await,
-            "mod-warn" => ModeratorWarnCommand::handle_model(data, self).await,
+            "mod-warn" => ModeratorCommands::handle_model(data, self).await,
             "modify-embed" => OwnerCommands::handle_model(data, self).await,
             name => {
                 warn!(name = name, "received unknown component");

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use anyhow::Context;
 use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::warn;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::audit_log::AuditLogEventType};
@@ -12,6 +13,12 @@ mod member_kick;
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn audit_log_handler(self: Arc<Self>, event: Box<GuildAuditLogEntryCreate>) -> anyhow::Result<()> {
+        let punished_user_id = &event.target_id.context("No user ID for the punished user")?.cast();
+        let mut punished_user = self.database.get_user(punished_user_id, &self.twilight_client).await?;
+        let mut moderator = self
+            .database
+            .get_user(&event.user_id.context("No user ID for the ban author")?, &self.twilight_client)
+            .await?;
         // Make sure this interaction was a guild
         let guild_id = match event.guild_id {
             Some(guild_id) => guild_id,
@@ -20,33 +27,28 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 return Ok(());
             }
         };
-
-        let mut embed = self.default_embed(&event.guild_id).await;
-        embed.colour(self.accent_colour(&Some(guild_id)).await);
-
-        match event.user_id {
-            Some(action_user_id) => {
-                {
-                    if action_user_id == self.database.current_user.read().unwrap().id {
-                        // Event done by the bot, so no need to report it again
-                        return Ok(());
-                    }
-                }
-
-                let luro_user = self.database.get_user(&action_user_id).await?;
-                embed.author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()))
-            }
-            None => embed.footer(|footer| footer.text("There is no record who performed this action."))
-        };
-
         let guild = self.twilight_client.guild(guild_id).await?.model().await?;
+
+        if moderator.id() == self.database.current_user.read().unwrap().id {
+            // Event done by the bot, so no need to report it again
+            return Ok(());
+        }
+
         match event.action_type {
-            AuditLogEventType::MemberBanAdd => self.subhandle_member_ban_add(embed, &guild, &event).await,
-            AuditLogEventType::MemberKick => self.subhandle_member_kick(embed, &guild, &event).await,
-            AuditLogEventType::MemberBanRemove => self.subhandle_member_ban_remove(embed, &guild, &event).await,
+            AuditLogEventType::MemberBanAdd => {
+                self.subhandle_member_ban_add(&guild, &event, &mut moderator, &mut punished_user)
+                    .await
+            }
+            AuditLogEventType::MemberKick => {
+                self.subhandle_member_kick(&guild, &event, &mut moderator, &mut punished_user)
+                    .await
+            }
+            AuditLogEventType::MemberBanRemove => {
+                self.subhandle_member_ban_remove(&guild, &event, &mut moderator, &punished_user)
+                    .await
+            }
             _ => {
                 let mut guild_settings = self.database.get_guild(&guild_id).await?;
-                let guild = self.twilight_client.guild(guild_id).await?.model().await?;
                 guild_settings.update_guild(guild);
                 self.database.save_guild(&guild_id, &guild_settings).await?;
                 Ok(())

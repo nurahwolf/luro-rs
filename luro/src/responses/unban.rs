@@ -5,20 +5,20 @@ use twilight_model::{
     id::{marker::GuildMarker, Id}
 };
 
-use crate::{framework::Framework, interaction::LuroSlash, COLOUR_DANGER};
+use crate::{framework::Framework, interaction::LuroSlash, COLOUR_SUCCESS};
 
 impl<D: LuroDatabaseDriver> LuroSlash<D> {
-    pub async fn kick_response(
+    pub async fn unbanned_response(
         &self,
         guild: &Guild,
         punished_user: &LuroUser,
-        reason: Option<&str>,
+        reason: &String,
         success: bool
     ) -> anyhow::Result<()> {
         let moderator = self.get_interaction_author(&self.interaction).await?;
         let mut embed = self
             .framework
-            .kick_embed(&guild.name, &guild.id, &moderator, punished_user, reason);
+            .unbanned_embed(&guild.name, &guild.id, &moderator, punished_user, Some(reason));
 
         if success {
             embed.create_field("DM Sent", "Successful", true);
@@ -32,7 +32,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     /// An embed formatted to show a banned user
-    pub fn kick_embed(
+    pub fn unbanned_embed(
         &self,
         guild_name: &str,
         guild_id: &Id<GuildMarker>,
@@ -43,12 +43,12 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         let mut embed = EmbedBuilder::default();
 
         embed
-            .colour(COLOUR_DANGER)
-            .title(format!("👢 Kicked from {}", guild_name))
+            .colour(COLOUR_SUCCESS)
+            .title(format!("🔓 Unbanned from {}", guild_name))
             .author(|author| {
                 author
                     .icon_url(moderator.avatar())
-                    .name(format!("Kicked by {} - {}", moderator.username(), moderator.id))
+                    .name(format!("Unbanned by {} - {}", moderator.username(), moderator.id))
             })
             .create_field("Guild ID", &guild_id.to_string(), true)
             .thumbnail(|thumbnail| thumbnail.url(punished_user.avatar()));

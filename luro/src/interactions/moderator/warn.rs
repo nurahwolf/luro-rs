@@ -1,22 +1,15 @@
 use crate::interaction::LuroSlash;
 use luro_model::database::drivers::LuroDatabaseDriver;
 
-use anyhow::Context;
-use luro_builder::embed::EmbedBuilder;
-use luro_model::guild::log_channel::LuroLogChannel;
-use luro_model::user::actions::UserActions;
-use luro_model::user::actions_type::UserActionType;
 use twilight_model::http::interaction::InteractionResponseType;
 
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::application::interaction::modal::ModalInteractionData;
+
 use twilight_model::channel::message::component::{ActionRow, TextInput, TextInputStyle};
 use twilight_model::channel::message::Component;
 use twilight_model::guild::Permissions;
-use twilight_model::id::marker::UserMarker;
-use twilight_model::id::Id;
 
 use crate::luro_command::LuroCommand;
 
@@ -42,12 +35,12 @@ impl LuroCommand for ModeratorWarnCommand {
         let user_id = self.user.resolved.id;
 
         if !self.new {
-            let user_data = ctx.framework.database.get_user(&user_id).await?;
+            let user_data = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
             if user_data.warnings.is_empty() {
                 return ctx.respond(|r| r.content("No warnings for that user!")).await;
             }
 
-            let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
+            let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap(), &ctx.framework.twilight_client).await?;
             let mut warnings_formatted = String::new();
             for (warning, user_id) in &user_data.warnings {
                 writeln!(warnings_formatted, "Warning by <@{user_id}>```{warning}```")?
@@ -102,65 +95,5 @@ impl LuroCommand for ModeratorWarnCommand {
                 .response_type(InteractionResponseType::Modal)
         })
         .await
-    }
-
-    async fn handle_model<D: LuroDatabaseDriver>(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let author = ctx.interaction.author().context("Expected to get interaction author")?;
-        let warning = ctx.parse_modal_field_required(&data, "mod-warn-text")?;
-        let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
-        let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
-
-        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
-
-        let mut user_data = ctx.framework.database.get_user(&user_id).await?;
-        user_data.warnings.push((warning.to_owned(), author.id));
-        ctx.framework.database.save_user(&user_id, &user_data).await?;
-
-        let mut embed = EmbedBuilder::default();
-        embed
-            .description(format!("Warning Created for <@{user_id}>\n```{warning}```"))
-            .colour(ctx.accent_colour().await)
-            .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
-            .author(|author| {
-                author
-                    .name(format!("Warning by {}", luro_user.name()))
-                    .icon_url(luro_user.avatar())
-            });
-
-        match ctx.framework.twilight_client.create_private_channel(user_id).await {
-            Ok(channel) => {
-                let channel = channel.model().await?;
-                let victim_dm = ctx
-                    .framework
-                    .twilight_client
-                    .create_message(channel.id)
-                    .embeds(&[embed.clone().into()])
-                    .await;
-                match victim_dm {
-                    Ok(_) => embed.create_field("DM Sent", "Successful", true),
-                    Err(_) => embed.create_field("DM Sent", "Failed", true)
-                }
-            }
-            Err(_) => embed.create_field("DM Sent", "Failed", true)
-        };
-
-        ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))
-            .await?;
-
-        let mut reward = ctx.framework.database.get_user(&author.id).await?;
-        reward.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&author.id, &reward).await?;
-
-        // Record the punishment
-        let mut warned = ctx.framework.database.get_user(&user_id).await?;
-        warned.moderation_actions.push(UserActions {
-            action_type: vec![UserActionType::Warn],
-            guild_id: ctx.interaction.guild_id,
-            reason: warning.to_owned(),
-            responsible_user: author.id
-        });
-        ctx.framework.database.save_user(&user_id, &warned).await?;
-
-        ctx.respond(|response| response.add_embed(embed)).await
     }
 }

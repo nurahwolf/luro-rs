@@ -47,7 +47,7 @@ impl LuroCommand for RoleCommands {
 
         let mut embed = EmbedBuilder::default();
         let accent_colour = ctx.accent_colour().await;
-        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
+        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap(), &ctx.framework.twilight_client).await?;
 
         let guild_id = ctx.interaction.guild_id.unwrap();
         let member = ctx
@@ -270,7 +270,7 @@ pub struct Menu {
 impl LuroCommand for Menu {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author_id().unwrap();
-        let luro_user = ctx.framework.database.get_user(&interaction_author).await?;
+        let luro_user = ctx.framework.database.get_user(&interaction_author, &ctx.framework.twilight_client).await?;
 
         let mut owner_match = false;
 

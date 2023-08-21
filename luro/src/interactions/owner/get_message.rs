@@ -30,7 +30,7 @@ impl LuroCommand for OwnerGetMessage {
             Some(user) => ctx
                 .framework
                 .database
-                .get_user(&user.resolved.id)
+                .get_user(&user.resolved.id, &ctx.framework.twilight_client)
                 .await?
                 .messages
                 .get(&message_id)
@@ -57,7 +57,7 @@ impl LuroCommand for OwnerGetMessage {
 
         match luro_message {
             Some(message) => {
-                let user = ctx.framework.database.get_user(&message.author).await?;
+                let user = ctx.framework.database.get_user(&message.author, &ctx.framework.twilight_client).await?;
 
                 let toml = toml::to_string_pretty(&message)?;
                 embed

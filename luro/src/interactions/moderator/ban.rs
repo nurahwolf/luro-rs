@@ -46,15 +46,14 @@ pub enum TimeToBan {
 impl LuroCommand for Ban {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
-        let author_user_id = interaction.author_id().unwrap();
-        let mut author_user = ctx.framework.database.get_user(&author_user_id).await?;
-        let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
+        let mut moderator = ctx.get_interaction_author(interaction).await?;
+        let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id, &ctx.framework.twilight_client).await?;
         let mut response = ctx.acknowledge_interaction(false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
         let permissions = GuildPermissions::new(&ctx.framework.twilight_client, &guild_id).await?;
         let author_member = interaction.member.as_ref().unwrap();
-        let author_permissions = permissions.member(author_user_id, &author_member.roles).await?;
+        let author_permissions = permissions.member(moderator.id(), &author_member.roles).await?;
         let bot_permissions = permissions.current_member().await?;
         let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
         let punished_user_id = Id::new(punished_user.id);
@@ -68,12 +67,6 @@ impl LuroCommand for Ban {
             TimeToBan::ThreeDays => "Previous 3 Days".to_string(),
             TimeToBan::SevenDays => "Previous 7 Days".to_string()
         };
-
-        // Permission checks
-        if reason.is_empty() {
-            response.content("You need to specify a reason, dork!").ephemeral();
-            return ctx.send_respond(response).await;
-        }
 
         if !bot_permissions.guild().contains(Permissions::BAN_MEMBERS) {
             return ctx.bot_missing_permission_response(&"BAN_MEMBERS".to_owned()).await;
@@ -101,21 +94,28 @@ impl LuroCommand for Ban {
         };
 
         // Checks passed, now let's action the user
-        let mut embed = ctx.ban_embed(&guild, &punished_user, &reason, &period_string).await?;
-        let punished_user_dm = match ctx.framework.twilight_client.create_private_channel(punished_user_id).await {
-            Ok(channel) => channel.model().await?,
-            Err(_) => return ctx.ban_response(&guild, &punished_user, &reason, &period_string, false).await
-        };
+        let mut embed = ctx.framework.ban_embed(
+            &guild.name,
+            &guild_id,
+            &moderator,
+            &punished_user,
+            reason.as_deref(),
+            Some(&period_string)
+        );
+        match ctx.framework.twilight_client.create_private_channel(punished_user.id()).await {
+            Ok(channel) => {
+                let victim_dm = ctx
+                    .framework
+                    .twilight_client
+                    .create_message(channel.model().await?.id)
+                    .embeds(&[embed.clone().into()])
+                    .await;
 
-        let victim_dm = ctx
-            .framework
-            .twilight_client
-            .create_message(punished_user_dm.id)
-            .embeds(&[embed.clone().into()])
-            .await;
-
-        match victim_dm {
-            Ok(_) => embed.create_field("DM Sent", "Successful", true),
+                match victim_dm {
+                    Ok(_) => embed.create_field("DM Sent", "Successful", true),
+                    Err(_) => embed.create_field("DM Sent", "Failed", true)
+                }
+            }
             Err(_) => embed.create_field("DM Sent", "Failed", true)
         };
 
@@ -123,20 +123,20 @@ impl LuroCommand for Ban {
         ctx.send_respond(response).await?;
 
         let ban = ctx.framework.twilight_client.create_ban(guild_id, punished_user_id);
-        match reason.is_empty() {
-            true => ban.delete_message_seconds(self.purge as u32).await?,
-            false => ban.delete_message_seconds(self.purge as u32).reason(&reason).await?
+        match reason {
+            None => ban.delete_message_seconds(self.purge as u32).await?,
+            Some(ref reason) => ban.delete_message_seconds(self.purge as u32).reason(reason).await?
         };
 
-        author_user.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&author_user_id, &author_user).await?;
+        moderator.moderation_actions_performed += 1;
+        ctx.framework.database.save_user(&moderator.id(), &moderator).await?;
 
         // Record the punishment
         punished_user.moderation_actions.push(UserActions {
             action_type: vec![UserActionType::Ban],
             guild_id: Some(guild_id),
             reason,
-            responsible_user: author_user_id
+            responsible_user: moderator.id()
         });
         ctx.framework.database.save_user(&punished_user_id, &punished_user).await?;
 

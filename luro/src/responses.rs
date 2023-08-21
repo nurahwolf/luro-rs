@@ -17,5 +17,6 @@ mod thread_created;
 mod thread_deleted;
 mod thread_update;
 mod unable_to_get_guild;
+pub mod unban;
 mod unknown_command;
 mod user_hierarchy;

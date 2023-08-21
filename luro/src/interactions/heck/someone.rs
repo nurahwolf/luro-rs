@@ -34,7 +34,7 @@ impl LuroCommand for HeckSomeoneCommand {
         debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, interaction.author().as_ref().unwrap(), &self.user.resolved).await;
 
-        let luro_user = ctx.framework.database.get_user(&heck.author_id).await?;
+        let luro_user = ctx.framework.database.get_user(&heck.author_id, &ctx.framework.twilight_client).await?;
 
         // Create our response, depending on if the user wants a plaintext heck or not
         if let Some(plaintext) = self.plaintext && plaintext {

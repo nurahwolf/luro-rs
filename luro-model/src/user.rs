@@ -56,6 +56,7 @@ pub struct LuroUser {
     pub locale: Option<String>,
     #[serde(default)]
     pub mfa_enabled: bool,
+    /// The user's raw username.
     #[serde(default)]
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -182,9 +183,11 @@ impl LuroUser {
         self
     }
 
-        /// Update this type from a [CachedMember].
-        pub fn update_cached_member(&mut self, guild_id: &Id<GuildMarker>, member: &CachedMember) -> &mut Self {
-            self.guilds.entry(*guild_id).and_modify(|e|{
+    /// Update this type from a [CachedMember].
+    pub fn update_cached_member(&mut self, guild_id: &Id<GuildMarker>, member: &CachedMember) -> &mut Self {
+        self.guilds
+            .entry(*guild_id)
+            .and_modify(|e| {
                 e.avatar = member.avatar();
                 e.communication_disabled_until = member.communication_disabled_until();
                 e.deaf = member.deaf().unwrap_or_default();
@@ -197,9 +200,10 @@ impl LuroUser {
                 e.pending = member.pending();
                 e.premium_since = member.premium_since();
                 e.role_ids = member.roles().to_vec();
-            }).or_insert(LuroMember::from(member));
-            self
-        }
+            })
+            .or_insert(LuroMember::from(member));
+        self
+    }
 
     /// Update this type from a user.
     pub fn update_user(&mut self, user: &User) -> &mut Self {
@@ -299,12 +303,12 @@ impl LuroUser {
             None => return self.name()
         };
 
-        let guild = match self.guilds.get(guild_id) {
+        let member = match self.guilds.get(guild_id) {
             Some(guild) => guild,
             None => return self.name()
         };
 
-        match &guild.nick {
+        match &member.nick {
             Some(nickname) => nickname.clone(),
             None => self.name()
         }
@@ -317,11 +321,24 @@ impl LuroUser {
     pub fn name(&self) -> String {
         match &self.global_name {
             Some(global_name) => global_name.clone(),
-            None => match self.discriminator == 0 {
-                true => self.name.clone(),
-                false => format!("{}#{}", self.name, self.discriminator)
-            }
+            None => self.username()
         }
+    }
+
+    /// Get's the user's username name
+    ///
+    /// Returns the first match
+    /// Username -> Legacy Username
+    pub fn username(&self) -> String {
+        match self.discriminator == 0 {
+            true => self.name.clone(),
+            false => format!("{}#{}", self.name, self.discriminator)
+        }
+    }
+
+    /// Simply convert a user's u64 ID into an [Id<UserMarker>]
+    pub fn id(&self) -> Id<UserMarker> {
+        Id::new(self.id)
     }
 }
 

@@ -43,7 +43,7 @@ impl LuroCommand for InfoUser {
             Some(ref user) => user.resolved.id,
             None => ctx.interaction.author_id().unwrap()
         };
-        let mut luro_user = ctx.framework.database.get_user(&user_id).await?;
+        let mut luro_user = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
         let user_timestamp = Duration::from_millis(user_id.timestamp().unsigned_abs());
 
         let mut response = LuroResponse::default();
@@ -196,7 +196,12 @@ impl LuroCommand for InfoUser {
                 )?;
             }
             writeln!(user_data_description, "- Typed `{}` characters", luro_user.averagesize)?;
-            writeln!(user_data_description, "- Has said `{}` words with an average length of {}", luro_user.wordcount, luro_user.wordsize.len())?;
+            writeln!(
+                user_data_description,
+                "- Has said `{}` words with an average length of {}",
+                luro_user.wordcount,
+                luro_user.wordsize.len()
+            )?;
 
             if luro_user.moderation_actions_performed != 0 {
                 writeln!(

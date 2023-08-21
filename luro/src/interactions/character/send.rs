@@ -24,7 +24,7 @@ impl CharacterSendAutocomplete {
             .author_id()
             .context("Expected to find the user running this command")?;
 
-        let user_data = ctx.framework.database.get_user(&user_id).await?;
+        let user_data = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
         let choices = match self.name {
             AutocompleteValue::None => user_data
                 .characters
@@ -75,7 +75,7 @@ impl LuroCommand for CharacterSend {
             .author_id()
             .context("Expected to find the user running this command")?;
 
-        let user_data = ctx.framework.database.get_user(&user_id).await?;
+        let user_data = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
         if user_data.characters.is_empty() {
             return ctx
                 .respond(|r| {

@@ -6,7 +6,7 @@ use crate::{models::LuroWebhook, LuroFramework};
 
 pub async fn message_handler(ctx: &LuroFramework, message: MessageCreate) -> anyhow::Result<()> {
     ctx.response_message_modified(&message.clone().into()).await?;
-    let user_data = ctx.database.get_user(&message.author.id).await?;
+    let user_data = ctx.database.get_user(&message.author.id, &ctx.twilight_client).await?;
     let first_word = message.content.split(' ').next().unwrap_or("");
     if let Some(character_name) = user_data.character_prefix.get(first_word) {
         let character = match user_data.characters.get(character_name) {

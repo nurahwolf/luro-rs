@@ -1,9 +1,19 @@
+use anyhow::Context;
+use luro_builder::embed::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
+use twilight_model::{
+    application::interaction::modal::ModalInteractionData,
+    id::{marker::UserMarker, Id}
+};
 
 use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::{
+    database::drivers::LuroDatabaseDriver,
+    guild::log_channel::LuroLogChannel,
+    user::{actions::UserActions, actions_type::UserActionType}
+};
 
-use self::{ban::Ban, kick::Kick, purge::PurgeCommand, settings::GuildSettingsCommand, warn::ModeratorWarnCommand};
+use self::{ban::Ban, kick::Kick, purge::PurgeCommand, settings::GuildSettingsCommand, warn::ModeratorWarnCommand, unban::Unban};
 use crate::luro_command::LuroCommand;
 
 mod assign;
@@ -11,7 +21,8 @@ mod ban;
 mod kick;
 mod purge;
 mod settings;
-pub mod warn;
+mod unban;
+mod warn;
 
 #[derive(CommandOption, CreateOption, Clone, Debug, PartialEq, Eq)]
 pub enum Reason {
@@ -61,7 +72,9 @@ pub enum ModeratorCommands {
     #[command(name = "settings")]
     Setting(GuildSettingsCommand),
     #[command(name = "warn")]
-    Warn(ModeratorWarnCommand)
+    Warn(ModeratorWarnCommand),
+    #[command(name = "unban")]
+    Unban(Unban)
 }
 
 impl LuroCommand for ModeratorCommands {
@@ -72,12 +85,74 @@ impl LuroCommand for ModeratorCommands {
             Self::Kick(command) => command.run_command(ctx).await,
             Self::Purge(command) => command.run_command(ctx).await,
             Self::Setting(command) => command.run_command(ctx).await,
-            Self::Warn(command) => command.run_command(ctx).await
+            Self::Warn(command) => command.run_command(ctx).await,
+            Self::Unban(command) => command.run_command(ctx).await
+
         }
+    }
+
+    async fn handle_model<D: LuroDatabaseDriver>(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+        let author = ctx.interaction.author().context("Expected to get interaction author")?;
+        let warning = ctx.parse_modal_field_required(&data, "mod-warn-text")?;
+        let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
+        let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
+
+        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap(), &ctx.framework.twilight_client).await?;
+
+        let mut user_data = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
+        user_data.warnings.push((warning.to_owned(), author.id));
+        ctx.framework.database.save_user(&user_id, &user_data).await?;
+
+        let mut embed = EmbedBuilder::default();
+        embed
+            .description(format!("Warning Created for <@{user_id}>\n```{warning}```"))
+            .colour(ctx.accent_colour().await)
+            .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
+            .author(|author| {
+                author
+                    .name(format!("Warning by {}", luro_user.name()))
+                    .icon_url(luro_user.avatar())
+            });
+
+        match ctx.framework.twilight_client.create_private_channel(user_id).await {
+            Ok(channel) => {
+                let channel = channel.model().await?;
+                let victim_dm = ctx
+                    .framework
+                    .twilight_client
+                    .create_message(channel.id)
+                    .embeds(&[embed.clone().into()])
+                    .await;
+                match victim_dm {
+                    Ok(_) => embed.create_field("DM Sent", "Successful", true),
+                    Err(_) => embed.create_field("DM Sent", "Failed", true)
+                }
+            }
+            Err(_) => embed.create_field("DM Sent", "Failed", true)
+        };
+
+        ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))
+            .await?;
+
+        let mut reward = ctx.framework.database.get_user(&author.id, &ctx.framework.twilight_client).await?;
+        reward.moderation_actions_performed += 1;
+        ctx.framework.database.save_user(&author.id, &reward).await?;
+
+        // Record the punishment
+        let mut warned = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
+        warned.moderation_actions.push(UserActions {
+            action_type: vec![UserActionType::Warn],
+            guild_id: ctx.interaction.guild_id,
+            reason: Some(warning.to_owned()),
+            responsible_user: author.id
+        });
+        ctx.framework.database.save_user(&user_id, &warned).await?;
+
+        ctx.respond(|response| response.add_embed(embed)).await
     }
 }
 
-pub fn reason(reason: Reason, details: Option<String>) -> String {
+pub fn reason(reason: Reason, details: Option<String>) -> Option<String> {
     let mut reason_string = match reason {
         Reason::ArtScam => "[Art Scam]".to_owned(),
         Reason::Compromised => "[Compromised Account]".to_owned(),
@@ -94,5 +169,8 @@ pub fn reason(reason: Reason, details: Option<String>) -> String {
         }
     }
 
-    reason_string
+    match reason_string.is_empty() {
+        true => None,
+        false => Some(reason_string)
+    }
 }

@@ -5,10 +5,10 @@ use crate::user::character::Fetish;
 
 pub mod deserialize_heck;
 pub mod deserialize_role_positions;
+pub mod deserialize_user_to_id;
+pub mod ok_or_default;
 pub mod serialize_heck;
 pub mod serialize_role_positions;
-pub mod ok_or_default;
-pub mod deserialize_user_to_id;
 
 // Serialise a BTreeMap, changing the key from usize to String
 pub fn serialize_fetish<S>(input: &BTreeMap<usize, Fetish>, serializer: S) -> Result<S::Ok, S::Error>

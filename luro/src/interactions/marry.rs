@@ -120,10 +120,10 @@ impl LuroCommand for MarryCommands {
             .clone()
             .message
             .ok_or_else(|| Error::msg("Unable to find the original message"))?;
-        let mut proposer = ctx.framework.database.get_user(&message.author.id).await?;
+        let mut proposer = ctx.framework.database.get_user(&message.author.id, &ctx.framework.twilight_client).await?;
         let (mut proposee, reason) = match self {
             Self::New(command) => (
-                ctx.framework.database.get_user(&command.marry.resolved.id).await?,
+                ctx.framework.database.get_user(&command.marry.resolved.id, &ctx.framework.twilight_client).await?,
                 command.reason
             ),
             Self::Marriages(_) => return ctx.unknown_command_response().await
@@ -214,7 +214,7 @@ impl LuroCommand for MarryMarriages {
             .colour(ctx.accent_colour().await);
 
         for (user, marriage) in luro_user.marriages.iter() {
-            marriages.push((ctx.framework.database.get_user(user).await?, marriage));
+            marriages.push((ctx.framework.database.get_user(user, &ctx.framework.twilight_client).await?, marriage));
         }
 
         match marriages.is_empty() {
@@ -255,7 +255,7 @@ pub struct MarryNew {
 
 impl LuroCommand for MarryNew {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
+        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap(), &ctx.framework.twilight_client).await?;
         let mut embed = EmbedBuilder::default();
         embed
             .author(|author| {

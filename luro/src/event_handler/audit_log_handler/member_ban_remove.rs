@@ -1,40 +1,24 @@
-use anyhow::Context;
-use luro_builder::embed::EmbedBuilder;
-use luro_model::database::drivers::LuroDatabaseDriver;
-use std::{fmt::Write, sync::Arc};
-use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
+use luro_model::{database::drivers::LuroDatabaseDriver, user::LuroUser};
+use std::sync::Arc;
+use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild};
 
-use crate::{framework::Framework, COLOUR_SUCCESS};
+use crate::framework::Framework;
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn subhandle_member_ban_remove(
         self: &Arc<Self>,
-        mut embed: EmbedBuilder,
         guild: &Guild,
-        event: &GuildAuditLogEntryCreate
+        event: &GuildAuditLogEntryCreate,
+        moderator: &mut LuroUser,
+        punished_user: &LuroUser
     ) -> anyhow::Result<()> {
-        let mut description = String::new();
-        let unbanned_user_id = Id::new(event.target_id.context("No user ID found for unbanned user")?.get());
-        let luro_user = self.database.get_user(&unbanned_user_id).await?;
+        let embed = self.kick_embed(&guild.name, &guild.id, moderator, punished_user, event.reason.as_deref());
 
-        embed
-            .thumbnail(|thumbnail| thumbnail.url(luro_user.avatar()))
-            .colour(COLOUR_SUCCESS)
-            .title(format!("🔓 Unbanned from {}", guild.name));
-        writeln!(
-            description,
-            "**User:** <@{unbanned_user_id}> - `{}`\n**User ID:** `{unbanned_user_id}`",
-            luro_user.name()
-        )?;
+        // Reward the moderator
+        moderator.moderation_actions_performed += 1;
+        self.database.save_user(&moderator.id(), moderator).await?;
 
-        if let Some(reason) = &event.reason {
-            if reason.starts_with("```") {
-                writeln!(description, "{reason}")?
-            } else {
-                writeln!(description, "```{reason}```")?
-            }
-        }
-        embed.description(description);
+        // Send the response
         self.send_moderator_log_channel(&Some(guild.id), embed).await
     }
 }

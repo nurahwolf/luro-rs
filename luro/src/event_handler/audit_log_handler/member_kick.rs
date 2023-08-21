@@ -1,58 +1,36 @@
-use crate::{framework::Framework, COLOUR_DANGER};
-use anyhow::Context;
-use luro_builder::embed::EmbedBuilder;
+use std::sync::Arc;
+
+use crate::framework::Framework;
 use luro_model::{
     database::drivers::LuroDatabaseDriver,
-    user::{actions::UserActions, actions_type::UserActionType}
+    user::{actions::UserActions, actions_type::UserActionType, LuroUser}
 };
-use std::{fmt::Write, sync::Arc};
-use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
+use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild};
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn subhandle_member_kick(
         self: &Arc<Self>,
-        mut embed: EmbedBuilder,
         guild: &Guild,
-        event: &GuildAuditLogEntryCreate
+        event: &GuildAuditLogEntryCreate,
+        moderator: &mut LuroUser,
+        punished_user: &mut LuroUser
     ) -> anyhow::Result<()> {
-        let mut description = String::new();
-        let kicked_user_id = Id::new(event.target_id.context("No user ID found for kicked user")?.get());
-        let luro_user = self.database.get_user(&kicked_user_id).await?;
+        let embed = self.kick_embed(&guild.name, &guild.id, moderator, punished_user, event.reason.as_deref());
 
-        embed
-            .thumbnail(|thumbnail| thumbnail.url(luro_user.avatar()))
-            .colour(COLOUR_DANGER)
-            .title(format!("👢 Kicked from {}", guild.name));
+        // Reward the moderator
+        moderator.moderation_actions_performed += 1;
+        self.database.save_user(&moderator.id(), moderator).await?;
 
-        writeln!(
-            description,
-            "**User:** <@{kicked_user_id}> - `{}`\n**User ID:** `{kicked_user_id}`",
-            luro_user.name()
-        )?;
+        // Record the punishment
+        punished_user.moderation_actions.push(UserActions {
+            action_type: vec![UserActionType::Kick],
+            guild_id: Some(guild.id),
+            reason: event.reason.clone(),
+            responsible_user: moderator.id()
+        });
+        self.database.save_user(&punished_user.id(), punished_user).await?;
 
-        if let Some(reason) = &event.reason {
-            if reason.starts_with("```") {
-                writeln!(description, "{reason}")?
-            } else {
-                writeln!(description, "```{reason}```")?
-            }
-            if let Some(user_id) = &event.user_id {
-                let mut reward = self.database.get_user(user_id).await?;
-                reward.moderation_actions_performed += 1;
-                self.database.save_user(user_id, &reward).await?;
-
-                // Record the punishment
-                let mut banned = self.database.get_user(&kicked_user_id).await?;
-                banned.moderation_actions.push(UserActions {
-                    action_type: vec![UserActionType::Kick],
-                    guild_id: Some(guild.id),
-                    reason: reason.clone(),
-                    responsible_user: kicked_user_id
-                });
-                self.database.save_user(&kicked_user_id, &banned).await?;
-            }
-        }
-        embed.description(description);
+        // Send the response
         self.send_moderator_log_channel(&Some(guild.id), embed).await
     }
 }

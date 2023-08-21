@@ -26,11 +26,11 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     ) -> anyhow::Result<()> {
         let command = command_name.into();
         {
-            let mut user_data = self.framework.database.get_user(user_id).await?;
+            let mut user_data = self.framework.database.get_user(user_id, &self.framework.twilight_client).await?;
             user_data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::PrivilegeEscalation],
                 guild_id: *guild_id,
-                reason: format!("Attempted to run the {} command", &command),
+                reason: Some(format!("Attempted to run the {} command", &command)),
                 responsible_user: *user_id
             });
             self.framework.database.save_user(user_id, &user_data).await?;

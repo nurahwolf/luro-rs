@@ -17,7 +17,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         let mut description = String::new();
         let mut embed = self.default_embed(&message.guild_id).await;
-        let mut user = self.database.get_user(&message.author).await?;
+        let mut user = self.database.get_user(&message.author, &self.twilight_client).await?;
 
         if user.bot {
             debug!("User is a bot");
@@ -28,7 +28,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         match message.source {
             LuroMessageSource::MessageUpdate => {
-                let user_data = match self.database.get_user(&message.author).await {
+                let user_data = match self.database.get_user(&message.author, &self.twilight_client).await {
                     Ok(data) => Some(data),
                     Err(why) => {
                         warn!(why = ?why, "Could not fetch user data!");

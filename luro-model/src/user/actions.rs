@@ -14,7 +14,7 @@ pub struct UserActions {
     /// The guild that the action took place
     pub guild_id: Option<Id<GuildMarker>>,
     /// The reason that the action took place
-    pub reason: String,
+    pub reason: Option<String>,
     /// Who performed this action
     pub responsible_user: Id<UserMarker>
 }

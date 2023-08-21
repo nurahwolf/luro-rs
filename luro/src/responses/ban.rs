@@ -1,20 +1,25 @@
-use anyhow::Error;
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{database::drivers::LuroDatabaseDriver, user::LuroUser};
-use twilight_model::guild::Guild;
+use twilight_model::{
+    guild::Guild,
+    id::{marker::GuildMarker, Id}
+};
 
-use crate::{interaction::LuroSlash, COLOUR_DANGER};
+use crate::{framework::Framework, interaction::LuroSlash, COLOUR_DANGER};
 
 impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn ban_response(
         &self,
         guild: &Guild,
         punished_user: &LuroUser,
-        reason: &String,
+        reason: Option<&str>,
         period: &String,
         success: bool
     ) -> anyhow::Result<()> {
-        let mut embed = self.ban_embed(guild, punished_user, reason, period).await?;
+        let moderator = self.get_interaction_author(&self.interaction).await?;
+        let mut embed = self
+            .framework
+            .ban_embed(&guild.name, &guild.id, &moderator, punished_user, reason, Some(period));
         if success {
             embed.create_field("DM Sent", "Successful", true);
         } else {
@@ -23,42 +28,56 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
 
         self.respond(|r| r.add_embed(embed)).await
     }
+}
 
+impl<D: LuroDatabaseDriver> Framework<D> {
     /// An embed formatted to show a banned user
-    pub async fn ban_embed(
+    pub fn ban_embed(
         &self,
-        guild: &Guild,
+        guild_name: &str,
+        guild_id: &Id<GuildMarker>,
+        moderator: &LuroUser,
         punished_user: &LuroUser,
-        reason: &String,
-        period: &String
-    ) -> Result<EmbedBuilder, Error> {
+        reason: Option<&str>,
+        period: Option<&str>
+    ) -> EmbedBuilder {
         let mut embed = EmbedBuilder::default();
-        let moderator = self.get_interaction_author(&self.interaction).await?;
 
         embed
             .colour(COLOUR_DANGER)
-            .title(format!("Banned from {}", guild.name))
+            .title(format!("🔨 Banned from {}", guild_name))
             .author(|author| {
                 author
-                    .icon_url(punished_user.avatar())
-                    .name(format!("Banned by {} - {}", moderator.name(), moderator.id))
+                    .icon_url(moderator.avatar())
+                    .name(format!("Banned by {} - {}", moderator.username(), moderator.id))
             })
-            .create_field("Purged Messages", period, true)
-            .create_field("Guild ID", &guild.id.to_string(), true)
+            .create_field("Guild ID", &guild_id.to_string(), true)
             .thumbnail(|thumbnail| thumbnail.url(punished_user.avatar()));
 
-        if !reason.is_empty() {
-            embed.description(format!(
-                "**User:** <@{0}> - {1}\n**User ID:** {0}\n```{reason}```",
-                punished_user.id, punished_user.name
-            ));
-        } else {
-            embed.description(format!(
-                "**User:** <@{0}> - {1}\n**User ID:** {0}",
-                punished_user.id, punished_user.name
-            ));
+        if let Some(period) = period {
+            embed.create_field("Purged Messages", period, true);
         }
 
-        Ok(embed)
+        match reason {
+            Some(reason) => {
+                if reason.starts_with("```") {
+                    embed.description(format!(
+                        "**User:** <@{0}> - {1}\n**User ID:** {0}\n{reason}",
+                        punished_user.id, punished_user.name
+                    ))
+                } else {
+                    embed.description(format!(
+                        "**User:** <@{0}> - {1}\n**User ID:** {0}\n```{reason}```",
+                        punished_user.id, punished_user.name
+                    ))
+                }
+            }
+            None => embed.description(format!(
+                "**User:** <@{0}> - {1}\n**User ID:** {0}",
+                punished_user.id, punished_user.name
+            ))
+        };
+
+        embed
     }
 }

@@ -42,7 +42,8 @@ pub enum TimeToBan {
 impl LuroCommand for FakeBan {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
-        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
+        let moderator = ctx.get_interaction_author(interaction).await?;
+        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id, &ctx.framework.twilight_client).await?;
         let mut response = ctx.acknowledge_interaction(false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
@@ -59,17 +60,22 @@ impl LuroCommand for FakeBan {
             TimeToBan::SevenDays => "Previous 7 Days".to_string()
         };
 
-        // Permission checks
-        if reason.is_empty() {
-            response.content("You need to specify a reason, dork!").ephemeral();
-            return ctx.send_respond(response).await;
-        }
-
         // Checks passed, now let's action the user
-        let mut embed = ctx.ban_embed(&guild, &punished_user, &reason, &period_string).await?;
+        let mut embed = ctx.framework.ban_embed(
+            &guild.name,
+            &guild_id,
+            &moderator,
+            &punished_user,
+            reason.as_deref(),
+            Some(&period_string)
+        );
         let punished_user_dm = match ctx.framework.twilight_client.create_private_channel(punished_user_id).await {
             Ok(channel) => channel.model().await?,
-            Err(_) => return ctx.ban_response(&guild, &punished_user, &reason, &period_string, false).await
+            Err(_) => {
+                return ctx
+                    .ban_response(&guild, &punished_user, reason.as_deref(), &period_string, false)
+                    .await
+            }
         };
 
         let victim_dm = ctx

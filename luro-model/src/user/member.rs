@@ -135,7 +135,7 @@ impl From<&CachedMember> for LuroMember {
             pending: member.pending(),
             premium_since: member.premium_since(),
             role_ids: member.roles().to_vec(),
-            permissions: Default::default(),
+            permissions: Default::default()
         }
     }
 }
