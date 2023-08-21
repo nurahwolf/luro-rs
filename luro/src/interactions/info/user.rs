@@ -198,9 +198,9 @@ impl LuroCommand for InfoUser {
             writeln!(user_data_description, "- Typed `{}` characters", luro_user.averagesize)?;
             writeln!(
                 user_data_description,
-                "- Has said `{}` words with an average length of {}",
+                "- Has said `{}` words with an average length of {} characters per word",
                 luro_user.wordcount,
-                luro_user.wordsize.len()
+                luro_user.averagesize.checked_div(luro_user.wordcount).unwrap_or(0)
             )?;
 
             if luro_user.moderation_actions_performed != 0 {
