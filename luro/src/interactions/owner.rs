@@ -1,3 +1,5 @@
+use luro_model::BOT_OWNERS;
+use tracing::warn;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::modal::ModalInteractionData;
 use twilight_model::id::Id;
@@ -69,18 +71,17 @@ pub enum OwnerCommands {
 impl LuroCommand for OwnerCommands {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author().unwrap();
-        let mut owner_match = false;
 
-        // We are using global data for this one in case an owner was removed from the application live
-
-        for (id, _) in ctx.framework.database.get_staff().await? {
-            if interaction_author.id == id {
-                owner_match = true
-            }
-        }
+        let staff = match ctx.framework.database.get_staff().await {
+            Ok(data) => data.into_iter().map(|data|data.0).collect(),
+            Err(why) => {
+                warn!(why = ?why, "Failed to load staff from database, falling back to hardcoded staff members");
+                BOT_OWNERS.to_vec()
+            },
+        };
 
         // If we don't have a match, bitch at the user
-        if !owner_match {
+        if !staff.contains(&interaction_author.id) {
             return ctx
                 .not_owner_response(
                     &interaction_author.id,

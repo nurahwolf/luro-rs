@@ -17,7 +17,7 @@ fn internal_error_embed(error: Error) -> EmbedBuilder {
     embed
         .title("It's fucked")
         .colour(COLOUR_DANGER)
-        .description(format!("```{:#?}```", error.to_string()))
+        .description(format!("```rs\n{}```", error))
         .footer(|footer| footer.text("Okay, Houston, I believe we've had a problem here ..."));
     embed
 }

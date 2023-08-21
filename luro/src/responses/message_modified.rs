@@ -17,10 +17,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         let mut description = String::new();
         let mut embed = self.default_embed(&message.guild_id).await;
-        let mut user = match message.author {
-            Some(user_id) => self.database.get_user(&user_id).await?,
-            None => return Ok(())
-        };
+        let mut user = self.database.get_user(&message.author).await?;
 
         if user.bot {
             debug!("User is a bot");
@@ -31,29 +28,45 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         match message.source {
             LuroMessageSource::MessageUpdate => {
-                let old_message = match self.twilight_cache.message(message.id) {
-                    Some(old_message) => old_message,
-                    None => {
-                        warn!("Old message does not exist in the cache");
-                        return Ok(());
+                let user_data = match self.database.get_user(&message.author).await {
+                    Ok(data) => Some(data),
+                    Err(why) => {
+                        warn!(why = ?why, "Could not fetch user data!");
+                        None
                     }
                 };
-                match old_message.content().len() > 1024 {
-                    true => writeln!(description, "**Original Message:**\n{}\n", old_message.content())?,
-                    false => {
-                        embed.create_field("Original Message", old_message.content(), false);
+
+                let mut old_message = self
+                    .twilight_cache
+                    .message(message.id)
+                    .map(|data| LuroMessage::from(data.clone()));
+
+                if old_message.is_none() && let Some(ref user_data) = user_data {
+                    old_message = user_data.messages.get(&message.id).cloned();
+                }
+
+                let message = match old_message {
+                    Some(message) => message,
+                    None => {
+                        warn!("Old message does not exist in the cache and not in the sender's data!");
+                        return Ok(());
                     }
                 };
 
                 embed.title("Message Edited");
+                match message.content.len() > 1024 {
+                    true => writeln!(description, "**Original Message:**\n{}\n", &message.content)?,
+                    false => {
+                        embed.create_field("Original Message", &message.content, false);
+                    }
+                };
 
-                let user_data;
-                {
-                    let mut data = self.database.get_user(&old_message.author()).await?;
+                if let Some(mut data) = user_data {
                     data.message_edits += 1;
-                    self.database.save_user(&old_message.author(), &data).await?;
-                    user_data = data
+                    embed.create_field("Total Edits", &format!("Edited `{}` messages!", &data.message_edits), true);
+                    self.database.save_user(&message.author, &data).await?;
                 }
+
                 match !message.content.is_empty() {
                     true => match message.content.len() > 1024 {
                         true => writeln!(description, "**Updated Message:**\n{}", message.content)?,
@@ -66,11 +79,6 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                         return Ok(());
                     }
                 }
-                embed.create_field(
-                    "Total Edits",
-                    &format!("Edited `{}` messages!", user_data.message_edits),
-                    true
-                );
             }
             LuroMessageSource::MessageDelete => {
                 let old_message = match self.twilight_cache.message(message.id) {
@@ -118,7 +126,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     }
 
                     // Save
-                    self.database.save_user(&message.author.unwrap(), &user).await?;
+                    self.database.save_user(&message.author, &user).await?;
                 }
 
                 return Ok(());

@@ -1,6 +1,7 @@
 use std::collections::{btree_map::Entry, BTreeMap, HashMap};
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use twilight_cache_inmemory::model::CachedMember;
 use twilight_model::{
     guild::{Member, PartialMember},
     id::{
@@ -180,6 +181,25 @@ impl LuroUser {
         self.verified = user.verified.unwrap_or_default();
         self
     }
+
+        /// Update this type from a [CachedMember].
+        pub fn update_cached_member(&mut self, guild_id: &Id<GuildMarker>, member: &CachedMember) -> &mut Self {
+            self.guilds.entry(*guild_id).and_modify(|e|{
+                e.avatar = member.avatar();
+                e.communication_disabled_until = member.communication_disabled_until();
+                e.deaf = member.deaf().unwrap_or_default();
+                e.flags = member.flags();
+                e.id = Some(member.user_id());
+                e.joined_at = member.joined_at();
+                e.mute = member.mute().unwrap_or_default();
+                e.flags = member.flags();
+                e.nick = member.nick().map(|s| s.to_string());
+                e.pending = member.pending();
+                e.premium_since = member.premium_since();
+                e.role_ids = member.roles().to_vec();
+            }).or_insert(LuroMember::from(member));
+            self
+        }
 
     /// Update this type from a user.
     pub fn update_user(&mut self, user: &User) -> &mut Self {

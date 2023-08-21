@@ -16,6 +16,8 @@ use twilight_model::{
     util::Timestamp
 };
 
+use crate::PRIMARY_BOT_OWNER;
+
 #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum LuroMessageSource {
     /// Created from an existing message
@@ -38,8 +40,10 @@ pub enum LuroMessageSource {
 /// Effectively a wrapper around different type of messages, for more streamlined responses
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct LuroMessage {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub author: Option<Id<UserMarker>>,
+    // Enable this if you need to migrate
+    // #[serde(default = "default_user", deserialize_with = "deserialize_user_to_id")]
+    #[serde(default = "default_user")]
+    pub author: Id<UserMarker>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub updated_content: Option<Box<LuroMessage>>,
     #[serde(default)]
@@ -210,7 +214,7 @@ impl LuroMessage {
         self.application = message.application;
         self.application_id = message.application_id;
         self.attachments = message.attachments;
-        self.author = Some(message.author.id);
+        self.author = message.author.id;
         self.channel_id = message.channel_id;
         self.components = message.components;
         self.content = message.content;
@@ -239,7 +243,7 @@ impl LuroMessage {
     pub fn from_message_update(&mut self, message: MessageUpdate) -> &mut Self {
         let mut luro = Self::default();
         if let Some(author) = message.author {
-            luro.author = Some(author.id)
+            luro.author = author.id
         }
 
         if let Some(kind) = message.kind {
@@ -284,7 +288,7 @@ impl LuroMessage {
         self.application = message.0.application;
         self.application_id = message.0.application_id;
         self.attachments = message.0.attachments;
-        self.author = Some(message.0.author.id);
+        self.author = message.0.author.id;
         self.channel_id = message.0.channel_id;
         self.components = message.0.components;
         self.content = message.0.content;
@@ -316,7 +320,7 @@ impl LuroMessage {
         self.application = message.application().cloned();
         self.application_id = message.application_id();
         self.attachments = message.attachments().to_vec();
-        self.author = Some(message.author());
+        self.author = message.author();
         self.channel_id = message.channel_id();
         self.components = message.components().to_vec();
         self.content = message.content().to_string();
@@ -399,7 +403,7 @@ impl From<MessageUpdate> for LuroMessage {
 impl Default for LuroMessage {
     fn default() -> Self {
         Self {
-            author: Default::default(),
+            author: default_user(),
             updated_content: Default::default(),
             deleted: Default::default(),
             source: Default::default(),
@@ -437,4 +441,8 @@ impl Default for LuroMessage {
 
 fn default_kind() -> MessageType {
     MessageType::Regular
+}
+
+fn default_user() -> Id<UserMarker> {
+    PRIMARY_BOT_OWNER
 }

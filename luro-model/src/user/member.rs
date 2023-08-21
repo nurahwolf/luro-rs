@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use twilight_cache_inmemory::model::CachedMember;
 use twilight_model::{
     guild::{Member, MemberFlags, PartialMember, Permissions},
     id::{
@@ -116,6 +117,25 @@ impl From<&Member> for LuroMember {
             role_ids: member.roles.clone(),
             permissions: None,
             id: Some(member.user.id)
+        }
+    }
+}
+
+impl From<&CachedMember> for LuroMember {
+    fn from(member: &CachedMember) -> Self {
+        Self {
+            id: Some(member.user_id()),
+            avatar: member.avatar(),
+            communication_disabled_until: member.communication_disabled_until(),
+            deaf: member.deaf().unwrap_or_default(),
+            flags: member.flags(),
+            joined_at: member.joined_at(),
+            mute: member.mute().unwrap_or_default(),
+            nick: member.nick().map(|s| s.to_string()),
+            pending: member.pending(),
+            premium_since: member.premium_since(),
+            role_ids: member.roles().to_vec(),
+            permissions: Default::default(),
         }
     }
 }
