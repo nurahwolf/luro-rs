@@ -5,6 +5,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -12,7 +13,7 @@ use crate::luro_command::LuroCommand;
 pub struct HeckInfo {}
 
 impl LuroCommand for HeckInfo {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::new().title("Heck Information - Global");
         let mut global_details = String::new();
         {
@@ -26,16 +27,6 @@ impl LuroCommand for HeckInfo {
                 "**GLOBAL NSFW HECKS:** {}",
                 ctx.framework.database.get_hecks(true).await?.len()
             )?;
-            writeln!(
-                global_details,
-                "**GLOBAL SFW IDS AVAILABLE:** {}",
-                ctx.framework.database.available_random_sfw_hecks.read().unwrap().len()
-            )?;
-            writeln!(
-                global_details,
-                "**GLOBAL NSFW IDS AVAILABLE:** {}",
-                ctx.framework.database.available_random_nsfw_hecks.read().unwrap().len()
-            )?;
         }
 
         embed = embed.field(EmbedFieldBuilder::new("Global Stats", global_details).inline());
@@ -45,16 +36,6 @@ impl LuroCommand for HeckInfo {
             let guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
             writeln!(guild_details, "**GUILD SFW HECKS:** {}", guild_settings.sfw_hecks.len())?;
             writeln!(guild_details, "**GUILD NSFW HECKS:** {}", guild_settings.nsfw_hecks.len())?;
-            writeln!(
-                guild_details,
-                "**GUILD SFW IDS AVAILABLE:** {}",
-                guild_settings.available_random_sfw_hecks.len()
-            )?;
-            writeln!(
-                guild_details,
-                "**GUILD NSFW IDS AVAILABLE:** {}",
-                guild_settings.available_random_nsfw_hecks.len()
-            )?;
             embed = embed.field(EmbedFieldBuilder::new("Guild Stats", guild_details).inline());
         }
 

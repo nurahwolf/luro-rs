@@ -1,23 +1,16 @@
 use anyhow::{anyhow, Context, Error};
 
-use luro_model::heck::Heck;
+use luro_model::{database::drivers::LuroDatabaseDriver, heck::Heck};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::message_component::MessageComponentInteractionData, http::interaction::InteractionResponseType
 };
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-
-#[cfg(not(feature = "toml-driver"))]
-fn format_heck_id(input: usize) -> usize {
-    input
-}
-
-#[cfg(feature = "toml-driver")]
-fn format_heck_id(input: usize) -> String {
-    input.to_string()
-}
+use crate::{
+    interaction::{LuroSlash},
+    luro_command::LuroCommand
+};
 
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(name = "add", desc = "Add a heck", dm_permission = true)]
@@ -28,7 +21,7 @@ impl LuroCommand for HeckAddCommand {
     ///
     /// This modal is only shown if the user has not specified a reason in the
     /// initial command.
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         ctx.respond(|r| {
             r.title("Write your heck below!")
                 .custom_id("heck-add")
@@ -48,7 +41,11 @@ impl LuroCommand for HeckAddCommand {
         .await
     }
 
-    async fn handle_component(self, data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component<D: LuroDatabaseDriver>(
+        self,
+        data: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>
+    ) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
         let interaction_author = interaction.author().context("Expected to get interaction author")?;
         let interaction_channel = interaction.channel.clone().unwrap();
@@ -91,15 +88,13 @@ impl LuroCommand for HeckAddCommand {
 
         // Based on our component data, should this be added as a global heck or a guild heck?
         if global.contains("heck-add-global") {
+            let hecks = ctx.framework.database.get_hecks(nsfw).await?;
+            heck_id = hecks.len() + 1;
             if nsfw {
-                heck_id = ctx.framework.database.nsfw_hecks.len() + 1;
-                ctx.framework.database.modify_heck(heck_id, &heck, true).await?;
-                ctx.framework.database.nsfw_hecks.insert(format_heck_id(heck_id), heck);
+                ctx.framework.database.save_heck(heck_id, heck, true).await?;
                 heck_author.name = "Global Heck Created - NSFW Heck".to_owned();
             } else {
-                heck_id = ctx.framework.database.sfw_hecks.len() + 1;
-                ctx.framework.database.modify_heck(heck_id, &heck, false).await?;
-                ctx.framework.database.sfw_hecks.insert(format_heck_id(heck_id), heck);
+                ctx.framework.database.save_heck(heck_id, heck, false).await?;
                 heck_author.name = "Global Heck Created - SFW Heck".to_owned();
             };
             field.append(&mut vec![EmbedFieldBuilder::new("Global Heck", "Just created")
@@ -111,18 +106,18 @@ impl LuroCommand for HeckAddCommand {
                 None => return Err(anyhow!("This place is not a guild. You can only use this option in a guild."))
             };
 
-            let guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
+            let mut guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
 
             if nsfw {
                 heck_id = guild_settings.nsfw_hecks.len();
-                guild_settings.nsfw_hecks.insert(format_heck_id(heck_id), heck);
-                ctx.framework.database.update_guild(guild_id, &guild_settings).await?;
+                guild_settings.nsfw_hecks.insert(heck_id, heck);
+                ctx.framework.database.save_guild(&guild_id, &guild_settings).await?;
 
                 heck_author.name = "Guild Heck Created - NSFW Heck".to_owned()
             } else {
                 heck_id = guild_settings.sfw_hecks.len();
-                guild_settings.sfw_hecks.insert(format_heck_id(heck_id), heck);
-                ctx.framework.database.update_guild(guild_id, &guild_settings).await?;
+                guild_settings.sfw_hecks.insert(heck_id, heck);
+                ctx.framework.database.save_guild(&guild_id, &guild_settings).await?;
 
                 heck_author.name = "Guild Heck Created - SFW Heck".to_owned()
             };

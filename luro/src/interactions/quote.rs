@@ -1,6 +1,10 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use crate::{
+    interaction::{LuroSlash},
+    luro_command::LuroCommand
+};
 
 use self::{add::Add, get::Get, list::List, remove::Remove, sort::Sort};
 
@@ -26,7 +30,7 @@ pub enum QuoteCommands {
 }
 
 impl LuroCommand for QuoteCommands {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
             Self::Get(command) => command.run_command(ctx).await,
             Self::Add(command) => command.run_command(ctx).await,

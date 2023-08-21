@@ -1,9 +1,10 @@
 use anyhow::anyhow;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_model::application::interaction::modal::ModalInteractionData;
 
 use super::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Parse a field from [`ModalInteractionData`].
     ///
     /// This function try to find a field with the given name in the modal data and

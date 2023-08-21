@@ -1,6 +1,6 @@
 use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
-use luro_model::luro_database_driver::LuroDatabaseDriver;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use std::{fmt::Write, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 

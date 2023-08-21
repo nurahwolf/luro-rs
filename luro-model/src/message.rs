@@ -3,8 +3,8 @@ use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::{
     channel::{
         message::{
-            sticker::MessageSticker, Component, Embed, MessageActivity, MessageApplication, MessageFlags,
-            MessageInteraction, MessageReference, MessageType, Reaction, RoleSubscriptionData
+            sticker::MessageSticker, Component, Embed, MessageActivity, MessageApplication, MessageFlags, MessageInteraction,
+            MessageReference, MessageType, Reaction, RoleSubscriptionData
         },
         Attachment, ChannelMention, Message
     },
@@ -342,7 +342,10 @@ impl LuroMessage {
 
 impl From<Message> for LuroMessage {
     fn from(message: Message) -> Self {
-        let mut luro = LuroMessage { source: LuroMessageSource::Message, ..Default::default() };
+        let mut luro = LuroMessage {
+            source: LuroMessageSource::Message,
+            ..Default::default()
+        };
         luro.from_message(message);
         luro
     }
@@ -350,16 +353,44 @@ impl From<Message> for LuroMessage {
 
 impl From<MessageCreate> for LuroMessage {
     fn from(message: MessageCreate) -> Self {
-        let mut luro = LuroMessage { source: LuroMessageSource::MessageCreate, ..Default::default() };
+        let mut luro = LuroMessage {
+            source: LuroMessageSource::MessageCreate,
+            ..Default::default()
+        };
         luro.from_message_create(message);
+        luro
+    }
+}
+
+impl From<MessageDelete> for LuroMessage {
+    fn from(message: MessageDelete) -> Self {
+        let mut luro = LuroMessage {
+            source: LuroMessageSource::MessageDelete,
+            ..Default::default()
+        };
+        luro.from_message_delete(message);
         luro
     }
 }
 
 impl From<CachedMessage> for LuroMessage {
     fn from(message: CachedMessage) -> Self {
-        let mut luro = LuroMessage { source: LuroMessageSource::CachedMessage, ..Default::default() };
+        let mut luro = LuroMessage {
+            source: LuroMessageSource::CachedMessage,
+            ..Default::default()
+        };
         luro.from_cached_message(message);
+        luro
+    }
+}
+
+impl From<MessageUpdate> for LuroMessage {
+    fn from(message: MessageUpdate) -> Self {
+        let mut luro = LuroMessage {
+            source: LuroMessageSource::MessageUpdate,
+            ..Default::default()
+        };
+        luro.from_message_update(message);
         luro
     }
 }

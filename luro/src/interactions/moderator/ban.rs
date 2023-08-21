@@ -1,10 +1,14 @@
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use std::convert::TryInto;
-
-use luro_model::{
-    guild_permissions::GuildPermissions, luro_log_channel::LuroLogChannel, user_actions::UserActions,
-    user_actions_type::UserActionType
+use crate::{
+    interaction::{LuroSlash},
+    luro_command::LuroCommand
 };
+use luro_model::{
+    database::drivers::LuroDatabaseDriver,
+    guild::log_channel::LuroLogChannel,
+    legacy::guild_permissions::GuildPermissions,
+    user::{actions::UserActions, actions_type::UserActionType}
+};
+use std::convert::TryInto;
 use tracing::debug;
 
 use twilight_http::request::AuditLogReason;
@@ -46,7 +50,7 @@ pub enum TimeToBan {
 }
 
 impl LuroCommand for BanCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let response = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(false).await?;
 
@@ -170,7 +174,7 @@ impl LuroCommand for BanCommand {
 
         let mut reward = ctx.framework.database.get_user(&author_user.id).await?;
         reward.moderation_actions_performed += 1;
-        ctx.framework.database.modify_user(&author_user.id, &reward).await?;
+        ctx.framework.database.save_user(&author_user.id, &reward).await?;
 
         // Record the punishment
         let mut banned = ctx.framework.database.get_user(&user_to_remove.id).await?;
@@ -180,7 +184,7 @@ impl LuroCommand for BanCommand {
             reason,
             responsible_user: author_user.id
         });
-        ctx.framework.database.modify_user(&user_to_remove.id, &banned).await?;
+        ctx.framework.database.save_user(&user_to_remove.id, &banned).await?;
 
         // If an alert channel is defined, send a message there
         ctx.framework

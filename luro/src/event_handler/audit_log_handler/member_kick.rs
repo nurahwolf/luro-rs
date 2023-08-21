@@ -1,7 +1,10 @@
 use crate::{framework::Framework, COLOUR_DANGER};
 use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{luro_database_driver::LuroDatabaseDriver, user_actions::UserActions, user_actions_type::UserActionType};
+use luro_model::{
+    database::drivers::LuroDatabaseDriver,
+    user::{actions::UserActions, actions_type::UserActionType}
+};
 use std::{fmt::Write, sync::Arc};
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild, id::Id};
 
@@ -36,7 +39,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             if let Some(user_id) = &event.user_id {
                 let mut reward = self.database.get_user(user_id).await?;
                 reward.moderation_actions_performed += 1;
-                self.database.modify_user(user_id, &reward).await?;
+                self.database.save_user(user_id, &reward).await?;
 
                 // Record the punishment
                 let mut banned = self.database.get_user(&kicked_user_id).await?;
@@ -46,7 +49,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     reason: reason.clone(),
                     responsible_user: kicked_user_id
                 });
-                self.database.modify_user(&kicked_user_id, &banned).await?;
+                self.database.save_user(&kicked_user_id, &banned).await?;
             }
         }
         embed.description(description);

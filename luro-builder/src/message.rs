@@ -1,4 +1,4 @@
-use luro_model::luro_message::LuroMessage;
+use luro_model::message::LuroMessage;
 use twilight_model::channel::message::Embed;
 
 use crate::embed::EmbedBuilder;
@@ -36,7 +36,7 @@ impl MessageBuilder {
     /// Set the content that should be sent with the message.
     /// This will overrwrite anything previously set.
     pub fn content(&mut self, content: impl Into<String>) -> &mut Self {
-        self.0.content = Some(content.into());
+        self.0.content = content.into();
 
         self
     }

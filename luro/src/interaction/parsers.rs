@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use std::mem;
 
 use twilight_model::application::interaction::{
@@ -7,7 +8,7 @@ use twilight_model::application::interaction::{
 
 use super::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Parse incoming [`ModalSubmit`] interaction and return the inner data.
     ///
     /// This takes a mutable [`Interaction`] since the inner [`ModalInteractionData`]

@@ -1,7 +1,7 @@
 use core::fmt;
 use std::{fmt::Display, num::NonZeroU64};
 
-use crate::{RollAst, RollValue, FilterModifier, DiceRoll};
+use crate::{DiceRoll, FilterModifier, RollAst, RollValue};
 
 const DEFAULT_SIDES: &str = "20";
 

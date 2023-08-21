@@ -1,5 +1,5 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::luro_database_driver::LuroDatabaseDriver;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::debug;
 use twilight_model::gateway::payload::incoming::ThreadDelete;
 

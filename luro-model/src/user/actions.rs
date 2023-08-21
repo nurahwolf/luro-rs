@@ -4,7 +4,7 @@ use twilight_model::id::{
     Id
 };
 
-use crate::user_actions_type::UserActionType;
+use super::actions_type::UserActionType;
 
 /// Bans recorded against a user
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]

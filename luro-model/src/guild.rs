@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use serde::{Deserialize, Serialize};
 use twilight_model::{
@@ -6,8 +6,8 @@ use twilight_model::{
     channel::{message::Sticker, Channel, StageInstance},
     gateway::presence::Presence,
     guild::{
-        AfkTimeout, DefaultMessageNotificationLevel, Emoji, ExplicitContentFilter, GuildFeature, MfaLevel, NSFWLevel,
-        Permissions, PremiumTier, SystemChannelFlags, VerificationLevel, Guild
+        AfkTimeout, DefaultMessageNotificationLevel, Emoji, ExplicitContentFilter, Guild, GuildFeature, MfaLevel, NSFWLevel,
+        Permissions, PremiumTier, SystemChannelFlags, VerificationLevel
     },
     id::{
         marker::{ApplicationMarker, ChannelMarker, GuildMarker, RoleMarker, UserMarker},
@@ -17,15 +17,18 @@ use twilight_model::{
     voice::VoiceState
 };
 
-use crate::constants::PRIMARY_BOT_OWNER;
+pub mod log_channel;
 
-use super::{
+use crate::{
     heck::Hecks,
-    role::{LuroRolePositions, LuroRoles}
+    role::{LuroRolePositions, LuroRoles},
+    PRIMARY_BOT_OWNER
 };
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+/// A [HashMap] containing guild specific settings ([LuroGuild]), keyed by [GuildMarker].
+pub type LuroGuilds = HashMap<Id<GuildMarker>, LuroGuild>;
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LuroGuild {
     /// If the guild has a custom accent set by a member of staff
     pub accent_colour_custom: Option<u32>,

@@ -1,10 +1,10 @@
-use luro_model::{
-    guild_permissions::GuildPermissions, luro_log_channel::LuroLogChannel, user_actions::UserActions,
-    user_actions_type::UserActionType
-};
-
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use luro_model::{database::drivers::LuroDatabaseDriver, legacy::guild_permissions::GuildPermissions};
 
+use luro_model::{
+    guild::log_channel::LuroLogChannel,
+    user::{actions::UserActions, actions_type::UserActionType}
+};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{guild::Permissions, http::interaction::InteractionResponseType};
 use twilight_util::builder::embed::EmbedFieldBuilder;
@@ -28,7 +28,7 @@ pub struct KickCommand {
 }
 
 impl LuroCommand for KickCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let response = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(false).await?;
 
@@ -142,7 +142,7 @@ impl LuroCommand for KickCommand {
 
         let mut reward = ctx.framework.database.get_user(&author_user.id).await?;
         reward.moderation_actions_performed += 1;
-        ctx.framework.database.modify_user(&author_user.id, &reward).await?;
+        ctx.framework.database.save_user(&author_user.id, &reward).await?;
 
         // Record the punishment
         let mut warned = ctx.framework.database.get_user(&user_to_remove.id).await?;
@@ -152,7 +152,7 @@ impl LuroCommand for KickCommand {
             reason,
             responsible_user: author_user.id
         });
-        ctx.framework.database.modify_user(&user_to_remove.id, &warned).await?;
+        ctx.framework.database.save_user(&user_to_remove.id, &warned).await?;
         ctx.respond(|r| r.add_embed(embed.build()).response_type(response)).await
     }
 }

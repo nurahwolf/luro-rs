@@ -1,6 +1,7 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use self::{add::Add, remove::Remove};
 
@@ -20,7 +21,7 @@ pub enum Blacklist {
 }
 
 impl LuroCommand for Blacklist {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
             Self::Add(command) => command.run_command(ctx).await,
             Self::Remove(command) => command.run_command(ctx).await

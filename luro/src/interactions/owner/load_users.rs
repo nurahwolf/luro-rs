@@ -3,6 +3,7 @@ use twilight_model::http::interaction::InteractionResponseType;
 
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -12,7 +13,7 @@ use crate::luro_command::LuroCommand;
 pub struct OwnerLoadUsers {}
 
 impl LuroCommand for OwnerLoadUsers {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let response = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.respond(|r| r.response_type(response)).await?;
 
@@ -38,7 +39,7 @@ impl LuroCommand for OwnerLoadUsers {
                     user_data.public_flags = user.public_flags;
                     user_data.system = user.system.unwrap_or_default();
                     user_data.verified = user.verified.unwrap_or_default();
-                    if ctx.framework.database.modify_user(&user.id, &user_data).await.is_err() {
+                    if ctx.framework.database.save_user(&user.id, &user_data).await.is_err() {
                         errors += 1
                     }
 

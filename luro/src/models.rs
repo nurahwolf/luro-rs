@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use luro_model::luro_database_driver::LuroDatabaseDriver;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_model::{
     channel::Webhook,
     id::{marker::ChannelMarker, Id}
 };
 
-use crate::{WEBHOOK_NAME, framework::Framework};
+use crate::{framework::Framework, WEBHOOK_NAME};
 
 /// Used for handling webhooks
 pub struct LuroWebhook<D: LuroDatabaseDriver> {
@@ -15,9 +15,7 @@ pub struct LuroWebhook<D: LuroDatabaseDriver> {
 
 impl<D: LuroDatabaseDriver> LuroWebhook<D> {
     pub fn new(framework: Arc<Framework<D>>) -> Self {
-        Self {
-            framework
-        }
+        Self { framework }
     }
 
     // Get a webhook for a channel, or create it if it does not exist

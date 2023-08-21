@@ -1,11 +1,12 @@
 use luro_builder::embed::EmbedBuilder;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::warn;
 
 use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn invalid_heck_response(
         self,
         missing_user: bool,

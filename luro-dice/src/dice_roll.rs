@@ -2,7 +2,7 @@ use std::{collections::HashMap, num::NonZeroU64};
 
 use rand::RngCore;
 
-use crate::{DiceRoll, FilterModifier, RollParser, RollResult, RollAst};
+use crate::{DiceRoll, FilterModifier, RollAst, RollParser, RollResult};
 
 const STAT_ROLL: &str = "4d6l";
 const DIR: &[&str] = &[

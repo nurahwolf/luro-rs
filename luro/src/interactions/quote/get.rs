@@ -1,5 +1,6 @@
 use anyhow::Context;
 
+use luro_model::database::drivers::LuroDatabaseDriver;
 use rand::Rng;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -15,7 +16,7 @@ pub struct Get {
 }
 
 impl LuroCommand for Get {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let id = match self.id {
             Some(id) => id.try_into().context("Expected to convert i64 to usize")?,
             None => {
@@ -28,6 +29,7 @@ impl LuroCommand for Get {
             Ok(quote) => quote,
             Err(_) => return ctx.respond(|r| r.content("Sorry! Quote was not found :(").ephemeral()).await
         };
+        let user = ctx.framework.database.get_user(&quote.author.unwrap()).await?;
 
         if self.puppet.unwrap_or_default() {
             let luro_webhook = LuroWebhook::new(ctx.framework.clone());
@@ -59,9 +61,9 @@ impl LuroCommand for Get {
             ctx.framework
                 .twilight_client
                 .execute_webhook(webhook.id, &webhook_token)
-                .username(&quote.user.name)
-                .avatar_url(&quote.user.avatar())
-                .content(&quote.content.unwrap_or_default())
+                .username(&user.name)
+                .avatar_url(&user.avatar())
+                .content(&quote.content)
                 .await?;
 
             return ctx.respond(|response| response.content("Puppetted!").ephemeral()).await;
@@ -70,21 +72,16 @@ impl LuroCommand for Get {
         let accent_colour = ctx.accent_colour().await;
         ctx.respond(|response| {
             response.embed(|embed| {
-                embed
-                    .colour(accent_colour)
-                    .description(quote.content.unwrap_or_default())
-                    .author(|author| {
-                        author
-                            .name(format!("{} - Quote {id}", quote.user.name()))
-                            .icon_url(quote.user.avatar());
-                        match quote.guild_id {
-                            Some(guild_id) => author.url(format!(
-                                "https://discord.com/channels/{guild_id}/{}/{}",
-                                quote.channel_id, quote.id
-                            )),
-                            None => author.url(format!("https://discord.com/channels/{}/{}", quote.channel_id, quote.id))
-                        }
-                    })
+                embed.colour(accent_colour).description(quote.content).author(|author| {
+                    author.name(format!("{} - Quote {id}", user.name())).icon_url(user.avatar());
+                    match quote.guild_id {
+                        Some(guild_id) => author.url(format!(
+                            "https://discord.com/channels/{guild_id}/{}/{}",
+                            quote.channel_id, quote.id
+                        )),
+                        None => author.url(format!("https://discord.com/channels/{}/{}", quote.channel_id, quote.id))
+                    }
+                })
             })
         })
         .await

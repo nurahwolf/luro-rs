@@ -1,6 +1,9 @@
-use std::{str::FromStr, fmt::{Display, Formatter}};
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr
+};
 
-use twilight_model::id::{Id, marker::EmojiMarker};
+use twilight_model::id::{marker::EmojiMarker, Id};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
 #[repr(u8)]
@@ -20,7 +23,7 @@ pub enum Emote {
     SingleStep,
     JumpEnd,
 
-    Miss,
+    Miss
 }
 
 // impl From<GameMode> for Emote {
@@ -52,7 +55,7 @@ impl FromStr for Emote {
             "single_step" => Self::SingleStep,
             "jump_end" => Self::JumpEnd,
             "miss" => Self::Miss,
-            _ => return Err(()),
+            _ => return Err(())
         };
 
         Ok(emote)
@@ -71,14 +74,11 @@ impl Display for Emote {
 #[derive(Debug)]
 pub struct CustomEmote {
     pub id: Id<EmojiMarker>,
-    pub name: Box<str>,
+    pub name: Box<str>
 }
 
 impl CustomEmote {
     pub fn new(id: u64, name: Box<str>) -> Self {
-        Self {
-            id: Id::new(id),
-            name,
-        }
+        Self { id: Id::new(id), name }
     }
 }

@@ -1,6 +1,7 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 
@@ -19,7 +20,7 @@ pub enum LewdCommands {
 }
 
 impl LuroCommand for LewdCommands {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         if !ctx.interaction.channel.as_ref().unwrap().nsfw.unwrap_or_default() {
             return ctx.nsfw_in_sfw_response().await;
         }

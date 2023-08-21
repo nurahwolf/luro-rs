@@ -1,4 +1,5 @@
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use std::fmt::Write;
 use std::time::SystemTime;
@@ -6,7 +7,7 @@ use std::time::SystemTime;
 use anyhow::{Context, Error};
 
 use luro_builder::embed::EmbedBuilder;
-use luro_model::user_marriages::UserMarriages;
+use luro_model::user::marriages::UserMarriages;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -99,7 +100,7 @@ pub enum MarryCommands {
 }
 
 impl LuroCommand for MarryCommands {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::New(command) => command.run_command(ctx).await,
@@ -107,7 +108,11 @@ impl LuroCommand for MarryCommands {
         }
     }
 
-    async fn handle_component(self, data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component<D: LuroDatabaseDriver>(
+        self,
+        data: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>
+    ) -> anyhow::Result<()> {
         let (marry, reason) = match self {
             Self::New(command) => (command.marry, command.reason),
             Self::Marriages(_) => return ctx.unknown_command_response().await
@@ -204,7 +209,7 @@ pub struct MarryMarriages {
 }
 
 impl LuroCommand for MarryMarriages {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut marriages = vec![];
         let luro_user = ctx.get_specified_user_or_author(&self.user, &ctx.interaction).await?;
         let mut embed = EmbedBuilder::default();
@@ -257,7 +262,7 @@ pub struct MarryNew {
 }
 
 impl LuroCommand for MarryNew {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
         let mut embed = EmbedBuilder::default();
         embed

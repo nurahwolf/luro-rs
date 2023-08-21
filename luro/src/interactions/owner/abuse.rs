@@ -4,6 +4,7 @@ use luro_builder::embed::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 use crate::models::LuroWebhook;
@@ -20,7 +21,7 @@ pub struct AbuseCommand {
 }
 
 impl LuroCommand for AbuseCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let luro_webhook = LuroWebhook::new(ctx.framework.clone());
         let webhook = luro_webhook
             .get_webhook(

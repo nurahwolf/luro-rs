@@ -1,7 +1,11 @@
 use luro_dice::DiceRoll;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use crate::{
+    interaction::{LuroSlash},
+    luro_command::LuroCommand
+};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "stats", desc = "Get some stats for your character sheet")]
@@ -11,7 +15,7 @@ pub struct Stats {
 }
 
 impl LuroCommand for Stats {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         ctx.respond(|r| {
             if self.ephemeral.unwrap_or_default() {
                 r.ephemeral();

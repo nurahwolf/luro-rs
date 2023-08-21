@@ -1,5 +1,5 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{constants::COLOUR_DANGER, role_ordering::RoleOrdering};
+use luro_model::{legacy::role_ordering::RoleOrdering, COLOUR_DANGER};
 use std::fmt::Write;
 use tracing::{debug, info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -10,6 +10,7 @@ use twilight_model::{
 };
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use self::blacklist::Blacklist;
 
@@ -25,14 +26,18 @@ pub enum RoleCommands {
 }
 
 impl LuroCommand for RoleCommands {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
             Self::Menu(command) => command.run_command(ctx).await,
             Self::Blacklist(command) => command.run_command(ctx).await
         }
     }
 
-    async fn handle_component(self, data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component<D: LuroDatabaseDriver>(
+        self,
+        data: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>
+    ) -> anyhow::Result<()> {
         // Variables
         let mut roles_to_remove_string = String::new();
         let mut roles_to_remove = vec![];
@@ -263,7 +268,7 @@ pub struct Menu {
 }
 
 impl LuroCommand for Menu {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author_id().unwrap();
         let luro_user = ctx.framework.database.get_user(&interaction_author).await?;
 

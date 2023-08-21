@@ -2,6 +2,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -20,7 +21,7 @@ pub struct AssignCommand {
 }
 
 impl LuroCommand for AssignCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_user = ctx.interaction.author().unwrap();
 
         // User to action

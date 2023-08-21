@@ -1,4 +1,5 @@
 use anyhow::Context;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -6,7 +7,10 @@ use twilight_model::{
     id::{marker::UserMarker, Id}
 };
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use crate::{
+    interaction::{LuroSlash},
+    luro_command::LuroCommand
+};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "profile", desc = "Fetch a user's character profile")]
@@ -20,7 +24,7 @@ pub struct Profile {
 }
 
 impl LuroCommand for Profile {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let user_id = match self.user {
             Some(user) => user,
             None => ctx

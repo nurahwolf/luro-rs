@@ -26,6 +26,7 @@ fn format_story_id(input: usize) -> String {
 }
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
+use luro_model::database::drivers::LuroDatabaseDriver;
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "story",
@@ -43,20 +44,18 @@ pub struct StoryCommand {
 }
 
 impl LuroCommand for StoryCommand {
-    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model<D: LuroDatabaseDriver>(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let nsfw = ctx.interaction.channel.clone().unwrap().nsfw.unwrap_or(false);
-        let id = match nsfw {
-            true => ctx.framework.database.nsfw_stories.len() + 1,
-            false => ctx.framework.database.sfw_stories.len() + 1
-        };
+        let stories = ctx.framework.database.get_stories(nsfw).await?;
+        let id = stories.len() + 1;
         let title = ctx.parse_modal_field_required(&data, "story-title")?.to_owned();
         let description = ctx.parse_modal_field_required(&data, "story-description")?.to_owned();
 
         ctx.framework
             .database
-            .modify_story(
+            .save_story(
                 id,
-                &Story {
+                Story {
                     title,
                     description,
                     author: ctx.interaction.author().unwrap().id
@@ -67,7 +66,7 @@ impl LuroCommand for StoryCommand {
         Ok(())
     }
 
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         if let Some(add) = self.add && add {
             let components = vec![Component::ActionRow(ActionRow {
                 components: vec![Component::TextInput(TextInput {
@@ -115,14 +114,14 @@ impl LuroCommand for StoryCommand {
 
         let stories = ctx.framework.database.get_stories(nsfw).await?;
 
-        let story_id = format_story_id(if let Some(story_id) = self.id {
+        let story_id = if let Some(story_id) = self.id {
             story_id.try_into().unwrap()
         } else {
             if stories.is_empty() {
                 return ctx.respond(|r| r.content("No stories of this type has been added!")).await;
             }
             rand::thread_rng().gen_range(0..stories.len()) + 1
-        });
+        };
 
         let story = match stories.get(&story_id) {
             Some(story) => story,
@@ -148,7 +147,11 @@ impl LuroCommand for StoryCommand {
         .await
     }
 
-    async fn handle_component(self, _: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component<D: LuroDatabaseDriver>(
+        self,
+        _: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>
+    ) -> anyhow::Result<()> {
         let embed = EmbedBuilder::new()
             .color(COLOUR_DANGER)
             .title("REDACTED")

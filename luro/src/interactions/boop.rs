@@ -5,6 +5,7 @@ use twilight_model::{
 };
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 
@@ -13,7 +14,7 @@ use crate::luro_command::LuroCommand;
 pub struct BoopCommand {}
 
 impl LuroCommand for BoopCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
@@ -28,7 +29,11 @@ impl LuroCommand for BoopCommand {
         ctx.respond(|r| r.content("Boop Count: 0").add_components(components)).await
     }
 
-    async fn handle_component(self, _data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component<D: LuroDatabaseDriver>(
+        self,
+        _data: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>
+    ) -> anyhow::Result<()> {
         // Get message and parse number
         let message = ctx.interaction.message.clone().unwrap();
 

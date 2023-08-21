@@ -1,11 +1,11 @@
 use anyhow::Error;
-use luro_model::luro_user::LuroUser;
+use luro_model::{database::drivers::LuroDatabaseDriver, user::LuroUser};
 use twilight_model::{guild::Guild, user::User};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::{interaction::LuroSlash, COLOUR_DANGER};
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn ban_response(
         &self,
         guild: Guild,

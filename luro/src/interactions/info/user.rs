@@ -3,7 +3,6 @@ use luro_builder::response::LuroResponse;
 
 use std::{collections::btree_map::Entry, fmt::Write, time::Duration};
 
-use luro_model::{luro_member::LuroMember, role_ordering::RoleOrdering, user_actions_type::UserActionType};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::{attachment::Attachment, interaction::InteractionResponseType},
@@ -12,6 +11,11 @@ use twilight_model::{
 use twilight_util::snowflake::Snowflake;
 
 use crate::interaction::LuroSlash;
+use luro_model::{
+    database::drivers::LuroDatabaseDriver,
+    legacy::role_ordering::RoleOrdering,
+    user::{actions_type::UserActionType, member::LuroMember}
+};
 
 use crate::luro_command::LuroCommand;
 
@@ -31,7 +35,7 @@ pub struct InfoUser {
 }
 
 impl LuroCommand for InfoUser {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let response_type = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(self.gdpr_export.unwrap_or_default()).await?;
         // The user we are interested in is the interaction author, unless a user was specified
@@ -108,18 +112,18 @@ impl LuroCommand for InfoUser {
                 Entry::Vacant(entry) => {
                     let entry = entry.insert(LuroMember::from(&ctx.framework.twilight_client.guild_member(guild_id, user_id).await?.model().await?));
                     for role in user_roles {
-                        entry.roles.insert(role.id, role);
+                        entry.role_ids.push(role.id)
                     }
                 },
                 Entry::Occupied(mut entry) => {
                     let entry = entry.get_mut();
                     for role in user_roles {
-                        entry.roles.insert(role.id, role);
+                        entry.role_ids.push(role.id)
                     }
                 },
             };
 
-            ctx.framework.database.modify_user(&user_id, &luro_user).await?;
+            ctx.framework.database.save_user(&user_id, &luro_user).await?;
 
             for role in &user_roles_modified {
                 if role_list.is_empty() {

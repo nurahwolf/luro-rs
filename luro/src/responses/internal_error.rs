@@ -1,11 +1,10 @@
 use anyhow::Error;
 use luro_builder::embed::EmbedBuilder;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
-use crate::COLOUR_DANGER;
+use crate::{interaction::LuroSlash, COLOUR_DANGER};
 
-use crate::interaction::LuroSlash;
-
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// A response returned by default when a command does not exist within Luro.
     pub async fn internal_error_response(&self, error: Error) -> anyhow::Result<()> {
         self.respond(|respond| respond.add_embed(internal_error_embed(error)).ephemeral())

@@ -11,7 +11,7 @@ pub enum PrefixCommandGroup {
     Twitch,
     Games,
     Utility,
-    Songs,
+    Songs
 }
 
 impl PrefixCommandGroup {
@@ -30,7 +30,7 @@ impl PrefixCommandGroup {
             PrefixCommandGroup::Twitch => "twitch",
             PrefixCommandGroup::Games => "games",
             PrefixCommandGroup::Utility => "utility",
-            PrefixCommandGroup::Songs => "songs",
+            PrefixCommandGroup::Songs => "songs"
         }
     }
 }

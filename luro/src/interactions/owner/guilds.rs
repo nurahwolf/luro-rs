@@ -3,6 +3,7 @@ use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 
@@ -14,7 +15,7 @@ pub struct OwnerGuildsCommand {
 }
 
 impl LuroCommand for OwnerGuildsCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut guilds = String::new();
         for guild in ctx.framework.twilight_cache.iter().guilds() {
             if let Some(show_id) = self.show_id && show_id {

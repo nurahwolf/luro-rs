@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-use luro_model::{constants::PRIMARY_BOT_OWNER, heck::Heck};
+use luro_model::{database::drivers::LuroDatabaseDriver, heck::Heck, PRIMARY_BOT_OWNER};
 use rand::Rng;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -16,7 +16,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder};
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand, LuroFramework, ACCENT_COLOUR};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand, ACCENT_COLOUR};
 
 use self::{add::HeckAddCommand, info::HeckInfo, someone::HeckSomeoneCommand};
 
@@ -50,7 +50,7 @@ fn format_heck_id(input: usize) -> String {
 }
 
 impl LuroCommand for HeckCommands {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Add(command) => command.run_command(ctx).await,
@@ -59,7 +59,7 @@ impl LuroCommand for HeckCommands {
         }
     }
 
-    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model<D: LuroDatabaseDriver>(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let luro_user = ctx.get_interaction_author(&ctx.interaction).await?;
         let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
 
@@ -113,45 +113,14 @@ impl LuroCommand for HeckCommands {
     }
 }
 
-/// This checks to make sure heck IDs are present. If a guild ID is passed, they are checked as well
-async fn check_hecks_are_present(ctx: LuroFramework, guild_id: Option<Id<GuildMarker>>) -> anyhow::Result<()> {
-    if let Some(guild_id) = guild_id {
-        let guild_data = ctx.database.get_guild(&guild_id).await?;
-
-        if guild_data.available_random_nsfw_hecks.is_empty() {
-            ctx.database.reload_guild_heck_ids(&guild_id, true).await?;
-        }
-
-        if guild_data.available_random_sfw_hecks.is_empty() {
-            ctx.database.reload_guild_heck_ids(&guild_id, false).await?;
-        }
-    }
-
-    let nsfw_hecks = ctx.database.get_hecks(true).await?;
-    let sfw_hecks = ctx.database.get_hecks(false).await?;
-
-    if nsfw_hecks.is_empty() {
-        ctx.database.reload_global_heck_ids(true).await?;
-    }
-
-    if sfw_hecks.is_empty() {
-        ctx.database.reload_global_heck_ids(false).await?;
-    }
-
-    Ok(())
-}
-
 /// Open the database as writeable and remove a NSFW heck from it, returning the heck removed
-async fn get_heck(
-    ctx: &LuroFramework,
+async fn get_heck<D: LuroDatabaseDriver>(
+    ctx: &LuroSlash<D>,
     id: Option<i64>,
     guild_id: Option<Id<GuildMarker>>,
     global: bool,
     nsfw: bool
 ) -> anyhow::Result<(Heck, usize)> {
-    // Check to make sure heck IDs are available in the cache
-    check_hecks_are_present(ctx.clone(), guild_id).await?;
-
     // A heck type to send if there are no hecks of the type requested!
     let no_heck = Heck {
         heck_message: "No hecks of the requested type found!".to_string(),
@@ -166,8 +135,8 @@ async fn get_heck(
     Ok(match global {
         true => {
             let hecks = match nsfw {
-                true => ctx.database.get_hecks(true).await?,
-                false => ctx.database.get_hecks(false).await?
+                true => ctx.framework.database.get_hecks(true).await?,
+                false => ctx.framework.database.get_hecks(false).await?
             };
 
             if heck_id == 0 {
@@ -177,7 +146,7 @@ async fn get_heck(
                 heck_id = rand::thread_rng().gen_range(0..hecks.len())
             }
 
-            let heck = match hecks.get(&format_heck_id(heck_id)) {
+            let heck = match hecks.get(&heck_id) {
                 Some(heck) => (heck.clone(), heck_id),
                 None => (no_heck, 69)
             };
@@ -187,7 +156,7 @@ async fn get_heck(
         false => {
             let guild_id =
                 guild_id.ok_or_else(|| Error::msg("Guild ID is not present. You can only use this option in a guild."))?;
-            let guild_settings = ctx.database.get_guild(&guild_id).await?;
+            let guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
 
             if heck_id == 0 {
                 heck_id = rand::thread_rng().gen_range(
@@ -209,8 +178,8 @@ async fn get_heck(
             }
 
             let heck = match nsfw {
-                true => guild_settings.nsfw_hecks.get(&format_heck_id(heck_id)),
-                false => guild_settings.sfw_hecks.get(&format_heck_id(heck_id))
+                true => guild_settings.nsfw_hecks.get(&heck_id),
+                false => guild_settings.sfw_hecks.get(&heck_id)
             };
 
             match heck {

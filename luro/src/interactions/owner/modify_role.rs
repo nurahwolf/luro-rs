@@ -8,6 +8,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -37,7 +38,7 @@ struct Position {
 }
 
 impl LuroCommand for ModifyRoleCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let (mut role_selected, mut role_position) = (None, None);
 
         // Guild to modify

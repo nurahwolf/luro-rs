@@ -1,11 +1,11 @@
 use anyhow::Error;
-use luro_model::{constants::ACCENT_COLOUR, luro_user::LuroUser};
+use luro_model::{database::drivers::LuroDatabaseDriver, user::LuroUser, ACCENT_COLOUR};
 use twilight_model::{guild::Guild, user::User};
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::interaction::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn kick_response(&self, guild: Guild, banned_user: User, reason: &String, success: bool) -> anyhow::Result<()> {
         let mut embed = self.kick_embed(guild, banned_user, reason).await?;
         if success {

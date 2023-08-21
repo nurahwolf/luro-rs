@@ -1,6 +1,7 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 mod help;
 mod roll;
@@ -31,7 +32,7 @@ pub enum DiceCommands {
 }
 
 impl LuroCommand for DiceCommands {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
             Self::Roll(command) => command.run_command(ctx).await,
             Self::Direction(command) => command.run_command(ctx).await,

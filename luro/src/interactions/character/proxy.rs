@@ -1,8 +1,12 @@
 use anyhow::Context;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use crate::{
+    interaction::{LuroSlash},
+    luro_command::LuroCommand
+};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "proxy", desc = "Configure a prefix for proxying messages")]
@@ -16,7 +20,7 @@ pub struct Proxy {
 }
 
 impl LuroCommand for Proxy {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let user_id = ctx
             .interaction
             .author_id()
@@ -49,7 +53,7 @@ impl LuroCommand for Proxy {
         if self.remove.unwrap_or_default() {
             let content = match user_data.character_prefix.remove(&self.prefix) {
                 Some(prefix) => {
-                    ctx.framework.database.modify_user(&user_id, &user_data).await?;
+                    ctx.framework.database.save_user(&user_id, &user_data).await?;
                     format!("Prefix {prefix} removed from character {}!", self.name)
                 }
                 None => {
@@ -64,7 +68,7 @@ impl LuroCommand for Proxy {
         }
 
         user_data.character_prefix.insert(self.prefix, self.name.clone());
-        ctx.framework.database.modify_user(&user_id, &user_data).await?;
+        ctx.framework.database.save_user(&user_id, &user_data).await?;
 
         let character_icon = match !character.icon.is_empty() {
             true => character.icon.clone(),

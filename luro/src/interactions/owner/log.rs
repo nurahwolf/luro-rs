@@ -3,6 +3,7 @@ use tracing_subscriber::filter;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -29,7 +30,7 @@ pub enum LogLevel {
 }
 
 impl LuroCommand for LogCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let (_, level) = match self.level {
             LogLevel::Trace => (
                 ctx.framework

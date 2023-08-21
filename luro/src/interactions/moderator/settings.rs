@@ -1,5 +1,7 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{luro_log_channel::LuroLogChannel, role_ordering::RoleOrdering};
+use luro_model::{
+    database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel, legacy::role_ordering::RoleOrdering
+};
 use std::fmt::Write;
 use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -37,7 +39,7 @@ impl LuroCommand for GuildSettingsCommand {
         Permissions::MANAGE_GUILD
     }
 
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await
@@ -101,7 +103,7 @@ impl LuroCommand for GuildSettingsCommand {
         }
 
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
-        ctx.framework.database.update_guild(guild_id, &guild_settings).await?;
+        ctx.framework.database.save_guild(&guild_id, &guild_settings).await?;
         embed.create_field(
             "Guild Accent Colour",
             &format!("`{:X}` - <@&{highest_role_id}>", guild_settings.accent_colour),

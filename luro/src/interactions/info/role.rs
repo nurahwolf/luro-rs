@@ -1,10 +1,10 @@
 use std::fmt::Write;
 
-use luro_model::role_ordering::RoleOrdering;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentionable};
 
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
+use luro_model::{database::drivers::LuroDatabaseDriver, legacy::role_ordering::RoleOrdering};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "role", desc = "Information about a role")]
@@ -14,7 +14,7 @@ pub struct InfoRole {
 }
 
 impl LuroCommand for InfoRole {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut description: String = String::new();
         let role = match ctx.framework.twilight_cache.role(self.role.id().cast()) {
             Some(role) => role,

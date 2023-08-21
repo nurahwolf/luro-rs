@@ -1,9 +1,10 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::{error, warn};
 use twilight_model::application::interaction::InteractionType;
 
 use super::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// A handler around different type of interactions
     /// TODO: Refactor this
     pub async fn handle(self) -> anyhow::Result<()> {

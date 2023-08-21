@@ -2,6 +2,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "remove", desc = "Remove a role to the blacklist")]
@@ -11,7 +12,7 @@ pub struct Remove {
 }
 
 impl LuroCommand for Remove {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author_id().unwrap();
         let mut owner_match = false;
 
@@ -33,7 +34,7 @@ impl LuroCommand for Remove {
         guild_settings.assignable_role_blacklist.retain(|&x| x != self.role);
         ctx.framework
             .database
-            .update_guild(ctx.interaction.guild_id.unwrap(), &guild_settings)
+            .save_guild(&ctx.interaction.guild_id.unwrap(), &guild_settings)
             .await?;
 
         ctx.respond(|r| {

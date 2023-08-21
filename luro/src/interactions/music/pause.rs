@@ -2,6 +2,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Pause;
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -9,7 +10,7 @@ use crate::luro_command::LuroCommand;
 pub struct PauseCommand {}
 
 impl LuroCommand for PauseCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
         let player = ctx.framework.lavalink.player(guild_id).await.unwrap();

@@ -3,6 +3,7 @@ use twilight_model::application::interaction::modal::ModalInteractionData;
 use twilight_model::id::Id;
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 
@@ -62,7 +63,7 @@ pub enum OwnerCommands {
 }
 
 impl LuroCommand for OwnerCommands {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author().unwrap();
         let mut owner_match = false;
 
@@ -115,7 +116,7 @@ impl LuroCommand for OwnerCommands {
         }
     }
 
-    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model<D: LuroDatabaseDriver>(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut message_id = None;
         let mut channel_id = None;
 

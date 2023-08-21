@@ -1,7 +1,8 @@
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
-use luro_model::constants::COLOUR_DANGER;
-use luro_model::luro_message::LuroMessage;
+use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::message::LuroMessage;
+use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::marker::ChannelMarker;
 use twilight_model::id::Id;
@@ -18,7 +19,7 @@ pub struct OwnerGetMessage {
 }
 
 impl LuroCommand for OwnerGetMessage {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let message_id = Id::new(self.message_id.parse()?);
         let channel_id = self.channel_id.unwrap_or(ctx.interaction.clone().channel.unwrap().id);
         let mut embed = ctx.default_embed().await;
@@ -32,7 +33,8 @@ impl LuroCommand for OwnerGetMessage {
                 .get_user(&user.resolved.id)
                 .await?
                 .messages
-                .get(&message_id).cloned(),
+                .get(&message_id)
+                .cloned(),
             None => None
         };
 
@@ -46,20 +48,21 @@ impl LuroCommand for OwnerGetMessage {
 
         // Last ditch effort, is it in the cache?
         if luro_message.is_none() {
-            luro_message = ctx.framework.twilight_cache.message(message_id).map(|message| LuroMessage::from(message.clone()))
+            luro_message = ctx
+                .framework
+                .twilight_cache
+                .message(message_id)
+                .map(|message| LuroMessage::from(message.clone()))
         }
 
         match luro_message {
             Some(message) => {
+                let user = ctx.framework.database.get_user(&message.author.unwrap()).await?;
+
                 let toml = toml::to_string_pretty(&message)?;
                 embed
-                    .author(|author| {
-                        author
-                            .name(message.user.name())
-                            .icon_url(message.user.avatar())
-                            .url(message.link())
-                    })
-                    .description(message.content.unwrap_or_default())
+                    .author(|author| author.name(user.name()).icon_url(user.avatar()).url(message.link()))
+                    .description(message.content)
                     .create_field("Channel", &format!("<#{}>", channel_id), true)
                     .create_field("Message ID", &message_id.to_string(), true)
                     .create_field("LuroMessage", &format!("```toml\n{toml}\n```"), false)

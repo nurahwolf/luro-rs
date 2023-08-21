@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use luro_database::TomlDatabaseDriver;
-
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::error;
 use twilight_gateway::{Event, Latency, MessageSender};
 
@@ -19,11 +18,11 @@ mod thread_member_update;
 mod thread_members_update;
 mod thread_update;
 
-use crate::interaction::LuroSlash;
+use crate::interaction::{LuroSlash};
 
 use super::Framework;
 
-impl Framework<TomlDatabaseDriver> {
+impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn event_handler(self: Arc<Self>, event: Event, shard: MessageSender, latency: Latency) -> anyhow::Result<()> {
         // events we want an IMMEDIATE resposne to, such as if we don't want the cache to be updated yet.
         let callback = match event.clone() {

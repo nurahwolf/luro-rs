@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use anyhow::anyhow;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
 use tracing::warn;
 use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
-
 
 use self::character::Character;
 use self::dice::DiceCommands;
@@ -21,13 +21,13 @@ use self::{
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
     say::SayCommand, story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand
 };
+use crate::interaction::LuroSlash;
 use crate::interactions::heck::add::HeckAddCommand;
 
 use anyhow::bail;
 
 use twilight_model::application::interaction::InteractionData;
 
-use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
 use crate::BOT_NAME;
 
@@ -54,10 +54,6 @@ mod story;
 mod uwu;
 mod wordcount;
 // pub mod fursona;
-
-
-
-
 
 /// A simple structure containing our commands
 #[derive(Default)]
@@ -101,7 +97,6 @@ impl Commands {
         init.global_commands.insert("roles", RoleCommands::create_command().into());
         init.global_commands.insert("character", Character::create_command().into());
 
-
         init.global_commands
             .insert("wordcount", WordcountCommand::create_command().into());
 
@@ -110,7 +105,7 @@ impl Commands {
     }
 }
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Handle incoming command interaction.
     pub async fn handle_command(self) -> anyhow::Result<()> {
         let data = match self.interaction.data.clone() {

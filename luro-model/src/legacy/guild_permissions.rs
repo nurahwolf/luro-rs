@@ -7,7 +7,7 @@ use twilight_model::{
     }
 };
 
-use crate::luro_permissions::LuroPermissions;
+use super::luro_permissions::LuroPermissions;
 
 /// Calculate the permissions for a given guild.
 pub struct GuildPermissions<'a> {

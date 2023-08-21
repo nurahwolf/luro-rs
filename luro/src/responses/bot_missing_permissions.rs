@@ -1,3 +1,4 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::error;
 use twilight_util::builder::embed::EmbedBuilder;
 
@@ -5,7 +6,7 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn bot_missing_permission_response(&self, permission_missing: &String) -> anyhow::Result<()> {
         self.respond(|r| r.add_embed(bot_missing_permission_embed(permission_missing).build()))
             .await

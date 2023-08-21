@@ -1,8 +1,12 @@
+use luro_dice::{DiceRoll, RollResult, RollValue};
+use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
-use luro_dice::{RollValue, DiceRoll, RollResult};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use crate::{
+    interaction::{LuroSlash},
+    luro_command::LuroCommand
+};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "simple", desc = "A simpler version, for those not wanting to deal with foruma")]
@@ -44,7 +48,7 @@ pub struct Simple {
 }
 
 impl LuroCommand for Simple {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut roll = format!("{}d{}", self.dice, self.sides);
 
         if let Some(operation) = self.keep_highest {

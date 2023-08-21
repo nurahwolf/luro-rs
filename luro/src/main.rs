@@ -1,11 +1,12 @@
 #![feature(let_chains)]
 #![feature(async_fn_in_trait)]
+#![feature(associated_type_bounds)]
 
 use anyhow::Context;
 use dotenv::dotenv;
 use framework::Framework;
 use futures_util::StreamExt;
-use luro_database::TomlDatabaseDriver;
+use luro_database::toml::TomlDatabaseDriver;
 use std::{env, sync::Arc};
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::{
@@ -18,11 +19,11 @@ use tracing_subscriber::{
 use twilight_gateway::{error::ReceiveMessageErrorType, stream::ShardEventStream, Intents};
 
 pub mod commands;
-pub mod interactions;
 pub mod event_handler;
 pub mod framework;
 pub mod functions;
 pub mod interaction;
+pub mod interactions;
 pub mod luro_command;
 pub mod models;
 pub mod responses;

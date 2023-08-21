@@ -1,10 +1,12 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::debug;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 use crate::{
     interaction::LuroSlash,
-    luro_command::LuroCommand, interactions::heck::{get_heck, format_heck}
+    interactions::heck::{format_heck, get_heck},
+    luro_command::LuroCommand
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -21,13 +23,13 @@ pub struct HeckSomeoneCommand {
 }
 
 impl LuroCommand for HeckSomeoneCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // Is the channel the interaction called in NSFW?
         let interaction = &ctx.interaction;
         let nsfw = interaction.channel.as_ref().unwrap().nsfw.unwrap_or(false);
 
         // Attempt to get a heck
-        let (heck, heck_id) = get_heck(&ctx.framework, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
+        let (heck, heck_id) = get_heck(&ctx, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
 
         debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, interaction.author().as_ref().unwrap(), &self.user.resolved).await;

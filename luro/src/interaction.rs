@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use luro_builder::embed::EmbedBuilder;
 use luro_builder::response::LuroResponse;
-use luro_database::TomlDatabaseDriver;
+use luro_database::toml::TomlDatabaseDriver;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::debug;
 use tracing::error;
 use twilight_gateway::Latency;
@@ -26,28 +27,25 @@ mod parsers;
 mod send_log_message;
 mod user_utils;
 
+pub type LuroContext = LuroSlash<TomlDatabaseDriver>;
+
 /// Some nice stuff about formatting a response, ready to send via twilight's client
 #[derive(Clone, Debug)]
-pub struct LuroSlash {
+pub struct LuroSlash<D: LuroDatabaseDriver> {
     /// The framework for being able to respond to an interaction
-    pub framework: Arc<Framework<TomlDatabaseDriver>>,
+    pub framework: Arc<Framework<D>>,
     /// The client is wrapped around this interaction
     pub interaction: Interaction,
     pub shard: MessageSender,
     pub latency: Latency
 }
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Create a client wrapped around an interaction. Note that not setting anything else will not cause a response to be sent!
     /// This is set with some defaults:
     /// - AllowedMentions - All
     /// - InteractionResponseType - [`InteractionResponseType::ChannelMessageWithSource`]
-    pub fn new(
-        framework: Arc<Framework<TomlDatabaseDriver>>,
-        interaction: Interaction,
-        shard: MessageSender,
-        latency: Latency
-    ) -> Self {
+    pub fn new(framework: Arc<Framework<D>>, interaction: Interaction, shard: MessageSender, latency: Latency) -> Self {
         Self {
             framework,
             interaction,

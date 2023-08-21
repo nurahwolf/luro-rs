@@ -1,9 +1,15 @@
-use std::fmt::Write;
 use anyhow::Context;
-use luro_model::character_profile::{FetishCategory, Fetish, FetishList};
+use luro_model::{
+    database::drivers::LuroDatabaseDriver,
+    user::character::{Fetish, FetishCategory, FetishList}
+};
+use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{luro_command::LuroCommand, interaction::LuroSlash};
+use crate::{
+    interaction::{LuroSlash},
+    luro_command::LuroCommand
+};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "add", desc = "Add a fetish to a character profile")]
@@ -13,20 +19,22 @@ pub struct Add {
     /// The fetish type to add
     pub fetish: FetishCategory,
     /// Description of that fetish
-    pub description: String,
+    pub description: String
 }
 
 impl LuroCommand for Add {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
-        let user_id = ctx.interaction.author_id().context("Expected to find the user running this command")?;
+        let user_id = ctx
+            .interaction
+            .author_id()
+            .context("Expected to find the user running this command")?;
         let mut user_data = ctx.framework.database.get_user(&user_id).await?;
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| {
             a.icon_url(user_data.avatar())
                 .name(format!("Profile by {}", user_data.name()))
         });
-
 
         if user_data.characters.is_empty() {
             return ctx
@@ -40,13 +48,16 @@ impl LuroCommand for Add {
         let character = match user_data.characters.get_mut(&self.name) {
             Some(character) => {
                 let test = character.fetishes.len() + 1;
-                character.fetishes.insert(test, Fetish {
-                    category: self.fetish,
-                    description: self.description,
-                    list: FetishList::Custom,
-                });
+                character.fetishes.insert(
+                    test,
+                    Fetish {
+                        category: self.fetish,
+                        description: self.description,
+                        list: FetishList::Custom
+                    }
+                );
                 character.clone()
-            },
+            }
             None => {
                 let mut characters = String::new();
 
@@ -54,11 +65,14 @@ impl LuroCommand for Add {
                     writeln!(characters, "- {character_name}: {}", character.short_description)?
                 }
 
-                let response = format!("I'm afraid that you have no characters with the name `{}`! You have the following characters:\n{}", self.name, characters);
+                let response = format!(
+                    "I'm afraid that you have no characters with the name `{}`! You have the following characters:\n{}",
+                    self.name, characters
+                );
                 return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
-        
+
         ctx.framework.database.save_user(&user_id, &user_data).await?;
 
         let mut fav = String::new();
@@ -77,7 +91,7 @@ impl LuroCommand for Add {
                 FetishCategory::Neutral => writeln!(neutral, "- {id}: {}", fetish.description)?,
                 FetishCategory::Dislike => writeln!(dislike, "- {id}: {}", fetish.description)?,
                 FetishCategory::Hate => writeln!(hate, "- {id}: {}", fetish.description)?,
-                FetishCategory::Limit => writeln!(limits, "- {id}: {}", fetish.description)?,
+                FetishCategory::Limit => writeln!(limits, "- {id}: {}", fetish.description)?
             }
         }
 
@@ -109,6 +123,6 @@ impl LuroCommand for Add {
             embed.create_field("Limits", &limits, false);
         }
 
-        ctx.respond(|r|r.add_embed(embed).ephemeral()).await
+        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }
 }

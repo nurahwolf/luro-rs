@@ -1,7 +1,11 @@
-use luro_dice::{RollResult, DiceRoll, RollValue};
+use luro_dice::{DiceRoll, RollResult, RollValue};
+use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use crate::{
+    interaction::{LuroSlash},
+    luro_command::LuroCommand
+};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "roll", desc = "Roll those freaking dice!!!")]
@@ -15,7 +19,7 @@ pub struct Roll {
 }
 
 impl LuroCommand for Roll {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let result = DiceRoll::roll_inline(&self.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)

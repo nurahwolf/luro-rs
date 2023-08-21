@@ -1,4 +1,4 @@
-use crate::{RollParser, RollOptions, RollAst, FilterModifier};
+use crate::{FilterModifier, RollAst, RollOptions, RollParser};
 
 impl<'a> RollParser<'a> {
     pub fn new(expr: &'a str) -> Self {

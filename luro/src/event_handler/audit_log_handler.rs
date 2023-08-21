@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use luro_model::luro_database_driver::LuroDatabaseDriver;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::warn;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::audit_log::AuditLogEventType};
 
