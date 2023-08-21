@@ -43,7 +43,11 @@ impl LuroCommand for InfoUser {
             Some(ref user) => user.resolved.id,
             None => ctx.interaction.author_id().unwrap()
         };
-        let mut luro_user = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
+        let mut luro_user = ctx
+            .framework
+            .database
+            .get_user(&user_id, &ctx.framework.twilight_client)
+            .await?;
         let user_timestamp = Duration::from_millis(user_id.timestamp().unsigned_abs());
 
         let mut response = LuroResponse::default();

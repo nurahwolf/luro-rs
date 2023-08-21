@@ -19,7 +19,11 @@ pub struct OwnerClearWarning {
 
 impl LuroCommand for OwnerClearWarning {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let mut user_data = ctx.framework.database.get_user(&self.user.resolved.id, &ctx.framework.twilight_client).await?;
+        let mut user_data = ctx
+            .framework
+            .database
+            .get_user(&self.user.resolved.id, &ctx.framework.twilight_client)
+            .await?;
         if user_data.warnings.is_empty() {
             return ctx
                 .respond(|r| r.content("User has no warnings you stupid idiot!").ephemeral())

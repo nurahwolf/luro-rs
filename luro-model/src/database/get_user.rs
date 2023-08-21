@@ -1,4 +1,4 @@
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 use twilight_http::Client;
 use twilight_model::id::{marker::UserMarker, Id};
 
@@ -8,7 +8,7 @@ use super::{drivers::LuroDatabaseDriver, LuroDatabase};
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get a user from the cache, otherwise gets the user from the database
-    /// 
+    ///
     /// If that fails... Then fetch from Discord's API
     pub async fn get_user(&self, id: &Id<UserMarker>, twilight_client: &Client) -> anyhow::Result<LuroUser> {
         let data = match self.user_data.read() {
@@ -27,8 +27,8 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
                     Ok(data) => data,
                     Err(why) => {
                         error!(why = ?why, "Failed to get user from the database. Falling back to twilight");
-                        return Ok(LuroUser::from(&twilight_client.user(*id).await?.model().await?))
-                    },
+                        return Ok(LuroUser::from(&twilight_client.user(*id).await?.model().await?));
+                    }
                 };
                 match self.user_data.write() {
                     Ok(mut user) => {

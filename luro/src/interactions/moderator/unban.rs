@@ -20,7 +20,11 @@ impl LuroCommand for Unban {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
         let mut moderator = ctx.get_interaction_author(interaction).await?;
-        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id, &ctx.framework.twilight_client).await?;
+        let punished_user = ctx
+            .framework
+            .database
+            .get_user(&self.user.resolved.id, &ctx.framework.twilight_client)
+            .await?;
         let mut response = ctx.acknowledge_interaction(false).await?;
 
         let guild_id = interaction.guild_id.unwrap();

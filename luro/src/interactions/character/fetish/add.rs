@@ -24,7 +24,11 @@ impl LuroCommand for Add {
             .interaction
             .author_id()
             .context("Expected to find the user running this command")?;
-        let mut user_data = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
+        let mut user_data = ctx
+            .framework
+            .database
+            .get_user(&user_id, &ctx.framework.twilight_client)
+            .await?;
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| {
             a.icon_url(user_data.avatar())

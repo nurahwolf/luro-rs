@@ -9,7 +9,6 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 use twilight_model::channel::message::component::{ActionRow, TextInput, TextInputStyle};
 use twilight_model::channel::message::Component;
-use twilight_model::guild::Permissions;
 
 use crate::luro_command::LuroCommand;
 
@@ -22,27 +21,25 @@ use crate::luro_command::LuroCommand;
 pub struct ModeratorWarnCommand {
     /// Want to make a new warning?
     new: bool,
-    /// The user to warn.
+    /// The user to warn / get warnings for.
     user: ResolvedUser
 }
 
 impl LuroCommand for ModeratorWarnCommand {
-    fn default_permissions() -> Permissions {
-        Permissions::MANAGE_MESSAGES
-    }
-
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let user_id = self.user.resolved.id;
+        let punished_user = ctx
+            .framework
+            .database
+            .get_user(&self.user.resolved.id, &ctx.framework.twilight_client)
+            .await?;
 
         if !self.new {
-            let user_data = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
-            if user_data.warnings.is_empty() {
+            if punished_user.warnings.is_empty() {
                 return ctx.respond(|r| r.content("No warnings for that user!")).await;
             }
 
-            let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap(), &ctx.framework.twilight_client).await?;
             let mut warnings_formatted = String::new();
-            for (warning, user_id) in &user_data.warnings {
+            for (warning, user_id) in &punished_user.warnings {
                 writeln!(warnings_formatted, "Warning by <@{user_id}>```{warning}```")?
             }
 
@@ -51,9 +48,15 @@ impl LuroCommand for ModeratorWarnCommand {
                 .respond(|r| {
                     r.embed(|embed| {
                         embed
-                            .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()))
+                            .author(|author| {
+                                author
+                                    .name(punished_user.member_name(&ctx.interaction.guild_id))
+                                    .icon_url(punished_user.avatar())
+                            })
                             .description(warnings_formatted)
-                            .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
+                            .footer(|footer| {
+                                footer.text(format!("User has a total of {} warnings.", punished_user.warnings.len()))
+                            })
                             .colour(accent_colour)
                     })
                 })
@@ -82,7 +85,7 @@ impl LuroCommand for ModeratorWarnCommand {
                     placeholder: None,
                     required: Some(true),
                     style: TextInputStyle::Short,
-                    value: Some(user_id.to_string())
+                    value: Some(punished_user.id.to_string())
                 })]
             }),
         ];

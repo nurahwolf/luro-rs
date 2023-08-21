@@ -29,7 +29,11 @@ impl LuroCommand for Profile {
                 .author_id()
                 .context("Expected to find the user running this command")?
         };
-        let user_data = ctx.framework.database.get_user(&user_id, &ctx.framework.twilight_client).await?;
+        let user_data = ctx
+            .framework
+            .database
+            .get_user(&user_id, &ctx.framework.twilight_client)
+            .await?;
         let interaction_channel_nsfw = &ctx.interaction.clone().channel.unwrap().nsfw;
         let nsfw = match self.nsfw {
             Some(nsfw) => match interaction_channel_nsfw {
