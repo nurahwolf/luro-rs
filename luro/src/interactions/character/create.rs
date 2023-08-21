@@ -2,10 +2,7 @@ use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{channel::message::component::TextInputStyle, http::interaction::InteractionResponseType};
 
-use crate::{
-    interaction::{LuroSlash},
-    luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "create", desc = "Create a character profile.")]

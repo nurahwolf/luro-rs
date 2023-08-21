@@ -1,20 +1,13 @@
-
-use std::fmt::Write;
-use std::{sync::RwLock};
-
+use std::sync::RwLock;
 
 use serde::{Deserialize, Serialize};
 
-use twilight_model::{
-    application::interaction::Interaction,
-    oauth::Application,
-    user::CurrentUser
-};
+use twilight_model::{application::interaction::Interaction, oauth::Application, user::CurrentUser};
 
-use crate::guild::{LuroGuilds};
+use crate::guild::LuroGuilds;
 use crate::heck::Hecks;
+use crate::message::LuroMessage;
 use crate::user::LuroUsers;
-use crate::{message::LuroMessage};
 use crate::{CommandManager, Quotes, Stories};
 
 use self::drivers::LuroDatabaseDriver;

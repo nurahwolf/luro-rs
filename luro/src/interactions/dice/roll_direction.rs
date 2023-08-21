@@ -2,10 +2,7 @@ use luro_dice::DiceRoll;
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{
-    interaction::{LuroSlash},
-    luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "direction", desc = "Roll for a direction, such as `North East`!")]

@@ -1,7 +1,6 @@
-use tracing::{warn};
+use tracing::warn;
 
-
-use crate::{story::Story};
+use crate::story::Story;
 
 use super::{drivers::LuroDatabaseDriver, LuroDatabase};
 

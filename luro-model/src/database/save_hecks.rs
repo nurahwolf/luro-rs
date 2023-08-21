@@ -1,8 +1,6 @@
-use tracing::{warn};
+use tracing::warn;
 
-use crate::{
-    heck::{Hecks}
-};
+use crate::heck::Hecks;
 
 use super::{drivers::LuroDatabaseDriver, LuroDatabase};
 

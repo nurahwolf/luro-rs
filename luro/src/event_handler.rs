@@ -18,7 +18,7 @@ mod thread_member_update;
 mod thread_members_update;
 mod thread_update;
 
-use crate::interaction::{LuroSlash};
+use crate::interaction::LuroSlash;
 
 use super::Framework;
 

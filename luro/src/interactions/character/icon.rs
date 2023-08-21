@@ -3,10 +3,7 @@ use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{
-    interaction::{LuroSlash},
-    luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "icon", desc = "Set the primary icon for this character")]

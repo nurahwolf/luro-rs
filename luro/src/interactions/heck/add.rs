@@ -7,10 +7,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedFieldBuilder;
 
-use crate::{
-    interaction::{LuroSlash},
-    luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(name = "add", desc = "Add a heck", dm_permission = true)]

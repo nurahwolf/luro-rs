@@ -6,10 +6,7 @@ use luro_model::{
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{
-    interaction::{LuroSlash},
-    luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "add", desc = "Add a fetish to a character profile")]

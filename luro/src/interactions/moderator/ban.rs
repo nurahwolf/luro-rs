@@ -1,7 +1,4 @@
-use crate::{
-    interaction::{LuroSlash},
-    luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 use luro_model::{
     database::drivers::LuroDatabaseDriver,
     guild::log_channel::LuroLogChannel,

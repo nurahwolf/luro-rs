@@ -9,10 +9,7 @@ use twilight_model::application::interaction::{
     message_component::MessageComponentInteractionData, modal::ModalInteractionData
 };
 
-use crate::{
-    interaction::{LuroSlash},
-    luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 use self::{create::Create, fetish::Fetish, icon::Icon, profile::Profile, proxy::Proxy};
 

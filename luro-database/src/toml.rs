@@ -11,11 +11,6 @@ const SFW_HECK_FILE_PATH: &str = "data/sfw_hecks.toml";
 const SFW_STORIES_FILE_PATH: &str = "data/sfw_stories.toml";
 const USERDATA_FILE_PATH: &str = "data/user";
 
-
-
-
-
-
 use serde::Deserialize;
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{fs, io::AsyncReadExt};

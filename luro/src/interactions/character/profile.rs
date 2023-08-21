@@ -7,10 +7,7 @@ use twilight_model::{
     id::{marker::UserMarker, Id}
 };
 
-use crate::{
-    interaction::{LuroSlash},
-    luro_command::LuroCommand
-};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "profile", desc = "Fetch a user's character profile")]
