@@ -1,11 +1,11 @@
 use anyhow::Error;
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{constants::ACCENT_COLOUR, luro_user::LuroUser};
+use luro_model::{database::drivers::LuroDatabaseDriver, user::LuroUser, ACCENT_COLOUR};
 use twilight_model::guild::Guild;
 
 use crate::interaction::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn kick_response(
         &self,
         guild: &Guild,

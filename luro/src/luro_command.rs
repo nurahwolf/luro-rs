@@ -17,6 +17,7 @@ use twilight_model::{
 
 use crate::interaction::LuroSlash;
 use crate::LuroFramework;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 /// Add some custom functionality around [CommandModel]
 pub trait LuroCommand: CommandModel {
@@ -36,17 +37,21 @@ pub trait LuroCommand: CommandModel {
     }
 
     /// Run the command / command group
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
     /// Handle a component interaction. This could be a button or other form of interaciton
-    async fn handle_component(self, _data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component<D: LuroDatabaseDriver>(
+        self,
+        _data: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>
+    ) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 
     /// Create and respond to a button interaction
-    async fn handle_model(_data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model<D: LuroDatabaseDriver>(_data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         ctx.not_implemented_response().await
     }
 

@@ -1,3 +1,4 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::error;
 use twilight_model::id::{marker::GuildMarker, Id};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
@@ -6,7 +7,7 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn no_guild_settings_response(&self, guild_id: Id<GuildMarker>) -> anyhow::Result<()> {
         self.respond(|r| r.add_embed(no_guild_settings_embed(guild_id).build())).await
     }

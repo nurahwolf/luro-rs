@@ -1,6 +1,7 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 
@@ -12,7 +13,7 @@ use crate::luro_command::LuroCommand;
 pub struct Flush {}
 
 impl LuroCommand for Flush {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let errors = ctx.framework.database.flush().await?;
         let accent_colour = ctx.accent_colour().await;
 

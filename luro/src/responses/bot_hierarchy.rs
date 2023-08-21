@@ -1,9 +1,10 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::warn;
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{interaction::LuroSlash, COLOUR_DANGER};
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn bot_hierarchy_response(&self, bot_username: &String) -> anyhow::Result<()> {
         self.respond(|r| r.add_embed(bot_hierarchy_embed(bot_username).build())).await
     }

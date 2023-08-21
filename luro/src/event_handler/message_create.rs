@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Error;
-use luro_model::luro_database_driver::LuroDatabaseDriver;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::error;
 use twilight_model::gateway::payload::incoming::MessageCreate;
 
@@ -39,14 +39,13 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
             let proxied_message = message.content.replace(first_word, "");
 
+            self.twilight_client.delete_message(message.channel_id, message.id).await?;
             self.twilight_client
                 .execute_webhook(webhook.id, &webhook_token)
                 .username(&format!("{character_name} [{}]", user_data.member_name(&message.guild_id)))
                 .content(&proxied_message)
                 .avatar_url(&character_icon)
                 .await?;
-
-            self.twilight_client.delete_message(message.channel_id, message.id).await?;
         }
 
         self.response_message_modified(&message.clone().into()).await?;

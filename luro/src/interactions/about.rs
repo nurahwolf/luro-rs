@@ -3,7 +3,8 @@ use std::path::Path;
 
 use git2::{ErrorCode, Repository};
 use luro_builder::embed::EmbedBuilder;
-use luro_model::luro_user::LuroUser;
+use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::user::LuroUser;
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -23,7 +24,7 @@ pub struct AboutCommand {
 }
 
 impl LuroCommand for AboutCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // Variables
         let mut description =
             "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n"
@@ -131,7 +132,7 @@ impl LuroCommand for AboutCommand {
         }
 
         let mut staff_list = String::new();
-        for staff in staff.iter() {
+        for staff in staff.values() {
             match self.show_username.unwrap_or_default() {
                 true => writeln!(staff_list, "- {}", &staff.name)?,
                 false => writeln!(staff_list, "- <@{}>", staff.id)?

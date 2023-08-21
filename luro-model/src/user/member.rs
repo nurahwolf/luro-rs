@@ -1,14 +1,17 @@
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
 use twilight_model::{
-    guild::{Member, MemberFlags, PartialMember, Permissions, Role},
-    id::{marker::RoleMarker, Id},
+    guild::{Member, MemberFlags, PartialMember, Permissions},
+    id::{
+        marker::{RoleMarker, UserMarker},
+        Id
+    },
     util::{ImageHash, Timestamp}
 };
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct LuroMember {
+    /// User ID
+    pub id: Option<Id<UserMarker>>,
     /// Member's guild avatar.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub avatar: Option<ImageHash>,
@@ -33,8 +36,6 @@ pub struct LuroMember {
     pub premium_since: Option<Timestamp>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub role_ids: Vec<Id<RoleMarker>>,
-    #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub roles: BTreeMap<Id<RoleMarker>, Role>,
     /// Permission data for the member.
     ///
     /// Sent in an [`Interaction`].
@@ -51,6 +52,7 @@ impl LuroMember {
         self.communication_disabled_until = member.communication_disabled_until;
         self.deaf = member.deaf;
         self.flags = member.flags;
+        self.id = Some(member.user.id);
         self.joined_at = member.joined_at;
         self.mute = member.mute;
         self.nick = member.nick.clone();
@@ -62,6 +64,9 @@ impl LuroMember {
 
     /// Update this type from a user. Consider creating a default and then calling this function if you need a blank slate
     pub fn update_partialmember(&mut self, member: &PartialMember) -> &mut Self {
+        if let Some(user) = &member.user {
+            self.id = Some(user.id);
+        }
         self.avatar = member.avatar;
         self.communication_disabled_until = member.communication_disabled_until;
         self.deaf = member.deaf;
@@ -74,16 +79,11 @@ impl LuroMember {
         self.permissions = member.permissions;
         self
     }
-
-    // This clears all roles and applies the passed roles in their place
-    pub fn update_roles(&mut self, roles: BTreeMap<Id<RoleMarker>, Role>) -> &mut Self {
-        self.roles = roles;
-        self
-    }
 }
 
 impl From<&PartialMember> for LuroMember {
     fn from(member: &PartialMember) -> Self {
+        let id = member.user.as_ref().map(|user| user.id);
         Self {
             avatar: member.avatar,
             communication_disabled_until: member.communication_disabled_until,
@@ -95,8 +95,8 @@ impl From<&PartialMember> for LuroMember {
             pending: false,
             premium_since: member.premium_since,
             role_ids: member.roles.clone(),
-            roles: Default::default(),
-            permissions: member.permissions
+            permissions: member.permissions,
+            id
         }
     }
 }
@@ -114,8 +114,8 @@ impl From<&Member> for LuroMember {
             pending: member.pending,
             premium_since: member.premium_since,
             role_ids: member.roles.clone(),
-            roles: Default::default(),
-            permissions: None
+            permissions: None,
+            id: Some(member.user.id)
         }
     }
 }

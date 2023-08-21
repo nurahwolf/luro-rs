@@ -1,8 +1,8 @@
-use crate::COLOUR_DANGER;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
-use crate::interaction::LuroSlash;
+use crate::{interaction::LuroSlash, COLOUR_DANGER};
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// A response sent when Luro receives a command it does not have a handler for
     pub async fn unknown_command_response(self) -> anyhow::Result<()> {
         self.respond(|r| {

@@ -1,5 +1,8 @@
 use anyhow::{Context, Error};
-use luro_model::character_profile::{CharacterProfile, FetishCategory};
+use luro_model::{
+    database::drivers::LuroDatabaseDriver,
+    user::character::{CharacterProfile, FetishCategory}
+};
 use std::{collections::btree_map::Entry, fmt::Write};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::{
@@ -11,6 +14,8 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 use self::{create::Create, fetish::Fetish, icon::Icon, profile::Profile, proxy::Proxy, send::CharacterSend};
 
 mod create;
+mod fetish;
+mod icon;
 mod fetish;
 mod icon;
 mod profile;
@@ -35,7 +40,7 @@ pub enum Character {
 }
 
 impl LuroCommand for Character {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
             Self::Profile(command) => command.run_command(ctx).await,
             Self::Create(command) => command.run_command(ctx).await,
@@ -46,7 +51,7 @@ impl LuroCommand for Character {
         }
     }
 
-    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_model<D: LuroDatabaseDriver>(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let user_id = ctx
             .interaction
             .author_id()
@@ -96,7 +101,7 @@ impl LuroCommand for Character {
         ctx.respond(|response| response.add_embed(embed)).await
     }
 
-    async fn handle_component(self, _data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component<D: LuroDatabaseDriver>(self, _data: Box<MessageComponentInteractionData>, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let message = ctx
             .interaction

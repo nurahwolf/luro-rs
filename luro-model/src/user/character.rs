@@ -1,9 +1,8 @@
-use crate::toml_driver::deserialize_fetish;
-use crate::toml_driver::serialize_fetish;
+#[cfg(feature = "toml-driver")]
+use crate::database::drivers::toml::{deserialize_fetish, serialize_fetish};
 use core::fmt;
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use twilight_interactions::command::{CommandOption, CreateOption};
 /// The different categories of fetishes a user can have
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq, CommandOption, CreateOption)]
@@ -65,9 +64,6 @@ pub struct CharacterProfile {
     #[serde(default)]
     /// A HTTP / HTTPS link to an icon used for their main appearance
     pub icon: String,
-    /// An icon that is only shown in NSFW rooms / contexts
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub nsfw_icon: Option<String>,
     /// A detailed description for this character
     #[serde(default)]
     pub description: String,

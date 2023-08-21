@@ -1,3 +1,4 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
@@ -7,7 +8,7 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 pub struct Sort {}
 
 impl LuroCommand for Sort {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut quotes = ctx.framework.database.get_quotes().await?;
 
         // Remove duplicates and new IDs

@@ -1,3 +1,4 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::error;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
@@ -5,7 +6,7 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn no_interaction_channel_response(&self) -> anyhow::Result<()> {
         self.respond(|r: &mut luro_builder::response::LuroResponse| r.add_embed(no_interaction_channel_embed().build()))
             .await

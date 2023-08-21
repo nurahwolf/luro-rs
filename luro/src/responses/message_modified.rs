@@ -1,7 +1,9 @@
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{
-    constants::COLOUR_DANGER, luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel,
-    luro_message::LuroMessage, luro_message_source::LuroMessageSource
+    database::drivers::LuroDatabaseDriver,
+    guild::log_channel::LuroLogChannel,
+    message::{LuroMessage, LuroMessageSource},
+    COLOUR_DANGER
 };
 use regex::Regex;
 use std::{fmt::Write, sync::Arc};
@@ -15,18 +17,17 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         let mut description = String::new();
         let mut embed = self.default_embed(&message.guild_id).await;
+        let mut user = match message.author {
+            Some(user_id) => self.database.get_user(&user_id).await?,
+            None => return Ok(())
+        };
 
-        if message.user.bot {
+        if user.bot {
             debug!("User is a bot");
             return Ok(());
         };
 
-        embed.author(|author| {
-            author
-                .name(message.user.name())
-                .icon_url(message.user.avatar())
-                .url(message.link())
-        });
+        embed.author(|author| author.name(user.name()).icon_url(user.avatar()).url(message.link()));
 
         match message.source {
             LuroMessageSource::MessageUpdate => {
@@ -50,17 +51,17 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 {
                     let mut data = self.database.get_user(&old_message.author()).await?;
                     data.message_edits += 1;
-                    self.database.modify_user(&old_message.author(), &data).await?;
+                    self.database.save_user(&old_message.author(), &data).await?;
                     user_data = data
                 }
-                match &message.content {
-                    Some(content) => match content.len() > 1024 {
-                        true => writeln!(description, "**Updated Message:**\n{content}")?,
+                match !message.content.is_empty() {
+                    true => match message.content.len() > 1024 {
+                        true => writeln!(description, "**Updated Message:**\n{}", message.content)?,
                         false => {
-                            embed.create_field("Updated Message", content, false);
+                            embed.create_field("Updated Message", &message.content, false);
                         }
                     },
-                    None => {
+                    false => {
                         debug!("No message content, so no need to record it");
                         return Ok(());
                     }
@@ -84,7 +85,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 }
                 writeln!(description, "**Original Message:**\n{}\n\n", old_message.content())?;
                 embed
-                    .author(|author| author.name(message.user.name()).icon_url(message.user.avatar()))
+                    .author(|author| author.name(user.name()).icon_url(user.avatar()))
                     .colour(COLOUR_DANGER);
             }
             LuroMessageSource::MessageCreate => {
@@ -95,8 +96,8 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     }
                 }
 
-                if let Some(message_content) = &message.content {
-                    content.push_str(message_content)
+                if !message.content.is_empty() {
+                    content.push_str(&message.content)
                 }
 
                 if !content.is_empty() {
@@ -104,6 +105,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     modified_user_data.global_name = message.user.global_name.clone();
                     modified_user_data.messages.insert(message.id, message.clone());
                     modified_user_data.update_lurouser(&message.user);
+                    user.messages.insert(message.id, message.clone());
 
                     // First perform analysis
                     let regex = Regex::new(r"\b[\w-]+\b").unwrap();
@@ -113,16 +115,14 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                             None => "".to_owned()
                         };
                         let size = word.len();
-                        modified_user_data.wordcount += 1;
-                        modified_user_data.averagesize += size;
-                        *modified_user_data.words.entry(word).or_insert(0) += 1;
-                        *modified_user_data.wordsize.entry(size).or_insert(0) += 1;
+                        user.wordcount += 1;
+                        user.averagesize += size;
+                        *user.words.entry(word).or_insert(0) += 1;
+                        *user.wordsize.entry(size).or_insert(0) += 1;
                     }
 
                     // Save
-                    self.database
-                        .modify_user(&message.author_id.unwrap(), &modified_user_data)
-                        .await?;
+                    self.database.save_user(&message.author.unwrap(), &user).await?;
                 }
 
                 return Ok(());

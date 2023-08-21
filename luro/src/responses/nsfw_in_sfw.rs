@@ -1,3 +1,4 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
@@ -5,7 +6,7 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn nsfw_in_sfw_response(&self) -> anyhow::Result<()> {
         self.respond(|r| r.add_embed(nsfw_in_sfw_embed().build())).await
     }

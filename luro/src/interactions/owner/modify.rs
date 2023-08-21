@@ -2,6 +2,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{channel::message::component::TextInputStyle, http::interaction::InteractionResponseType};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(
@@ -16,7 +17,7 @@ impl LuroCommand for Modify {
     ///
     /// This modal is only shown if the user has not specified a reason in the
     /// initial command.
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let channel_id = ctx.interaction.channel.clone().unwrap().id;
         ctx.respond(|r| {
             r.title("Modify an Embed!")

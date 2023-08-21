@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Error;
-use luro_model::luro_database_driver::LuroDatabaseDriver;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_model::gateway::payload::incoming::MessageDelete;
 
 use crate::framework::Framework;

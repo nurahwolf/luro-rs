@@ -1,3 +1,4 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
@@ -15,7 +16,7 @@ pub enum Fetish {
              // Remove(Remove),
 }
 impl Fetish {
-    pub async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    pub async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
             Self::Add(command) => command.run_command(ctx).await // Self::Remove(command) => command.run_command(ctx).await,
         }

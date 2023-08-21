@@ -1,7 +1,11 @@
-use std::{collections::BTreeMap, convert::TryFrom};
+use std::{
+    collections::{BTreeMap, HashMap},
+    convert::TryFrom
+};
 
 use anyhow::Context;
 
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
@@ -26,7 +30,7 @@ pub struct WordcountCommand {
 }
 
 impl LuroCommand for WordcountCommand {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let luro_user = ctx.get_specified_user_or_author(&self.user, &ctx.interaction).await?;
         let response = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(false).await?;
@@ -47,7 +51,13 @@ impl LuroCommand for WordcountCommand {
         if global {
             let mut most_said_words: BTreeMap<Id<UserMarker>, usize> = Default::default();
             let mut user_ids = vec![];
-            for (id, user_data) in ctx.framework.database.user_data.clone() {
+
+            let data = match ctx.framework.database.user_data.read() {
+                Ok(data) => data.clone(),
+                Err(_) => HashMap::new()
+            };
+
+            for (id, user_data) in data {
                 user_ids.push(id);
 
                 wordcount += user_data.wordcount;

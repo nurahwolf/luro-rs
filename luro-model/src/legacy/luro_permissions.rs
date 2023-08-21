@@ -9,7 +9,7 @@ use twilight_model::{
 };
 use twilight_util::permission_calculator::PermissionCalculator;
 
-use crate::{guild_permissions::GuildPermissions, member_roles::MemberRoles, role_ordering::RoleOrdering};
+use super::{guild_permissions::GuildPermissions, member_roles::MemberRoles, role_ordering::RoleOrdering};
 
 /// Calculate the permissions of a member with information from the cache.
 pub struct LuroPermissions<'a> {

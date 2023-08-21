@@ -1,4 +1,5 @@
 use anyhow::Context;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -16,7 +17,7 @@ pub struct Icon {
 }
 
 impl LuroCommand for Icon {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let user_id = ctx
             .interaction
             .author_id()
@@ -49,7 +50,7 @@ impl LuroCommand for Icon {
             }
         };
 
-        ctx.framework.database.modify_user(&user_id, &user_data).await?;
+        ctx.framework.database.save_user(&user_id, &user_data).await?;
 
         ctx.respond(|r| r.content("Done!").ephemeral()).await
     }

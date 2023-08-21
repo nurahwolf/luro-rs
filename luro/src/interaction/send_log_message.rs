@@ -1,10 +1,10 @@
 use luro_builder::response::LuroResponse;
-use luro_model::luro_log_channel::LuroLogChannel;
+use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
 use tracing::{debug, info};
 
 use super::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Send a message to a log channel if defined
     /// This gets the guild ID from the interaction. Consider using the method on ['LuroFramework'] to define the channel you are sending to.
     pub async fn send_log_channel<F>(&self, log_channel: LuroLogChannel, response: F) -> anyhow::Result<()>

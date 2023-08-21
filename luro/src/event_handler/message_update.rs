@@ -4,7 +4,7 @@ use anyhow::Error;
 use twilight_model::gateway::payload::incoming::MessageUpdate;
 
 use crate::framework::Framework;
-use luro_model::luro_database_driver::LuroDatabaseDriver;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn message_update_handler(self: &Arc<Self>, message: MessageUpdate) -> Result<(), Error> {

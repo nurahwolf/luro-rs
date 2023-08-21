@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Error;
 use luro_builder::{embed::EmbedBuilder, response::LuroResponse};
-use luro_model::{luro_database_driver::LuroDatabaseDriver, luro_log_channel::LuroLogChannel};
+use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
 use twilight_model::gateway::payload::incoming::MessageDeleteBulk;
 
 use crate::{framework::Framework, COLOUR_DANGER};

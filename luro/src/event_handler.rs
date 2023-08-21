@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use luro_database::TomlDatabaseDriver;
-
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::error;
 use twilight_gateway::{Event, Latency, MessageSender};
 
@@ -23,7 +22,7 @@ use crate::interaction::LuroSlash;
 
 use super::Framework;
 
-impl Framework<TomlDatabaseDriver> {
+impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn event_handler(self: Arc<Self>, event: Event, shard: MessageSender, latency: Latency) -> anyhow::Result<()> {
         // events we want an IMMEDIATE resposne to, such as if we don't want the cache to be updated yet.
         let callback = match event.clone() {
@@ -41,11 +40,11 @@ impl Framework<TomlDatabaseDriver> {
         self.lavalink.process(&event).await?;
         self.twilight_cache.update(&event);
 
-        let callback = match event {
+        let callback = match event.clone() {
             Event::Ready(ready) => self.ready_listener(ready, shard).await,
             Event::MessageCreate(message) => self.message_create_listener(*message).await,
-            Event::InteractionCreate(interaction) => LuroSlash::new(self, interaction.0, shard, latency).handle().await,
-            Event::GuildAuditLogEntryCreate(entry) => self.audit_log_handler(entry).await,
+            Event::InteractionCreate(interaction) => LuroSlash::new(self.clone(), interaction.0, shard, latency).handle().await,
+            Event::GuildAuditLogEntryCreate(entry) => self.clone().audit_log_handler(entry).await,
             Event::BanAdd(ban) => self.ban_add_listener(ban).await,
             Event::ThreadCreate(event) => self.listener_thread_create(event).await,
             Event::ThreadDelete(event) => self.listener_thread_delete(event).await,
@@ -59,6 +58,15 @@ impl Framework<TomlDatabaseDriver> {
         // TODO: Really shitty event handler, please change this
         if let Err(why) = callback {
             error!(why = ?why, "error while handling event");
+        }
+
+        // Update guild and user data
+        // TODO: Lessen how much this is checked lol
+        if let Some(guild_id) = &event.guild_id() {
+            let mut guild_settings = self.database.get_guild(guild_id).await?;
+            let guild = self.twilight_client.guild(*guild_id).await?.model().await?;
+            guild_settings.update_guild(guild);
+            self.database.save_guild(guild_id, &guild_settings).await?;
         }
 
         Ok(())

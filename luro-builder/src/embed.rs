@@ -1,4 +1,4 @@
-use luro_model::constants::ACCENT_COLOUR;
+use luro_model::ACCENT_COLOUR;
 use twilight_model::{
     channel::message::{
         embed::{EmbedAuthor, EmbedField, EmbedImage, EmbedProvider, EmbedThumbnail, EmbedVideo},

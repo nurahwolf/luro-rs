@@ -1,10 +1,10 @@
-use luro_model::{
-    guild_permissions::GuildPermissions, luro_log_channel::LuroLogChannel, user_actions::UserActions,
-    user_actions_type::UserActionType
-};
-
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use luro_model::{database::drivers::LuroDatabaseDriver, legacy::guild_permissions::GuildPermissions};
 
+use luro_model::{
+    guild::log_channel::LuroLogChannel,
+    user::{actions::UserActions, actions_type::UserActionType}
+};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{guild::Permissions, id::Id};
 
@@ -27,7 +27,7 @@ pub struct Kick {
 }
 
 impl LuroCommand for Kick {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
         let author_user_id = interaction.author_id().unwrap();
         let mut author_user = ctx.framework.database.get_user(&author_user_id).await?;
@@ -102,7 +102,7 @@ impl LuroCommand for Kick {
             .await?;
 
         author_user.moderation_actions_performed += 1;
-        ctx.framework.database.modify_user(&author_user_id, &author_user).await?;
+        ctx.framework.database.save_user(&author_user_id, &author_user).await?;
 
         // Record the punishment
         punished_user.moderation_actions.push(UserActions {
@@ -111,7 +111,25 @@ impl LuroCommand for Kick {
             reason,
             responsible_user: author_user_id
         });
-        ctx.framework.database.modify_user(&punished_user_id, &punished_user).await?;
+        ctx.framework.database.mod_user(&punished_user_id, &punished_user).await?;
+
+        // If an alert channel is defined, send a message there
+        ctx.framework
+            .send_log_channel(&Some(guild_id), embed.into(), LuroLogChannel::Moderator)
+            .await?;
+
+        let mut reward = ctx.framework.database.get_user(&author_user.id).await?;
+        reward.moderation_actions_performed += 1;
+        ctx.framework.database.save_user(&author_user.id, &reward).await?;
+
+        // Record the punishment
+        punished_user.moderation_actions.push(UserActions {
+            action_type: vec![UserActionType::Kick],
+            guild_id: Some(guild_id),
+            reason,
+            responsible_user: author_user_id
+        });
+        ctx.framework.database.save_user(&punished_user_id, &punished_user).await?;
 
         // If an alert channel is defined, send a message there
         ctx.framework

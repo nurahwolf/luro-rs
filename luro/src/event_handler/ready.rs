@@ -1,4 +1,4 @@
-use luro_model::luro_database_driver::LuroDatabaseDriver;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::{debug, info};
 use twilight_gateway::MessageSender;
 use twilight_model::gateway::{
@@ -46,7 +46,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         let mut owners = String::new();
         let staff = self.database.get_staff().await?;
 
-        for staff in staff.iter() {
+        for staff in staff.values() {
             if owners.is_empty() {
                 owners.push_str(&staff.name)
             } else {

@@ -1,10 +1,10 @@
-use luro_model::luro_user::LuroUser;
+use luro_model::{database::drivers::LuroDatabaseDriver, user::LuroUser};
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::application::interaction::Interaction;
 
 use super::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Get and return useful information about the interaction author
     pub async fn get_interaction_author<'a>(&'a self, interaction: &'a Interaction) -> anyhow::Result<LuroUser> {
         self.framework.database.get_user(&interaction.author_id().unwrap()).await

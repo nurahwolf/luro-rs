@@ -1,11 +1,10 @@
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::warn;
 use twilight_util::builder::embed::EmbedBuilder;
 
-use crate::COLOUR_DANGER;
+use crate::{interaction::LuroSlash, COLOUR_DANGER};
 
-use crate::interaction::LuroSlash;
-
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn not_guild_response(&self) -> anyhow::Result<()> {
         self.respond(|r| r.add_embed(not_guild_embed().build()).ephemeral()).await
     }

@@ -1,11 +1,12 @@
 use luro_builder::embed::EmbedBuilder;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::error;
 
 use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// A response returned by default when a command does not exist within Luro.
     pub async fn not_implemented_response(self) -> anyhow::Result<()> {
         self.respond(|response| response.add_embed(not_implemented_embed())).await

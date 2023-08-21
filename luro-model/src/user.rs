@@ -1,4 +1,4 @@
-use std::collections::{btree_map::Entry, BTreeMap};
+use std::collections::{btree_map::Entry, BTreeMap, HashMap};
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use twilight_model::{
@@ -11,10 +11,17 @@ use twilight_model::{
     util::ImageHash
 };
 
-use crate::{
-    character_profile::CharacterProfile, luro_member::LuroMember, luro_message::LuroMessage, user_actions::UserActions,
-    user_marriages::UserMarriages
-};
+/// A [HashMap] containing user specific settings ([LuroUser]), keyed by [UserMarker].
+pub type LuroUsers = HashMap<Id<UserMarker>, LuroUser>;
+use crate::message::LuroMessage;
+
+use self::{actions::UserActions, character::CharacterProfile, marriages::UserMarriages, member::LuroMember};
+
+pub mod actions;
+pub mod actions_type;
+pub mod character;
+pub mod marriages;
+pub mod member;
 
 /// Some nice functionality primarily around [User] and [Member], with some added goodness
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]

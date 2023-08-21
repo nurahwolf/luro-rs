@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::anyhow;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
 use tracing::warn;
 use twilight_interactions::command::CommandModel;
@@ -23,13 +24,13 @@ use self::{
     say::SayCommand, story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand
 };
 use crate::interactions::character::send::CharacterSendAutocomplete;
+use crate::interaction::LuroSlash;
 use crate::interactions::heck::add::HeckAddCommand;
 
 use anyhow::bail;
 
 use twilight_model::application::interaction::InteractionData;
 
-use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
 use crate::BOT_NAME;
 
@@ -107,7 +108,7 @@ impl Commands {
     }
 }
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Handle incoming command interaction.
     pub async fn handle_command(self) -> anyhow::Result<()> {
         let data = match self.interaction.data.clone() {

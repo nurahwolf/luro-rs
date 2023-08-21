@@ -1,4 +1,4 @@
-use luro_model::luro_message_source::LuroMessageSource;
+use luro_model::{database::drivers::LuroDatabaseDriver, message::LuroMessageSource};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
@@ -8,12 +8,12 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 pub struct List {}
 
 impl LuroCommand for List {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let quotes = ctx.framework.database.get_quotes().await?;
         let mut quotes_string = String::new();
 
         for (id, quote) in quotes.into_iter() {
-            let content = quote.content.unwrap_or_default();
+            let content = quote.content;
             if let Some(content) = content.lines().next() {
                 let mut content = content.to_string();
                 content = match quote.source {

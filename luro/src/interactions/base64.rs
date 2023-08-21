@@ -11,6 +11,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
 
 use crate::interaction::LuroSlash;
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
@@ -23,7 +24,7 @@ pub enum Base64Commands {
 }
 
 impl LuroCommand for Base64Commands {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Decode(command) => command.run_command(ctx).await,
@@ -31,7 +32,11 @@ impl LuroCommand for Base64Commands {
         }
     }
 
-    async fn handle_component(self, data: Box<MessageComponentInteractionData>, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn handle_component<D: LuroDatabaseDriver>(
+        self,
+        data: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>
+    ) -> anyhow::Result<()> {
         let author_id = ctx.interaction.author_id().context("Expected to get interaction author ID")?;
         // Always insure the input is decoded
         let (input, bait) = match self {
@@ -74,7 +79,7 @@ pub struct Base64Decode {
 }
 
 impl LuroCommand for Base64Decode {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         ctx.send_respond(decode_response(&ctx, &decode(&self.string)?).await?).await
     }
 }
@@ -89,7 +94,7 @@ pub struct Base64Encode {
 }
 
 impl LuroCommand for Base64Encode {
-    async fn run_command(self, ctx: LuroSlash) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         ctx.send_respond(encode_response(&ctx, &encode(&self.string)).await?).await
     }
 }
@@ -119,7 +124,11 @@ fn decode(input: &str) -> anyhow::Result<String> {
 }
 
 /// Simply send a response with a few checks.
-async fn response(ctx: &LuroSlash, input: &str, decode_operation: bool) -> anyhow::Result<LuroResponse> {
+async fn response<D: LuroDatabaseDriver>(
+    ctx: &LuroSlash<D>,
+    input: &str,
+    decode_operation: bool
+) -> anyhow::Result<LuroResponse> {
     let mut response = match decode_operation {
         true => decode_response(ctx, input).await?,
         false => encode_response(ctx, &encode(input)).await?
@@ -128,7 +137,7 @@ async fn response(ctx: &LuroSlash, input: &str, decode_operation: bool) -> anyho
     Ok(response)
 }
 
-async fn decode_response(ctx: &LuroSlash, input: &str) -> anyhow::Result<LuroResponse> {
+async fn decode_response<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>, input: &str) -> anyhow::Result<LuroResponse> {
     let accent_colour = ctx.accent_colour().await;
     let mut response = LuroResponse::default();
 
@@ -141,7 +150,7 @@ async fn decode_response(ctx: &LuroSlash, input: &str) -> anyhow::Result<LuroRes
     Ok(response)
 }
 
-async fn encode_response(ctx: &LuroSlash, input: &str) -> anyhow::Result<LuroResponse> {
+async fn encode_response<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>, input: &str) -> anyhow::Result<LuroResponse> {
     let accent_colour = ctx.accent_colour().await;
     let mut response = LuroResponse::default();
 

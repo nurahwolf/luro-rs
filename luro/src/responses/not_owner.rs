@@ -1,11 +1,13 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::user_actions::UserActions;
-use luro_model::user_actions_type::UserActionType;
+use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::user::actions::UserActions;
+use luro_model::user::actions_type::UserActionType;
 use rand::seq::SliceRandom;
 use tracing::warn;
 use twilight_model::id::marker::{GuildMarker, UserMarker};
 use twilight_model::id::Id;
 
+use crate::interaction::LuroSlash;
 use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
@@ -17,7 +19,7 @@ const INSULTS: [&str; 4] = [
     "Get fucked."
 ];
 
-impl LuroSlash {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn not_owner_response(
         &self,
         user_id: &Id<UserMarker>,
@@ -33,7 +35,7 @@ impl LuroSlash {
                 reason: format!("Attempted to run the {} command", &command),
                 responsible_user: *user_id
             });
-            self.framework.database.modify_user(user_id, &user_data).await?;
+            self.framework.database.save_user(user_id, &user_data).await?;
         }
         self.respond(|r| r.add_embed(not_owner_embed(user_id, &command))).await
     }
