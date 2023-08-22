@@ -30,7 +30,11 @@ impl LuroCommand for Add {
                 .await;
         }
 
-        let mut guild_settings = ctx.framework.database.get_guild(&ctx.interaction.guild_id.unwrap(), &ctx.framework.twilight_client).await?;
+        let mut guild_settings = ctx
+            .framework
+            .database
+            .get_guild(&ctx.interaction.guild_id.unwrap(), &ctx.framework.twilight_client)
+            .await?;
         guild_settings.assignable_role_blacklist.push(self.role);
         ctx.framework
             .database

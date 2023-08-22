@@ -67,7 +67,11 @@ impl LuroCommand for RoleCommands {
         let selected: Vec<Id<RoleMarker>> = data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
         let mut raw_user_roles = vec![];
         let mut selected_roles = vec![];
-        let guild_settings = ctx.framework.database.get_guild(&guild_id, &ctx.framework.twilight_client).await?;
+        let guild_settings = ctx
+            .framework
+            .database
+            .get_guild(&guild_id, &ctx.framework.twilight_client)
+            .await?;
         for guild_role in guild.roles.clone() {
             for member_role in &member.roles {
                 if guild_settings.assignable_role_blacklist.contains(&guild_role.id) {

@@ -1,4 +1,4 @@
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 use twilight_http::Client;
 use twilight_model::id::{marker::GuildMarker, Id};
 
@@ -43,8 +43,10 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         };
 
         match twilight_client.guild(*id).await {
-            Ok(guild) => {response.update_guild(guild.model().await?);},
-            Err(why) => info!(why = ?why, "Failed to update user"),
+            Ok(guild) => {
+                response.update_guild(guild.model().await?);
+            }
+            Err(why) => info!(why = ?why, "Failed to update user")
         }
 
         Ok(response)

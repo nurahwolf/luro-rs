@@ -62,7 +62,10 @@ impl LuroCommand for PlayCommand {
             content = if let (Some(title), Some(author)) = (&track.info.title, &track.info.author) {
                 format!("- Playing **{title}** by **{author}** - Volume {volume}")
             } else {
-                format!("- Playing **{:#?}** by **{:#?}** - Volume {volume}", track.info.title, track.info.author)
+                format!(
+                    "- Playing **{:#?}** by **{:#?}** - Volume {volume}",
+                    track.info.title, track.info.author
+                )
             };
         } else {
             content = "Didn't find any results".to_owned();

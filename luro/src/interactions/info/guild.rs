@@ -29,7 +29,11 @@ impl LuroCommand for Guild {
             None => ctx.interaction.guild_id.unwrap()
         };
         let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-        let guild_settings = ctx.framework.database.get_guild(&guild_id, &ctx.framework.twilight_client).await?;
+        let guild_settings = ctx
+            .framework
+            .database
+            .get_guild(&guild_id, &ctx.framework.twilight_client)
+            .await?;
         let mut embed = ctx.default_embed().await;
         embed
             .title(&guild_settings.name)

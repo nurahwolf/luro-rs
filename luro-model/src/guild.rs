@@ -304,7 +304,7 @@ impl LuroGuild {
             verification_level: Default::default(),
             voice_states: Default::default(),
             widget_channel_id: Default::default(),
-            widget_enabled: Default::default(),
+            widget_enabled: Default::default()
         }
     }
 }

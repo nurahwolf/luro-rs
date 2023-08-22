@@ -33,7 +33,11 @@ impl LuroCommand for HeckInfo {
 
         if let Some(guild_id) = ctx.interaction.guild_id {
             let mut guild_details = String::new();
-            let guild_settings = ctx.framework.database.get_guild(&guild_id, &ctx.framework.twilight_client).await?;
+            let guild_settings = ctx
+                .framework
+                .database
+                .get_guild(&guild_id, &ctx.framework.twilight_client)
+                .await?;
             writeln!(guild_details, "**GUILD SFW HECKS:** {}", guild_settings.sfw_hecks.len())?;
             writeln!(guild_details, "**GUILD NSFW HECKS:** {}", guild_settings.nsfw_hecks.len())?;
             embed = embed.field(EmbedFieldBuilder::new("Guild Stats", guild_details).inline());

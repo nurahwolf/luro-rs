@@ -45,8 +45,10 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         };
 
         match twilight_client.user(*id).await {
-            Ok(user) => {response.update_user(&user.model().await?);},
-            Err(why) => info!(why = ?why, "Failed to update user"),
+            Ok(user) => {
+                response.update_user(&user.model().await?);
+            }
+            Err(why) => info!(why = ?why, "Failed to update user")
         }
 
         Ok(response)

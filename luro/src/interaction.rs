@@ -138,7 +138,12 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     pub async fn accent_colour(&self) -> u32 {
         if let Some(guild_id) = &self.interaction.guild_id {
-            let guild_settings = match self.framework.database.get_guild(guild_id, &self.framework.twilight_client).await {
+            let guild_settings = match self
+                .framework
+                .database
+                .get_guild(guild_id, &self.framework.twilight_client)
+                .await
+            {
                 Ok(guild_settings) => guild_settings,
                 Err(why) => {
                     error!(why = ?why, "Failed to get guild settings when attempting to get guild's accent colour");

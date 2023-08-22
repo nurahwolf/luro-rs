@@ -5,7 +5,8 @@ use luro_builder::{embed::EmbedBuilder, response::LuroResponse};
 use luro_model::{
     database::{drivers::LuroDatabaseDriver, LuroDatabase},
     guild::log_channel::LuroLogChannel,
-    ACCENT_COLOUR, user::LuroUser
+    user::LuroUser,
+    ACCENT_COLOUR
 };
 use tracing::{debug, info};
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};

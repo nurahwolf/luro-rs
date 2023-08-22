@@ -70,7 +70,11 @@ impl LuroCommand for GuildSettingsCommand {
         embed.title(format!("Guild Setting - {}", guild.name));
 
         // Create a new guild settings object
-        let mut guild_settings = ctx.framework.database.get_guild(&guild_id, &ctx.framework.twilight_client).await?;
+        let mut guild_settings = ctx
+            .framework
+            .database
+            .get_guild(&guild_id, &ctx.framework.twilight_client)
+            .await?;
         if let Some(clear_settings) = self.clear_settings && clear_settings {
             guild_settings.accent_colour_custom = Default::default();
             guild_settings.catchall_log_channel = Default::default();

@@ -146,7 +146,11 @@ async fn get_heck<D: LuroDatabaseDriver>(
         false => {
             let guild_id =
                 guild_id.ok_or_else(|| Error::msg("Guild ID is not present. You can only use this option in a guild."))?;
-            let guild_settings = ctx.framework.database.get_guild(&guild_id, &ctx.framework.twilight_client).await?;
+            let guild_settings = ctx
+                .framework
+                .database
+                .get_guild(&guild_id, &ctx.framework.twilight_client)
+                .await?;
 
             if heck_id == 0 {
                 heck_id = rand::thread_rng().gen_range(
