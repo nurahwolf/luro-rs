@@ -32,18 +32,18 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             None => LuroGuild::new(*id)
         };
 
-        match self.guild_data.write() {
-            Ok(mut guild) => {
-                guild.insert(*id, data.clone());
-            }
-            Err(why) => error!(why = ?why, "guild_data lock is poisoned! Please investigate!")
-        }
-
         match self.twilight_client.guild(*id).await {
             Ok(guild) => {
                 data.update_guild(guild.model().await?);
             }
             Err(why) => info!(why = ?why, "Failed to update guild")
+        }
+
+        match self.guild_data.write() {
+            Ok(mut guild) => {
+                guild.insert(*id, data.clone());
+            }
+            Err(why) => error!(why = ?why, "guild_data lock is poisoned! Please investigate!")
         }
 
         Ok(data)

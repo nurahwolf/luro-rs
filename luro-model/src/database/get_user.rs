@@ -34,18 +34,18 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             None => LuroUser::new(*id)
         };
 
-        match self.user_data.write() {
-            Ok(mut user_data) => {
-                user_data.insert(*id, data.clone());
-            }
-            Err(why) => error!(why = ?why, "user_data lock is poisoned! Please investigate!")
-        }
-
         match self.twilight_client.user(*id).await {
             Ok(user) => {
                 data.update_user(&user.model().await?);
             }
             Err(why) => info!(why = ?why, "Failed to update user")
+        }
+
+        match self.user_data.write() {
+            Ok(mut user_data) => {
+                user_data.insert(*id, data.clone());
+            }
+            Err(why) => error!(why = ?why, "user_data lock is poisoned! Please investigate!")
         }
 
         Ok(data)
