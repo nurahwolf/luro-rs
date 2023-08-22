@@ -1,7 +1,5 @@
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use luro_model::{
-    database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel, legacy::guild_permissions::GuildPermissions
-};
+use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
 
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -19,32 +17,43 @@ pub struct Unban {
 impl LuroCommand for Unban {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
+        let guild_id = interaction.guild_id.unwrap();
+        let mut guild = ctx
+            .framework
+            .database
+            .get_guild(&guild_id, &ctx.framework.twilight_client)
+            .await?;
+        let luro = ctx
+            .framework
+            .database
+            .get_user(
+                &ctx.framework.twilight_client.current_user().await?.model().await?.id,
+                &ctx.framework.twilight_client
+            )
+            .await?;
         let mut moderator = ctx.get_interaction_author(interaction).await?;
-        let punished_user = ctx
+        let mut punished_user = ctx
             .framework
             .database
             .get_user(&self.user.resolved.id, &ctx.framework.twilight_client)
             .await?;
+        punished_user.update_user(&self.user.resolved);
         let mut response = ctx.acknowledge_interaction(false).await?;
+        let moderator_permissions = guild.user_permission(&moderator)?;
+        let luro_permissions = guild.user_permission(&luro)?;
 
-        let guild_id = interaction.guild_id.unwrap();
-        let guild_name = ctx
-            .framework
-            .database
-            .get_guild(&guild_id, &ctx.framework.twilight_client)
-            .await?
-            .name;
-        let permissions = GuildPermissions::new(&ctx.framework.twilight_client, &guild_id).await?;
-        let bot_permissions = permissions.current_member().await?;
+        if !luro_permissions.contains(Permissions::BAN_MEMBERS) {
+            return ctx.bot_missing_permission_response(Permissions::BAN_MEMBERS).await;
+        }
 
-        if !bot_permissions.guild().contains(Permissions::BAN_MEMBERS) {
-            return ctx.bot_missing_permission_response(&"BAN_MEMBERS".to_owned()).await;
+        if !moderator_permissions.contains(Permissions::BAN_MEMBERS) {
+            return ctx.missing_permission_response(Permissions::BAN_MEMBERS).await;
         }
 
         // Checks passed, now let's action the user
         let mut embed = ctx
             .framework
-            .unbanned_embed(&guild_name, &guild_id, &moderator, &punished_user, Some(&self.reason));
+            .unbanned_embed(&guild.name, &guild_id, &moderator, &punished_user, Some(&self.reason));
         match ctx.framework.twilight_client.create_private_channel(punished_user.id).await {
             Ok(channel) => {
                 let victim_dm = ctx

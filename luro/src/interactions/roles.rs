@@ -1,6 +1,5 @@
+use anyhow::Context;
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{legacy::role_ordering::RoleOrdering, COLOUR_DANGER};
-use std::fmt::Write;
 use tracing::{debug, info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -10,7 +9,7 @@ use twilight_model::{
 };
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::{database::drivers::LuroDatabaseDriver, COLOUR_DANGER};
 
 use self::blacklist::Blacklist;
 
@@ -38,215 +37,157 @@ impl LuroCommand for RoleCommands {
         data: Box<MessageComponentInteractionData>,
         ctx: LuroSlash<D>
     ) -> anyhow::Result<()> {
-        // Variables
-        let mut roles_to_remove_string = String::new();
-        let mut roles_to_remove = vec![];
-        let mut roles_to_add_string = String::new();
-        let mut roles_to_add = vec![];
-        let mut blacklisted_roles = vec![];
-
-        let mut embed = EmbedBuilder::default();
-        let accent_colour = ctx.accent_colour().await;
-        let luro_user = ctx
-            .framework
-            .database
-            .get_user(&ctx.interaction.author_id().unwrap(), &ctx.framework.twilight_client)
-            .await?;
-
+        let raw_selected_roles: Vec<Id<RoleMarker>> =
+            data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
         let guild_id = ctx.interaction.guild_id.unwrap();
-        let member = ctx
-            .framework
-            .twilight_client
-            .guild_member(guild_id, luro_user.id)
-            .await?
-            .model()
-            .await?;
-        let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
 
-        // Get and sort user's roles
-        let selected: Vec<Id<RoleMarker>> = data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
-        let mut raw_user_roles = vec![];
+        let mut blacklisted_roles = vec![];
+        let mut roles_to_add = vec![];
+        let mut roles_to_remove = vec![];
         let mut selected_roles = vec![];
-        let guild_settings = ctx
+        let mut existing_roles = vec![];
+        let mut too_high_role = vec![];
+
+        let mut embed = ctx.default_embed().await;
+        let guild = ctx
             .framework
             .database
             .get_guild(&guild_id, &ctx.framework.twilight_client)
             .await?;
-        for guild_role in guild.roles.clone() {
-            for member_role in &member.roles {
-                if guild_settings.assignable_role_blacklist.contains(&guild_role.id) {
+        let mut user = ctx
+            .framework
+            .database
+            .get_user(&ctx.interaction.author_id().unwrap(), &ctx.framework.twilight_client)
+            .await?;
+        user.update_member(&guild_id, &ctx.framework.twilight_client.guild_member(guild_id, user.id).await?.model().await?);
+        let user_roles = guild.user_roles(&user);
+        let user_highest_role = guild
+            .user_highest_role(&user)
+            .context("Expected to get user's highest role")?;
+
+
+        // For each role in guild
+        for (position, role_id) in &guild.role_positions {
+            // If the user selected this role
+            if raw_selected_roles.contains(role_id) {
+                // If the role is higher than theirs
+                if &user_highest_role.0 > position {
+                    too_high_role.push(*role_id);
                     continue;
                 }
 
-                if member_role == &guild_role.id {
-                    raw_user_roles.push(guild_role.clone())
-                }
-            }
-
-            for role in &selected {
-                if guild_settings.assignable_role_blacklist.contains(role) {
-                    if !blacklisted_roles.contains(role) {
-                        blacklisted_roles.push(*role)
-                    }
+                // If the role is in the guild's blacklist
+                if guild.assignable_role_blacklist.contains(role_id) {
+                    blacklisted_roles.push(*role_id);
                     continue;
                 }
 
-                if role == &guild_role.id {
-                    selected_roles.push(guild_role.clone())
-                }
-            }
-        }
-        // Turn them into ordered roles
-        let mut user_roles: Vec<_> = raw_user_roles.iter().map(RoleOrdering::from).collect();
-        user_roles.sort_by(|a, b| b.cmp(a));
-        let mut selected_roles: Vec<_> = selected_roles.iter().map(RoleOrdering::from).collect();
-        selected_roles.sort_by(|a, b| b.cmp(a));
-        let highest_role = *user_roles.first().unwrap();
-        info!("Highest Role - {}", highest_role.id);
-
-        // List current roles
-        let mut current_role_list = String::new();
-        let mut current_roles = vec![];
-        for role in &user_roles {
-            current_roles.push(*role);
-            writeln!(current_role_list, "- <@&{}>", role.id)?
-        }
-        embed.create_field("Current Roles", &current_role_list, false);
-
-        // List selected roles
-        let mut too_high_role_list = String::new();
-        for role in &selected_roles {
-            match role.position > highest_role.position {
-                true => writeln!(too_high_role_list, "- <@&{}>", role.id)?,
-                false => {
-                    if current_roles.contains(role) {
-                        continue;
-                    }
-
-                    roles_to_add.push(role.id);
-                    writeln!(roles_to_add_string, "- <@&{}>", role.id)?
-                }
+                // Add this to a list of selected roles to add to a user
+                selected_roles.push(*role_id)
             }
         }
 
-        if !too_high_role_list.is_empty() {
-            embed.create_field("Selected Roles - Too High", &too_high_role_list, false);
-            if let Some(log_channel) = guild_settings.moderator_actions_log_channel {
-                // TODO: Remove hardcoded channel
-                warn!("User {} attempted to escalate their privileges", luro_user.id);
-                ctx.framework
-                    .send_message(&log_channel, |r| {
-                        r.embed(|embed| {
-                            embed
-                                .colour(COLOUR_DANGER)
-                                .title("Privilege Escalation Attempt")
-                                .description(format!(
-                                    "The user <@{}> just attempted to give themselves higher roles than they should have",
-                                    luro_user.id
-                                ))
-                                .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()))
-                                .create_field("Roles Attempted", &too_high_role_list, false)
-                        })
-                        .content("<@&1037361382410170378>")
-                    })
-                    .await?;
-            }
-        }
-
-        // Check if we need to remove any roles
-        for role in &user_roles {
-            if highest_role == *role {
+        for user_role in guild.user_roles(&user) {
+            // Don't modify blacklisted roles
+            if guild.assignable_role_blacklist.contains(&user_role.id) {
                 continue;
             }
 
-            if !selected_roles.contains(role) {
-                roles_to_remove.push(role.id);
-                writeln!(roles_to_remove_string, "- <@&{}>", role.id)?
+            // If this role is not one they selected, add it to the list to be removed
+            match selected_roles.contains(&user_role.id) {
+                true => existing_roles.push(user_role.id),
+                false => {
+                    // Don't remove their higest role!
+                    if user_highest_role.1 == user_role.id {
+                        continue;
+                    }
+
+                    roles_to_remove.push(user_role.id)
+                }
             }
         }
 
-        if let Self::Menu(command) = self {
-            if &data.custom_id == "rules-button" {
-                roles_to_remove.drain(..);
-                roles_to_remove_string.drain(..);
-                let rules_role = command.rules.unwrap();
-                if let Some(adult_role) = command.adult {
-                    for role in &user_roles {
-                        if role.id == adult_role {
-                            roles_to_remove.push(adult_role);
-                            writeln!(roles_to_remove_string, "- <@&{}> - (Rules Role)", adult_role)?;
-                        }
+        if !too_high_role.is_empty() {
+            add_role_field(&mut embed, &too_high_role, "Selected Roles - Too High");
+            if let Some(log_channel) = guild.moderator_actions_log_channel {
+                // TODO: Remove hardcoded channel
+                warn!("User {} attempted to escalate their privileges", user.id);
+                embed
+                    .colour(COLOUR_DANGER)
+                    .title("Privilege Escalation Attempt")
+                    .description(format!(
+                        "The user <@{}> just attempted to give themselves higher roles than they should have",
+                        user.id
+                    ))
+                    .author(|author| author.name(user.name()).icon_url(user.avatar()));
+                ctx.framework
+                    .send_message(&log_channel, |r| {
+                        r.add_embed(embed.clone())
+                            // TODO: Fix hard coded staff ping
+                            .content("<@&1037361382410170378>")
+                    })
+                    .await?;
+            }
+        };
+
+        if let Self::Menu(ref command) = self && &data.custom_id == "rules-button" {
+            roles_to_remove.drain(..);
+            roles_to_add.push(command.rules.unwrap());
+            if let Some(adult_role) = command.adult {
+                for role in &user_roles {
+                    if role.id == adult_role {
+                        roles_to_remove.push(adult_role);
                     }
                 }
-                roles_to_add.push(rules_role);
-                writeln!(roles_to_add_string, "- <@&{}> - (Rules Button)", rules_role)?;
-            }
-            if &data.custom_id == "adult-button" {
-                roles_to_remove.drain(..);
-                roles_to_remove_string.drain(..);
-                let adult_role = command.adult.unwrap();
-                if let Some(rules_role) = command.rules {
-                    for role in &user_roles {
-                        if role.id == rules_role {
-                            roles_to_remove.push(rules_role);
-                            writeln!(roles_to_remove_string, "- <@&{}> - (Rules Role)", rules_role)?;
-                        }
-                    }
-                }
-                roles_to_add.push(adult_role);
-                writeln!(roles_to_add_string, "- <@&{}> - (Adult Button)", adult_role)?;
-            }
-            if &data.custom_id == "bait-button" {
-                roles_to_remove.drain(..);
-                roles_to_remove_string.drain(..);
-                roles_to_add.push(command.bait.unwrap());
-                writeln!(roles_to_add_string, "- <@&{}> - (Bait Button)", command.bait.unwrap())?;
-            }
-            if !roles_to_add_string.is_empty() {
-                embed.create_field("Roles to add", &roles_to_add_string, false);
-            }
-            if !roles_to_remove_string.is_empty() {
-                embed.create_field("Roles to remove", &roles_to_remove_string, false);
-            }
-
-            let mut blacklisted_roles_list = String::new();
-            for role in &blacklisted_roles {
-                writeln!(blacklisted_roles_list, "- <@&{}>", role)?;
-            }
-
-            if !blacklisted_roles_list.is_empty() {
-                embed.create_field("Blacklisted Roles", &blacklisted_roles_list, false);
             }
         }
 
-        debug!("{:#?}", roles_to_add);
-        debug!("{:#?}", roles_to_remove);
-        debug!("{:#?}", blacklisted_roles);
+        if let Self::Menu(ref command) = self && &data.custom_id == "adult-button" {
+            roles_to_remove.drain(..);
+            roles_to_add.push(command.adult.unwrap());
+            if let Some(rules) = command.rules {
+                for role in &user_roles {
+                    if role.id == rules {
+                        roles_to_remove.push(rules);
+                    }
+                }
+            }
+        }
+
+        if let Self::Menu(ref command) = self && &data.custom_id == "bait-button" {
+            roles_to_remove.drain(..);
+            roles_to_add.push(command.bait.unwrap());
+        }
+
+        add_role_field(&mut embed, &existing_roles, "User Roles");
+        add_role_field(&mut embed, &selected_roles, "Selected Roles");
+        add_role_field(&mut embed, &roles_to_add, "Added Roles");
+        add_role_field(&mut embed, &roles_to_remove, "Removed Roles");
+        add_role_field(&mut embed, &blacklisted_roles, "Blacklisted Roles");
 
         embed
-            .colour(accent_colour)
             .title("Roles Updated")
-            .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()));
+            .author(|author| author.name(user.name()).icon_url(user.avatar()));
 
         ctx.respond(|r| r.add_embed(embed.clone()).ephemeral()).await?;
 
         for role in roles_to_add {
             ctx.framework
                 .twilight_client
-                .add_guild_member_role(guild_id, luro_user.id, role)
+                .add_guild_member_role(guild_id, user.id, role)
                 .await?;
         }
 
         for role in roles_to_remove {
             ctx.framework
                 .twilight_client
-                .remove_guild_member_role(guild_id, luro_user.id, role)
+                .remove_guild_member_role(guild_id, user.id, role)
                 .await?;
         }
 
-        info!("User {} just updated their roles", luro_user.name());
+        info!("User {} just updated their roles", user.name());
 
-        if let Some(log_channel) = guild_settings.catchall_log_channel {
+        if let Some(log_channel) = guild.catchall_log_channel {
             ctx.framework.send_message(&log_channel, |r| r.add_embed(embed)).await?;
         }
 
@@ -372,4 +313,20 @@ impl LuroCommand for Menu {
         })
         .await
     }
+}
+
+/// Appends a list of roles to an embed with the given name. If the passed array is empty, the field is not added
+fn add_role_field<'a>(embed: &'a mut EmbedBuilder, roles: &[Id<RoleMarker>], name: &str) -> &'a mut EmbedBuilder {
+    debug!("{:#?}", roles);
+    let mut role_description = String::new();
+    if !roles.is_empty() {
+        for role in roles {
+            match role_description.is_empty() {
+                true => role_description.push_str(&format!("<@&{}>", role)),
+                false => role_description.push_str(&format!(", <@&{}>", role))
+            }
+        }
+        embed.create_field(name, &role_description, false);
+    }
+    embed
 }

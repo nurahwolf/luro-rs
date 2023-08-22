@@ -105,6 +105,8 @@ pub struct LuroUser {
     pub character_prefix: BTreeMap<String, String>
 }
 
+impl LuroUser {}
+
 impl From<&CurrentUser> for LuroUser {
     fn from(user: &CurrentUser) -> Self {
         let mut luro = Self::new(user.id);

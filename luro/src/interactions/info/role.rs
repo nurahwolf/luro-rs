@@ -1,39 +1,55 @@
 use std::fmt::Write;
 
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedMentionable};
+use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::id::{
+    marker::{GenericMarker, RoleMarker},
+    Id
+};
 
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
-use luro_model::{database::drivers::LuroDatabaseDriver, legacy::role_ordering::RoleOrdering};
+use luro_model::database::drivers::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "role", desc = "Information about a role")]
 pub struct InfoRole {
     /// The role to get
-    role: ResolvedMentionable
+    role: Id<RoleMarker>,
+    /// The guild to get the role from
+    guild: Option<Id<GenericMarker>>
 }
 
 impl LuroCommand for InfoRole {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let mut description: String = String::new();
-        let role = match ctx.framework.twilight_cache.role(self.role.id().cast()) {
-            Some(role) => role,
-            None => return ctx.respond(|r| r.content("No role found! Sorry...").ephemeral()).await
-        };
+        let mut description = String::new();
+        let mut embed = ctx.default_embed().await;
+        let guild_id = ctx.interaction.guild_id.unwrap_or(match self.guild {
+            Some(guild_id) => guild_id.cast(),
+            None => {
+                return ctx
+                    .respond(|r| r.content("Could not find the guild the role is in").ephemeral())
+                    .await
+            }
+        });
+        let mut guild = ctx
+            .framework
+            .database
+            .get_guild(&guild_id, &ctx.framework.twilight_client)
+            .await?;
 
-        let roles = ctx.framework.twilight_client.roles(role.guild_id()).await?.model().await?;
-        let mut roles: Vec<_> = roles.iter().map(RoleOrdering::from).collect();
-        roles.sort_by(|a, b| b.cmp(a));
-        for guild_role in roles {
-            if guild_role.id == role.id {
-                writeln!(description, "--> <@&{}> <--", guild_role.id)?;
+        guild.sort_roles();
+        for luro_role in guild.role_positions.values() {
+            if luro_role == &self.role {
+                writeln!(description, "--> <@&{}> <--", luro_role)?;
                 continue;
             }
-            writeln!(description, "<@&{}>", guild_role.id)?;
+            writeln!(description, "<@&{}>", luro_role)?;
         }
+        embed.create_field("Sorted Roles", &description, true);
+        embed
+            .title(format!("{}'s roles", guild.name))
+            .colour(ctx.accent_colour().await);
 
-        let accent_colour = ctx.accent_colour().await;
-        ctx.respond(|r| r.embed(|e| e.description(description).title(role.name.clone()).colour(accent_colour)))
-            .await
+        ctx.respond(|r| r.add_embed(embed)).await
     }
 }

@@ -2,7 +2,6 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 use luro_model::{
     database::drivers::LuroDatabaseDriver,
     guild::log_channel::LuroLogChannel,
-    legacy::guild_permissions::GuildPermissions,
     user::{actions::UserActions, actions_type::UserActionType}
 };
 
@@ -46,6 +45,20 @@ pub enum TimeToBan {
 impl LuroCommand for Ban {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
+        let guild_id = interaction.guild_id.unwrap();
+        let mut guild = ctx
+            .framework
+            .database
+            .get_guild(&guild_id, &ctx.framework.twilight_client)
+            .await?;
+        let luro = ctx
+            .framework
+            .database
+            .get_user(
+                &ctx.framework.twilight_client.current_user().await?.model().await?.id,
+                &ctx.framework.twilight_client
+            )
+            .await?;
         let mut moderator = ctx.get_interaction_author(interaction).await?;
         let mut punished_user = ctx
             .framework
@@ -54,13 +67,11 @@ impl LuroCommand for Ban {
             .await?;
         punished_user.update_user(&self.user.resolved);
         let mut response = ctx.acknowledge_interaction(false).await?;
-
-        let guild_id = interaction.guild_id.unwrap();
-        let permissions = GuildPermissions::new(&ctx.framework.twilight_client, &guild_id).await?;
-        let author_member = interaction.member.as_ref().unwrap();
-        let author_permissions = permissions.member(moderator.id, &author_member.roles).await?;
-        let bot_permissions = permissions.current_member().await?;
-        let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
+        let moderator_permissions = guild.user_permission(&moderator)?;
+        let moderator_highest_role = guild.user_highest_role(&moderator);
+        let punished_user_highest_role = guild.user_highest_role(&punished_user);
+        let luro_permissions = guild.user_permission(&luro)?;
+        let luro_highest_role = guild.user_highest_role(&luro);
         let reason = reason(self.reason, self.details);
         let period_string = match self.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),
@@ -72,30 +83,27 @@ impl LuroCommand for Ban {
             TimeToBan::SevenDays => "Previous 7 Days".to_string()
         };
 
-        if !bot_permissions.guild().contains(Permissions::BAN_MEMBERS) {
-            return ctx.bot_missing_permission_response(&"BAN_MEMBERS".to_owned()).await;
+        if !luro_permissions.contains(Permissions::BAN_MEMBERS) {
+            return ctx.bot_missing_permission_response(Permissions::BAN_MEMBERS).await;
         }
 
-        // Checks if we have them recorded as a member of the guild
-        if let Some(punished_member) = self.user.member {
-            // The user is a member of the server, so carry out some additional checks.
-            let member_permissions = permissions.member(punished_user.id, &punished_member.roles).await?;
-            let member_highest_role = member_permissions.highest_role();
+        if !moderator_permissions.contains(Permissions::BAN_MEMBERS) {
+            return ctx.missing_permission_response(Permissions::BAN_MEMBERS).await;
+        }
 
-            // Check if the author and the bot have required permissions.
-            if member_permissions.is_owner() {
-                return ctx.server_owner_response().await;
-            }
+        // Check if the author and the bot have required permissions.
+        if guild.is_owner(&punished_user) {
+            return ctx.server_owner_response().await;
+        }
 
-            if member_highest_role >= author_permissions.highest_role() {
-                return ctx.user_hierarchy_response(&punished_user.member_name(&Some(guild_id))).await;
-            }
+        if punished_user_highest_role >= moderator_highest_role {
+            return ctx.user_hierarchy_response(&punished_user.member_name(&Some(guild_id))).await;
+        }
 
-            if member_highest_role >= bot_permissions.highest_role() {
-                let name = ctx.framework.database.current_user.read().unwrap().clone().name;
-                return ctx.bot_hierarchy_response(&name).await;
-            }
-        };
+        if punished_user_highest_role >= luro_highest_role {
+            let name = ctx.framework.database.current_user.read().unwrap().clone().name;
+            return ctx.bot_hierarchy_response(&name).await;
+        }
 
         // Checks passed, now let's action the user
         let mut embed = ctx.framework.ban_embed(

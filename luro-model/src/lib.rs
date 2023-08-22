@@ -26,7 +26,6 @@ pub const COLOUR_SUCCESS: u32 = 0xA0D995;
 pub mod database;
 pub mod guild;
 pub mod heck;
-pub mod legacy;
 pub mod message;
 pub mod role;
 pub mod story;

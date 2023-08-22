@@ -1,7 +1,7 @@
-use anyhow::Context;
 use luro_builder::response::LuroResponse;
+use std::fmt::Write;
 
-use std::{collections::btree_map::Entry, fmt::Write, time::Duration};
+use std::time::Duration;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
@@ -11,11 +11,7 @@ use twilight_model::{
 use twilight_util::snowflake::Snowflake;
 
 use crate::interaction::LuroSlash;
-use luro_model::{
-    database::drivers::LuroDatabaseDriver,
-    legacy::role_ordering::RoleOrdering,
-    user::{actions_type::UserActionType, member::LuroMember}
-};
+use luro_model::{database::drivers::LuroDatabaseDriver, user::actions_type::UserActionType};
 
 use crate::luro_command::LuroCommand;
 
@@ -91,41 +87,16 @@ impl LuroCommand for InfoUser {
         };
 
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
-            let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-            let member = ctx.framework.twilight_cache.member(guild_id, luro_user.id).context("Expected to find member in cache")?;
-
+            let guild = ctx.framework.database.get_guild(&guild_id, &ctx.framework.twilight_client).await?;
+            let member = ctx.framework.twilight_client.guild_member(guild_id, luro_user.id).await?.model().await?;
             let mut guild_information = String::new();
             let mut role_list = String::new();
-            let mut user_roles = vec![];
-            for member_role in member.roles() {
-                for guild_role in guild.roles.clone() {
-                    if member_role == &guild_role.id {
-                        user_roles.push(guild_role)
-                    }
-                }
-            }
 
-            let mut user_roles_modified: Vec<_> = user_roles.iter().map(RoleOrdering::from).collect();
-            user_roles_modified.sort_by(|a, b| b.cmp(a));
-
-            match luro_user.guilds.entry(guild_id) {
-                Entry::Vacant(entry) => {
-                    let entry = entry.insert(LuroMember::from(&ctx.framework.twilight_client.guild_member(guild_id, luro_user.id).await?.model().await?));
-                    for role in user_roles {
-                        entry.role_ids.push(role.id)
-                    }
-                },
-                Entry::Occupied(mut entry) => {
-                    let entry = entry.get_mut();
-                    for role in user_roles {
-                        entry.role_ids.push(role.id)
-                    }
-                },
-            };
-
+            luro_user.update_member(&guild_id, &member);
+            let user_roles = guild.user_roles(&luro_user);
             ctx.framework.database.save_user(&luro_user.id, &luro_user).await?;
 
-            for role in &user_roles_modified {
+            for role in &user_roles {
                 if role_list.is_empty() {
                     write!(role_list, "<@&{}>", role.id)?;
                     continue;
@@ -133,29 +104,29 @@ impl LuroCommand for InfoUser {
                 write!(role_list, ", <@&{}>", role.id)?
             }
 
-            if let Some(role) = user_roles_modified.first() {
+            if let Some(role) = user_roles.first() {
                 if role.colour != 0 {
                     embed.colour(role.colour);
                 }
             }
-            writeln!(guild_information, "- Roles ({}): {role_list}", user_roles_modified.len())?;
-            timestamp.push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>\n", member.joined_at().as_secs()).as_str());
-            if let Some(member_timestamp) = member.premium_since() {
+            writeln!(guild_information, "- Roles ({}): {role_list}", user_roles.len())?;
+            timestamp.push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>\n", member.joined_at.as_secs()).as_str());
+            if let Some(member_timestamp) = member.premium_since {
                 timestamp.push_str(format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.as_secs()).as_str());
             }
-            if let Some(nickname) = member.nick() {
+            if let Some(nickname) = member.nick {
                 writeln!(guild_information, "- Nickname: `{nickname}`")?;            
             }
-            if member.deaf().unwrap_or_default() {
+            if member.deaf {
                 writeln!(guild_information, "- Deafened: `true`")?;            
             }
-            if member.mute().unwrap_or_default() {
+            if member.mute {
                 writeln!(guild_information, "- Muted: `true`")?;            
             }
-            if member.pending() {
+            if member.pending {
                 writeln!(guild_information, "- Pending: `true`")?;            
             }
-            if let Some(timestamp) = member.communication_disabled_until() {
+            if let Some(timestamp) = member.communication_disabled_until {
                 writeln!(guild_information, "- Timed out until: <t:{}:R>", timestamp.as_secs())?;            
             }
             // TODO: Once member_banner is a thing in [Member]

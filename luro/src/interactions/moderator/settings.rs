@@ -1,9 +1,5 @@
-use luro_builder::embed::EmbedBuilder;
-use luro_model::{
-    database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel, legacy::role_ordering::RoleOrdering
-};
+use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
 use std::fmt::Write;
-use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     guild::Permissions,
@@ -44,94 +40,73 @@ impl LuroCommand for GuildSettingsCommand {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await
         };
-        let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-        // Attempt to get the first role after @everyone, otherwise fall back to @everyone
-        let mut roles: Vec<_> = guild.roles.iter().map(RoleOrdering::from).collect();
-        roles.sort_by(|a, b| b.cmp(a));
-
-        let mut highest_role_colour = 0;
-        let mut highest_role_id = 0;
-        for role in &roles {
-            if highest_role_colour != 0 {
-                break;
-            }
-
-            highest_role_colour = role.colour;
-            highest_role_id = role.id.get();
-            debug!("Role {highest_role_id} - {}", role.colour)
-        }
-
-        let accent_colour_defined: Option<u32> = if let Some(accent_colour) = self.accent_colour.clone() {
-            Some(parse_string_to_u32(accent_colour)?)
-        } else {
-            None
-        };
-        let mut embed = EmbedBuilder::default();
-        embed.title(format!("Guild Setting - {}", guild.name));
-
-        // Create a new guild settings object
-        let mut guild_settings = ctx
+        let mut guild = ctx
             .framework
             .database
             .get_guild(&guild_id, &ctx.framework.twilight_client)
             .await?;
+        guild.accent_colour = guild.highest_role_colour();
+
+        let mut embed = ctx.default_embed().await;
+        embed.title(format!("Guild Setting - {}", guild.name));
         if let Some(clear_settings) = self.clear_settings && clear_settings {
-            guild_settings.accent_colour_custom = Default::default();
-            guild_settings.catchall_log_channel = Default::default();
-            guild_settings.commands = Default::default();
-            guild_settings.message_events_log_channel = Default::default();
-            guild_settings.moderator_actions_log_channel = Default::default();
-            guild_settings.thread_events_log_channel = Default::default();
+            guild.accent_colour_custom = Default::default();
+            guild.catchall_log_channel = Default::default();
+            guild.commands = Default::default();
+            guild.message_events_log_channel = Default::default();
+            guild.moderator_actions_log_channel = Default::default();
+            guild.thread_events_log_channel = Default::default();
+            guild.accent_colour_custom = self.accent_colour.map(|c|parse_string_to_u32(c).unwrap_or_default());
         };
 
-        guild_settings.accent_colour = highest_role_colour;
-
-        if let Some(accent_colour) = accent_colour_defined {
-            guild_settings.accent_colour_custom = Some(accent_colour)
+        if let Some(accent_colour) = guild.accent_colour_custom {
+            guild.accent_colour_custom = Some(accent_colour)
         }
 
         if let Some(catchall_log_channel) = self.catchall_log_channel {
-            guild_settings.catchall_log_channel = Some(catchall_log_channel)
+            guild.catchall_log_channel = Some(catchall_log_channel)
         }
 
         if let Some(message_events_log_channel) = self.message_events_log_channel {
-            guild_settings.message_events_log_channel = Some(message_events_log_channel)
+            guild.message_events_log_channel = Some(message_events_log_channel)
         }
 
         if let Some(moderator_actions_log_channel) = self.moderator_actions_log_channel {
-            guild_settings.moderator_actions_log_channel = Some(moderator_actions_log_channel)
+            guild.moderator_actions_log_channel = Some(moderator_actions_log_channel)
         }
 
         if let Some(thread_events_log_channel) = self.thread_events_log_channel {
-            guild_settings.thread_events_log_channel = Some(thread_events_log_channel)
+            guild.thread_events_log_channel = Some(thread_events_log_channel)
         }
 
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
-        ctx.framework.database.save_guild(&guild_id, &guild_settings).await?;
-        embed.create_field(
-            "Guild Accent Colour",
-            &format!("`{:X}` - <@&{highest_role_id}>", guild_settings.accent_colour),
-            true
-        );
+        ctx.framework.database.save_guild(&guild_id, &guild).await?;
+        if let Some(role_id) = guild.role_positions.get(&0) {
+            embed.create_field(
+                "Guild Accent Colour",
+                &format!("`{:X}` - <@&{role_id}>", guild.accent_colour),
+                true
+            );
+        }
 
-        if let Some(accent_colour) = guild_settings.accent_colour_custom {
+        if let Some(accent_colour) = guild.accent_colour_custom {
             embed.create_field("Custom Accent Colour", &format!("`{:X}`", accent_colour), true);
         }
-        if let Some(channel) = guild_settings.catchall_log_channel {
+        if let Some(channel) = guild.catchall_log_channel {
             embed.create_field("Catchall Log Channel", &format!("<#{channel}>"), true);
         }
-        if let Some(channel) = guild_settings.message_events_log_channel {
+        if let Some(channel) = guild.message_events_log_channel {
             embed.create_field("Message Log Channel", &format!("<#{channel}>"), true);
         }
-        if let Some(channel) = guild_settings.moderator_actions_log_channel {
+        if let Some(channel) = guild.moderator_actions_log_channel {
             embed.create_field("Moderation Log Channel", &format!("<#{channel}>"), true);
         }
-        if let Some(channel) = guild_settings.thread_events_log_channel {
+        if let Some(channel) = guild.thread_events_log_channel {
             embed.create_field("Thread Log Channel", &format!("<#{channel}>"), true);
         }
 
         let mut blacklist = String::new();
-        for role in guild_settings.assignable_role_blacklist {
+        for role in guild.assignable_role_blacklist {
             writeln!(blacklist, "- <@&{role}>")?;
         }
         if !blacklist.is_empty() {
