@@ -118,7 +118,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             None => match guild_data.catchall_log_channel {
                 Some(channel) => channel,
                 None => {
-                    info!("Guild {guild_id} does not have a catchall channel defined");
+                    debug!("Guild {guild_id} does not have a catchall channel defined");
                     return Ok(());
                 }
             }
@@ -154,7 +154,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             None => match guild_data.catchall_log_channel {
                 Some(channel) => channel,
                 None => {
-                    info!("Guild {guild_id} does not have a catchall channel defined");
+                    debug!("Guild {guild_id} does not have a catchall channel defined");
                     return Ok(());
                 }
             }
