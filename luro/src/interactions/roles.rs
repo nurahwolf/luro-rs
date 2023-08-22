@@ -49,22 +49,12 @@ impl LuroCommand for RoleCommands {
         let mut too_high_role = vec![];
 
         let mut embed = ctx.default_embed().await;
-        let guild = ctx
-            .framework
-            .database
-            .get_guild(&guild_id, &ctx.framework.twilight_client)
-            .await?;
-        let mut user = ctx
-            .framework
-            .database
-            .get_user(&ctx.interaction.author_id().unwrap(), &ctx.framework.twilight_client)
-            .await?;
-        user.update_member(&guild_id, &ctx.framework.twilight_client.guild_member(guild_id, user.id).await?.model().await?);
+        let guild = ctx.framework.database.get_guild(&guild_id).await?;
+        let user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
         let user_roles = guild.user_roles(&user);
         let user_highest_role = guild
             .user_highest_role(&user)
             .context("Expected to get user's highest role")?;
-
 
         // For each role in guild
         for (position, role_id) in &guild.role_positions {
@@ -219,11 +209,7 @@ pub struct Menu {
 impl LuroCommand for Menu {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author_id().unwrap();
-        let luro_user = ctx
-            .framework
-            .database
-            .get_user(&interaction_author, &ctx.framework.twilight_client)
-            .await?;
+        let luro_user = ctx.framework.database.get_user(&interaction_author).await?;
 
         let mut owner_match = false;
 

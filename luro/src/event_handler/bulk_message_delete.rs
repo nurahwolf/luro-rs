@@ -30,7 +30,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             // Save each author in a hash map. If there is only one author per embed, then set them as the embed author.
             let message_author = message_authors
                 .entry(message.author())
-                .or_insert(self.database.get_user(&message.author(), &self.twilight_client).await?)
+                .or_insert(self.database.get_user(&message.author()).await?)
                 .clone();
 
             // We hit the 25 field cap per embed. Let's roll this embed up and start again.

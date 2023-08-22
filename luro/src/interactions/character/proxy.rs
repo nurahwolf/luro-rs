@@ -23,11 +23,7 @@ impl LuroCommand for Proxy {
             .author_id()
             .context("Expected to find the user running this command")?;
 
-        let mut user_data = ctx
-            .framework
-            .database
-            .get_user(&user_id, &ctx.framework.twilight_client)
-            .await?;
+        let mut user_data = ctx.framework.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
             return ctx
                 .respond(|r| {

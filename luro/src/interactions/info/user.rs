@@ -87,7 +87,7 @@ impl LuroCommand for InfoUser {
         };
 
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
-            let guild = ctx.framework.database.get_guild(&guild_id, &ctx.framework.twilight_client).await?;
+            let guild = ctx.framework.database.get_guild(&guild_id).await?;
             let member = ctx.framework.twilight_client.guild_member(guild_id, luro_user.id).await?.model().await?;
             let mut guild_information = String::new();
             let mut role_list = String::new();

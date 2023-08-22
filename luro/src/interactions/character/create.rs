@@ -18,11 +18,7 @@ impl LuroCommand for Create {
             .interaction
             .author_id()
             .context("Expected to find the user running this command")?;
-        let user_data = ctx
-            .framework
-            .database
-            .get_user(&user_id, &ctx.framework.twilight_client)
-            .await?;
+        let user_data = ctx.framework.database.get_user(&user_id).await?;
         let character = user_data.characters.get(&self.name);
 
         // Create a model

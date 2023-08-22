@@ -31,11 +31,7 @@ impl LuroCommand for InfoRole {
                     .await
             }
         });
-        let mut guild = ctx
-            .framework
-            .database
-            .get_guild(&guild_id, &ctx.framework.twilight_client)
-            .await?;
+        let mut guild = ctx.framework.database.get_guild(&guild_id).await?;
 
         guild.sort_roles();
         for luro_role in guild.role_positions.values() {

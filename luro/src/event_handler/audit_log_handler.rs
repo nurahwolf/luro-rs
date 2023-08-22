@@ -14,13 +14,10 @@ mod member_kick;
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn audit_log_handler(self: Arc<Self>, event: Box<GuildAuditLogEntryCreate>) -> anyhow::Result<()> {
         let punished_user_id = &event.target_id.context("No user ID for the punished user")?.cast();
-        let mut punished_user = self.database.get_user(punished_user_id, &self.twilight_client).await?;
+        let mut punished_user = self.database.get_user(punished_user_id).await?;
         let mut moderator = self
             .database
-            .get_user(
-                &event.user_id.context("No user ID for the ban author")?,
-                &self.twilight_client
-            )
+            .get_user(&event.user_id.context("No user ID for the ban author")?)
             .await?;
         // Make sure this interaction was a guild
         let guild_id = match event.guild_id {

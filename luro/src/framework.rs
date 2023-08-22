@@ -39,7 +39,7 @@ pub struct Framework<D: LuroDatabaseDriver> {
     /// Lavalink client, for playing music
     pub lavalink: Lavalink,
     /// Twilight's client for interacting with the Discord API
-    pub twilight_client: Client,
+    pub twilight_client: Arc<Client>,
     /// Twilight's cache
     pub twilight_cache: InMemoryCache,
     /// The global tracing subscriber, for allowing manipulation within commands
@@ -103,7 +103,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         debug!("Attempting to send to log channel");
         // TODO: Send event to main logging channel if not defined
         let (guild_data, guild_id) = match guild_id {
-            Some(guild_id) => (self.database.get_guild(guild_id, &self.twilight_client).await?, guild_id),
+            Some(guild_id) => (self.database.get_guild(guild_id).await?, guild_id),
             None => return Ok(())
         };
 
@@ -141,7 +141,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             Some(data) => data,
             None => return Ok(())
         };
-        let guild_data = self.database.get_guild(guild_id, &self.twilight_client).await?;
+        let guild_data = self.database.get_guild(guild_id).await?;
 
         let log_channel = match log_channel {
             LuroLogChannel::Catchall => guild_data.catchall_log_channel,
@@ -213,7 +213,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             Some(data) => data,
             None => return Ok(())
         };
-        let guild_data = self.database.get_guild(guild_id, &self.twilight_client).await?;
+        let guild_data = self.database.get_guild(guild_id).await?;
         let log_channel = match guild_data.moderator_actions_log_channel {
             Some(data) => data,
             None => return Ok(())
@@ -236,7 +236,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     pub async fn accent_colour(&self, guild_id: &Option<Id<GuildMarker>>) -> u32 {
         if let Some(guild_id) = guild_id {
-            let guild_settings = self.database.get_guild(guild_id, &self.twilight_client).await;
+            let guild_settings = self.database.get_guild(guild_id).await;
 
             if let Ok(guild_settings) = guild_settings {
                 // Check to see if a custom colour is defined
@@ -291,7 +291,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     ) -> anyhow::Result<(Arc<Self>, Vec<Shard>)> {
         ensure_data_directory_exists();
         let (twilight_client, twilight_cache, shard_config) = create_twilight_client(intents, token)?;
-        let (database, current_user_id) = initialise_database(driver, &twilight_client).await?;
+        let (database, current_user_id) = initialise_database(driver, twilight_client.clone()).await?;
         let shards = stream::create_recommended(&twilight_client, shard_config, |_, c| c.build())
             .await?
             .collect::<Vec<_>>();
@@ -334,9 +334,9 @@ fn ensure_data_directory_exists() {
     }
 }
 
-fn create_twilight_client(intents: Intents, token: String) -> anyhow::Result<(Client, InMemoryCache, Config)> {
+fn create_twilight_client(intents: Intents, token: String) -> anyhow::Result<(Arc<Client>, InMemoryCache, Config)> {
     Ok((
-        twilight_http::Client::new(token.clone()),
+        twilight_http::Client::new(token.clone()).into(),
         InMemoryCache::new(),
         ConfigBuilder::new(token, intents)
             .presence(UpdatePresencePayload::new(
@@ -356,10 +356,13 @@ fn create_twilight_client(intents: Intents, token: String) -> anyhow::Result<(Cl
 
 async fn initialise_database<D: LuroDatabaseDriver>(
     driver: D,
-    twilight_client: &Client
+    twilight_client: Arc<Client>
 ) -> anyhow::Result<(LuroDatabase<D>, Id<UserMarker>)> {
     let application = twilight_client.current_user_application().await?.model().await?;
     let current_user = twilight_client.current_user().await?.model().await?;
     let current_user_id = current_user.id;
-    Ok((LuroDatabase::build(application, current_user, driver).await, current_user_id))
+    Ok((
+        LuroDatabase::build(application, current_user, twilight_client, driver),
+        current_user_id
+    ))
 }

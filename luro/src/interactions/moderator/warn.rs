@@ -27,11 +27,7 @@ pub struct ModeratorWarnCommand {
 
 impl LuroCommand for ModeratorWarnCommand {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let punished_user = ctx
-            .framework
-            .database
-            .get_user(&self.user.resolved.id, &ctx.framework.twilight_client)
-            .await?;
+        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
 
         if !self.new {
             if punished_user.warnings.is_empty() {

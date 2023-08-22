@@ -98,17 +98,9 @@ impl LuroCommand for ModeratorCommands {
         let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
 
-        let luro_user = ctx
-            .framework
-            .database
-            .get_user(&ctx.interaction.author_id().unwrap(), &ctx.framework.twilight_client)
-            .await?;
+        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
 
-        let mut user_data = ctx
-            .framework
-            .database
-            .get_user(&user_id, &ctx.framework.twilight_client)
-            .await?;
+        let mut user_data = ctx.framework.database.get_user(&user_id).await?;
         user_data.warnings.push((warning.to_owned(), author.id));
         ctx.framework.database.save_user(&user_id, &user_data).await?;
 
@@ -143,20 +135,12 @@ impl LuroCommand for ModeratorCommands {
         ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))
             .await?;
 
-        let mut reward = ctx
-            .framework
-            .database
-            .get_user(&author.id, &ctx.framework.twilight_client)
-            .await?;
+        let mut reward = ctx.framework.database.get_user(&author.id).await?;
         reward.moderation_actions_performed += 1;
         ctx.framework.database.save_user(&author.id, &reward).await?;
 
         // Record the punishment
-        let mut warned = ctx
-            .framework
-            .database
-            .get_user(&user_id, &ctx.framework.twilight_client)
-            .await?;
+        let mut warned = ctx.framework.database.get_user(&user_id).await?;
         warned.moderation_actions.push(UserActions {
             action_type: vec![UserActionType::Warn],
             guild_id: ctx.interaction.guild_id,

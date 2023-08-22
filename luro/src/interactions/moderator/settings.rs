@@ -40,11 +40,7 @@ impl LuroCommand for GuildSettingsCommand {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await
         };
-        let mut guild = ctx
-            .framework
-            .database
-            .get_guild(&guild_id, &ctx.framework.twilight_client)
-            .await?;
+        let mut guild = ctx.framework.database.get_guild(&guild_id).await?;
         guild.accent_colour = guild.highest_role_colour();
 
         let mut embed = ctx.default_embed().await;

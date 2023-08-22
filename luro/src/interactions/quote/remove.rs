@@ -19,11 +19,7 @@ impl LuroCommand for Remove {
             Some(quote) => quote,
             None => return ctx.respond(|r| r.content("That quote is not present!").ephemeral()).await
         };
-        let user = ctx
-            .framework
-            .database
-            .get_user(&quote.author, &ctx.framework.twilight_client)
-            .await?;
+        let user = ctx.framework.database.get_user(&quote.author).await?;
 
         ctx.framework.database.save_quotes(quotes).await?;
 

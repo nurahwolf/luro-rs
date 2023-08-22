@@ -30,25 +30,14 @@ impl LuroCommand for Kick {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
         let guild_id = interaction.guild_id.unwrap();
-        let mut guild = ctx
-            .framework
-            .database
-            .get_guild(&guild_id, &ctx.framework.twilight_client)
-            .await?;
+        let mut guild = ctx.framework.database.get_guild(&guild_id).await?;
         let luro = ctx
             .framework
             .database
-            .get_user(
-                &ctx.framework.twilight_client.current_user().await?.model().await?.id,
-                &ctx.framework.twilight_client
-            )
+            .get_user(&ctx.framework.twilight_client.current_user().await?.model().await?.id)
             .await?;
         let mut moderator = ctx.get_interaction_author(interaction).await?;
-        let mut punished_user = ctx
-            .framework
-            .database
-            .get_user(&self.user.resolved.id, &ctx.framework.twilight_client)
-            .await?;
+        let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
         punished_user.update_user(&self.user.resolved);
         let mut response = ctx.acknowledge_interaction(false).await?;
         let moderator_permissions = guild.user_permission(&moderator)?;

@@ -1,7 +1,8 @@
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 
 use serde::{Deserialize, Serialize};
 
+use twilight_http::Client;
 use twilight_model::{application::interaction::Interaction, oauth::Application, user::CurrentUser};
 
 use crate::guild::LuroGuilds;
@@ -46,7 +47,7 @@ pub struct StoryManager {
 /// Luro's database context. This itself just handles an abstraction for saving and loading data from whatever database it is using in the backend, depending on the feature selected.
 ///
 /// NOTE: With the TOML driver, usize keys are serialised as strings!
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub application: RwLock<Application>,
     pub command_data: RwLock<CommandManager>,
@@ -58,12 +59,18 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub quotes: RwLock<Quotes>,
     pub staff: RwLock<LuroUsers>,
     pub stories: RwLock<StoryManager>,
-    pub user_data: RwLock<LuroUsers>
+    pub user_data: RwLock<LuroUsers>,
+    pub twilight_client: Arc<Client>
 }
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Build the key requirements of our database. The rest of our data is fetched as required.
-    pub async fn build(application: Application, current_user: CurrentUser, driver: D) -> Self {
+    pub fn build(
+        application: Application,
+        current_user: CurrentUser,
+        twilight_client: Arc<Client>,
+        driver: D
+    ) -> LuroDatabase<D> {
         Self {
             application: application.into(),
             command_data: Default::default(),
@@ -75,7 +82,8 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             hecks: Default::default(),
             staff: Default::default(),
             user_data: Default::default(),
-            quotes: Default::default()
+            quotes: Default::default(),
+            twilight_client
         }
     }
 

@@ -418,7 +418,7 @@ impl Default for LuroMessage {
             embeds: Default::default(),
             flags: Default::default(),
             guild_id: Default::default(),
-            id: Id::new(1),
+            id: Id::new(69),
             interaction: Default::default(),
             kind: MessageType::Regular,
             mention_channels: Default::default(),
