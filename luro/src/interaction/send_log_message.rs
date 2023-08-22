@@ -14,7 +14,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
         debug!("Attempting to send to log channel");
         // TODO: Send event to main logging channel if not defined
         let (guild_data, guild_id) = match self.interaction.guild_id {
-            Some(guild_id) => (self.framework.database.get_guild(&guild_id).await?, guild_id),
+            Some(guild_id) => (self.framework.database.get_guild(&guild_id, &self.framework.twilight_client).await?, guild_id),
             None => return Ok(())
         };
 

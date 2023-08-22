@@ -50,12 +50,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 self.subhandle_member_ban_remove(&guild, &event, &mut moderator, &punished_user)
                     .await
             }
-            _ => {
-                let mut guild_settings = self.database.get_guild(&guild_id).await?;
-                guild_settings.update_guild(guild);
-                self.database.save_guild(&guild_id, &guild_settings).await?;
-                Ok(())
-            }
+            _ => Ok(())
         }
     }
 }

@@ -28,7 +28,7 @@ impl LuroCommand for Unban {
         let mut response = ctx.acknowledge_interaction(false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
-        let guild_name = ctx.framework.database.get_guild(&guild_id).await?.name;
+        let guild_name = ctx.framework.database.get_guild(&guild_id, &ctx.framework.twilight_client).await?.name;
         let permissions = GuildPermissions::new(&ctx.framework.twilight_client, &guild_id).await?;
         let bot_permissions = permissions.current_member().await?;
 

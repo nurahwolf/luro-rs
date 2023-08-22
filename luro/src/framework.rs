@@ -102,7 +102,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         debug!("Attempting to send to log channel");
         // TODO: Send event to main logging channel if not defined
         let (guild_data, guild_id) = match guild_id {
-            Some(guild_id) => (self.database.get_guild(guild_id).await?, guild_id),
+            Some(guild_id) => (self.database.get_guild(guild_id, &self.twilight_client).await?, guild_id),
             None => return Ok(())
         };
 
@@ -140,7 +140,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             Some(data) => data,
             None => return Ok(())
         };
-        let guild_data = self.database.get_guild(guild_id).await?;
+        let guild_data = self.database.get_guild(guild_id, &self.twilight_client).await?;
 
         let log_channel = match log_channel {
             LuroLogChannel::Catchall => guild_data.catchall_log_channel,
@@ -212,7 +212,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             Some(data) => data,
             None => return Ok(())
         };
-        let guild_data = self.database.get_guild(guild_id).await?;
+        let guild_data = self.database.get_guild(guild_id, &self.twilight_client).await?;
         let log_channel = match guild_data.moderator_actions_log_channel {
             Some(data) => data,
             None => return Ok(())
@@ -235,7 +235,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     pub async fn accent_colour(&self, guild_id: &Option<Id<GuildMarker>>) -> u32 {
         if let Some(guild_id) = guild_id {
-            let guild_settings = self.database.get_guild(guild_id).await;
+            let guild_settings = self.database.get_guild(guild_id, &self.twilight_client).await;
 
             if let Ok(guild_settings) = guild_settings {
                 // Check to see if a custom colour is defined

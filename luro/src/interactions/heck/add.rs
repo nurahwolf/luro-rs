@@ -103,7 +103,7 @@ impl LuroCommand for HeckAddCommand {
                 None => return Err(anyhow!("This place is not a guild. You can only use this option in a guild."))
             };
 
-            let mut guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
+            let mut guild_settings = ctx.framework.database.get_guild(&guild_id, &ctx.framework.twilight_client).await?;
 
             if nsfw {
                 heck_id = guild_settings.nsfw_hecks.len();
