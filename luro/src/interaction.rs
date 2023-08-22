@@ -3,6 +3,7 @@ use std::sync::Arc;
 use luro_builder::embed::EmbedBuilder;
 use luro_builder::response::LuroResponse;
 use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::user::LuroUser;
 use tracing::debug;
 use tracing::error;
 use twilight_gateway::Latency;
@@ -201,5 +202,22 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
         }
 
         create_message.await
+    }
+
+    pub async fn update_user<'a>(&'a self, user: &'a mut LuroUser) -> anyhow::Result<&'a mut LuroUser> {
+        match self.interaction.guild_id {
+            Some(guild_id) => user.update_member(
+                &guild_id,
+                &self
+                    .framework
+                    .twilight_client
+                    .guild_member(guild_id, user.id)
+                    .await?
+                    .model()
+                    .await?
+            ),
+            None => user.update_user(&self.framework.twilight_client.user(user.id).await?.model().await?)
+        };
+        Ok(user)
     }
 }

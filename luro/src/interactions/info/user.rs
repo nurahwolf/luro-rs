@@ -39,16 +39,8 @@ impl LuroCommand for InfoUser {
         let response_type = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(self.gdpr_export.unwrap_or_default()).await?;
         // The user we are interested in is the interaction author, unless a user was specified
-        let user_id = match self.user {
-            Some(ref user) => user.resolved.id,
-            None => ctx.interaction.author_id().unwrap()
-        };
-        let mut luro_user = ctx
-            .framework
-            .database
-            .get_user(&user_id, &ctx.framework.twilight_client)
-            .await?;
-        let user_timestamp = Duration::from_millis(user_id.timestamp().unsigned_abs());
+        let mut luro_user = ctx.get_specified_user_or_author(&self.user, &ctx.interaction).await?;
+        let user_timestamp = Duration::from_millis(luro_user.id.timestamp().unsigned_abs());
 
         let mut response = LuroResponse::default();
         let mut embed = ctx.default_embed().await;
@@ -100,7 +92,7 @@ impl LuroCommand for InfoUser {
 
         if let Some(guild_id) = guild_id && !self.user_only.is_some_and(|user_only| user_only) {
             let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-            let member = ctx.framework.twilight_cache.member(guild_id, user_id).context("Expected to find member in cache")?;
+            let member = ctx.framework.twilight_cache.member(guild_id, luro_user.id).context("Expected to find member in cache")?;
 
             let mut guild_information = String::new();
             let mut role_list = String::new();
@@ -118,7 +110,7 @@ impl LuroCommand for InfoUser {
 
             match luro_user.guilds.entry(guild_id) {
                 Entry::Vacant(entry) => {
-                    let entry = entry.insert(LuroMember::from(&ctx.framework.twilight_client.guild_member(guild_id, user_id).await?.model().await?));
+                    let entry = entry.insert(LuroMember::from(&ctx.framework.twilight_client.guild_member(guild_id, luro_user.id).await?.model().await?));
                     for role in user_roles {
                         entry.role_ids.push(role.id)
                     }
@@ -131,7 +123,7 @@ impl LuroCommand for InfoUser {
                 },
             };
 
-            ctx.framework.database.save_user(&user_id, &luro_user).await?;
+            ctx.framework.database.save_user(&luro_user.id, &luro_user).await?;
 
             for role in &user_roles_modified {
                 if role_list.is_empty() {

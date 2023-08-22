@@ -57,7 +57,7 @@ impl LuroCommand for RoleCommands {
         let member = ctx
             .framework
             .twilight_client
-            .guild_member(guild_id, Id::new(luro_user.id))
+            .guild_member(guild_id, luro_user.id)
             .await?
             .model()
             .await?;
@@ -229,14 +229,14 @@ impl LuroCommand for RoleCommands {
         for role in roles_to_add {
             ctx.framework
                 .twilight_client
-                .add_guild_member_role(guild_id, Id::new(luro_user.id), role)
+                .add_guild_member_role(guild_id, luro_user.id, role)
                 .await?;
         }
 
         for role in roles_to_remove {
             ctx.framework
                 .twilight_client
-                .remove_guild_member_role(guild_id, Id::new(luro_user.id), role)
+                .remove_guild_member_role(guild_id, luro_user.id, role)
                 .await?;
         }
 

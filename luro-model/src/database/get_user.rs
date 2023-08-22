@@ -19,17 +19,27 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             }
         };
 
+        let user = twilight_client.user(*id).await;
+
         Ok(match data {
-            Some(data) => data,
+            Some(mut data) => {
+                if let Ok(user) = user {
+                    data.update_user(&user.model().await?);
+                }
+                data
+            }
             None => {
                 info!(id = ?id, "user is not in the cache, fetching from disk");
-                let data = match self.driver.get_user(id.get()).await {
+                let mut data = match self.driver.get_user(id.get()).await {
                     Ok(data) => data,
                     Err(why) => {
                         error!(why = ?why, "Failed to get user from the database. Falling back to twilight");
-                        return Ok(LuroUser::from(&twilight_client.user(*id).await?.model().await?));
+                        LuroUser::new(*id)
                     }
                 };
+                if let Ok(user) = user {
+                    data.update_user(&user.model().await?);
+                }
                 match self.user_data.write() {
                     Ok(mut user) => {
                         user.insert(*id, data.clone());

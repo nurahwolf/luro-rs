@@ -6,7 +6,7 @@ use luro_model::{
     user::{actions::UserActions, actions_type::UserActionType}
 };
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::{guild::Permissions, id::Id};
+use twilight_model::guild::Permissions;
 
 use super::{reason, Reason};
 
@@ -40,10 +40,10 @@ impl LuroCommand for Kick {
         let guild_id = interaction.guild_id.unwrap();
         let permissions = GuildPermissions::new(&ctx.framework.twilight_client, &guild_id).await?;
         let author_member = interaction.member.as_ref().unwrap();
-        let author_permissions = permissions.member(moderator.id(), &author_member.roles).await?;
+        let author_permissions = permissions.member(moderator.id, &author_member.roles).await?;
         let bot_permissions = permissions.current_member().await?;
         let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-        let punished_user_id = Id::new(punished_user.id);
+        let punished_user_id = punished_user.id;
         let reason = reason(self.reason, self.details);
 
         if !bot_permissions.guild().contains(Permissions::KICK_MEMBERS) {
@@ -75,7 +75,7 @@ impl LuroCommand for Kick {
         let mut embed: luro_builder::embed::EmbedBuilder =
             ctx.framework
                 .kick_embed(&guild.name, &guild_id, &moderator, &punished_user, reason.as_deref());
-        match ctx.framework.twilight_client.create_private_channel(punished_user.id()).await {
+        match ctx.framework.twilight_client.create_private_channel(punished_user.id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .framework
@@ -101,14 +101,14 @@ impl LuroCommand for Kick {
             .await?;
 
         moderator.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&moderator.id(), &moderator).await?;
+        ctx.framework.database.save_user(&moderator.id, &moderator).await?;
 
         // Record the punishment
         punished_user.moderation_actions.push(UserActions {
             action_type: vec![UserActionType::Kick],
             guild_id: Some(guild_id),
             reason: reason.clone(),
-            responsible_user: moderator.id()
+            responsible_user: moderator.id
         });
         ctx.framework.database.save_user(&punished_user_id, &punished_user).await?;
 

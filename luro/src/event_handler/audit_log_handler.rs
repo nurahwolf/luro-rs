@@ -32,7 +32,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         };
         let guild = self.twilight_client.guild(guild_id).await?.model().await?;
 
-        if moderator.id() == self.database.current_user.read().unwrap().id {
+        if moderator.id == self.database.current_user.read().unwrap().id {
             // Event done by the bot, so no need to report it again
             return Ok(());
         }

@@ -25,7 +25,7 @@ pub mod marriages;
 pub mod member;
 
 /// Some nice functionality primarily around [User] and [Member], with some added goodness
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct LuroUser {
     /// Accent color of the user's banner.
     ///
@@ -50,8 +50,7 @@ pub struct LuroUser {
     pub email: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flags: Option<UserFlags>,
-    #[serde(default)]
-    pub id: u64,
+    pub id: Id<UserMarker>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub locale: Option<String>,
     #[serde(default)]
@@ -108,7 +107,7 @@ pub struct LuroUser {
 
 impl From<&CurrentUser> for LuroUser {
     fn from(user: &CurrentUser) -> Self {
-        let mut luro = Self::default();
+        let mut luro = Self::new(user.id);
         luro.update_currentuser(user);
         luro
     }
@@ -116,13 +115,48 @@ impl From<&CurrentUser> for LuroUser {
 
 impl From<&User> for LuroUser {
     fn from(user: &User) -> Self {
-        let mut luro = Self::default();
+        let mut luro = Self::new(user.id);
         luro.update_user(user);
         luro
     }
 }
 
 impl LuroUser {
+    pub fn new(id: Id<UserMarker>) -> Self {
+        Self {
+            accent_color: Default::default(),
+            avatar: Default::default(),
+            avatar_decoration: Default::default(),
+            banner: Default::default(),
+            bot: Default::default(),
+            discriminator: Default::default(),
+            global_name: Default::default(),
+            email: Default::default(),
+            flags: Default::default(),
+            id,
+            locale: Default::default(),
+            mfa_enabled: Default::default(),
+            name: Default::default(),
+            premium_type: Default::default(),
+            public_flags: Default::default(),
+            system: Default::default(),
+            verified: Default::default(),
+            wordcount: Default::default(),
+            averagesize: Default::default(),
+            wordsize: Default::default(),
+            words: Default::default(),
+            warnings: Default::default(),
+            messages: Default::default(),
+            moderation_actions: Default::default(),
+            moderation_actions_performed: Default::default(),
+            message_edits: Default::default(),
+            marriages: Default::default(),
+            guilds: Default::default(),
+            characters: Default::default(),
+            character_prefix: Default::default()
+        }
+    }
+
     /// Update this type from a luro user
     pub fn update_lurouser(&mut self, luro: &Self) -> &mut Self {
         self.accent_color = luro.accent_color;
@@ -173,7 +207,7 @@ impl LuroUser {
         self.discriminator = user.discriminator;
         self.email = user.email.clone();
         self.flags = user.flags;
-        self.id = user.id.get();
+        self.id = user.id;
         self.locale = user.locale.clone();
         self.mfa_enabled = user.mfa_enabled;
         self.name = user.name.clone();
@@ -216,7 +250,7 @@ impl LuroUser {
         self.email = user.email.clone();
         self.flags = user.flags;
         self.global_name = user.global_name.clone();
-        self.id = user.id.get();
+        self.id = user.id;
         self.locale = user.locale.clone();
         self.mfa_enabled = user.mfa_enabled.unwrap_or_default();
         self.name = user.name.clone();
@@ -335,11 +369,6 @@ impl LuroUser {
             false => format!("{}#{}", self.name, self.discriminator)
         }
     }
-
-    /// Simply convert a user's u64 ID into an [Id<UserMarker>]
-    pub fn id(&self) -> Id<UserMarker> {
-        Id::new(self.id)
-    }
 }
 
 pub fn serialize_wordsize<S>(input: &BTreeMap<usize, usize>, s: S) -> Result<S::Ok, S::Error>
@@ -377,4 +406,41 @@ where
         return Err(de::Error::custom("detected duplicate integer key"));
     }
     Ok(data)
+}
+
+impl Default for LuroUser {
+    fn default() -> Self {
+        Self {
+            accent_color: Default::default(),
+            avatar: Default::default(),
+            avatar_decoration: Default::default(),
+            banner: Default::default(),
+            bot: Default::default(),
+            discriminator: Default::default(),
+            global_name: Default::default(),
+            email: Default::default(),
+            flags: Default::default(),
+            id: Id::new(69),
+            locale: Default::default(),
+            mfa_enabled: Default::default(),
+            name: Default::default(),
+            premium_type: Default::default(),
+            public_flags: Default::default(),
+            system: Default::default(),
+            verified: Default::default(),
+            wordcount: Default::default(),
+            averagesize: Default::default(),
+            wordsize: Default::default(),
+            words: Default::default(),
+            warnings: Default::default(),
+            messages: Default::default(),
+            moderation_actions: Default::default(),
+            moderation_actions_performed: Default::default(),
+            message_edits: Default::default(),
+            marriages: Default::default(),
+            guilds: Default::default(),
+            characters: Default::default(),
+            character_prefix: Default::default()
+        }
+    }
 }

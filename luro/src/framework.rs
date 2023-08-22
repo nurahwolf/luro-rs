@@ -5,7 +5,7 @@ use luro_builder::{embed::EmbedBuilder, response::LuroResponse};
 use luro_model::{
     database::{drivers::LuroDatabaseDriver, LuroDatabase},
     guild::log_channel::LuroLogChannel,
-    ACCENT_COLOUR
+    ACCENT_COLOUR, user::LuroUser
 };
 use tracing::{debug, info};
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
@@ -314,6 +314,11 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             .into(),
             shards
         ))
+    }
+
+    pub async fn update_user<'a>(&'a self, user: &'a mut LuroUser) -> anyhow::Result<&'a mut LuroUser> {
+        user.update_user(&self.twilight_client.user(user.id).await?.model().await?);
+        Ok(user)
     }
 }
 

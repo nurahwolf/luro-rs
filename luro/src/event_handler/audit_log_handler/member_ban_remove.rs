@@ -16,7 +16,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         // Reward the moderator
         moderator.moderation_actions_performed += 1;
-        self.database.save_user(&moderator.id(), moderator).await?;
+        self.database.save_user(&moderator.id, moderator).await?;
 
         // Send the response
         self.send_moderator_log_channel(&Some(guild.id), embed).await

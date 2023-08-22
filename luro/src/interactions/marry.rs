@@ -14,7 +14,6 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
-use twilight_model::id::Id;
 
 use crate::luro_command::LuroCommand;
 
@@ -170,7 +169,7 @@ impl LuroCommand for MarryCommands {
                 let proposal = embed.description.ok_or_else(|| Error::msg("No author in our heck embed"))?;
 
                 proposee.marriages.insert(
-                    Id::new(proposer.id),
+                    proposer.id,
                     UserMarriages {
                         timestamp: SystemTime::now(),
                         reason: reason.clone(),
@@ -178,15 +177,15 @@ impl LuroCommand for MarryCommands {
                     }
                 );
                 proposer.marriages.insert(
-                    Id::new(proposee.id),
+                    proposee.id,
                     UserMarriages {
                         timestamp: SystemTime::now(),
                         reason,
                         proposal
                     }
                 );
-                ctx.framework.database.save_user(&Id::new(proposer.id), &proposer).await?;
-                ctx.framework.database.save_user(&Id::new(proposee.id), &proposee).await?;
+                ctx.framework.database.save_user(&proposer.id, &proposer).await?;
+                ctx.framework.database.save_user(&proposee.id, &proposee).await?;
 
                 ctx.respond(|response| {
                     response

@@ -8,7 +8,7 @@ use luro_model::{
 
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
-use twilight_model::{guild::Permissions, id::Id};
+use twilight_model::guild::Permissions;
 
 use super::{reason, Reason};
 
@@ -52,15 +52,15 @@ impl LuroCommand for Ban {
             .database
             .get_user(&self.user.resolved.id, &ctx.framework.twilight_client)
             .await?;
+        punished_user.update_user(&self.user.resolved);
         let mut response = ctx.acknowledge_interaction(false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
         let permissions = GuildPermissions::new(&ctx.framework.twilight_client, &guild_id).await?;
         let author_member = interaction.member.as_ref().unwrap();
-        let author_permissions = permissions.member(moderator.id(), &author_member.roles).await?;
+        let author_permissions = permissions.member(moderator.id, &author_member.roles).await?;
         let bot_permissions = permissions.current_member().await?;
         let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-        let punished_user_id = Id::new(punished_user.id);
         let reason = reason(self.reason, self.details);
         let period_string = match self.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),
@@ -79,7 +79,7 @@ impl LuroCommand for Ban {
         // Checks if we have them recorded as a member of the guild
         if let Some(punished_member) = self.user.member {
             // The user is a member of the server, so carry out some additional checks.
-            let member_permissions = permissions.member(punished_user_id, &punished_member.roles).await?;
+            let member_permissions = permissions.member(punished_user.id, &punished_member.roles).await?;
             let member_highest_role = member_permissions.highest_role();
 
             // Check if the author and the bot have required permissions.
@@ -106,7 +106,7 @@ impl LuroCommand for Ban {
             reason.as_deref(),
             Some(&period_string)
         );
-        match ctx.framework.twilight_client.create_private_channel(punished_user.id()).await {
+        match ctx.framework.twilight_client.create_private_channel(punished_user.id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .framework
@@ -126,23 +126,23 @@ impl LuroCommand for Ban {
         response.add_embed(embed.clone());
         ctx.send_respond(response).await?;
 
-        let ban = ctx.framework.twilight_client.create_ban(guild_id, punished_user_id);
+        let ban = ctx.framework.twilight_client.create_ban(guild_id, punished_user.id);
         match reason {
             None => ban.delete_message_seconds(self.purge as u32).await?,
             Some(ref reason) => ban.delete_message_seconds(self.purge as u32).reason(reason).await?
         };
 
         moderator.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&moderator.id(), &moderator).await?;
+        ctx.framework.database.save_user(&moderator.id, &moderator).await?;
 
         // Record the punishment
         punished_user.moderation_actions.push(UserActions {
             action_type: vec![UserActionType::Ban],
             guild_id: Some(guild_id),
             reason,
-            responsible_user: moderator.id()
+            responsible_user: moderator.id
         });
-        ctx.framework.database.save_user(&punished_user_id, &punished_user).await?;
+        ctx.framework.database.save_user(&punished_user.id, &punished_user).await?;
 
         // If an alert channel is defined, send a message there
         ctx.framework

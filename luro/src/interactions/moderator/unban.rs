@@ -40,7 +40,7 @@ impl LuroCommand for Unban {
         let mut embed = ctx
             .framework
             .unbanned_embed(&guild_name, &guild_id, &moderator, &punished_user, Some(&self.reason));
-        match ctx.framework.twilight_client.create_private_channel(punished_user.id()).await {
+        match ctx.framework.twilight_client.create_private_channel(punished_user.id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .framework
@@ -60,7 +60,7 @@ impl LuroCommand for Unban {
         let unban = ctx
             .framework
             .twilight_client
-            .delete_ban(guild_id, punished_user.id())
+            .delete_ban(guild_id, punished_user.id)
             .reason(&self.reason)
             .await;
         match unban {
@@ -72,7 +72,7 @@ impl LuroCommand for Unban {
         ctx.send_respond(response).await?;
 
         moderator.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&moderator.id(), &moderator).await?;
+        ctx.framework.database.save_user(&moderator.id, &moderator).await?;
 
         // If an alert channel is defined, send a message there
         ctx.framework

@@ -8,7 +8,7 @@ use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "volume", desc = "Set the volume of the player!", dm_permission = false)]
 pub struct VolumeCommand {
-    /// Sets the volume between 0 and 1000! 100 is the default
+    /// Sets the volume between 0 and 1000! 100 is the default (100% volume)
     #[command(min_value = 0, max_value = 1000)]
     volume: i64
 }

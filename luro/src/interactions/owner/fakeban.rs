@@ -6,7 +6,6 @@ use crate::{
 use luro_model::database::drivers::LuroDatabaseDriver;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
-use twilight_model::id::Id;
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
 #[command(name = "fakeban", desc = "Ban a user", dm_permission = false)]
@@ -52,7 +51,7 @@ impl LuroCommand for FakeBan {
 
         let guild_id = interaction.guild_id.unwrap();
         let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-        let punished_user_id = Id::new(punished_user.id);
+        let punished_user_id = punished_user.id;
         let reason = reason(self.reason, self.details);
         let period_string = match self.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),
