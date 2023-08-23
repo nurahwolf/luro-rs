@@ -1,5 +1,5 @@
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use luro_framework::responses::user_unbanned::user_unbanned_embed;
+use luro_framework::responses::{user_action::PunishmentType, StandardResponse};
 use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
 
 use twilight_http::request::AuditLogReason;
@@ -41,22 +41,24 @@ impl LuroCommand for Unban {
         }
 
         // Checks passed, now let's action the user
-        let mut embed = user_unbanned_embed(&guild.name, &guild.id, &punished_user, &moderator, Some(&self.reason), None);
+        let mut embed =
+            StandardResponse::new_punishment(PunishmentType::Unbanned, &guild.name, &guild_id, &punished_user, &moderator);
+        embed.punishment_reason(Some(&self.reason), &punished_user);
         match ctx.framework.twilight_client.create_private_channel(punished_user.id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .framework
                     .twilight_client
                     .create_message(channel.model().await?.id)
-                    .embeds(&[embed.clone().into()])
+                    .embeds(&[embed.embed().0])
                     .await;
 
                 match victim_dm {
-                    Ok(_) => embed.create_field("DM Sent", "Successful", true),
-                    Err(_) => embed.create_field("DM Sent", "Failed", true)
+                    Ok(_) => embed.dm_sent(true),
+                    Err(_) => embed.dm_sent(false)
                 }
             }
-            Err(_) => embed.create_field("DM Sent", "Failed", true)
+            Err(_) => embed.dm_sent(false)
         };
 
         let unban = ctx
@@ -70,7 +72,7 @@ impl LuroCommand for Unban {
             Err(_) => embed.create_field("Unban", "Failed", true)
         };
 
-        response.add_embed(embed.clone());
+        response.add_embed(embed.embed().0);
         ctx.send_respond(response).await?;
 
         moderator.moderation_actions_performed += 1;
@@ -78,7 +80,7 @@ impl LuroCommand for Unban {
 
         // If an alert channel is defined, send a message there
         ctx.framework
-            .send_log_channel(&Some(guild_id), embed.into(), LuroLogChannel::Moderator)
+            .send_log_channel(&Some(guild_id), embed.embed.0, LuroLogChannel::Moderator)
             .await?;
 
         Ok(())

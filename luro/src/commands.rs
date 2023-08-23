@@ -1,4 +1,3 @@
-use luro_builder::embed::EmbedBuilder;
 use tracing::error;
 use twilight_model::gateway::payload::incoming::MessageCreate;
 

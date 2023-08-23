@@ -1,9 +1,7 @@
-pub mod ban;
 mod bot_hierarchy;
 mod bot_missing_permissions;
 mod internal_error;
 mod invalid_heck;
-pub mod kick;
 mod message_modified;
 mod missing_permissions;
 mod no_guild_settings;
@@ -18,6 +16,5 @@ mod thread_created;
 mod thread_deleted;
 mod thread_update;
 mod unable_to_get_guild;
-pub mod unban;
 mod unknown_command;
 mod user_hierarchy;

@@ -1,4 +1,5 @@
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use luro_framework::responses::{user_action::PunishmentType, StandardResponse};
 use luro_model::{
     database::drivers::LuroDatabaseDriver,
     guild::log_channel::LuroLogChannel,
@@ -95,32 +96,29 @@ impl LuroCommand for Ban {
         }
 
         // Checks passed, now let's action the user
-        let mut embed = ctx.framework.ban_embed(
-            &guild.name,
-            &guild_id,
-            &moderator,
-            &punished_user,
-            reason.as_deref(),
-            Some(&period_string)
-        );
+        let mut embed =
+            StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.id, &punished_user, &moderator);
+        embed
+            .punishment_reason(reason.as_deref(), &punished_user)
+            .punishment_period(&period_string);
         match ctx.framework.twilight_client.create_private_channel(punished_user.id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .framework
                     .twilight_client
                     .create_message(channel.model().await?.id)
-                    .embeds(&[embed.clone().into()])
+                    .embeds(&[embed.embed().0])
                     .await;
 
                 match victim_dm {
-                    Ok(_) => embed.create_field("DM Sent", "Successful", true),
-                    Err(_) => embed.create_field("DM Sent", "Failed", true)
+                    Ok(_) => embed.dm_sent(true),
+                    Err(_) => embed.dm_sent(false)
                 }
             }
-            Err(_) => embed.create_field("DM Sent", "Failed", true)
+            Err(_) => embed.dm_sent(false)
         };
 
-        response.add_embed(embed.clone());
+        response.add_embed(embed.embed().0);
         ctx.send_respond(response).await?;
 
         let ban = ctx.framework.twilight_client.create_ban(guild_id, punished_user.id);
@@ -143,7 +141,7 @@ impl LuroCommand for Ban {
 
         // If an alert channel is defined, send a message there
         ctx.framework
-            .send_log_channel(&Some(guild_id), embed.into(), LuroLogChannel::Moderator)
+            .send_log_channel(&Some(guild_id), embed.embed.0, LuroLogChannel::Moderator)
             .await?;
 
         Ok(())

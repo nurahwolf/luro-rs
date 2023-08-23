@@ -3,6 +3,7 @@ use crate::{
     interactions::moderator::{reason, Reason},
     luro_command::LuroCommand
 };
+use luro_framework::responses::{StandardResponse, user_action::PunishmentType};
 use luro_model::database::drivers::LuroDatabaseDriver;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
@@ -60,28 +61,21 @@ impl LuroCommand for FakeBan {
         };
 
         // Checks passed, now let's action the user
-        let mut embed = ctx.framework.ban_embed(
-            &guild.name,
-            &guild_id,
-            &moderator,
-            &punished_user,
-            reason.as_deref(),
-            Some(&period_string)
-        );
+        let mut embed =
+            StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.id, &punished_user, &moderator);
+        embed
+            .punishment_reason(reason.as_deref(), &punished_user)
+            .punishment_period(&period_string);
         let punished_user_dm = match ctx.framework.twilight_client.create_private_channel(punished_user_id).await {
             Ok(channel) => channel.model().await?,
-            Err(_) => {
-                return ctx
-                    .ban_response(&guild, &punished_user, reason.as_deref(), &period_string, false)
-                    .await
-            }
+            Err(_) => return ctx.respond(|r|r.content("Could not create DM with the user!")).await
         };
 
         let victim_dm = ctx
             .framework
             .twilight_client
             .create_message(punished_user_dm.id)
-            .embeds(&[embed.clone().into()])
+            .embeds(&[embed.embed().0])
             .await;
 
         match victim_dm {
@@ -89,7 +83,7 @@ impl LuroCommand for FakeBan {
             Err(_) => embed.create_field("DM Sent", "Failed", true)
         };
 
-        response.add_embed(embed.clone());
+        response.add_embed(embed.embed);
         ctx.send_respond(response).await
     }
 }
