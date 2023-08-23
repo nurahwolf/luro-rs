@@ -61,6 +61,19 @@ impl LuroResponse {
         self
     }
 
+    /// Explicitly set and overwrite all currently set embeds.
+    /// Modify the nested embeds field for more advanced controls.
+    #[allow(unreachable_code)]
+    pub fn set_embed(&mut self, embeds: impl Into<Embed>) -> &mut Self {
+        self.embeds = Some(vec![embeds.into()]);
+
+        #[cfg(feature = "auto-trim")]
+        return self.check_embed();
+
+        #[cfg(not(feature = "auto-trim"))]
+        self
+    }
+
     #[cfg(feature = "auto-trim")]
     fn check_embed(&mut self) -> &mut Self {
         if let Some(embeds) = &mut self.embeds {

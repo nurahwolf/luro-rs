@@ -11,7 +11,6 @@ mod not_implemented;
 mod not_member;
 mod not_owner;
 mod nsfw_in_sfw;
-mod server_owner;
 mod thread_created;
 mod thread_deleted;
 mod thread_update;

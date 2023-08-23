@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::anyhow;
+use luro_builder::response::LuroResponse;
 use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
 use tracing::warn;
@@ -257,3 +258,8 @@ impl Autocomplete {
         }
     }
 }
+
+    /// Send the response
+    pub async fn send<D: LuroDatabaseDriver>(response: &LuroResponse, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+        ctx.send_respond(response.clone()).await
+    }

@@ -1,10 +1,13 @@
 use luro_builder::embed::EmbedBuilder;
 use luro_model::database::drivers::LuroDatabaseDriver;
-use twilight_model::channel::message::embed::EmbedField;
+use twilight_model::{channel::message::embed::EmbedField, id::{marker::UserMarker, Id}};
 
 use crate::{InteractionContext, Framework};
 
+use self::permission_server_owner::permission_server_owner;
+
 pub mod user_action;
+pub mod permission_server_owner;
 
 /// A wrapper around [EmbedBuilder] to make easy standardised responses
 #[derive(Default, Clone)]
@@ -50,8 +53,27 @@ impl StandardResponse {
         self
     }
 
-    /// Use the build response to respond to an interaction
+    /// Respond to an interaction with a standard response
     pub async fn interaction_response<D: LuroDatabaseDriver>(&self, framework: Framework<D>, ctx: InteractionContext) -> anyhow::Result<()> {
         ctx.respond(framework, |response|response.add_embed(self.embed())).await
     }
+
+    /// Create a new builder and both create and execute a response, all in one.
+    /// This only works with simple responses.
+    pub async fn simple_interaction_response<D: LuroDatabaseDriver>(framework: Framework<D>, ctx: InteractionContext, response: SimpleResponse) -> anyhow::Result<()> {
+        Self::simple(response).interaction_response(framework, ctx).await
+    }
+
+    /// Create a standard response from a simple response
+    pub fn simple(response: SimpleResponse) -> Self {
+        let embed = match response {
+            SimpleResponse::NotOwner(user_id) => permission_server_owner(&user_id),
+        };
+
+        Self { embed }
+    }
+}
+
+pub enum SimpleResponse {
+    NotOwner(Id<UserMarker>)
 }

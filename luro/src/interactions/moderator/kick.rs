@@ -1,5 +1,7 @@
+use crate::interactions::send;
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 use luro_framework::responses::StandardResponse;
+use luro_framework::responses::permission_server_owner::permission_server_owner;
 use luro_framework::responses::user_action::PunishmentType;
 use luro_model::database::drivers::LuroDatabaseDriver;
 
@@ -59,7 +61,7 @@ impl LuroCommand for Kick {
 
         // Check if the author and the bot have required permissions.
         if guild.is_owner(&punished_user) {
-            return ctx.server_owner_response().await;
+            return send(response.set_embed(permission_server_owner(&moderator.id)), ctx).await
         }
 
         if punished_user_highest_role >= moderator_highest_role {

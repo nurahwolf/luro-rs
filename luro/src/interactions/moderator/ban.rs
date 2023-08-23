@@ -1,5 +1,5 @@
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use luro_framework::responses::{user_action::PunishmentType, StandardResponse};
+use crate::{interaction::LuroSlash, luro_command::LuroCommand, interactions::send};
+use luro_framework::responses::{user_action::PunishmentType, StandardResponse, permission_server_owner::permission_server_owner};
 use luro_model::{
     database::drivers::LuroDatabaseDriver,
     guild::log_channel::LuroLogChannel,
@@ -83,7 +83,7 @@ impl LuroCommand for Ban {
 
         // Check if the author and the bot have required permissions.
         if guild.is_owner(&punished_user) {
-            return ctx.server_owner_response().await;
+            return send(response.set_embed(permission_server_owner(&moderator.id)), ctx).await
         }
 
         if punished_user_highest_role >= moderator_highest_role {
