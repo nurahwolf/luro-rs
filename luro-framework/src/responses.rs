@@ -1,5 +1,8 @@
 use luro_builder::embed::EmbedBuilder;
+use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_model::channel::message::embed::EmbedField;
+
+use crate::{InteractionContext, Framework};
 
 pub mod user_action;
 
@@ -47,4 +50,8 @@ impl StandardResponse {
         self
     }
 
+    /// Use the build response to respond to an interaction
+    pub async fn interaction_response<D: LuroDatabaseDriver>(&self, framework: Framework<D>, ctx: InteractionContext) -> anyhow::Result<()> {
+        ctx.respond(framework, |response|response.add_embed(self.embed())).await
+    }
 }
