@@ -37,21 +37,22 @@ impl TomlDatabaseDriver {
     }
 
     /// Gets the specified [Path], which should be a toml file. If it does not exist, it will be created.
-    async fn get<'de, T>(path: &Path) -> anyhow::Result<T>
+    /// 
+    /// If the type does not exists, uses the passed `new` to create a new one.
+    async fn get<'de, T>(path: &Path, new: T) -> anyhow::Result<T>
     where
-        T: Default + Serialize + DeserializeOwned + std::fmt::Debug
+        T:  Serialize + DeserializeOwned + std::fmt::Debug
     {
         // Check to make sure our path exists, if not then create a new heck file
         if !path.exists() {
             warn!("Path {} does not exist, attempting to create it", path.to_string_lossy());
-            let new_data = T::default();
-            let formatted_data = toml::to_string_pretty(&new_data)?;
+            let formatted_data = toml::to_string_pretty(&new)?;
 
             // Make sure the directory exists, then attempt to make the file
             fs::create_dir_all(path.parent().unwrap()).await?;
             fs::write(path, formatted_data).await?;
             // We can short curcuit here and return directly, saving a few operations.
-            return Ok(new_data);
+            return Ok(new);
         }
 
         // Attempt to open the file. It should now exist due to the previous check
@@ -67,7 +68,7 @@ impl TomlDatabaseDriver {
         match toml::from_str::<T>(&contents) {
             Ok(ok) => Ok(ok),
             Err(why) => {
-                error!(why = ?why, "Failed to serialised the type {:?}", T::default());
+                error!(why = ?why, "Failed to serialised the type {:?}", new);
                 Err(why.into())
             }
         }
