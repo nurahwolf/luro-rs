@@ -12,6 +12,8 @@ use twilight_model::{
 mod context;
 mod framework;
 mod interaction_context;
+#[cfg(feature = "responses")]
+pub mod responses;
 
 /// The core framework. Should be available from ALL tasks and holds key data.
 /// Context classes generally take a reference to this to perform their actions.

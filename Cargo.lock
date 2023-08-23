@@ -724,6 +724,7 @@ dependencies = [
  "luro-builder",
  "luro-database",
  "luro-dice",
+ "luro-framework",
  "luro-model",
  "memory-stats",
  "parking_lot 0.12.1",

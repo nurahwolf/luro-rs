@@ -1,4 +1,5 @@
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
+use luro_framework::responses::user_unbanned::user_unbanned_embed;
 use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
 
 use twilight_http::request::AuditLogReason;
@@ -40,9 +41,7 @@ impl LuroCommand for Unban {
         }
 
         // Checks passed, now let's action the user
-        let mut embed = ctx
-            .framework
-            .unbanned_embed(&guild.name, &guild_id, &moderator, &punished_user, Some(&self.reason));
+        let mut embed = user_unbanned_embed(&guild.name, &guild.id, &punished_user, &moderator, Some(&self.reason), None);
         match ctx.framework.twilight_client.create_private_channel(punished_user.id).await {
             Ok(channel) => {
                 let victim_dm = ctx

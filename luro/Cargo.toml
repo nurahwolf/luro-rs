@@ -25,6 +25,7 @@ luro-dice = { path = "../luro-dice", optional = true }
 luro-model = { path = "../luro-model" }
 luro-database = { path = "../luro-database" }
 luro-builder = { path = "../luro-builder" }
+luro-framework.path = "../luro-framework"
 twilight-interactions.path = "../twilight-interactions"
 
 
