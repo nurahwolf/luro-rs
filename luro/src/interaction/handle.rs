@@ -36,6 +36,15 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             }
         };
 
+        // Update user
+        if let Some(user_id) = self.interaction.author_id() {
+            let mut user = self.framework.database.get_user(&user_id).await?;
+            if let Ok(twilight_user) = self.framework.twilight_client.user(user_id).await {
+                user.update_user(&twilight_user.model().await?);
+            }
+            self.framework.database.save_user(&user_id, &user).await?;
+        }
+
         Ok(())
     }
 }
