@@ -40,7 +40,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             Ok(user) => {
                 data.update_user(&user.model().await?);
             }
-            Err(why) => info!(why = ?why, "Failed to update user")
+            Err(why) => info!(why = ?why, "Failed to update user - {id}")
         }
 
         match self.user_data.write() {

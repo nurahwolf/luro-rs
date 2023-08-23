@@ -19,7 +19,7 @@ tracing = { workspace = true }
 
 # Luro Specific
 luro-model = { path = "../luro-model", optional = true }
-twilight-interactions = { workspace = true, optional = true }
+twilight-interactions = { path = "../twilight-interactions", optional = true }
 
 # Twilight
 twilight-model = { workspace = true }

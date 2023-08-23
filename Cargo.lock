@@ -778,6 +778,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "luro-framework"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "hyper",
+ "luro-builder",
+ "luro-model",
+ "serde",
+ "tracing",
+ "tracing-subscriber",
+ "twilight-cache-inmemory",
+ "twilight-gateway",
+ "twilight-http",
+ "twilight-lavalink",
+ "twilight-model",
+]
+
+[[package]]
 name = "luro-model"
 version = "0.0.1"
 dependencies = [

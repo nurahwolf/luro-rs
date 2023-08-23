@@ -1,0 +1,35 @@
+[package]
+name = "luro-framework"
+description = "Luro's framework, the core of the library. Uses features to control the database driver used and such"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow.workspace = true
+hyper = { workspace = true, optional = true } #framework
+luro-builder = { path = "../luro-builder", optional = true } #
+luro-model.path = "../luro-model" #framework
+serde.workspace = true #framework
+tracing.workspace = true
+tracing-subscriber.workspace = true #framework
+twilight-cache-inmemory = { workspace = true, optional = true} #framework
+twilight-gateway.workspace = true #framework
+twilight-http.workspace = true #framework
+twilight-lavalink = {workspace = true, optional = true } #framework
+twilight-model.workspace = true #framework
+
+[features]
+cache-memory = ["dep:twilight-cache-inmemory"]
+database-toml = []
+default = ["cache-memory", "database-toml", "http-client-hyper", "lavalink", "luro-builder"]
+http-client-hyper = ["dep:hyper"]
+lavalink = ["dep:twilight-lavalink"]
+luro-builder = ["dep:luro-builder"]

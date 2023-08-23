@@ -37,15 +37,12 @@ pub async fn message_handler(ctx: &LuroFramework, message: MessageCreate) -> any
         };
 
         let proxied_message = message.content.replace(first_word, "");
-        let mut embed = EmbedBuilder::default();
-        embed
-            .colour(ctx.accent_colour(&message.guild_id).await)
-            .description(&proxied_message)
-            .author(|author| {
-                author
-                    .name(&format!("{character_name} - Controlled by {}", user_data.name()))
-                    .icon_url(&character_icon)
-            });
+        let mut embed = ctx.default_embed(&message.guild_id).await;
+        embed.description(&proxied_message).author(|author| {
+            author
+                .name(&format!("{character_name} - Controlled by {}", user_data.name()))
+                .icon_url(&character_icon)
+        });
 
         ctx.twilight_client
             .execute_webhook(webhook.id, &webhook_token)

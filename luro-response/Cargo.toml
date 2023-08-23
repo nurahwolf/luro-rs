@@ -18,5 +18,5 @@ anyhow = { workspace = true }
 tracing= { workspace = true}
 
 # Luro
-luro-builder = { workspace = true }
-luro-model = { workspace = true }
+luro-builder.path = "../luro-builder"
+luro-model.path = "../luro-model"

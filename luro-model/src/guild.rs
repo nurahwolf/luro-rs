@@ -194,6 +194,8 @@ impl LuroGuild {
         self
     }
 
+    /// Get's the guild's accent colour, which is the highest role with a colour.
+    /// Returns none if there are no roles with any colours
     pub fn highest_role_colour(&mut self) -> Option<(u32, usize, Id<RoleMarker>)> {
         self.sort_roles();
         for (position, id) in &self.role_positions {

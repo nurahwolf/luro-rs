@@ -25,7 +25,7 @@ twilight-http = { workspace = true }
 twilight-lavalink = { workspace = true }
 twilight-model = { workspace = true }
 tracing-subscriber = { workspace = true }
-twilight-interactions = { workspace = true }
+twilight-interactions.path = "../twilight-interactions"
 hyper = { workspace = true }
 twilight-gateway = { workspace = true }
 tracing = { workspace = true }

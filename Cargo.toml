@@ -1,14 +1,15 @@
 [workspace]
 members = [
-    "luro",
-    "luro-twilight",
-    "luro-dice",
     "luro-builder",
     "luro-database",
+    "luro-dice",
+    "luro-framework",
     "luro-model",
     "luro-response",
-    "twilight-interactions",
+    "luro-twilight",
+    "luro",
     "twilight-interactions-derive",
+    "twilight-interactions",
 ]
 resolver = "2"
 
@@ -24,18 +25,6 @@ repository = "https://github.com/nurahwolf/luro-rs"
 version = "0.0.1"
 
 [workspace.dependencies]
-
-# Project
-luro = { path = "luro" }
-luro-twilight = { path = "luro-twilight" }
-luro-builder = { path = "luro-builder" }
-luro-database = { path = "luro-database" }
-luro-dice = { path = "luro-dice" }
-luro-model = { path = "luro-model"}
-luro-response = { path = "luro-response" }
-twilight-interactions-derive = { path = "twilight-interactions-derive"}
-twilight-interactions = { path = "twilight-interactions" }
-
 # Legacy
 
 anyhow = "1"
@@ -65,7 +54,3 @@ rand = "0.8.0" # Used for luro-twilight, luro-model
 toml = "0.7"
 tracing = "0.1"
 hyper = "0.14.0"
-
-[workspace.dev-dependencies]
-futures = "0.3"
-tokio = { version = "1", features = ["full"] }

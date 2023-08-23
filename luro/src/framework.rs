@@ -142,7 +142,6 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             None => return Ok(())
         };
         let guild_data = self.database.get_guild(guild_id).await?;
-
         let log_channel = match log_channel {
             LuroLogChannel::Catchall => guild_data.catchall_log_channel,
             LuroLogChannel::Message => guild_data.message_events_log_channel,
@@ -258,6 +257,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     pub fn interaction_client(&self) -> InteractionClient {
         self.twilight_client.interaction(self.database.application.read().unwrap().id)
     }
+
     /// Register commands to the Discord API.
     pub async fn register_commands(&self, application_id: Id<ApplicationMarker>) -> anyhow::Result<()> {
         let client = self.twilight_client.interaction(application_id);
