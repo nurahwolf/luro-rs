@@ -6,7 +6,6 @@ use std::{
 use anyhow::Context;
 
 use luro_model::database::drivers::LuroDatabaseDriver;
-use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::interaction::InteractionResponseType,
@@ -160,13 +159,11 @@ impl LuroCommand for WordcountCommand {
             let total_padding = padding.0;
             let length_padding = padding.1;
 
-            info!("{total} needs {total_padding} padding - {length} needs {length_padding} padding");
             writeln!(
                 word_size,
                 "- `{total:^total_padding$}` words with `{length:^length_padding$}` characters"
             )?;
         }
-        info!("{:?}", word_size);
 
         // Most used words field
         let mut most_used = String::new();
