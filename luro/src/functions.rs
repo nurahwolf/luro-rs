@@ -28,11 +28,11 @@ pub async fn respond_to_interaction(
 }
 
 /// Parse a string into a u32, used for hex codes colours
-pub fn parse_string_to_u32(input: String) -> anyhow::Result<u32> {
+pub fn parse_string_to_u32(input: &str) -> anyhow::Result<u32> {
     Ok(if input.starts_with("0x") {
-        u32::from_str_radix(input.as_str().strip_prefix("0x").unwrap(), 16)?
+        u32::from_str_radix(input.strip_prefix("0x").unwrap(), 16)?
     } else if input.chars().all(|char| char.is_ascii_hexdigit()) {
-        u32::from_str_radix(input.as_str(), 16)?
+        u32::from_str_radix(input, 16)?
     } else {
         input.parse::<u32>()?
     })

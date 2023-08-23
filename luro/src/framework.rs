@@ -244,8 +244,8 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     return custom_accent_colour;
                 };
 
-                if guild_settings.accent_colour != 0 {
-                    return guild_settings.accent_colour;
+                if let Some(colour) = guild_settings.accent_colour {
+                    return colour;
                 }
             }
         };

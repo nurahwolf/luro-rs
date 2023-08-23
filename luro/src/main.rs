@@ -103,7 +103,6 @@ async fn main() -> anyhow::Result<()> {
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
         // INTENTS - Intents::GUILD_PRESENCES
         INTENTS
-
     );
 
     // Create the framework

@@ -111,8 +111,13 @@ impl LuroCommand for InfoUser {
                     }
                 }
                 writeln!(guild_information, "- Roles ({}): {role_list}", user_roles.len())?;
-                timestamp
-                    .push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>\n", luro_member.joined_at.as_secs()).as_str());
+                timestamp.push_str(
+                    format!(
+                        "- Joined this server at <t:{0}> - <t:{0}:R>\n",
+                        luro_member.joined_at.as_secs()
+                    )
+                    .as_str()
+                );
                 if let Some(member_timestamp) = luro_member.premium_since {
                     timestamp.push_str(
                         format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.as_secs()).as_str()

@@ -13,7 +13,11 @@ use twilight_model::{
 /// The primary owner user ID. Used for some defaults, as well as to say who owns the bot. This MUST  be set, even if a group of people own Luro, as its used as a fallback for when data is not tied to a specific user. For example, see [Story].
 pub const PRIMARY_BOT_OWNER: Id<UserMarker> = Id::new(373524896187416576);
 // Luro's primary owner(s)
-pub const BOT_OWNERS: [Id<UserMarker>; 3] = [Id::new(373524896187416576), Id::new(138791390279630849), Id::new(261308783546859520)];
+pub const BOT_OWNERS: [Id<UserMarker>; 3] = [
+    Id::new(373524896187416576),
+    Id::new(138791390279630849),
+    Id::new(261308783546859520)
+];
 /// Luro's main accent colour
 pub const ACCENT_COLOUR: u32 = 0xDABEEF;
 /// Luro's DANGER colour

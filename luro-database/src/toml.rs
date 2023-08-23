@@ -37,11 +37,11 @@ impl TomlDatabaseDriver {
     }
 
     /// Gets the specified [Path], which should be a toml file. If it does not exist, it will be created.
-    /// 
+    ///
     /// If the type does not exists, uses the passed `new` to create a new one.
     async fn get<'de, T>(path: &Path, new: T) -> anyhow::Result<T>
     where
-        T:  Serialize + DeserializeOwned + std::fmt::Debug
+        T: Serialize + DeserializeOwned + std::fmt::Debug
     {
         // Check to make sure our path exists, if not then create a new heck file
         if !path.exists() {

@@ -43,8 +43,8 @@ pub struct LuroGuild {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub accent_colour_custom: Option<u32>,
     /// The accent colour of the guild. This is calculated by the first role in a guild that has a colour
-    #[serde(default)]
-    pub accent_colour: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub accent_colour: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub afk_channel_id: Option<Id<ChannelMarker>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -194,20 +194,17 @@ impl LuroGuild {
         self
     }
 
-    pub fn highest_role_colour(&self) -> u32 {
-        let mut colour = 0;
+    pub fn highest_role_colour(&mut self) -> Option<(u32, usize, Id<RoleMarker>)> {
+        self.sort_roles();
         for (position, id) in &self.role_positions {
             if let Some(role) = self.roles.get(id) {
-                colour = role.colour;
-            }
-
-            if colour != 0 {
-                // Break because we know we have a valid colour!
-                debug!("Found colour at position {position}");
-                break;
+                if role.colour != 0 {
+                    debug!("Found {} at position {} - {}", role.colour, position, id);
+                    return Some((role.colour, *position, *id));
+                }
             }
         }
-        colour
+        None
     }
 
     /// Return a list of a user's roles
@@ -310,7 +307,7 @@ impl LuroGuild {
             members.push(member.user.id)
         }
 
-        self.accent_colour = self.highest_role_colour();
+        self.accent_colour = self.highest_role_colour().map(|x| x.0);
         self.afk_channel_id = guild.afk_channel_id;
         self.afk_timeout = Some(guild.afk_timeout);
         self.application_id = guild.application_id;

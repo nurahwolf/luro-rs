@@ -54,7 +54,10 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     }
 
     pub async fn get_user_cached(&self, id: &Id<UserMarker>, cache: &InMemoryCache) -> anyhow::Result<LuroUser> {
-        let cached_user = cache.user(*id).map(|x|x.clone()).context("Expected to get user from cache")?;
+        let cached_user = cache
+            .user(*id)
+            .map(|x| x.clone())
+            .context("Expected to get user from cache")?;
         let mut data = match self.user_data.read() {
             Ok(data) => data.get(id).cloned(),
             Err(why) => {

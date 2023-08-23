@@ -1,4 +1,4 @@
-use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
+use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -41,7 +41,9 @@ impl LuroCommand for GuildSettingsCommand {
             None => return ctx.not_guild_response().await
         };
         let mut guild = ctx.framework.database.get_guild(&guild_id).await?;
-        guild.accent_colour = guild.highest_role_colour();
+        if let Ok(twilight_guild) = ctx.framework.twilight_client.guild(guild_id).await {
+            guild.update_guild(twilight_guild.model().await?);
+        }
 
         let mut embed = ctx.default_embed().await;
         embed.title(format!("Guild Setting - {}", guild.name));
@@ -52,11 +54,14 @@ impl LuroCommand for GuildSettingsCommand {
             guild.message_events_log_channel = Default::default();
             guild.moderator_actions_log_channel = Default::default();
             guild.thread_events_log_channel = Default::default();
-            guild.accent_colour_custom = self.accent_colour.map(|c|parse_string_to_u32(c).unwrap_or_default());
+            guild.accent_colour_custom = self.accent_colour.clone().map(|c|parse_string_to_u32(c.as_ref()).unwrap_or_default());
         };
 
-        if let Some(accent_colour) = guild.accent_colour_custom {
-            guild.accent_colour_custom = Some(accent_colour)
+        if let Some(accent_colour) = &self.accent_colour {
+            guild.accent_colour_custom = match parse_string_to_u32(accent_colour) {
+                Ok(accent_colour) => Some(accent_colour),
+                Err(_) => None
+            }
         }
 
         if let Some(catchall_log_channel) = self.catchall_log_channel {
@@ -77,10 +82,11 @@ impl LuroCommand for GuildSettingsCommand {
 
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
         ctx.framework.database.save_guild(&guild_id, &guild).await?;
-        if let Some(role_id) = guild.role_positions.get(&0) {
+        if let Some((colour, position, role)) = guild.highest_role_colour() {
+            guild.accent_colour = Some(colour);
             embed.create_field(
                 "Guild Accent Colour",
-                &format!("`{:X}` - <@&{role_id}>", guild.accent_colour),
+                &format!("`{colour:X}` - <@&{role}> - Position `{position}`"),
                 true
             );
         }
@@ -106,11 +112,9 @@ impl LuroCommand for GuildSettingsCommand {
             writeln!(blacklist, "- <@&{role}>")?;
         }
         if !blacklist.is_empty() {
-            embed.create_field("Blacklisted Roles from Selfassign", &blacklist, true);
+            embed.create_field("Blacklisted Roles from Selfassign", &blacklist, false);
         }
 
-        ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))
-            .await?;
         ctx.respond(|r| r.add_embed(embed)).await
     }
 }

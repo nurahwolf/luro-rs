@@ -31,9 +31,7 @@ impl LuroCommand for Guild {
         let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
         let guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
         let mut embed = ctx.default_embed().await;
-        embed
-            .title(&guild_settings.name)
-            .colour(guild_settings.accent_colour_custom.unwrap_or(guild_settings.accent_colour));
+        embed.title(&guild_settings.name);
 
         writeln!(luro_guild, "- Guild Name: {}", &guild_settings.name)?;
         if !guild_settings.commands.is_empty() {
