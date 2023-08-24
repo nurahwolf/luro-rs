@@ -24,6 +24,11 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             return Ok(());
         };
 
+        if message.webhook_id.is_some() {
+            debug!("Message was sent by a webhook");
+            return Ok(());
+        }
+
         embed.author(|author| author.name(user.name()).icon_url(user.avatar()).url(message.link()));
 
         match message.source {
