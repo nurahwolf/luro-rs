@@ -3,10 +3,10 @@ use crate::database::drivers::toml::{
     deserialize_heck::deserialize_heck, deserialize_role_positions::deserialize_role_positions, serialize_heck::serialize_heck,
     serialize_role_positions::serialize_role_positions
 };
-use anyhow::anyhow;
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
-use tracing::debug;
+use tracing::{debug, info};
 use twilight_http::Client;
 use twilight_model::{
     application::command::Command,
@@ -250,13 +250,12 @@ impl LuroGuild {
         }
     }
 
-    pub fn apply_everyone_role(&mut self, role: Option<LuroRole>) -> &mut Self {
-        self.everyone_role = role;
-        self
+    pub fn get_everyone_role(&self) -> Option<LuroRole> {
+        self.roles.get(&self.id.cast()).cloned()
     }
 
     /// Returns the permissions a user may have
-    pub fn user_permission(&mut self, user: &LuroUser) -> anyhow::Result<Permissions> {
+    pub fn user_permission(&self, user: &LuroUser) -> anyhow::Result<Permissions> {
         let user_permissions = &self.user_role_permissions(user);
         Ok(self.permission_calculator(user, user_permissions)?.root())
     }
@@ -270,20 +269,17 @@ impl LuroGuild {
         user: &'a LuroUser,
         user_permissions: &'a [(Id<RoleMarker>, Permissions)]
     ) -> anyhow::Result<PermissionCalculator> {
-        let everyone_role = match &self.everyone_role {
-            Some(role) => role,
-            None => return Err(anyhow!("Guild roles do not contain the everyone role!"))
-        };
+        let everyone_role = self.get_everyone_role().context("Could not get everyone role from guild roles!")?;
         Ok(PermissionCalculator::new(self.id, user.id, everyone_role.permissions, user_permissions).owner_id(self.owner_id))
     }
 
-    fn user_role_permissions(&mut self, user: &LuroUser) -> Vec<(Id<RoleMarker>, Permissions)> {
-        let mut roles: Vec<LuroRole> = self.user_roles(user).into_iter().cloned().collect();
-        if let Some(everyone_role) = roles.iter().position(|x| x.id == self.id.cast()) {
-            // let everyone_role = roles.swap_remove(everyone_role)
-            self.apply_everyone_role(Some(roles.swap_remove(everyone_role)));
-        }
+    pub fn update_everyone_role(&mut self) -> &mut Self {
+        self.everyone_role = self.roles.get(&self.id.cast()).cloned();
+        self
+    }
 
+    fn user_role_permissions(&self, user: &LuroUser) -> Vec<(Id<RoleMarker>, Permissions)> {
+        let roles: Vec<LuroRole> = self.user_roles(user).into_iter().filter(|x|x.id.get() != self.id.get()).cloned().collect();
         roles.into_iter().map(|role| role.role_permission()).collect()
     }
 

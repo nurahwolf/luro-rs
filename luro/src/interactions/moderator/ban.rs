@@ -6,6 +6,7 @@ use luro_model::{
     user::{actions::UserActions, actions_type::UserActionType}
 };
 
+use tracing::info;
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::guild::Permissions;
@@ -47,7 +48,7 @@ impl LuroCommand for Ban {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
         let guild_id = interaction.guild_id.unwrap();
-        let mut guild = ctx.framework.database.get_guild(&guild_id).await?;
+        let guild = ctx.framework.database.get_guild(&guild_id).await?;
         let luro = ctx
             .framework
             .database
@@ -61,6 +62,8 @@ impl LuroCommand for Ban {
         let moderator_highest_role = guild.user_highest_role(&moderator);
         let punished_user_highest_role = guild.user_highest_role(&punished_user);
         let luro_permissions = guild.user_permission(&luro)?;
+        info!("{:#?}", luro_permissions);
+        info!("{:#?}", luro_permissions);
         let luro_highest_role = guild.user_highest_role(&luro);
         let reason = reason(self.reason, self.details);
         let period_string = match self.purge {

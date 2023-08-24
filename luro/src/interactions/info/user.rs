@@ -84,80 +84,6 @@ impl LuroCommand for InfoUser {
             None => ctx.interaction.guild_id
         };
 
-        if let Some(guild_id) = guild_id {
-            let guild = ctx.framework.database.get_guild(&guild_id).await?;
-            if let Ok(guild_member) = ctx.framework.twilight_client.guild_member(guild_id, luro_user.id).await {
-                luro_user.update_member(&guild_id, &guild_member.model().await?);
-            }
-
-            if let Some(luro_member) = luro_user.guilds.get(&guild_id) {
-                let mut guild_information = String::new();
-                let mut role_list = String::new();
-
-                let user_roles = guild.user_roles(&luro_user);
-                ctx.framework.database.save_user(&luro_user.id, &luro_user).await?;
-
-                for role in &user_roles {
-                    if role_list.is_empty() {
-                        write!(role_list, "<@&{}>", role.id)?;
-                        continue;
-                    };
-                    write!(role_list, ", <@&{}>", role.id)?
-                }
-
-                if let Some(role) = user_roles.first() {
-                    if role.colour != 0 {
-                        embed.colour(role.colour);
-                    }
-                }
-                writeln!(guild_information, "- Roles ({}): {role_list}", user_roles.len())?;
-                timestamp.push_str(
-                    format!(
-                        "- Joined this server at <t:{0}> - <t:{0}:R>\n",
-                        luro_member.joined_at.as_secs()
-                    )
-                    .as_str()
-                );
-                if let Some(member_timestamp) = luro_member.premium_since {
-                    timestamp.push_str(
-                        format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.as_secs()).as_str()
-                    );
-                }
-                if let Some(nickname) = &luro_member.nick {
-                    writeln!(guild_information, "- Nickname: `{nickname}`")?;
-                }
-                if luro_member.deaf {
-                    writeln!(guild_information, "- Deafened: `true`")?;
-                }
-                if luro_member.mute {
-                    writeln!(guild_information, "- Muted: `true`")?;
-                }
-                if luro_member.pending {
-                    writeln!(guild_information, "- Pending: `true`")?;
-                }
-                if let Some(timestamp) = luro_member.communication_disabled_until {
-                    writeln!(guild_information, "- Timed out until: <t:{}:R>", timestamp.as_secs())?;
-                }
-                // TODO: Once member_banner is a thing in [Member]
-                // if let Some(banner) = get_member_banner(&member, guild_id, user) {
-                //     embed = embed.image(ImageSource::url(banner)?)
-                // }
-                embed.author(|author| {
-                    author
-                        .name(luro_user.member_name(&Some(guild_id)))
-                        .icon_url(luro_user.guild_avatar(&guild_id))
-                });
-                match guild_information.len() > 1024 {
-                    true => {
-                        writeln!(description, "\n**Guild Information**\n{guild_information}")?;
-                    }
-                    false => {
-                        embed.create_field("Guild Information", &guild_information, false);
-                    }
-                }
-            }
-        }
-
         // USER DATA SECTION
         let mut user_data_description = String::new();
         {
@@ -250,9 +176,80 @@ impl LuroCommand for InfoUser {
             }
         }
 
-        if description.len() > 4096 {
-            description.truncate(4093);
-            description.push_str("...")
+        if let Some(guild_id) = guild_id {
+            let guild = ctx.framework.database.get_guild(&guild_id).await?;
+            if let Ok(guild_member) = ctx.framework.twilight_client.guild_member(guild_id, luro_user.id).await {
+                luro_user.update_member(&guild_id, &guild_member.model().await?);
+            }
+
+            if let Some(luro_member) = luro_user.guilds.get(&guild_id) {
+                let mut guild_information = String::new();
+                let mut role_list = String::new();
+
+                let user_roles = guild.user_roles(&luro_user);
+                ctx.framework.database.save_user(&luro_user.id, &luro_user).await?;
+
+                for role in &user_roles {
+                    if role_list.is_empty() {
+                        write!(role_list, "<@&{}>", role.id)?;
+                        continue;
+                    };
+                    write!(role_list, ", <@&{}>", role.id)?
+                }
+
+                if let Some(role) = user_roles.first() {
+                    if role.colour != 0 {
+                        embed.colour(role.colour);
+                    }
+                }
+                writeln!(guild_information, "- Roles ({}): {role_list}", user_roles.len())?;
+                timestamp.push_str(
+                    format!(
+                        "- Joined this server at <t:{0}> - <t:{0}:R>\n",
+                        luro_member.joined_at.as_secs()
+                    )
+                    .as_str()
+                );
+                if let Some(member_timestamp) = luro_member.premium_since {
+                    timestamp.push_str(
+                        format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.as_secs()).as_str()
+                    );
+                }
+                if let Some(nickname) = &luro_member.nick {
+                    writeln!(guild_information, "- Nickname: `{nickname}`")?;
+                }
+                if luro_member.deaf {
+                    writeln!(guild_information, "- Deafened: `true`")?;
+                }
+                if luro_member.mute {
+                    writeln!(guild_information, "- Muted: `true`")?;
+                }
+                if luro_member.pending {
+                    writeln!(guild_information, "- Pending: `true`")?;
+                }
+                if let Some(timestamp) = luro_member.communication_disabled_until {
+                    writeln!(guild_information, "- Timed out until: <t:{}:R>", timestamp.as_secs())?;
+                }
+
+                // TODO: Once member_banner is a thing in [Member]
+                // if let Some(banner) = get_member_banner(&member, guild_id, user) {
+                //     embed = embed.image(ImageSource::url(banner)?)
+                // }
+                embed.author(|author| {
+                    author
+                        .name(luro_user.member_name(&Some(guild_id)))
+                        .icon_url(luro_user.guild_avatar(&guild_id))
+                });
+                match guild_information.len() > 1024 {
+                    true => {
+                        writeln!(description, "\n**Guild Information**\n{guild_information}")?;
+                    }
+                    false => {
+                        embed.create_field("Guild Information", &guild_information, false);
+                    }
+                }
+                embed.create_field("Member Permissions", &format!("```rs\n{:#?}```", guild.user_permission(&luro_user)?), false);
+            }
         }
 
         embed.create_field("Timestamps", &timestamp, true);
