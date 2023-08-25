@@ -73,7 +73,7 @@ impl LuroCommand for OwnerCommands {
         let interaction_author = ctx.interaction.author().unwrap();
 
         let staff = match ctx.framework.database.get_staff().await {
-            Ok(data) => data.into_iter().map(|data| data.0).collect(),
+            Ok(data) => data.keys().copied().collect(),
             Err(why) => {
                 warn!(why = ?why, "Failed to load staff from database, falling back to hardcoded staff members");
                 BOT_OWNERS.to_vec()

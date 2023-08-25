@@ -54,12 +54,12 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub count: RwLock<usize>,
     pub current_user: RwLock<CurrentUser>,
     pub driver: D,
-    pub guild_data: RwLock<LuroGuilds>,
+    pub guild_data: Box<RwLock<LuroGuilds>>,
     pub hecks: RwLock<HeckManager>,
     pub quotes: RwLock<Quotes>,
     pub staff: RwLock<LuroUsers>,
     pub stories: RwLock<StoryManager>,
-    pub user_data: RwLock<LuroUsers>,
+    pub user_data: Box<RwLock<LuroUsers>>,
     pub twilight_client: Arc<Client>
 }
 

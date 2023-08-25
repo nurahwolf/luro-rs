@@ -1,4 +1,4 @@
-use std::collections::{btree_map::Entry, BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, hash_map::Entry};
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use twilight_cache_inmemory::model::CachedMember;
@@ -9,7 +9,7 @@ use twilight_model::{
         Id
     },
     user::{CurrentUser, PremiumType, User, UserFlags},
-    util::ImageHash
+    util::ImageHash, gateway::payload::incoming::{MemberAdd, MemberUpdate}
 };
 
 /// A [HashMap] containing user specific settings ([LuroUser]), keyed by [UserMarker].
@@ -83,8 +83,8 @@ pub struct LuroUser {
     /// An tuple of warnings wrapped in a vec. The first value is the warning, and the second is whoever warned the person
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub warnings: Vec<(String, Id<UserMarker>)>,
-    #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub messages: BTreeMap<Id<MessageMarker>, LuroMessage>,
+    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
+    pub messages: Box<HashMap<Id<MessageMarker>, LuroMessage>>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub moderation_actions: Vec<UserActions>,
     #[serde(default)]
@@ -96,8 +96,8 @@ pub struct LuroUser {
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
     /// A list of member instances across guilds
-    #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub guilds: BTreeMap<Id<GuildMarker>, LuroMember>,
+    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
+    pub guilds: Box<HashMap<Id<GuildMarker>, LuroMember>>,
     /// The user's character profiles
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub characters: BTreeMap<String, CharacterProfile>,
@@ -175,7 +175,7 @@ impl LuroUser {
         self.premium_type = luro.premium_type;
         self.public_flags = luro.public_flags;
         self.verified = luro.verified;
-        for (guild_id, member) in &luro.guilds {
+        for (guild_id, member) in luro.guilds.iter() {
             match self.guilds.entry(*guild_id) {
                 Entry::Vacant(entry) => {
                     entry.insert(member.clone());
@@ -260,6 +260,24 @@ impl LuroUser {
         self.public_flags = user.public_flags;
         self.system = user.system.unwrap_or_default();
         self.verified = user.verified.unwrap_or_default();
+        self
+    }
+
+    pub fn update_member_add(&mut self, event: Box<MemberAdd>) -> &mut Self {
+        self.update_user(&event.user);
+        match self.guilds.entry(event.guild_id) {
+            Entry::Vacant(entry) => entry.insert(LuroMember::from(event)),
+            Entry::Occupied(mut entry) => entry.get_mut().update_member_add(event)
+        };
+        self
+    }
+
+    pub fn update_member_update(&mut self, event: Box<MemberUpdate>) -> &mut Self {
+        self.update_user(&event.user);
+        match self.guilds.entry(event.guild_id) {
+            Entry::Vacant(entry) => entry.insert(LuroMember::from(event)),
+            Entry::Occupied(mut entry) => entry.get_mut().update_member_update(event)
+        };
         self
     }
 

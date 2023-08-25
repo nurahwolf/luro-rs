@@ -56,8 +56,6 @@ impl LuroCommand for Ban {
             .await?;
         let mut moderator = ctx.get_interaction_author(interaction).await?;
         let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
-        let member = ctx.framework.twilight_client.guild_member(guild_id, punished_user.id).await?.model().await?;
-        punished_user.update_member(&guild_id, &member);
         let mut response = ctx.acknowledge_interaction(false).await?;
         let moderator_permissions = guild.user_permission(&moderator)?;
         let moderator_highest_role = guild.user_highest_role(&moderator);

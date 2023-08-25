@@ -6,7 +6,7 @@ use crate::database::drivers::toml::{
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
-use tracing::{debug, info};
+use tracing::debug;
 use twilight_http::Client;
 use twilight_model::{
     application::command::Command,

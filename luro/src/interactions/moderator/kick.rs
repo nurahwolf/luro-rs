@@ -35,7 +35,7 @@ impl LuroCommand for Kick {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
         let guild_id = interaction.guild_id.unwrap();
-        let mut guild = ctx.framework.database.get_guild(&guild_id).await?;
+        let guild = ctx.framework.database.get_guild(&guild_id).await?;
         let luro = ctx
             .framework
             .database
