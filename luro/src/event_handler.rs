@@ -17,6 +17,10 @@ mod thread_list_sync;
 mod thread_member_update;
 mod thread_members_update;
 mod thread_update;
+mod role_update;
+mod member_add;
+mod member_update;
+mod user_update;
 
 use crate::interaction::LuroSlash;
 
@@ -41,17 +45,21 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         self.twilight_cache.update(&event);
 
         let callback = match event.clone() {
-            Event::Ready(ready) => self.ready_listener(ready, shard).await,
-            Event::MessageCreate(message) => self.message_create_listener(*message).await,
-            Event::InteractionCreate(interaction) => LuroSlash::new(self.clone(), interaction.0, shard, latency).handle().await,
-            Event::GuildAuditLogEntryCreate(entry) => self.clone().audit_log_handler(entry).await,
             Event::BanAdd(ban) => self.ban_add_listener(ban).await,
+            Event::GuildAuditLogEntryCreate(entry) => self.clone().audit_log_handler(entry).await,
+            Event::InteractionCreate(interaction) => LuroSlash::new(self.clone(), interaction.0, shard, latency).handle().await,
+            Event::MemberAdd(event) => self.member_add_listener(event).await,
+            Event::MemberUpdate(event) => self.member_update_listener(event).await,
+            Event::MessageCreate(message) => self.message_create_listener(*message).await,
+            Event::Ready(ready) => self.ready_listener(ready, shard).await,
+            Event::RoleUpdate(event) => self.role_update_listener(event).await,
             Event::ThreadCreate(event) => self.listener_thread_create(event).await,
             Event::ThreadDelete(event) => self.listener_thread_delete(event).await,
             Event::ThreadListSync(event) => self.listener_thread_list_sync(event).await,
-            Event::ThreadMemberUpdate(event) => self.listener_thread_member_update(event).await,
             Event::ThreadMembersUpdate(event) => self.listener_thread_members_update(event).await,
+            Event::ThreadMemberUpdate(event) => self.listener_thread_member_update(event).await,
             Event::ThreadUpdate(event) => self.listener_thread_update(event).await,
+            Event::UserUpdate(event) => self.user_update_listener(event).await,
             _ => Ok(())
         };
 
