@@ -50,11 +50,25 @@ impl LuroCommand for RoleCommands {
 
         let mut embed = ctx.default_embed().await;
         let guild = ctx.framework.database.get_guild(&guild_id).await?;
-        let user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
+        let mut user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
         let user_roles = guild.user_roles(&user);
-        let user_highest_role = guild
-            .user_highest_role(&user)
-            .context("Expected to get user's highest role")?;
+        let user_highest_role = match guild.user_highest_role(&user) {
+            Some(role) => role,
+            None => {
+                let member = ctx
+                    .framework
+                    .twilight_client
+                    .guild_member(guild_id, user.id)
+                    .await?
+                    .model()
+                    .await?;
+                user.update_member(&guild_id, &member);
+                ctx.framework.database.save_user(&user.id, &user).await?;
+                guild
+                    .user_highest_role(&user)
+                    .context("Expected to get user's highest role")?
+            }
+        };
 
         // For each role in guild
         for (position, role_id) in &guild.role_positions {
@@ -228,7 +242,6 @@ impl LuroCommand for Menu {
         }
 
         // SAFETY: This command can only be used in guilds
-        let _member = &ctx.interaction.member.clone().unwrap();
         let add_buttons = self.rules.is_some() || self.adult.is_some() || self.bait.is_some();
 
         let accent_colour = ctx.accent_colour().await;
