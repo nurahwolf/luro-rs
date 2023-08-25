@@ -86,28 +86,32 @@ impl LuroCommand for RoleCommands {
                     continue;
                 }
 
-                // Add this to a list of selected roles to add to a user
-                selected_roles.push(*role_id)
+                selected_roles.push(*role_id);
             }
         }
 
         for user_role in guild.user_roles(&user) {
             // Don't modify blacklisted roles
             if guild.assignable_role_blacklist.contains(&user_role.id) {
+                existing_roles.push(user_role.id);
                 continue;
             }
 
             // If this role is not one they selected, add it to the list to be removed
-            match selected_roles.contains(&user_role.id) {
-                true => existing_roles.push(user_role.id),
-                false => {
-                    // Don't remove their higest role!
-                    if user_highest_role.1 == user_role.id {
-                        continue;
-                    }
-
-                    roles_to_remove.push(user_role.id)
+            if !selected_roles.contains(&user_role.id) {
+                // Don't remove their higest role!
+                if user_highest_role.1 == user_role.id {
+                    continue;
                 }
+
+                roles_to_remove.push(user_role.id)
+            }
+        }
+
+        let user_role_ids: Vec<_> = guild.user_roles(&user).iter().map(|x|x.id).collect();
+        for role in &selected_roles {
+            if !user_role_ids.contains(role) {
+                roles_to_add.push(*role)
             }
         }
 
