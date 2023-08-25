@@ -9,6 +9,7 @@ use luro_model::{
     guild::log_channel::LuroLogChannel,
     user::{actions::UserActions, actions_type::UserActionType}
 };
+use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::guild::Permissions;
 
@@ -64,13 +65,25 @@ impl LuroCommand for Kick {
             return send(response.set_embed(permission_server_owner(&moderator.id)), ctx).await
         }
 
-        if punished_user_highest_role >= moderator_highest_role {
-            return ctx.user_hierarchy_response(&punished_user.member_name(&Some(guild_id))).await;
-        }
+        // The lower the number, the higher they are on the heirarchy 
+        if let Some(punished_user_highest_role) = punished_user_highest_role {
+            info!("Punished user position: {}", punished_user_highest_role.0);
+            if let Some(moderator_highest_role) = moderator_highest_role {
+                info!("Moderator user position: {}", moderator_highest_role.0);
+                if punished_user_highest_role.0 <= moderator_highest_role.0 {
+                    return ctx.user_hierarchy_response(&punished_user.member_name(&Some(guild_id))).await;
+                }
+            }
 
-        if punished_user_highest_role >= luro_highest_role {
-            let name = ctx.framework.database.current_user.read().unwrap().clone().name;
-            return ctx.bot_hierarchy_response(&name).await;
+            if let Some(luro_highest_role) = luro_highest_role {
+                info!("Luro user position: {}", luro_highest_role.0);
+                if punished_user_highest_role.0 <= luro_highest_role.0 {
+                    let name = ctx.framework.database.current_user.read().unwrap().clone().name;
+                    return ctx.bot_hierarchy_response(&name).await;
+                }
+            }
+        } else {
+            warn!("Could not fetch the highest role for {}! They have no roles in my cache!!", punished_user.id)
         }
 
         // Checks passed, now let's action the user

@@ -6,7 +6,7 @@ use luro_model::{
     user::{actions::UserActions, actions_type::UserActionType}
 };
 
-use tracing::info;
+use tracing::{info, warn};
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::guild::Permissions;
@@ -56,14 +56,13 @@ impl LuroCommand for Ban {
             .await?;
         let mut moderator = ctx.get_interaction_author(interaction).await?;
         let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
-        punished_user.update_user(&self.user.resolved);
+        let member = ctx.framework.twilight_client.guild_member(guild_id, punished_user.id).await?.model().await?;
+        punished_user.update_member(&guild_id, &member);
         let mut response = ctx.acknowledge_interaction(false).await?;
         let moderator_permissions = guild.user_permission(&moderator)?;
         let moderator_highest_role = guild.user_highest_role(&moderator);
         let punished_user_highest_role = guild.user_highest_role(&punished_user);
         let luro_permissions = guild.user_permission(&luro)?;
-        info!("{:#?}", luro_permissions);
-        info!("{:#?}", luro_permissions);
         let luro_highest_role = guild.user_highest_role(&luro);
         let reason = reason(self.reason, self.details);
         let period_string = match self.purge {
@@ -89,13 +88,25 @@ impl LuroCommand for Ban {
             return send(response.set_embed(permission_server_owner(&moderator.id)), ctx).await
         }
 
-        if punished_user_highest_role >= moderator_highest_role {
-            return ctx.user_hierarchy_response(&punished_user.member_name(&Some(guild_id))).await;
-        }
+        // The lower the number, the higher they are on the heirarchy 
+        if let Some(punished_user_highest_role) = punished_user_highest_role {
+            info!("Punished user position: {}", punished_user_highest_role.0);
+            if let Some(moderator_highest_role) = moderator_highest_role {
+                info!("Moderator user position: {}", moderator_highest_role.0);
+                if punished_user_highest_role.0 <= moderator_highest_role.0 {
+                    return ctx.user_hierarchy_response(&punished_user.member_name(&Some(guild_id))).await;
+                }
+            }
 
-        if punished_user_highest_role >= luro_highest_role {
-            let name = ctx.framework.database.current_user.read().unwrap().clone().name;
-            return ctx.bot_hierarchy_response(&name).await;
+            if let Some(luro_highest_role) = luro_highest_role {
+                info!("Luro user position: {}", luro_highest_role.0);
+                if punished_user_highest_role.0 <= luro_highest_role.0 {
+                    let name = ctx.framework.database.current_user.read().unwrap().clone().name;
+                    return ctx.bot_hierarchy_response(&name).await;
+                }
+            }
+        } else {
+            warn!("Could not fetch the highest role for {}! They have no roles in my cache!!", punished_user.id)
         }
 
         // Checks passed, now let's action the user
