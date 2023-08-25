@@ -108,7 +108,7 @@ impl LuroCommand for RoleCommands {
             }
         }
 
-        let user_role_ids: Vec<_> = guild.user_roles(&user).iter().map(|x|x.id).collect();
+        let user_role_ids: Vec<_> = guild.user_roles(&user).iter().map(|x| x.id).collect();
         for role in &selected_roles {
             if !user_role_ids.contains(role) {
                 roles_to_add.push(*role)
@@ -118,7 +118,6 @@ impl LuroCommand for RoleCommands {
         if !too_high_role.is_empty() {
             add_role_field(&mut embed, &too_high_role, "Selected Roles - Too High");
             if let Some(log_channel) = guild.moderator_actions_log_channel {
-                // TODO: Remove hardcoded channel
                 warn!("User {} attempted to escalate their privileges", user.id);
                 embed
                     .colour(COLOUR_DANGER)
@@ -129,11 +128,7 @@ impl LuroCommand for RoleCommands {
                     ))
                     .author(|author| author.name(user.name()).icon_url(user.avatar()));
                 ctx.framework
-                    .send_message(&log_channel, |r| {
-                        r.add_embed(embed.clone())
-                            // TODO: Fix hard coded staff ping
-                            .content("<@&1037361382410170378>")
-                    })
+                    .send_message(&log_channel, |r| r.add_embed(embed.clone()))
                     .await?;
             }
         };
