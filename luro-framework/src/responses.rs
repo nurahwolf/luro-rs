@@ -1,13 +1,16 @@
 use luro_builder::embed::EmbedBuilder;
 use luro_model::database::drivers::LuroDatabaseDriver;
-use twilight_model::{channel::message::embed::EmbedField, id::{marker::UserMarker, Id}};
+use twilight_model::{
+    channel::message::embed::EmbedField,
+    id::{marker::UserMarker, Id}
+};
 
-use crate::{InteractionContext, Framework};
+use crate::{Framework, InteractionContext};
 
 use self::permission_server_owner::permission_server_owner;
 
-pub mod user_action;
 pub mod permission_server_owner;
+pub mod user_action;
 
 /// A wrapper around [EmbedBuilder] to make easy standardised responses
 #[derive(Default, Clone)]
@@ -19,12 +22,12 @@ pub struct StandardResponse {
 impl StandardResponse {
     pub fn new() -> Self {
         Self {
-            embed: Default::default(),
+            embed: Default::default()
         }
     }
 
     /// Clone the internal embed and return it. Useful for if you don't want to clone it manually.
-    /// 
+    ///
     /// Generally used when the response is reused
     pub fn embed(&self) -> EmbedBuilder {
         self.embed.clone()
@@ -54,20 +57,28 @@ impl StandardResponse {
     }
 
     /// Respond to an interaction with a standard response
-    pub async fn interaction_response<D: LuroDatabaseDriver>(&self, framework: Framework<D>, ctx: InteractionContext) -> anyhow::Result<()> {
-        ctx.respond(framework, |response|response.add_embed(self.embed())).await
+    pub async fn interaction_response<D: LuroDatabaseDriver>(
+        &self,
+        framework: Framework<D>,
+        ctx: InteractionContext
+    ) -> anyhow::Result<()> {
+        ctx.respond(framework, |response| response.add_embed(self.embed())).await
     }
 
     /// Create a new builder and both create and execute a response, all in one.
     /// This only works with simple responses.
-    pub async fn simple_interaction_response<D: LuroDatabaseDriver>(framework: Framework<D>, ctx: InteractionContext, response: SimpleResponse) -> anyhow::Result<()> {
+    pub async fn simple_interaction_response<D: LuroDatabaseDriver>(
+        framework: Framework<D>,
+        ctx: InteractionContext,
+        response: SimpleResponse
+    ) -> anyhow::Result<()> {
         Self::simple(response).interaction_response(framework, ctx).await
     }
 
     /// Create a standard response from a simple response
     pub fn simple(response: SimpleResponse) -> Self {
         let embed = match response {
-            SimpleResponse::NotOwner(user_id) => permission_server_owner(&user_id),
+            SimpleResponse::NotOwner(user_id) => permission_server_owner(&user_id)
         };
 
         Self { embed }

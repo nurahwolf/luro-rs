@@ -11,7 +11,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         // let mut user = self.database.get_user(&event.id).await?;
         // user.update_user(&event.);
         // self.database.save_user(&event.id, &user).await?;
-        
+
         Ok(())
     }
 }

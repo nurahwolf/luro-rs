@@ -1,15 +1,16 @@
-use std::collections::{BTreeMap, HashMap, hash_map::Entry};
+use std::collections::{hash_map::Entry, BTreeMap, HashMap};
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use twilight_cache_inmemory::model::CachedMember;
 use twilight_model::{
+    gateway::payload::incoming::{MemberAdd, MemberUpdate},
     guild::{Member, PartialMember},
     id::{
         marker::{GuildMarker, MessageMarker, UserMarker},
         Id
     },
     user::{CurrentUser, PremiumType, User, UserFlags},
-    util::ImageHash, gateway::payload::incoming::{MemberAdd, MemberUpdate}
+    util::ImageHash
 };
 
 /// A [HashMap] containing user specific settings ([LuroUser]), keyed by [UserMarker].

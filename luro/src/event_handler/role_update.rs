@@ -11,7 +11,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         let mut guild = self.database.get_guild(&event.guild_id).await?;
         guild.roles.insert(event.role.id, event.role.into());
         self.database.save_guild(&event.guild_id, &guild).await?;
-        
+
         Ok(())
     }
 }

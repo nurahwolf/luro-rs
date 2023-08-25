@@ -1,8 +1,8 @@
 use crate::interactions::send;
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use luro_framework::responses::StandardResponse;
 use luro_framework::responses::permission_server_owner::permission_server_owner;
 use luro_framework::responses::user_action::PunishmentType;
+use luro_framework::responses::StandardResponse;
 use luro_model::database::drivers::LuroDatabaseDriver;
 
 use luro_model::{
@@ -62,10 +62,10 @@ impl LuroCommand for Kick {
 
         // Check if the author and the bot have required permissions.
         if guild.is_owner(&punished_user) {
-            return send(response.set_embed(permission_server_owner(&moderator.id)), ctx).await
+            return send(response.set_embed(permission_server_owner(&moderator.id)), ctx).await;
         }
 
-        // The lower the number, the higher they are on the heirarchy 
+        // The lower the number, the higher they are on the heirarchy
         if let Some(punished_user_highest_role) = punished_user_highest_role {
             info!("Punished user position: {}", punished_user_highest_role.0);
             if let Some(moderator_highest_role) = moderator_highest_role {
@@ -83,14 +83,16 @@ impl LuroCommand for Kick {
                 }
             }
         } else {
-            warn!("Could not fetch the highest role for {}! They have no roles in my cache!!", punished_user.id)
+            warn!(
+                "Could not fetch the highest role for {}! They have no roles in my cache!!",
+                punished_user.id
+            )
         }
 
         // Checks passed, now let's action the user
         let mut embed =
             StandardResponse::new_punishment(PunishmentType::Kicked, &guild.name, &guild.id, &punished_user, &moderator);
-        embed
-            .punishment_reason(reason.as_deref(), &punished_user);
+        embed.punishment_reason(reason.as_deref(), &punished_user);
         match ctx.framework.twilight_client.create_private_channel(punished_user.id).await {
             Ok(channel) => {
                 let victim_dm = ctx

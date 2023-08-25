@@ -248,7 +248,11 @@ impl LuroCommand for InfoUser {
                         embed.create_field("Guild Information", &guild_information, false);
                     }
                 }
-                embed.create_field("Member Permissions", &format!("```rs\n{:#?}```", guild.user_permission(&luro_user)?), false);
+                embed.create_field(
+                    "Member Permissions",
+                    &format!("```rs\n{:#?}```", guild.user_permission(&luro_user)?),
+                    false
+                );
             }
         }
 

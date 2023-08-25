@@ -10,8 +10,8 @@ pub fn permission_server_owner(user_id: &Id<UserMarker>) -> EmbedBuilder {
     embed
         .colour(COLOUR_DANGER)
         .title("That's the server owner you idiot")
-        .description(
-        format!("Congratulations <@{user_id}>, that's the server owner. Do you really think I'm gonna screw with them? Nope!")
-    );
+        .description(format!(
+            "Congratulations <@{user_id}>, that's the server owner. Do you really think I'm gonna screw with them? Nope!"
+        ));
     embed
 }

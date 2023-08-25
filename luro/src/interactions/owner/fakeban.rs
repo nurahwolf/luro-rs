@@ -3,7 +3,7 @@ use crate::{
     interactions::moderator::{reason, Reason},
     luro_command::LuroCommand
 };
-use luro_framework::responses::{StandardResponse, user_action::PunishmentType};
+use luro_framework::responses::{user_action::PunishmentType, StandardResponse};
 use luro_model::database::drivers::LuroDatabaseDriver;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
@@ -68,7 +68,7 @@ impl LuroCommand for FakeBan {
             .punishment_period(&period_string);
         let punished_user_dm = match ctx.framework.twilight_client.create_private_channel(punished_user_id).await {
             Ok(channel) => channel.model().await?,
-            Err(_) => return ctx.respond(|r|r.content("Could not create DM with the user!")).await
+            Err(_) => return ctx.respond(|r| r.content("Could not create DM with the user!")).await
         };
 
         let victim_dm = ctx

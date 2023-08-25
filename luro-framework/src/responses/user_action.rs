@@ -12,7 +12,7 @@ pub enum PunishmentType {
 
 impl StandardResponse {
     /// Create a new punishment response
-    pub fn new_punishment (
+    pub fn new_punishment(
         kind: PunishmentType,
         guild_name: &str,
         guild_id: &Id<GuildMarker>,

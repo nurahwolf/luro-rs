@@ -13,6 +13,4 @@ mod send_log_channel;
 #[cfg(feature = "luro-builder")]
 mod send_message;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
-
-}
+impl<D: LuroDatabaseDriver> Framework<D> {}

@@ -269,7 +269,9 @@ impl LuroGuild {
         user: &'a LuroUser,
         user_permissions: &'a [(Id<RoleMarker>, Permissions)]
     ) -> anyhow::Result<PermissionCalculator> {
-        let everyone_role = self.get_everyone_role().context("Could not get everyone role from guild roles!")?;
+        let everyone_role = self
+            .get_everyone_role()
+            .context("Could not get everyone role from guild roles!")?;
         Ok(PermissionCalculator::new(self.id, user.id, everyone_role.permissions, user_permissions).owner_id(self.owner_id))
     }
 
@@ -279,7 +281,12 @@ impl LuroGuild {
     }
 
     fn user_role_permissions(&self, user: &LuroUser) -> Vec<(Id<RoleMarker>, Permissions)> {
-        let roles: Vec<LuroRole> = self.user_roles(user).into_iter().filter(|x|x.id.get() != self.id.get()).cloned().collect();
+        let roles: Vec<LuroRole> = self
+            .user_roles(user)
+            .into_iter()
+            .filter(|x| x.id.get() != self.id.get())
+            .cloned()
+            .collect();
         roles.into_iter().map(|role| role.role_permission()).collect()
     }
 
