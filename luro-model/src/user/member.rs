@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use serde::{Deserialize, Serialize};
 use twilight_cache_inmemory::model::CachedMember;
 use twilight_model::{
@@ -44,7 +46,9 @@ pub struct LuroMember {
     ///
     /// [`Interaction`]: crate::application::interaction::Interaction
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub permissions: Option<Permissions>
+    pub permissions: Option<Permissions>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub left_at: Option<Duration>,
 }
 
 impl LuroMember {
@@ -115,7 +119,7 @@ impl LuroMember {
 impl From<&PartialMember> for LuroMember {
     fn from(member: &PartialMember) -> Self {
         let id = member.user.as_ref().map(|user| user.id);
-        Self {
+        LuroMember {
             avatar: member.avatar,
             communication_disabled_until: member.communication_disabled_until,
             deaf: member.deaf,
@@ -127,7 +131,8 @@ impl From<&PartialMember> for LuroMember {
             premium_since: member.premium_since,
             role_ids: member.roles.clone(),
             permissions: member.permissions,
-            id
+            id,
+            left_at: None
         }
     }
 }
@@ -146,7 +151,9 @@ impl From<&Member> for LuroMember {
             premium_since: member.premium_since,
             role_ids: member.roles.clone(),
             permissions: None,
-            id: Some(member.user.id)
+            id: Some(member.user.id),
+            left_at: None
+
         }
     }
 }
@@ -165,7 +172,9 @@ impl From<&CachedMember> for LuroMember {
             pending: member.pending(),
             premium_since: member.premium_since(),
             role_ids: member.roles().to_vec(),
-            permissions: Default::default()
+            permissions: Default::default(),
+            left_at: None
+
         }
     }
 }
@@ -184,7 +193,9 @@ impl From<Box<MemberAdd>> for LuroMember {
             pending: member.pending,
             permissions: None,
             premium_since: member.premium_since,
-            role_ids: member.roles.clone()
+            role_ids: member.roles.clone(),
+            left_at: None
+
         }
     }
 }
@@ -203,7 +214,9 @@ impl From<Box<MemberUpdate>> for LuroMember {
             pending: member.pending,
             permissions: None,
             premium_since: member.premium_since,
-            role_ids: member.roles.clone()
+            role_ids: member.roles.clone(),
+            left_at: None
+
         }
     }
 }
