@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context};
 
-use luro_builder::response::LuroResponse;
+use luro_model::response::LuroResponse;
 
 use std::str;
 

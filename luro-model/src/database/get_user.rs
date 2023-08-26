@@ -71,7 +71,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             data = match self.driver.get_user(id.get()).await {
                 Ok(data) => Some(data),
                 Err(why) => {
-                    warn!(why = ?why, "Failed to get user from the database. Falling back to twilight");
+                    warn!(why = ?why, "(Cached) Failed to get user from the database. Falling back to twilight");
                     None
                 }
             }

@@ -1,3 +1,4 @@
+use luro_builder::embed::EmbedBuilder;
 use serde::{Deserialize, Serialize};
 use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::{
@@ -445,4 +446,41 @@ fn default_kind() -> MessageType {
 
 fn default_user() -> Id<UserMarker> {
     PRIMARY_BOT_OWNER
+}
+
+impl LuroMessage {
+    /// Create and append an embed. Multiple calls will add multiple embeds.
+    ///
+    /// NOTE: This WILL fail to send if more than 10 embeds are present!
+    ///
+    /// Refer to the documentation for [`EmbedBuilder`] for more
+    /// information.
+    pub fn embed<F>(&mut self, embed: F) -> &mut Self
+    where
+        F: FnOnce(&mut EmbedBuilder) -> &mut EmbedBuilder
+    {
+        let mut e = EmbedBuilder::default();
+        embed(&mut e);
+        self.embeds.push(e.into());
+
+        self
+    }
+
+    /// Explicitly set and overwrite all currently set embeds.
+    /// Modify the nested embeds field for more advanced controls.
+    ///
+    /// NOTE: This WILL fail to send if more than 10 are present!
+    pub fn set_embeds(&mut self, embeds: Vec<Embed>) -> &mut Self {
+        self.embeds = embeds;
+
+        self
+    }
+
+    /// Set the content that should be sent with the message.
+    /// This will overrwrite anything previously set.
+    pub fn content(&mut self, content: impl Into<String>) -> &mut Self {
+        self.content = content.into();
+
+        self
+    }
 }

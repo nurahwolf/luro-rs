@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 
 use anyhow::anyhow;
-use luro_builder::response::LuroResponse;
 use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::response::LuroResponse;
 use tracing::info;
 use tracing::warn;
 use twilight_interactions::command::CommandModel;
 use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
 use twilight_model::application::interaction::application_command::CommandData;
+use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
+use twilight_model::application::interaction::modal::ModalInteractionData;
 
 use self::character::Character;
 use self::dice::DiceCommands;
@@ -20,14 +22,12 @@ use self::quote::QuoteCommands;
 use self::roles::RoleCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
-    hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::OwnerCommands,
-    say::SayCommand, story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand
+    hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::Owner, say::SayCommand,
+    story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand
 };
 use crate::interaction::LuroSlash;
 use crate::interactions::character::send::CharacterSendAutocomplete;
 use crate::interactions::heck::add::HeckAddCommand;
-
-use anyhow::bail;
 
 use twilight_model::application::interaction::InteractionData;
 
@@ -85,7 +85,7 @@ impl Commands {
         init.global_commands.insert("music", MusicCommands::create_command().into());
         init.global_commands.insert("boop", BoopCommand::create_command().into());
         init.global_commands.insert("heck", HeckCommands::create_command().into());
-        init.global_commands.insert("owner", OwnerCommands::create_command().into());
+        init.global_commands.insert("owner", Owner::create_command().into());
         init.global_commands.insert("about", AboutCommand::create_command().into());
         init.global_commands.insert("info", InfoCommands::create_command().into());
         init.global_commands.insert("lewd", LewdCommands::create_command().into());
@@ -110,12 +110,7 @@ impl Commands {
 
 impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Handle incoming command interaction.
-    pub async fn handle_command(self) -> anyhow::Result<()> {
-        let data = match self.interaction.data.clone() {
-            Some(InteractionData::ApplicationCommand(data)) => *data,
-            _ => bail!("expected application command data")
-        };
-
+    pub async fn handle_command(self, data: Box<CommandData>) -> anyhow::Result<()> {
         // TODO: CONSTANT match for bot name...
         match data.name.as_str() {
             "about" => AboutCommand::new(data).await?.run_command(self).await,
@@ -126,7 +121,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             "mod" => ModeratorCommands::new(data).await?.run_command(self).await,
             "music" => MusicCommands::new(data).await?.run_command(self).await,
             "boop" => BoopCommand::new(data).await?.run_command(self).await,
-            "owner" => OwnerCommands::new(data).await?.run_command(self).await,
+            "owner" => Owner::new(data).await?.run_command(self).await,
             "heck" => HeckCommands::new(data).await?.run_command(self).await,
             "lewd" => LewdCommands::new(data).await?.run_command(self).await,
             "base64" => Base64Commands::new(data).await?.run_command(self).await,
@@ -149,22 +144,29 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     ///
     /// SAFETY: There is an unwrap here, but the type is always present on MessageComponent
     /// which is the only type this function is called on
-    pub async fn handle_component(self) -> anyhow::Result<()> {
-        let data = self.parse_component_data(&mut self.interaction.clone())?;
-        let interaction = &self.interaction;
+    pub async fn handle_component(self, data: Box<MessageComponentInteractionData>) -> anyhow::Result<()> {
+        let mut message = self.interaction.message.clone().unwrap();
+        let mut interaction = self.interaction.clone();
+        let mut new_id = true;
 
-        let original_interaction = self
-            .framework
-            .database
-            .get_interaction(&interaction.message.as_ref().unwrap().id.to_string())
-            .await?;
+        while new_id {
+            interaction = self.framework.database.get_interaction(&message.id.to_string()).await?;
 
-        let command = match original_interaction.data {
-            Some(InteractionData::ApplicationCommand(data)) => *data,
+            new_id = match interaction.message {
+                Some(ref new_message) => {
+                    message = new_message.clone();
+                    true
+                }
+                None => false
+            }
+        }
+
+        let command = match interaction.data {
+            Some(InteractionData::ApplicationCommand(ref data)) => data.clone(),
             _ => {
                 return Err(anyhow!(
                     "unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}",
-                    original_interaction.data
+                    interaction.data
                 ))
             }
         };
@@ -173,7 +175,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             info!("Received component interaction - {} - {}", author.name, data.custom_id);
         }
 
-        match &*data.custom_id {
+        match data.custom_id.as_str() {
             "character-fetish" => Character::new(command).await?.handle_component(data, self).await,
             "boop" => BoopCommand::new(command).await?.handle_component(data, self).await,
             "decode" | "encode" => Base64Commands::new(command).await?.handle_component(data, self).await,
@@ -183,6 +185,9 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             "role-menu" | "rules-button" | "adult-button" | "bait-button" => {
                 RoleCommands::new(command).await?.handle_component(data, self).await
             }
+            "mass-assign-roles" | "mass-assign-remove" | "mass-assign-selector" => {
+                Owner::new(command).await?.handle_component(data, self).await
+            }
             name => {
                 warn!(name = name, "received unknown component");
                 self.unknown_command_response_named(name).await
@@ -191,9 +196,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     }
 
     /// Handle incoming modal interaction
-    pub async fn handle_modal(self) -> anyhow::Result<()> {
-        let data = self.parse_modal_data(&mut self.interaction.clone())?;
-
+    pub async fn handle_modal(self, data: ModalInteractionData) -> anyhow::Result<()> {
         // let original_interaction = self
         //     .framework
         //     .database
@@ -203,16 +206,16 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
         //     .clone();
 
         // let command = match original_interaction.data {
-        //     Some(InteractionData::ApplicationCommand(data)) => *data,
+        //     Some(InteractionData::ApplicationCommand(data)) => data,
         //     _ => return Err(anyhow!("unable to parse modal data, received unknown data type"))
         // };
 
-        match &*data.custom_id {
+        match data.custom_id.as_str() {
             "character" => Character::handle_model(data, self).await,
             "heck-add" => HeckAddCommand::handle_model(data, self).await,
             "story-add" => StoryCommand::handle_model(data, self).await,
             "mod-warn" => ModeratorCommands::handle_model(data, self).await,
-            "modify-embed" => OwnerCommands::handle_model(data, self).await,
+            "modify-embed" => Owner::handle_model(data, self).await,
             name => {
                 warn!(name = name, "received unknown component");
                 self.unknown_command_response_named(name).await
@@ -221,8 +224,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     }
 
     /// Handle incoming autocomplete
-    pub async fn handle_autocomplete(self) -> anyhow::Result<()> {
-        let data = self.parse_autocomplete_data(&self.interaction)?;
+    pub async fn handle_autocomplete(self, data: Box<CommandData>) -> anyhow::Result<()> {
         Autocomplete::new(*data)?.run(self).await
     }
 }

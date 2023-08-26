@@ -23,7 +23,7 @@ pub struct TomlDatabaseDriver {}
 
 impl TomlDatabaseDriver {
     // A simple function used to make sure our data path and other needed files exist
-    pub async fn start() -> anyhow::Result<()> {
+    pub async fn start() -> anyhow::Result<Self> {
         let path_to_data = PathBuf::from("./data"); //env::current_dir().expect("Invaild executing directory").join("/data");
 
         // Initialise /data folder for toml. Otherwise it panics.
@@ -33,7 +33,7 @@ impl TomlDatabaseDriver {
             tracing::info!("/data folder successfully created!");
         }
 
-        Ok(())
+        Ok(Self {  })
     }
 
     /// Gets the specified [Path], which should be a toml file. If it does not exist, it will be created.

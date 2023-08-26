@@ -5,7 +5,6 @@ members = [
     "luro-dice",
     "luro-framework",
     "luro-model",
-    "luro-response",
     "luro-twilight",
     "luro",
     "twilight-interactions-derive",
@@ -28,9 +27,7 @@ version = "0.0.1"
 # Legacy
 
 anyhow = "1"
-dashmap = "5"
 serde = "1"
-parking_lot = "0.12"
 tracing-subscriber = "0.3.0"
 tokio = { version = "1", default-features = false, features = [
     "sync",

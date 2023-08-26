@@ -48,7 +48,6 @@ tracing-appender = "0.2.2"
 tracing-subscriber = { workspace = true }
 
 # Others
-parking_lot = { workspace = true }
 futures-util = "0.3.28"
 anyhow = { workspace = true }
 hyper = { workspace = true }
@@ -62,7 +61,6 @@ base64 = "0.21.2"
 regex = "1.9.1"
 dotenv = "0.15.0"
 uwuify = "0.2.2"
-dashmap = { workspace = true }
 
 [dev-dependencies]
 futures = "0.3"

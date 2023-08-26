@@ -4,6 +4,7 @@ use luro_model::database::drivers::LuroDatabaseDriver;
 use tokio::fs::read_dir;
 use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::id::Id;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -74,11 +75,29 @@ async fn load_disk<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result<
 
     let mut paths = read_dir(USERDATA_FILE_PATH).await?;
 
-    while let Ok(entry) = paths.next_entry().await {
-        if let Some(entry) = entry {
-            if let Ok(file) = entry.file_name().into_string() {
-                info!("Name: {file}");
+    match paths.next_entry().await {
+        Ok(entry) => match entry {
+            Some(entry) => match entry.file_name().into_string() {
+                Ok(file) => {
+                    info!("Name: {file}");
+                    match ctx.framework.database.get_user(&Id::new(file.parse()?)).await {
+                        Ok(_) => loaded += 1,
+                        Err(_) => errors += 1
+                    }
+                }
+                Err(why) => {
+                    warn!(why = ?why, "Failed to load user");
+                    errors += 1;
+                }
+            },
+            None => {
+                warn!("No data in entry");
+                errors += 1;
             }
+        },
+        Err(why) => {
+            warn!(why = ?why, "Failed to load user");
+            errors += 1;
         }
     }
 

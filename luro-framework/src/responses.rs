@@ -5,11 +5,13 @@ use twilight_model::{
     id::{marker::UserMarker, Id}
 };
 
-use crate::{Framework, InteractionContext};
+use crate::{Framework, InteractionContext, interaction_context::LuroInteraction};
 
-use self::permission_server_owner::permission_server_owner;
+use self::{permission_server_owner::permission_server_owner, unknown_command::unknown_command};
 
+pub mod not_implemented_response;
 pub mod permission_server_owner;
+pub mod unknown_command;
 pub mod user_action;
 
 /// A wrapper around [EmbedBuilder] to make easy standardised responses
@@ -62,29 +64,27 @@ impl StandardResponse {
         framework: Framework<D>,
         ctx: InteractionContext
     ) -> anyhow::Result<()> {
-        ctx.respond(framework, |response| response.add_embed(self.embed())).await
-    }
-
-    /// Create a new builder and both create and execute a response, all in one.
-    /// This only works with simple responses.
-    pub async fn simple_interaction_response<D: LuroDatabaseDriver>(
-        framework: Framework<D>,
-        ctx: InteractionContext,
-        response: SimpleResponse
-    ) -> anyhow::Result<()> {
-        Self::simple(response).interaction_response(framework, ctx).await
-    }
-
-    /// Create a standard response from a simple response
-    pub fn simple(response: SimpleResponse) -> Self {
-        let embed = match response {
-            SimpleResponse::NotOwner(user_id) => permission_server_owner(&user_id)
-        };
-
-        Self { embed }
+        ctx.respond(&framework, |response| response.add_embed(self.embed())).await?;
+        Ok(())
     }
 }
 
-pub enum SimpleResponse {
-    NotOwner(Id<UserMarker>)
+pub enum SimpleResponse<'a> {
+    NotOwner(&'a Id<UserMarker>),
+    UnknownCommand(&'a str)
+}
+
+impl<'a> SimpleResponse<'a> {
+    /// Convert the response to an embed
+    pub fn embed(&self) -> EmbedBuilder {
+        match self {
+            SimpleResponse::NotOwner(user_id) => permission_server_owner(user_id),
+            SimpleResponse::UnknownCommand(name) => unknown_command(name)
+        }
+    }
+
+    pub async fn respond<D: LuroDatabaseDriver, T: LuroInteraction>(&self, framework: Framework<D>, interaction: T) -> anyhow::Result<()> {
+        interaction.respond(&framework, |response| response.add_embed(self.embed())).await?;
+        Ok(())
+    }
 }

@@ -11,14 +11,12 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-# Luro Specific
-# luro-builder = { path = "../luro-builder" }
-
-# For feature dice-roller
-rand = { workspace = true, optional = true}
+radix_trie = { version = "0.2", optional = true } # command
+nom = { version = "7", optional = true } # command/text_args
+luro-builder.path = "../luro-builder" # interaction
+rand = { workspace = true, optional = true} # feature dice-roller
 
 anyhow = { workspace = true }
-dashmap = { workspace = true, features = ["serde"]}
 serde = { workspace = true }
 twilight-cache-inmemory = { workspace = true }
 twilight-http = { workspace = true }
@@ -29,10 +27,12 @@ twilight-interactions.path = "../twilight-interactions"
 hyper = { workspace = true }
 twilight-gateway = { workspace = true }
 tracing = { workspace = true }
-parking_lot = { workspace = true }
 twilight-util = { workspace = true }
 
 [features]
-default = ["toml-driver", "dice-roller"]
+default = ["toml-driver", "dice-roller", "luro-command", "lavalink", "auto-trim"]
 toml-driver = []
 dice-roller = ["dep:rand"]
+luro-command = ["dep:radix_trie", "dep:nom"]
+lavalink = [] # Enable this feature to have Luro respond to lavalink events
+auto-trim = [] # Used to automatically trim message responses that are too big, sending as a file instead

@@ -85,7 +85,7 @@ pub struct LuroUser {
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub warnings: Vec<(String, Id<UserMarker>)>,
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
-    pub messages: Box<HashMap<Id<MessageMarker>, LuroMessage>>,
+    pub messages: HashMap<Id<MessageMarker>, LuroMessage>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub moderation_actions: Vec<UserActions>,
     #[serde(default)]
@@ -98,15 +98,13 @@ pub struct LuroUser {
     pub marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
     /// A list of member instances across guilds
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
-    pub guilds: Box<HashMap<Id<GuildMarker>, LuroMember>>,
+    pub guilds: HashMap<Id<GuildMarker>, LuroMember>,
     /// The user's character profiles
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub characters: BTreeMap<String, CharacterProfile>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub character_prefix: BTreeMap<String, String>
 }
-
-impl LuroUser {}
 
 impl From<&CurrentUser> for LuroUser {
     fn from(user: &CurrentUser) -> Self {

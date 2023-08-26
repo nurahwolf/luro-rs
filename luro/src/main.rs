@@ -3,6 +3,7 @@
 #![feature(associated_type_bounds)]
 
 use anyhow::Context;
+#[cfg(debug_assertions)]
 use dotenv::dotenv;
 use framework::Framework;
 use futures_util::StreamExt;
@@ -140,6 +141,8 @@ async fn main() -> anyhow::Result<()> {
             }
             Ok(event) => event
         };
+
+        // unsafe { enable() }
 
         tokio::spawn(luro.clone().event_handler(event, shard.sender(), shard.latency().clone()));
     }

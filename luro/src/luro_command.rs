@@ -27,7 +27,8 @@ pub trait LuroCommand: CommandModel {
     // }
 
     /// Create a new command and get it's data from the interaction
-    async fn new(data: CommandData) -> anyhow::Result<Self> {
+    async fn new(data: Box<CommandData>) -> anyhow::Result<Self> {
+        let data = *data;
         match Self::from_interaction(data.into()) {
             Ok(ok) => Ok(ok),
             Err(why) => Err(anyhow!(

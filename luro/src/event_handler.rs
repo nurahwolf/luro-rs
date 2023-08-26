@@ -60,6 +60,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             Event::ThreadMemberUpdate(event) => self.listener_thread_member_update(event).await,
             Event::ThreadUpdate(event) => self.listener_thread_update(event).await,
             Event::UserUpdate(event) => self.user_update_listener(event).await,
+
             _ => Ok(())
         };
 

@@ -25,6 +25,24 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug executable 'luro'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=luro",
+                    "--package=luro"
+                ],
+                "filter": {
+                    "name": "luro",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug unit tests in executable 'luro-twilight'",
             "cargo": {
                 "args": [

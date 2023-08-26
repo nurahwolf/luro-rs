@@ -1,8 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Error;
-use luro_builder::{embed::EmbedBuilder, response::LuroResponse};
-use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
+use luro_builder::embed::EmbedBuilder;
+use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel, response::LuroResponse};
 use twilight_model::gateway::payload::incoming::MessageDeleteBulk;
 
 use crate::{framework::Framework, COLOUR_DANGER};
@@ -86,7 +86,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         });
 
         // Send out response
-        self.send_log_channel_new(&event.guild_id, LuroLogChannel::Message, |r| {
+        self.send_log_channel_new( &event.guild_id, LuroLogChannel::Message, |r| {
             *r = response;
             r
         })

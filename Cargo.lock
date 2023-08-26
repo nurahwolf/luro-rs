@@ -259,7 +259,6 @@ dependencies = [
  "lock_api",
  "once_cell",
  "parking_lot_core 0.9.8",
- "serde",
 ]
 
 [[package]]
@@ -715,7 +714,6 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "base64",
- "dashmap",
  "dotenv",
  "futures",
  "futures-util",
@@ -727,7 +725,6 @@ dependencies = [
  "luro-framework",
  "luro-model",
  "memory-stats",
- "parking_lot 0.12.1",
  "rand",
  "regex",
  "serde",
@@ -752,9 +749,7 @@ name = "luro-builder"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "luro-model",
  "tracing",
- "twilight-interactions",
  "twilight-model",
 ]
 
@@ -792,6 +787,7 @@ dependencies = [
  "twilight-cache-inmemory",
  "twilight-gateway",
  "twilight-http",
+ "twilight-interactions",
  "twilight-lavalink",
  "twilight-model",
 ]
@@ -801,9 +797,10 @@ name = "luro-model"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "dashmap",
  "hyper",
- "parking_lot 0.12.1",
+ "luro-builder",
+ "nom",
+ "radix_trie",
  "rand",
  "serde",
  "tracing",
@@ -818,22 +815,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "luro-response"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "luro-builder",
- "luro-model",
- "tracing",
-]
-
-[[package]]
 name = "luro-twilight"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "nom",
- "radix_trie",
+ "dotenv",
+ "futures-util",
+ "luro-database",
+ "luro-framework",
+ "luro-model",
+ "tokio",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "twilight-gateway",
  "twilight-interactions",
  "twilight-model",
 ]
@@ -991,16 +986,6 @@ dependencies = [
  "instant",
  "lock_api",
  "parking_lot_core 0.8.6",
-]
-
-[[package]]
-name = "parking_lot"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3742b2c103b9f06bc9fff0a37ff4912935851bee6d36f3c02bcc755bcfec228f"
-dependencies = [
- "lock_api",
- "parking_lot_core 0.9.8",
 ]
 
 [[package]]
@@ -1904,7 +1889,7 @@ checksum = "3db6840b7adcfd2e866c79157cc890ecdbbc1f739607134039ae64eaa6c07e24"
 dependencies = [
  "clap",
  "owo-colors",
- "parking_lot 0.11.2",
+ "parking_lot",
  "thiserror",
 ]
 

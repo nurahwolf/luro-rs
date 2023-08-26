@@ -1,12 +1,12 @@
 use std::{fs, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
 
 use hyper::client::HttpConnector;
-use luro_builder::{embed::EmbedBuilder, response::LuroResponse};
+use luro_builder::embed::EmbedBuilder;
 use luro_model::{
     database::{drivers::LuroDatabaseDriver, LuroDatabase},
     guild::log_channel::LuroLogChannel,
     user::LuroUser,
-    ACCENT_COLOUR
+    ACCENT_COLOUR, response::LuroResponse
 };
 use tracing::{debug, info};
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};

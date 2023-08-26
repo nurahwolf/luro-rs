@@ -1,4 +1,5 @@
 use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::response::LuroResponse;
 use tracing::warn;
 use twilight_util::builder::embed::EmbedBuilder;
 
@@ -8,7 +9,7 @@ use crate::interaction::LuroSlash;
 
 impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn unable_to_get_guild_response(&self) -> anyhow::Result<()> {
-        self.respond(|r: &mut luro_builder::response::LuroResponse| r.add_embed(unable_to_get_guild_embed().build()))
+        self.respond(|r: &mut LuroResponse| r.add_embed(unable_to_get_guild_embed().build()))
             .await
     }
 }

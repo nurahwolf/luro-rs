@@ -1,5 +1,3 @@
-use twilight_model::http::attachment::Attachment;
-
 use super::LuroResponse;
 
 impl LuroResponse {
@@ -19,7 +17,10 @@ impl LuroResponse {
 
     #[cfg(feature = "auto-trim")]
     pub fn check_content(&mut self) -> &mut Self {
-        use luro_model::ACCENT_COLOUR;
+        use twilight_model::http::attachment::Attachment;
+
+        use crate::ACCENT_COLOUR;
+
 
         if let Some(mut content) = self.content.clone() {
             // Can we convert this to an embed?

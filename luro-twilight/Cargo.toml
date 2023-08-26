@@ -14,12 +14,25 @@ version.workspace = true
 
 [dependencies]
 # Core
-anyhow = { workspace = true } # authored, interaction
+dotenv = "0.15" # main
+anyhow = { workspace = true } # main
+
+# Tokio
+tokio.workspace = true # main
+futures-util = "0.3" # main
+
+# Luro - Specify the driver using the feature setting below
+luro-database = { path = "../luro-database", features = ['toml-driver']} # main
+luro-model.path = "../luro-model" # main
+luro-framework.path = "../luro-framework" 
+
+
+# Tracing
+tracing = { workspace = true } # main
+tracing-appender = "0.2" # main
+tracing-subscriber = { workspace = true } # main
 
 # Twilight
-twilight-model = { workspace = true } # authored, interaction, command, emote, command/command_kind
-twilight-interactions.path = "../twilight-interactions" # command
-
-# Misc
-radix_trie = "0.2" # command
-nom = "7" # command/text_args
+twilight-model = { workspace = true } # event_listener
+twilight-gateway.workspace = true # main
+twilight-interactions.path = "../twilight-interactions" # commands

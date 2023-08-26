@@ -1,4 +1,3 @@
-use luro_builder::response::LuroResponse;
 use std::fmt::Write;
 
 use std::time::Duration;
@@ -11,7 +10,7 @@ use twilight_model::{
 use twilight_util::snowflake::Snowflake;
 
 use crate::interaction::LuroSlash;
-use luro_model::{database::drivers::LuroDatabaseDriver, user::actions_type::UserActionType};
+use luro_model::{database::drivers::LuroDatabaseDriver, user::actions_type::UserActionType, response::LuroResponse};
 
 use crate::luro_command::LuroCommand;
 

@@ -1,6 +1,6 @@
 use luro_model::database::drivers::LuroDatabaseDriver;
-use tracing::error;
-use twilight_model::application::interaction::InteractionType;
+use tracing::{error, warn};
+use twilight_model::application::interaction::{InteractionData, InteractionType};
 
 use super::LuroSlash;
 
@@ -10,12 +10,26 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn handle(self) -> anyhow::Result<()> {
         let interaction = &self.interaction;
 
-        let response = match interaction.kind {
-            InteractionType::ApplicationCommand => self.clone().handle_command().await,
-            InteractionType::MessageComponent => self.clone().handle_component().await,
-            InteractionType::ModalSubmit => self.clone().handle_modal().await,
-            InteractionType::ApplicationCommandAutocomplete => self.clone().handle_autocomplete().await,
-            _ => Ok(())
+        let data = match interaction.data.clone() {
+            Some(data) => data,
+            None => {
+                warn!(interaction = ?interaction, "Interaction without any data!");
+                return Ok(());
+            }
+        };
+
+        let response = match data {
+            InteractionData::ApplicationCommand(data) => match &interaction.kind {
+                InteractionType::ApplicationCommand => self.clone().handle_command(data).await,
+                InteractionType::ApplicationCommandAutocomplete => self.clone().handle_autocomplete(data).await,
+                _ => {
+                    warn!(interaction = ?interaction, "Application Command with unexpected application data!");
+                    Ok(())
+                }
+            },
+            InteractionData::MessageComponent(data) => self.clone().handle_component(data).await,
+            InteractionData::ModalSubmit(data) => self.clone().handle_modal(data).await,
+            _ => todo!()
         };
 
         match response {
@@ -36,14 +50,14 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             }
         };
 
-        // Update user
-        if let Some(user_id) = self.interaction.author_id() {
-            let mut user = self.framework.database.get_user(&user_id).await?;
-            if let Ok(twilight_user) = self.framework.twilight_client.user(user_id).await {
-                user.update_user(&twilight_user.model().await?);
-            }
-            self.framework.database.save_user(&user_id, &user).await?;
-        }
+        // // Update user
+        // if let Some(user_id) = self.interaction.author_id() {
+        //     let mut user = self.framework.database.get_user(&user_id).await?;
+        //     if let Ok(twilight_user) = self.framework.twilight_client.user(user_id).await {
+        //         user.update_user(&twilight_user.model().await?);
+        //     }
+        //     self.framework.database.save_user(&user_id, &user).await?;
+        // }
 
         Ok(())
     }

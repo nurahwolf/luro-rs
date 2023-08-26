@@ -2,7 +2,7 @@ use std::fmt::Write;
 use std::time::Instant;
 
 use luro_builder::embed::EmbedBuilder;
-use luro_builder::response::LuroResponse;
+use luro_model::response::LuroResponse;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::interaction::LuroSlash;
