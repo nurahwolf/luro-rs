@@ -139,8 +139,10 @@ impl LuroCommand for Ban {
         ctx.send_respond(response).await?;
 
         let ban = ctx.framework.twilight_client.create_ban(guild_id, punished_user.id);
+        info!("Purging {:#?} messages!", self.purge.value());
+
         match reason {
-            None => ban.delete_message_seconds(self.purge as u32).await?,
+            None => ban.delete_message_seconds(self.purge.value() as u32).await?,
             Some(ref reason) => ban.delete_message_seconds(self.purge as u32).reason(reason).await?
         };
 
