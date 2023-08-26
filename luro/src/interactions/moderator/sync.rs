@@ -3,15 +3,10 @@ use luro_model::database::drivers::LuroDatabaseDriver;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-
 use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(
-    name = "sync",
-    desc = "Sync the latest guild settings",
-    dm_permission = false
-)]
+#[command(name = "sync", desc = "Sync the latest guild settings", dm_permission = false)]
 pub struct SyncCommand {}
 
 impl LuroCommand for SyncCommand {
@@ -22,6 +17,6 @@ impl LuroCommand for SyncCommand {
         let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
         luro_guild.update_guild(guild);
 
-        ctx.respond(|r|r.content("Updated!").ephemeral()).await
+        ctx.respond(|r| r.content("Updated!").ephemeral()).await
     }
 }

@@ -1,38 +1,39 @@
 #![feature(async_fn_in_trait)]
-use interaction_context::LuroInteraction;
+use luro_builder::embed::EmbedBuilder;
+use luro_model::response::LuroResponse;
 use luro_model::ACCENT_COLOUR;
-use twilight_interactions::command::ApplicationCommandData;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex}
 };
 use tracing::warn;
-use luro_builder::embed::EmbedBuilder;
-use twilight_model::{http::interaction::InteractionResponseType, application::interaction::{InteractionData, InteractionType, Interaction}};
-use luro_model::response::LuroResponse;
+use twilight_interactions::command::ApplicationCommandData;
+use twilight_model::{
+    application::interaction::{Interaction, InteractionData, InteractionType},
+    http::interaction::InteractionResponseType
+};
 
 use luro_model::database::{drivers::LuroDatabaseDriver, LuroDatabase};
 use twilight_model::{
     application::interaction::{
-            application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData
-        },
+        application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData
+    },
+    channel::{Channel, Message},
     guild::{PartialMember, Permissions},
     id::{
-        marker::{GuildMarker, InteractionMarker, ApplicationMarker},
+        marker::{ApplicationMarker, GuildMarker, InteractionMarker},
         Id
     },
-    user::User, channel::{Channel, Message}
+    user::User
 };
 
-mod command;
+pub mod command;
 mod context;
 mod framework;
-pub mod interaction_context;
 #[cfg(feature = "responses")]
 pub mod responses;
 
 type LuroCommand = HashMap<String, ApplicationCommandData>;
-
 
 /// The core framework. Should be available from ALL tasks and holds key data.
 /// Context classes generally take a reference to this to perform their actions.
@@ -57,7 +58,7 @@ pub struct Framework<D: LuroDatabaseDriver> {
     /// A mutable list of global commands, keyed by [String] (command name) and containing a [ApplicationCommandData]
     pub global_commands: Arc<Mutex<LuroCommand>>,
     /// A mutable list of guild commands, keyed by [GuildMarker] and containing [LuroCommand]s
-    pub guild_commands: Arc<Mutex<HashMap<Id<GuildMarker>, LuroCommand>>>,
+    pub guild_commands: Arc<Mutex<HashMap<Id<GuildMarker>, LuroCommand>>>
 }
 
 /// Luro's primary context, which is instanced per event.
@@ -150,7 +151,7 @@ impl InteractionContext {
             token: interaction.token,
             user: interaction.user,
             latency: ctx.latency,
-            shard: ctx.shard,
+            shard: ctx.shard
         }
     }
 }
@@ -302,4 +303,42 @@ interaction_methods! {
     InteractionCommand,
     InteractionComponent,
     InteractionModal,
+}
+
+pub trait LuroInteraction {
+    /// Create a response to an interaction.
+    /// This automatically handles if the interaction had been deferred.
+    async fn respond<D, F>(&self, ctx: &Framework<D>, response: F) -> anyhow::Result<Option<Message>>
+    where
+        D: LuroDatabaseDriver,
+        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse;
+
+    /// Create a response. This is used for sending a response to an interaction, as well as to defer interactions.
+    /// This CANNOT be used to update a response! Use `response_update` for that!
+    async fn response_create<D: LuroDatabaseDriver>(
+        &self,
+        ctx: &Framework<D>,
+        response: &LuroResponse
+    ) -> anyhow::Result<Option<Message>>;
+
+    /// Update an existing response
+    async fn response_update<D: LuroDatabaseDriver>(
+        &self,
+        framework: &Framework<D>,
+        response: &LuroResponse
+    ) -> anyhow::Result<Message>;
+
+    /// Send an existing response builder a response to an interaction.
+    /// This automatically handles if the interaction had been deferred.
+    async fn send_response<D: LuroDatabaseDriver>(
+        &self,
+        ctx: &Framework<D>,
+        response: LuroResponse
+    ) -> anyhow::Result<Option<Message>>;
+
+    /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
+    async fn default_embed<D: LuroDatabaseDriver>(&self, ctx: &Framework<D>) -> EmbedBuilder;
+
+    /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
+    async fn accent_colour<D: LuroDatabaseDriver>(&self, ctx: &Framework<D>) -> u32;
 }

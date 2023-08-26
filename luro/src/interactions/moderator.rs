@@ -14,7 +14,8 @@ use luro_model::{
 };
 
 use self::{
-    ban::Ban, kick::Kick, purge::PurgeCommand, settings::GuildSettingsCommand, unban::Unban, warn::ModeratorWarnCommand, sync::SyncCommand
+    ban::Ban, kick::Kick, purge::PurgeCommand, settings::GuildSettingsCommand, sync::SyncCommand, unban::Unban,
+    warn::ModeratorWarnCommand
 };
 use crate::luro_command::LuroCommand;
 
@@ -23,9 +24,9 @@ mod ban;
 mod kick;
 mod purge;
 mod settings;
+mod sync;
 mod unban;
 mod warn;
-mod sync;
 
 #[derive(CommandOption, CreateOption, Clone, Debug, PartialEq, Eq)]
 pub enum Reason {
@@ -92,7 +93,7 @@ impl LuroCommand for ModeratorCommands {
             Self::Setting(command) => command.run_command(ctx).await,
             Self::Warn(command) => command.run_command(ctx).await,
             Self::Unban(command) => command.run_command(ctx).await,
-            Self::Sync(command) => command.run_command(ctx).await,
+            Self::Sync(command) => command.run_command(ctx).await
         }
     }
 

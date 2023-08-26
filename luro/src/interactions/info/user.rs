@@ -10,7 +10,7 @@ use twilight_model::{
 use twilight_util::snowflake::Snowflake;
 
 use crate::interaction::LuroSlash;
-use luro_model::{database::drivers::LuroDatabaseDriver, user::actions_type::UserActionType, response::LuroResponse};
+use luro_model::{database::drivers::LuroDatabaseDriver, response::LuroResponse, user::actions_type::UserActionType};
 
 use crate::luro_command::LuroCommand;
 

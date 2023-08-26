@@ -86,7 +86,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         });
 
         // Send out response
-        self.send_log_channel_new( &event.guild_id, LuroLogChannel::Message, |r| {
+        self.send_log_channel_new(&event.guild_id, LuroLogChannel::Message, |r| {
             *r = response;
             r
         })

@@ -6,7 +6,6 @@ use twilight_model::application::interaction::modal::ModalInteractionData;
 use crate::InteractionModal;
 use crate::{InteractionCommand, InteractionComponent, InteractionContext};
 
-
 impl InteractionCommand {
     pub fn new(interaction: InteractionContext, data: Box<CommandData>) -> Self {
         Self {

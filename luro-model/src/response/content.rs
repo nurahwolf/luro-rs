@@ -21,7 +21,6 @@ impl LuroResponse {
 
         use crate::ACCENT_COLOUR;
 
-
         if let Some(mut content) = self.content.clone() {
             // Can we convert this to an embed?
             if content.len() > 2000 && content.len() < 4096 {

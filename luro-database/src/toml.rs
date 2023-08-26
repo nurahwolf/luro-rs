@@ -33,7 +33,7 @@ impl TomlDatabaseDriver {
             tracing::info!("/data folder successfully created!");
         }
 
-        Ok(Self {  })
+        Ok(Self {})
     }
 
     /// Gets the specified [Path], which should be a toml file. If it does not exist, it will be created.

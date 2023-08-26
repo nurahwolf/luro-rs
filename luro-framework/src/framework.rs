@@ -1,10 +1,19 @@
 use std::sync::Arc;
 
-use luro_model::{database::{drivers::LuroDatabaseDriver, LuroDatabase}, configuration::Configuration};
-use tracing_subscriber::{reload::Handle, filter::LevelFilter, Registry};
-use twilight_gateway::{Shard, stream, Intents, Config, ConfigBuilder};
+use luro_model::{
+    configuration::Configuration,
+    database::{drivers::LuroDatabaseDriver, LuroDatabase}
+};
+use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
+use twilight_gateway::{stream, Config, ConfigBuilder, Intents, Shard};
 use twilight_http::Client;
-use twilight_model::{gateway::{payload::outgoing::update_presence::UpdatePresencePayload, presence::{MinimalActivity, ActivityType, Status}}, id::{marker::UserMarker, Id}};
+use twilight_model::{
+    gateway::{
+        payload::outgoing::update_presence::UpdatePresencePayload,
+        presence::{ActivityType, MinimalActivity, Status}
+    },
+    id::{marker::UserMarker, Id}
+};
 
 use crate::Framework;
 

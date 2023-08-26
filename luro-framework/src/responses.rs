@@ -5,7 +5,7 @@ use twilight_model::{
     id::{marker::UserMarker, Id}
 };
 
-use crate::{Framework, InteractionContext, interaction_context::LuroInteraction};
+use crate::{Framework, InteractionContext, LuroInteraction};
 
 use self::{permission_server_owner::permission_server_owner, unknown_command::unknown_command};
 
@@ -83,8 +83,14 @@ impl<'a> SimpleResponse<'a> {
         }
     }
 
-    pub async fn respond<D: LuroDatabaseDriver, T: LuroInteraction>(&self, framework: Framework<D>, interaction: T) -> anyhow::Result<()> {
-        interaction.respond(&framework, |response| response.add_embed(self.embed())).await?;
+    pub async fn respond<D: LuroDatabaseDriver, T: LuroInteraction>(
+        &self,
+        framework: Framework<D>,
+        interaction: T
+    ) -> anyhow::Result<()> {
+        interaction
+            .respond(&framework, |response| response.add_embed(self.embed()))
+            .await?;
         Ok(())
     }
 }

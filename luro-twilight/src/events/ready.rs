@@ -1,10 +1,16 @@
-use luro_framework::{Framework, Context};
+use luro_framework::{Context, Framework};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
-use twilight_model::gateway::{payload::{outgoing::UpdatePresence, incoming::Ready}, presence::{MinimalActivity, ActivityType, Status}};
+use twilight_model::gateway::{
+    payload::{incoming::Ready, outgoing::UpdatePresence},
+    presence::{ActivityType, MinimalActivity, Status}
+};
 
-
-pub async fn ready_listener<D: LuroDatabaseDriver> (framework: Framework<D>, ctx: Context, event: Box<Ready>) -> anyhow::Result<()> {
+pub async fn ready_listener<D: LuroDatabaseDriver>(
+    framework: Framework<D>,
+    ctx: Context,
+    event: Box<Ready>
+) -> anyhow::Result<()> {
     info!("Luro is now ready!");
     info!("==================");
     info!("Username:      {}", event.user.name);

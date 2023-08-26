@@ -18,7 +18,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             Some(guild_id) => {
                 let commands: Vec<Command> = match self.guild_commands.lock() {
                     Ok(guild_commands) => match guild_commands.get(&guild_id).cloned().map(|commands| commands.into_values()) {
-                        Some(commands) => commands.map(|x|x.into()).collect(),
+                        Some(commands) => commands.map(|x| x.into()).collect(),
                         None => vec![]
                     },
                     Err(why) => return Err(anyhow!("Guild Commands mutex is poistioned: {why}"))
@@ -33,7 +33,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             }
             None => {
                 let commands: Vec<Command> = match self.global_commands.lock() {
-                    Ok(global_commands) => global_commands.values().cloned().map(|x|x.into()).collect(),
+                    Ok(global_commands) => global_commands.values().cloned().map(|x| x.into()).collect(),
                     Err(why) => return Err(anyhow!("Guild Commands mutex is poistioned: {why}"))
                 };
                 info!("Registering {} global commands!", commands.len());
@@ -44,7 +44,6 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     .await?
                     .model()
                     .await?
-                
             }
         })
     }

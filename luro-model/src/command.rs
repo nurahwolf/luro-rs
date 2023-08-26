@@ -1,9 +1,17 @@
 use std::{future::Future, pin::Pin};
 
 use twilight_model::{
-    application::interaction::{application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData, Interaction},
-    channel::{Message, Channel},
-    guild::{Permissions, PartialMember}, id::{marker::{ApplicationMarker, GuildMarker, InteractionMarker}, Id}, user::User
+    application::interaction::{
+        application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData,
+        Interaction
+    },
+    channel::{Channel, Message},
+    guild::{PartialMember, Permissions},
+    id::{
+        marker::{ApplicationMarker, GuildMarker, InteractionMarker},
+        Id
+    },
+    user::User
 };
 
 pub mod prefix_command_group;

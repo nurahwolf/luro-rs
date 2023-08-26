@@ -2,9 +2,9 @@ use anyhow::anyhow;
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::CommandModel;
 use twilight_model::{application::interaction::application_command::CommandData, guild::Permissions};
-use crate::interaction_context::LuroInteraction;
 
-use crate::{Framework, InteractionCommand, responses::not_implemented_response::not_implemented_embed, InteractionModal};
+use crate::LuroInteraction;
+use crate::{responses::not_implemented_response::not_implemented_embed, Framework, InteractionCommand, InteractionModal};
 
 /// Add some custom functionality around [CommandModel]
 pub trait LuroCommand: CommandModel {
@@ -25,7 +25,9 @@ pub trait LuroCommand: CommandModel {
         ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        interaction.respond(&ctx, |response| response.add_embed(not_implemented_embed())).await?;
+        interaction
+            .respond(&ctx, |response| response.add_embed(not_implemented_embed()))
+            .await?;
         Ok(())
     }
 
@@ -35,13 +37,17 @@ pub trait LuroCommand: CommandModel {
         ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        interaction.respond(&ctx, |response| response.add_embed(not_implemented_embed())).await?;
+        interaction
+            .respond(&ctx, |response| response.add_embed(not_implemented_embed()))
+            .await?;
         Ok(())
     }
 
     /// Create and respond to a button interaction
     async fn handle_model<D: LuroDatabaseDriver>(self, ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
-        interaction.respond(&ctx, |response| response.add_embed(not_implemented_embed())).await?;
+        interaction
+            .respond(&ctx, |response| response.add_embed(not_implemented_embed()))
+            .await?;
         Ok(())
     }
 

@@ -36,19 +36,18 @@ pub const INTENTS: Intents = Intents::all();
 /// The log path. By default this is a sub directory of DATA_PATH
 pub const LOG_PATH: &str = "data/log/";
 
-pub mod authored;
 pub mod command;
+pub mod configuration;
 pub mod context;
 pub mod database;
 pub mod emote;
 pub mod guild;
 pub mod heck;
 pub mod message;
+pub mod response;
 pub mod role;
 pub mod story;
 pub mod user;
-pub mod configuration;
-pub mod response;
 
 /// A simple wrapper around quotes. Primary key is the ID of the story.
 pub type Quotes = BTreeMap<usize, LuroMessage>;

@@ -1,3 +1,4 @@
+#![feature(async_fn_in_trait)]
 use anyhow::Context;
 use commands::default_global_commands;
 use dotenv::dotenv;
