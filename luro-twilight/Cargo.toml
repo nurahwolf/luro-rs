@@ -17,6 +17,9 @@ version.workspace = true
 dotenv = "0.15" # main
 anyhow = { workspace = true } # main
 
+# Commands
+luro-dice = { path = "../luro-dice", optional = true}
+
 # Tokio
 tokio.workspace = true # main
 futures-util = "0.3" # main
@@ -36,3 +39,12 @@ tracing-subscriber = { workspace = true } # main
 twilight-model = { workspace = true } # event_listener
 twilight-gateway.workspace = true # main
 twilight-interactions.path = "../twilight-interactions" # commands
+
+[features]
+# Main Features
+default = ["commands"]
+commands = ["command-say", "command-dice"]
+
+# Commands
+command-say = []
+command-dice = ["dep:luro-dice"]

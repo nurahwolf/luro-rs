@@ -822,6 +822,7 @@ dependencies = [
  "dotenv",
  "futures-util",
  "luro-database",
+ "luro-dice",
  "luro-framework",
  "luro-model",
  "tokio",

@@ -36,11 +36,8 @@ pub const INTENTS: Intents = Intents::all();
 /// The log path. By default this is a sub directory of DATA_PATH
 pub const LOG_PATH: &str = "data/log/";
 
-pub mod command;
 pub mod configuration;
-pub mod context;
 pub mod database;
-pub mod emote;
 pub mod guild;
 pub mod heck;
 pub mod message;

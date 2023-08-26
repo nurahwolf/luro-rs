@@ -10,7 +10,8 @@ use tracing::warn;
 use twilight_interactions::command::ApplicationCommandData;
 use twilight_model::{
     application::interaction::{Interaction, InteractionData, InteractionType},
-    http::interaction::InteractionResponseType
+    http::interaction::InteractionResponseType,
+    id::marker::UserMarker
 };
 
 use luro_model::database::{drivers::LuroDatabaseDriver, LuroDatabase};
@@ -212,6 +213,37 @@ macro_rules! interaction_methods {
         ctx.default_embed(self.guild_id.as_ref()).await
     }
 
+        /// ID of the user that invoked the interaction.
+    ///
+    /// This will first check for the [`member`]'s
+    /// [`user`][`PartialMember::user`]'s ID and then, if not present, check the
+    /// [`user`]'s ID.
+    ///
+    /// [`member`]: Self::member
+    /// [`user`]: Self::user
+    fn author_id(&self) -> Option<Id<UserMarker>> {
+        if let Some(user) = self.author() {
+            Some(user.id)
+        } else {
+            None
+        }
+    }
+
+    /// The user that invoked the interaction.
+    ///
+    /// This will first check for the [`member`]'s
+    /// [`user`][`PartialMember::user`] and then, if not present, check the
+    /// [`user`].
+    ///
+    /// [`member`]: Self::member
+    /// [`user`]: Self::user
+    fn author(&self) -> Option<&User> {
+        match self.member.as_ref() {
+            Some(member) if member.user.is_some() => member.user.as_ref(),
+            _ => self.user.as_ref(),
+        }
+    }
+
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     async fn accent_colour<D: LuroDatabaseDriver>(&self, ctx: &Framework<D>) -> u32 {
         match self.guild_id {
@@ -341,4 +373,7 @@ pub trait LuroInteraction {
 
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     async fn accent_colour<D: LuroDatabaseDriver>(&self, ctx: &Framework<D>) -> u32;
+
+    fn author_id(&self) -> Option<Id<UserMarker>>;
+    fn author(&self) -> Option<&User>;
 }

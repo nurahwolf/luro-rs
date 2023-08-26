@@ -1,12 +1,22 @@
-use luro_framework::command::LuroCommand;
 use luro_framework::responses::SimpleResponse;
 use luro_framework::{Framework, InteractionCommand, InteractionComponent, InteractionModal};
 use luro_model::database::drivers::LuroDatabaseDriver;
-use twilight_interactions::command::{ApplicationCommandData, CreateCommand};
+use twilight_interactions::command::ApplicationCommandData;
 
-use self::say::Say;
-
+#[cfg(feature = "command-say")]
 mod say;
+
+#[cfg(feature = "command-dice")]
+mod dice;
+
+pub fn default_global_commands() -> Vec<ApplicationCommandData> {
+    vec![
+        #[cfg(feature = "command-say")]
+        <say::Say as twilight_interactions::command::CreateCommand>::create_command(),
+        <dice::Dice as twilight_interactions::command::CreateCommand>::create_command(),
+
+    ]
+}
 
 /// Handle incoming command interaction.
 pub async fn handle_command<D: LuroDatabaseDriver>(
@@ -15,7 +25,23 @@ pub async fn handle_command<D: LuroDatabaseDriver>(
 ) -> anyhow::Result<()> {
     let data = interaction.data.clone();
     match data.name.as_str() {
-        "say" => Say::new(data)?.interaction_command(framework, interaction).await,
+        #[cfg(feature = "command-say")]
+        "say" => {
+            luro_framework::command::LuroCommand::interaction_command(
+                <say::Say as luro_framework::command::LuroCommand>::new(data)?,
+                framework,
+                interaction
+            )
+            .await
+        },
+        "dice" => {
+            luro_framework::command::LuroCommand::interaction_command(
+                <dice::Dice as luro_framework::command::LuroCommand>::new(data)?,
+                framework,
+                interaction
+            )
+            .await
+        }
         name => SimpleResponse::UnknownCommand(name).respond(framework, interaction).await
     }
 }
@@ -56,8 +82,4 @@ pub async fn handle_autocomplete<D: LuroDatabaseDriver>(
     _interaction: InteractionCommand
 ) -> anyhow::Result<()> {
     Ok(())
-}
-
-pub fn default_global_commands() -> Vec<ApplicationCommandData> {
-    vec![Say::create_command()]
 }
