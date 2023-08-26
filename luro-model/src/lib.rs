@@ -35,6 +35,8 @@ pub const FILTER: LevelFilter = LevelFilter::INFO;
 pub const INTENTS: Intents = Intents::all();
 /// The log path. By default this is a sub directory of DATA_PATH
 pub const LOG_PATH: &str = "data/log/";
+/// The name used for Luro's webhooks
+pub const WEBHOOK_NAME: &str = "LuroHook";
 
 pub mod configuration;
 pub mod database;

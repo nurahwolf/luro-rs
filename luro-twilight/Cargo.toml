@@ -43,8 +43,9 @@ twilight-interactions.path = "../twilight-interactions" # commands
 [features]
 # Main Features
 default = ["commands"]
-commands = ["command-say", "command-dice"]
+commands = ["command-say", "command-dice", "command-character"]
 
 # Commands
 command-say = []
+command-character = []
 command-dice = ["dep:luro-dice"]

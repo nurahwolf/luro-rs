@@ -1,4 +1,5 @@
 #![feature(async_fn_in_trait)]
+#![feature(let_chains)]
 use anyhow::Context;
 use commands::default_global_commands;
 use dotenv::dotenv;

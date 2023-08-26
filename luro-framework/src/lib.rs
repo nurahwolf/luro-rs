@@ -29,7 +29,7 @@ use twilight_model::{
 };
 
 pub mod command;
-mod context;
+pub mod context;
 mod framework;
 #[cfg(feature = "responses")]
 pub mod responses;
@@ -74,6 +74,7 @@ pub struct Context {
 /// A context sapwned only in which the event is an interaction
 #[derive(Debug)]
 pub struct InteractionContext {
+    pub original: Interaction,
     /// App's permissions in the channel the interaction was sent from.
     ///
     /// Present when the interaction is invoked in a guild.
@@ -140,19 +141,20 @@ impl InteractionContext {
         Self {
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,
-            channel: interaction.channel,
-            data: interaction.data,
+            channel: interaction.channel.clone(),
+            data: interaction.data.clone(),
             guild_id: interaction.guild_id,
-            guild_locale: interaction.guild_locale,
+            guild_locale: interaction.guild_locale.clone(),
             id: interaction.id,
             kind: interaction.kind,
-            locale: interaction.locale,
-            member: interaction.member,
-            message: interaction.message,
-            token: interaction.token,
-            user: interaction.user,
             latency: ctx.latency,
-            shard: ctx.shard
+            locale: interaction.locale.clone(),
+            member: interaction.member.clone(),
+            message: interaction.message.clone(),
+            original: interaction.clone(),
+            shard: ctx.shard,
+            token: interaction.token,
+            user: interaction.user
         }
     }
 }
@@ -174,6 +176,7 @@ pub struct InteractionCommand {
 
 #[derive(Clone)]
 pub struct InteractionComponent {
+    pub original: Interaction,
     pub application_id: Id<ApplicationMarker>,
     pub channel: Option<Channel>,
     pub data: Box<MessageComponentInteractionData>,
@@ -256,9 +259,10 @@ macro_rules! interaction_methods {
         }
     }
 
-        /// Create a response to an interaction.
+    /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
-    async fn respond<D, F>(&self, ctx: &Framework<D>, response: F) -> anyhow::Result<Option<Message>>
+    /// This method returns an optional message, if the message was updated
+    async fn respond_message<D, F>(&self, ctx: &Framework<D>, response: F) -> anyhow::Result<Option<Message>>
     where
         D: LuroDatabaseDriver,
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse
@@ -272,6 +276,27 @@ macro_rules! interaction_methods {
             true => Ok(Some(self.response_update(ctx, &r).await?)),
             false => self.response_create(ctx, &r).await
         }
+    }
+
+
+    /// Create a response to an interaction.
+    /// This automatically handles if the interaction had been deferred.
+    async fn respond<D, F>(&self, ctx: &Framework<D>, response: F) -> anyhow::Result<()>
+    where
+        D: LuroDatabaseDriver,
+        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse
+    {
+        let mut r = LuroResponse::default();
+        response(&mut r);
+
+        match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
+            || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
+        {
+            true => {self.response_update(ctx, &r).await?;},
+            false => {self.response_create(ctx, &r).await?;}
+        }
+
+        Ok(())
     }
 
     /// Create a response. This is used for sending a response to an interaction, as well as to defer interactions.
@@ -318,7 +343,7 @@ macro_rules! interaction_methods {
         ctx: &Framework<D>,
         response: LuroResponse
     ) -> anyhow::Result<Option<Message>> {
-        self.respond(ctx, |r| {
+        self.respond_message(ctx, |r| {
             *r = response;
             r
         })
@@ -340,7 +365,12 @@ interaction_methods! {
 pub trait LuroInteraction {
     /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
-    async fn respond<D, F>(&self, ctx: &Framework<D>, response: F) -> anyhow::Result<Option<Message>>
+    async fn respond<D, F>(&self, ctx: &Framework<D>, response: F) -> anyhow::Result<()>
+    where
+        D: LuroDatabaseDriver,
+        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse;
+
+    async fn respond_message<D, F>(&self, ctx: &Framework<D>, response: F) -> anyhow::Result<Option<Message>>
     where
         D: LuroDatabaseDriver,
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse;

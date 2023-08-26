@@ -26,6 +26,7 @@ mod register_commands;
 mod send_log_channel;
 #[cfg(feature = "luro-builder")]
 mod send_message;
+mod webhook;
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn new(
