@@ -1,4 +1,3 @@
-use anyhow::Context;
 use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
@@ -27,9 +26,7 @@ impl LuroCommand for Profile {
     ) -> anyhow::Result<()> {
         let user_id = match self.user {
             Some(user) => user,
-            None => interaction
-                .author_id()
-                .context("Expected to find the user running this command")?
+            None => interaction.author_id()
         };
         let user_data = ctx.database.get_user(&user_id).await?;
         let interaction_channel_nsfw = &interaction.clone().channel.unwrap().nsfw;

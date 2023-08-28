@@ -1,4 +1,3 @@
-use anyhow::Context;
 use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -17,9 +16,7 @@ impl LuroCommand for Create {
         ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        let user_id = interaction
-            .author_id()
-            .context("Expected to find the user running this command")?;
+        let user_id = interaction.author_id();
         let user_data = ctx.database.get_user(&user_id).await?;
         let character = user_data.characters.get(&self.name);
 

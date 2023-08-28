@@ -1,14 +1,12 @@
 use crate::{interaction::LuroSlash, interactions::send, luro_command::LuroCommand};
-use luro_framework::responses::{
-    permission_server_owner::permission_server_owner, user_action::PunishmentType, StandardResponse
-};
+use luro_framework::responses::{PunishmentType, StandardResponse};
 use luro_model::{
     database::drivers::LuroDatabaseDriver,
     guild::log_channel::LuroLogChannel,
     user::{actions::UserActions, actions_type::UserActionType}
 };
 
-use tracing::{warn, debug};
+use tracing::{debug, warn};
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::guild::Permissions;
@@ -85,7 +83,13 @@ impl LuroCommand for Ban {
 
         // Check if the author and the bot have required permissions.
         if guild.is_owner(&punished_user) {
-            return send(response.set_embed(permission_server_owner(&moderator.id)), ctx).await;
+            return send(
+                response.set_embed(
+                    luro_framework::responses::permission_modify_server_owner::permission_server_owner(&moderator.id)
+                ),
+                ctx
+            )
+            .await;
         }
 
         // The lower the number, the higher they are on the heirarchy
@@ -139,7 +143,7 @@ impl LuroCommand for Ban {
         ctx.send_respond(response).await?;
 
         let ban = ctx.framework.twilight_client.create_ban(guild_id, punished_user.id);
-        debug!("Purging {:#?} messages!", self.purge.value());
+        debug!("Purging {:#?} seconds worth of messages!", self.purge.value());
 
         match reason {
             None => ban.delete_message_seconds(self.purge.value() as u32).await?,

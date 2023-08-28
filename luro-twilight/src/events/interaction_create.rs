@@ -5,7 +5,7 @@ use twilight_model::application::interaction::{InteractionData, InteractionType}
 
 use crate::commands::{handle_autocomplete, handle_command, handle_component, handle_modal};
 
-pub async fn interaction_create<D: LuroDatabaseDriver>(
+pub async fn interaction_create_listener<D: LuroDatabaseDriver>(
     framework: Framework<D>,
     interaction: InteractionContext
 ) -> anyhow::Result<()> {

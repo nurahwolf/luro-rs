@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::framework::Framework;
-use luro_framework::responses::{user_action::PunishmentType, StandardResponse};
+use luro_framework::responses::{PunishmentType, StandardResponse};
 use luro_model::{
     database::drivers::LuroDatabaseDriver,
     user::{actions::UserActions, actions_type::UserActionType, LuroUser}

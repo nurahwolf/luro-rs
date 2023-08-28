@@ -1,4 +1,4 @@
-use luro_framework::responses::{user_action::PunishmentType, StandardResponse};
+use luro_framework::responses::{PunishmentType, StandardResponse};
 use luro_model::{database::drivers::LuroDatabaseDriver, user::LuroUser};
 use std::sync::Arc;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild};

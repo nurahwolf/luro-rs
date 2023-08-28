@@ -3,7 +3,7 @@ use crate::{
     interactions::moderator::{reason, Reason},
     luro_command::LuroCommand
 };
-use luro_framework::responses::{user_action::PunishmentType, StandardResponse};
+use luro_framework::responses::{PunishmentType, StandardResponse};
 use luro_model::database::drivers::LuroDatabaseDriver;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};

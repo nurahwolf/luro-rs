@@ -8,6 +8,7 @@ mod audit_log_handler;
 mod ban_add;
 mod bulk_message_delete;
 mod member_add;
+mod member_remove;
 mod member_update;
 mod message_create;
 mod message_delete;
@@ -21,7 +22,6 @@ mod thread_member_update;
 mod thread_members_update;
 mod thread_update;
 mod user_update;
-mod member_remove;
 
 use crate::interaction::LuroSlash;
 
@@ -61,7 +61,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             Event::ThreadMemberUpdate(event) => self.listener_thread_member_update(event).await,
             Event::ThreadUpdate(event) => self.listener_thread_update(event).await,
             Event::UserUpdate(event) => self.user_update_listener(event).await,
-            Event::MemberRemove(event) => self.member_remove_listener(event).await,            
+            Event::MemberRemove(event) => self.member_remove_listener(event).await,
 
             _ => Ok(())
         };

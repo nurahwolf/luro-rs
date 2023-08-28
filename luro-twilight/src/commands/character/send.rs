@@ -1,4 +1,3 @@
-use anyhow::Context;
 use luro_framework::command::LuroCommand;
 use luro_framework::Framework;
 use luro_framework::InteractionCommand;
@@ -25,10 +24,7 @@ impl CharacterSendAutocomplete {
         ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        let user_id = interaction
-            .author_id()
-            .context("Expected to find the user running this command")?;
-
+        let user_id = interaction.author_id();
         let user_data = ctx.database.get_user(&user_id).await?;
         let choices = match self.name {
             AutocompleteValue::None => user_data
@@ -80,9 +76,7 @@ impl LuroCommand for CharacterSend {
         ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        let user_id = interaction
-            .author_id()
-            .context("Expected to find the user running this command")?;
+        let user_id = interaction.author_id();
 
         let user_data = ctx.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {

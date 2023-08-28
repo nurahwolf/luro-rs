@@ -34,7 +34,7 @@ impl LuroCommand for Roll {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                interaction.author_id().unwrap(),
+                interaction.author_id(),
                 result.string_result,
                 result.dice_total
             )
