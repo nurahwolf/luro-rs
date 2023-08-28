@@ -8,7 +8,7 @@ use luro_model::{
     user::{actions::UserActions, actions_type::UserActionType}
 };
 
-use tracing::{warn, debug};
+use tracing::{debug, warn};
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 use twilight_model::guild::Permissions;
@@ -138,13 +138,17 @@ impl LuroCommand for Ban {
         response.add_embed(embed.embed().0);
         ctx.send_respond(response).await?;
 
-        let ban = ctx.framework.twilight_client.create_ban(guild_id, punished_user.id);
-        debug!("Purging {:#?} messages!", self.purge.value());
+let ban = ctx
+    .framework
+    .twilight_client
+    .create_ban(guild_id, punished_user.id)
+    .delete_message_seconds(604_800);
+debug!("Purging {:#?} messages!", 604_800 as u32);
 
-        match reason {
-            None => ban.delete_message_seconds(self.purge.value() as u32).await?,
-            Some(ref reason) => ban.delete_message_seconds(self.purge as u32).reason(reason).await?
-        };
+match reason {
+    None => ban.await?,
+    Some(ref reason) => ban.reason(reason).await?
+};
 
         moderator.moderation_actions_performed += 1;
         ctx.framework.database.save_user(&moderator.id, &moderator).await?;

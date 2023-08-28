@@ -47,12 +47,15 @@ pub enum Owner {
     #[command(name = "commands")]
     Commands(OwnerCommandsCommand),
 
+    #[command(name = "log")]
+    Log(log::LogCommand),
     #[command(name = "mass_assign")]
     MassAssign(MassAssign),
     #[command(name = "modify")]
     Modify(Modify),
     #[command(name = "modify_role")]
     ModifyRole(ModifyRoleCommand)
+
 }
 
 // pub enum OwnerCommands {
@@ -62,14 +65,12 @@ pub enum Owner {
 //     #[command(name = "get_message")]
 //     #[command(name = "guilds")]
 //     #[command(name = "load_users")]
-//     #[command(name = "log")]
 //     Config(ConfigCommand),
 //     FakeBan(FakeBan),
 //     Flush(Flush),
 //     GetMessage(OwnerGetMessage),
 //     Guilds(OwnerGuildsCommand),
 //     LoadUsers(OwnerLoadUsers),
-//     Log(LogCommand),
 // }
 
 impl LuroCommand for Owner {
@@ -125,7 +126,7 @@ impl LuroCommand for Owner {
             // Self::GetMessage(command) => command.run_command(ctx).await,
             // Self::Guilds(command) => command.run_command(ctx).await,
             // Self::LoadUsers(command) => command.run_command(ctx).await,
-            // Self::Log(command) => command.run_command(ctx).await,
+            Self::Log(command) => command.run_command(ctx).await,
             Self::MassAssign(command) => command.run_command(ctx).await,
             Self::Modify(command) => command.run_command(ctx).await,
             Self::ModifyRole(command) => command.run_command(ctx).await
