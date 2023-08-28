@@ -14,38 +14,53 @@ version.workspace = true
 
 [dependencies]
 # Core
-dotenv = "0.15" # main
+dotenv = "0.15"               # main
 anyhow = { workspace = true } # main
 
-# Commands
-luro-dice = { path = "../luro-dice", optional = true}
+# Dependencies for commands
+luro-dice = { path = "../luro-dice", optional = true } # command-dice
+uwuify = { version = "0.2.0", optional = true }        # command-uwu
+rand = { workspace = true, optional = true } # command-story
 
 # Tokio
 tokio.workspace = true # main
-futures-util = "0.3" # main
+futures-util = "0.3"   # main
 
 # Luro - Specify the driver using the feature setting below
-luro-database = { path = "../luro-database", features = ['toml-driver']} # main
-luro-model.path = "../luro-model" # main
-luro-framework.path = "../luro-framework" 
+luro-builder = { path = "../luro-builder", optional = true } # command-story
+luro-database = { path = "../luro-database", features = ['toml-driver'] } # main
+luro-model.path = "../luro-model"                                         # main
+luro-framework.path = "../luro-framework"
 
 
 # Tracing
-tracing = { workspace = true } # main
-tracing-appender = "0.2" # main
+tracing = { workspace = true }            # main
+tracing-appender = "0.2"                  # main
 tracing-subscriber = { workspace = true } # main
 
 # Twilight
-twilight-model = { workspace = true } # event_listener
-twilight-gateway.workspace = true # main
+twilight-model = { workspace = true }                   # event_listener
+twilight-gateway.workspace = true                       # main
 twilight-interactions.path = "../twilight-interactions" # commands
 
 [features]
 # Main Features
 default = ["commands"]
-commands = ["command-say", "command-dice", "command-character"]
+commands = [
+    "command-character",
+    "command-dice",
+    "command-roles",
+    "command-say",
+    "command-story",
+    "command-uwu",
+    "command-wordcount",
+]
 
 # Commands
-command-say = []
 command-character = []
 command-dice = ["dep:luro-dice"]
+command-roles = []
+command-say = []
+command-story = ["dep:rand", "dep:luro-builder"]
+command-uwu = []
+command-wordcount = ["dep:uwuify"]

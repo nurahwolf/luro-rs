@@ -48,7 +48,7 @@ pub struct LuroMember {
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub permissions: Option<Permissions>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub left_at: Option<Duration>,
+    pub left_at: Option<Duration>
 }
 
 impl LuroMember {
@@ -153,7 +153,6 @@ impl From<&Member> for LuroMember {
             permissions: None,
             id: Some(member.user.id),
             left_at: None
-
         }
     }
 }
@@ -174,7 +173,6 @@ impl From<&CachedMember> for LuroMember {
             role_ids: member.roles().to_vec(),
             permissions: Default::default(),
             left_at: None
-
         }
     }
 }
@@ -195,7 +193,6 @@ impl From<Box<MemberAdd>> for LuroMember {
             premium_since: member.premium_since,
             role_ids: member.roles.clone(),
             left_at: None
-
         }
     }
 }
@@ -216,7 +213,6 @@ impl From<Box<MemberUpdate>> for LuroMember {
             premium_since: member.premium_since,
             role_ids: member.roles.clone(),
             left_at: None
-
         }
     }
 }

@@ -1,8 +1,7 @@
 use crate::interactions::send;
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use luro_framework::responses::permission_server_owner::permission_server_owner;
-use luro_framework::responses::user_action::PunishmentType;
-use luro_framework::responses::StandardResponse;
+use luro_framework::responses::permission_modify_server_owner::permission_server_owner;
+use luro_framework::responses::{PunishmentType, StandardResponse};
 use luro_model::database::drivers::LuroDatabaseDriver;
 
 use luro_model::{

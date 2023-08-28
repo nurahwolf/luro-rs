@@ -1,5 +1,5 @@
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use luro_framework::responses::{user_action::PunishmentType, StandardResponse};
+use luro_framework::responses::{PunishmentType, StandardResponse};
 use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
 
 use twilight_http::request::AuditLogReason;

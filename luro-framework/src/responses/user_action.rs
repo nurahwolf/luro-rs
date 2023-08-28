@@ -1,14 +1,7 @@
 use luro_model::{user::LuroUser, COLOUR_DANGER, COLOUR_SUCCESS};
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use super::StandardResponse;
-
-/// The type of punishment
-pub enum PunishmentType {
-    Kicked,
-    Banned,
-    Unbanned
-}
+use super::{PunishmentType, StandardResponse};
 
 impl StandardResponse {
     /// Create a new punishment response

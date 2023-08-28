@@ -53,9 +53,7 @@ impl LuroCommand for Character {
     }
 
     async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
-        let user_id = interaction
-            .author_id()
-            .context("Expected to find the user running this command")?;
+        let user_id = interaction.author_id();
         let nsfw = interaction.clone().channel.unwrap().nsfw.unwrap_or_default();
         let mut user_data = ctx.database.get_user(&user_id).await?;
         let character_name = parse_modal_field::parse_modal_field_required(&interaction.data, "character-name")?;
@@ -108,7 +106,7 @@ impl LuroCommand for Character {
         interaction: InteractionComponent
     ) -> anyhow::Result<()> {
         let mut embed = interaction.default_embed(&ctx).await;
-        let user_data = ctx.database.get_user(&interaction.author_id().unwrap()).await?;
+        let user_data = ctx.database.get_user(&interaction.author_id()).await?;
         let name = match self {
             Character::Profile(data) => data.name,
             Character::Create(data) => data.name,

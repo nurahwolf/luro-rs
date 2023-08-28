@@ -1,5 +1,9 @@
+use anyhow::Error;
 use luro_builder::embed::EmbedBuilder;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::{
+    database::drivers::LuroDatabaseDriver,
+    user::{actions::UserActions, actions_type::UserActionType}
+};
 use twilight_model::{
     channel::message::embed::EmbedField,
     id::{marker::UserMarker, Id}
@@ -7,12 +11,11 @@ use twilight_model::{
 
 use crate::{Framework, InteractionContext, LuroInteraction};
 
-use self::{permission_server_owner::permission_server_owner, unknown_command::unknown_command};
-
-pub mod not_implemented_response;
-pub mod permission_server_owner;
-pub mod unknown_command;
-pub mod user_action;
+mod internal_error;
+pub mod permission_modify_server_owner; // TODO: Change to private, only needs to be public for old framework
+mod permission_not_bot_staff;
+mod unknown_command;
+mod user_action;
 
 /// A wrapper around [EmbedBuilder] to make easy standardised responses
 #[derive(Default, Clone)]
@@ -70,7 +73,9 @@ impl StandardResponse {
 }
 
 pub enum SimpleResponse<'a> {
-    NotOwner(&'a Id<UserMarker>),
+    InternalError(&'a Error),
+    PermissionNotBotStaff(),
+    PermissionModifyServerOwner(&'a Id<UserMarker>),
     UnknownCommand(&'a str)
 }
 
@@ -78,19 +83,50 @@ impl<'a> SimpleResponse<'a> {
     /// Convert the response to an embed
     pub fn embed(&self) -> EmbedBuilder {
         match self {
-            SimpleResponse::NotOwner(user_id) => permission_server_owner(user_id),
-            SimpleResponse::UnknownCommand(name) => unknown_command(name)
+            SimpleResponse::InternalError(error) => internal_error::internal_error(error),
+            SimpleResponse::PermissionNotBotStaff() => permission_not_bot_staff::permission_not_bot_staff(),
+            SimpleResponse::PermissionModifyServerOwner(user_id) => {
+                permission_modify_server_owner::permission_server_owner(user_id)
+            }
+            SimpleResponse::UnknownCommand(name) => unknown_command::unknown_command(name)
         }
     }
 
     pub async fn respond<D: LuroDatabaseDriver, T: LuroInteraction>(
         &self,
-        framework: Framework<D>,
-        interaction: T
+        framework: &Framework<D>,
+        interaction: &T
     ) -> anyhow::Result<()> {
+        match self {
+            SimpleResponse::PermissionNotBotStaff() => privelege_escalation(framework, interaction).await,
+            _ => Ok(())
+        }?;
+
         interaction
-            .respond(&framework, |response| response.add_embed(self.embed()))
+            .respond(framework, |response| response.add_embed(self.embed()))
             .await?;
         Ok(())
     }
+}
+
+async fn privelege_escalation<D: LuroDatabaseDriver, T: LuroInteraction>(
+    framework: &Framework<D>,
+    interaction: &T
+) -> anyhow::Result<()> {
+    let mut user_data = framework.database.get_user(&interaction.author_id()).await?;
+    user_data.moderation_actions.push(UserActions {
+        action_type: vec![UserActionType::PrivilegeEscalation],
+        guild_id: interaction.guild_id(),
+        reason: Some(format!("Attempted to run the {} command", interaction.command_name())),
+        responsible_user: interaction.author_id()
+    });
+    framework.database.save_user(&interaction.author_id(), &user_data).await?;
+    Ok(())
+}
+
+/// The type of punishment
+pub enum PunishmentType {
+    Kicked,
+    Banned,
+    Unbanned
 }

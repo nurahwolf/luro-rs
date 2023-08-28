@@ -781,6 +781,7 @@ dependencies = [
  "hyper",
  "luro-builder",
  "luro-model",
+ "rand",
  "serde",
  "tracing",
  "tracing-subscriber",
@@ -821,10 +822,12 @@ dependencies = [
  "anyhow",
  "dotenv",
  "futures-util",
+ "luro-builder",
  "luro-database",
  "luro-dice",
  "luro-framework",
  "luro-model",
+ "rand",
  "tokio",
  "tracing",
  "tracing-appender",
@@ -832,6 +835,7 @@ dependencies = [
  "twilight-gateway",
  "twilight-interactions",
  "twilight-model",
+ "uwuify",
 ]
 
 [[package]]

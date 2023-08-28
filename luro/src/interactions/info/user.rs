@@ -210,15 +210,8 @@ impl LuroCommand for InfoUser {
                     .as_str()
                 );
                 if let Some(left_at) = luro_member.left_at {
-                    timestamp.push_str(
-                        format!(
-                            "- Left this server at <t:{0}> - <t:{0}:R>\n",
-                            left_at.as_secs()
-                        )
-                        .as_str()
-                    );
+                    timestamp.push_str(format!("- Left this server at <t:{0}> - <t:{0}:R>\n", left_at.as_secs()).as_str());
                 }
-
 
                 if let Some(member_timestamp) = luro_member.premium_since {
                     timestamp.push_str(

@@ -3,8 +3,9 @@ use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::CommandModel;
 use twilight_model::{application::interaction::application_command::CommandData, guild::Permissions};
 
-use crate::{responses::not_implemented_response::not_implemented_embed, Framework, InteractionCommand, InteractionModal};
-use crate::{InteractionComponent, LuroInteraction};
+use crate::responses::SimpleResponse;
+use crate::InteractionComponent;
+use crate::{Framework, InteractionCommand, InteractionModal};
 
 /// Add some custom functionality around [CommandModel]
 pub trait LuroCommand: CommandModel {
@@ -25,10 +26,9 @@ pub trait LuroCommand: CommandModel {
         ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        interaction
-            .respond(&ctx, |response| response.add_embed(not_implemented_embed()))
-            .await?;
-        Ok(())
+        SimpleResponse::UnknownCommand(&interaction.data.name)
+            .respond(&ctx, &interaction)
+            .await
     }
 
     /// Handle a component interaction. This could be a button or other form of interaciton
@@ -37,18 +37,16 @@ pub trait LuroCommand: CommandModel {
         ctx: Framework<D>,
         interaction: InteractionComponent
     ) -> anyhow::Result<()> {
-        interaction
-            .respond(&ctx, |response| response.add_embed(not_implemented_embed()))
-            .await?;
-        Ok(())
+        SimpleResponse::UnknownCommand(&interaction.data.custom_id)
+            .respond(&ctx, &interaction)
+            .await
     }
 
     /// Create and respond to a button interaction
     async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
-        interaction
-            .respond(&ctx, |response| response.add_embed(not_implemented_embed()))
-            .await?;
-        Ok(())
+        SimpleResponse::UnknownCommand(&interaction.data.custom_id)
+            .respond(&ctx, &interaction)
+            .await
     }
 
     /// The default permissions a user needs to run this command

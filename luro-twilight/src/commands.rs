@@ -11,8 +11,16 @@ use twilight_model::application::interaction::InteractionData;
 mod character;
 #[cfg(feature = "command-dice")]
 mod dice;
+#[cfg(feature = "command-roles")]
+mod roles;
 #[cfg(feature = "command-say")]
 mod say;
+#[cfg(feature = "command-story")]
+mod story;
+#[cfg(feature = "command-uwu")]
+mod uwu;
+#[cfg(feature = "command-wordcount")]
+mod wordcount;
 
 pub fn default_global_commands() -> Vec<ApplicationCommandData> {
     vec![
@@ -22,6 +30,10 @@ pub fn default_global_commands() -> Vec<ApplicationCommandData> {
         <dice::Dice as twilight_interactions::command::CreateCommand>::create_command(),
         #[cfg(feature = "command-say")]
         <say::Say as twilight_interactions::command::CreateCommand>::create_command(),
+        #[cfg(feature = "command-uwu")]
+        <uwu::UwU as twilight_interactions::command::CreateCommand>::create_command(),
+        #[cfg(feature = "command-wordcount")]
+        <wordcount::Wordcount as twilight_interactions::command::CreateCommand>::create_command(),
     ]
 }
 
@@ -59,8 +71,26 @@ pub async fn handle_command<D: LuroDatabaseDriver>(
             )
             .await
         }
+        #[cfg(feature = "command-wordcount")]
+        "wordcount" => {
+            luro_framework::command::LuroCommand::interaction_command(
+                <wordcount::Wordcount as luro_framework::command::LuroCommand>::new(data)?,
+                framework,
+                interaction
+            )
+            .await
+        }
+        #[cfg(feature = "command-uwu")]
+        "uwu" => {
+            luro_framework::command::LuroCommand::interaction_command(
+                <uwu::UwU as luro_framework::command::LuroCommand>::new(data)?,
+                framework,
+                interaction
+            )
+            .await
+        }
 
-        name => SimpleResponse::UnknownCommand(name).respond(framework, interaction).await
+        name => SimpleResponse::UnknownCommand(name).respond(&framework, &interaction).await
     }
 }
 
@@ -98,12 +128,11 @@ pub async fn handle_component<D: LuroDatabaseDriver>(
         }
     };
 
-    if let Some(author) = interaction.author() {
-        info!(
-            "Received component interaction - {} - {}",
-            author.name, interaction.data.custom_id
-        );
-    }
+    info!(
+        "Received component interaction - {} - {}",
+        interaction.author().name,
+        interaction.data.custom_id
+    );
 
     match interaction.data.custom_id.as_str() {
         #[cfg(feature = "command-character")]
@@ -125,12 +154,11 @@ pub async fn handle_component<D: LuroDatabaseDriver>(
 
 /// Handle incoming modal interaction
 pub async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
-    if let Some(author) = interaction.author() {
-        info!(
-            "Received component interaction - {} - {}",
-            author.name, interaction.data.custom_id
-        );
-    }
+    info!(
+        "Received component interaction - {} - {}",
+        interaction.author().name,
+        interaction.data.custom_id
+    );
 
     match interaction.data.custom_id.as_str() {
         #[cfg(feature = "command-character")]
@@ -154,12 +182,16 @@ pub async fn handle_autocomplete<D: LuroDatabaseDriver>(
 #[derive(CommandModel)]
 #[command(autocomplete = true)]
 enum Autocomplete {
+    #[cfg(feature = "command-character")]
     #[command(name = "send")]
     Send(character::send::CharacterSendAutocomplete),
+    #[cfg(feature = "command-character")]
     #[command(name = "proxy")]
     Proxy(character::send::CharacterSendAutocomplete),
+    #[cfg(feature = "command-character")]
     #[command(name = "icon")]
     Icon(character::send::CharacterSendAutocomplete),
+    #[cfg(feature = "command-character")]
     #[command(name = "create")]
     Create(character::send::CharacterSendAutocomplete)
 }
@@ -167,6 +199,7 @@ enum Autocomplete {
 impl Autocomplete {
     async fn run<D: LuroDatabaseDriver>(self, ctx: Framework<D>, interaction: InteractionCommand) -> anyhow::Result<()> {
         match self {
+            #[cfg(feature = "command-character")]
             Autocomplete::Create(cmd) | Autocomplete::Icon(cmd) | Autocomplete::Send(cmd) | Autocomplete::Proxy(cmd) => {
                 cmd.interaction_command(ctx, interaction).await
             }

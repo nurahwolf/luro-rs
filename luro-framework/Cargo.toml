@@ -25,8 +25,9 @@ twilight-gateway.workspace = true                               #framework
 twilight-http.workspace = true                                  #framework
 twilight-lavalink = { workspace = true, optional = true }       #framework
 twilight-model.workspace = true                                 #framework
-
 twilight-interactions.path = "../twilight-interactions"         # command
+
+rand = { workspace = true, optional = true } # response/permission_not_bot_staff
 
 [features]
 cache-memory = ["dep:twilight-cache-inmemory"]
@@ -37,9 +38,11 @@ default = [
     "http-client-hyper",
     "lavalink",
     "luro-builder",
-    "responses"
+    "responses",
+    "random-responses" # Disable this feature to get a fixed response
 ]
 http-client-hyper = ["dep:hyper"]
 lavalink = ["dep:twilight-lavalink"]
 luro-builder = ["dep:luro-builder"]
 responses = ["dep:luro-builder"]
+random-responses = ["dep:rand"]

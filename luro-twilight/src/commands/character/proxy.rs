@@ -1,4 +1,3 @@
-use anyhow::Context;
 use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
@@ -21,10 +20,7 @@ impl LuroCommand for Proxy {
         ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        let user_id = interaction
-            .author_id()
-            .context("Expected to find the user running this command")?;
-
+        let user_id = interaction.author_id();
         let mut user_data = ctx.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
             return interaction

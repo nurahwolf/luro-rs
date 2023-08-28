@@ -1,4 +1,3 @@
-use anyhow::Context;
 use luro_framework::command::LuroCommand;
 use luro_framework::{Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
@@ -24,9 +23,7 @@ impl LuroCommand for Add {
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let mut embed = interaction.default_embed(&ctx).await;
-        let user_id = interaction
-            .author_id()
-            .context("Expected to find the user running this command")?;
+        let user_id = interaction.author_id();
         let mut user_data = ctx.database.get_user(&user_id).await?;
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| {
