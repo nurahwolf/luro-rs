@@ -55,7 +55,6 @@ pub enum Owner {
     Modify(Modify),
     #[command(name = "modify_role")]
     ModifyRole(ModifyRoleCommand)
-
 }
 
 // pub enum OwnerCommands {
