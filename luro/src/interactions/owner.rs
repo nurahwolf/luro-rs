@@ -1,4 +1,6 @@
+use luro_model::BOT_OWNERS;
 use std::fmt::Write;
+use tracing::warn;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
 use twilight_model::application::interaction::modal::ModalInteractionData;
@@ -16,6 +18,7 @@ use self::abuse::AbuseCommand;
 use self::assign::AssignCommand;
 use self::clear_warnings::OwnerClearWarning;
 use self::commands::OwnerCommandsCommand;
+use self::fakeban::FakeBan;
 use self::mass_assign::MassAssign;
 use self::modify::Modify;
 use self::modify_role::ModifyRoleCommand;
@@ -46,7 +49,8 @@ pub enum Owner {
     ClearWarning(OwnerClearWarning),
     #[command(name = "commands")]
     Commands(OwnerCommandsCommand),
-
+    #[command(name = "fakeban")]
+    FakeBan(FakeBan),
     #[command(name = "log")]
     Log(log::LogCommand),
     #[command(name = "mass_assign")]
@@ -59,13 +63,11 @@ pub enum Owner {
 
 // pub enum OwnerCommands {
 //     #[command(name = "config")]
-//     #[command(name = "fakeban")]
 //     #[command(name = "flush")]
 //     #[command(name = "get_message")]
 //     #[command(name = "guilds")]
 //     #[command(name = "load_users")]
 //     Config(ConfigCommand),
-//     FakeBan(FakeBan),
 //     Flush(Flush),
 //     GetMessage(OwnerGetMessage),
 //     Guilds(OwnerGuildsCommand),
@@ -74,44 +76,43 @@ pub enum Owner {
 
 impl LuroCommand for Owner {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        // let interaction_author = ctx.interaction.author().unwrap();
+        let interaction_author = ctx.interaction.author().unwrap();
 
-        // let staff = match ctx.framework.database.get_staff().await {
-        //     Ok(data) => data.keys().copied().collect(),
-        //     Err(why) => {
-        //         warn!(why = ?why, "Failed to load staff from database, falling back to hardcoded staff members");
-        //         BOT_OWNERS.to_vec()
-        //     }
-        // };
+        let staff = match ctx.framework.database.get_staff().await {
+            Ok(data) => data.keys().copied().collect(),
+            Err(why) => {
+                warn!(why = ?why, "Failed to load staff from database, falling back to hardcoded staff members");
+                BOT_OWNERS.to_vec()
+            }
+        };
 
-        // let staff = BOT_OWNERS.to_vec();
+        let staff = BOT_OWNERS.to_vec();
 
         // If we don't have a match, bitch at the user
-        // if !staff.contains(&interaction_author.id) {
-        //     return ctx
-        //         .not_owner_response(
-        //             &interaction_author.id,
-        //             &ctx.interaction.guild_id,
-        //             match self {
-        //                 Self::Abuse(_) => "owner_abuse",
-        //                 Self::Assign(_) => "owner_assign",
-        //                 Self::ClearWarning(_) => "owner_clearwarning",
-        //                 Self::Commands(_) => "owner_commands",
-        //                 Self::Config(_) => "owner_config",
-        //                 Self::GetMessage(_) => "owner_getmessage",
-        //                 Self::Guilds(_) => "owner_guilds",
-        //                 Self::LoadUsers(_) => "owner_loadusers",
-        //                 Self::Log(_) => "owner_log",
-        //                 Self::ModifyRole(_) => "owner_modify",
-        //                 Self::Flush(_) => "owner_save",
-        //                 Self::Modify(_) => "owner_modify",
-        //                 Self::FakeBan(_) => "owner_fakeban",
-        //                 Self::MassAssign(_) => "mass_assign"
-
-        //             }
-        //         )
-        //         .await;
-        // }
+        if !staff.contains(&interaction_author.id) {
+            return ctx
+                .not_owner_response(
+                    &interaction_author.id,
+                    &ctx.interaction.guild_id,
+                    match self {
+                        Self::Abuse(_) => "owner_abuse",
+                        Self::Assign(_) => "owner_assign",
+                        Self::ClearWarning(_) => "owner_clearwarning",
+                        Self::Commands(_) => "owner_commands",
+                        // Self::Config(_) => "owner_config",
+                        // Self::GetMessage(_) => "owner_getmessage",
+                        // Self::Guilds(_) => "owner_guilds",
+                        // Self::LoadUsers(_) => "owner_loadusers",
+                        Self::Log(_) => "owner_log",
+                        Self::ModifyRole(_) => "owner_modify",
+                        // Self::Flush(_) => "owner_save",
+                        Self::Modify(_) => "owner_modify",
+                        Self::FakeBan(_) => "owner_fakeban",
+                        Self::MassAssign(_) => "mass_assign"
+                    }
+                )
+                .await;
+        }
 
         // We know the user is good, so call the appropriate subcommand.
         match self {
@@ -120,7 +121,7 @@ impl LuroCommand for Owner {
             Self::ClearWarning(command) => command.run_command(ctx).await,
             Self::Commands(command) => command.run_command(ctx).await,
             // Self::Config(command) => command.run_command(ctx).await,
-            // Self::FakeBan(command) => command.run_command(ctx).await,
+            Self::FakeBan(command) => command.run_command(ctx).await,
             // Self::Flush(command) => command.run_command(ctx).await,
             // Self::GetMessage(command) => command.run_command(ctx).await,
             // Self::Guilds(command) => command.run_command(ctx).await,
