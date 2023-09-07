@@ -146,8 +146,8 @@ impl LuroCommand for Ban {
         debug!("Purging {:#?} seconds worth of messages!", self.purge.value());
 
         match reason {
-            None => ban.delete_message_seconds(self.purge.value() as u32).await?,
-            Some(ref reason) => ban.delete_message_seconds(self.purge as u32).reason(reason).await?
+            None => ban.await?,
+            Some(ref reason) => ban.reason(reason).await?
         };
 
         moderator.moderation_actions_performed += 1;
