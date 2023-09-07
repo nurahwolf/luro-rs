@@ -78,7 +78,7 @@ impl LuroCommand for Owner {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author().unwrap();
 
-        let staff = match ctx.framework.database.get_staff().await {
+        let _staff = match ctx.framework.database.get_staff().await {
             Ok(data) => data.keys().copied().collect(),
             Err(why) => {
                 warn!(why = ?why, "Failed to load staff from database, falling back to hardcoded staff members");
