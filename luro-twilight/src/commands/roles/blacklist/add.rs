@@ -14,6 +14,7 @@ pub struct Add {
 }
 #[async_trait::async_trait]
 
+
 impl LuroCommandTrait for Add {
     async fn handle_interaction<D: LuroDatabaseDriver>(
         ctx: Arc<Framework<D>>,

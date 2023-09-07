@@ -1,9 +1,11 @@
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::{database::drivers::LuroDatabaseDriver, message::LuroMessage, user::LuroUser};
 use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::ChannelMarker, Id};
-
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "add", desc = "Save what someone said!")]
@@ -14,15 +16,20 @@ pub struct Add {
     channel: Option<Id<ChannelMarker>>
 }
 
-impl LuroCommand for Add {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let interaction = &ctx.interaction;
-        let channel_id = self.channel.unwrap_or(interaction.channel.as_ref().unwrap().id);
-        let accent_colour = ctx.accent_colour().await;
-        let id = Id::new(self.id.parse()?);
+#[async_trait]
+impl LuroCommandTrait for Add {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
+        interaction: InteractionCommand
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+
+        let channel_id = data.channel.unwrap_or(interaction.channel.as_ref().unwrap().id);
+        let accent_colour = interaction.accent_colour(&ctx).await;
+        let id = Id::new(data.id.parse()?);
         let quoted_user;
 
-        let quote = match ctx.framework.twilight_client.message(channel_id, id).await {
+        let quote = match ctx.twilight_client.message(channel_id, id).await {
             Ok(message) => {
                 let message = message.model().await?;
                 quoted_user = message.author.clone();
@@ -30,20 +37,20 @@ impl LuroCommand for Add {
             }
             Err(_) => {
                 debug!("Failed to get message via twilight, so lookign in the cache");
-                match ctx.framework.twilight_cache.message(id) {
+                match ctx.cache.message(id) {
                     Some(message) => {
                         let quote = LuroMessage::from(message.clone());
                         // Add some more stuff that is not in the cache
-                        if let Some(user) = ctx.framework.twilight_cache.user(message.author()) {
+                        if let Some(user) = ctx.cache.user(message.author()) {
                             quoted_user = user.clone();
                         } else {
-                            let user = ctx.framework.twilight_client.user(message.author()).await?.model().await?;
+                            let user = ctx.twilight_client.user(message.author()).await?.model().await?;
                             quoted_user = user.clone();
                         }
                         quote
                     },
-                    None => return ctx
-                    .respond(|r| {
+                    None => return interaction
+                    .respond(&ctx, |r| {
                         r.content("Sorry! Could not find that message. You sure you gave me the right ID?\nTry specifying the exact channel with the optional parameter if I'm struggling. If I still can't, it's probably because I don't have access to the channel.")
                             .ephemeral()
                     })
@@ -54,12 +61,12 @@ impl LuroCommand for Add {
 
         let slash_user = LuroUser::from(&quoted_user);
 
-        let local_quotes = ctx.framework.database.get_quotes().await?;
+        let local_quotes = ctx.database.get_quotes().await?;
         let local_quote_id = local_quotes.len();
 
-        ctx.framework.database.save_quote(local_quote_id, quote.clone()).await?;
+        ctx.database.save_quote(local_quote_id, quote.clone()).await?;
 
-        ctx.respond(|response| {
+        interaction.respond(&ctx, |response| {
             response.embed(|embed| {
                 embed.colour(accent_colour).description(quote.content).author(|author| {
                     author

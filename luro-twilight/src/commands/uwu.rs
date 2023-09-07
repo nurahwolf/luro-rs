@@ -17,7 +17,7 @@ pub struct UwU {
     message: String
 }
 
-impl LuroCommandBuilder for UwU {}
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for UwU {}
 
 #[async_trait]
 impl LuroCommandTrait for UwU {

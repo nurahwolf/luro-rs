@@ -30,6 +30,7 @@ pub struct Menu {
 }
 #[async_trait::async_trait]
 
+
 impl LuroCommandTrait for Menu {
     async fn handle_interaction<D: LuroDatabaseDriver>(
         ctx: Arc<Framework<D>>,

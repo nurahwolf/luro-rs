@@ -11,8 +11,8 @@ use crate::slash_command::LuroCommand;
 use crate::{Framework, InteractionCommand, InteractionComponent, InteractionModal};
 
 /// Simply a wrapper around [LuroCommand], ensuring that [CreateCommand] is present
-pub trait LuroCommandBuilder: LuroCommandTrait + CreateCommand {
-    fn new_command<D: LuroDatabaseDriver + 'static>() -> LuroCommand<D> {
+pub trait LuroCommandBuilder<D: LuroDatabaseDriver + 'static>: LuroCommandTrait + CreateCommand {
+    fn new_command() -> LuroCommand<D> {
         LuroCommand {
             name: Self::NAME,
             create: Self::create_command,

@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use luro_framework::{InteractionCommand, Framework, command::LuroCommandTrait, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "remove", desc = "Remove a particular quote (Owner Only)!")]
@@ -10,21 +12,27 @@ pub struct Remove {
     id: i64
 }
 
-impl LuroCommand for Remove {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let mut quotes = ctx.framework.database.get_quotes().await?;
-        let id = usize::try_from(self.id).unwrap();
+#[async_trait]
+impl LuroCommandTrait for Remove {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
+        interaction: InteractionCommand
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+
+        let mut quotes = ctx.database.get_quotes().await?;
+        let id = usize::try_from(data.id).unwrap();
 
         let quote = match quotes.remove(&id) {
             Some(quote) => quote,
-            None => return ctx.respond(|r| r.content("That quote is not present!").ephemeral()).await
+            None => return interaction.respond(&ctx, |r| r.content("That quote is not present!").ephemeral()).await
         };
-        let user = ctx.framework.database.get_user(&quote.author).await?;
+        let user = ctx.database.get_user(&quote.author).await?;
 
-        ctx.framework.database.save_quotes(quotes).await?;
+        ctx.database.save_quotes(quotes).await?;
 
-        let accent_colour = ctx.accent_colour().await;
-        ctx.respond(|response| {
+        let accent_colour = interaction.accent_colour(&ctx).await;
+        interaction.respond(&ctx, |response| {
             response.embed(|embed| {
                 embed.colour(accent_colour).description(quote.content).author(|author| {
                     author

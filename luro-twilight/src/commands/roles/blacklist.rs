@@ -23,6 +23,7 @@ pub enum Blacklist {
 }
 #[async_trait::async_trait]
 
+
 impl LuroCommandTrait for Blacklist {
     async fn handle_interaction<D: LuroDatabaseDriver>(
         ctx: Arc<Framework<D>>,

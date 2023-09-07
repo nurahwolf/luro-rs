@@ -1,15 +1,22 @@
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use luro_framework::{command::LuroCommandTrait, InteractionCommand, Framework, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "sort", desc = "Sort the list of quotes (Owner Only)!")]
 pub struct Sort {}
 
-impl LuroCommand for Sort {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let mut quotes = ctx.framework.database.get_quotes().await?;
+#[async_trait]
+impl LuroCommandTrait for Sort {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
+        interaction: InteractionCommand
+    ) -> anyhow::Result<()> {
+        let mut quotes = ctx.database.get_quotes().await?;
 
         // Remove duplicates and new IDs
         let mut iteration = 0;
@@ -28,10 +35,10 @@ impl LuroCommand for Sort {
             iteration += 1;
         }
 
-        ctx.framework.database.save_quotes(quotes).await?;
+        ctx.database.save_quotes(quotes).await?;
 
-        let accent_colour = ctx.accent_colour().await;
-        ctx.respond(|response| {
+        let accent_colour = interaction.accent_colour(&ctx).await;
+        interaction.respond(&ctx, |response| {
             response.embed(|embed| {
                 embed
                     .colour(accent_colour)

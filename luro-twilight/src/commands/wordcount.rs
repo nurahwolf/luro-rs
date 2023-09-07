@@ -33,7 +33,7 @@ pub struct Wordcount {
     global: Option<bool>
 }
 
-impl LuroCommandBuilder for Wordcount {}
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Wordcount {}
 
 #[async_trait]
 impl LuroCommandTrait for Wordcount {

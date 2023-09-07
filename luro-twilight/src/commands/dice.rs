@@ -33,7 +33,8 @@ pub enum Dice {
     Simple(Simple)
 }
 
-impl LuroCommandBuilder for Dice {}
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Dice {}
+
 #[async_trait]
 impl LuroCommandTrait for Dice {
     async fn handle_interaction<D: LuroDatabaseDriver>(

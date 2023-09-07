@@ -71,7 +71,6 @@ impl StandardResponse {
         Ok(())
     }
 }
-
 pub enum SimpleResponse<'a> {
     InternalError(&'a Error),
     PermissionNotBotStaff(),

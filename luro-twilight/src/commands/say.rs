@@ -17,7 +17,7 @@ pub struct Say {
     user: Option<ResolvedUser>
 }
 
-impl LuroCommandBuilder for Say {}
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Say {}
 
 #[async_trait]
 impl LuroCommandTrait for Say {

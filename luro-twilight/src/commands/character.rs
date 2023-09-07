@@ -40,7 +40,7 @@ pub enum Character {
     Send(CharacterSend)
 }
 
-impl LuroCommandBuilder for Character {}
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Character {}
 
 #[async_trait]
 impl LuroCommandTrait for Character {

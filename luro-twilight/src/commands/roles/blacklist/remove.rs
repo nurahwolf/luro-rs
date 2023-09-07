@@ -14,6 +14,7 @@ pub struct Remove {
 }
 #[async_trait::async_trait]
 
+
 impl LuroCommandTrait for Remove {
     async fn handle_interaction<D: LuroDatabaseDriver>(
         framework: Arc<Framework<D>>,

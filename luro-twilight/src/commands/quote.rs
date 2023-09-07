@@ -1,9 +1,9 @@
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-
-use self::{add::Add, get::Get, list::List, remove::Remove, sort::Sort};
 
 mod add;
 mod get;
@@ -15,25 +15,32 @@ mod sort;
 #[command(name = "quote", desc = "Get or save some quotes")]
 pub enum QuoteCommands {
     #[command(name = "get")]
-    Get(Get),
+    Get(get::Get),
     #[command(name = "add")]
-    Add(Add),
+    Add(add::Add),
     #[command(name = "list")]
-    List(List),
+    List(list::List),
     #[command(name = "sort")]
-    Sort(Sort),
+    Sort(sort::Sort),
     #[command(name = "remove")]
-    Remove(Remove)
+    Remove(remove::Remove)
 }
 
-impl LuroCommand for QuoteCommands {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        match self {
-            Self::Get(command) => command.run_command(ctx).await,
-            Self::Add(command) => command.run_command(ctx).await,
-            Self::List(command) => command.run_command(ctx).await,
-            Self::Sort(command) => command.run_command(ctx).await,
-            Self::Remove(command) => command.run_command(ctx).await
+
+#[async_trait]
+impl LuroCommandTrait for QuoteCommands {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
+        interaction: InteractionCommand
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+        
+        match data {
+            Self::Get(_) => add::Add::handle_interaction(ctx, interaction).await,
+            Self::Add(_) => get::Get::handle_interaction(ctx, interaction).await,
+            Self::List(_) => list::List::handle_interaction(ctx, interaction).await,
+            Self::Sort(_) => remove::Remove::handle_interaction(ctx, interaction).await,
+            Self::Remove(_) => sort::Sort::handle_interaction(ctx, interaction).await
         }
     }
 }
