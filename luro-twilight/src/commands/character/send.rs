@@ -4,7 +4,7 @@ use luro_framework::InteractionCommand;
 use luro_framework::LuroInteraction;
 use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
-use std::sync::Arc;
+
 use twilight_interactions::command::AutocompleteValue;
 use twilight_interactions::command::CommandModel;
 use twilight_interactions::command::CreateCommand;
@@ -22,7 +22,7 @@ pub struct CharacterSendAutocomplete {
 impl CharacterSendAutocomplete {
     pub async fn interaction_command<D: LuroDatabaseDriver>(
         self,
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let user_id = interaction.author_id();
@@ -74,7 +74,7 @@ pub struct CharacterSend {
 
 impl LuroCommandTrait for CharacterSend {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

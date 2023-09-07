@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand};
 use luro_model::database::drivers::LuroDatabaseDriver;
@@ -26,15 +24,14 @@ pub enum QuoteCommands {
     Remove(remove::Remove)
 }
 
-
 #[async_trait]
 impl LuroCommandTrait for QuoteCommands {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
-        
+
         match data {
             Self::Get(_) => add::Add::handle_interaction(ctx, interaction).await,
             Self::Add(_) => get::Get::handle_interaction(ctx, interaction).await,

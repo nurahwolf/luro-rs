@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::ApplicationCommandData;
 
@@ -15,11 +13,11 @@ pub struct LuroCommand<D: LuroDatabaseDriver> {
     /// The core [ApplicationCommandData] needed to create the command in Discord
     pub create: fn() -> ApplicationCommandData,
     /// Command to execute in an interaction context
-    pub interaction_command: fn(Arc<Framework<D>>, InteractionCommand) -> CommandResult,
+    pub interaction_command: fn(Framework<D>, InteractionCommand) -> CommandResult,
     /// A component to execute
-    pub component: fn(Arc<Framework<D>>, InteractionComponent) -> CommandResult,
+    pub component: fn(Framework<D>, InteractionComponent) -> CommandResult,
     /// A modal to execute
-    pub modal: fn(Arc<Framework<D>>, InteractionModal) -> CommandResult,
+    pub modal: fn(Framework<D>, InteractionModal) -> CommandResult,
     /// A autocomplete to execute
-    pub autocomplete: fn(Arc<Framework<D>>, InteractionCommand) -> CommandResult
+    pub autocomplete: fn(Framework<D>, InteractionCommand) -> CommandResult
 }

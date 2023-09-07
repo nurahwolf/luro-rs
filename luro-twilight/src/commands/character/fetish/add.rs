@@ -3,7 +3,7 @@ use luro_framework::{Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use luro_model::user::character::{Fetish, FetishCategory, FetishList};
 use std::fmt::Write;
-use std::sync::Arc;
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
@@ -20,7 +20,7 @@ pub struct Add {
 
 impl LuroCommandTrait for Add {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

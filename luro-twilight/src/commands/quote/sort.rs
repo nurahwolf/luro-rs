@@ -1,10 +1,7 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, InteractionCommand, Framework, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "sort", desc = "Sort the list of quotes (Owner Only)!")]
@@ -13,7 +10,7 @@ pub struct Sort {}
 #[async_trait]
 impl LuroCommandTrait for Sort {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let mut quotes = ctx.database.get_quotes().await?;
@@ -38,14 +35,15 @@ impl LuroCommandTrait for Sort {
         ctx.database.save_quotes(quotes).await?;
 
         let accent_colour = interaction.accent_colour(&ctx).await;
-        interaction.respond(&ctx, |response| {
-            response.embed(|embed| {
-                embed
-                    .colour(accent_colour)
-                    .title("Quote Sorted")
-                    .description(format!("There are now a total of {iteration} quotes!"))
+        interaction
+            .respond(&ctx, |response| {
+                response.embed(|embed| {
+                    embed
+                        .colour(accent_colour)
+                        .title("Quote Sorted")
+                        .description(format!("There are now a total of {iteration} quotes!"))
+                })
             })
-        })
-        .await
+            .await
     }
 }

@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
@@ -14,10 +12,9 @@ pub struct Remove {
 }
 #[async_trait::async_trait]
 
-
 impl LuroCommandTrait for Remove {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        framework: Arc<Framework<D>>,
+        framework: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

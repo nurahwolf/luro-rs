@@ -1,8 +1,6 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
-use luro_framework::{Framework, InteractionCommand, command::LuroCommandTrait, LuroInteraction};
-use luro_model::{message::LuroMessageSource, database::drivers::LuroDatabaseDriver};
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
+use luro_model::{database::drivers::LuroDatabaseDriver, message::LuroMessageSource};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
@@ -12,7 +10,7 @@ pub struct List {}
 #[async_trait]
 impl LuroCommandTrait for List {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let quotes = ctx.database.get_quotes().await?;
@@ -45,14 +43,15 @@ impl LuroCommandTrait for List {
         }
 
         let accent_colour = interaction.accent_colour(&ctx).await;
-        interaction.respond(&ctx,|response| {
-            response.embed(|embed| {
-                embed
-                    .colour(accent_colour)
-                    .title("Some quotes to choose from...")
-                    .description(quotes_string)
+        interaction
+            .respond(&ctx, |response| {
+                response.embed(|embed| {
+                    embed
+                        .colour(accent_colour)
+                        .title("Some quotes to choose from...")
+                        .description(quotes_string)
+                })
             })
-        })
-        .await
+            .await
     }
 }

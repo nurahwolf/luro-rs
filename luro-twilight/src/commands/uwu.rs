@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
 use luro_framework::{
     command::{LuroCommandBuilder, LuroCommandTrait},
@@ -22,7 +20,7 @@ impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for UwU {}
 #[async_trait]
 impl LuroCommandTrait for UwU {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

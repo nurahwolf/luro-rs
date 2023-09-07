@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::commands::anyhow;
 use anyhow::Context;
 use async_trait::async_trait;
@@ -31,7 +29,7 @@ pub enum RoleCommands {
 #[async_trait]
 impl LuroCommandTrait for RoleCommands {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -42,7 +40,7 @@ impl LuroCommandTrait for RoleCommands {
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionComponent
     ) -> anyhow::Result<()> {
         let mut message = interaction.message.clone();

@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use anyhow::anyhow;
 use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
@@ -36,7 +34,7 @@ pub struct StoryCommand {
 #[async_trait]
 
 impl LuroCommandTrait for StoryCommand {
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Arc<Framework<D>>, interaction: InteractionModal) -> anyhow::Result<()> {
+    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
         let nsfw = interaction.channel.clone().unwrap().nsfw.unwrap_or(false);
         let stories = ctx.database.get_stories(nsfw).await?;
         let id = stories.len() + 1;
@@ -58,7 +56,7 @@ impl LuroCommandTrait for StoryCommand {
     }
 
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -152,7 +150,7 @@ impl LuroCommandTrait for StoryCommand {
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionComponent
     ) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::default();

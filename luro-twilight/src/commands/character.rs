@@ -10,7 +10,7 @@ use luro_model::{
     database::drivers::LuroDatabaseDriver,
     user::character::{CharacterProfile, FetishCategory}
 };
-use std::{collections::btree_map::Entry, fmt::Write, sync::Arc};
+use std::{collections::btree_map::Entry, fmt::Write};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::InteractionData;
 
@@ -45,7 +45,7 @@ impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Character {}
 #[async_trait]
 impl LuroCommandTrait for Character {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -59,7 +59,7 @@ impl LuroCommandTrait for Character {
         }
     }
 
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Arc<Framework<D>>, interaction: InteractionModal) -> anyhow::Result<()> {
+    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
         let user_id = interaction.author_id();
         let nsfw = interaction.clone().channel.unwrap().nsfw.unwrap_or_default();
         let mut user_data = ctx.database.get_user(&user_id).await?;
@@ -108,7 +108,7 @@ impl LuroCommandTrait for Character {
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionComponent
     ) -> anyhow::Result<()> {
         let mut message = interaction.message.clone();

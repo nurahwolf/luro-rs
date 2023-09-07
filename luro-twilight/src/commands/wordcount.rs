@@ -1,5 +1,5 @@
 use std::fmt::Write;
-use std::sync::Arc;
+
 use std::{
     collections::{BTreeMap, HashMap},
     convert::TryFrom
@@ -38,7 +38,7 @@ impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Wordcount {}
 #[async_trait]
 impl LuroCommandTrait for Wordcount {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

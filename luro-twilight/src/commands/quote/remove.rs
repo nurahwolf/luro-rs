@@ -1,7 +1,5 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
-use luro_framework::{InteractionCommand, Framework, command::LuroCommandTrait, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -15,7 +13,7 @@ pub struct Remove {
 #[async_trait]
 impl LuroCommandTrait for Remove {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -25,29 +23,34 @@ impl LuroCommandTrait for Remove {
 
         let quote = match quotes.remove(&id) {
             Some(quote) => quote,
-            None => return interaction.respond(&ctx, |r| r.content("That quote is not present!").ephemeral()).await
+            None => {
+                return interaction
+                    .respond(&ctx, |r| r.content("That quote is not present!").ephemeral())
+                    .await
+            }
         };
         let user = ctx.database.get_user(&quote.author).await?;
 
         ctx.database.save_quotes(quotes).await?;
 
         let accent_colour = interaction.accent_colour(&ctx).await;
-        interaction.respond(&ctx, |response| {
-            response.embed(|embed| {
-                embed.colour(accent_colour).description(quote.content).author(|author| {
-                    author
-                        .name(format!("{} - Quote {id} Removed", user.name()))
-                        .icon_url(user.avatar());
-                    match quote.guild_id {
-                        Some(guild_id) => author.url(format!(
-                            "https://discord.com/channels/{guild_id}/{}/{}",
-                            quote.channel_id, quote.id
-                        )),
-                        None => author.url(format!("https://discord.com/channels/{}/{}", quote.channel_id, quote.id))
-                    }
+        interaction
+            .respond(&ctx, |response| {
+                response.embed(|embed| {
+                    embed.colour(accent_colour).description(quote.content).author(|author| {
+                        author
+                            .name(format!("{} - Quote {id} Removed", user.name()))
+                            .icon_url(user.avatar());
+                        match quote.guild_id {
+                            Some(guild_id) => author.url(format!(
+                                "https://discord.com/channels/{guild_id}/{}/{}",
+                                quote.channel_id, quote.id
+                            )),
+                            None => author.url(format!("https://discord.com/channels/{}/{}", quote.channel_id, quote.id))
+                        }
+                    })
                 })
             })
-        })
-        .await
+            .await
     }
 }

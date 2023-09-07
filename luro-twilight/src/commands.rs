@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
 use anyhow::anyhow;
 use luro_framework::command::LuroCommandBuilder;
@@ -74,7 +73,7 @@ pub fn default_global_commands<'a, D: LuroDatabaseDriver + 'static>() -> HashMap
 
 /// Handle incoming command interaction.
 pub async fn handle_command<D: LuroDatabaseDriver>(
-    framework: Arc<Framework<D>>,
+    framework: Framework<D>,
     interaction: InteractionCommand
 ) -> anyhow::Result<()> {
     info!(
@@ -109,7 +108,7 @@ pub async fn handle_command<D: LuroDatabaseDriver>(
 /// SAFETY: There is an unwrap here, but the type is always present on MessageComponent
 /// which is the only type this function is called on
 pub async fn handle_component<D: LuroDatabaseDriver>(
-    framework: Arc<Framework<D>>,
+    framework: Framework<D>,
     interaction: InteractionComponent
 ) -> anyhow::Result<()> {
     info!(
@@ -140,10 +139,7 @@ pub async fn handle_component<D: LuroDatabaseDriver>(
 }
 
 /// Handle incoming modal interaction
-pub async fn handle_modal<D: LuroDatabaseDriver>(
-    framework: Arc<Framework<D>>,
-    interaction: InteractionModal
-) -> anyhow::Result<()> {
+pub async fn handle_modal<D: LuroDatabaseDriver>(framework: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
     info!(
         "Received modal interaction - {} - {}",
         interaction.author().name,
@@ -173,7 +169,7 @@ pub async fn handle_modal<D: LuroDatabaseDriver>(
 
 /// Handle incoming autocomplete
 pub async fn handle_autocomplete<D: LuroDatabaseDriver>(
-    ctx: Arc<Framework<D>>,
+    ctx: Framework<D>,
     interaction: InteractionCommand
 ) -> anyhow::Result<()> {
     Autocomplete::new(*interaction.data.clone())?.run(ctx, interaction).await
@@ -197,7 +193,7 @@ enum Autocomplete {
 }
 
 impl Autocomplete {
-    async fn run<D: LuroDatabaseDriver>(self, ctx: Arc<Framework<D>>, interaction: InteractionCommand) -> anyhow::Result<()> {
+    async fn run<D: LuroDatabaseDriver>(self, ctx: Framework<D>, interaction: InteractionCommand) -> anyhow::Result<()> {
         match self {
             #[cfg(feature = "command-character")]
             Autocomplete::Create(cmd) | Autocomplete::Icon(cmd) | Autocomplete::Send(cmd) | Autocomplete::Proxy(cmd) => {

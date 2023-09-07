@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -14,7 +12,7 @@ pub struct Help {
 
 impl LuroCommandTrait for Help {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

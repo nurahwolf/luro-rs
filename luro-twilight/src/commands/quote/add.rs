@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::{database::drivers::LuroDatabaseDriver, message::LuroMessage, user::LuroUser};
@@ -19,7 +17,7 @@ pub struct Add {
 #[async_trait]
 impl LuroCommandTrait for Add {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -66,22 +64,23 @@ impl LuroCommandTrait for Add {
 
         ctx.database.save_quote(local_quote_id, quote.clone()).await?;
 
-        interaction.respond(&ctx, |response| {
-            response.embed(|embed| {
-                embed.colour(accent_colour).description(quote.content).author(|author| {
-                    author
-                        .name(format!("{} - Quote {local_quote_id}", slash_user.name))
-                        .icon_url(slash_user.avatar());
-                    match quote.guild_id {
-                        Some(guild_id) => author.url(format!(
-                            "https://discord.com/channels/{guild_id}/{}/{}",
-                            quote.channel_id, quote.id
-                        )),
-                        None => author.url(format!("https://discord.com/channels/{}/{}", quote.channel_id, quote.id))
-                    }
+        interaction
+            .respond(&ctx, |response| {
+                response.embed(|embed| {
+                    embed.colour(accent_colour).description(quote.content).author(|author| {
+                        author
+                            .name(format!("{} - Quote {local_quote_id}", slash_user.name))
+                            .icon_url(slash_user.avatar());
+                        match quote.guild_id {
+                            Some(guild_id) => author.url(format!(
+                                "https://discord.com/channels/{guild_id}/{}/{}",
+                                quote.channel_id, quote.id
+                            )),
+                            None => author.url(format!("https://discord.com/channels/{}/{}", quote.channel_id, quote.id))
+                        }
+                    })
                 })
             })
-        })
-        .await
+            .await
     }
 }

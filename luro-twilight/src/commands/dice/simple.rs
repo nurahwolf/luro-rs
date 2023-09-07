@@ -1,7 +1,7 @@
 use luro_dice::{DiceRoll, RollResult, RollValue};
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
-use std::{fmt::Write, sync::Arc};
+use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
@@ -46,7 +46,7 @@ pub struct Simple {
 
 impl LuroCommandTrait for Simple {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

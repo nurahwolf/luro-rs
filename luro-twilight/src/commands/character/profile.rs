@@ -1,6 +1,6 @@
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
-use std::{fmt::Write, sync::Arc};
+use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     channel::message::component::ButtonStyle,
@@ -21,7 +21,7 @@ pub struct Profile {
 
 impl LuroCommandTrait for Profile {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

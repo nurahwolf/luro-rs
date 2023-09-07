@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -23,10 +21,9 @@ pub enum Blacklist {
 }
 #[async_trait::async_trait]
 
-
 impl LuroCommandTrait for Blacklist {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Arc<Framework<D>>,
+        ctx: Framework<D>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
