@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 use luro_dice::{DiceRoll, RollResult, RollValue};
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -13,18 +15,19 @@ pub struct Roll {
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
     ephemeral: Option<bool>
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for Roll {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl LuroCommandTrait for Roll {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        let result = DiceRoll::roll_inline(&self.dice, false).unwrap_or(RollResult {
+        let data = Self::new(interaction.data.clone())?;
+        let result = DiceRoll::roll_inline(&data.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
-        let mut result_string = if let Some(mut reason) = self.reason {
+        let mut result_string = if let Some(mut reason) = data.reason {
             if !reason.starts_with('\\') {
                 reason = format!("```{reason}```")
             } else {
@@ -52,7 +55,7 @@ impl LuroCommand for Roll {
 
         interaction
             .respond(&ctx, |r| {
-                if self.ephemeral.unwrap_or_default() {
+                if data.ephemeral.unwrap_or_default() {
                     r.ephemeral();
                 }
                 r.content(result_string)

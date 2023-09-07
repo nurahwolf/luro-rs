@@ -38,7 +38,9 @@ async fn main() -> anyhow::Result<()> {
 
     // Create the framework, Initialise tracing for logs based on bot name
     let (framework, mut shards) = Framework::new(config, database_driver, tracing_subscriber).await?;
-    framework.register_new_commands(None, default_global_commands()).await?;
+    framework
+        .register_new_commands(None, default_global_commands().into_values().collect())
+        .await?;
     init_tracing_subscriber(filter, &framework.database.current_user.read().unwrap().name);
 
     // Work on our events

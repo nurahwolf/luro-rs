@@ -1,4 +1,6 @@
-use luro_framework::{command::LuroCommand, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
+use std::sync::Arc;
+
+use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 
@@ -10,13 +12,15 @@ pub struct Remove {
     /// The role to remove
     role: Id<RoleMarker>
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for Remove {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        framework: Framework<D>,
+impl LuroCommandTrait for Remove {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        framework: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+
         let guild_id = interaction.guild_id.unwrap(); // SAFETY: Safe to unwrap as this can only be run in a guild
         let interaction_author = interaction.author_id();
         let mut owner_match = false;
@@ -36,12 +40,12 @@ impl LuroCommand for Remove {
         }
 
         let mut guild_settings = framework.database.get_guild(&guild_id).await?;
-        guild_settings.assignable_role_blacklist.retain(|&x| x != self.role);
+        guild_settings.assignable_role_blacklist.retain(|&x| x != data.role);
         framework.database.save_guild(&guild_id, &guild_settings).await?;
 
         interaction
             .respond(&framework, |r| {
-                r.content(format!("Added role <@&{}> to the guild blacklist!", self.role))
+                r.content(format!("Added role <@&{}> to the guild blacklist!", data.role))
                     .ephemeral()
             })
             .await

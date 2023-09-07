@@ -1,5 +1,6 @@
 use crate::toml::USERDATA_FILE_PATH;
 use anyhow::anyhow;
+use async_trait::async_trait;
 use luro_model::{
     database::drivers::LuroDatabaseDriver,
     guild::LuroGuild,
@@ -20,6 +21,7 @@ use super::{
     QUOTES_FILE_PATH, SFW_HECK_FILE_PATH, SFW_STORIES_FILE_PATH
 };
 
+#[async_trait]
 impl LuroDatabaseDriver for TomlDatabaseDriver {
     async fn add_guild(&self, id: u64, guild: &LuroGuild) -> anyhow::Result<()> {
         let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &id);

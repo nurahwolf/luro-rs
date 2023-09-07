@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use luro_framework::{Context, Framework};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
@@ -7,7 +9,7 @@ use twilight_model::gateway::{
 };
 
 pub async fn ready_listener<D: LuroDatabaseDriver>(
-    framework: Framework<D>,
+    framework: Arc<Framework<D>>,
     ctx: Context,
     event: Box<Ready>
 ) -> anyhow::Result<()> {

@@ -1,6 +1,6 @@
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
-use std::fmt::Write;
+use std::{fmt::Write, sync::Arc};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     channel::message::component::ButtonStyle,
@@ -17,20 +17,21 @@ pub struct Profile {
     /// Fetch the character name from someone else.
     user: Option<Id<UserMarker>>
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for Profile {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl LuroCommandTrait for Profile {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        let user_id = match self.user {
+        let data = Self::new(interaction.data.clone())?;
+        let user_id = match data.user {
             Some(user) => user,
             None => interaction.author_id()
         };
         let user_data = ctx.database.get_user(&user_id).await?;
         let interaction_channel_nsfw = &interaction.clone().channel.unwrap().nsfw;
-        let nsfw = match self.nsfw {
+        let nsfw = match data.nsfw {
             Some(nsfw) => match interaction_channel_nsfw {
                 Some(channel_nsfw) => match !channel_nsfw && nsfw {
                     true => {
@@ -54,7 +55,7 @@ impl LuroCommand for Profile {
                 .await;
         }
 
-        let character = match user_data.characters.get(&self.name) {
+        let character = match user_data.characters.get(&data.name) {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
@@ -63,7 +64,7 @@ impl LuroCommand for Profile {
                     writeln!(characters, "- {character_name}: {}", character.short_description)?
                 }
 
-                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", self.name, characters);
+                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", data.name, characters);
                 return interaction.respond(&ctx, |r| r.content(response).ephemeral()).await;
             }
         };
@@ -78,7 +79,7 @@ impl LuroCommand for Profile {
             writeln!(description, "\n- **NSFW Description:**\n{nsfw_description}")?
 
         }
-        embed.title(format!("Character Profile - {}", self.name));
+        embed.title(format!("Character Profile - {}", data.name));
         embed.description(description);
         embed.author(|a| {
             a.icon_url(user_data.avatar())
@@ -87,7 +88,7 @@ impl LuroCommand for Profile {
 
         let mut prefix_string = String::new();
         for (prefix, character_name) in user_data.character_prefix {
-            if self.name == character_name {
+            if data.name == character_name {
                 writeln!(prefix_string, "- `{prefix}`")?
             }
         }

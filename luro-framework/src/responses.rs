@@ -79,9 +79,9 @@ pub enum SimpleResponse<'a> {
     UnknownCommand(&'a str)
 }
 
-impl<'a> SimpleResponse<'a> {
+impl<'a, 'b> SimpleResponse<'a> {
     /// Convert the response to an embed
-    pub fn embed(&self) -> EmbedBuilder {
+    pub fn embed(self) -> EmbedBuilder {
         match self {
             SimpleResponse::InternalError(error) => internal_error::internal_error(error),
             SimpleResponse::PermissionNotBotStaff() => permission_not_bot_staff::permission_not_bot_staff(),
@@ -93,9 +93,9 @@ impl<'a> SimpleResponse<'a> {
     }
 
     pub async fn respond<D: LuroDatabaseDriver, T: LuroInteraction>(
-        &self,
+        self,
         framework: &Framework<D>,
-        interaction: &T
+        interaction: &'a T
     ) -> anyhow::Result<()> {
         match self {
             SimpleResponse::PermissionNotBotStaff() => privelege_escalation(framework, interaction).await,
@@ -104,8 +104,16 @@ impl<'a> SimpleResponse<'a> {
 
         interaction
             .respond(framework, |response| response.add_embed(self.embed()))
-            .await?;
-        Ok(())
+            .await
+    }
+
+    pub async fn unknown_command<D: LuroDatabaseDriver, T: LuroInteraction>(
+        framework: &Framework<D>,
+        interaction: &'a T
+    ) -> anyhow::Result<()> {
+        let embed = Self::UnknownCommand(interaction.command_name()).embed();
+
+        interaction.respond(framework, |response| response.add_embed(embed)).await
     }
 }
 

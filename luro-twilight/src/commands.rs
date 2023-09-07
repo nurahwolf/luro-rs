@@ -1,16 +1,50 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use anyhow::anyhow;
+use luro_framework::command::LuroCommandBuilder;
 use luro_framework::responses::SimpleResponse;
+use luro_framework::slash_command::LuroCommand;
 use luro_framework::{Framework, InteractionCommand, InteractionComponent, InteractionModal, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::{info, warn};
-use twilight_interactions::command::{ApplicationCommandData, CommandModel};
+use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::application_command::CommandData;
-use twilight_model::application::interaction::InteractionData;
 
+#[cfg(feature = "command-about")]
+mod about;
+#[cfg(feature = "command-base64")]
+mod base64;
+#[cfg(feature = "command-boop")]
+mod boop;
 #[cfg(feature = "command-character")]
 mod character;
+#[cfg(feature = "command-count")]
+mod count;
 #[cfg(feature = "command-dice")]
 mod dice;
+#[cfg(feature = "command-heck")]
+mod heck;
+#[cfg(feature = "command-hello")]
+mod hello;
+#[cfg(feature = "command-info")]
+mod info;
+#[cfg(feature = "command-lewd")]
+mod lewd;
+#[cfg(feature = "command-luro")]
+mod luro;
+#[cfg(feature = "command-marry")]
+mod marry;
+#[cfg(feature = "command-moderator")]
+mod moderator;
+#[cfg(feature = "command-music")]
+mod music;
+#[cfg(feature = "command-owner")]
+mod owner;
+#[cfg(feature = "command-ping")]
+mod ping;
+#[cfg(feature = "command-quote")]
+mod quote;
 #[cfg(feature = "command-roles")]
 mod roles;
 #[cfg(feature = "command-say")]
@@ -22,75 +56,51 @@ mod uwu;
 #[cfg(feature = "command-wordcount")]
 mod wordcount;
 
-pub fn default_global_commands() -> Vec<ApplicationCommandData> {
-    vec![
-        #[cfg(feature = "command-character")]
-        <character::Character as twilight_interactions::command::CreateCommand>::create_command(),
-        #[cfg(feature = "command-dice")]
-        <dice::Dice as twilight_interactions::command::CreateCommand>::create_command(),
-        #[cfg(feature = "command-say")]
-        <say::Say as twilight_interactions::command::CreateCommand>::create_command(),
-        #[cfg(feature = "command-uwu")]
-        <uwu::UwU as twilight_interactions::command::CreateCommand>::create_command(),
-        #[cfg(feature = "command-wordcount")]
-        <wordcount::Wordcount as twilight_interactions::command::CreateCommand>::create_command(),
-    ]
+pub fn default_global_commands<'a, D: LuroDatabaseDriver + 'static>() -> HashMap<&'a str, LuroCommand<D>> {
+    let mut commands = HashMap::new();
+    #[cfg(feature = "command-character")]
+    commands.insert(character::Character::NAME, character::Character::new_command());
+    #[cfg(feature = "command-dice")]
+    commands.insert(dice::Dice::NAME, dice::Dice::new_command());
+    #[cfg(feature = "command-say")]
+    commands.insert(say::Say::NAME, say::Say::new_command());
+    #[cfg(feature = "command-uwu")]
+    commands.insert(uwu::UwU::NAME, uwu::UwU::new_command());
+    #[cfg(feature = "command-wordcount")]
+    commands.insert(wordcount::Wordcount::NAME, wordcount::Wordcount::new_command());
+
+    commands
 }
 
 /// Handle incoming command interaction.
 pub async fn handle_command<D: LuroDatabaseDriver>(
-    framework: Framework<D>,
+    framework: Arc<Framework<D>>,
     interaction: InteractionCommand
 ) -> anyhow::Result<()> {
-    let data = interaction.data.clone();
-    match data.name.as_str() {
-        #[cfg(feature = "command-character")]
-        "character" => {
-            luro_framework::command::LuroCommand::interaction_command(
-                <character::Character as luro_framework::command::LuroCommand>::new(data)?,
-                framework,
-                interaction
-            )
-            .await
-        }
-        #[cfg(feature = "command-dice")]
-        "dice" => {
-            luro_framework::command::LuroCommand::interaction_command(
-                <dice::Dice as luro_framework::command::LuroCommand>::new(data)?,
-                framework,
-                interaction
-            )
-            .await
-        }
-        #[cfg(feature = "command-say")]
-        "say" => {
-            luro_framework::command::LuroCommand::interaction_command(
-                <say::Say as luro_framework::command::LuroCommand>::new(data)?,
-                framework,
-                interaction
-            )
-            .await
-        }
-        #[cfg(feature = "command-wordcount")]
-        "wordcount" => {
-            luro_framework::command::LuroCommand::interaction_command(
-                <wordcount::Wordcount as luro_framework::command::LuroCommand>::new(data)?,
-                framework,
-                interaction
-            )
-            .await
-        }
-        #[cfg(feature = "command-uwu")]
-        "uwu" => {
-            luro_framework::command::LuroCommand::interaction_command(
-                <uwu::UwU as luro_framework::command::LuroCommand>::new(data)?,
-                framework,
-                interaction
-            )
-            .await
-        }
+    info!(
+        "Received command interaction - {} - {}",
+        interaction.author().name,
+        interaction.data.name
+    );
 
-        name => SimpleResponse::UnknownCommand(name).respond(&framework, &interaction).await
+    let command;
+
+    {
+        match framework.global_commands.lock() {
+            Ok(commands) => match commands.get(&interaction.data.name) {
+                Some(cmd) => command = Some(cmd.clone()),
+                None => command = None
+            },
+            Err(why) => {
+                warn!(why = ?why, "Command mutex is poisoned");
+                command = None
+            }
+        };
+    }
+
+    match command {
+        Some(command) => (command.interaction_command)(framework.clone(), interaction).await,
+        None => SimpleResponse::unknown_command(&framework, &interaction).await
     }
 }
 
@@ -99,81 +109,71 @@ pub async fn handle_command<D: LuroDatabaseDriver>(
 /// SAFETY: There is an unwrap here, but the type is always present on MessageComponent
 /// which is the only type this function is called on
 pub async fn handle_component<D: LuroDatabaseDriver>(
-    ctx: Framework<D>,
+    framework: Arc<Framework<D>>,
     interaction: InteractionComponent
 ) -> anyhow::Result<()> {
-    let mut message = interaction.message.clone();
-    let mut original_interaction = interaction.original.clone();
-    let mut new_id = true;
-
-    while new_id {
-        original_interaction = ctx.database.get_interaction(&message.id.to_string()).await?;
-
-        new_id = match original_interaction.message {
-            Some(ref new_message) => {
-                message = new_message.clone();
-                true
-            }
-            None => false
-        }
-    }
-
-    let command = match original_interaction.data {
-        Some(InteractionData::ApplicationCommand(ref data)) => data.clone(),
-        _ => {
-            return Err(anyhow!(
-                "unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}",
-                interaction.data
-            ))
-        }
-    };
-
     info!(
         "Received component interaction - {} - {}",
         interaction.author().name,
         interaction.data.custom_id
     );
 
-    match interaction.data.custom_id.as_str() {
-        #[cfg(feature = "command-character")]
-        "character" => {
-            luro_framework::command::LuroCommand::handle_component(
-                <character::Character as luro_framework::command::LuroCommand>::new(command)?,
-                ctx,
-                interaction
-            )
-            .await
-        }
-        name => {
-            warn!(name = name, "received unknown component");
-            // self.unknown_command_response_named(name).await
-            Ok(())
-        }
+    let command;
+
+    {
+        match framework.global_commands.lock() {
+            Ok(commands) => match commands.get(&interaction.data.custom_id) {
+                Some(cmd) => command = Some(cmd.clone()),
+                None => command = None
+            },
+            Err(why) => {
+                warn!(why = ?why, "Command mutex is poisoned");
+                command = None
+            }
+        };
+    }
+
+    match command {
+        Some(command) => (command.component)(framework.clone(), interaction).await,
+        None => SimpleResponse::unknown_command(&framework, &interaction).await
     }
 }
 
 /// Handle incoming modal interaction
-pub async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
+pub async fn handle_modal<D: LuroDatabaseDriver>(
+    framework: Arc<Framework<D>>,
+    interaction: InteractionModal
+) -> anyhow::Result<()> {
     info!(
-        "Received component interaction - {} - {}",
+        "Received modal interaction - {} - {}",
         interaction.author().name,
         interaction.data.custom_id
     );
 
-    match interaction.data.custom_id.as_str() {
-        #[cfg(feature = "command-character")]
-        "character" => <character::Character as luro_framework::command::LuroCommand>::handle_modal(ctx, interaction).await,
-        name => {
-            warn!(name = name, "received unknown component");
-            // ctx.unknown_command_response_named(name).await
-            Ok(())
-        }
+    let command;
+
+    {
+        match framework.global_commands.lock() {
+            Ok(commands) => match commands.get(&interaction.data.custom_id) {
+                Some(cmd) => command = Some(cmd.clone()),
+                None => command = None
+            },
+            Err(why) => {
+                warn!(why = ?why, "Command mutex is poisoned");
+                command = None
+            }
+        };
+    }
+
+    match command {
+        Some(command) => (command.modal)(framework.clone(), interaction).await,
+        None => SimpleResponse::unknown_command(&framework, &interaction).await
     }
 }
 
 /// Handle incoming autocomplete
 pub async fn handle_autocomplete<D: LuroDatabaseDriver>(
-    ctx: Framework<D>,
+    ctx: Arc<Framework<D>>,
     interaction: InteractionCommand
 ) -> anyhow::Result<()> {
     Autocomplete::new(*interaction.data.clone())?.run(ctx, interaction).await
@@ -197,7 +197,7 @@ enum Autocomplete {
 }
 
 impl Autocomplete {
-    async fn run<D: LuroDatabaseDriver>(self, ctx: Framework<D>, interaction: InteractionCommand) -> anyhow::Result<()> {
+    async fn run<D: LuroDatabaseDriver>(self, ctx: Arc<Framework<D>>, interaction: InteractionCommand) -> anyhow::Result<()> {
         match self {
             #[cfg(feature = "command-character")]
             Autocomplete::Create(cmd) | Autocomplete::Icon(cmd) | Autocomplete::Send(cmd) | Autocomplete::Proxy(cmd) => {

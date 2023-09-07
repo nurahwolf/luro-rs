@@ -3,13 +3,12 @@ use std::collections::HashMap;
 use anyhow::anyhow;
 use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
-use twilight_interactions::command::ApplicationCommandData;
 use twilight_model::{
     application::command::Command,
     id::{marker::GuildMarker, Id}
 };
 
-use crate::Framework;
+use crate::{slash_command::LuroCommand, Framework};
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     /// Register the commands present in the framework
@@ -17,8 +16,8 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         Ok(match guild_id {
             Some(guild_id) => {
                 let commands: Vec<Command> = match self.guild_commands.lock() {
-                    Ok(guild_commands) => match guild_commands.get(&guild_id).cloned().map(|commands| commands.into_values()) {
-                        Some(commands) => commands.map(|x| x.into()).collect(),
+                    Ok(guild_commands) => match guild_commands.get(&guild_id).map(|commands| commands.values()) {
+                        Some(commands) => commands.map(|x| ((x.create)()).into()).collect(),
                         None => vec![]
                     },
                     Err(why) => return Err(anyhow!("Guild Commands mutex is poistioned: {why}"))
@@ -33,7 +32,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             }
             None => {
                 let commands: Vec<Command> = match self.global_commands.lock() {
-                    Ok(global_commands) => global_commands.values().cloned().map(|x| x.into()).collect(),
+                    Ok(global_commands) => global_commands.values().map(|x| ((x.create)()).into()).collect(),
                     Err(why) => return Err(anyhow!("Guild Commands mutex is poistioned: {why}"))
                 };
                 info!("Registering {} global commands!", commands.len());
@@ -48,18 +47,43 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         })
     }
 
+    /// Register a single command in the framework, does NOT register them discord's side. Call `register_commands` for that!
+    pub async fn register_new_command(
+        &self,
+        guild_id: Option<Id<GuildMarker>>,
+        new_commands: LuroCommand<D>
+    ) -> anyhow::Result<&Framework<D>> {
+        match guild_id {
+            Some(guild_id) => match self.guild_commands.lock() {
+                Ok(mut guild_commands) => {
+                    let mut commands = HashMap::new();
+                    commands.insert(new_commands.name.to_string(), new_commands);
+                    guild_commands.insert(guild_id, commands);
+                }
+                Err(why) => return Err(anyhow!("Guild Commands mutex is poistioned: {why}"))
+            },
+            None => match self.global_commands.lock() {
+                Ok(mut guild_commands) => {
+                    guild_commands.insert(new_commands.name.to_string(), new_commands);
+                }
+                Err(why) => return Err(anyhow!("Guild Commands mutex is poistioned: {why}"))
+            }
+        };
+        Ok(self)
+    }
+
     /// Register new commands in the framework, does NOT register them discord's side. Call `register_commands` for that!
     pub async fn register_new_commands(
         &self,
         guild_id: Option<Id<GuildMarker>>,
-        new_commands: Vec<ApplicationCommandData>
-    ) -> anyhow::Result<&Self> {
+        new_commands: Vec<LuroCommand<D>>
+    ) -> anyhow::Result<&Framework<D>> {
         match guild_id {
             Some(guild_id) => match self.guild_commands.lock() {
                 Ok(mut guild_commands) => {
                     let mut commands = HashMap::new();
                     for command in new_commands {
-                        commands.insert(command.name.clone(), command);
+                        commands.insert(command.name.to_string(), command);
                     }
                     guild_commands.insert(guild_id, commands);
                 }
@@ -68,7 +92,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             None => match self.global_commands.lock() {
                 Ok(mut guild_commands) => {
                     for command in new_commands {
-                        guild_commands.insert(command.name.clone(), command);
+                        guild_commands.insert(command.name.to_string(), command);
                     }
                 }
                 Err(why) => return Err(anyhow!("Guild Commands mutex is poistioned: {why}"))

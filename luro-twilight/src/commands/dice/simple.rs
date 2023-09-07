@@ -1,7 +1,7 @@
 use luro_dice::{DiceRoll, RollResult, RollValue};
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
-use std::fmt::Write;
+use std::{fmt::Write, sync::Arc};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
@@ -42,44 +42,45 @@ pub struct Simple {
     #[command(min_value = 1, max_value = 1000)]
     divide: Option<i64>
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for Simple {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl LuroCommandTrait for Simple {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        let mut roll = format!("{}d{}", self.dice, self.sides);
+        let data = Self::new(interaction.data.clone())?;
+        let mut roll = format!("{}d{}", data.dice, data.sides);
 
-        if let Some(operation) = self.keep_highest {
+        if let Some(operation) = data.keep_highest {
             write!(roll, "kh{operation}")?
         }
 
-        if let Some(operation) = self.keep_lowest {
+        if let Some(operation) = data.keep_lowest {
             write!(roll, "kl{operation}")?
         }
 
-        if let Some(operation) = self.drop_highest {
+        if let Some(operation) = data.drop_highest {
             write!(roll, "dh{operation}")?
         }
 
-        if let Some(operation) = self.drop_lowest {
+        if let Some(operation) = data.drop_lowest {
             write!(roll, "dl{operation}")?
         }
 
-        if let Some(operation) = self.add {
+        if let Some(operation) = data.add {
             write!(roll, "+{operation}")?
         }
 
-        if let Some(operation) = self.take {
+        if let Some(operation) = data.take {
             write!(roll, "-{operation}")?
         }
 
-        if let Some(operation) = self.multiply {
+        if let Some(operation) = data.multiply {
             write!(roll, "*{operation}")?
         }
 
-        if let Some(operation) = self.divide {
+        if let Some(operation) = data.divide {
             write!(roll, "/{operation}")?
         }
 
@@ -87,7 +88,7 @@ impl LuroCommand for Simple {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
-        let mut result_string = if let Some(mut reason) = self.reason {
+        let mut result_string = if let Some(mut reason) = data.reason {
             if !reason.starts_with('\\') {
                 reason = format!("```{reason}```")
             } else {
@@ -115,7 +116,7 @@ impl LuroCommand for Simple {
 
         interaction
             .respond(&ctx, |r| {
-                if self.ephemeral.unwrap_or_default() {
+                if data.ephemeral.unwrap_or_default() {
                     r.ephemeral();
                 }
                 r.content(result_string)

@@ -28,6 +28,7 @@ twilight-model.workspace = true                                 #framework
 twilight-interactions.path = "../twilight-interactions"         # command
 
 rand = { workspace = true, optional = true } # response/permission_not_bot_staff
+async-trait = "0.1.73"
 
 [features]
 cache-memory = ["dep:twilight-cache-inmemory"]

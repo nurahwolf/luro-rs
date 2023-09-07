@@ -1,4 +1,7 @@
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{channel::message::component::TextInputStyle, http::interaction::InteractionResponseType};
@@ -10,15 +13,16 @@ pub struct Create {
     pub name: String
 }
 
-impl LuroCommand for Create {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+#[async_trait]
+impl LuroCommandTrait for Create {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let user_id = interaction.author_id();
         let user_data = ctx.database.get_user(&user_id).await?;
-        let character = user_data.characters.get(&self.name);
+        let character = user_data.characters.get(&data.name);
 
         // Create a model
         interaction
@@ -32,7 +36,7 @@ impl LuroCommand for Create {
                                         .label("Character Name")
                                         .max_length(40)
                                         .placeholder("Nurah")
-                                        .value(&self.name)
+                                        .value(&data.name)
                                         .style(TextInputStyle::Short)
                                 })
                             })

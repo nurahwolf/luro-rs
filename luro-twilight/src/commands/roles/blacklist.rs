@@ -1,4 +1,6 @@
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand};
+use std::sync::Arc;
+
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use luro_model::database::drivers::LuroDatabaseDriver;
@@ -19,16 +21,17 @@ pub enum Blacklist {
     #[command(name = "remove")]
     Remove(Remove)
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for Blacklist {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl LuroCommandTrait for Blacklist {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        match self {
-            Self::Add(command) => command.interaction_command(ctx, interaction).await,
-            Self::Remove(command) => command.interaction_command(ctx, interaction).await
+        let data = Self::new(interaction.data.clone())?;
+        match data {
+            Self::Add(_command) => add::Add::handle_interaction(ctx, interaction).await,
+            Self::Remove(_command) => remove::Remove::handle_interaction(ctx, interaction).await
         }
     }
 }

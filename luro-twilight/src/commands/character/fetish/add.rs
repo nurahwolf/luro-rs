@@ -1,8 +1,9 @@
-use luro_framework::command::LuroCommand;
+use luro_framework::command::LuroCommandTrait;
 use luro_framework::{Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use luro_model::user::character::{Fetish, FetishCategory, FetishList};
 use std::fmt::Write;
+use std::sync::Arc;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
@@ -15,17 +16,19 @@ pub struct Add {
     /// Description of that fetish
     description: String
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for Add {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl LuroCommandTrait for Add {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+
         let mut embed = interaction.default_embed(&ctx).await;
         let user_id = interaction.author_id();
         let mut user_data = ctx.database.get_user(&user_id).await?;
-        embed.title(format!("Character Profile - {}", self.name));
+        embed.title(format!("Character Profile - {}", data.name));
         embed.author(|a| {
             a.icon_url(user_data.avatar())
                 .name(format!("Profile by {}", user_data.name()))
@@ -40,14 +43,14 @@ impl LuroCommand for Add {
                 .await;
         }
 
-        let character = match user_data.characters.get_mut(&self.name) {
+        let character = match user_data.characters.get_mut(&data.name) {
             Some(character) => {
                 let test = character.fetishes.len() + 1;
                 character.fetishes.insert(
                     test,
                     Fetish {
-                        category: self.fetish,
-                        description: self.description,
+                        category: data.fetish,
+                        description: data.description,
                         list: FetishList::Custom
                     }
                 );
@@ -62,7 +65,7 @@ impl LuroCommand for Add {
 
                 let response = format!(
                     "I'm afraid that you have no characters with the name `{}`! You have the following characters:\n{}",
-                    self.name, characters
+                    data.name, characters
                 );
                 return interaction.respond(&ctx, |r| r.content(response).ephemeral()).await;
             }

@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use twilight_model::application::interaction::Interaction;
 
 #[cfg(feature = "toml-driver")]
@@ -13,7 +14,8 @@ use crate::{
 };
 
 /// This trait enforces all implementation required to be compatible with [LuroDatabase].
-pub trait LuroDatabaseDriver: Clone {
+#[async_trait]
+pub trait LuroDatabaseDriver: Clone + Sync + Send {
     async fn add_guild(&self, id: u64, guild: &LuroGuild) -> anyhow::Result<()>;
     async fn add_heck(&self, heck: &Heck, nsfw: bool) -> anyhow::Result<()>;
     async fn add_stories(&self, stories: &Stories, nsfw: bool) -> anyhow::Result<()>;

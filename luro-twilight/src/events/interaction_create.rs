@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use luro_framework::{Framework, InteractionCommand, InteractionComponent, InteractionContext, InteractionModal};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::{error, warn};
@@ -6,7 +8,7 @@ use twilight_model::application::interaction::{InteractionData, InteractionType}
 use crate::commands::{handle_autocomplete, handle_command, handle_component, handle_modal};
 
 pub async fn interaction_create_listener<D: LuroDatabaseDriver>(
-    framework: Framework<D>,
+    framework: Arc<Framework<D>>,
     interaction: InteractionContext
 ) -> anyhow::Result<()> {
     let data = match interaction.data.clone() {

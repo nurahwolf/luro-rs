@@ -1,4 +1,6 @@
-use luro_framework::{command::LuroCommand, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
+use std::sync::Arc;
+
+use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -26,13 +28,14 @@ pub struct Menu {
     /// The button's label. Defaults to the role name
     bait_label: Option<String>
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for Menu {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl LuroCommandTrait for Menu {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let interaction_author = interaction.author_id();
         let luro_user = ctx.database.get_user(&interaction_author).await?;
 
@@ -51,7 +54,7 @@ impl LuroCommand for Menu {
         }
 
         // SAFETY: This command can only be used in guilds
-        let add_buttons = self.rules.is_some() || self.adult.is_some() || self.bait.is_some();
+        let add_buttons = data.rules.is_some() || data.adult.is_some() || data.bait.is_some();
 
         let accent_colour = interaction.accent_colour(&ctx).await;
         interaction
@@ -61,11 +64,11 @@ impl LuroCommand for Menu {
                         embed
                             .colour(accent_colour)
                             .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()));
-                        match self.description {
+                        match data.description {
                             Some(description) => embed.description(description),
                             None => embed.description("Select the roles you want")
                         };
-                        if let Some(title) = self.title {
+                        if let Some(title) = data.title {
                             embed.title(title);
                         }
                         embed
@@ -82,33 +85,33 @@ impl LuroCommand for Menu {
                 if add_buttons {
                     response.components(|components| {
                         components.action_row(|row| {
-                            if let Some(role) = self.rules {
+                            if let Some(role) = data.rules {
                                 let role = ctx.cache.role(role).unwrap().clone();
                                 row.button(|button| {
                                     button.custom_id("rules-button").style(ButtonStyle::Primary);
-                                    match self.rules_label {
+                                    match data.rules_label {
                                         Some(label) => button.label(label),
                                         None => button.label(role.name.clone())
                                     };
                                     button
                                 });
                             }
-                            if let Some(role) = self.adult {
+                            if let Some(role) = data.adult {
                                 let role = ctx.cache.role(role).unwrap().clone();
                                 row.button(|button| {
                                     button.custom_id("adult-button").style(ButtonStyle::Primary);
-                                    match self.adult_label {
+                                    match data.adult_label {
                                         Some(label) => button.label(label),
                                         None => button.label(role.name.clone())
                                     };
                                     button
                                 });
                             }
-                            if let Some(role) = self.bait {
+                            if let Some(role) = data.bait {
                                 let role = ctx.cache.role(role).unwrap().clone();
                                 row.button(|button| {
                                     button.custom_id("bait-button").style(ButtonStyle::Danger);
-                                    match self.bait_label {
+                                    match data.bait_label {
                                         Some(label) => button.label(label),
                                         None => button.label(role.name.clone())
                                     };

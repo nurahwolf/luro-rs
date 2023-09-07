@@ -42,6 +42,7 @@ tracing-subscriber = { workspace = true } # main
 twilight-model = { workspace = true }                   # event_listener
 twilight-gateway.workspace = true                       # main
 twilight-interactions.path = "../twilight-interactions" # commands
+async-trait = "0.1.73"
 
 [features]
 # Main Features
@@ -57,6 +58,7 @@ commands = [
 ]
 
 # Commands
+command-about = []
 command-character = []
 command-dice = ["dep:luro-dice"]
 command-roles = []

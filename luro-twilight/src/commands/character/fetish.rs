@@ -1,4 +1,6 @@
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand};
+use std::sync::Arc;
+
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -15,11 +17,11 @@ pub enum Fetish {
 impl Fetish {
     pub async fn interaction_command<D: LuroDatabaseDriver>(
         self,
-        ctx: Framework<D>,
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         match self {
-            Self::Add(command) => command.interaction_command(ctx, interaction).await
+            Self::Add(_) => add::Add::handle_interaction(ctx, interaction).await
         }
     }
 }

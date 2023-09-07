@@ -1,9 +1,16 @@
+use std::sync::Arc;
+
+use crate::commands::anyhow;
 use anyhow::Context;
+use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, InteractionComponent, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, InteractionComponent, LuroInteraction};
 use tracing::{debug, info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::id::{marker::RoleMarker, Id};
+use twilight_model::{
+    application::interaction::InteractionData,
+    id::{marker::RoleMarker, Id}
+};
 
 use luro_model::{database::drivers::LuroDatabaseDriver, COLOUR_DANGER};
 
@@ -21,23 +28,50 @@ pub enum RoleCommands {
     Blacklist(Blacklist)
 }
 
-impl LuroCommand for RoleCommands {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+#[async_trait]
+impl LuroCommandTrait for RoleCommands {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        match self {
-            Self::Menu(command) => command.interaction_command(ctx, interaction).await,
-            Self::Blacklist(command) => command.interaction_command(ctx, interaction).await
+        let data = Self::new(interaction.data.clone())?;
+        match data {
+            Self::Menu(_command) => menu::Menu::handle_interaction(ctx, interaction).await,
+            Self::Blacklist(_command) => blacklist::Blacklist::handle_interaction(ctx, interaction).await
         }
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+        ctx: Arc<Framework<D>>,
         interaction: InteractionComponent
     ) -> anyhow::Result<()> {
+        let mut message = interaction.message.clone();
+        let mut original_interaction = interaction.original.clone();
+        let mut new_id = true;
+
+        while new_id {
+            original_interaction = ctx.database.get_interaction(&message.id.to_string()).await?;
+
+            new_id = match original_interaction.message {
+                Some(ref new_message) => {
+                    message = new_message.clone();
+                    true
+                }
+                None => false
+            }
+        }
+
+        let command = match original_interaction.data {
+            Some(InteractionData::ApplicationCommand(ref data)) => data.clone(),
+            _ => {
+                return Err(anyhow!(
+                    "unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}",
+                    interaction.data
+                ))
+            }
+        };
+
+        let data = Self::new(command)?;
         let raw_selected_roles: Vec<Id<RoleMarker>> = interaction
             .data
             .values
@@ -130,7 +164,7 @@ impl LuroCommand for RoleCommands {
             }
         };
 
-        if let Self::Menu(ref command) = self && &interaction.data.custom_id == "rules-button" {
+        if let Self::Menu(ref command) = data && &interaction.data.custom_id == "rules-button" {
             roles_to_remove.drain(..);
             roles_to_add.push(command.rules.unwrap());
             if let Some(adult_role) = command.adult {
@@ -142,7 +176,7 @@ impl LuroCommand for RoleCommands {
             }
         }
 
-        if let Self::Menu(ref command) = self && &interaction.data.custom_id == "adult-button" {
+        if let Self::Menu(ref command) = data && &interaction.data.custom_id == "adult-button" {
             roles_to_remove.drain(..);
             roles_to_add.push(command.adult.unwrap());
             if let Some(rules) = command.rules {
@@ -154,7 +188,7 @@ impl LuroCommand for RoleCommands {
             }
         }
 
-        if let Self::Menu(ref command) = self && &interaction.data.custom_id == "bait-button" {
+        if let Self::Menu(ref command) = data && &interaction.data.custom_id == "bait-button" {
             roles_to_remove.drain(..);
             roles_to_add.push(command.bait.unwrap());
         }
