@@ -6,10 +6,10 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use crate::{
     interaction::LuroSlash,
     interactions::heck::{format_heck, get_heck},
-    luro_command::LuroCommand
+    luro_command::LuroCommand,
 };
 
-#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq,)]
 #[command(name = "someone", desc = "Heck a user", dm_permission = true)]
 pub struct HeckSomeoneCommand {
     /// The user to heck
@@ -17,24 +17,28 @@ pub struct HeckSomeoneCommand {
     /// Get a global heck, or a heck that is specific to this server
     pub global: bool,
     /// Get a specific heck
-    pub id: Option<i64>,
+    pub id: Option<i64,>,
     /// Should the heck be sent as plaintext? (Without an embed)
-    pub plaintext: Option<bool>
+    pub plaintext: Option<bool,>,
 }
 
 impl LuroCommand for HeckSomeoneCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
         // Is the channel the interaction called in NSFW?
         let interaction = &ctx.interaction;
-        let nsfw = interaction.channel.as_ref().unwrap().nsfw.unwrap_or(false);
+        let nsfw = interaction
+            .channel
+            .as_ref()
+            .map(|x| x.nsfw.unwrap_or_default(),)
+            .unwrap_or_default();
 
         // Attempt to get a heck
-        let (heck, heck_id) = get_heck(&ctx, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
+        let (heck, heck_id,) = get_heck(&ctx, self.id, ctx.interaction.guild_id, self.global, nsfw,).await?;
 
         debug!("attempting to format the returned heck");
-        let formatted_heck = format_heck(&heck, interaction.author().as_ref().unwrap(), &self.user.resolved).await;
+        let formatted_heck = format_heck(&heck, interaction.author().as_ref().unwrap(), &self.user.resolved,).await;
 
-        let luro_user = ctx.framework.database.get_user(&heck.author_id).await?;
+        let luro_user = ctx.framework.database.get_user(&heck.author_id,).await?;
 
         // Create our response, depending on if the user wants a plaintext heck or not
         if let Some(plaintext) = self.plaintext && plaintext {
