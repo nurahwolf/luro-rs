@@ -50,7 +50,11 @@ impl LuroCommand for RoleCommands {
 
         let mut embed = ctx.default_embed().await;
         let guild = ctx.framework.database.get_guild(&guild_id).await?;
-        let mut user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
+        let mut user = ctx
+            .framework
+            .database
+            .get_user(&ctx.interaction.author_id().unwrap(), false)
+            .await?;
         let user_roles = guild.user_roles(&user);
         let user_highest_role = match guild.user_highest_role(&user) {
             Some(role) => role,
@@ -222,7 +226,7 @@ pub struct Menu {
 impl LuroCommand for Menu {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author_id().unwrap();
-        let luro_user = ctx.framework.database.get_user(&interaction_author).await?;
+        let luro_user = ctx.framework.database.get_user(&interaction_author, false).await?;
 
         let mut owner_match = false;
 

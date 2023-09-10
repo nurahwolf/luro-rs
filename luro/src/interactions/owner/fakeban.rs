@@ -43,7 +43,7 @@ impl LuroCommand for FakeBan {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction = &ctx.interaction;
         let moderator = ctx.get_interaction_author(interaction).await?;
-        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
+        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id, false).await?;
         let mut response = ctx.acknowledge_interaction(false).await?;
 
         let guild_id = interaction.guild_id.unwrap();

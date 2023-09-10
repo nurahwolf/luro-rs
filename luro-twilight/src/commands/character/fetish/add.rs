@@ -27,7 +27,7 @@ impl LuroCommandTrait for Add {
 
         let mut embed = interaction.default_embed(&ctx).await;
         let user_id = interaction.author_id();
-        let mut user_data = ctx.database.get_user(&user_id).await?;
+        let mut user_data = ctx.database.get_user(&user_id, false).await?;
         embed.title(format!("Character Profile - {}", data.name));
         embed.author(|a| {
             a.icon_url(user_data.avatar())

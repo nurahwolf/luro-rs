@@ -35,7 +35,7 @@ impl LuroCommandTrait for Menu {
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
         let interaction_author = interaction.author_id();
-        let luro_user = ctx.database.get_user(&interaction_author).await?;
+        let luro_user = ctx.database.get_user(&interaction_author, false).await?;
 
         let mut owner_match = false;
 

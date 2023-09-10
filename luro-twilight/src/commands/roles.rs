@@ -2,7 +2,10 @@ use crate::commands::anyhow;
 use anyhow::Context;
 use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
-use luro_framework::{command::{LuroCommandTrait, LuroCommandBuilder}, Framework, InteractionCommand, InteractionComponent, LuroInteraction};
+use luro_framework::{
+    command::{LuroCommandBuilder, LuroCommandTrait},
+    Framework, InteractionCommand, InteractionComponent, LuroInteraction
+};
 use tracing::{debug, info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -27,7 +30,6 @@ pub enum RoleCommands {
 }
 
 impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for RoleCommands {}
-
 
 #[async_trait]
 impl LuroCommandTrait for RoleCommands {
@@ -90,7 +92,7 @@ impl LuroCommandTrait for RoleCommands {
 
         let mut embed = interaction.default_embed(&ctx).await;
         let guild = ctx.database.get_guild(&guild_id).await?;
-        let mut user = ctx.database.get_user(&interaction.author_id()).await?;
+        let mut user = ctx.database.get_user(&interaction.author_id(), false).await?;
         let user_roles = guild.user_roles(&user);
         let user_highest_role = match guild.user_highest_role(&user) {
             Some(role) => role,

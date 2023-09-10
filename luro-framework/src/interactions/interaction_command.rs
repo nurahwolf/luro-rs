@@ -147,7 +147,7 @@ impl LuroInteraction for InteractionCommand {
 
     /// Get and return useful information about the interaction author
     async fn get_interaction_author<D: LuroDatabaseDriver>(&self, ctx: &Framework<D>) -> anyhow::Result<LuroUser> {
-        ctx.database.get_user(&self.author_id()).await
+        ctx.database.get_user(&self.author_id(), false).await
     }
 
     /// Get a specified user, else fall back to the interaction author
@@ -158,7 +158,7 @@ impl LuroInteraction for InteractionCommand {
         specified_user: Option<&ResolvedUser>
     ) -> anyhow::Result<LuroUser> {
         match specified_user {
-            Some(user_defined) => ctx.database.get_user(&user_defined.resolved.id).await,
+            Some(user_defined) => ctx.database.get_user(&user_defined.resolved.id, false).await,
             None => self.get_interaction_author(ctx).await
         }
     }

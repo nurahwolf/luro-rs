@@ -1,5 +1,8 @@
 use async_trait::async_trait;
-use luro_framework::{command::{LuroCommandTrait, LuroCommandBuilder}, Framework, InteractionCommand};
+use luro_framework::{
+    command::{LuroCommandBuilder, LuroCommandTrait},
+    Framework, InteractionCommand
+};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 

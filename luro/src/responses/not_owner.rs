@@ -72,7 +72,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     ) -> anyhow::Result<()> {
         let command = command_name.into();
         {
-            let mut user_data = self.framework.database.get_user(user_id).await?;
+            let mut user_data = self.framework.database.get_user(user_id, false).await?;
             user_data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::PrivilegeEscalation],
                 guild_id: *guild_id,

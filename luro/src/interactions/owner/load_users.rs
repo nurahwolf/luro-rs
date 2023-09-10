@@ -80,7 +80,7 @@ async fn load_disk<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result<
             Some(entry) => match entry.file_name().into_string() {
                 Ok(file) => {
                     info!("Name: {file}");
-                    match ctx.framework.database.get_user(&Id::new(file.parse()?)).await {
+                    match ctx.framework.database.get_user(&Id::new(file.parse()?), false).await {
                         Ok(_) => loaded += 1,
                         Err(_) => errors += 1
                     }

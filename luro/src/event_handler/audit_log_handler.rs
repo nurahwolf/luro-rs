@@ -20,10 +20,10 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 return Ok(());
             }
         };
-        let mut punished_user = self.database.get_user(&punished_user_id).await?;
+        let mut punished_user = self.database.get_user(&punished_user_id, false).await?;
         let mut moderator = self
             .database
-            .get_user(&event.user_id.context("No user ID for the ban author")?)
+            .get_user(&event.user_id.context("No user ID for the ban author")?, false)
             .await?;
         // Make sure this interaction was a guild
         let guild_id = match event.guild_id {

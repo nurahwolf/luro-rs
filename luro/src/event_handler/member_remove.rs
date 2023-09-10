@@ -10,7 +10,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn member_remove_listener(&self, event: MemberRemove) -> anyhow::Result<()> {
         info!("Member {} removed / left from guild {}", event.user.id, event.guild_id);
 
-        let mut user = self.database.get_user(&event.user.id).await?;
+        let mut user = self.database.get_user(&event.user.id, false).await?;
         match user.guilds.get_mut(&event.guild_id) {
             Some(member) => {
                 let start = SystemTime::now();

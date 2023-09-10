@@ -39,7 +39,7 @@ impl LuroCommandTrait for Get {
                     .await
             }
         };
-        let user = ctx.database.get_user(&quote.author).await?;
+        let user = ctx.database.get_user(&quote.author, false).await?;
 
         if data.puppet.unwrap_or_default() {
             let webhook = ctx

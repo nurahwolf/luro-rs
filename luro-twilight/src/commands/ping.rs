@@ -3,7 +3,10 @@ use std::time::Instant;
 
 use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
-use luro_framework::{command::{LuroCommandTrait, LuroCommandBuilder}, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{
+    command::{LuroCommandBuilder, LuroCommandTrait},
+    Framework, InteractionCommand, LuroInteraction
+};
 use luro_model::response::LuroResponse;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -14,7 +17,6 @@ use luro_model::database::drivers::LuroDatabaseDriver;
 pub struct Ping {}
 
 impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Ping {}
-
 
 #[async_trait]
 impl LuroCommandTrait for Ping {

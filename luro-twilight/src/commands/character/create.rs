@@ -19,7 +19,7 @@ impl LuroCommandTrait for Create {
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
         let user_id = interaction.author_id();
-        let user_data = ctx.database.get_user(&user_id).await?;
+        let user_data = ctx.database.get_user(&user_id, false).await?;
         let character = user_data.characters.get(&data.name);
 
         // Create a model

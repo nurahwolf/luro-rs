@@ -1,14 +1,14 @@
 use async_trait::async_trait;
+use luro_framework::command::{LuroCommandBuilder, LuroCommandTrait};
 use luro_framework::responses::SimpleResponse;
-use luro_framework::{Framework, InteractionCommand, LuroInteraction, InteractionComponent};
-use luro_framework::command::{LuroCommandTrait, LuroCommandBuilder};
+use luro_framework::{Framework, InteractionCommand, InteractionComponent, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_model::application::interaction::InteractionData;
 
 use std::fmt::Write;
 use std::time::SystemTime;
 
-use anyhow::{Context, Error, anyhow};
+use anyhow::{anyhow, Context, Error};
 
 use luro_builder::embed::EmbedBuilder;
 use luro_model::user::marriages::UserMarriages;
@@ -102,7 +102,6 @@ pub enum Marry {
 
 impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Marry {}
 
-
 #[async_trait]
 impl LuroCommandTrait for Marry {
     async fn handle_interaction<D: LuroDatabaseDriver>(
@@ -127,17 +126,24 @@ impl LuroCommandTrait for Marry {
         let original_interaction = ctx.database.get_interaction(&interaction.message.id.to_string()).await?;
         let data = match original_interaction.data.unwrap() {
             InteractionData::ApplicationCommand(data) => Self::new(data)?,
-            _ => return SimpleResponse::InternalError(&anyhow!("No command data!")).respond(&ctx, &interaction).await
+            _ => {
+                return SimpleResponse::InternalError(&anyhow!("No command data!"))
+                    .respond(&ctx, &interaction)
+                    .await
+            }
         };
 
-
-        let mut proposer = ctx.database.get_user(&message.author.id).await?;
+        let mut proposer = ctx.database.get_user(&message.author.id, false).await?;
         let (mut proposee, reason) = match data {
             Self::Someone(command) => (
-                ctx.database.get_user(&command.marry.resolved.id).await?,
+                ctx.database.get_user(&command.marry.resolved.id, false).await?,
                 command.reason
             ),
-            Self::Marriages(_) => return SimpleResponse::InternalError(&anyhow!("No command data!")).respond(&ctx, &interaction).await
+            Self::Marriages(_) => {
+                return SimpleResponse::InternalError(&anyhow!("No command data!"))
+                    .respond(&ctx, &interaction)
+                    .await
+            }
         };
 
         match interaction_author == proposee.id {
@@ -152,7 +158,7 @@ impl LuroCommandTrait for Marry {
             true => {
                 if &interaction.data.custom_id == "marry-deny" {
                     return interaction
-                        .respond(&ctx,|response| {
+                        .respond(&ctx, |response| {
                             response
                                 .content(format!(
                                     "It looks like <@{}> will never know what true love is like...",
@@ -192,13 +198,14 @@ impl LuroCommandTrait for Marry {
                 ctx.database.save_user(&proposer.id, &proposer).await?;
                 ctx.database.save_user(&proposee.id, &proposee).await?;
 
-                interaction.respond(&ctx,|response| {
-                    response
-                        .content(format!("Congratulations <@{}> & <@{}>!!!", &proposer.id, &proposee.id))
-                        .components(|c| c)
-                        .update()
-                })
-                .await
+                interaction
+                    .respond(&ctx, |response| {
+                        response
+                            .content(format!("Congratulations <@{}> & <@{}>!!!", &proposer.id, &proposee.id))
+                            .components(|c| c)
+                            .update()
+                    })
+                    .await
             }
         }
     }
@@ -231,7 +238,7 @@ impl LuroCommandTrait for Marriages {
             .colour(interaction.accent_colour(&ctx).await);
 
         for (user, marriage) in luro_user.marriages.iter() {
-            marriages.push((ctx.database.get_user(user).await?, marriage));
+            marriages.push((ctx.database.get_user(user, false).await?, marriage));
         }
 
         match marriages.is_empty() {
@@ -257,7 +264,7 @@ impl LuroCommandTrait for Marriages {
             }
         };
 
-        interaction.respond(&ctx,|r| r.add_embed(embed)).await
+        interaction.respond(&ctx, |r| r.add_embed(embed)).await
     }
 }
 
@@ -278,7 +285,7 @@ impl LuroCommandTrait for Someone {
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
 
-        let luro_user = ctx.database.get_user(&interaction.author_id()).await?;
+        let luro_user = ctx.database.get_user(&interaction.author_id(), false).await?;
         let mut embed = EmbedBuilder::default();
         embed
             .author(|author| {
@@ -303,12 +310,13 @@ impl LuroCommandTrait for Someone {
             embed.create_field("Their Reason", &reason, true);
         }
 
-        interaction.respond(&ctx, |r| {
-            r.add_embed(embed)
-                .content(format!("<@{}>", &data.marry.resolved.id))
-                .add_components(buttons())
-        })
-        .await
+        interaction
+            .respond(&ctx, |r| {
+                r.add_embed(embed)
+                    .content(format!("<@{}>", &data.marry.resolved.id))
+                    .add_components(buttons())
+            })
+            .await
     }
 }
 

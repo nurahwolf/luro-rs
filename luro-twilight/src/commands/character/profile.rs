@@ -29,7 +29,7 @@ impl LuroCommandTrait for Profile {
             Some(user) => user,
             None => interaction.author_id()
         };
-        let user_data = ctx.database.get_user(&user_id).await?;
+        let user_data = ctx.database.get_user(&user_id, false).await?;
         let interaction_channel_nsfw = &interaction.clone().channel.unwrap().nsfw;
         let nsfw = match data.nsfw {
             Some(nsfw) => match interaction_channel_nsfw {

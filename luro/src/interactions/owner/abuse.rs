@@ -47,7 +47,7 @@ impl LuroCommand for AbuseCommand {
             }
         };
 
-        let luro_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
+        let luro_user = ctx.framework.database.get_user(&self.user.resolved.id, false).await?;
 
         let mut embed = EmbedBuilder::default();
         embed

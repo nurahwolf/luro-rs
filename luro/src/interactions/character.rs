@@ -55,7 +55,7 @@ impl LuroCommand for Character {
             .author_id()
             .context("Expected to find the user running this command")?;
         let nsfw = ctx.interaction.clone().channel.unwrap().nsfw.unwrap_or_default();
-        let mut user_data = ctx.framework.database.get_user(&user_id).await?;
+        let mut user_data = ctx.framework.database.get_user(&user_id, false).await?;
         let character_name = ctx.parse_modal_field_required(&data, "character-name")?;
         let short_description = ctx.parse_modal_field_required(&data, "character-short-description")?;
         let description = ctx.parse_modal_field_required(&data, "character-description")?;
@@ -113,7 +113,7 @@ impl LuroCommand for Character {
         let interaction = message
             .interaction
             .context("Unable to get the interaction the original message was attached to")?;
-        let user_data = ctx.framework.database.get_user(&interaction.user.id).await?;
+        let user_data = ctx.framework.database.get_user(&interaction.user.id, false).await?;
         let name = match self {
             Character::Profile(data) => data.name,
             Character::Create(data) => data.name,

@@ -23,7 +23,7 @@ impl LuroCommandTrait for Icon {
         let data = Self::new(interaction.data.clone())?;
         let user_id = interaction.author_id();
 
-        let mut user_data = ctx.database.get_user(&user_id).await?;
+        let mut user_data = ctx.database.get_user(&user_id, false).await?;
         if user_data.characters.is_empty() {
             return interaction
                 .respond(&ctx, |r| {

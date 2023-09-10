@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
-use luro_framework::command::{LuroCommandTrait, LuroCommandBuilder};
+use luro_framework::command::{LuroCommandBuilder, LuroCommandTrait};
 use luro_framework::context::parse_modal_field::parse_modal_field_required;
 use luro_framework::responses::SimpleResponse;
 use luro_framework::{Framework, InteractionCommand, InteractionComponent, InteractionModal, LuroInteraction};
@@ -32,7 +32,6 @@ pub struct StoryCommand {
 }
 
 impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for StoryCommand {}
-
 
 #[async_trait]
 impl LuroCommandTrait for StoryCommand {

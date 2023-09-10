@@ -29,7 +29,7 @@ impl LuroCommandTrait for Remove {
                     .await
             }
         };
-        let user = ctx.database.get_user(&quote.author).await?;
+        let user = ctx.database.get_user(&quote.author, false).await?;
 
         ctx.database.save_quotes(quotes).await?;
 

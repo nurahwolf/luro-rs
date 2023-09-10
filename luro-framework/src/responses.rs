@@ -120,7 +120,7 @@ async fn privelege_escalation<D: LuroDatabaseDriver, T: LuroInteraction>(
     framework: &Framework<D>,
     interaction: &T
 ) -> anyhow::Result<()> {
-    let mut user_data = framework.database.get_user(&interaction.author_id()).await?;
+    let mut user_data = framework.database.get_user(&interaction.author_id(), false).await?;
     user_data.moderation_actions.push(UserActions {
         action_type: vec![UserActionType::PrivilegeEscalation],
         guild_id: interaction.guild_id(),
