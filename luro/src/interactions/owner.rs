@@ -14,15 +14,6 @@ use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 
-use self::abuse::AbuseCommand;
-use self::assign::AssignCommand;
-use self::clear_warnings::OwnerClearWarning;
-use self::commands::OwnerCommandsCommand;
-use self::fakeban::FakeBan;
-use self::mass_assign::MassAssign;
-use self::modify::Modify;
-use self::modify_role::ModifyRoleCommand;
-
 mod abuse;
 mod assign;
 mod clear_warnings;
@@ -42,33 +33,33 @@ mod modify_role;
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges!")]
 pub enum Owner {
     #[command(name = "abuse")]
-    Abuse(AbuseCommand),
+    Abuse(abuse::AbuseCommand),
     #[command(name = "assign")]
-    Assign(AssignCommand),
+    Assign(assign::AssignCommand),
     #[command(name = "clear_warnings")]
-    ClearWarning(OwnerClearWarning),
+    ClearWarning(clear_warnings::OwnerClearWarning),
     #[command(name = "commands")]
-    Commands(OwnerCommandsCommand),
+    Commands(commands::OwnerCommandsCommand),
     #[command(name = "fakeban")]
-    FakeBan(FakeBan),
+    FakeBan(fakeban::FakeBan),
     #[command(name = "log")]
     Log(log::LogCommand),
     #[command(name = "mass_assign")]
-    MassAssign(MassAssign),
+    MassAssign(mass_assign::MassAssign),
     #[command(name = "modify")]
-    Modify(Modify),
+    Modify(modify::Modify),
     #[command(name = "modify_role")]
-    ModifyRole(ModifyRoleCommand)
+    ModifyRole(modify_role::ModifyRoleCommand),
+    #[command(name = "flush")]
+    Flush(flush::Flush),
 }
 
 // pub enum OwnerCommands {
 //     #[command(name = "config")]
-//     #[command(name = "flush")]
 //     #[command(name = "get_message")]
 //     #[command(name = "guilds")]
 //     #[command(name = "load_users")]
 //     Config(ConfigCommand),
-//     Flush(Flush),
 //     GetMessage(OwnerGetMessage),
 //     Guilds(OwnerGuildsCommand),
 //     LoadUsers(OwnerLoadUsers),
@@ -85,8 +76,6 @@ impl LuroCommand for Owner {
                 BOT_OWNERS.to_vec()
             }
         };
-
-        let staff = BOT_OWNERS.to_vec();
 
         // If we don't have a match, bitch at the user
         if !staff.contains(&interaction_author.id) {
@@ -105,7 +94,7 @@ impl LuroCommand for Owner {
                         // Self::LoadUsers(_) => "owner_loadusers",
                         Self::Log(_) => "owner_log",
                         Self::ModifyRole(_) => "owner_modify",
-                        // Self::Flush(_) => "owner_save",
+                        Self::Flush(_) => "owner_save",
                         Self::Modify(_) => "owner_modify",
                         Self::FakeBan(_) => "owner_fakeban",
                         Self::MassAssign(_) => "mass_assign"
@@ -122,7 +111,7 @@ impl LuroCommand for Owner {
             Self::Commands(command) => command.run_command(ctx).await,
             // Self::Config(command) => command.run_command(ctx).await,
             Self::FakeBan(command) => command.run_command(ctx).await,
-            // Self::Flush(command) => command.run_command(ctx).await,
+            Self::Flush(command) => command.run_command(ctx).await,
             // Self::GetMessage(command) => command.run_command(ctx).await,
             // Self::Guilds(command) => command.run_command(ctx).await,
             // Self::LoadUsers(command) => command.run_command(ctx).await,

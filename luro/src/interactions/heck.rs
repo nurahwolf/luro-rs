@@ -121,16 +121,13 @@ async fn get_heck<D: LuroDatabaseDriver>(
     };
 
     let mut heck_id = match id {
-        Some(requested_id) => usize::try_from(requested_id)?,
+        Some(requested_id) => requested_id as usize,
         None => 0
     };
 
     Ok(match global {
         true => {
-            let hecks = match nsfw {
-                true => ctx.framework.database.get_hecks(true).await?,
-                false => ctx.framework.database.get_hecks(false).await?
-            };
+            let hecks = ctx.framework.database.get_hecks(nsfw).await?;
 
             if heck_id == 0 {
                 if hecks.is_empty() {
@@ -139,12 +136,10 @@ async fn get_heck<D: LuroDatabaseDriver>(
                 heck_id = rand::thread_rng().gen_range(0..hecks.len())
             }
 
-            let heck = match hecks.get(&heck_id) {
+            match hecks.get(&heck_id) {
                 Some(heck) => (heck.clone(), heck_id),
                 None => (no_heck, 69)
-            };
-
-            heck
+            }
         }
         false => {
             let guild_id =
