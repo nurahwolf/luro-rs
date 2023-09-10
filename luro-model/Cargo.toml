@@ -31,9 +31,10 @@ twilight-util = { workspace = true }
 async-trait = "0.1.73"
 
 [features]
-default = ["toml-driver", "dice-roller", "luro-command", "lavalink", "auto-trim"]
+default = ["toml-driver", "dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory"]
 toml-driver = []
 dice-roller = ["dep:rand"]
+cache-memory = []
 luro-command = ["dep:radix_trie", "dep:nom"]
 lavalink = [] # Enable this feature to have Luro respond to lavalink events
 auto-trim = [] # Used to automatically trim message responses that are too big, sending as a file instead

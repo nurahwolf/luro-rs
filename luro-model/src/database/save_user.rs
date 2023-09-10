@@ -7,7 +7,7 @@ use super::{drivers::LuroDatabaseDriver, LuroDatabase};
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Saves a user, overwriting whatever value used to exist
-    /// Returns the old users data if it existed
+    /// Returns the old users data if it existed in the cache
     pub async fn save_user(&self, id: &Id<UserMarker>, user: &LuroUser) -> anyhow::Result<Option<LuroUser>> {
         let (ok, data) = match self.user_data.write() {
             Ok(mut data) => (true, Ok(data.insert(*id, user.clone()))),

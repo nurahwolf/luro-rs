@@ -68,9 +68,14 @@ tokio = { workspace = true }
 
 [features]
 # Core
-default = ["toml-driver", "all-commands"]
+default = ["toml-driver", "all-commands", "dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory"]
 all-commands = ["command-dice"]
 toml-driver = []
+dice-roller = []
+cache-memory = []
+luro-command = []
+lavalink = [] # Enable this feature to have Luro respond to lavalink events
+auto-trim = [] # Used to automatically trim message responses that are too big, sending as a file instead
 
 # Commands
 command-dice = ["dep:luro-dice"]

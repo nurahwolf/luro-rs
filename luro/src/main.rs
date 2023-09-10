@@ -8,6 +8,7 @@ use dotenv::dotenv;
 use framework::Framework;
 use futures_util::StreamExt;
 use luro_database::toml::TomlDatabaseDriver;
+use luro_model::configuration::Configuration;
 use std::{env, sync::Arc};
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::{
@@ -96,18 +97,21 @@ pub type LuroFramework = Arc<Framework<TomlDatabaseDriver>>;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv().ok();
-    let driver = TomlDatabaseDriver {};
+    
+    // Database driver - Change this and the feature of `luro-database` to modify the driver!
+    let database_driver = luro_database::toml::TomlDatabaseDriver::start().await?;
     let (filter, tracing_subscriber) = reload::Layer::new(FILTER);
-    let (token, lavalink_host, lavalink_auth, intents) = (
+    let config = Configuration::new(
+        database_driver,
+        INTENTS,
         env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
         env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
-        INTENTS - Intents::GUILD_PRESENCES, // INTENTS
-    );
+    )?.into();
 
     // Create the framework
     let (luro, mut shards) =
-        Framework::builder(driver, intents, lavalink_auth, lavalink_host, token, tracing_subscriber).await?;
+        Framework::builder(tracing_subscriber, config).await?;
 
     // Initialise tracing for logs
     init_tracing_subscriber(filter, &luro.database.current_user.read().unwrap().name);

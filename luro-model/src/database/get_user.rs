@@ -35,7 +35,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         if fetch_user || data.is_none() {
             info!("Fetching data for {id} at request / not available in database");
             let mut data = LuroUser::new(*id);
-            match self.twilight_client.user(*id).await {
+            match self.config.twilight_client.user(*id).await {
                 Ok(user) => {
                     data.update_user(&user.model().await?);
                 }

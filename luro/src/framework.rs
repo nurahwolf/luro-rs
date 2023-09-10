@@ -1,27 +1,24 @@
-use std::{fs, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
+use std::sync::Arc;
 
 use hyper::client::HttpConnector;
 use luro_builder::embed::EmbedBuilder;
+
 use luro_model::{
     database::{drivers::LuroDatabaseDriver, LuroDatabase},
     guild::log_channel::LuroLogChannel,
     response::LuroResponse,
     user::LuroUser,
-    ACCENT_COLOUR,
+    ACCENT_COLOUR, configuration::Configuration,
 };
 use tracing::{debug, info};
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
 use twilight_cache_inmemory::InMemoryCache;
-use twilight_gateway::{stream, Config, ConfigBuilder, Intents, Shard};
-use twilight_http::{client::InteractionClient, Client, Error, Response};
+use twilight_gateway::{stream, Shard};
+use twilight_http::{client::InteractionClient, Error, Response};
 use twilight_lavalink::Lavalink;
 use twilight_model::{
     application::command::Command,
     channel::{message::Embed, Message},
-    gateway::{
-        payload::outgoing::update_presence::UpdatePresencePayload,
-        presence::{ActivityType, MinimalActivity, Status},
-    },
     http::attachment::Attachment,
     id::{
         marker::{ApplicationMarker, ChannelMarker, GuildMarker, UserMarker},
@@ -40,9 +37,9 @@ pub struct Framework<D: LuroDatabaseDriver> {
     /// Lavalink client, for playing music
     pub lavalink: Lavalink,
     /// Twilight's client for interacting with the Discord API
-    pub twilight_client: Arc<Client>,
+    pub twilight_client: Arc<twilight_http::Client>,
     /// Twilight's cache
-    pub twilight_cache: InMemoryCache,
+    pub twilight_cache: Arc<InMemoryCache>,
     /// The global tracing subscriber, for allowing manipulation within commands
     pub tracing_subscriber: Handle<LevelFilter, Registry>,
 }
@@ -283,39 +280,39 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn builder(
-        driver: D,
-        intents: Intents,
-        lavalink_auth: String,
-        lavalink_host: String,
-        token: String,
         tracing_subscriber: Handle<LevelFilter, Registry>,
-    ) -> anyhow::Result<(Arc<Self>, Vec<Shard>)> {
-        ensure_data_directory_exists();
-        let (twilight_client, twilight_cache, shard_config) = create_twilight_client(intents, token)?;
-        let (database, current_user_id) = initialise_database(driver, twilight_client.clone()).await?;
-        let shards = stream::create_recommended(&twilight_client, shard_config, |_, c| c.build())
+        config: Arc<Configuration<D>>
+    ) -> anyhow::Result<(Arc<Framework<D>>, Vec<Shard>)> {
+        let (database, current_user_id) = initialise_database(config.clone()).await?;
+        let shards = stream::create_recommended(&config.twilight_client, config.shard_config.clone(), |_, c| c.build())
             .await?
             .collect::<Vec<_>>();
 
+        #[cfg(feature = "lavalink")]
         let lavalink = {
-            let socket = SocketAddr::from_str(&lavalink_host)?;
-            let lavalink = Lavalink::new(current_user_id, shards.len().try_into()?);
-            lavalink.add(socket, lavalink_auth).await?;
+            let socket = <std::net::SocketAddr as std::str::FromStr>::from_str(&config.lavalink_host)?;
+            let lavalink = twilight_lavalink::Lavalink::new(current_user_id, shards.len().try_into()?);
+            lavalink.add(socket, &config.lavalink_auth).await?;
             lavalink
         };
 
-        Ok((
-            Self {
-                database,
-                hyper_client: hyper::Client::new(),
-                lavalink,
-                twilight_client,
-                twilight_cache,
-                tracing_subscriber,
-            }
-            .into(),
-            shards,
-        ))
+        #[cfg(feature = "http-client-hyper")]
+        let http_client = hyper::Client::new();
+
+        let framework = Self {
+            #[cfg(feature = "cache-memory")]
+            twilight_cache: config.cache.clone(),
+            #[cfg(feature = "http-client-hyper")]
+            http_client,
+            database,
+            #[cfg(feature = "lavalink")]
+            lavalink,
+            tracing_subscriber,
+            twilight_client: config.twilight_client.clone(),
+            hyper_client: hyper::Client::new()
+        };
+
+        Ok((framework.into(), shards))
     }
 
     pub async fn update_user<'a>(&'a self, user: &'a mut LuroUser) -> anyhow::Result<&'a mut LuroUser> {
@@ -324,46 +321,14 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     }
 }
 
-fn ensure_data_directory_exists() {
-    let path_to_data = PathBuf::from("./data"); //env::current_dir().expect("Invaild executing directory").join("/data");
-
-    // Initialise /data folder for toml. Otherwise it panics.
-    if !path_to_data.exists() {
-        tracing::warn!("/data folder does not exist, creating it...");
-        fs::create_dir(path_to_data).expect("Failed to make data subfolder");
-        tracing::info!("/data folder successfully created!");
-    }
-}
-
-fn create_twilight_client(intents: Intents, token: String) -> anyhow::Result<(Arc<Client>, InMemoryCache, Config)> {
-    Ok((
-        twilight_http::Client::new(token.clone()).into(),
-        InMemoryCache::new(),
-        ConfigBuilder::new(token, intents)
-            .presence(UpdatePresencePayload::new(
-                vec![MinimalActivity {
-                    kind: ActivityType::Playing,
-                    name: "/about | Hello World!".to_owned(),
-                    url: None,
-                }
-                .into()],
-                false,
-                None,
-                Status::Online,
-            )?)
-            .build(),
-    ))
-}
-
 async fn initialise_database<D: LuroDatabaseDriver>(
-    driver: D,
-    twilight_client: Arc<Client>,
+    config: Arc<Configuration<D>>
 ) -> anyhow::Result<(LuroDatabase<D>, Id<UserMarker>)> {
-    let application = twilight_client.current_user_application().await?.model().await?;
-    let current_user = twilight_client.current_user().await?.model().await?;
+    let application = config.twilight_client.current_user_application().await?.model().await?;
+    let current_user = config.twilight_client.current_user().await?.model().await?;
     let current_user_id = current_user.id;
     Ok((
-        LuroDatabase::build(application, current_user, twilight_client, driver),
+        LuroDatabase::build(application, current_user, config),
         current_user_id,
     ))
 }

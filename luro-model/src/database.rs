@@ -1,13 +1,10 @@
-use std::sync::{Arc, RwLock};
-
+use std::sync::{RwLock, Arc};
 use serde::{Deserialize, Serialize};
+use twilight_model::{oauth::Application, user::CurrentUser};
 
-use twilight_http::Client;
-use twilight_model::{application::interaction::Interaction, oauth::Application, user::CurrentUser};
-
+use crate::configuration::Configuration;
 use crate::guild::LuroGuilds;
 use crate::heck::Hecks;
-use crate::message::LuroMessage;
 use crate::user::LuroUsers;
 use crate::{CommandManager, Quotes, Stories};
 
@@ -32,6 +29,10 @@ mod save_hecks;
 mod save_stories;
 mod save_story;
 mod save_user;
+mod save_interaction;
+mod get_interaction;
+mod save_quote;
+mod save_quotes;
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
 pub struct HeckManager {
@@ -61,7 +62,7 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub staff: RwLock<LuroUsers>,
     pub stories: RwLock<StoryManager>,
     pub user_data: Box<RwLock<LuroUsers>>,
-    pub twilight_client: Arc<Client>,
+    pub config: Arc<Configuration<D>>
 }
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
@@ -69,38 +70,21 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     pub fn build(
         application: Application,
         current_user: CurrentUser,
-        twilight_client: Arc<Client>,
-        driver: D,
+        config: Arc<Configuration<D>>,
     ) -> LuroDatabase<D> {
         Self {
             application: application.into(),
             command_data: Default::default(),
+            config: config.clone(),
             count: Default::default(),
             current_user: current_user.into(),
-            driver,
+            driver: config.database_driver.clone(),
             guild_data: Default::default(),
-            stories: Default::default(),
             hecks: Default::default(),
-            staff: Default::default(),
-            user_data: Default::default(),
             quotes: Default::default(),
-            twilight_client,
+            staff: Default::default(),
+            stories: Default::default(),
+            user_data: Default::default(),
         }
-    }
-
-    pub async fn save_interaction(&self, key: &str, interaction: &Interaction) -> anyhow::Result<()> {
-        self.driver.save_interaction(interaction, key).await
-    }
-
-    pub async fn get_interaction(&self, key: &str) -> anyhow::Result<Interaction> {
-        self.driver.get_interaction(key).await
-    }
-
-    pub async fn save_quote(&self, key: usize, quote: LuroMessage) -> anyhow::Result<()> {
-        self.driver.save_quote(quote, key).await
-    }
-
-    pub async fn save_quotes(&self, quotes: Quotes) -> anyhow::Result<()> {
-        self.driver.save_quotes(quotes).await
     }
 }

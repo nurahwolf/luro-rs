@@ -32,7 +32,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
             None => LuroGuild::new(*id),
         };
 
-        match self.twilight_client.guild(*id).await {
+        match self.config.twilight_client.guild(*id).await {
             Ok(guild) => {
                 data.update_guild(guild.model().await?);
             }

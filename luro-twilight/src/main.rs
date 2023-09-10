@@ -30,14 +30,15 @@ async fn main() -> anyhow::Result<()> {
     let database_driver = luro_database::toml::TomlDatabaseDriver::start().await?;
     let (filter, tracing_subscriber) = reload::Layer::new(FILTER);
     let config = Configuration::new(
+        database_driver,
         INTENTS,
         env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
         env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
-    );
+    )?.into();
 
     // Create the framework, Initialise tracing for logs based on bot name
-    let (framework, mut shards) = Framework::new(config, database_driver, tracing_subscriber).await?;
+    let (framework, mut shards) = Framework::new(config, tracing_subscriber).await?;
     framework
         .register_new_commands(None, default_global_commands().into_values().collect())
         .await?;
