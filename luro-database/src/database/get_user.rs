@@ -17,26 +17,34 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
                     return Ok(data.clone());
                 }
             }
-            Err(why) => error!(why = ?why, "guild_data lock is poisoned! Please investigate!"),
+            Err(why) => error!(why = ?why, "user_data lock is poisoned! Please investigate!"),
         };
 
-        info!(id = ?id, "guild is not in Luro's cache, fetching from Luro's Database");
+        info!(id = ?id, "user is not in Luro's cache, fetching from Luro's Database");
         if let Ok(data) = LuroUser::get_item(&id.get(), ()).await {
+            match self.user_data.write() {
+                Ok(mut user_data) => {
+                    if let Some(data) = user_data.insert(*id, data.clone()) {
+                        return Ok(data.clone());
+                    }
+                }
+                Err(why) => error!(why = ?why, "user_data lock is poisoned! Please investigate!"),
+            };
             return Ok(data);
         }
 
-        info!(id = ?id, "guild is not in Luro's cache, fetching from Twilight's Cache");
+        info!(id = ?id, "user is not in Luro's cache, fetching from Twilight's Cache");
         if let Some(data) = self.config.cache.user(*id) {
             return Ok(LuroUser::from(data.value()));
         }
 
-        info!(id = ?id, "guild is not in Luro's cache, fetching from Twilight's Client");
+        info!(id = ?id, "user is not in Luro's cache, fetching from Twilight's Client");
         if let Ok(data) = self.config.twilight_client.user(*id).await {
             return Ok(LuroUser::from(&data.model().await?));
         }
 
         Err(anyhow!(
-            "Could not find any data relating to the guild. Is the user resolvable?"
+            "Could not find any data relating to the user. Is the user resolvable?"
         ))
     }
 }

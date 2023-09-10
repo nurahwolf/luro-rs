@@ -22,6 +22,14 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
 
         info!(id = ?id, "guild is not in Luro's cache, fetching from Luro's Database");
         if let Ok(data) = LuroGuild::get_item(&id.get(), ()).await {
+            match self.guild_data.write() {
+                Ok(mut db) => {
+                    if let Some(data) = db.insert(*id, data.clone()) {
+                        return Ok(data.clone());
+                    }
+                }
+                Err(why) => error!(why = ?why, "guild_data lock is poisoned! Please investigate!"),
+            };
             return Ok(data);
         }
 
