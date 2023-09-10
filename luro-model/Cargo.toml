@@ -28,6 +28,7 @@ hyper = { workspace = true }
 twilight-gateway = { workspace = true }
 tracing = { workspace = true }
 twilight-util = { workspace = true }
+async-trait = "0.1.73"
 
 [features]
 default = ["toml-driver", "dice-roller", "luro-command", "lavalink", "auto-trim"]

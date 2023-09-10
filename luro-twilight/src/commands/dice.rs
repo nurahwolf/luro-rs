@@ -1,4 +1,7 @@
-use luro_framework::command::LuroCommand;
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use luro_framework::command::{LuroCommandBuilder, LuroCommandTrait};
 use luro_framework::{Framework, InteractionCommand};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -30,18 +33,21 @@ pub enum Dice {
     Simple(Simple)
 }
 
-impl LuroCommand for Dice {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Dice {}
+
+#[async_trait]
+impl LuroCommandTrait for Dice {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        match self {
-            Self::Roll(command) => command.interaction_command(ctx, interaction).await,
-            Self::Direction(command) => command.interaction_command(ctx, interaction).await,
-            Self::Stats(command) => command.interaction_command(ctx, interaction).await,
-            Self::Help(command) => command.interaction_command(ctx, interaction).await,
-            Self::Simple(command) => command.interaction_command(ctx, interaction).await
+        let data = Self::new(interaction.data.clone())?;
+        match data {
+            Self::Roll(_command) => roll::Roll::handle_interaction(ctx, interaction).await,
+            Self::Direction(_command) => roll_direction::Direction::handle_interaction(ctx, interaction).await,
+            Self::Stats(_command) => stats::Stats::handle_interaction(ctx, interaction).await,
+            Self::Help(_command) => help::Help::handle_interaction(ctx, interaction).await,
+            Self::Simple(_command) => simple::Simple::handle_interaction(ctx, interaction).await
         }
     }
 }

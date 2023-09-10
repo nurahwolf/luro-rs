@@ -1,11 +1,12 @@
 #![feature(async_fn_in_trait)]
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{response::LuroResponse, user::LuroUser};
+use slash_command::LuroCommand;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex}
 };
-use twilight_interactions::command::{ApplicationCommandData, ResolvedUser};
+use twilight_interactions::command::ResolvedUser;
 use twilight_model::{
     application::interaction::{Interaction, InteractionData, InteractionType},
     id::marker::UserMarker
@@ -31,8 +32,10 @@ mod framework;
 mod interactions;
 #[cfg(feature = "responses")]
 pub mod responses;
+pub mod slash_command;
 
-type LuroCommand = HashMap<String, ApplicationCommandData>;
+type LuroCommandType<D> = HashMap<String, LuroCommand<D>>;
+type LuroMutex<T> = Arc<Mutex<T>>;
 
 /// The core framework. Should be available from ALL tasks and holds key data.
 /// Context classes generally take a reference to this to perform their actions.
@@ -55,9 +58,9 @@ pub struct Framework<D: LuroDatabaseDriver> {
     pub tracing_subscriber:
         tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     /// A mutable list of global commands, keyed by [String] (command name) and containing a [ApplicationCommandData]
-    pub global_commands: Arc<Mutex<LuroCommand>>,
+    pub global_commands: LuroMutex<LuroCommandType<D>>,
     /// A mutable list of guild commands, keyed by [GuildMarker] and containing [LuroCommand]s
-    pub guild_commands: Arc<Mutex<HashMap<Id<GuildMarker>, LuroCommand>>>
+    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType<D>>>
 }
 
 /// Luro's primary context, which is instanced per event.

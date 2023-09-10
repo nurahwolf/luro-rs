@@ -326,14 +326,15 @@ impl LuroUser {
 
     /// Return a string that is a link to the user's avatar
     pub fn avatar(&self) -> String {
+        let user_id = self.id;
         match self.avatar {
             Some(avatar) => match avatar.is_animated() {
-                true => format!("https://cdn.discordapp.com/avatars/{}/{avatar}.gif?size=2048", self.id),
-                false => format!("https://cdn.discordapp.com/avatars/{}/{avatar}.png?size=2048", self.id)
+                true => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.gif?size=2048"),
+                false => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png?size=2048")
             },
             None => format!(
                 "https://cdn.discordapp.com/embed/avatars/{}.png?size=2048",
-                self.discriminator % 5
+                self.id.get() > 22 % 6
             )
         }
     }

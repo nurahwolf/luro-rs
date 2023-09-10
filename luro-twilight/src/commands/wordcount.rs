@@ -1,11 +1,16 @@
+use std::fmt::Write;
+use std::sync::Arc;
 use std::{
     collections::{BTreeMap, HashMap},
     convert::TryFrom
 };
 
 use anyhow::Context;
-
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
+use async_trait::async_trait;
+use luro_framework::{
+    command::{LuroCommandBuilder, LuroCommandTrait},
+    Framework, InteractionCommand, LuroInteraction
+};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
@@ -13,7 +18,7 @@ use twilight_model::{
     id::{marker::UserMarker, Id}
 };
 
-use std::{convert::TryInto, fmt::Write, iter::FromIterator};
+use std::iter::FromIterator;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "wordcount", desc = "Get some stats on the bullshit someone has posted.")]
@@ -28,14 +33,17 @@ pub struct Wordcount {
     global: Option<bool>
 }
 
-impl LuroCommand for Wordcount {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Wordcount {}
+
+#[async_trait]
+impl LuroCommandTrait for Wordcount {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         interaction.acknowledge_interaction(&ctx, false).await?;
-        let luro_user = interaction.get_specified_user_or_author(&ctx, self.user.as_ref()).await?;
+        let luro_user = interaction.get_specified_user_or_author(&ctx, data.user.as_ref()).await?;
         let response = InteractionResponseType::DeferredChannelMessageWithSource;
         let accent_colour = interaction.accent_colour(&ctx).await;
         let mut wordcount: usize = Default::default();
@@ -43,9 +51,9 @@ impl LuroCommand for Wordcount {
         let mut wordsize: BTreeMap<usize, usize> = Default::default();
         let mut words: BTreeMap<String, usize> = Default::default();
         let mut content = String::new();
-        let global = self.global.unwrap_or(false);
+        let global = data.global.unwrap_or(false);
         // How many items we should get
-        let limit = match self.limit {
+        let limit = match data.limit {
             Some(limit) => limit.try_into().context("Failed to convert i64 into usize")?,
             None => 10
         };
@@ -108,7 +116,7 @@ impl LuroCommand for Wordcount {
         )?;
 
         // Handle if a user is just interested in a word
-        if let Some(word) = self.word {
+        if let Some(word) = data.word {
             match words.get(&word) {
                 // If we are getting a single word, then we want to get it from the BTreeMap that is sorted by key
                 Some(word_count) => {

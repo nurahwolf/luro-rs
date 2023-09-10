@@ -1,9 +1,10 @@
-use luro_framework::command::LuroCommand;
+use luro_framework::command::LuroCommandTrait;
 use luro_framework::Framework;
 use luro_framework::InteractionCommand;
 use luro_framework::LuroInteraction;
 use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
+use std::sync::Arc;
 use twilight_interactions::command::AutocompleteValue;
 use twilight_interactions::command::CommandModel;
 use twilight_interactions::command::CreateCommand;
@@ -21,7 +22,7 @@ pub struct CharacterSendAutocomplete {
 impl CharacterSendAutocomplete {
     pub async fn interaction_command<D: LuroDatabaseDriver>(
         self,
-        ctx: Framework<D>,
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
         let user_id = interaction.author_id();
@@ -69,13 +70,14 @@ pub struct CharacterSend {
     /// The message to send
     message: String
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for CharacterSend {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl LuroCommandTrait for CharacterSend {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let user_id = interaction.author_id();
 
         let user_data = ctx.database.get_user(&user_id).await?;
@@ -88,7 +90,7 @@ impl LuroCommand for CharacterSend {
                 .await;
         }
 
-        let character = match user_data.characters.get(&self.name) {
+        let character = match user_data.characters.get(&data.name) {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
@@ -97,7 +99,7 @@ impl LuroCommand for CharacterSend {
                     writeln!(characters, "- {character_name}: {}", character.short_description)?
                 }
 
-                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", self.name, characters);
+                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", data.name, characters);
                 return interaction.respond(&ctx, |r| r.content(response).ephemeral()).await;
             }
         };
@@ -121,8 +123,8 @@ impl LuroCommand for CharacterSend {
 
         ctx.twilight_client
             .execute_webhook(webhook.id, &webhook_token)
-            .username(&format!("{} [{}]", self.name, user_data.member_name(&interaction.guild_id)))
-            .content(&self.message)
+            .username(&format!("{} [{}]", data.name, user_data.member_name(&interaction.guild_id)))
+            .content(&data.message)
             .avatar_url(&character_icon)
             .await?;
 

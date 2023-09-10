@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
 use luro_framework::{Context, Framework};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
 use twilight_model::gateway::payload::incoming::RoleUpdate;
 
 pub async fn role_update_listener<D: LuroDatabaseDriver>(
-    framework: Framework<D>,
+    framework: Arc<Framework<D>>,
     _ctx: Context,
     event: RoleUpdate
 ) -> anyhow::Result<()> {

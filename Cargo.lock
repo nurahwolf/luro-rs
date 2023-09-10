@@ -57,6 +57,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
+name = "async-trait"
+version = "0.1.73"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc00ceb34980c03614e35a3a4e218276a0a824e911d07651cd0d858a51e8c0f0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -758,6 +769,7 @@ name = "luro-database"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "async-trait",
  "luro-model",
  "serde",
  "tokio",
@@ -778,6 +790,7 @@ name = "luro-framework"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "async-trait",
  "hyper",
  "luro-builder",
  "luro-model",
@@ -798,6 +811,7 @@ name = "luro-model"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "async-trait",
  "hyper",
  "luro-builder",
  "nom",
@@ -820,6 +834,7 @@ name = "luro-twilight"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "async-trait",
  "dotenv",
  "futures-util",
  "luro-builder",

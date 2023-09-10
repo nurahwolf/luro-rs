@@ -1,4 +1,10 @@
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use luro_framework::{
+    command::{LuroCommandBuilder, LuroCommandTrait},
+    Framework, InteractionCommand, LuroInteraction
+};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use uwuifier::uwuify_str_sse;
 
@@ -11,14 +17,17 @@ pub struct UwU {
     message: String
 }
 
-impl LuroCommand for UwU {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for UwU {}
+
+#[async_trait]
+impl LuroCommandTrait for UwU {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let uwu = if cfg!(target_feature = "sse4.1") {
-            unsafe { sse_uwu(&self.message) }
+            unsafe { sse_uwu(&data.message) }
         } else {
             arm_uwu()
         };

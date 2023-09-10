@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use luro_framework::{Context, Framework, InteractionContext};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_gateway::Event;
@@ -7,7 +9,11 @@ mod ready;
 mod role_update;
 mod user_update;
 
-pub async fn event_handler<D: LuroDatabaseDriver>(framework: Framework<D>, ctx: Context, event: Event) -> anyhow::Result<()> {
+pub async fn event_handler<D: LuroDatabaseDriver>(
+    framework: Arc<Framework<D>>,
+    ctx: Context,
+    event: Event
+) -> anyhow::Result<()> {
     match event {
         Event::Ready(event) => ready::ready_listener(framework, ctx, event).await,
         Event::RoleUpdate(event) => role_update::role_update_listener(framework, ctx, event).await,

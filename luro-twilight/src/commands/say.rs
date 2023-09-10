@@ -1,4 +1,10 @@
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use luro_framework::{
+    command::{LuroCommandBuilder, LuroCommandTrait},
+    Framework, InteractionCommand, LuroInteraction
+};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
@@ -11,16 +17,19 @@ pub struct Say {
     user: Option<ResolvedUser>
 }
 
-impl LuroCommand for Say {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Say {}
+
+#[async_trait]
+impl LuroCommandTrait for Say {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        let content = if let Some(user) = self.user {
-            format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
+        let data = Self::new(interaction.data.clone())?;
+        let content = if let Some(user) = data.user {
+            format!("Hey <@{}>!\n{}", user.resolved.id, data.message)
         } else {
-            self.message
+            data.message
         };
 
         interaction.respond(&ctx, |response| response.content(content)).await?;

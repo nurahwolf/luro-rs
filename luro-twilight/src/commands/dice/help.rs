@@ -1,4 +1,6 @@
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
+use std::sync::Arc;
+
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -8,13 +10,14 @@ pub struct Help {
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
     ephemeral: Option<bool>
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for Help {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl LuroCommandTrait for Help {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let description = "Roll some dice with a brief explanation of the output all on one line, such as `1d20 = [13] = 13`.";
 
         let shortmode_help = [
@@ -75,7 +78,7 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
         let accent_colour = interaction.accent_colour(&ctx).await;
         interaction
             .respond(&ctx, |r| {
-                if self.ephemeral.unwrap_or_default() {
+                if data.ephemeral.unwrap_or_default() {
                     r.ephemeral();
                 }
                 r.embed(|embed| {

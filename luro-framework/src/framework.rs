@@ -33,7 +33,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         config: Configuration,
         database_driver: D,
         tracing_subscriber: Handle<LevelFilter, Registry>
-    ) -> anyhow::Result<(Self, Vec<Shard>)> {
+    ) -> anyhow::Result<(Arc<Framework<D>>, Vec<Shard>)> {
         let (twilight_client, shard_config) = create_twilight_client(config.intents, config.token)?;
         let (database, current_user_id) = initialise_database(database_driver, twilight_client.clone()).await?;
         let shards = stream::create_recommended(&twilight_client, shard_config, |_, c| c.build())
@@ -68,7 +68,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             twilight_client
         };
 
-        Ok((framework, shards))
+        Ok((framework.into(), shards))
     }
 }
 

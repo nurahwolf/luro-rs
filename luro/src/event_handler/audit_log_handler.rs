@@ -18,7 +18,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             None => {
                 warn!(event = ?event, "Audit log event with no target_id");
                 return Ok(());
-            },
+            }
         };
         let mut punished_user = self.database.get_user(&punished_user_id).await?;
         let mut moderator = self

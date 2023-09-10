@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use anyhow::anyhow;
+use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
-use luro_framework::command::LuroCommand;
+use luro_framework::command::LuroCommandTrait;
 use luro_framework::context::parse_modal_field::parse_modal_field_required;
 use luro_framework::responses::SimpleResponse;
 use luro_framework::{Framework, InteractionCommand, InteractionComponent, InteractionModal, LuroInteraction};
@@ -30,8 +33,10 @@ pub struct StoryCommand {
     add: Option<bool>
 }
 
-impl LuroCommand for StoryCommand {
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
+#[async_trait]
+
+impl LuroCommandTrait for StoryCommand {
+    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Arc<Framework<D>>, interaction: InteractionModal) -> anyhow::Result<()> {
         let nsfw = interaction.channel.clone().unwrap().nsfw.unwrap_or(false);
         let stories = ctx.database.get_stories(nsfw).await?;
         let id = stories.len() + 1;
@@ -52,12 +57,12 @@ impl LuroCommand for StoryCommand {
         Ok(())
     }
 
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
-        if let Some(add) = self.add && add {
+        let data = Self::new(interaction.data.clone())?;
+        if let Some(add) = data.add && add {
             let components = vec![Component::ActionRow(ActionRow {
                 components: vec![Component::TextInput(TextInput {
                     custom_id: "story-title".to_owned(),
@@ -86,7 +91,7 @@ impl LuroCommand for StoryCommand {
             ).await
         }
         let channel_nsfw = interaction.channel.clone().unwrap().nsfw;
-        let nsfw = if let Some(nsfw) = self.nsfw {
+        let nsfw = if let Some(nsfw) = data.nsfw {
             match nsfw {
                 false => false,
                 true => {
@@ -106,7 +111,7 @@ impl LuroCommand for StoryCommand {
 
         let stories = ctx.database.get_stories(nsfw).await?;
 
-        let story_id = if let Some(story_id) = self.id {
+        let story_id = if let Some(story_id) = data.id {
             story_id.try_into().unwrap()
         } else {
             if stories.is_empty() {
@@ -127,8 +132,8 @@ impl LuroCommand for StoryCommand {
         };
 
         // Make sure we are in a size limit to send as plaintext, otherwise we are sending as an embed...
-        if let Some(plaintext) = self.plaintext && plaintext && story.description.len() < 2000 {
-            return interaction.respond(&ctx, |r|r.content(story.description.clone())).await;
+        if data.plaintext.unwrap_or_default() && story.description.len() < 2000 {
+            return interaction.respond(&ctx, |r| r.content(story.description.clone())).await;
         };
 
         let accent_colour = interaction.accent_colour(&ctx).await;
@@ -147,8 +152,7 @@ impl LuroCommand for StoryCommand {
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+        ctx: Arc<Framework<D>>,
         interaction: InteractionComponent
     ) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::default();

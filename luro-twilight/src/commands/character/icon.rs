@@ -1,6 +1,6 @@
-use luro_framework::{command::LuroCommand, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database::drivers::LuroDatabaseDriver;
-use std::fmt::Write;
+use std::{fmt::Write, sync::Arc};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
@@ -13,13 +13,14 @@ pub struct Icon {
     /// The URL a NSFW icon
     nsfw_icon: Option<String>
 }
+#[async_trait::async_trait]
 
-impl LuroCommand for Icon {
-    async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
+impl LuroCommandTrait for Icon {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Arc<Framework<D>>,
         interaction: InteractionCommand
     ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let user_id = interaction.author_id();
 
         let mut user_data = ctx.database.get_user(&user_id).await?;
@@ -32,10 +33,10 @@ impl LuroCommand for Icon {
                 .await;
         }
 
-        match user_data.characters.get_mut(&self.name) {
+        match user_data.characters.get_mut(&data.name) {
             Some(character) => {
-                character.nsfw_icon = self.nsfw_icon;
-                character.icon = self.icon
+                character.nsfw_icon = data.nsfw_icon;
+                character.icon = data.icon
             }
             None => {
                 let mut characters = String::new();
@@ -44,7 +45,7 @@ impl LuroCommand for Icon {
                     writeln!(characters, "- {character_name}: {}", character.short_description)?
                 }
 
-                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", self.name, characters);
+                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", data.name, characters);
                 return interaction.respond(&ctx, |r| r.content(response).ephemeral()).await;
             }
         };
