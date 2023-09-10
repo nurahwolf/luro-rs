@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand};
+use luro_framework::{command::{LuroCommandTrait, LuroCommandBuilder}, Framework, InteractionCommand};
 use luro_model::database::drivers::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -23,6 +23,8 @@ pub enum QuoteCommands {
     #[command(name = "remove")]
     Remove(remove::Remove)
 }
+
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for QuoteCommands {}
 
 #[async_trait]
 impl LuroCommandTrait for QuoteCommands {

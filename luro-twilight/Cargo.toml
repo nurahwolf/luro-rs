@@ -51,10 +51,12 @@ commands = [
     "command-character",
     "command-dice",
     "command-roles",
+    "command-ping",
     "command-quote",
     "command-say",
     "command-story",
     "command-uwu",
+    "command-marry",
     "command-wordcount",
 ]
 
@@ -63,7 +65,9 @@ command-about = []
 command-character = []
 command-dice = ["dep:luro-dice"]
 command-roles = []
+command-marry = []
 command-quote = []
+command-ping = []
 command-say = []
 command-story = ["dep:rand", "dep:luro-builder"]
 command-uwu = []

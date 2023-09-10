@@ -61,8 +61,18 @@ pub fn default_global_commands<'a, D: LuroDatabaseDriver + 'static>() -> HashMap
     commands.insert(character::Character::NAME, character::Character::new_command());
     #[cfg(feature = "command-dice")]
     commands.insert(dice::Dice::NAME, dice::Dice::new_command());
+    #[cfg(feature = "command-marry")]
+    commands.insert(marry::Marry::NAME, marry::Marry::new_command());
+    #[cfg(feature = "command-ping")]
+    commands.insert(ping::Ping::NAME, ping::Ping::new_command());
+    #[cfg(feature = "command-quote")]
+    commands.insert(quote::QuoteCommands::NAME, quote::QuoteCommands::new_command());
+    #[cfg(feature = "command-roles")]
+    commands.insert(roles::RoleCommands::NAME, roles::RoleCommands::new_command());
     #[cfg(feature = "command-say")]
     commands.insert(say::Say::NAME, say::Say::new_command());
+    #[cfg(feature = "command-story")]
+    commands.insert(story::StoryCommand::NAME, story::StoryCommand::new_command());
     #[cfg(feature = "command-uwu")]
     commands.insert(uwu::UwU::NAME, uwu::UwU::new_command());
     #[cfg(feature = "command-wordcount")]

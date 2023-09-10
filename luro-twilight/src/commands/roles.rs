@@ -2,7 +2,7 @@ use crate::commands::anyhow;
 use anyhow::Context;
 use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, InteractionComponent, LuroInteraction};
+use luro_framework::{command::{LuroCommandTrait, LuroCommandBuilder}, Framework, InteractionCommand, InteractionComponent, LuroInteraction};
 use tracing::{debug, info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -25,6 +25,9 @@ pub enum RoleCommands {
     #[command(name = "blacklist")]
     Blacklist(Blacklist)
 }
+
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for RoleCommands {}
+
 
 #[async_trait]
 impl LuroCommandTrait for RoleCommands {
