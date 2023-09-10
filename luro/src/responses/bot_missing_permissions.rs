@@ -7,15 +7,15 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl<D: LuroDatabaseDriver> LuroSlash<D> {
-    pub async fn bot_missing_permission_response(&self, permission: Permissions) -> anyhow::Result<()> {
-        self.respond(|r| r.add_embed(bot_missing_permission_embed(permission).build()))
+impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
+    pub async fn bot_missing_permission_response(&self, permission: Permissions,) -> anyhow::Result<(),> {
+        self.respond(|r| r.add_embed(bot_missing_permission_embed(permission,).build(),),)
             .await
     }
 }
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-fn bot_missing_permission_embed(permission: Permissions) -> EmbedBuilder {
+fn bot_missing_permission_embed(permission: Permissions,) -> EmbedBuilder {
     error!("Luro was missing permissions to run a command");
     EmbedBuilder::new()
         .color(COLOUR_DANGER)

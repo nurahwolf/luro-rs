@@ -3,50 +3,50 @@ use core::fmt;
 use crate::RollOptions;
 
 impl RollOptions {
-    pub fn new(source: String) -> Self {
+    pub fn new(source: String,) -> Self {
         Self {
             options: Default::default(),
             lastpos: Default::default(),
             messages: Default::default(),
-            source
+            source,
         }
     }
 
-    pub fn message(mut self, msg: impl AsRef<str>) -> Self {
-        self.messages.push(msg.as_ref().to_string());
+    pub fn message(mut self, msg: impl AsRef<str,>,) -> Self {
+        self.messages.push(msg.as_ref().to_string(),);
         self
     }
 
-    pub fn pos(mut self, pos: u64) -> Self {
+    pub fn pos(mut self, pos: u64,) -> Self {
         if pos > self.lastpos {
             self.lastpos = pos;
         }
         self
     }
 
-    pub fn merge(mut self, other: RollOptions) -> Self {
+    pub fn merge(mut self, other: RollOptions,) -> Self {
         for i in other.options {
-            self = self.add_value(i);
+            self = self.add_value(i,);
         }
 
         self
     }
 
-    pub fn add_value(mut self, value: impl Into<String>) -> Self {
-        self.options.insert(value.into());
+    pub fn add_value(mut self, value: impl Into<String,>,) -> Self {
+        self.options.insert(value.into(),);
         self
     }
 }
 
 impl fmt::Display for RollOptions {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_,>,) -> fmt::Result {
         writeln!(f, "{}", self.source)?;
         writeln!(f, "{}^", " ".repeat(self.lastpos as usize))?;
 
         if !self.options.is_empty() {
             writeln!(f, "An error occurred: unexpected character.")?;
             write!(f, "Expected any of: [")?;
-            for (index, i) in self.options.iter().enumerate() {
+            for (index, i,) in self.options.iter().enumerate() {
                 write!(f, "{i}")?;
 
                 if index != self.options.len() - 1 {
@@ -61,6 +61,6 @@ impl fmt::Display for RollOptions {
             writeln!(f, "{i}")?;
         }
 
-        Ok(())
+        Ok((),)
     }
 }

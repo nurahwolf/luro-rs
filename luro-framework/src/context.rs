@@ -9,7 +9,7 @@ use crate::{InteractionCommand, InteractionComponent, InteractionContext};
 pub mod parse_modal_field;
 
 impl InteractionCommand {
-    pub fn new(interaction: InteractionContext, data: Box<CommandData>) -> Self {
+    pub fn new(interaction: InteractionContext, data: Box<CommandData,>,) -> Self {
         Self {
             application_id: interaction.application_id,
             channel: interaction.channel,
@@ -21,15 +21,15 @@ impl InteractionCommand {
             permissions: interaction.app_permissions,
             shard: interaction.shard,
             token: interaction.token,
-            user: interaction.user
+            user: interaction.user,
         }
     }
 }
 
 impl InteractionComponent {
-    pub fn new(interaction: InteractionContext, data: Box<MessageComponentInteractionData>) -> anyhow::Result<Self> {
+    pub fn new(interaction: InteractionContext, data: Box<MessageComponentInteractionData,>,) -> anyhow::Result<Self,> {
         match interaction.message {
-            Some(message) => Ok(Self {
+            Some(message,) => Ok(Self {
                 original: interaction.original,
                 application_id: interaction.application_id,
                 channel: interaction.channel,
@@ -42,15 +42,15 @@ impl InteractionComponent {
                 permissions: interaction.app_permissions,
                 shard: interaction.shard,
                 token: interaction.token,
-                user: interaction.user
-            }),
-            None => Err(anyhow!("No message found!"))
+                user: interaction.user,
+            },),
+            None => Err(anyhow!("No message found!"),),
         }
     }
 }
 
 impl InteractionModal {
-    pub fn new(interaction: InteractionContext, data: ModalInteractionData) -> Self {
+    pub fn new(interaction: InteractionContext, data: ModalInteractionData,) -> Self {
         Self {
             application_id: interaction.application_id,
             channel: interaction.channel,
@@ -63,7 +63,7 @@ impl InteractionModal {
             permissions: interaction.app_permissions,
             shard: interaction.shard,
             token: interaction.token,
-            user: interaction.user
+            user: interaction.user,
         }
     }
 }

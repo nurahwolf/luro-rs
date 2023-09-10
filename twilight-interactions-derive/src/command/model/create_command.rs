@@ -6,49 +6,49 @@ use super::parse::{channel_type, command_option_value, optional, StructField, Ty
 use crate::{command::description::get_description, parse::find_attr};
 
 /// Implementation of `CreateCommand` derive macro
-pub fn impl_create_command(input: DeriveInput, fields: Option<FieldsNamed>) -> Result<TokenStream> {
+pub fn impl_create_command(input: DeriveInput, fields: Option<FieldsNamed,>,) -> Result<TokenStream,> {
     let ident = &input.ident;
     let generics = &input.generics;
     let where_clause = &generics.where_clause;
     let span = input.span();
     let fields = match fields {
-        Some(fields) => StructField::from_fields(fields)?,
-        None => Vec::new()
+        Some(fields,) => StructField::from_fields(fields,)?,
+        None => Vec::new(),
     };
 
-    check_fields_order(&fields)?;
+    check_fields_order(&fields,)?;
 
     let capacity = fields.len();
-    let (attributes, attr_span) = match find_attr(&input.attrs, "command") {
-        Some(attr) => (TypeAttribute::parse(attr)?, attr.span()),
-        None => return Err(Error::new(span, "missing required #[command(...)] attribute"))
+    let (attributes, attr_span,) = match find_attr(&input.attrs, "command",) {
+        Some(attr,) => (TypeAttribute::parse(attr,)?, attr.span(),),
+        None => return Err(Error::new(span, "missing required #[command(...)] attribute",),),
     };
 
-    if attributes.autocomplete == Some(true) {
-        return Err(Error::new(attr_span, "cannot implement `CreateCommand` on partial model"));
+    if attributes.autocomplete == Some(true,) {
+        return Err(Error::new(attr_span, "cannot implement `CreateCommand` on partial model",),);
     }
 
-    let desc = get_description(&attributes.desc_localizations, &attributes.desc, span, &input.attrs)?;
+    let desc = get_description(&attributes.desc_localizations, &attributes.desc, span, &input.attrs,)?;
 
     let name = match &attributes.name {
-        Some(name) => name,
-        None => return Err(Error::new(attr_span, "missing required attribute `name`"))
+        Some(name,) => name,
+        None => return Err(Error::new(attr_span, "missing required attribute `name`",),),
     };
-    let name_localizations = localization_field(&attributes.name_localizations);
+    let name_localizations = localization_field(&attributes.name_localizations,);
     let default_permissions = match &attributes.default_permissions {
-        Some(path) => quote! { ::std::option::Option::Some(#path())},
-        None => quote! { ::std::option::Option::None }
+        Some(path,) => quote! { ::std::option::Option::Some(#path())},
+        None => quote! { ::std::option::Option::None },
     };
     let dm_permission = match &attributes.dm_permission {
-        Some(dm_permission) => quote! { ::std::option::Option::Some(#dm_permission)},
-        None => quote! { ::std::option::Option::None }
+        Some(dm_permission,) => quote! { ::std::option::Option::Some(#dm_permission)},
+        None => quote! { ::std::option::Option::None },
     };
     let nsfw = match &attributes.nsfw {
-        Some(nsfw) => quote! { ::std::option::Option::Some(#nsfw) },
-        None => quote! { ::std::option::Option::None }
+        Some(nsfw,) => quote! { ::std::option::Option::Some(#nsfw) },
+        None => quote! { ::std::option::Option::None },
     };
 
-    let field_options = fields.iter().map(field_option).collect::<Result<Vec<_>>>()?;
+    let field_options = fields.iter().map(field_option,).collect::<Result<Vec<_,>,>>()?;
 
     Ok(quote! {
         impl #generics ::twilight_interactions::command::CreateCommand for #ident #generics #where_clause {
@@ -73,11 +73,11 @@ pub fn impl_create_command(input: DeriveInput, fields: Option<FieldsNamed>) -> R
                 }
             }
         }
-    })
+    },)
 }
 
 /// Generate field option code
-fn field_option(field: &StructField) -> Result<TokenStream> {
+fn field_option(field: &StructField,) -> Result<TokenStream,> {
     let ty = &field.ty;
     let span = field.span;
 
@@ -85,22 +85,22 @@ fn field_option(field: &StructField) -> Result<TokenStream> {
         &field.attributes.desc_localizations,
         &field.attributes.desc,
         field.span,
-        &field.raw_attrs
+        &field.raw_attrs,
     )?;
 
-    let name = field.attributes.name_default(field.ident.to_string());
-    let name_localizations = localization_field(&field.attributes.name_localizations);
+    let name = field.attributes.name_default(field.ident.to_string(),);
+    let name_localizations = localization_field(&field.attributes.name_localizations,);
     let required = field.kind.required();
     let autocomplete = field.attributes.autocomplete;
-    let max_value = command_option_value(field.attributes.max_value);
-    let min_value = command_option_value(field.attributes.min_value);
-    let max_length = optional(field.attributes.max_length);
-    let min_length = optional(field.attributes.min_length);
+    let max_value = command_option_value(field.attributes.max_value,);
+    let min_value = command_option_value(field.attributes.min_value,);
+    let max_length = optional(field.attributes.max_length,);
+    let min_length = optional(field.attributes.min_length,);
 
     let channel_types = if field.attributes.channel_types.is_empty() {
         quote! { ::std::option::Option::None }
     } else {
-        let items = field.attributes.channel_types.iter().map(channel_type);
+        let items = field.attributes.channel_types.iter().map(channel_type,);
         quote! { ::std::option::Option::Some(::std::vec![#(#items),*]) }
     };
 
@@ -123,24 +123,24 @@ fn field_option(field: &StructField) -> Result<TokenStream> {
                 },
             }
         ));
-    })
+    },)
 }
 
-fn localization_field(path: &Option<syn::Path>) -> TokenStream {
+fn localization_field(path: &Option<syn::Path,>,) -> TokenStream {
     match path {
-        Some(path) => {
+        Some(path,) => {
             quote! {
                 ::std::option::Option::Some(
                     ::twilight_interactions::command::internal::convert_localizations(#path())
                 )
             }
         }
-        None => quote! { ::std::option::Option::None }
+        None => quote! { ::std::option::Option::None },
     }
 }
 
 /// Ensure optional options are after required ones
-fn check_fields_order(fields: &[StructField]) -> Result<()> {
+fn check_fields_order(fields: &[StructField],) -> Result<(),> {
     let mut optional_option_added = false;
 
     for field in fields {
@@ -149,9 +149,9 @@ fn check_fields_order(fields: &[StructField]) -> Result<()> {
         }
 
         if optional_option_added && field.kind.required() {
-            return Err(Error::new(field.span, "required options should be added before optional"));
+            return Err(Error::new(field.span, "required options should be added before optional",),);
         }
     }
 
-    Ok(())
+    Ok((),)
 }

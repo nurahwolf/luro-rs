@@ -4,9 +4,9 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{interaction::LuroSlash, COLOUR_DANGER};
 
-impl<D: LuroDatabaseDriver> LuroSlash<D> {
-    pub async fn not_guild_response(&self) -> anyhow::Result<()> {
-        self.respond(|r| r.add_embed(not_guild_embed().build()).ephemeral()).await
+impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
+    pub async fn not_guild_response(&self,) -> anyhow::Result<(),> {
+        self.respond(|r| r.add_embed(not_guild_embed().build(),).ephemeral(),).await
     }
 }
 

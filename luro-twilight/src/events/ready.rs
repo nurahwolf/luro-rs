@@ -3,47 +3,47 @@ use luro_model::database::drivers::LuroDatabaseDriver;
 use tracing::info;
 use twilight_model::gateway::{
     payload::{incoming::Ready, outgoing::UpdatePresence},
-    presence::{ActivityType, MinimalActivity, Status}
+    presence::{ActivityType, MinimalActivity, Status},
 };
 
-pub async fn ready_listener<D: LuroDatabaseDriver>(
-    framework: Framework<D>,
+pub async fn ready_listener<D: LuroDatabaseDriver,>(
+    framework: Framework<D,>,
     ctx: Context,
-    event: Box<Ready>
-) -> anyhow::Result<()> {
+    event: Box<Ready,>,
+) -> anyhow::Result<(),> {
     info!("Luro is now ready!");
     info!("==================");
     info!("Username:      {}", event.user.name);
     info!("ID:            {}", event.user.id);
     info!("Guilds:        {}", event.guilds.len());
     info!("API Version:   {}", event.version);
-    if let Some(latency) = ctx.latency.average() {
+    if let Some(latency,) = ctx.latency.average() {
         info!("Latency:       {} ms", latency.as_millis());
     }
 
     let mut presence_string = format!("/about | on {} guilds", event.guilds.len());
 
-    if let Some(shard_id) = event.shard {
+    if let Some(shard_id,) = event.shard {
         info!("Shard:         {}", shard_id.number());
         info!("Total Shards:  {}", shard_id.total());
-        presence_string.push_str(format!(" | shard {}", shard_id.number()).as_str());
+        presence_string.push_str(format!(" | shard {}", shard_id.number()).as_str(),);
 
         ctx.shard.command(&UpdatePresence::new(
             vec![MinimalActivity {
                 kind: ActivityType::Playing,
                 name: presence_string,
-                url: None
+                url: None,
             }
             .into()],
             false,
             None,
-            Status::Online
-        )?)?;
+            Status::Online,
+        )?,)?;
     };
 
     let application = framework.twilight_client.current_user_application().await?.model().await?;
 
-    if let Some(owner) = &application.owner {
+    if let Some(owner,) = &application.owner {
         info!("Primary Owner: {}", owner.name);
     }
     let mut owners = String::new();
@@ -51,14 +51,14 @@ pub async fn ready_listener<D: LuroDatabaseDriver>(
 
     for staff in staff.values() {
         if owners.is_empty() {
-            owners.push_str(&staff.name)
+            owners.push_str(&staff.name,)
         } else {
-            owners.push_str(format!(", {}", staff.name).as_str())
+            owners.push_str(format!(", {}", staff.name).as_str(),)
         }
     }
     info!("Owners:        {owners}");
 
-    framework.register_commands(None).await?;
+    framework.register_commands(None,).await?;
 
-    Ok(())
+    Ok((),)
 }

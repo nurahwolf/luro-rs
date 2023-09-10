@@ -3,15 +3,15 @@ use std::{borrow::Cow, collections::HashMap};
 use twilight_model::{
     application::{
         command::{Command, CommandOption, CommandOptionType, CommandType},
-        interaction::InteractionChannel
+        interaction::InteractionChannel,
     },
     channel::Attachment,
     guild::{Permissions, Role},
     id::{
         marker::{AttachmentMarker, ChannelMarker, GenericMarker, RoleMarker, UserMarker},
-        Id
+        Id,
     },
-    user::User
+    user::User,
 };
 
 use super::{internal::CreateOptionData, ResolvedMentionable, ResolvedUser};
@@ -92,7 +92,7 @@ pub trait CreateCommand: Sized {
     fn create_command() -> ApplicationCommandData;
 }
 
-impl<T: CreateCommand> CreateCommand for Box<T> {
+impl<T: CreateCommand,> CreateCommand for Box<T,> {
     const NAME: &'static str = T::NAME;
 
     fn create_command() -> ApplicationCommandData {
@@ -141,39 +141,39 @@ impl<T: CreateCommand> CreateCommand for Box<T> {
 
 pub trait CreateOption: Sized {
     /// Create a [`CommandOption`] from this type.
-    fn create_option(data: CreateOptionData) -> CommandOption;
+    fn create_option(data: CreateOptionData,) -> CommandOption;
 }
 
 /// Data sent to Discord to create a command.
 ///
 /// This type is used in the [`CreateCommand`] trait.
 /// To convert it into a [`Command`], use the [From] (or [Into]) trait.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq,)]
 pub struct ApplicationCommandData {
     /// Name of the command. It must be 32 characters or less.
     pub name: String,
     /// Localization dictionary for the command name. Keys must be valid
     /// locales.
-    pub name_localizations: Option<HashMap<String, String>>,
+    pub name_localizations: Option<HashMap<String, String,>,>,
     /// Description of the command. It must be 100 characters or less.
     pub description: String,
     /// Localization dictionary for the command description. Keys must be valid
     /// locales.
-    pub description_localizations: Option<HashMap<String, String>>,
+    pub description_localizations: Option<HashMap<String, String,>,>,
     /// List of command options.
-    pub options: Vec<CommandOption>,
+    pub options: Vec<CommandOption,>,
     /// Whether the command is available in DMs.
-    pub dm_permission: Option<bool>,
+    pub dm_permission: Option<bool,>,
     /// Default permissions required for a member to run the command.
-    pub default_member_permissions: Option<Permissions>,
+    pub default_member_permissions: Option<Permissions,>,
     /// Whether the command is a subcommand group.
     pub group: bool,
     /// Whether the command is nsfw.
-    pub nsfw: Option<bool>
+    pub nsfw: Option<bool,>,
 }
 
-impl From<ApplicationCommandData> for Command {
-    fn from(item: ApplicationCommandData) -> Self {
+impl From<ApplicationCommandData,> for Command {
+    fn from(item: ApplicationCommandData,) -> Self {
         Command {
             application_id: None,
             guild_id: None,
@@ -187,13 +187,13 @@ impl From<ApplicationCommandData> for Command {
             kind: CommandType::ChatInput,
             nsfw: item.nsfw,
             options: item.options,
-            version: Id::new(1)
+            version: Id::new(1,),
         }
     }
 }
 
-impl From<ApplicationCommandData> for CommandOption {
-    fn from(item: ApplicationCommandData) -> Self {
+impl From<ApplicationCommandData,> for CommandOption {
+    fn from(item: ApplicationCommandData,) -> Self {
         let data = CreateOptionData {
             name: item.name,
             name_localizations: item.name_localizations,
@@ -201,109 +201,111 @@ impl From<ApplicationCommandData> for CommandOption {
             description_localizations: item.description_localizations,
             required: None,
             autocomplete: false,
-            data: Default::default()
+            data: Default::default(),
         };
 
         if item.group {
-            data.builder(CommandOptionType::SubCommandGroup).options(item.options).build()
+            data.builder(CommandOptionType::SubCommandGroup,)
+                .options(item.options,)
+                .build()
         } else {
-            data.builder(CommandOptionType::SubCommand).options(item.options).build()
+            data.builder(CommandOptionType::SubCommand,).options(item.options,).build()
         }
     }
 }
 
 impl CreateOption for String {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::String)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::String,)
     }
 }
 
-impl<'a> CreateOption for Cow<'a, str> {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::String)
+impl<'a,> CreateOption for Cow<'a, str,> {
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::String,)
     }
 }
 
 impl CreateOption for i64 {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Integer)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Integer,)
     }
 }
 
 impl CreateOption for f64 {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Number)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Number,)
     }
 }
 
 impl CreateOption for bool {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Boolean)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Boolean,)
     }
 }
 
-impl CreateOption for Id<UserMarker> {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::User)
+impl CreateOption for Id<UserMarker,> {
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::User,)
     }
 }
 
-impl CreateOption for Id<ChannelMarker> {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Channel)
+impl CreateOption for Id<ChannelMarker,> {
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Channel,)
     }
 }
 
-impl CreateOption for Id<RoleMarker> {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Role)
+impl CreateOption for Id<RoleMarker,> {
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Role,)
     }
 }
 
-impl CreateOption for Id<GenericMarker> {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Mentionable)
+impl CreateOption for Id<GenericMarker,> {
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Mentionable,)
     }
 }
 
-impl CreateOption for Id<AttachmentMarker> {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Attachment)
+impl CreateOption for Id<AttachmentMarker,> {
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Attachment,)
     }
 }
 
 impl CreateOption for Attachment {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Attachment)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Attachment,)
     }
 }
 
 impl CreateOption for User {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::User)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::User,)
     }
 }
 
 impl CreateOption for ResolvedUser {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::User)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::User,)
     }
 }
 
 impl CreateOption for ResolvedMentionable {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Mentionable)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Mentionable,)
     }
 }
 
 impl CreateOption for InteractionChannel {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Channel)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Channel,)
     }
 }
 
 impl CreateOption for Role {
-    fn create_option(data: CreateOptionData) -> CommandOption {
-        data.into_option(CommandOptionType::Role)
+    fn create_option(data: CreateOptionData,) -> CommandOption {
+        data.into_option(CommandOptionType::Role,)
     }
 }

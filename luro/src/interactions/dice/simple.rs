@@ -5,7 +5,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand,)]
 #[command(name = "simple", desc = "A simpler version, for those not wanting to deal with foruma")]
 pub struct Simple {
     /// Total number of dice, for example two dice
@@ -15,68 +15,68 @@ pub struct Simple {
     #[command(min_value = 1, max_value = 10000)]
     sides: i64,
     /// Add context to your role, such as for D&D
-    reason: Option<String>,
+    reason: Option<String,>,
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
-    ephemeral: Option<bool>,
+    ephemeral: Option<bool,>,
     /// Keep the highest amount of X dice
     #[command(min_value = 1, max_value = 100)]
-    keep_highest: Option<i64>,
+    keep_highest: Option<i64,>,
     /// Keep the lowest amount of X dice
     #[command(min_value = 1, max_value = 100)]
-    keep_lowest: Option<i64>,
+    keep_lowest: Option<i64,>,
     /// Drop the highest amount of X dice
     #[command(min_value = 1, max_value = 100)]
-    drop_highest: Option<i64>,
+    drop_highest: Option<i64,>,
     /// Drop the lowest amount of X dice
     #[command(min_value = 1, max_value = 100)]
-    drop_lowest: Option<i64>,
+    drop_lowest: Option<i64,>,
     /// Add X value to the result
     #[command(min_value = 1, max_value = 100)]
-    add: Option<i64>,
+    add: Option<i64,>,
     /// Take away X value from the result
     #[command(min_value = 1, max_value = 10000)]
-    take: Option<i64>,
+    take: Option<i64,>,
     /// Multiply the result by X amount
     #[command(min_value = 1, max_value = 1000)]
-    multiply: Option<i64>,
+    multiply: Option<i64,>,
     /// Divide the result by X amount
     #[command(min_value = 1, max_value = 1000)]
-    divide: Option<i64>
+    divide: Option<i64,>,
 }
 
 impl LuroCommand for Simple {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
         let mut roll = format!("{}d{}", self.dice, self.sides);
 
-        if let Some(operation) = self.keep_highest {
+        if let Some(operation,) = self.keep_highest {
             write!(roll, "kh{operation}")?
         }
 
-        if let Some(operation) = self.keep_lowest {
+        if let Some(operation,) = self.keep_lowest {
             write!(roll, "kl{operation}")?
         }
 
-        if let Some(operation) = self.drop_highest {
+        if let Some(operation,) = self.drop_highest {
             write!(roll, "dh{operation}")?
         }
 
-        if let Some(operation) = self.drop_lowest {
+        if let Some(operation,) = self.drop_lowest {
             write!(roll, "dl{operation}")?
         }
 
-        if let Some(operation) = self.add {
+        if let Some(operation,) = self.add {
             write!(roll, "+{operation}")?
         }
 
-        if let Some(operation) = self.take {
+        if let Some(operation,) = self.take {
             write!(roll, "-{operation}")?
         }
 
-        if let Some(operation) = self.multiply {
+        if let Some(operation,) = self.multiply {
             write!(roll, "*{operation}")?
         }
 
-        if let Some(operation) = self.divide {
+        if let Some(operation,) = self.divide {
             write!(roll, "/{operation}")?
         }
 
@@ -84,12 +84,12 @@ impl LuroCommand for Simple {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
-        let mut result_string = if let Some(mut reason) = self.reason {
-            if !reason.starts_with('\\') {
+        let mut result_string = if let Some(mut reason,) = self.reason {
+            if !reason.starts_with('\\',) {
                 reason = format!("```{reason}```")
             } else {
-                reason.remove(0);
-                reason.push('\n')
+                reason.remove(0,);
+                reason.push('\n',)
             }
 
             format!(
@@ -102,20 +102,20 @@ impl LuroCommand for Simple {
             format!("**Result:** `{}`\n**Total:** `{}`", result.string_result, result.dice_total)
         };
 
-        if result.dice_total == RollValue::Int(20) {
-            result_string.push_str(&format!("\n-----\n*Whoa, a 20!! Congrats!! <3*"))
+        if result.dice_total == RollValue::Int(20,) {
+            result_string.push_str(&format!("\n-----\n*Whoa, a 20!! Congrats!! <3*"),)
         }
 
-        if result.dice_total == RollValue::Int(0) {
-            result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
+        if result.dice_total == RollValue::Int(0,) {
+            result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"),)
         }
 
         ctx.respond(|r| {
             if self.ephemeral.unwrap_or_default() {
                 r.ephemeral();
             }
-            r.content(result_string)
-        })
-        .await
+            r.content(result_string,)
+        },)
+            .await
     }
 }

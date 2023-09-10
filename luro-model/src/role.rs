@@ -1,19 +1,19 @@
 use std::{
     cmp::Ordering,
-    collections::{BTreeMap, HashMap}
+    collections::{BTreeMap, HashMap},
 };
 
 use serde::{Deserialize, Serialize};
 use twilight_model::{
     guild::{Permissions, Role, RoleFlags, RoleTags},
     id::{marker::RoleMarker, Id},
-    util::ImageHash
+    util::ImageHash,
 };
 
 /// A [HashMap] of [LuroRole], keyed by a [RoleMarker]
-pub type LuroRoles = HashMap<Id<RoleMarker>, LuroRole>;
+pub type LuroRoles = HashMap<Id<RoleMarker,>, LuroRole,>;
 /// A [BTreeMap] of [RoleMarker], keyed by [usize]
-pub type LuroRolePositions = BTreeMap<usize, Id<RoleMarker>>;
+pub type LuroRolePositions = BTreeMap<usize, Id<RoleMarker,>,>;
 
 /// Note that it is possible to compare the positions between roles, using the [`Ord`] trait.
 ///
@@ -30,7 +30,7 @@ pub type LuroRolePositions = BTreeMap<usize, Id<RoleMarker>>;
 /// > higher role than one with an ID of 20.
 ///
 /// [twilight-model documentation]: https://docs.rs/twilight-model/0.10.2/twilight_model/guild/struct.Role.html#impl-Ord
-#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize,)]
 pub struct LuroRole {
     #[serde(default)]
     pub colour: u32,
@@ -45,8 +45,8 @@ pub struct LuroRole {
     ///
     /// [Discord Docs/Image Formatting]: https://discord.com/developers/docs/reference#image-formatting
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub icon: Option<ImageHash>,
-    pub id: Id<RoleMarker>,
+    pub icon: Option<ImageHash,>,
+    pub id: Id<RoleMarker,>,
     #[serde(default)]
     pub managed: bool,
     #[serde(default)]
@@ -60,37 +60,37 @@ pub struct LuroRole {
     pub flags: RoleFlags,
     /// Tags about the role.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub tags: Option<RoleTags>,
+    pub tags: Option<RoleTags,>,
     /// Icon unicode emoji.
     ///
     /// Present if the guild has the `ROLE_ICONS` feature and if the role has
     /// one.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub unicode_emoji: Option<String>
+    pub unicode_emoji: Option<String,>,
 }
 
 impl LuroRole {
-    pub fn role_permission(&self) -> (Id<RoleMarker>, Permissions) {
-        (self.id, self.permissions)
+    pub fn role_permission(&self,) -> (Id<RoleMarker,>, Permissions,) {
+        (self.id, self.permissions,)
     }
 
-    pub fn role_ids(roles: Vec<LuroRole>) -> Vec<Id<RoleMarker>> {
-        roles.into_iter().map(|x| x.id).collect()
+    pub fn role_ids(roles: Vec<LuroRole,>,) -> Vec<Id<RoleMarker,>,> {
+        roles.into_iter().map(|x| x.id,).collect()
     }
 }
 
 impl Ord for LuroRole {
-    fn cmp(&self, other: &Self) -> Ordering {
+    fn cmp(&self, other: &Self,) -> Ordering {
         self.position
-            .cmp(&other.position)
-            .then(self.id.get().cmp(&other.id.get()))
+            .cmp(&other.position,)
+            .then(self.id.get().cmp(&other.id.get(),),)
             .reverse()
     }
 }
 
 impl PartialOrd for LuroRole {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+    fn partial_cmp(&self, other: &Self,) -> Option<Ordering,> {
+        Some(self.cmp(other,),)
     }
 }
 
@@ -100,7 +100,7 @@ impl Default for LuroRole {
             colour: Default::default(),
             hoist: Default::default(),
             icon: Default::default(),
-            id: Id::new(0),
+            id: Id::new(0,),
             managed: Default::default(),
             mentionable: Default::default(),
             name: Default::default(),
@@ -108,13 +108,13 @@ impl Default for LuroRole {
             position: Default::default(),
             flags: RoleFlags::empty(),
             tags: Default::default(),
-            unicode_emoji: Default::default()
+            unicode_emoji: Default::default(),
         }
     }
 }
 
-impl From<Role> for LuroRole {
-    fn from(role: Role) -> Self {
+impl From<Role,> for LuroRole {
+    fn from(role: Role,) -> Self {
         Self {
             colour: role.color,
             hoist: role.hoist,
@@ -127,13 +127,13 @@ impl From<Role> for LuroRole {
             position: role.position,
             flags: role.flags,
             tags: role.tags,
-            unicode_emoji: role.unicode_emoji
+            unicode_emoji: role.unicode_emoji,
         }
     }
 }
 
-impl From<Id<RoleMarker>> for LuroRole {
-    fn from(id: Id<RoleMarker>) -> Self {
+impl From<Id<RoleMarker,>,> for LuroRole {
+    fn from(id: Id<RoleMarker,>,) -> Self {
         LuroRole {
             id,
             ..Default::default()
@@ -141,8 +141,8 @@ impl From<Id<RoleMarker>> for LuroRole {
     }
 }
 
-impl From<&Id<RoleMarker>> for LuroRole {
-    fn from(id: &Id<RoleMarker>) -> Self {
+impl From<&Id<RoleMarker,>,> for LuroRole {
+    fn from(id: &Id<RoleMarker,>,) -> Self {
         LuroRole {
             id: *id,
             ..Default::default()

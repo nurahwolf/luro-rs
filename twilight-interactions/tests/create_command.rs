@@ -5,11 +5,11 @@ use twilight_model::application::interaction::InteractionChannel;
 use twilight_model::{
     application::command::{CommandOption, CommandOptionType, CommandOptionValue},
     channel::ChannelType,
-    guild::Permissions
+    guild::Permissions,
 };
 
 /// Demo command for testing purposes
-#[derive(CreateCommand, Debug, PartialEq)]
+#[derive(CreateCommand, Debug, PartialEq,)]
 #[command(
     name = "demo",
     name_localizations = "demo_name",
@@ -17,9 +17,9 @@ use twilight_model::{
     dm_permission = false,
     nsfw = true
 )]
-struct DemoCommand<'a, T>
+struct DemoCommand<'a, T,>
 where
-    T: CreateOption
+    T: CreateOption,
 {
     /// This should be overwritten
     #[command(rename = "member", desc = "A member")]
@@ -34,22 +34,22 @@ where
     number: f64,
     /// A text channel
     #[command(channel_types = "guild_text private")]
-    channel: Option<InteractionChannel>,
+    channel: Option<InteractionChannel,>,
     /// Generic field
-    generic: Option<T>,
+    generic: Option<T,>,
     /// More text
-    cow: Option<Cow<'a, str>>
+    cow: Option<Cow<'a, str,>,>,
 }
 
 fn demo_permissions() -> Permissions {
     Permissions::SEND_MESSAGES
 }
 
-fn demo_name() -> [(&'static str, &'static str); 1] {
-    [("en", "demo")]
+fn demo_name() -> [(&'static str, &'static str,); 1] {
+    [("en", "demo",),]
 }
 
-#[derive(CreateCommand, Debug, PartialEq, Eq)]
+#[derive(CreateCommand, Debug, PartialEq, Eq,)]
 #[command(name = "unit", desc = "Unit command for testing purposes")]
 struct UnitCommand;
 
@@ -57,7 +57,7 @@ struct UnitCommand;
 fn test_create_command() {
     let options = vec![
         CommandOption {
-            autocomplete: Some(false),
+            autocomplete: Some(false,),
             channel_types: None,
             choices: None,
             description: "A member".into(),
@@ -70,10 +70,10 @@ fn test_create_command() {
             name: "member".into(),
             name_localizations: None,
             options: None,
-            required: Some(true)
+            required: Some(true,),
         },
         CommandOption {
-            autocomplete: Some(false),
+            autocomplete: Some(false,),
             channel_types: None,
             choices: None,
             description: "Some text".into(),
@@ -81,32 +81,32 @@ fn test_create_command() {
             kind: CommandOptionType::String,
             max_length: None,
             max_value: None,
-            min_length: Some(5),
+            min_length: Some(5,),
             min_value: None,
             name: "text".into(),
             name_localizations: None,
             options: None,
-            required: Some(true)
+            required: Some(true,),
         },
         CommandOption {
-            autocomplete: Some(true),
+            autocomplete: Some(true,),
             channel_types: None,
             choices: None,
             description: "A number".into(),
             description_localizations: None,
             kind: CommandOptionType::Number,
             max_length: None,
-            max_value: Some(CommandOptionValue::Number(50.0)),
+            max_value: Some(CommandOptionValue::Number(50.0,),),
             min_length: None,
             min_value: None,
             name: "number".into(),
             name_localizations: None,
             options: None,
-            required: Some(true)
+            required: Some(true,),
         },
         CommandOption {
-            autocomplete: Some(false),
-            channel_types: Some(vec![ChannelType::GuildText, ChannelType::Private]),
+            autocomplete: Some(false,),
+            channel_types: Some(vec![ChannelType::GuildText, ChannelType::Private],),
             choices: None,
             description: "A text channel".into(),
             description_localizations: None,
@@ -118,10 +118,10 @@ fn test_create_command() {
             name: "channel".into(),
             name_localizations: None,
             options: None,
-            required: Some(false)
+            required: Some(false,),
         },
         CommandOption {
-            autocomplete: Some(false),
+            autocomplete: Some(false,),
             channel_types: None,
             choices: None,
             description: "Generic field".into(),
@@ -134,10 +134,10 @@ fn test_create_command() {
             name: "generic".into(),
             name_localizations: None,
             options: None,
-            required: Some(false)
+            required: Some(false,),
         },
         CommandOption {
-            autocomplete: Some(false),
+            autocomplete: Some(false,),
             channel_types: None,
             choices: None,
             description: "More text".into(),
@@ -150,26 +150,26 @@ fn test_create_command() {
             name: "cow".into(),
             name_localizations: None,
             options: None,
-            required: Some(false)
+            required: Some(false,),
         },
     ];
 
-    let name_localizations = HashMap::from([("en".into(), "demo".into())]);
+    let name_localizations = HashMap::from([("en".into(), "demo".into(),),],);
 
     let expected = ApplicationCommandData {
         name: "demo".into(),
-        name_localizations: Some(name_localizations),
+        name_localizations: Some(name_localizations,),
         description: "Demo command for testing purposes".into(),
         description_localizations: None,
         options,
-        default_member_permissions: Some(Permissions::SEND_MESSAGES),
-        dm_permission: Some(false),
+        default_member_permissions: Some(Permissions::SEND_MESSAGES,),
+        dm_permission: Some(false,),
         group: false,
-        nsfw: Some(true)
+        nsfw: Some(true,),
     };
 
-    assert_eq!(DemoCommand::<i64>::create_command(), expected);
-    assert_eq!(DemoCommand::<i64>::NAME, "demo");
+    assert_eq!(DemoCommand::<i64,>::create_command(), expected);
+    assert_eq!(DemoCommand::<i64,>::NAME, "demo");
 }
 
 #[test]
@@ -183,7 +183,7 @@ fn test_unit_create_command() {
         default_member_permissions: None,
         dm_permission: None,
         group: false,
-        nsfw: None
+        nsfw: None,
     };
 
     assert_eq!(UnitCommand::create_command(), expected);

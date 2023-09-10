@@ -23,7 +23,7 @@ use self::roles::RoleCommands;
 use self::{
     about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
     hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::Owner, say::SayCommand,
-    story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand
+    story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand,
 };
 use crate::interaction::LuroSlash;
 use crate::interactions::character::send::CharacterSendAutocomplete;
@@ -59,12 +59,12 @@ mod wordcount;
 // pub mod fursona;
 
 /// A simple structure containing our commands
-#[derive(Default)]
+#[derive(Default,)]
 pub struct Commands {
     /// Commands that are available to be registered within guilds
-    pub guild_commands: HashMap<&'static str, Command>,
+    pub guild_commands: HashMap<&'static str, Command,>,
     /// Commands that are available to be registered globally
-    pub global_commands: HashMap<&'static str, Command>
+    pub global_commands: HashMap<&'static str, Command,>,
 }
 
 impl Commands {
@@ -73,70 +73,72 @@ impl Commands {
         // Create the hashmaps
         let mut init = Self {
             guild_commands: Default::default(),
-            global_commands: Default::default()
+            global_commands: Default::default(),
         };
 
         // Add some default commands
-        init.global_commands.insert("about", AboutCommand::create_command().into());
-        init.global_commands.insert("hello", HelloCommand::create_command().into());
-        init.global_commands.insert("count", CountCommand::create_command().into());
-        init.global_commands.insert("say", SayCommand::create_command().into());
-        init.global_commands.insert("mod", ModeratorCommands::create_command().into());
-        init.global_commands.insert("music", MusicCommands::create_command().into());
-        init.global_commands.insert("boop", BoopCommand::create_command().into());
-        init.global_commands.insert("heck", HeckCommands::create_command().into());
-        init.global_commands.insert("owner", Owner::create_command().into());
-        init.global_commands.insert("about", AboutCommand::create_command().into());
-        init.global_commands.insert("info", InfoCommands::create_command().into());
-        init.global_commands.insert("lewd", LewdCommands::create_command().into());
-        init.global_commands.insert("base64", Base64Commands::create_command().into());
-        init.global_commands.insert("story", StoryCommand::create_command().into());
-        init.global_commands.insert("uwu", UwUCommand::create_command().into());
-        init.global_commands.insert("roll", DiceCommands::create_command().into());
-        init.global_commands.insert("marry", MarryCommands::create_command().into());
-        init.global_commands.insert("ping", PingCommand::create_command().into());
-        init.global_commands.insert(BOT_NAME, LuroCommands::create_command().into());
-        init.global_commands.insert("quote", QuoteCommands::create_command().into());
-        init.global_commands.insert("roles", RoleCommands::create_command().into());
-        init.global_commands.insert("character", Character::create_command().into());
+        init.global_commands.insert("about", AboutCommand::create_command().into(),);
+        init.global_commands.insert("hello", HelloCommand::create_command().into(),);
+        init.global_commands.insert("count", CountCommand::create_command().into(),);
+        init.global_commands.insert("say", SayCommand::create_command().into(),);
+        init.global_commands
+            .insert("mod", ModeratorCommands::create_command().into(),);
+        init.global_commands.insert("music", MusicCommands::create_command().into(),);
+        init.global_commands.insert("boop", BoopCommand::create_command().into(),);
+        init.global_commands.insert("heck", HeckCommands::create_command().into(),);
+        init.global_commands.insert("owner", Owner::create_command().into(),);
+        init.global_commands.insert("about", AboutCommand::create_command().into(),);
+        init.global_commands.insert("info", InfoCommands::create_command().into(),);
+        init.global_commands.insert("lewd", LewdCommands::create_command().into(),);
+        init.global_commands
+            .insert("base64", Base64Commands::create_command().into(),);
+        init.global_commands.insert("story", StoryCommand::create_command().into(),);
+        init.global_commands.insert("uwu", UwUCommand::create_command().into(),);
+        init.global_commands.insert("roll", DiceCommands::create_command().into(),);
+        init.global_commands.insert("marry", MarryCommands::create_command().into(),);
+        init.global_commands.insert("ping", PingCommand::create_command().into(),);
+        init.global_commands.insert(BOT_NAME, LuroCommands::create_command().into(),);
+        init.global_commands.insert("quote", QuoteCommands::create_command().into(),);
+        init.global_commands.insert("roles", RoleCommands::create_command().into(),);
+        init.global_commands.insert("character", Character::create_command().into(),);
 
         init.global_commands
-            .insert("wordcount", WordcountCommand::create_command().into());
+            .insert("wordcount", WordcountCommand::create_command().into(),);
 
         // Return our initialised commands
         init
     }
 }
 
-impl<D: LuroDatabaseDriver> LuroSlash<D> {
+impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
     /// Handle incoming command interaction.
-    pub async fn handle_command(self, data: Box<CommandData>) -> anyhow::Result<()> {
+    pub async fn handle_command(self, data: Box<CommandData,>,) -> anyhow::Result<(),> {
         // TODO: CONSTANT match for bot name...
         match data.name.as_str() {
-            "about" => AboutCommand::new(data).await?.run_command(self).await,
-            "say" => SayCommand::new(data).await?.run_command(self).await,
-            "info" => InfoCommands::new(data).await?.run_command(self).await,
-            "hello" => HelloCommand::new(data).await?.run_command(self).await,
-            "count" => CountCommand::new(data).await?.run_command(self).await,
-            "mod" => ModeratorCommands::new(data).await?.run_command(self).await,
-            "music" => MusicCommands::new(data).await?.run_command(self).await,
-            "boop" => BoopCommand::new(data).await?.run_command(self).await,
-            "owner" => Owner::new(data).await?.run_command(self).await,
-            "heck" => HeckCommands::new(data).await?.run_command(self).await,
-            "lewd" => LewdCommands::new(data).await?.run_command(self).await,
-            "base64" => Base64Commands::new(data).await?.run_command(self).await,
-            "story" => StoryCommand::new(data).await?.run_command(self).await,
-            "uwu" => UwUCommand::new(data).await?.run_command(self).await,
-            "wordcount" => WordcountCommand::new(data).await?.run_command(self).await,
-            "dice" => DiceCommands::new(data).await?.run_command(self).await,
-            "luro" => LuroCommands::new(data).await?.run_command(self).await,
-            "marry" => MarryCommands::new(data).await?.run_command(self).await,
-            "ping" => PingCommand::new(data).await?.run_command(self).await,
-            "quote" => QuoteCommands::new(data).await?.run_command(self).await,
-            "roles" => RoleCommands::new(data).await?.run_command(self).await,
-            "character" => Character::new(data).await?.run_command(self).await,
+            "about" => AboutCommand::new(data,).await?.run_command(self,).await,
+            "say" => SayCommand::new(data,).await?.run_command(self,).await,
+            "info" => InfoCommands::new(data,).await?.run_command(self,).await,
+            "hello" => HelloCommand::new(data,).await?.run_command(self,).await,
+            "count" => CountCommand::new(data,).await?.run_command(self,).await,
+            "mod" => ModeratorCommands::new(data,).await?.run_command(self,).await,
+            "music" => MusicCommands::new(data,).await?.run_command(self,).await,
+            "boop" => BoopCommand::new(data,).await?.run_command(self,).await,
+            "owner" => Owner::new(data,).await?.run_command(self,).await,
+            "heck" => HeckCommands::new(data,).await?.run_command(self,).await,
+            "lewd" => LewdCommands::new(data,).await?.run_command(self,).await,
+            "base64" => Base64Commands::new(data,).await?.run_command(self,).await,
+            "story" => StoryCommand::new(data,).await?.run_command(self,).await,
+            "uwu" => UwUCommand::new(data,).await?.run_command(self,).await,
+            "wordcount" => WordcountCommand::new(data,).await?.run_command(self,).await,
+            "dice" => DiceCommands::new(data,).await?.run_command(self,).await,
+            "luro" => LuroCommands::new(data,).await?.run_command(self,).await,
+            "marry" => MarryCommands::new(data,).await?.run_command(self,).await,
+            "ping" => PingCommand::new(data,).await?.run_command(self,).await,
+            "quote" => QuoteCommands::new(data,).await?.run_command(self,).await,
+            "roles" => RoleCommands::new(data,).await?.run_command(self,).await,
+            "character" => Character::new(data,).await?.run_command(self,).await,
 
-            name => self.unknown_command_response_named(name).await
+            name => self.unknown_command_response_named(name,).await,
         }
     }
 
@@ -144,59 +146,59 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     ///
     /// SAFETY: There is an unwrap here, but the type is always present on MessageComponent
     /// which is the only type this function is called on
-    pub async fn handle_component(self, data: Box<MessageComponentInteractionData>) -> anyhow::Result<()> {
+    pub async fn handle_component(self, data: Box<MessageComponentInteractionData,>,) -> anyhow::Result<(),> {
         let mut message = self.interaction.message.clone().unwrap();
         let mut interaction = self.interaction.clone();
         let mut new_id = true;
 
         while new_id {
-            interaction = self.framework.database.get_interaction(&message.id.to_string()).await?;
+            interaction = self.framework.database.get_interaction(&message.id.to_string(),).await?;
 
             new_id = match interaction.message {
-                Some(ref new_message) => {
+                Some(ref new_message,) => {
                     message = new_message.clone();
                     true
                 }
-                None => false
+                None => false,
             }
         }
 
         let command = match interaction.data {
-            Some(InteractionData::ApplicationCommand(ref data)) => data.clone(),
+            Some(InteractionData::ApplicationCommand(ref data,),) => data.clone(),
             _ => {
                 return Err(anyhow!(
                     "unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}",
                     interaction.data
-                ))
+                ),)
             }
         };
 
-        if let Some(author) = interaction.author() {
+        if let Some(author,) = interaction.author() {
             info!("Received component interaction - {} - {}", author.name, data.custom_id);
         }
 
         match data.custom_id.as_str() {
-            "character-fetish" => Character::new(command).await?.handle_component(data, self).await,
-            "boop" => BoopCommand::new(command).await?.handle_component(data, self).await,
-            "decode" | "encode" => Base64Commands::new(command).await?.handle_component(data, self).await,
-            "marry-accept" | "marry-deny" => MarryCommands::new(command).await?.handle_component(data, self).await,
-            "story" => StoryCommand::new(command).await?.handle_component(data, self).await,
-            "heck-setting" => HeckCommands::new(command).await?.handle_component(data, self).await,
+            "character-fetish" => Character::new(command,).await?.handle_component(data, self,).await,
+            "boop" => BoopCommand::new(command,).await?.handle_component(data, self,).await,
+            "decode" | "encode" => Base64Commands::new(command,).await?.handle_component(data, self,).await,
+            "marry-accept" | "marry-deny" => MarryCommands::new(command,).await?.handle_component(data, self,).await,
+            "story" => StoryCommand::new(command,).await?.handle_component(data, self,).await,
+            "heck-setting" => HeckCommands::new(command,).await?.handle_component(data, self,).await,
             "role-menu" | "rules-button" | "adult-button" | "bait-button" => {
-                RoleCommands::new(command).await?.handle_component(data, self).await
+                RoleCommands::new(command,).await?.handle_component(data, self,).await
             }
             "mass-assign-roles" | "mass-assign-remove" | "mass-assign-selector" => {
-                Owner::new(command).await?.handle_component(data, self).await
+                Owner::new(command,).await?.handle_component(data, self,).await
             }
             name => {
                 warn!(name = name, "received unknown component");
-                self.unknown_command_response_named(name).await
+                self.unknown_command_response_named(name,).await
             }
         }
     }
 
     /// Handle incoming modal interaction
-    pub async fn handle_modal(self, data: ModalInteractionData) -> anyhow::Result<()> {
+    pub async fn handle_modal(self, data: ModalInteractionData,) -> anyhow::Result<(),> {
         // let original_interaction = self
         //     .framework
         //     .database
@@ -211,57 +213,57 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
         // };
 
         match data.custom_id.as_str() {
-            "character" => Character::handle_model(data, self).await,
-            "heck-add" => HeckAddCommand::handle_model(data, self).await,
-            "story-add" => StoryCommand::handle_model(data, self).await,
-            "mod-warn" => ModeratorCommands::handle_model(data, self).await,
-            "modify-embed" => Owner::handle_model(data, self).await,
+            "character" => Character::handle_model(data, self,).await,
+            "heck-add" => HeckAddCommand::handle_model(data, self,).await,
+            "story-add" => StoryCommand::handle_model(data, self,).await,
+            "mod-warn" => ModeratorCommands::handle_model(data, self,).await,
+            "modify-embed" => Owner::handle_model(data, self,).await,
             name => {
                 warn!(name = name, "received unknown component");
-                self.unknown_command_response_named(name).await
+                self.unknown_command_response_named(name,).await
             }
         }
     }
 
     /// Handle incoming autocomplete
-    pub async fn handle_autocomplete(self, data: Box<CommandData>) -> anyhow::Result<()> {
-        Autocomplete::new(*data)?.run(self).await
+    pub async fn handle_autocomplete(self, data: Box<CommandData,>,) -> anyhow::Result<(),> {
+        Autocomplete::new(*data,)?.run(self,).await
     }
 }
 
-#[derive(CommandModel)]
+#[derive(CommandModel,)]
 #[command(autocomplete = true)]
 enum Autocomplete {
     #[command(name = "send")]
-    Send(CharacterSendAutocomplete),
+    Send(CharacterSendAutocomplete,),
     #[command(name = "proxy")]
-    Proxy(CharacterSendAutocomplete),
+    Proxy(CharacterSendAutocomplete,),
     #[command(name = "icon")]
-    Icon(CharacterSendAutocomplete),
+    Icon(CharacterSendAutocomplete,),
     #[command(name = "create")]
-    Create(CharacterSendAutocomplete)
+    Create(CharacterSendAutocomplete,),
 }
 
 impl Autocomplete {
-    async fn run<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
         match self {
-            Autocomplete::Create(cmd) | Autocomplete::Icon(cmd) | Autocomplete::Send(cmd) | Autocomplete::Proxy(cmd) => {
-                cmd.run(ctx).await
+            Autocomplete::Create(cmd,) | Autocomplete::Icon(cmd,) | Autocomplete::Send(cmd,) | Autocomplete::Proxy(cmd,) => {
+                cmd.run(ctx,).await
             }
         }
     }
 
-    fn new(data: CommandData) -> anyhow::Result<Self> {
-        match Self::from_interaction(data.into()) {
-            Ok(ok) => Ok(ok),
-            Err(why) => Err(anyhow!(
+    fn new(data: CommandData,) -> anyhow::Result<Self,> {
+        match Self::from_interaction(data.into(),) {
+            Ok(ok,) => Ok(ok,),
+            Err(why,) => Err(anyhow!(
                 "Got interaction data, but failed to parse it to the command type specified: {why}"
-            ))
+            ),),
         }
     }
 }
 
 /// Send the response
-pub async fn send<D: LuroDatabaseDriver>(response: &LuroResponse, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-    ctx.send_respond(response.clone()).await
+pub async fn send<D: LuroDatabaseDriver,>(response: &LuroResponse, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
+    ctx.send_respond(response.clone(),).await
 }

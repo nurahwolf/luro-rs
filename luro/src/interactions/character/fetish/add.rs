@@ -6,7 +6,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand,)]
 #[command(name = "add", desc = "Add a fetish to a character profile")]
 pub struct Add {
     #[command(desc = "The character that should be modified", autocomplete = true)]
@@ -14,49 +14,49 @@ pub struct Add {
     /// The fetish type to add
     fetish: FetishCategory,
     /// Description of that fetish
-    description: String
+    description: String,
 }
 
 impl LuroCommand for Add {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
         let mut embed = ctx.default_embed().await;
         let user_id = ctx
             .interaction
             .author_id()
-            .context("Expected to find the user running this command")?;
-        let mut user_data = ctx.framework.database.get_user(&user_id, false).await?;
-        embed.title(format!("Character Profile - {}", self.name));
+            .context("Expected to find the user running this command",)?;
+        let mut user_data = ctx.framework.database.get_user(&user_id, false,).await?;
+        embed.title(format!("Character Profile - {}", self.name),);
         embed.author(|a| {
-            a.icon_url(user_data.avatar())
-                .name(format!("Profile by {}", user_data.name()))
-        });
+            a.icon_url(user_data.avatar(),)
+                .name(format!("Profile by {}", user_data.name()),)
+        },);
 
         if user_data.characters.is_empty() {
             return ctx
                 .respond(|r| {
-                    r.content(format!("Hey <@{user_id}>, you must add a character first!!"))
+                    r.content(format!("Hey <@{user_id}>, you must add a character first!!"),)
                         .ephemeral()
-                })
+                },)
                 .await;
         }
 
-        let character = match user_data.characters.get_mut(&self.name) {
-            Some(character) => {
+        let character = match user_data.characters.get_mut(&self.name,) {
+            Some(character,) => {
                 let test = character.fetishes.len() + 1;
                 character.fetishes.insert(
                     test,
                     Fetish {
                         category: self.fetish,
                         description: self.description,
-                        list: FetishList::Custom
-                    }
+                        list: FetishList::Custom,
+                    },
                 );
                 character.clone()
             }
             None => {
                 let mut characters = String::new();
 
-                for (character_name, character) in user_data.characters {
+                for (character_name, character,) in user_data.characters {
                     writeln!(characters, "- {character_name}: {}", character.short_description)?
                 }
 
@@ -64,11 +64,11 @@ impl LuroCommand for Add {
                     "I'm afraid that you have no characters with the name `{}`! You have the following characters:\n{}",
                     self.name, characters
                 );
-                return ctx.respond(|r| r.content(response).ephemeral()).await;
+                return ctx.respond(|r| r.content(response,).ephemeral(),).await;
             }
         };
 
-        ctx.framework.database.save_user(&user_id, &user_data).await?;
+        ctx.framework.database.save_user(&user_id, &user_data,).await?;
 
         let mut fav = String::new();
         let mut love = String::new();
@@ -78,7 +78,7 @@ impl LuroCommand for Add {
         let mut hate = String::new();
         let mut limits = String::new();
 
-        for (id, fetish) in &character.fetishes {
+        for (id, fetish,) in &character.fetishes {
             match fetish.category {
                 FetishCategory::Favourite => writeln!(fav, "- {id}: {}", fetish.description)?,
                 FetishCategory::Love => writeln!(love, "- {id}: {}", fetish.description)?,
@@ -86,38 +86,38 @@ impl LuroCommand for Add {
                 FetishCategory::Neutral => writeln!(neutral, "- {id}: {}", fetish.description)?,
                 FetishCategory::Dislike => writeln!(dislike, "- {id}: {}", fetish.description)?,
                 FetishCategory::Hate => writeln!(hate, "- {id}: {}", fetish.description)?,
-                FetishCategory::Limit => writeln!(limits, "- {id}: {}", fetish.description)?
+                FetishCategory::Limit => writeln!(limits, "- {id}: {}", fetish.description)?,
             }
         }
 
         if !fav.is_empty() {
-            embed.create_field("Favourites", &fav, false);
+            embed.create_field("Favourites", &fav, false,);
         }
 
         if !love.is_empty() {
-            embed.create_field("Love", &love, false);
+            embed.create_field("Love", &love, false,);
         }
 
         if !like.is_empty() {
-            embed.create_field("Like", &like, false);
+            embed.create_field("Like", &like, false,);
         }
 
         if !neutral.is_empty() {
-            embed.create_field("Neutral", &neutral, false);
+            embed.create_field("Neutral", &neutral, false,);
         }
 
         if !dislike.is_empty() {
-            embed.create_field("Dislike", &dislike, false);
+            embed.create_field("Dislike", &dislike, false,);
         }
 
         if !hate.is_empty() {
-            embed.create_field("Hate", &hate, false);
+            embed.create_field("Hate", &hate, false,);
         }
 
         if !limits.is_empty() {
-            embed.create_field("Limits", &limits, false);
+            embed.create_field("Limits", &limits, false,);
         }
 
-        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
+        ctx.respond(|r| r.add_embed(embed,).ephemeral(),).await
     }
 }

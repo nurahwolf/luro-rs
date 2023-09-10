@@ -16,29 +16,29 @@ use self::roll::Roll;
 use self::roll_direction::Direction;
 use self::simple::Simple;
 use self::stats::Stats;
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand,)]
 #[command(name = "dice", desc = "Roll those freaking dice!!!")]
 pub enum DiceCommands {
     #[command(name = "roll")]
-    Roll(Roll),
+    Roll(Roll,),
     #[command(name = "direction")]
-    Direction(Direction),
+    Direction(Direction,),
     #[command(name = "stats")]
-    Stats(Stats),
+    Stats(Stats,),
     #[command(name = "help")]
-    Help(Help),
+    Help(Help,),
     #[command(name = "simple")]
-    Simple(Simple)
+    Simple(Simple,),
 }
 
 impl LuroCommand for DiceCommands {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
         match self {
-            Self::Roll(command) => command.run_command(ctx).await,
-            Self::Direction(command) => command.run_command(ctx).await,
-            Self::Stats(command) => command.run_command(ctx).await,
-            Self::Help(command) => command.run_command(ctx).await,
-            Self::Simple(command) => command.run_command(ctx).await
+            Self::Roll(command,) => command.run_command(ctx,).await,
+            Self::Direction(command,) => command.run_command(ctx,).await,
+            Self::Stats(command,) => command.run_command(ctx,).await,
+            Self::Help(command,) => command.run_command(ctx,).await,
+            Self::Simple(command,) => command.run_command(ctx,).await,
         }
     }
 }

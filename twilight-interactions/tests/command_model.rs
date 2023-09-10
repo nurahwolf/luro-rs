@@ -4,63 +4,63 @@ use twilight_interactions::command::{CommandInputData, CommandModel, CommandOpti
 use twilight_model::{
     application::interaction::{
         application_command::{CommandDataOption, CommandOptionValue},
-        InteractionDataResolved, InteractionMember
+        InteractionDataResolved, InteractionMember,
     },
     guild::{MemberFlags, Permissions},
     id::Id,
     user::User,
-    util::Timestamp
+    util::Timestamp,
 };
 
-#[derive(CommandModel, Debug, PartialEq, Eq)]
-struct DemoCommand<'a, T>
+#[derive(CommandModel, Debug, PartialEq, Eq,)]
+struct DemoCommand<'a, T,>
 where
-    T: CommandOption
+    T: CommandOption,
 {
     #[command(rename = "member", desc = "test")]
     user: ResolvedUser,
     text: String,
-    number: Option<i64>,
+    number: Option<i64,>,
     generic: T,
-    cow: Cow<'a, str>,
-    mentionable: ResolvedMentionable
+    cow: Cow<'a, str,>,
+    mentionable: ResolvedMentionable,
 }
 
-#[derive(CommandModel, Debug, PartialEq, Eq)]
+#[derive(CommandModel, Debug, PartialEq, Eq,)]
 struct UnitCommand;
 
 #[test]
 fn test_command_model() {
-    let user_id = Id::new(123);
+    let user_id = Id::new(123,);
     let options = vec![
         CommandDataOption {
             name: "member".to_string(),
-            value: CommandOptionValue::User(user_id)
+            value: CommandOptionValue::User(user_id,),
         },
         CommandDataOption {
             name: "text".into(),
-            value: CommandOptionValue::String("hello world".into())
+            value: CommandOptionValue::String("hello world".into(),),
         },
         CommandDataOption {
             name: "number".into(),
-            value: CommandOptionValue::Integer(42)
+            value: CommandOptionValue::Integer(42,),
         },
         CommandDataOption {
             name: "generic".into(),
-            value: CommandOptionValue::Integer(0)
+            value: CommandOptionValue::Integer(0,),
         },
         CommandDataOption {
             name: "cow".into(),
-            value: CommandOptionValue::String("cow".into())
+            value: CommandOptionValue::String("cow".into(),),
         },
         CommandDataOption {
             name: "mentionable".into(),
-            value: CommandOptionValue::Mentionable(user_id.cast())
+            value: CommandOptionValue::Mentionable(user_id.cast(),),
         },
     ];
 
     let member = InteractionMember {
-        joined_at: Timestamp::from_secs(1609455600).unwrap(),
+        joined_at: Timestamp::from_secs(1609455600,).unwrap(),
         nick: None,
         premium_since: None,
         roles: vec![],
@@ -68,7 +68,7 @@ fn test_command_model() {
         communication_disabled_until: None,
         pending: false,
         permissions: Permissions::empty(),
-        flags: MemberFlags::empty()
+        flags: MemberFlags::empty(),
     };
 
     let user = User {
@@ -88,29 +88,29 @@ fn test_command_model() {
         accent_color: None,
         banner: None,
         avatar_decoration: None,
-        global_name: None
+        global_name: None,
     };
 
     let resolved_user = ResolvedUser {
         resolved: user.clone(),
-        member: Some(member.clone())
+        member: Some(member.clone(),),
     };
 
     let resolved = InteractionDataResolved {
         channels: HashMap::new(),
-        members: HashMap::from([(user_id, member)]),
+        members: HashMap::from([(user_id, member,),],),
         roles: HashMap::new(),
-        users: HashMap::from([(user_id, user)]),
+        users: HashMap::from([(user_id, user,),],),
         messages: HashMap::new(),
-        attachments: HashMap::new()
+        attachments: HashMap::new(),
     };
 
     let data = CommandInputData {
         options,
-        resolved: Some(Cow::Owned(resolved))
+        resolved: Some(Cow::Owned(resolved,),),
     };
 
-    let result = DemoCommand::from_interaction(data).unwrap();
+    let result = DemoCommand::from_interaction(data,).unwrap();
 
     assert_eq!(
         DemoCommand {
@@ -129,10 +129,10 @@ fn test_command_model() {
 fn test_unit_command_model() {
     let data = CommandInputData {
         options: vec![],
-        resolved: None
+        resolved: None,
     };
 
-    let result = UnitCommand::from_interaction(data).unwrap();
+    let result = UnitCommand::from_interaction(data,).unwrap();
 
     assert_eq!(UnitCommand, result);
 }

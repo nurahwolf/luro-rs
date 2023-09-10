@@ -7,20 +7,20 @@ use twilight_model::{
     guild::{Member, MemberFlags, PartialMember, Permissions},
     id::{
         marker::{RoleMarker, UserMarker},
-        Id
+        Id,
     },
-    util::{ImageHash, Timestamp}
+    util::{ImageHash, Timestamp},
 };
 
-#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize,)]
 pub struct LuroMember {
     /// User ID
-    pub id: Option<Id<UserMarker>>,
+    pub id: Option<Id<UserMarker,>,>,
     /// Member's guild avatar.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub avatar: Option<ImageHash>,
+    pub avatar: Option<ImageHash,>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub communication_disabled_until: Option<Timestamp>,
+    pub communication_disabled_until: Option<Timestamp,>,
     #[serde(default)]
     pub deaf: bool,
     /// Flags for the member.
@@ -31,34 +31,34 @@ pub struct LuroMember {
     #[serde(default)]
     pub mute: bool,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub nick: Option<String>,
+    pub nick: Option<String,>,
     /// Whether the user has yet to pass the guild's [Membership Screening]
     /// requirements.
     #[serde(default)]
     pub pending: bool,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub premium_since: Option<Timestamp>,
+    pub premium_since: Option<Timestamp,>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub role_ids: Vec<Id<RoleMarker>>,
+    pub role_ids: Vec<Id<RoleMarker,>,>,
     /// Permission data for the member.
     ///
     /// Sent in an [`Interaction`].
     ///
     /// [`Interaction`]: crate::application::interaction::Interaction
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub permissions: Option<Permissions>,
+    pub permissions: Option<Permissions,>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub left_at: Option<Duration>
+    pub left_at: Option<Duration,>,
 }
 
 impl LuroMember {
     /// Update this type from a user. Consider creating a default and then calling this function if you need a blank slate
-    pub fn update_member(&mut self, member: &Member) -> &mut Self {
+    pub fn update_member(&mut self, member: &Member,) -> &mut Self {
         self.avatar = member.avatar;
         self.communication_disabled_until = member.communication_disabled_until;
         self.deaf = member.deaf;
         self.flags = member.flags;
-        self.id = Some(member.user.id);
+        self.id = Some(member.user.id,);
         self.joined_at = member.joined_at;
         self.mute = member.mute;
         self.nick = member.nick.clone();
@@ -69,12 +69,12 @@ impl LuroMember {
     }
 
     /// Update this type from a member add event. Consider creating a default and then calling this function if you need a blank slate
-    pub fn update_member_add(&mut self, member: Box<MemberAdd>) -> &mut Self {
+    pub fn update_member_add(&mut self, member: Box<MemberAdd,>,) -> &mut Self {
         self.avatar = member.avatar;
         self.communication_disabled_until = member.communication_disabled_until;
         self.deaf = member.deaf;
         self.flags = member.flags;
-        self.id = Some(member.user.id);
+        self.id = Some(member.user.id,);
         self.joined_at = member.joined_at;
         self.mute = member.mute;
         self.nick = member.nick.clone();
@@ -85,10 +85,10 @@ impl LuroMember {
     }
 
     /// Update this type from a member add event. Consider creating a default and then calling this function if you need a blank slate
-    pub fn update_member_update(&mut self, member: Box<MemberUpdate>) -> &mut Self {
+    pub fn update_member_update(&mut self, member: Box<MemberUpdate,>,) -> &mut Self {
         self.avatar = member.avatar;
         self.communication_disabled_until = member.communication_disabled_until;
-        self.id = Some(member.user.id);
+        self.id = Some(member.user.id,);
         self.joined_at = member.joined_at;
         self.nick = member.nick.clone();
         self.pending = member.pending;
@@ -98,9 +98,9 @@ impl LuroMember {
     }
 
     /// Update this type from a user. Consider creating a default and then calling this function if you need a blank slate
-    pub fn update_partialmember(&mut self, member: &PartialMember) -> &mut Self {
-        if let Some(user) = &member.user {
-            self.id = Some(user.id);
+    pub fn update_partialmember(&mut self, member: &PartialMember,) -> &mut Self {
+        if let Some(user,) = &member.user {
+            self.id = Some(user.id,);
         }
         self.avatar = member.avatar;
         self.communication_disabled_until = member.communication_disabled_until;
@@ -116,9 +116,9 @@ impl LuroMember {
     }
 }
 
-impl From<&PartialMember> for LuroMember {
-    fn from(member: &PartialMember) -> Self {
-        let id = member.user.as_ref().map(|user| user.id);
+impl From<&PartialMember,> for LuroMember {
+    fn from(member: &PartialMember,) -> Self {
+        let id = member.user.as_ref().map(|user| user.id,);
         LuroMember {
             avatar: member.avatar,
             communication_disabled_until: member.communication_disabled_until,
@@ -132,13 +132,13 @@ impl From<&PartialMember> for LuroMember {
             role_ids: member.roles.clone(),
             permissions: member.permissions,
             id,
-            left_at: None
+            left_at: None,
         }
     }
 }
 
-impl From<&Member> for LuroMember {
-    fn from(member: &Member) -> Self {
+impl From<&Member,> for LuroMember {
+    fn from(member: &Member,) -> Self {
         Self {
             avatar: member.avatar,
             communication_disabled_until: member.communication_disabled_until,
@@ -151,40 +151,40 @@ impl From<&Member> for LuroMember {
             premium_since: member.premium_since,
             role_ids: member.roles.clone(),
             permissions: None,
-            id: Some(member.user.id),
-            left_at: None
+            id: Some(member.user.id,),
+            left_at: None,
         }
     }
 }
 
-impl From<&CachedMember> for LuroMember {
-    fn from(member: &CachedMember) -> Self {
+impl From<&CachedMember,> for LuroMember {
+    fn from(member: &CachedMember,) -> Self {
         Self {
-            id: Some(member.user_id()),
+            id: Some(member.user_id(),),
             avatar: member.avatar(),
             communication_disabled_until: member.communication_disabled_until(),
             deaf: member.deaf().unwrap_or_default(),
             flags: member.flags(),
             joined_at: member.joined_at(),
             mute: member.mute().unwrap_or_default(),
-            nick: member.nick().map(|s| s.to_string()),
+            nick: member.nick().map(|s| s.to_string(),),
             pending: member.pending(),
             premium_since: member.premium_since(),
             role_ids: member.roles().to_vec(),
             permissions: Default::default(),
-            left_at: None
+            left_at: None,
         }
     }
 }
 
-impl From<Box<MemberAdd>> for LuroMember {
-    fn from(member: Box<MemberAdd>) -> Self {
+impl From<Box<MemberAdd,>,> for LuroMember {
+    fn from(member: Box<MemberAdd,>,) -> Self {
         Self {
             avatar: member.avatar,
             communication_disabled_until: member.communication_disabled_until,
             deaf: member.deaf,
             flags: member.flags,
-            id: Some(member.user.id),
+            id: Some(member.user.id,),
             joined_at: member.joined_at,
             mute: member.mute,
             nick: member.nick.clone(),
@@ -192,19 +192,19 @@ impl From<Box<MemberAdd>> for LuroMember {
             permissions: None,
             premium_since: member.premium_since,
             role_ids: member.roles.clone(),
-            left_at: None
+            left_at: None,
         }
     }
 }
 
-impl From<Box<MemberUpdate>> for LuroMember {
-    fn from(member: Box<MemberUpdate>) -> Self {
+impl From<Box<MemberUpdate,>,> for LuroMember {
+    fn from(member: Box<MemberUpdate,>,) -> Self {
         Self {
             avatar: member.avatar,
             communication_disabled_until: member.communication_disabled_until,
             deaf: member.deaf.unwrap_or_default(),
             flags: MemberFlags::empty(),
-            id: Some(member.user.id),
+            id: Some(member.user.id,),
             joined_at: member.joined_at,
             mute: member.mute.unwrap_or_default(),
             nick: member.nick.clone(),
@@ -212,7 +212,7 @@ impl From<Box<MemberUpdate>> for LuroMember {
             permissions: None,
             premium_since: member.premium_since,
             role_ids: member.roles.clone(),
-            left_at: None
+            left_at: None,
         }
     }
 }

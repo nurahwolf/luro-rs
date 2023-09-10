@@ -20,39 +20,39 @@ mod seek;
 mod stop;
 mod volume;
 
-#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq,)]
 #[command(name = "music", desc = "Music commands!", dm_permission = false)]
 pub enum MusicCommands {
     #[command(name = "play")]
-    Play(PlayCommand),
+    Play(PlayCommand,),
     #[command(name = "join")]
-    Join(JoinCommand),
+    Join(JoinCommand,),
     #[command(name = "leave")]
-    Leave(LeaveCommand),
+    Leave(LeaveCommand,),
     #[command(name = "pause")]
-    Pause(PauseCommand),
+    Pause(PauseCommand,),
     #[command(name = "seek")]
-    Seek(SeekCommand),
+    Seek(SeekCommand,),
     #[command(name = "volume")]
-    Volume(VolumeCommand),
+    Volume(VolumeCommand,),
     #[command(name = "stop")]
-    Stop(StopCommand),
+    Stop(StopCommand,),
     #[command(name = "info")]
-    Info(InfoCommand)
+    Info(InfoCommand,),
 }
 
 impl LuroCommand for MusicCommands {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
         // Call the appropriate subcommand.
         match self {
-            Self::Play(command) => command.run_command(ctx).await,
-            Self::Join(command) => command.run_command(ctx).await,
-            Self::Leave(command) => command.run_command(ctx).await,
-            Self::Pause(command) => command.run_command(ctx).await,
-            Self::Seek(command) => command.run_command(ctx).await,
-            Self::Volume(command) => command.run_command(ctx).await,
-            Self::Stop(command) => command.run_command(ctx).await,
-            Self::Info(command) => command.run_command(ctx).await
+            Self::Play(command,) => command.run_command(ctx,).await,
+            Self::Join(command,) => command.run_command(ctx,).await,
+            Self::Leave(command,) => command.run_command(ctx,).await,
+            Self::Pause(command,) => command.run_command(ctx,).await,
+            Self::Seek(command,) => command.run_command(ctx,).await,
+            Self::Volume(command,) => command.run_command(ctx,).await,
+            Self::Stop(command,) => command.run_command(ctx,).await,
+            Self::Info(command,) => command.run_command(ctx,).await,
         }
     }
 }

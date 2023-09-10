@@ -5,21 +5,21 @@ use twilight_model::{
     channel::{
         message::{
             sticker::MessageSticker, Component, Embed, MessageActivity, MessageApplication, MessageFlags, MessageInteraction,
-            MessageReference, MessageType, Reaction, RoleSubscriptionData
+            MessageReference, MessageType, Reaction, RoleSubscriptionData,
         },
-        Attachment, ChannelMention, Message
+        Attachment, ChannelMention, Message,
     },
     gateway::payload::incoming::{MessageCreate, MessageDelete, MessageUpdate},
     id::{
         marker::{ApplicationMarker, ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker, WebhookMarker},
-        Id
+        Id,
     },
-    util::Timestamp
+    util::Timestamp,
 };
 
 use crate::PRIMARY_BOT_OWNER;
 
-#[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize,)]
 pub enum LuroMessageSource {
     /// Created from an existing message
     Message,
@@ -35,35 +35,35 @@ pub enum LuroMessageSource {
     MessageCreate,
     /// No message :(
     #[default]
-    None
+    None,
 }
 
 /// Effectively a wrapper around different type of messages, for more streamlined responses
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize,)]
 pub struct LuroMessage {
     // Enable this if you need to migrate
     // #[serde(default = "default_user", deserialize_with = "deserialize_user_to_id")]
     #[serde(default = "default_user")]
-    pub author: Id<UserMarker>,
+    pub author: Id<UserMarker,>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub updated_content: Option<Box<LuroMessage>>,
+    pub updated_content: Option<Box<LuroMessage,>,>,
     #[serde(default)]
     pub deleted: bool,
     #[serde(default)]
     pub source: LuroMessageSource,
     /// Present with Rich Presence-related chat embeds.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub activity: Option<MessageActivity>,
+    pub activity: Option<MessageActivity,>,
     /// Present with Rich Presence-related chat embeds.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub application: Option<MessageApplication>,
+    pub application: Option<MessageApplication,>,
     /// Associated application's ID.
     ///
     /// Present if the message is a response to an [`Interaction`].
     ///
     /// [`Interaction`]: crate::application::interaction::Interaction
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub application_id: Option<Id<ApplicationMarker>>,
+    pub application_id: Option<Id<ApplicationMarker,>,>,
     /// List of attachments.
     ///
     /// Receiving the attachments of messages requires that the
@@ -77,9 +77,9 @@ pub struct LuroMessage {
     ///
     /// [Message Content Intent]: crate::gateway::Intents::MESSAGE_CONTENT
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub attachments: Vec<Attachment>,
+    pub attachments: Vec<Attachment,>,
     /// ID of the [`Channel`] the message was sent in.
-    pub channel_id: Id<ChannelMarker>,
+    pub channel_id: Id<ChannelMarker,>,
     /// List of provided components, such as buttons.
     ///
     /// Receiving the components of messages requires that the
@@ -93,7 +93,7 @@ pub struct LuroMessage {
     ///
     /// [Message Content Intent]: crate::gateway::Intents::MESSAGE_CONTENT
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub components: Vec<Component>,
+    pub components: Vec<Component,>,
     /// Content of the message.
     ///
     /// Receiving the content of messages requires that the
@@ -110,7 +110,7 @@ pub struct LuroMessage {
     pub content: String,
     /// When the message was last edited.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub edited_timestamp: Option<Timestamp>,
+    pub edited_timestamp: Option<Timestamp,>,
     /// List of embeds.
     ///
     /// Receiving the embeds of messages requires that the
@@ -124,20 +124,20 @@ pub struct LuroMessage {
     ///
     /// [Message Content Intent]: crate::gateway::Intents::MESSAGE_CONTENT
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub embeds: Vec<Embed>,
+    pub embeds: Vec<Embed,>,
     /// Flags of the message.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub flags: Option<MessageFlags>,
+    pub flags: Option<MessageFlags,>,
     /// ID of the [`Guild`] the message was sent in.
     ///
     /// [`Guild`]: crate::guild::Guild
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub guild_id: Option<Id<GuildMarker>>,
+    pub guild_id: Option<Id<GuildMarker,>,>,
     /// Id of the message.
-    pub id: Id<MessageMarker>,
+    pub id: Id<MessageMarker,>,
     /// Interaction the message was sent as a response to.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub interaction: Option<MessageInteraction>,
+    pub interaction: Option<MessageInteraction,>,
     /// Type of message.
     #[serde(default = "default_kind")]
     pub kind: MessageType,
@@ -146,7 +146,7 @@ pub struct LuroMessage {
     /// Note: only textual channels visible to everyone mentioned in crossposted
     /// messages (via channel following) will be included.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub mention_channels: Vec<ChannelMention>,
+    pub mention_channels: Vec<ChannelMention,>,
     /// Whether the message mentions `@everyone`.
     #[serde(default)]
     pub mention_everyone: bool,
@@ -154,24 +154,24 @@ pub struct LuroMessage {
     ///
     /// [`Role`]: crate::guild::Role
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub mention_roles: Vec<Id<RoleMarker>>,
+    pub mention_roles: Vec<Id<RoleMarker,>,>,
     /// Users mentioned in the message.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub mentions: Vec<Id<UserMarker>>,
+    pub mentions: Vec<Id<UserMarker,>,>,
     /// Whether the message is pinned.
     #[serde(default)]
     pub pinned: bool,
     /// List of reactions to the message.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub reactions: Vec<Reaction>,
+    pub reactions: Vec<Reaction,>,
     /// Crosspost, channel follow add, pin and reply source message data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub reference: Option<MessageReference>,
+    pub reference: Option<MessageReference,>,
     /// The message associated with the [`reference`].
     ///
     /// [`reference`]: Self::reference
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub referenced_message: Option<Id<MessageMarker>>,
+    pub referenced_message: Option<Id<MessageMarker,>,>,
     /// Information about the role subscription purchase or renewal that
     /// prompted this message.
     ///
@@ -179,37 +179,37 @@ pub struct LuroMessage {
     ///
     /// [`RoleSubscriptionPurchase`]: MessageType::RoleSubscriptionPurchase
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub role_subscription_data: Option<RoleSubscriptionData>,
+    pub role_subscription_data: Option<RoleSubscriptionData,>,
     /// Stickers within the message.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub sticker_items: Vec<MessageSticker>,
+    pub sticker_items: Vec<MessageSticker,>,
     /// Timestamp of when the message was created.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub timestamp: Option<Timestamp>,
+    pub timestamp: Option<Timestamp,>,
     /// Thread started from this message, includes [`Channel::member`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub thread: Option<Id<ChannelMarker>>,
+    pub thread: Option<Id<ChannelMarker,>,>,
     /// Whether the message was a TTS message.
     #[serde(default)]
     pub tts: bool,
     /// ID of the webhook that generated the message.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub webhook_id: Option<Id<WebhookMarker>>
+    pub webhook_id: Option<Id<WebhookMarker,>,>,
 }
 
 impl LuroMessage {
     /// Return a link in the format of `https://discord.com/channels/{guild_id}/{channel_id}/{message_id}`.
-    pub fn link(&self) -> String {
+    pub fn link(&self,) -> String {
         match self.guild_id {
-            Some(guild_id) => format!("https://discord.com/channels/{guild_id}/{}/{}", self.channel_id, self.id),
-            None => format!("https://discord.com/channels/@me/{}/{}", self.channel_id, self.id)
+            Some(guild_id,) => format!("https://discord.com/channels/{guild_id}/{}/{}", self.channel_id, self.id),
+            None => format!("https://discord.com/channels/@me/{}/{}", self.channel_id, self.id),
         }
     }
 
     /// Update this message from a [Message]
-    pub fn from_message(&mut self, message: Message) -> &mut Self {
-        if let Some(thread) = message.thread {
-            self.thread = Some(thread.id);
+    pub fn from_message(&mut self, message: Message,) -> &mut Self {
+        if let Some(thread,) = message.thread {
+            self.thread = Some(thread.id,);
         }
         self.activity = message.activity;
         self.application = message.application;
@@ -229,30 +229,30 @@ impl LuroMessage {
         self.mention_channels = message.mention_channels;
         self.mention_everyone = message.mention_everyone;
         self.mention_roles = message.mention_roles;
-        self.mentions = message.mentions.into_iter().map(|m| m.id).collect();
+        self.mentions = message.mentions.into_iter().map(|m| m.id,).collect();
         self.pinned = message.pinned;
         self.reactions = message.reactions;
         self.reference = message.reference;
         self.sticker_items = message.sticker_items;
-        self.timestamp = Some(message.timestamp);
+        self.timestamp = Some(message.timestamp,);
         self.tts = message.tts;
         self.webhook_id = message.webhook_id;
         self
     }
 
     /// Update this message from a [Message]
-    pub fn from_message_update(&mut self, message: MessageUpdate) -> &mut Self {
+    pub fn from_message_update(&mut self, message: MessageUpdate,) -> &mut Self {
         let mut luro = Self::default();
-        if let Some(author) = message.author {
+        if let Some(author,) = message.author {
             luro.author = author.id
         }
 
-        if let Some(kind) = message.kind {
+        if let Some(kind,) = message.kind {
             luro.kind = kind
         }
 
-        if let Some(mentions) = message.mentions {
-            luro.mentions = mentions.into_iter().map(|m| m.id).collect()
+        if let Some(mentions,) = message.mentions {
+            luro.mentions = mentions.into_iter().map(|m| m.id,).collect()
         }
 
         luro.attachments = message.attachments.unwrap_or_default();
@@ -268,11 +268,11 @@ impl LuroMessage {
         luro.timestamp = message.timestamp;
         luro.tts = message.tts.unwrap_or_default();
 
-        self.updated_content = Some(Box::new(luro));
+        self.updated_content = Some(Box::new(luro,),);
         self
     }
 
-    pub fn from_message_delete(&mut self, message: MessageDelete) -> &mut Self {
+    pub fn from_message_delete(&mut self, message: MessageDelete,) -> &mut Self {
         self.id = message.id;
         self.channel_id = message.channel_id;
         self.guild_id = message.guild_id;
@@ -281,9 +281,9 @@ impl LuroMessage {
     }
 
     /// Update this message from a [Message]
-    pub fn from_message_create(&mut self, message: MessageCreate) -> &mut Self {
-        if let Some(thread) = message.0.thread {
-            self.thread = Some(thread.id);
+    pub fn from_message_create(&mut self, message: MessageCreate,) -> &mut Self {
+        if let Some(thread,) = message.0.thread {
+            self.thread = Some(thread.id,);
         }
         self.activity = message.0.activity;
         self.application = message.0.application;
@@ -303,19 +303,19 @@ impl LuroMessage {
         self.mention_channels = message.0.mention_channels;
         self.mention_everyone = message.0.mention_everyone;
         self.mention_roles = message.0.mention_roles;
-        self.mentions = message.0.mentions.into_iter().map(|m| m.id).collect();
+        self.mentions = message.0.mentions.into_iter().map(|m| m.id,).collect();
         self.pinned = message.0.pinned;
         self.reactions = message.0.reactions;
         self.reference = message.0.reference;
         self.sticker_items = message.0.sticker_items;
-        self.timestamp = Some(message.0.timestamp);
+        self.timestamp = Some(message.0.timestamp,);
         self.tts = message.0.tts;
         self.webhook_id = message.0.webhook_id;
         self
     }
 
     /// Update this message from a [Message]
-    pub fn from_cached_message(&mut self, message: CachedMessage) -> &mut Self {
+    pub fn from_cached_message(&mut self, message: CachedMessage,) -> &mut Self {
         self.thread = message.thread_id();
         self.activity = message.activity().cloned();
         self.application = message.application().cloned();
@@ -339,64 +339,64 @@ impl LuroMessage {
         self.reactions = message.reactions().to_vec();
         self.reference = message.reference().cloned();
         self.sticker_items = message.sticker_items().to_vec();
-        self.timestamp = Some(message.timestamp());
+        self.timestamp = Some(message.timestamp(),);
         self.tts = message.tts();
         self.webhook_id = message.webhook_id();
         self
     }
 }
 
-impl From<Message> for LuroMessage {
-    fn from(message: Message) -> Self {
+impl From<Message,> for LuroMessage {
+    fn from(message: Message,) -> Self {
         let mut luro = LuroMessage {
             source: LuroMessageSource::Message,
             ..Default::default()
         };
-        luro.from_message(message);
+        luro.from_message(message,);
         luro
     }
 }
 
-impl From<MessageCreate> for LuroMessage {
-    fn from(message: MessageCreate) -> Self {
+impl From<MessageCreate,> for LuroMessage {
+    fn from(message: MessageCreate,) -> Self {
         let mut luro = LuroMessage {
             source: LuroMessageSource::MessageCreate,
             ..Default::default()
         };
-        luro.from_message_create(message);
+        luro.from_message_create(message,);
         luro
     }
 }
 
-impl From<MessageDelete> for LuroMessage {
-    fn from(message: MessageDelete) -> Self {
+impl From<MessageDelete,> for LuroMessage {
+    fn from(message: MessageDelete,) -> Self {
         let mut luro = LuroMessage {
             source: LuroMessageSource::MessageDelete,
             ..Default::default()
         };
-        luro.from_message_delete(message);
+        luro.from_message_delete(message,);
         luro
     }
 }
 
-impl From<CachedMessage> for LuroMessage {
-    fn from(message: CachedMessage) -> Self {
+impl From<CachedMessage,> for LuroMessage {
+    fn from(message: CachedMessage,) -> Self {
         let mut luro = LuroMessage {
             source: LuroMessageSource::CachedMessage,
             ..Default::default()
         };
-        luro.from_cached_message(message);
+        luro.from_cached_message(message,);
         luro
     }
 }
 
-impl From<MessageUpdate> for LuroMessage {
-    fn from(message: MessageUpdate) -> Self {
+impl From<MessageUpdate,> for LuroMessage {
+    fn from(message: MessageUpdate,) -> Self {
         let mut luro = LuroMessage {
             source: LuroMessageSource::MessageUpdate,
             ..Default::default()
         };
-        luro.from_message_update(message);
+        luro.from_message_update(message,);
         luro
     }
 }
@@ -412,14 +412,14 @@ impl Default for LuroMessage {
             application: Default::default(),
             application_id: Default::default(),
             attachments: Default::default(),
-            channel_id: Id::new(1),
+            channel_id: Id::new(1,),
             components: Default::default(),
             content: Default::default(),
             edited_timestamp: Default::default(),
             embeds: Default::default(),
             flags: Default::default(),
             guild_id: Default::default(),
-            id: Id::new(69),
+            id: Id::new(69,),
             interaction: Default::default(),
             kind: MessageType::Regular,
             mention_channels: Default::default(),
@@ -435,7 +435,7 @@ impl Default for LuroMessage {
             timestamp: None,
             thread: Default::default(),
             tts: Default::default(),
-            webhook_id: Default::default()
+            webhook_id: Default::default(),
         }
     }
 }
@@ -444,7 +444,7 @@ fn default_kind() -> MessageType {
     MessageType::Regular
 }
 
-fn default_user() -> Id<UserMarker> {
+fn default_user() -> Id<UserMarker,> {
     PRIMARY_BOT_OWNER
 }
 
@@ -455,13 +455,13 @@ impl LuroMessage {
     ///
     /// Refer to the documentation for [`EmbedBuilder`] for more
     /// information.
-    pub fn embed<F>(&mut self, embed: F) -> &mut Self
+    pub fn embed<F,>(&mut self, embed: F,) -> &mut Self
     where
-        F: FnOnce(&mut EmbedBuilder) -> &mut EmbedBuilder
+        F: FnOnce(&mut EmbedBuilder,) -> &mut EmbedBuilder,
     {
         let mut e = EmbedBuilder::default();
-        embed(&mut e);
-        self.embeds.push(e.into());
+        embed(&mut e,);
+        self.embeds.push(e.into(),);
 
         self
     }
@@ -470,7 +470,7 @@ impl LuroMessage {
     /// Modify the nested embeds field for more advanced controls.
     ///
     /// NOTE: This WILL fail to send if more than 10 are present!
-    pub fn set_embeds(&mut self, embeds: Vec<Embed>) -> &mut Self {
+    pub fn set_embeds(&mut self, embeds: Vec<Embed,>,) -> &mut Self {
         self.embeds = embeds;
 
         self
@@ -478,7 +478,7 @@ impl LuroMessage {
 
     /// Set the content that should be sent with the message.
     /// This will overrwrite anything previously set.
-    pub fn content(&mut self, content: impl Into<String>) -> &mut Self {
+    pub fn content(&mut self, content: impl Into<String,>,) -> &mut Self {
         self.content = content.into();
 
         self

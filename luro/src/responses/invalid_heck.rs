@@ -6,27 +6,27 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl<D: LuroDatabaseDriver> LuroSlash<D> {
+impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
     pub async fn invalid_heck_response(
         self,
         missing_user: bool,
         missing_author: bool,
-        heck_message: &str
-    ) -> anyhow::Result<()> {
-        let mut embed = invalid_heck_embed(heck_message);
+        heck_message: &str,
+    ) -> anyhow::Result<(),> {
+        let mut embed = invalid_heck_embed(heck_message,);
 
         if missing_user {
-            embed.field(|field| field.field("Missing Value", "`<user>`", true));
+            embed.field(|field| field.field("Missing Value", "`<user>`", true,),);
         };
         if missing_author {
-            embed.field(|field| field.field("Missing Value", "`<author>`", true));
+            embed.field(|field| field.field("Missing Value", "`<author>`", true,),);
         };
-        self.respond(|response| response.add_embed(embed)).await
+        self.respond(|response| response.add_embed(embed,),).await
     }
 }
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-fn invalid_heck_embed(heck_message: &str) -> EmbedBuilder {
+fn invalid_heck_embed(heck_message: &str,) -> EmbedBuilder {
     warn!("User attempted to make an invalid heck");
     EmbedBuilder::default()
         .colour(COLOUR_DANGER)

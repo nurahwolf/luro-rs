@@ -4,14 +4,15 @@ use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{interaction::LuroSlash, COLOUR_DANGER};
 
-impl<D: LuroDatabaseDriver> LuroSlash<D> {
-    pub async fn bot_hierarchy_response(&self, bot_username: &String) -> anyhow::Result<()> {
-        self.respond(|r| r.add_embed(bot_hierarchy_embed(bot_username).build())).await
+impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
+    pub async fn bot_hierarchy_response(&self, bot_username: &String,) -> anyhow::Result<(),> {
+        self.respond(|r| r.add_embed(bot_hierarchy_embed(bot_username,).build(),),)
+            .await
     }
 }
 
 /// An embed returned if the user is above the bot in the role hierarchy.
-fn bot_hierarchy_embed(bot_username: &String) -> EmbedBuilder {
+fn bot_hierarchy_embed(bot_username: &String,) -> EmbedBuilder {
     warn!("User tried to execute a command in which the bot is too low to function");
     EmbedBuilder::new()
         .color(COLOUR_DANGER)

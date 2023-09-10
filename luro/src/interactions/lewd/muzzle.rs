@@ -6,15 +6,15 @@ use crate::interaction::LuroSlash;
 use luro_model::database::drivers::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
-#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq,)]
 #[command(name = "muzzle", desc = "Put a muzzle on a user")]
 pub struct MuzzleCommand {
     /// The user to muzzle.
-    user: ResolvedUser
+    user: ResolvedUser,
 }
 
 impl LuroCommand for MuzzleCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
         // TODO: Load these from a text file
         let responses = ["<user> just got muzzled for a few seconds!!",
         "<user> just got slapped on the muzzle and told to hush.",
@@ -177,13 +177,13 @@ impl LuroCommand for MuzzleCommand {
         "<user>'s words were silenced by the sudden, booming voice of the narrator.",
         "A sly fox just swiped <user>'s words away with a swish of its tail."];
 
-        let choice = rand::thread_rng().gen_range(0..responses.len());
+        let choice = rand::thread_rng().gen_range(0..responses.len(),);
         let content = responses
-            .get(choice)
+            .get(choice,)
             .unwrap()
-            .replace("<user>", format!("<@{}>", self.user.resolved.id).as_str())
-            .replace("<author>", format!("<@{}>", ctx.interaction.author_id().unwrap()).as_str());
+            .replace("<user>", format!("<@{}>", self.user.resolved.id).as_str(),)
+            .replace("<author>", format!("<@{}>", ctx.interaction.author_id().unwrap()).as_str(),);
 
-        ctx.respond(|r| r.content(content)).await
+        ctx.respond(|r| r.content(content,),).await
     }
 }

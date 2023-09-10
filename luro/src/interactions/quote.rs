@@ -11,29 +11,29 @@ mod list;
 mod remove;
 mod sort;
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand,)]
 #[command(name = "quote", desc = "Get or save some quotes")]
 pub enum QuoteCommands {
     #[command(name = "get")]
-    Get(Get),
+    Get(Get,),
     #[command(name = "add")]
-    Add(Add),
+    Add(Add,),
     #[command(name = "list")]
-    List(List),
+    List(List,),
     #[command(name = "sort")]
-    Sort(Sort),
+    Sort(Sort,),
     #[command(name = "remove")]
-    Remove(Remove)
+    Remove(Remove,),
 }
 
 impl LuroCommand for QuoteCommands {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
         match self {
-            Self::Get(command) => command.run_command(ctx).await,
-            Self::Add(command) => command.run_command(ctx).await,
-            Self::List(command) => command.run_command(ctx).await,
-            Self::Sort(command) => command.run_command(ctx).await,
-            Self::Remove(command) => command.run_command(ctx).await
+            Self::Get(command,) => command.run_command(ctx,).await,
+            Self::Add(command,) => command.run_command(ctx,).await,
+            Self::List(command,) => command.run_command(ctx,).await,
+            Self::Sort(command,) => command.run_command(ctx,).await,
+            Self::Remove(command,) => command.run_command(ctx,).await,
         }
     }
 }
