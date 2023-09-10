@@ -35,24 +35,24 @@ pub mod mass_assign;
 mod modify;
 mod modify_role;
 
-#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq,)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges!")]
 pub enum Owner {
     #[command(name = "abuse")]
-    Abuse(AbuseCommand,),
+    Abuse(AbuseCommand),
     #[command(name = "assign")]
-    Assign(AssignCommand,),
+    Assign(AssignCommand),
     #[command(name = "clear_warnings")]
-    ClearWarning(OwnerClearWarning,),
+    ClearWarning(OwnerClearWarning),
     #[command(name = "commands")]
-    Commands(OwnerCommandsCommand,),
+    Commands(OwnerCommandsCommand),
 
     #[command(name = "mass_assign")]
-    MassAssign(MassAssign,),
+    MassAssign(MassAssign),
     #[command(name = "modify")]
-    Modify(Modify,),
+    Modify(Modify),
     #[command(name = "modify_role")]
-    ModifyRole(ModifyRoleCommand,),
+    ModifyRole(ModifyRoleCommand),
 }
 
 // pub enum OwnerCommands {
@@ -73,7 +73,7 @@ pub enum Owner {
 // }
 
 impl LuroCommand for Owner {
-    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // let interaction_author = ctx.interaction.author().unwrap();
 
         // let staff = match ctx.framework.database.get_staff().await {
@@ -115,10 +115,10 @@ impl LuroCommand for Owner {
 
         // We know the user is good, so call the appropriate subcommand.
         match self {
-            Self::Abuse(command,) => command.run_command(ctx,).await,
-            Self::Assign(command,) => command.run_command(ctx,).await,
-            Self::ClearWarning(command,) => command.run_command(ctx,).await,
-            Self::Commands(command,) => command.run_command(ctx,).await,
+            Self::Abuse(command) => command.run_command(ctx).await,
+            Self::Assign(command) => command.run_command(ctx).await,
+            Self::ClearWarning(command) => command.run_command(ctx).await,
+            Self::Commands(command) => command.run_command(ctx).await,
             // Self::Config(command) => command.run_command(ctx).await,
             // Self::FakeBan(command) => command.run_command(ctx).await,
             // Self::Flush(command) => command.run_command(ctx).await,
@@ -126,13 +126,13 @@ impl LuroCommand for Owner {
             // Self::Guilds(command) => command.run_command(ctx).await,
             // Self::LoadUsers(command) => command.run_command(ctx).await,
             // Self::Log(command) => command.run_command(ctx).await,
-            Self::MassAssign(command,) => command.run_command(ctx,).await,
-            Self::Modify(command,) => command.run_command(ctx,).await,
-            Self::ModifyRole(command,) => command.run_command(ctx,).await,
+            Self::MassAssign(command) => command.run_command(ctx).await,
+            Self::Modify(command) => command.run_command(ctx).await,
+            Self::ModifyRole(command) => command.run_command(ctx).await,
         }
     }
 
-    async fn handle_model<D: LuroDatabaseDriver,>(data: ModalInteractionData, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
+    async fn handle_model<D: LuroDatabaseDriver>(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut message_id = None;
         let mut channel_id = None;
 
@@ -148,19 +148,19 @@ impl LuroCommand for Owner {
         }
 
         let message_id = match message_id {
-            Some(message_id,) => Id::new(message_id.parse()?,),
-            None => return ctx.respond(|r| r.content("No message ID!",).ephemeral(),).await,
+            Some(message_id) => Id::new(message_id.parse()?),
+            None => return ctx.respond(|r| r.content("No message ID!").ephemeral()).await,
         };
 
         let channel_id = match channel_id {
-            Some(channel_id,) => Id::new(channel_id.parse()?,),
-            None => return ctx.respond(|r| r.content("No channel ID!",).ephemeral(),).await,
+            Some(channel_id) => Id::new(channel_id.parse()?),
+            None => return ctx.respond(|r| r.content("No channel ID!").ephemeral()).await,
         };
 
         let message = ctx
             .framework
             .twilight_client
-            .message(channel_id, message_id,)
+            .message(channel_id, message_id)
             .await?
             .model()
             .await?;
@@ -179,27 +179,27 @@ impl LuroCommand for Owner {
 
         ctx.framework
             .twilight_client
-            .update_message(channel_id, message_id,)
-            .embeds(Some(vec![embed],).as_deref(),)
+            .update_message(channel_id, message_id)
+            .embeds(Some(vec![embed]).as_deref())
             .await?;
 
-        ctx.respond(|r| r.content("All done!",).ephemeral(),).await
+        ctx.respond(|r| r.content("All done!").ephemeral()).await
     }
 
-    async fn handle_component<D: LuroDatabaseDriver,>(
+    async fn handle_component<D: LuroDatabaseDriver>(
         self,
-        data: Box<MessageComponentInteractionData,>,
-        ctx: LuroSlash<D,>,
-    ) -> anyhow::Result<(),> {
+        data: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>,
+    ) -> anyhow::Result<()> {
         match data.custom_id.as_str() {
-            "mass-assign-selector" => component_selector(ctx,).await,
-            "mass-assign-roles" | "mass-assign-remove" => component_roles(data, ctx,).await,
-            _ => ctx.respond(|r| r.content("Unknown Command!",).ephemeral(),).await,
+            "mass-assign-selector" => component_selector(ctx).await,
+            "mass-assign-roles" | "mass-assign-remove" => component_roles(data, ctx).await,
+            _ => ctx.respond(|r| r.content("Unknown Command!").ephemeral()).await,
         }
     }
 }
 
-async fn component_selector<D: LuroDatabaseDriver,>(ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
+async fn component_selector<D: LuroDatabaseDriver>(ctx: LuroSlash<D>) -> anyhow::Result<()> {
     let mut roles_string = String::new();
     let guild_id = ctx.interaction.guild_id.unwrap();
     let mut data = None;
@@ -207,13 +207,13 @@ async fn component_selector<D: LuroDatabaseDriver,>(ctx: LuroSlash<D,>,) -> anyh
 
     while data.is_none() {
         match interaction.data {
-            Some(InteractionData::MessageComponent(new_data,),) => {
-                data = Some(new_data,);
+            Some(InteractionData::MessageComponent(new_data)) => {
+                data = Some(new_data);
                 break;
             }
             _ => {
-                if let Some(message,) = interaction.message {
-                    interaction = ctx.framework.database.get_interaction(&message.id.to_string(),).await?;
+                if let Some(message) = interaction.message {
+                    interaction = ctx.framework.database.get_interaction(&message.id.to_string()).await?;
                 }
             }
         }
@@ -221,41 +221,37 @@ async fn component_selector<D: LuroDatabaseDriver,>(ctx: LuroSlash<D,>,) -> anyh
 
     let data = data.unwrap();
 
-    let mut roles: Vec<Id<RoleMarker,>,> = data
-        .values
-        .iter()
-        .map(|role| Id::new(role.parse::<u64>().unwrap(),),)
-        .collect();
+    let mut roles: Vec<Id<RoleMarker>> = data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
     // let guild = ctx.framework.twilight_cache.guild_members(guild_id).unwrap();
     let guild = ctx
         .framework
         .twilight_client
-        .guild_members(guild_id,)
-        .limit(1000,)
+        .guild_members(guild_id)
+        .limit(1000)
         .await?
         .model()
         .await?;
     let mut users = vec![];
     for member in guild.into_iter() {
-        if let Ok(user,) = ctx
+        if let Ok(user) = ctx
             .framework
             .database
-            .get_user_cached(&member.user.id, &ctx.framework.twilight_cache,)
+            .get_user_cached(&member.user.id, &ctx.framework.twilight_cache)
             .await
         {
-            users.push(user,)
+            users.push(user)
         }
     }
 
     match roles.is_empty() {
-        true => roles.push(guild_id.cast(),),
+        true => roles.push(guild_id.cast()),
         false => users.retain(|user| {
             let mut found = false;
-            match user.guilds.get(&guild_id,) {
-                Some(guild_data,) => {
+            match user.guilds.get(&guild_id) {
+                Some(guild_data) => {
                     for role in &roles {
-                        if guild_data.role_ids.contains(role,) {
+                        if guild_data.role_ids.contains(role) {
                             found = true
                         }
                     }
@@ -263,7 +259,7 @@ async fn component_selector<D: LuroDatabaseDriver,>(ctx: LuroSlash<D,>,) -> anyh
                 None => found = false,
             };
             found
-        },),
+        }),
     };
 
     for role in &roles {
@@ -303,47 +299,43 @@ async fn component_selector<D: LuroDatabaseDriver,>(ctx: LuroSlash<D,>,) -> anyh
     .await
 }
 
-async fn component_roles<D: LuroDatabaseDriver,>(
-    data: Box<MessageComponentInteractionData,>,
-    ctx: LuroSlash<D,>,
-) -> anyhow::Result<(),> {
+async fn component_roles<D: LuroDatabaseDriver>(
+    data: Box<MessageComponentInteractionData>,
+    ctx: LuroSlash<D>,
+) -> anyhow::Result<()> {
     let guild_id = ctx.interaction.guild_id.unwrap();
 
-    let mut roles: Vec<Id<RoleMarker,>,> = data
-        .values
-        .iter()
-        .map(|role| Id::new(role.parse::<u64>().unwrap(),),)
-        .collect();
+    let mut roles: Vec<Id<RoleMarker>> = data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
     // let guild = ctx.framework.twilight_cache.guild_members(guild_id).unwrap();
     let guild = ctx
         .framework
         .twilight_client
-        .guild_members(guild_id,)
-        .limit(1000,)
+        .guild_members(guild_id)
+        .limit(1000)
         .await?
         .model()
         .await?;
     let mut users = vec![];
     for member in guild.into_iter() {
-        if let Ok(user,) = ctx
+        if let Ok(user) = ctx
             .framework
             .database
-            .get_user_cached(&member.user.id, &ctx.framework.twilight_cache,)
+            .get_user_cached(&member.user.id, &ctx.framework.twilight_cache)
             .await
         {
-            users.push(user,)
+            users.push(user)
         }
     }
 
     match roles.is_empty() {
-        true => roles.push(guild_id.cast(),),
+        true => roles.push(guild_id.cast()),
         false => users.retain(|user| {
             let mut found = false;
-            match user.guilds.get(&guild_id,) {
-                Some(guild_data,) => {
+            match user.guilds.get(&guild_id) {
+                Some(guild_data) => {
                     for role in &roles {
-                        if guild_data.role_ids.contains(role,) {
+                        if guild_data.role_ids.contains(role) {
                             found = true
                         }
                     }
@@ -351,7 +343,7 @@ async fn component_roles<D: LuroDatabaseDriver,>(
                 None => found = false,
             };
             found
-        },),
+        }),
     };
 
     let mut actions_performed = 0;
@@ -363,11 +355,11 @@ async fn component_roles<D: LuroDatabaseDriver,>(
                     match ctx
                         .framework
                         .twilight_client
-                        .add_guild_member_role(guild_id, user.id, *role,)
+                        .add_guild_member_role(guild_id, user.id, *role)
                         .await
                     {
-                        Ok(_,) => actions_performed += 1,
-                        Err(_,) => errors += 1,
+                        Ok(_) => actions_performed += 1,
+                        Err(_) => errors += 1,
                     };
                 }
             }
@@ -378,21 +370,21 @@ async fn component_roles<D: LuroDatabaseDriver,>(
                     match ctx
                         .framework
                         .twilight_client
-                        .remove_guild_member_role(guild_id, user.id, *role,)
+                        .remove_guild_member_role(guild_id, user.id, *role)
                         .await
                     {
-                        Ok(_,) => actions_performed += 1,
-                        Err(_,) => errors += 1,
+                        Ok(_) => actions_performed += 1,
+                        Err(_) => errors += 1,
                     };
                 }
             }
         }
-        _ => return ctx.respond(|r| r.content("It's fucked",).ephemeral(),).await,
+        _ => return ctx.respond(|r| r.content("It's fucked").ephemeral()).await,
     }
     let content = match errors != 0 {
         true => format!("Actioned `{actions_performed}` users, with `{errors}` errors!!"),
         false => format!("Actioned `{actions_performed}` users successfully!"),
     };
 
-    ctx.respond(|r| r.content(content,).ephemeral(),).await
+    ctx.respond(|r| r.content(content).ephemeral()).await
 }

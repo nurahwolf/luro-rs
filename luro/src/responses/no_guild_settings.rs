@@ -7,15 +7,14 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
-    pub async fn no_guild_settings_response(&self, guild_id: Id<GuildMarker,>,) -> anyhow::Result<(),> {
-        self.respond(|r| r.add_embed(no_guild_settings_embed(guild_id,).build(),),)
-            .await
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
+    pub async fn no_guild_settings_response(&self, guild_id: Id<GuildMarker>) -> anyhow::Result<()> {
+        self.respond(|r| r.add_embed(no_guild_settings_embed(guild_id).build())).await
     }
 }
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-fn no_guild_settings_embed(guild_id: Id<GuildMarker,>,) -> EmbedBuilder {
+fn no_guild_settings_embed(guild_id: Id<GuildMarker>) -> EmbedBuilder {
     error!("No guild settings present for guild {}", guild_id);
     EmbedBuilder::new()
         .title("No Guild Settings")

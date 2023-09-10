@@ -5,22 +5,22 @@ use twilight_model::gateway::payload::incoming::ThreadCreate;
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver,> Framework<D,> {
+impl<D: LuroDatabaseDriver> Framework<D> {
     // TODO: Change this to a response type
-    pub async fn response_thread_created(&self, event: &ThreadCreate,) -> anyhow::Result<(),> {
-        let embed = self.embed_thread_created(event,).await;
-        self.send_log_channel(&event.guild_id, embed.into(), LuroLogChannel::Thread,)
+    pub async fn response_thread_created(&self, event: &ThreadCreate) -> anyhow::Result<()> {
+        let embed = self.embed_thread_created(event).await;
+        self.send_log_channel(&event.guild_id, embed.into(), LuroLogChannel::Thread)
             .await
     }
 
     /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-    pub async fn embed_thread_created(&self, event: &ThreadCreate,) -> EmbedBuilder {
+    pub async fn embed_thread_created(&self, event: &ThreadCreate) -> EmbedBuilder {
         debug!(thread = ?event, "Thread created");
-        let mut embed = self.default_embed(&event.guild_id,).await;
+        let mut embed = self.default_embed(&event.guild_id).await;
 
         match &event.name {
-            Some(name,) => embed.create_field("Name", &format!("{name} - <#{}>", event.id), true,),
-            None => embed.create_field("ID", &format!("<#{}>", event.id), true,),
+            Some(name) => embed.create_field("Name", &format!("{name} - <#{}>", event.id), true),
+            None => embed.create_field("ID", &format!("<#{}>", event.id), true),
         };
 
         let channel_type = match event.kind {
@@ -39,10 +39,10 @@ impl<D: LuroDatabaseDriver,> Framework<D,> {
             _ => "Unknown",
         };
 
-        if let Some(parent_id,) = event.parent_id {
-            embed.create_field("Parent Channel", &format!("<#{parent_id}>"), true,);
+        if let Some(parent_id) = event.parent_id {
+            embed.create_field("Parent Channel", &format!("<#{parent_id}>"), true);
         }
-        embed.create_field("Type", channel_type, true,).title("Thread Created",);
+        embed.create_field("Type", channel_type, true).title("Thread Created");
         embed
     }
 }

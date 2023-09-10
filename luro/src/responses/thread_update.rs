@@ -5,21 +5,21 @@ use twilight_model::gateway::payload::incoming::ThreadUpdate;
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver,> Framework<D,> {
-    pub async fn response_thread_update(&self, event: &ThreadUpdate,) -> anyhow::Result<(),> {
-        let embed = self.embed_thread_update(event,).await;
-        self.send_log_channel(&event.guild_id, embed.into(), LuroLogChannel::Thread,)
+impl<D: LuroDatabaseDriver> Framework<D> {
+    pub async fn response_thread_update(&self, event: &ThreadUpdate) -> anyhow::Result<()> {
+        let embed = self.embed_thread_update(event).await;
+        self.send_log_channel(&event.guild_id, embed.into(), LuroLogChannel::Thread)
             .await
     }
 
-    pub async fn embed_thread_update(&self, event: &ThreadUpdate,) -> EmbedBuilder {
+    pub async fn embed_thread_update(&self, event: &ThreadUpdate) -> EmbedBuilder {
         debug!(thread = ?event, "Thread Updated!");
-        let mut embed = self.default_embed(&event.guild_id,).await;
-        embed.title("Thread Updated",);
+        let mut embed = self.default_embed(&event.guild_id).await;
+        embed.title("Thread Updated");
 
         match &event.name {
-            Some(name,) => embed.create_field("Name", &format!("{name} - <#{}>", event.id), true,),
-            None => embed.create_field("ID", &format!("<#{}>", event.id), true,),
+            Some(name) => embed.create_field("Name", &format!("{name} - <#{}>", event.id), true),
+            None => embed.create_field("ID", &format!("<#{}>", event.id), true),
         };
 
         let channel_type = match event.kind {
@@ -37,7 +37,7 @@ impl<D: LuroDatabaseDriver,> Framework<D,> {
             twilight_model::channel::ChannelType::GuildForum => "GuildForum",
             _ => "Unknown",
         };
-        embed.create_field("Type", channel_type, true,);
+        embed.create_field("Type", channel_type, true);
         embed
     }
 }

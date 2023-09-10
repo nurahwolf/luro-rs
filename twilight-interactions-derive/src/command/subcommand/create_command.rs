@@ -6,37 +6,37 @@ use super::parse::{ParsedVariant, TypeAttribute};
 use crate::{command::description::get_description, parse::find_attr};
 
 /// Implementation of `CreateCommand` derive macro
-pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item = Variant,>,) -> Result<TokenStream,> {
+pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item = Variant>) -> Result<TokenStream> {
     let ident = &input.ident;
     let generics = &input.generics;
     let where_clause = &generics.where_clause;
     let span = input.span();
 
-    let variants = ParsedVariant::from_variants(variants, input.span(),)?;
-    let attribute = match find_attr(&input.attrs, "command",) {
-        Some(attr,) => TypeAttribute::parse(attr,)?,
-        None => return Err(Error::new(span, "missing required #[command(...)] attribute",),),
+    let variants = ParsedVariant::from_variants(variants, input.span())?;
+    let attribute = match find_attr(&input.attrs, "command") {
+        Some(attr) => TypeAttribute::parse(attr)?,
+        None => return Err(Error::new(span, "missing required #[command(...)] attribute")),
     };
 
-    let desc = get_description(&attribute.desc_localizations, &attribute.desc, span, &input.attrs,)?;
+    let desc = get_description(&attribute.desc_localizations, &attribute.desc, span, &input.attrs)?;
 
     let capacity = variants.len();
     let name = &attribute.name;
-    let name_localizations = localization_field(&attribute.name_localizations,);
+    let name_localizations = localization_field(&attribute.name_localizations);
     let default_permissions = match &attribute.default_permissions {
-        Some(path,) => quote! { ::std::option::Option::Some(#path())},
+        Some(path) => quote! { ::std::option::Option::Some(#path())},
         None => quote! { ::std::option::Option::None },
     };
     let dm_permission = match &attribute.dm_permission {
-        Some(dm_permission,) => quote! { ::std::option::Option::Some(#dm_permission)},
+        Some(dm_permission) => quote! { ::std::option::Option::Some(#dm_permission)},
         None => quote! { ::std::option::Option::None },
     };
     let nsfw = match &attribute.nsfw {
-        Some(nsfw,) => quote! { ::std::option::Option::Some(#nsfw) },
+        Some(nsfw) => quote! { ::std::option::Option::Some(#nsfw) },
         None => quote! { std::option::Option::None },
     };
 
-    let variant_options = variants.iter().map(variant_option,);
+    let variant_options = variants.iter().map(variant_option);
 
     Ok(quote! {
         impl #generics ::twilight_interactions::command::CreateCommand for #ident #generics #where_clause {
@@ -61,12 +61,12 @@ pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item 
                 }
             }
         }
-    },)
+    })
 }
 
-fn localization_field(path: &Option<syn::Path,>,) -> TokenStream {
+fn localization_field(path: &Option<syn::Path>) -> TokenStream {
     match path {
-        Some(path,) => {
+        Some(path) => {
             quote! {
                 ::std::option::Option::Some(
                     ::twilight_interactions::command::internal::convert_localizations(#path())
@@ -78,7 +78,7 @@ fn localization_field(path: &Option<syn::Path,>,) -> TokenStream {
 }
 
 /// Generate variant option code
-fn variant_option(variant: &ParsedVariant,) -> TokenStream {
+fn variant_option(variant: &ParsedVariant) -> TokenStream {
     let ty = &variant.inner;
     let span = variant.span;
 

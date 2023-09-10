@@ -6,14 +6,14 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
-    pub async fn user_hierarchy_response(&self, username: &String,) -> anyhow::Result<(),> {
-        self.respond(|r| r.add_embed(user_hierarchy_embed(username,).build(),),).await
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
+    pub async fn user_hierarchy_response(&self, username: &String) -> anyhow::Result<()> {
+        self.respond(|r| r.add_embed(user_hierarchy_embed(username).build())).await
     }
 }
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-fn user_hierarchy_embed(username: &String,) -> EmbedBuilder {
+fn user_hierarchy_embed(username: &String) -> EmbedBuilder {
     warn!("The user {username} tried to abuse the bot's perms to do something they can't do");
     EmbedBuilder::new()
         .color(COLOUR_DANGER)

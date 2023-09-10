@@ -7,9 +7,9 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
-    pub async fn no_interaction_channel_response(&self,) -> anyhow::Result<(),> {
-        self.respond(|r: &mut LuroResponse| r.add_embed(no_interaction_channel_embed().build(),),)
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
+    pub async fn no_interaction_channel_response(&self) -> anyhow::Result<()> {
+        self.respond(|r: &mut LuroResponse| r.add_embed(no_interaction_channel_embed().build()))
             .await
     }
 }

@@ -2,7 +2,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::luro_command::LuroCommand;
 
-#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq,)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "config",
     desc = "Print out information about my configuration. You can override some options at runtime too."

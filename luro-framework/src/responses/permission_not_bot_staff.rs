@@ -58,24 +58,24 @@ const INSULTS: [&str; 50] = [
 pub fn permission_not_bot_staff() -> EmbedBuilder {
     let mut embed = EmbedBuilder::default();
     embed
-        .title("You are not the bot owner!",)
-        .colour(COLOUR_DANGER,)
-        .description(get_insult(),)
-        .footer(|f| f.text("FYI, I'm reporting you to Nurah.",),);
+        .title("You are not the bot owner!")
+        .colour(COLOUR_DANGER)
+        .description(get_insult())
+        .footer(|f| f.text("FYI, I'm reporting you to Nurah."));
     embed
 }
 
 /// Gets a insult. This version does not use RNG to get a response.
 #[cfg(not(feature = "random-responses"))]
-fn get_insult<'a,>() -> &'a str {
+fn get_insult<'a>() -> &'a str {
     INSULTS[0]
 }
 
 /// Gets a insult. This version uses [rand] to get an insult.
 #[cfg(feature = "random-responses")]
-fn get_insult<'a,>() -> &'a str {
+fn get_insult<'a>() -> &'a str {
     use rand::seq::SliceRandom;
 
     let mut rng = rand::thread_rng();
-    INSULTS.choose(&mut rng,).unwrap_or(&INSULTS[0],)
+    INSULTS.choose(&mut rng).unwrap_or(&INSULTS[0])
 }

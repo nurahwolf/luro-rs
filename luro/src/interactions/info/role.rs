@@ -10,43 +10,43 @@ use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
 use luro_model::database::drivers::LuroDatabaseDriver;
 
-#[derive(CommandModel, CreateCommand,)]
+#[derive(CommandModel, CreateCommand)]
 #[command(name = "role", desc = "Information about a role")]
 pub struct InfoRole {
     /// The role to get
-    role: Id<RoleMarker,>,
+    role: Id<RoleMarker>,
     /// The guild to get the role from
-    guild: Option<Id<GenericMarker,>,>,
+    guild: Option<Id<GenericMarker>>,
     /// Show guild roles as well
-    guid_roles: Option<bool,>,
+    guid_roles: Option<bool>,
 }
 
 impl LuroCommand for InfoRole {
-    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let guild_id = match ctx.interaction.guild_id {
-            Some(guild_id,) => guild_id,
+            Some(guild_id) => guild_id,
             None => match self.guild {
-                Some(guild_id,) => guild_id.cast(),
+                Some(guild_id) => guild_id.cast(),
                 None => {
                     return ctx
-                        .respond(|r| r.content("Could not find the guild the role is in",).ephemeral(),)
+                        .respond(|r| r.content("Could not find the guild the role is in").ephemeral())
                         .await
                 }
             },
         };
-        let mut guild = ctx.framework.database.get_guild(&guild_id,).await?;
-        embed.title(format!("{}'s roles", guild.name),);
+        let mut guild = ctx.framework.database.get_guild(&guild_id).await?;
+        embed.title(format!("{}'s roles", guild.name));
 
-        for (position, role_id,) in &guild.role_positions {
+        for (position, role_id) in &guild.role_positions {
             if role_id == &self.role {
-                embed.create_field("Role Position", &format!("`{position}`"), true,);
+                embed.create_field("Role Position", &format!("`{position}`"), true);
             }
         }
 
-        if let Some(role,) = guild.roles.get(&self.role,) {
-            embed.create_field("Role Name", &format!("`{}`", role.name), true,);
-            embed.create_field("Role Colour", &format!("`{}`", role.colour), true,);
+        if let Some(role) = guild.roles.get(&self.role) {
+            embed.create_field("Role Name", &format!("`{}`", role.name), true);
+            embed.create_field("Role Colour", &format!("`{}`", role.colour), true);
         }
 
         if self.guid_roles.unwrap_or_default() {
@@ -59,9 +59,9 @@ impl LuroCommand for InfoRole {
                 }
                 writeln!(description, "<@&{}>", luro_role)?;
             }
-            embed.description(description,);
+            embed.description(description);
         }
 
-        ctx.respond(|r| r.add_embed(embed,),).await
+        ctx.respond(|r| r.add_embed(embed)).await
     }
 }

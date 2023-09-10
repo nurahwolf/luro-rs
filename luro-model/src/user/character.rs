@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use twilight_interactions::command::{CommandOption, CreateOption};
 /// The different categories of fetishes a user can have
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq, CommandOption, CreateOption,)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq, CommandOption, CreateOption)]
 pub enum FetishCategory {
     #[option(
         name = "Favourite - Something this character loves to the end of the world",
@@ -28,13 +28,13 @@ pub enum FetishCategory {
 }
 
 /// A list of assignable fetishes. Used for matching with other users
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq,)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq)]
 pub enum FetishList {
     #[default]
     Custom,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize,)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct Fetish {
     #[serde(default)]
     pub category: FetishCategory,
@@ -45,7 +45,7 @@ pub struct Fetish {
 }
 
 impl fmt::Display for FetishList {
-    fn fmt(&self, f: &mut fmt::Formatter<'_,>,) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
@@ -56,7 +56,7 @@ impl fmt::Display for FetishList {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize,)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct CharacterProfile {
     /// A short description for this character
     #[serde(default)]
@@ -66,13 +66,13 @@ pub struct CharacterProfile {
     pub icon: String,
     /// A HTTP / HTTPS link to an icon used for their main appearance
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub nsfw_icon: Option<String,>,
+    pub nsfw_icon: Option<String>,
     /// A detailed description for this character
     #[serde(default)]
     pub description: String,
     /// A detailed description for this character that is only shown in the NSFW profile
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub nsfw_description: Option<String,>,
+    pub nsfw_description: Option<String>,
     /// Set to true if there are NSFW details present
     #[serde(default)]
     pub nsfw: bool,
@@ -82,5 +82,5 @@ pub struct CharacterProfile {
         serde(deserialize_with = "deserialize_fetish", serialize_with = "serialize_fetish")
     )]
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub fetishes: BTreeMap<usize, Fetish,>,
+    pub fetishes: BTreeMap<usize, Fetish>,
 }

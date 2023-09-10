@@ -63,39 +63,39 @@ const INSULTS: [&str; 50] = [
 "Plotting world domination? Start by owning a bot first."
 ];
 
-impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn not_owner_response(
         &self,
-        user_id: &Id<UserMarker,>,
-        guild_id: &Option<Id<GuildMarker,>,>,
-        command_name: impl Into<String,>,
-    ) -> anyhow::Result<(),> {
+        user_id: &Id<UserMarker>,
+        guild_id: &Option<Id<GuildMarker>>,
+        command_name: impl Into<String>,
+    ) -> anyhow::Result<()> {
         let command = command_name.into();
         {
-            let mut user_data = self.framework.database.get_user(user_id, false,).await?;
+            let mut user_data = self.framework.database.get_user(user_id, false).await?;
             user_data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::PrivilegeEscalation],
                 guild_id: *guild_id,
-                reason: Some(format!("Attempted to run the {} command", &command),),
+                reason: Some(format!("Attempted to run the {} command", &command)),
                 responsible_user: *user_id,
-            },);
-            self.framework.database.save_user(user_id, &user_data,).await?;
+            });
+            self.framework.database.save_user(user_id, &user_data).await?;
         }
-        self.respond(|r| r.add_embed(not_owner_embed(user_id, &command,),),).await
+        self.respond(|r| r.add_embed(not_owner_embed(user_id, &command))).await
     }
 }
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-fn not_owner_embed(user_id: &Id<UserMarker,>, command_name: &String,) -> EmbedBuilder {
+fn not_owner_embed(user_id: &Id<UserMarker>, command_name: &String) -> EmbedBuilder {
     warn!("User {user_id} attempted to run the command {command_name} without being in my list of authorised users...");
     let mut embed = EmbedBuilder::default();
     let mut rng = rand::thread_rng();
-    let insult = INSULTS.choose(&mut rng,).unwrap_or(&INSULTS[0],);
+    let insult = INSULTS.choose(&mut rng).unwrap_or(&INSULTS[0]);
 
     embed
-        .title("You are not the bot owner!",)
-        .colour(COLOUR_DANGER,)
-        .description(insult,)
-        .footer(|f| f.text("FYI, I'm reporting you to Nurah.",),);
+        .title("You are not the bot owner!")
+        .colour(COLOUR_DANGER)
+        .description(insult)
+        .footer(|f| f.text("FYI, I'm reporting you to Nurah."));
     embed
 }

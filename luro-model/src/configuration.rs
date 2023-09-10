@@ -16,13 +16,13 @@ pub struct Configuration {
 impl Configuration {
     /// Regular configuration
     #[cfg(not(feature = "lavalink"))]
-    pub fn new(intents: String, token: String,) -> Self {
-        Self { intents, token, }
+    pub fn new(intents: String, token: String) -> Self {
+        Self { intents, token }
     }
 
     /// New configuration, with lavalink host details
     #[cfg(feature = "lavalink")]
-    pub fn new(intents: Intents, token: String, lavalink_host: String, lavalink_auth: String,) -> Self {
+    pub fn new(intents: Intents, token: String, lavalink_host: String, lavalink_auth: String) -> Self {
         Self {
             token,
             intents,

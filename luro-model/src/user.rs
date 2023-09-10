@@ -14,7 +14,7 @@ use twilight_model::{
 };
 
 /// A [HashMap] containing user specific settings ([LuroUser]), keyed by [UserMarker].
-pub type LuroUsers = HashMap<Id<UserMarker,>, LuroUser,>;
+pub type LuroUsers = HashMap<Id<UserMarker>, LuroUser>;
 use crate::message::LuroMessage;
 
 use self::{actions::UserActions, character::CharacterProfile, marriages::UserMarriages, member::LuroMember};
@@ -26,43 +26,43 @@ pub mod marriages;
 pub mod member;
 
 /// Some nice functionality primarily around [User] and [Member], with some added goodness
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize,)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct LuroUser {
     /// Accent color of the user's banner.
     ///
     /// This is an integer representation of a hexadecimal color code.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub accent_color: Option<u32,>,
+    pub accent_color: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub avatar: Option<ImageHash,>,
+    pub avatar: Option<ImageHash>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub avatar_decoration: Option<ImageHash,>,
+    pub avatar_decoration: Option<ImageHash>,
     /// Hash of the user's banner image.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub banner: Option<ImageHash,>,
+    pub banner: Option<ImageHash>,
     #[serde(default)]
     pub bot: bool,
     #[serde(default)]
     pub discriminator: u16,
     /// User's global display name, if set
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub global_name: Option<String,>,
+    pub global_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub email: Option<String,>,
+    pub email: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub flags: Option<UserFlags,>,
-    pub id: Id<UserMarker,>,
+    pub flags: Option<UserFlags>,
+    pub id: Id<UserMarker>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub locale: Option<String,>,
+    pub locale: Option<String>,
     #[serde(default)]
     pub mfa_enabled: bool,
     /// The user's raw username.
     #[serde(default)]
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub premium_type: Option<PremiumType,>,
+    pub premium_type: Option<PremiumType>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub public_flags: Option<UserFlags,>,
+    pub public_flags: Option<UserFlags>,
     #[serde(default)]
     pub system: bool,
     #[serde(default)]
@@ -77,17 +77,17 @@ pub struct LuroUser {
     /// A hashmap containing the word length, and how many times it has appeared
     /// TODO: The key for this is stored as a string on the disk which is only needed for toml
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub wordsize: BTreeMap<usize, usize,>,
+    pub wordsize: BTreeMap<usize, usize>,
     /// A hashmap containing a count on how often a particular word appears
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub words: BTreeMap<String, usize,>,
+    pub words: BTreeMap<String, usize>,
     /// An tuple of warnings wrapped in a vec. The first value is the warning, and the second is whoever warned the person
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub warnings: Vec<(String, Id<UserMarker,>,),>,
+    pub warnings: Vec<(String, Id<UserMarker>)>,
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
-    pub messages: HashMap<Id<MessageMarker,>, LuroMessage,>,
+    pub messages: HashMap<Id<MessageMarker>, LuroMessage>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub moderation_actions: Vec<UserActions,>,
+    pub moderation_actions: Vec<UserActions>,
     #[serde(default)]
     pub moderation_actions_performed: usize,
     /// A simple tally of how many times a user has fucked up and needed to edit their message.
@@ -95,35 +95,35 @@ pub struct LuroUser {
     pub message_edits: usize,
     /// The user's marriages
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub marriages: BTreeMap<Id<UserMarker,>, UserMarriages,>,
+    pub marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
     /// A list of member instances across guilds
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
-    pub guilds: HashMap<Id<GuildMarker,>, LuroMember,>,
+    pub guilds: HashMap<Id<GuildMarker>, LuroMember>,
     /// The user's character profiles
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub characters: BTreeMap<String, CharacterProfile,>,
+    pub characters: BTreeMap<String, CharacterProfile>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub character_prefix: BTreeMap<String, String,>,
+    pub character_prefix: BTreeMap<String, String>,
 }
 
-impl From<&CurrentUser,> for LuroUser {
-    fn from(user: &CurrentUser,) -> Self {
-        let mut luro = Self::new(user.id,);
-        luro.update_currentuser(user,);
+impl From<&CurrentUser> for LuroUser {
+    fn from(user: &CurrentUser) -> Self {
+        let mut luro = Self::new(user.id);
+        luro.update_currentuser(user);
         luro
     }
 }
 
-impl From<&User,> for LuroUser {
-    fn from(user: &User,) -> Self {
-        let mut luro = Self::new(user.id,);
-        luro.update_user(user,);
+impl From<&User> for LuroUser {
+    fn from(user: &User) -> Self {
+        let mut luro = Self::new(user.id);
+        luro.update_user(user);
         luro
     }
 }
 
 impl LuroUser {
-    pub fn new(id: Id<UserMarker,>,) -> Self {
+    pub fn new(id: Id<UserMarker>) -> Self {
         Self {
             accent_color: Default::default(),
             avatar: Default::default(),
@@ -159,7 +159,7 @@ impl LuroUser {
     }
 
     /// Update this type from a luro user
-    pub fn update_lurouser(&mut self, luro: &Self,) -> &mut Self {
+    pub fn update_lurouser(&mut self, luro: &Self) -> &mut Self {
         self.accent_color = luro.accent_color;
         self.avatar = luro.avatar;
         self.banner = luro.banner;
@@ -174,12 +174,12 @@ impl LuroUser {
         self.premium_type = luro.premium_type;
         self.public_flags = luro.public_flags;
         self.verified = luro.verified;
-        for (guild_id, member,) in luro.guilds.iter() {
-            match self.guilds.entry(*guild_id,) {
-                Entry::Vacant(entry,) => {
-                    entry.insert(member.clone(),);
+        for (guild_id, member) in luro.guilds.iter() {
+            match self.guilds.entry(*guild_id) {
+                Entry::Vacant(entry) => {
+                    entry.insert(member.clone());
                 }
-                Entry::Occupied(mut entry,) => {
+                Entry::Occupied(mut entry) => {
                     let entry = entry.get_mut();
                     entry.avatar = member.avatar;
                     entry.communication_disabled_until = member.communication_disabled_until;
@@ -190,8 +190,8 @@ impl LuroUser {
                     entry.nick = member.nick.clone();
                     entry.premium_since = member.premium_since;
                     entry.role_ids = member.role_ids.clone();
-                    if let Some(permissions,) = member.permissions {
-                        entry.permissions = Some(permissions,);
+                    if let Some(permissions) = member.permissions {
+                        entry.permissions = Some(permissions);
                     }
                 }
             };
@@ -200,7 +200,7 @@ impl LuroUser {
     }
 
     /// Update this type from a currentuser.
-    pub fn update_currentuser(&mut self, user: &CurrentUser,) -> &mut Self {
+    pub fn update_currentuser(&mut self, user: &CurrentUser) -> &mut Self {
         self.accent_color = user.accent_color;
         self.avatar = user.avatar;
         self.banner = user.banner;
@@ -219,29 +219,29 @@ impl LuroUser {
     }
 
     /// Update this type from a [CachedMember].
-    pub fn update_cached_member(&mut self, guild_id: &Id<GuildMarker,>, member: &CachedMember,) -> &mut Self {
+    pub fn update_cached_member(&mut self, guild_id: &Id<GuildMarker>, member: &CachedMember) -> &mut Self {
         self.guilds
-            .entry(*guild_id,)
+            .entry(*guild_id)
             .and_modify(|e| {
                 e.avatar = member.avatar();
                 e.communication_disabled_until = member.communication_disabled_until();
                 e.deaf = member.deaf().unwrap_or_default();
                 e.flags = member.flags();
-                e.id = Some(member.user_id(),);
+                e.id = Some(member.user_id());
                 e.joined_at = member.joined_at();
                 e.mute = member.mute().unwrap_or_default();
                 e.flags = member.flags();
-                e.nick = member.nick().map(|s| s.to_string(),);
+                e.nick = member.nick().map(|s| s.to_string());
                 e.pending = member.pending();
                 e.premium_since = member.premium_since();
                 e.role_ids = member.roles().to_vec();
-            },)
-            .or_insert(LuroMember::from(member,),);
+            })
+            .or_insert(LuroMember::from(member));
         self
     }
 
     /// Update this type from a user.
-    pub fn update_user(&mut self, user: &User,) -> &mut Self {
+    pub fn update_user(&mut self, user: &User) -> &mut Self {
         self.accent_color = user.accent_color;
         self.avatar = user.avatar;
         self.avatar_decoration = user.avatar_decoration;
@@ -262,55 +262,55 @@ impl LuroUser {
         self
     }
 
-    pub fn update_member_add(&mut self, event: Box<MemberAdd,>,) -> &mut Self {
-        self.update_user(&event.user,);
-        match self.guilds.entry(event.guild_id,) {
-            Entry::Vacant(entry,) => entry.insert(LuroMember::from(event,),),
-            Entry::Occupied(mut entry,) => entry.get_mut().update_member_add(event,),
+    pub fn update_member_add(&mut self, event: Box<MemberAdd>) -> &mut Self {
+        self.update_user(&event.user);
+        match self.guilds.entry(event.guild_id) {
+            Entry::Vacant(entry) => entry.insert(LuroMember::from(event)),
+            Entry::Occupied(mut entry) => entry.get_mut().update_member_add(event),
         };
         self
     }
 
-    pub fn update_member_update(&mut self, event: Box<MemberUpdate,>,) -> &mut Self {
-        self.update_user(&event.user,);
-        match self.guilds.entry(event.guild_id,) {
-            Entry::Vacant(entry,) => entry.insert(LuroMember::from(event,),),
-            Entry::Occupied(mut entry,) => entry.get_mut().update_member_update(event,),
+    pub fn update_member_update(&mut self, event: Box<MemberUpdate>) -> &mut Self {
+        self.update_user(&event.user);
+        match self.guilds.entry(event.guild_id) {
+            Entry::Vacant(entry) => entry.insert(LuroMember::from(event)),
+            Entry::Occupied(mut entry) => entry.get_mut().update_member_update(event),
         };
         self
     }
 
     /// Update this type from a member. Consider creating a default and then calling this function if you need a blank slate
-    pub fn update_member(&mut self, guild_id: &Id<GuildMarker,>, member: &Member,) -> &mut Self {
-        self.update_user(&member.user,);
-        match self.guilds.entry(*guild_id,) {
-            Entry::Vacant(entry,) => entry.insert(LuroMember::from(member,),),
-            Entry::Occupied(mut entry,) => entry.get_mut().update_member(member,),
+    pub fn update_member(&mut self, guild_id: &Id<GuildMarker>, member: &Member) -> &mut Self {
+        self.update_user(&member.user);
+        match self.guilds.entry(*guild_id) {
+            Entry::Vacant(entry) => entry.insert(LuroMember::from(member)),
+            Entry::Occupied(mut entry) => entry.get_mut().update_member(member),
         };
         self
     }
 
     /// Update this type from a partial member. Consider creating a default and then calling this function if you need a blank slate
-    pub fn update_partialmember(&mut self, guild_id: &Id<GuildMarker,>, member: &PartialMember,) -> &mut Self {
-        if let Some(ref user,) = member.user {
-            self.update_user(user,);
+    pub fn update_partialmember(&mut self, guild_id: &Id<GuildMarker>, member: &PartialMember) -> &mut Self {
+        if let Some(ref user) = member.user {
+            self.update_user(user);
         }
-        match self.guilds.entry(*guild_id,) {
-            Entry::Vacant(entry,) => entry.insert(LuroMember::from(member,),),
-            Entry::Occupied(mut entry,) => entry.get_mut().update_partialmember(member,),
+        match self.guilds.entry(*guild_id) {
+            Entry::Vacant(entry) => entry.insert(LuroMember::from(member)),
+            Entry::Occupied(mut entry) => entry.get_mut().update_partialmember(member),
         };
         self
     }
 
     /// Return a string that is a link to the user's guild avatar if set, defaulting to the user
-    pub fn guild_avatar(&self, guild_id: &Id<GuildMarker,>,) -> String {
-        let guild = match self.guilds.get(guild_id,) {
-            Some(guild,) => guild,
+    pub fn guild_avatar(&self, guild_id: &Id<GuildMarker>) -> String {
+        let guild = match self.guilds.get(guild_id) {
+            Some(guild) => guild,
             None => return self.avatar(),
         };
 
         match guild.avatar {
-            Some(avatar,) => match avatar.is_animated() {
+            Some(avatar) => match avatar.is_animated() {
                 true => format!(
                     "https://cdn.discordapp.com/guilds/{guild_id}/users/{}/avatars/{avatar}.gif?size=2048",
                     self.id
@@ -325,10 +325,10 @@ impl LuroUser {
     }
 
     /// Return a string that is a link to the user's avatar
-    pub fn avatar(&self,) -> String {
+    pub fn avatar(&self) -> String {
         let user_id = self.id;
         match self.avatar {
-            Some(avatar,) => match avatar.is_animated() {
+            Some(avatar) => match avatar.is_animated() {
                 true => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.gif?size=2048"),
                 false => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png?size=2048"),
             },
@@ -340,30 +340,30 @@ impl LuroUser {
     }
 
     /// Return a string that is a link to the user's banner, or [None] if they don't have one
-    pub fn banner(&self,) -> Option<String,> {
+    pub fn banner(&self) -> Option<String> {
         self.banner.map(|banner| match banner.is_animated() {
             true => format!("https://cdn.discordapp.com/banners/{}/{banner}.gif?size=4096", self.id),
             false => format!("https://cdn.discordapp.com/banners/{}/{banner}.png?size=4096", self.id),
-        },)
+        })
     }
 
     /// Get's the member's nickname if set, otherwise gets the user's name
     ///
     /// Returns the first match
     /// Member Nickname -> Global Name -> Username -> Legacy Username
-    pub fn member_name(&self, guild_id: &Option<Id<GuildMarker,>,>,) -> String {
+    pub fn member_name(&self, guild_id: &Option<Id<GuildMarker>>) -> String {
         let guild_id = match guild_id {
-            Some(guild_id,) => guild_id,
+            Some(guild_id) => guild_id,
             None => return self.name(),
         };
 
-        let member = match self.guilds.get(guild_id,) {
-            Some(guild,) => guild,
+        let member = match self.guilds.get(guild_id) {
+            Some(guild) => guild,
             None => return self.name(),
         };
 
         match &member.nick {
-            Some(nickname,) => nickname.clone(),
+            Some(nickname) => nickname.clone(),
             None => self.name(),
         }
     }
@@ -372,9 +372,9 @@ impl LuroUser {
     ///
     /// Returns the first match
     /// Global Name -> Username -> Legacy Username
-    pub fn name(&self,) -> String {
+    pub fn name(&self) -> String {
         match &self.global_name {
-            Some(global_name,) => global_name.clone(),
+            Some(global_name) => global_name.clone(),
             None => self.username(),
         }
     }
@@ -383,7 +383,7 @@ impl LuroUser {
     ///
     /// Returns the first match
     /// Username -> Legacy Username
-    pub fn username(&self,) -> String {
+    pub fn username(&self) -> String {
         match self.discriminator == 0 {
             true => self.name.clone(),
             false => format!("{}#{}", self.name, self.discriminator),
@@ -391,41 +391,41 @@ impl LuroUser {
     }
 }
 
-pub fn serialize_wordsize<S,>(input: &BTreeMap<usize, usize,>, s: S,) -> Result<S::Ok, S::Error,>
+pub fn serialize_wordsize<S>(input: &BTreeMap<usize, usize>, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
     let data = input
         .iter()
-        .map(|(str_key, value,)| (str_key.to_string(), *value,),)
-        .collect::<BTreeMap<String, usize,>>();
+        .map(|(str_key, value)| (str_key.to_string(), *value))
+        .collect::<BTreeMap<String, usize>>();
 
-    s.collect_map(data,)
+    s.collect_map(data)
 }
 
-pub fn deserialize_wordsize<'de, D,>(deserializer: D,) -> Result<BTreeMap<usize, usize,>, D::Error,>
+pub fn deserialize_wordsize<'de, D>(deserializer: D) -> Result<BTreeMap<usize, usize>, D::Error>
 where
-    D: Deserializer<'de,>,
+    D: Deserializer<'de>,
 {
-    let str_map = BTreeMap::<String, usize,>::deserialize(deserializer,)?;
+    let str_map = BTreeMap::<String, usize>::deserialize(deserializer)?;
     let original_len = str_map.len();
     let data = {
         str_map
             .into_iter()
-            .map(|(str_key, value,)| match str_key.parse() {
-                Ok(int_key,) => Ok((int_key, value,),),
-                Err(_,) => Err(de::Error::invalid_value(
-                    de::Unexpected::Str(&str_key,),
+            .map(|(str_key, value)| match str_key.parse() {
+                Ok(int_key) => Ok((int_key, value)),
+                Err(_) => Err(de::Error::invalid_value(
+                    de::Unexpected::Str(&str_key),
                     &"a non-negative integer",
-                ),),
-            },)
-            .collect::<Result<BTreeMap<_, _,>, _,>>()?
+                )),
+            })
+            .collect::<Result<BTreeMap<_, _>, _>>()?
     };
     // multiple strings could parse to the same int, e.g "0" and "00"
     if data.len() < original_len {
-        return Err(de::Error::custom("detected duplicate integer key",),);
+        return Err(de::Error::custom("detected duplicate integer key"));
     }
-    Ok(data,)
+    Ok(data)
 }
 
 impl Default for LuroUser {
@@ -440,7 +440,7 @@ impl Default for LuroUser {
             global_name: Default::default(),
             email: Default::default(),
             flags: Default::default(),
-            id: Id::new(69,),
+            id: Id::new(69),
             locale: Default::default(),
             mfa_enabled: Default::default(),
             name: Default::default(),

@@ -4,7 +4,7 @@ use luro_model::database::drivers::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-#[derive(CommandModel, CreateCommand,)]
+#[derive(CommandModel, CreateCommand)]
 #[command(name = "simple", desc = "A simpler version, for those not wanting to deal with foruma")]
 pub struct Simple {
     /// Total number of dice, for example two dice
@@ -14,73 +14,73 @@ pub struct Simple {
     #[command(min_value = 1, max_value = 10000)]
     sides: i64,
     /// Add context to your role, such as for D&D
-    reason: Option<String,>,
+    reason: Option<String>,
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
-    ephemeral: Option<bool,>,
+    ephemeral: Option<bool>,
     /// Keep the highest amount of X dice
     #[command(min_value = 1, max_value = 100)]
-    keep_highest: Option<i64,>,
+    keep_highest: Option<i64>,
     /// Keep the lowest amount of X dice
     #[command(min_value = 1, max_value = 100)]
-    keep_lowest: Option<i64,>,
+    keep_lowest: Option<i64>,
     /// Drop the highest amount of X dice
     #[command(min_value = 1, max_value = 100)]
-    drop_highest: Option<i64,>,
+    drop_highest: Option<i64>,
     /// Drop the lowest amount of X dice
     #[command(min_value = 1, max_value = 100)]
-    drop_lowest: Option<i64,>,
+    drop_lowest: Option<i64>,
     /// Add X value to the result
     #[command(min_value = 1, max_value = 100)]
-    add: Option<i64,>,
+    add: Option<i64>,
     /// Take away X value from the result
     #[command(min_value = 1, max_value = 10000)]
-    take: Option<i64,>,
+    take: Option<i64>,
     /// Multiply the result by X amount
     #[command(min_value = 1, max_value = 1000)]
-    multiply: Option<i64,>,
+    multiply: Option<i64>,
     /// Divide the result by X amount
     #[command(min_value = 1, max_value = 1000)]
-    divide: Option<i64,>,
+    divide: Option<i64>,
 }
 #[async_trait::async_trait]
 
 impl LuroCommandTrait for Simple {
-    async fn handle_interaction<D: LuroDatabaseDriver,>(
-        ctx: Framework<D,>,
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
         interaction: InteractionCommand,
-    ) -> anyhow::Result<(),> {
-        let data = Self::new(interaction.data.clone(),)?;
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let mut roll = format!("{}d{}", data.dice, data.sides);
 
-        if let Some(operation,) = data.keep_highest {
+        if let Some(operation) = data.keep_highest {
             write!(roll, "kh{operation}")?
         }
 
-        if let Some(operation,) = data.keep_lowest {
+        if let Some(operation) = data.keep_lowest {
             write!(roll, "kl{operation}")?
         }
 
-        if let Some(operation,) = data.drop_highest {
+        if let Some(operation) = data.drop_highest {
             write!(roll, "dh{operation}")?
         }
 
-        if let Some(operation,) = data.drop_lowest {
+        if let Some(operation) = data.drop_lowest {
             write!(roll, "dl{operation}")?
         }
 
-        if let Some(operation,) = data.add {
+        if let Some(operation) = data.add {
             write!(roll, "+{operation}")?
         }
 
-        if let Some(operation,) = data.take {
+        if let Some(operation) = data.take {
             write!(roll, "-{operation}")?
         }
 
-        if let Some(operation,) = data.multiply {
+        if let Some(operation) = data.multiply {
             write!(roll, "*{operation}")?
         }
 
-        if let Some(operation,) = data.divide {
+        if let Some(operation) = data.divide {
             write!(roll, "/{operation}")?
         }
 
@@ -88,12 +88,12 @@ impl LuroCommandTrait for Simple {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
-        let mut result_string = if let Some(mut reason,) = data.reason {
-            if !reason.starts_with('\\',) {
+        let mut result_string = if let Some(mut reason) = data.reason {
+            if !reason.starts_with('\\') {
                 reason = format!("```{reason}```")
             } else {
-                reason.remove(0,);
-                reason.push('\n',)
+                reason.remove(0);
+                reason.push('\n')
             }
 
             format!(
@@ -106,12 +106,12 @@ impl LuroCommandTrait for Simple {
             format!("**Result:** `{}`\n**Total:** `{}`", result.string_result, result.dice_total)
         };
 
-        if result.dice_total == RollValue::Int(20,) {
-            result_string.push_str(&format!("\n-----\n*Whoa, a 20!! Congrats!! <3*"),)
+        if result.dice_total == RollValue::Int(20) {
+            result_string.push_str(&format!("\n-----\n*Whoa, a 20!! Congrats!! <3*"))
         }
 
-        if result.dice_total == RollValue::Int(0,) {
-            result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"),)
+        if result.dice_total == RollValue::Int(0) {
+            result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
         }
 
         interaction
@@ -119,9 +119,9 @@ impl LuroCommandTrait for Simple {
                 if data.ephemeral.unwrap_or_default() {
                     r.ephemeral();
                 }
-                r.content(result_string,)
-            },)
+                r.content(result_string)
+            })
             .await?;
-        Ok((),)
+        Ok(())
     }
 }

@@ -6,10 +6,10 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 
-impl<D: LuroDatabaseDriver,> LuroSlash<D,> {
+impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// A response returned by default when a command does not exist within Luro.
-    pub async fn not_implemented_response(self,) -> anyhow::Result<(),> {
-        self.respond(|response| response.add_embed(not_implemented_embed(),),).await
+    pub async fn not_implemented_response(self) -> anyhow::Result<()> {
+        self.respond(|response| response.add_embed(not_implemented_embed())).await
     }
 }
 

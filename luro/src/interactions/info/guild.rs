@@ -11,27 +11,27 @@ use crate::interaction::LuroSlash;
 
 use crate::luro_command::LuroCommand;
 
-#[derive(CommandModel, CreateCommand,)]
+#[derive(CommandModel, CreateCommand)]
 #[command(name = "guild", desc = "Information about a guild")]
 pub struct Guild {
     /// Get the details of a different guild
-    guild: Option<Id<GenericMarker,>,>,
+    guild: Option<Id<GenericMarker>>,
     /// Set this if you want a copy of your data (GUILD OWNER ONLY).
-    gdpr_export: Option<bool,>,
+    gdpr_export: Option<bool>,
 }
 
 impl LuroCommand for Guild {
-    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut luro_guild = String::new();
         let mut guild_description = String::new();
         let guild_id = match self.guild {
-            Some(guild,) => guild.cast(),
+            Some(guild) => guild.cast(),
             None => ctx.interaction.guild_id.unwrap(),
         };
-        let guild = ctx.framework.twilight_client.guild(guild_id,).await?.model().await?;
-        let guild_settings = ctx.framework.database.get_guild(&guild_id,).await?;
+        let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
+        let guild_settings = ctx.framework.database.get_guild(&guild_id).await?;
         let mut embed = ctx.default_embed().await;
-        embed.title(&guild_settings.name,);
+        embed.title(&guild_settings.name);
 
         writeln!(luro_guild, "- Guild Name: {}", &guild_settings.name)?;
         if !guild_settings.commands.is_empty() {
@@ -40,8 +40,8 @@ impl LuroCommand for Guild {
 
         writeln!(guild_description, "- Owner: <@{}>", guild.owner_id)?;
         writeln!(guild_description, "- AFK Timeout: {} seconds", guild.afk_timeout.get())?;
-        embed.description(guild_description,);
-        embed.create_field("Luro Settings", &luro_guild, false,);
+        embed.description(guild_description);
+        embed.create_field("Luro Settings", &luro_guild, false);
 
         ctx.respond(|response| {
             if self.gdpr_export.unwrap_or_default() {
@@ -50,8 +50,8 @@ impl LuroCommand for Guild {
                         "Hey <@{}>! <@{}> is being a cunt and trying to steal your guild data!",
                         guild.owner_id,
                         ctx.interaction.author_id().unwrap()
-                    ),);
-                } else if let Ok(guild_settings,) = toml::to_string_pretty(&guild_settings,) {
+                    ));
+                } else if let Ok(guild_settings) = toml::to_string_pretty(&guild_settings) {
                     response.attachments(
                         vec![Attachment::from_bytes(
                             format!("gdpr-export-{}.txt", ctx.interaction.author_id().unwrap()),
@@ -62,8 +62,8 @@ impl LuroCommand for Guild {
                     );
                 }
             }
-            response.add_embed(embed,)
-        },)
-            .await
+            response.add_embed(embed)
+        })
+        .await
     }
 }

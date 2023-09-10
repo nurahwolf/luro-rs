@@ -8,8 +8,8 @@ use twilight_model::gateway::{
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver,> Framework<D,> {
-    pub async fn ready_listener(&self, ready: Box<Ready,>, shard: MessageSender,) -> anyhow::Result<(),> {
+impl<D: LuroDatabaseDriver> Framework<D> {
+    pub async fn ready_listener(&self, ready: Box<Ready>, shard: MessageSender) -> anyhow::Result<()> {
         let mut presence_string = "/about".to_owned();
         info!("Luro is now ready!");
         info!("==================");
@@ -18,12 +18,12 @@ impl<D: LuroDatabaseDriver,> Framework<D,> {
         info!("Guilds:        {}", ready.guilds.len());
         info!("API Version:   {}", ready.version);
 
-        presence_string.push_str(format!(" | on {} guilds", ready.guilds.len()).as_str(),);
+        presence_string.push_str(format!(" | on {} guilds", ready.guilds.len()).as_str());
 
-        if let Some(shard_id,) = ready.shard {
+        if let Some(shard_id) = ready.shard {
             info!("Shard:         {}", shard_id.number());
             info!("Total Shards:  {}", shard_id.total());
-            presence_string.push_str(format!(" | shard {}", shard_id.number()).as_str(),);
+            presence_string.push_str(format!(" | shard {}", shard_id.number()).as_str());
 
             shard.command(&UpdatePresence::new(
                 vec![MinimalActivity {
@@ -35,12 +35,12 @@ impl<D: LuroDatabaseDriver,> Framework<D,> {
                 false,
                 None,
                 Status::Online,
-            )?,)?;
+            )?)?;
         };
 
         let application = self.twilight_client.current_user_application().await?.model().await?;
 
-        if let Some(owner,) = &application.owner {
+        if let Some(owner) = &application.owner {
             info!("Primary Owner: {}", owner.name);
         }
         let mut owners = String::new();
@@ -48,16 +48,16 @@ impl<D: LuroDatabaseDriver,> Framework<D,> {
 
         for staff in staff.values() {
             if owners.is_empty() {
-                owners.push_str(&staff.name,)
+                owners.push_str(&staff.name)
             } else {
-                owners.push_str(format!(", {}", staff.name).as_str(),)
+                owners.push_str(format!(", {}", staff.name).as_str())
             }
         }
         info!("Owners:        {owners}");
 
         debug!("Attempting to register guild settings");
-        self.register_commands(application.id,).await?;
+        self.register_commands(application.id).await?;
 
-        Ok((),)
+        Ok(())
     }
 }

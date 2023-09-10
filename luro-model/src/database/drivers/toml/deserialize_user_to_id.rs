@@ -4,10 +4,10 @@ use twilight_model::{
     user::User,
 };
 
-pub fn deserialize_user_to_id<'de, D,>(deserializer: D,) -> Result<Id<UserMarker,>, D::Error,>
+pub fn deserialize_user_to_id<'de, D>(deserializer: D) -> Result<Id<UserMarker>, D::Error>
 where
-    D: Deserializer<'de,>,
+    D: Deserializer<'de>,
 {
-    let data: User = Deserialize::deserialize(deserializer,)?;
-    Ok(data.id,)
+    let data: User = Deserialize::deserialize(deserializer)?;
+    Ok(data.id)
 }

@@ -20,68 +20,68 @@ mod profile;
 mod proxy;
 pub mod send;
 
-#[derive(CommandModel, CreateCommand,)]
+#[derive(CommandModel, CreateCommand)]
 #[command(name = "character", desc = "Show off your character!")]
 pub enum Character {
     #[command(name = "profile")]
-    Profile(Profile,),
+    Profile(Profile),
     #[command(name = "create")]
-    Create(Create,),
+    Create(Create),
     #[command(name = "fetish")]
-    Fetish(Fetish,),
+    Fetish(Fetish),
     #[command(name = "proxy")]
-    Proxy(Proxy,),
+    Proxy(Proxy),
     #[command(name = "icon")]
-    Icon(Icon,),
+    Icon(Icon),
     #[command(name = "send")]
-    Send(CharacterSend,),
+    Send(CharacterSend),
 }
 
 impl LuroCommand for Character {
-    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
-            Self::Profile(command,) => command.run_command(ctx,).await,
-            Self::Create(command,) => command.run_command(ctx,).await,
-            Self::Fetish(command,) => command.run_command(ctx,).await,
-            Self::Proxy(command,) => command.run_command(ctx,).await,
-            Self::Icon(command,) => command.run_command(ctx,).await,
-            Self::Send(command,) => command.run_command(ctx,).await,
+            Self::Profile(command) => command.run_command(ctx).await,
+            Self::Create(command) => command.run_command(ctx).await,
+            Self::Fetish(command) => command.run_command(ctx).await,
+            Self::Proxy(command) => command.run_command(ctx).await,
+            Self::Icon(command) => command.run_command(ctx).await,
+            Self::Send(command) => command.run_command(ctx).await,
         }
     }
 
-    async fn handle_model<D: LuroDatabaseDriver,>(data: ModalInteractionData, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
+    async fn handle_model<D: LuroDatabaseDriver>(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let user_id = ctx
             .interaction
             .author_id()
-            .context("Expected to find the user running this command",)?;
+            .context("Expected to find the user running this command")?;
         let nsfw = ctx.interaction.clone().channel.unwrap().nsfw.unwrap_or_default();
-        let mut user_data = ctx.framework.database.get_user(&user_id, false,).await?;
-        let character_name = ctx.parse_modal_field_required(&data, "character-name",)?;
-        let short_description = ctx.parse_modal_field_required(&data, "character-short-description",)?;
-        let description = ctx.parse_modal_field_required(&data, "character-description",)?;
-        let nsfw_description = ctx.parse_modal_field(&data, "character-nsfw-description",)?;
+        let mut user_data = ctx.framework.database.get_user(&user_id, false).await?;
+        let character_name = ctx.parse_modal_field_required(&data, "character-name")?;
+        let short_description = ctx.parse_modal_field_required(&data, "character-short-description")?;
+        let description = ctx.parse_modal_field_required(&data, "character-description")?;
+        let nsfw_description = ctx.parse_modal_field(&data, "character-nsfw-description")?;
 
-        match user_data.characters.entry(character_name.to_owned(),) {
-            Entry::Vacant(entry,) => entry.insert(CharacterProfile {
+        match user_data.characters.entry(character_name.to_owned()) {
+            Entry::Vacant(entry) => entry.insert(CharacterProfile {
                 short_description: short_description.to_string(),
                 description: description.to_string(),
-                nsfw_description: nsfw_description.map(|description| description.to_owned(),),
+                nsfw_description: nsfw_description.map(|description| description.to_owned()),
                 nsfw: nsfw_description.is_some(),
                 ..Default::default()
-            },),
-            Entry::Occupied(mut entry,) => {
+            }),
+            Entry::Occupied(mut entry) => {
                 let entry = entry.get_mut();
                 entry.description = description.to_owned();
                 entry.short_description = short_description.to_owned();
-                if let Some(nsfw_description,) = nsfw_description {
+                if let Some(nsfw_description) = nsfw_description {
                     entry.nsfw = true;
-                    entry.nsfw_description = Some(nsfw_description.to_owned(),);
+                    entry.nsfw_description = Some(nsfw_description.to_owned());
                 }
                 entry
             }
         };
 
-        ctx.framework.database.save_user(&user_id, &user_data,).await?;
+        ctx.framework.database.save_user(&user_id, &user_data).await?;
 
         let mut embed = ctx.default_embed().await;
         let mut description = format!("{short_description}\n- **Description:**\n{description}");
@@ -89,41 +89,41 @@ impl LuroCommand for Character {
             writeln!(description, "\n- **NSFW Description:**\n{nsfw_description}")?
         }
 
-        embed.title(format!("Character Profile - {character_name}"),);
-        embed.description(description,);
+        embed.title(format!("Character Profile - {character_name}"));
+        embed.description(description);
         embed.author(|a| {
-            a.icon_url(user_data.avatar(),)
-                .name(format!("Profile by {}", user_data.name()),)
-        },);
+            a.icon_url(user_data.avatar())
+                .name(format!("Profile by {}", user_data.name()))
+        });
 
-        ctx.respond(|response| response.add_embed(embed,),).await
+        ctx.respond(|response| response.add_embed(embed)).await
     }
 
-    async fn handle_component<D: LuroDatabaseDriver,>(
+    async fn handle_component<D: LuroDatabaseDriver>(
         self,
-        _data: Box<MessageComponentInteractionData,>,
-        ctx: LuroSlash<D,>,
-    ) -> anyhow::Result<(),> {
+        _data: Box<MessageComponentInteractionData>,
+        ctx: LuroSlash<D>,
+    ) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let message = ctx
             .interaction
             .message
             .clone()
-            .ok_or_else(|| Error::msg("Unable to find the original message",),)?;
+            .ok_or_else(|| Error::msg("Unable to find the original message"))?;
         let interaction = message
             .interaction
-            .context("Unable to get the interaction the original message was attached to",)?;
-        let user_data = ctx.framework.database.get_user(&interaction.user.id, false,).await?;
+            .context("Unable to get the interaction the original message was attached to")?;
+        let user_data = ctx.framework.database.get_user(&interaction.user.id, false).await?;
         let name = match self {
-            Character::Profile(data,) => data.name,
-            Character::Create(data,) => data.name,
-            _ => return ctx.respond(|r| r.content("Invalid command",).ephemeral(),).await,
+            Character::Profile(data) => data.name,
+            Character::Create(data) => data.name,
+            _ => return ctx.respond(|r| r.content("Invalid command").ephemeral()).await,
         };
         let character = user_data
             .characters
-            .get(&name,)
-            .context("Could not find that character! Was it deleted?",)?;
-        embed.title(format!("{name}'s Fetishes"),);
+            .get(&name)
+            .context("Could not find that character! Was it deleted?")?;
+        embed.title(format!("{name}'s Fetishes"));
 
         let mut fav = String::new();
         let mut love = String::new();
@@ -133,7 +133,7 @@ impl LuroCommand for Character {
         let mut hate = String::new();
         let mut limits = String::new();
 
-        for (id, fetish,) in &character.fetishes {
+        for (id, fetish) in &character.fetishes {
             match fetish.category {
                 FetishCategory::Favourite => writeln!(fav, "- {id}: {}", fetish.description)?,
                 FetishCategory::Love => writeln!(love, "- {id}: {}", fetish.description)?,
@@ -146,33 +146,33 @@ impl LuroCommand for Character {
         }
 
         if !fav.is_empty() {
-            embed.create_field("Favourites", &fav, false,);
+            embed.create_field("Favourites", &fav, false);
         }
 
         if !love.is_empty() {
-            embed.create_field("Love", &love, false,);
+            embed.create_field("Love", &love, false);
         }
 
         if !like.is_empty() {
-            embed.create_field("Like", &like, false,);
+            embed.create_field("Like", &like, false);
         }
 
         if !neutral.is_empty() {
-            embed.create_field("Neutral", &neutral, false,);
+            embed.create_field("Neutral", &neutral, false);
         }
 
         if !dislike.is_empty() {
-            embed.create_field("Dislike", &dislike, false,);
+            embed.create_field("Dislike", &dislike, false);
         }
 
         if !hate.is_empty() {
-            embed.create_field("Hate", &hate, false,);
+            embed.create_field("Hate", &hate, false);
         }
 
         if !limits.is_empty() {
-            embed.create_field("Limits", &limits, false,);
+            embed.create_field("Limits", &limits, false);
         }
 
-        ctx.respond(|r| r.add_embed(embed,).ephemeral(),).await
+        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }
 }

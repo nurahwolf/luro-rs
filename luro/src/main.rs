@@ -91,43 +91,43 @@ pub const DATA_PATH: &str = "data/";
 pub const LOG_PATH: &str = "data/log/";
 
 /// A shorthand to [Framework] wrapped in an [Arc].
-pub type LuroFramework = Arc<Framework<TomlDatabaseDriver,>,>;
+pub type LuroFramework = Arc<Framework<TomlDatabaseDriver>>;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<(),> {
+async fn main() -> anyhow::Result<()> {
     dotenv().ok();
     let driver = TomlDatabaseDriver {};
-    let (filter, tracing_subscriber,) = reload::Layer::new(FILTER,);
-    let (token, lavalink_host, lavalink_auth, intents,) = (
-        env::var("DISCORD_TOKEN",).context("Failed to get the variable DISCORD_TOKEN",)?,
-        env::var("LAVALINK_HOST",).context("Failed to get the variable LAVALINK_HOST",)?,
-        env::var("LAVALINK_AUTHORISATION",).context("Failed to get the variable LAVALINK_AUTHORISATION",)?,
+    let (filter, tracing_subscriber) = reload::Layer::new(FILTER);
+    let (token, lavalink_host, lavalink_auth, intents) = (
+        env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
+        env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
+        env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
         INTENTS - Intents::GUILD_PRESENCES, // INTENTS
     );
 
     // Create the framework
-    let (luro, mut shards,) =
-        Framework::builder(driver, intents, lavalink_auth, lavalink_host, token, tracing_subscriber,).await?;
+    let (luro, mut shards) =
+        Framework::builder(driver, intents, lavalink_auth, lavalink_host, token, tracing_subscriber).await?;
 
     // Initialise tracing for logs
-    init_tracing_subscriber(filter, &luro.database.current_user.read().unwrap().name,);
+    init_tracing_subscriber(filter, &luro.database.current_user.read().unwrap().name);
 
     // Start the configured database
     TomlDatabaseDriver::start().await?;
 
     // Work on our events
-    let mut stream = ShardEventStream::new(shards.iter_mut(),);
+    let mut stream = ShardEventStream::new(shards.iter_mut());
 
-    while let Some((shard, event,),) = stream.next().await {
+    while let Some((shard, event)) = stream.next().await {
         let event = match event {
-            Err(error,) => {
+            Err(error) => {
                 if error.is_fatal() {
                     eprintln!("Gateway connection fatally closed, error: {error:?}");
                     break;
                 }
 
                 match error.kind() {
-                    ReceiveMessageErrorType::Deserializing { event, } => {
+                    ReceiveMessageErrorType::Deserializing { event } => {
                         tracing::warn!("Failed to deserialise an object. Check DEBUG for the raw output");
                         tracing::debug!(?event, "error while deserialising event");
                         continue;
@@ -138,24 +138,24 @@ async fn main() -> anyhow::Result<(),> {
                     }
                 }
             }
-            Ok(event,) => event,
+            Ok(event) => event,
         };
 
         // unsafe { enable() }
 
-        tokio::spawn(luro.clone().event_handler(event, shard.sender(), shard.latency().clone(),),);
+        tokio::spawn(luro.clone().event_handler(event, shard.sender(), shard.latency().clone()));
     }
 
-    Ok((),)
+    Ok(())
 }
 
-fn init_tracing_subscriber(filter: Layer<LevelFilter, Registry,>, file_name: &String,) {
-    let file_appender = tracing_appender::rolling::hourly(LOG_PATH, format!("{file_name}.log"),);
-    let (non_blocking, _guard,) = tracing_appender::non_blocking(file_appender,);
-    let layer = fmt::layer().with_writer(non_blocking,);
+fn init_tracing_subscriber(filter: Layer<LevelFilter, Registry>, file_name: &String) {
+    let file_appender = tracing_appender::rolling::hourly(LOG_PATH, format!("{file_name}.log"));
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    let layer = fmt::layer().with_writer(non_blocking);
     tracing_subscriber::registry()
-        .with(filter,)
-        .with(layer,)
-        .with(fmt::Layer::default(),)
+        .with(filter)
+        .with(layer)
+        .with(fmt::Layer::default())
         .init();
 }

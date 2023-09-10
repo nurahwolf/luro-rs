@@ -23,64 +23,64 @@ mod heck;
 mod user;
 
 /// Defaults to the toml driver
-#[derive(Debug, Clone, Deserialize, Serialize, Default,)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct TomlDatabaseDriver {}
 
 impl TomlDatabaseDriver {
     // A simple function used to make sure our data path and other needed files exist
-    pub async fn start() -> anyhow::Result<Self,> {
-        let path_to_data = PathBuf::from("./data",); //env::current_dir().expect("Invaild executing directory").join("/data");
+    pub async fn start() -> anyhow::Result<Self> {
+        let path_to_data = PathBuf::from("./data"); //env::current_dir().expect("Invaild executing directory").join("/data");
 
         // Initialise /data folder for toml. Otherwise it panics.
         if !path_to_data.exists() {
             tracing::warn!("/data folder does not exist, creating it...");
-            fs::create_dir(path_to_data,).await?;
+            fs::create_dir(path_to_data).await?;
             tracing::info!("/data folder successfully created!");
         }
 
-        Ok(Self {},)
+        Ok(Self {})
     }
 
     /// Gets the specified [Path], which should be a toml file. If it does not exist, it will be created.
     ///
     /// If the type does not exists, uses the passed `new` to create a new one.
-    async fn get<'de, T,>(path: &Path, new: T,) -> anyhow::Result<T,>
+    async fn get<'de, T>(path: &Path, new: T) -> anyhow::Result<T>
     where
         T: Serialize + DeserializeOwned + std::fmt::Debug,
     {
         // Check to make sure our path exists, if not then create a new heck file
         if !path.exists() {
             warn!("Path {} does not exist, attempting to create it", path.to_string_lossy());
-            let formatted_data = toml::to_string_pretty(&new,)?;
+            let formatted_data = toml::to_string_pretty(&new)?;
 
             // Make sure the directory exists, then attempt to make the file
-            fs::create_dir_all(path.parent().unwrap(),).await?;
-            fs::write(path, formatted_data,).await?;
+            fs::create_dir_all(path.parent().unwrap()).await?;
+            fs::write(path, formatted_data).await?;
             // We can short curcuit here and return directly, saving a few operations.
-            return Ok(new,);
+            return Ok(new);
         }
 
         // Attempt to open the file. It should now exist due to the previous check
-        let mut file_opened = fs::File::open(path,).await?;
+        let mut file_opened = fs::File::open(path).await?;
         let mut contents = String::new();
 
         // If we could read it, then let standard output know
-        if let Ok(size,) = file_opened.read_to_string(&mut contents,).await {
+        if let Ok(size) = file_opened.read_to_string(&mut contents).await {
             debug!("Read file {} of length {size}", path.to_string_lossy());
         }
 
         // Serialise into a Heck type
-        match toml::from_str::<T,>(&contents,) {
-            Ok(ok,) => Ok(ok,),
-            Err(why,) => {
+        match toml::from_str::<T>(&contents) {
+            Ok(ok) => Ok(ok),
+            Err(why) => {
                 error!(why = ?why, "Failed to serialised the type {:?}", new);
-                Err(why.into(),)
+                Err(why.into())
             }
         }
     }
 
-    async fn gdpr_delete(path: &Path,) -> anyhow::Result<(),> {
-        let new_data = toml::to_string_pretty(GDPR_DELETE,)?;
+    async fn gdpr_delete(path: &Path) -> anyhow::Result<()> {
+        let new_data = toml::to_string_pretty(GDPR_DELETE)?;
 
         match path.exists() {
             true => {
@@ -88,61 +88,61 @@ impl TomlDatabaseDriver {
                     "Path {} has been deleted at the request of the user (GDPR)",
                     path.to_string_lossy()
                 );
-                Ok(fs::write(path, new_data,).await?,)
+                Ok(fs::write(path, new_data).await?)
             }
             false => Ok(warn!(
                 "Path {} does not exist and the user requested that their data be deleted",
                 path.to_string_lossy()
-            ),),
+            )),
         }
     }
 
     /// Write the passed data to file
-    async fn write<T,>(data: T, path: &Path,) -> anyhow::Result<T,>
+    async fn write<T>(data: T, path: &Path) -> anyhow::Result<T>
     where
         T: Serialize,
     {
-        let struct_to_toml_string = toml::to_string_pretty(&data,)?;
+        let struct_to_toml_string = toml::to_string_pretty(&data)?;
 
         if !path.exists() {
             warn!("Path {} does not exist, attempting to create it", path.to_string_lossy());
-            fs::create_dir_all(path.parent().unwrap(),).await?
+            fs::create_dir_all(path.parent().unwrap()).await?
         }
 
         debug!("Path {} has bee updated with new data", path.to_string_lossy());
-        fs::write(path, struct_to_toml_string,).await?;
-        Ok(data,)
+        fs::write(path, struct_to_toml_string).await?;
+        Ok(data)
     }
 }
 
 // Serialise a BTreeMap, changing the key from usize to String
-pub fn toml_serializer<T,>(input: BTreeMap<usize, T,>,) -> BTreeMap<String, T,> {
+pub fn toml_serializer<T>(input: BTreeMap<usize, T>) -> BTreeMap<String, T> {
     input
         .into_iter()
-        .map(|(str_key, value,)| (str_key.to_string(), value,),)
-        .collect::<BTreeMap<String, T,>>()
+        .map(|(str_key, value)| (str_key.to_string(), value))
+        .collect::<BTreeMap<String, T>>()
 }
 
 // Deserialise a BTreeMap, changing the key from [String] to [usize]
-pub fn toml_deserializer<T,>(input: BTreeMap<String, T,>,) -> anyhow::Result<BTreeMap<usize, T,>,> {
+pub fn toml_deserializer<T>(input: BTreeMap<String, T>) -> anyhow::Result<BTreeMap<usize, T>> {
     let original_len = input.len();
     let data = input
         .into_iter()
-        .map(|(key, value,)| {
+        .map(|(key, value)| {
             (
                 match key.parse() {
-                    Ok(usize_key,) => usize_key,
-                    Err(_,) => todo!(),
+                    Ok(usize_key) => usize_key,
+                    Err(_) => todo!(),
                 },
                 value,
             )
-        },)
-        .collect::<BTreeMap<usize, T,>>();
+        })
+        .collect::<BTreeMap<usize, T>>();
 
     // multiple strings could parse to the same int, e.g "0" and "00"
     if data.len() < original_len {
-        return Err(anyhow!("detected duplicate integer key"),);
+        return Err(anyhow!("detected duplicate integer key"));
     }
 
-    Ok(data,)
+    Ok(data)
 }

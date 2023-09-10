@@ -10,26 +10,26 @@ mod punishments;
 mod role;
 mod user;
 
-#[derive(CommandModel, CreateCommand,)]
+#[derive(CommandModel, CreateCommand)]
 #[command(name = "info", desc = "Information about neat things")]
 pub enum InfoCommands {
     #[command(name = "user")]
-    User(InfoUser,),
+    User(InfoUser),
     #[command(name = "role")]
-    Role(InfoRole,),
+    Role(InfoRole),
     #[command(name = "guild")]
-    Guild(Guild,),
+    Guild(Guild),
     #[command(name = "punishments")]
-    Punishments(Punishments,),
+    Punishments(Punishments),
 }
 
 impl LuroCommand for InfoCommands {
-    async fn run_command<D: LuroDatabaseDriver,>(self, ctx: LuroSlash<D,>,) -> anyhow::Result<(),> {
+    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
-            Self::Guild(command,) => command.run_command(ctx,).await,
-            Self::Punishments(command,) => command.run_command(ctx,).await,
-            Self::Role(command,) => command.run_command(ctx,).await,
-            Self::User(command,) => command.run_command(ctx,).await,
+            Self::Guild(command) => command.run_command(ctx).await,
+            Self::Punishments(command) => command.run_command(ctx).await,
+            Self::Role(command) => command.run_command(ctx).await,
+            Self::User(command) => command.run_command(ctx).await,
         }
     }
 }

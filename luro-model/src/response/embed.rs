@@ -10,16 +10,16 @@ impl LuroResponse {
     ///
     /// Refer to the documentation for [`EmbedBuilder`] for more
     /// information.
-    pub fn embed<F,>(&mut self, embed: F,) -> &mut Self
+    pub fn embed<F>(&mut self, embed: F) -> &mut Self
     where
-        F: FnOnce(&mut EmbedBuilder,) -> &mut EmbedBuilder,
+        F: FnOnce(&mut EmbedBuilder) -> &mut EmbedBuilder,
     {
         let mut e = EmbedBuilder::default();
-        embed(&mut e,);
+        embed(&mut e);
 
         match &mut self.embeds {
-            Some(embeds,) => embeds.push(e.into(),),
-            None => self.embeds = Some(vec![e.into()],),
+            Some(embeds) => embeds.push(e.into()),
+            None => self.embeds = Some(vec![e.into()]),
         }
 
         #[cfg(feature = "auto-trim")]
@@ -32,10 +32,10 @@ impl LuroResponse {
     /// Add an embed without modifying the existing embeds, if present.
     ///
     /// NOTE: This WILL fail to send if more than 10 embeds are present!
-    pub fn add_embed(&mut self, embed: impl Into<Embed,>,) -> &mut Self {
+    pub fn add_embed(&mut self, embed: impl Into<Embed>) -> &mut Self {
         match &mut self.embeds {
-            Some(embeds,) => embeds.push(embed.into(),),
-            None => self.embeds = Some(vec![embed.into()],),
+            Some(embeds) => embeds.push(embed.into()),
+            None => self.embeds = Some(vec![embed.into()]),
         }
 
         #[cfg(feature = "auto-trim")]
@@ -50,8 +50,8 @@ impl LuroResponse {
     ///
     /// NOTE: This WILL fail to send if more than 10 are present!
     #[allow(unreachable_code)]
-    pub fn set_embeds(&mut self, embeds: Vec<Embed,>,) -> &mut Self {
-        self.embeds = Some(embeds,);
+    pub fn set_embeds(&mut self, embeds: Vec<Embed>) -> &mut Self {
+        self.embeds = Some(embeds);
 
         #[cfg(feature = "auto-trim")]
         return self.check_embed();
@@ -63,8 +63,8 @@ impl LuroResponse {
     /// Explicitly set and overwrite all currently set embeds.
     /// Modify the nested embeds field for more advanced controls.
     #[allow(unreachable_code)]
-    pub fn set_embed(&mut self, embeds: impl Into<Embed,>,) -> &mut Self {
-        self.embeds = Some(vec![embeds.into()],);
+    pub fn set_embed(&mut self, embeds: impl Into<Embed>) -> &mut Self {
+        self.embeds = Some(vec![embeds.into()]);
 
         #[cfg(feature = "auto-trim")]
         return self.check_embed();
@@ -74,13 +74,13 @@ impl LuroResponse {
     }
 
     #[cfg(feature = "auto-trim")]
-    fn check_embed(&mut self,) -> &mut Self {
-        if let Some(embeds,) = &mut self.embeds {
+    fn check_embed(&mut self) -> &mut Self {
+        if let Some(embeds) = &mut self.embeds {
             let mut file_id = 0;
             let mut files = vec![];
             let mut modified_embeds = vec![];
             for embed in embeds {
-                if let Some(description,) = &mut embed.description {
+                if let Some(description) = &mut embed.description {
                     if description.len() > 4096 {
                         file_id += 1;
 
@@ -88,10 +88,10 @@ impl LuroResponse {
                             format!("Embed-{file_id}.txt"),
                             description.as_bytes().to_vec(),
                             file_id,
-                        ),);
+                        ));
 
-                        description.truncate(4093,);
-                        description.push_str("...",);
+                        description.truncate(4093);
+                        description.push_str("...");
                     }
                 }
 
@@ -103,20 +103,20 @@ impl LuroResponse {
                             format!("Field-{file_id}.txt"),
                             field.value.as_bytes().to_vec(),
                             file_id,
-                        ),);
+                        ));
 
-                        field.value.truncate(997,);
-                        field.value.push_str("...",);
+                        field.value.truncate(997);
+                        field.value.push_str("...");
                     }
                 }
 
-                modified_embeds.push(embed.clone(),)
+                modified_embeds.push(embed.clone())
             }
             if !files.is_empty() {
-                self.attachments(files.into_iter(),);
+                self.attachments(files.into_iter());
             }
 
-            self.embeds = Some(modified_embeds,)
+            self.embeds = Some(modified_embeds)
         }
         self
     }
