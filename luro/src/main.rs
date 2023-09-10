@@ -69,7 +69,7 @@ pub const BOT_NAME: &str = "luro";
 /// The name of the bot in lowercase
 
 /// [tracing_subscriber] filter level
-pub const FILTER: LevelFilter = LevelFilter::INFO;
+pub const FILTER: LevelFilter = LevelFilter::TRACE;
 // Luro's intents. Can be set to all, but rather spammy.
 pub const INTENTS: Intents = Intents::all();
 /// Luro's main accent colour
@@ -96,7 +96,7 @@ pub type LuroFramework = Arc<Framework<TomlDatabaseDriver>>;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenv().ok();
+    dotenv()?;
 
     // Database driver - Change this and the feature of `luro-database` to modify the driver!
     let database_driver = luro_database::toml::TomlDatabaseDriver::start().await?;
@@ -104,9 +104,9 @@ async fn main() -> anyhow::Result<()> {
     let config = Configuration::new(
         database_driver,
         INTENTS,
-        env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
-        env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
+        env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
+        env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
     )?
     .into();
 

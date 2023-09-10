@@ -32,9 +32,9 @@ async fn main() -> anyhow::Result<()> {
     let config = Configuration::new(
         database_driver,
         INTENTS,
-        env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
-        env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
+        env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
+        env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
     )?
     .into();
 
