@@ -49,7 +49,7 @@ impl LuroCommandTrait for Proxy {
         if data.remove.unwrap_or_default() {
             let content = match user_data.character_prefix.remove(&data.prefix) {
                 Some(prefix) => {
-                    ctx.database.save_user(&user_id, &user_data).await?;
+                    ctx.database.modify_user(&user_id, &user_data).await?;
                     format!("Prefix {prefix} removed from character {}!", data.name)
                 }
                 None => {
@@ -64,7 +64,7 @@ impl LuroCommandTrait for Proxy {
         }
 
         user_data.character_prefix.insert(data.prefix, data.name.clone());
-        ctx.database.save_user(&user_id, &user_data).await?;
+        ctx.database.modify_user(&user_id, &user_data).await?;
 
         let character_icon = match !character.icon.is_empty() {
             true => character.icon.clone(),

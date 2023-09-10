@@ -118,7 +118,7 @@ impl LuroCommand for Kick {
             .await?;
 
         moderator.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&moderator.id, &moderator).await?;
+        ctx.framework.database.modify_user(&moderator.id, &moderator).await?;
 
         // Record the punishment
         punished_user.moderation_actions.push(UserActions {
@@ -127,7 +127,7 @@ impl LuroCommand for Kick {
             reason: reason.clone(),
             responsible_user: moderator.id,
         });
-        ctx.framework.database.save_user(&punished_user.id, &punished_user).await?;
+        ctx.framework.database.modify_user(&punished_user.id, &punished_user).await?;
 
         // If an alert channel is defined, send a message there
         ctx.framework

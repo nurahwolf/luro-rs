@@ -50,7 +50,7 @@ impl LuroCommandTrait for Icon {
             }
         };
 
-        ctx.database.save_user(&user_id, &user_data).await?;
+        ctx.database.modify_user(&user_id, &user_data).await?;
 
         interaction.respond(&ctx, |r| r.content("Done!").ephemeral()).await
     }

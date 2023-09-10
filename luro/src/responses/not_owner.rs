@@ -79,7 +79,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
                 reason: Some(format!("Attempted to run the {} command", &command)),
                 responsible_user: *user_id,
             });
-            self.framework.database.save_user(user_id, &user_data).await?;
+            self.framework.database.modify_user(user_id, &user_data).await?;
         }
         self.respond(|r| r.add_embed(not_owner_embed(user_id, &command))).await
     }

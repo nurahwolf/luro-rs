@@ -21,7 +21,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         response.punishment_reason(event.reason.as_deref(), punished_user);
         // Reward the moderator
         moderator.moderation_actions_performed += 1;
-        self.database.save_user(&moderator.id, moderator).await?;
+        self.database.modify_user(&moderator.id, moderator).await?;
 
         // Record the punishment
         punished_user.moderation_actions.push(UserActions {
@@ -30,7 +30,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             reason: event.reason.clone(),
             responsible_user: moderator.id,
         });
-        self.database.save_user(&punished_user.id, punished_user).await?;
+        self.database.modify_user(&punished_user.id, punished_user).await?;
 
         // Send the response
         self.send_moderator_log_channel(&Some(guild.id), response.embed).await

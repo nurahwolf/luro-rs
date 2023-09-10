@@ -50,6 +50,7 @@ impl LuroCommand for StoryCommand {
                     title,
                     description,
                     author: ctx.interaction.author().unwrap().id,
+                    nsfw,
                 },
                 nsfw,
             )

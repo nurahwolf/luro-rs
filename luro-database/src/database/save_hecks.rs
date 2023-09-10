@@ -3,7 +3,6 @@ use tracing::warn;
 
 use crate::LuroDatabase;
 
-
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Modifies multiple hecks, overwriting whatever value used to exist
     pub async fn save_hecks(&self, hecks: Hecks, nsfw: bool) -> anyhow::Result<()> {

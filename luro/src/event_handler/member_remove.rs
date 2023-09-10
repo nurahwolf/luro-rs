@@ -15,7 +15,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             Some(member) => {
                 let start = SystemTime::now();
                 member.left_at = Some(start.duration_since(UNIX_EPOCH).expect("Time went backwards"));
-                self.database.save_user(&event.user.id, &user).await?;
+                self.database.modify_user(&event.user.id, &user).await?;
             }
             None => {
                 warn!("No guild settings for user {} in guild {}", event.user.id, event.guild_id);

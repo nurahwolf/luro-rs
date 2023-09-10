@@ -2,12 +2,13 @@ use crate::toml::USERDATA_FILE_PATH;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use luro_model::{
+    database_driver::LuroDatabaseDriver,
     guild::LuroGuild,
     heck::{Heck, Hecks},
     message::LuroMessage,
     story::Story,
     user::{LuroUser, LuroUsers},
-    CommandManager, Quotes, Stories, BOT_OWNERS, database_driver::LuroDatabaseDriver,
+    CommandManager, Quotes, Stories, BOT_OWNERS,
 };
 use std::{collections::HashMap, path::Path};
 use twilight_model::{application::interaction::Interaction, id::Id};

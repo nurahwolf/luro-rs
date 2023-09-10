@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use luro_model::{heck::Hecks, database_driver::LuroDatabaseDriver};
-use tracing::{warn, info};
+use luro_model::{database_driver::LuroDatabaseDriver, heck::Hecks};
+use tracing::{info, warn};
 
 use crate::LuroDatabase;
 

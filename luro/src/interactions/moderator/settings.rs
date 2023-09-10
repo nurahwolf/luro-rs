@@ -81,7 +81,7 @@ impl LuroCommand for GuildSettingsCommand {
         }
 
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
-        ctx.framework.database.save_guild(&guild_id, &guild).await?;
+        ctx.framework.database.modify_guild(&guild_id, &guild).await?;
         if let Some((colour, position, role)) = guild.highest_role_colour() {
             guild.accent_colour = Some(colour);
             embed.create_field(

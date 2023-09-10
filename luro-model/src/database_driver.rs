@@ -1,15 +1,15 @@
-use std::sync::{RwLock, Arc};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, RwLock};
 use twilight_model::application::interaction::Interaction;
 use twilight_model::{oauth::Application, user::CurrentUser};
 
 use crate::configuration::Configuration;
-use crate::guild::{LuroGuilds, LuroGuild};
-use crate::heck::{Hecks, Heck};
+use crate::guild::{LuroGuild, LuroGuilds};
+use crate::heck::{Heck, Hecks};
 use crate::message::LuroMessage;
 use crate::story::Story;
-use crate::user::{LuroUsers, LuroUser};
+use crate::user::{LuroUser, LuroUsers};
 use crate::{CommandManager, Quotes, Stories};
 
 pub mod drivers;
@@ -42,16 +42,12 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub staff: RwLock<LuroUsers>,
     pub stories: RwLock<StoryManager>,
     pub user_data: Box<RwLock<LuroUsers>>,
-    pub config: Arc<Configuration<D>>
+    pub config: Arc<Configuration<D>>,
 }
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Build the key requirements of our database. The rest of our data is fetched as required.
-    pub fn build(
-        application: Application,
-        current_user: CurrentUser,
-        config: Arc<Configuration<D>>,
-    ) -> LuroDatabase<D> {
+    pub fn build(application: Application, current_user: CurrentUser, config: Arc<Configuration<D>>) -> LuroDatabase<D> {
         Self {
             application: application.into(),
             command_data: Default::default(),

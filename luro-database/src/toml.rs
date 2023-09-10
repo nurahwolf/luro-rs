@@ -20,6 +20,7 @@ use tracing::{debug, error, warn};
 pub mod driver;
 pub mod guild;
 pub mod heck;
+mod story;
 pub mod user;
 
 /// Defaults to the toml driver

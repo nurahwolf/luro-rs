@@ -39,7 +39,7 @@ impl LuroCommandTrait for Remove {
 
         let mut guild_settings = framework.database.get_guild(&guild_id).await?;
         guild_settings.assignable_role_blacklist.retain(|&x| x != data.role);
-        framework.database.save_guild(&guild_id, &guild_settings).await?;
+        framework.database.modify_guild(&guild_id, &guild_settings).await?;
 
         interaction
             .respond(&framework, |r| {

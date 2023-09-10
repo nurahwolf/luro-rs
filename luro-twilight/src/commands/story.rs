@@ -49,6 +49,7 @@ impl LuroCommandTrait for StoryCommand {
                     title,
                     description,
                     author: interaction.author_id(),
+                    nsfw,
                 },
                 nsfw,
             )

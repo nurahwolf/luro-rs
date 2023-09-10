@@ -109,13 +109,13 @@ impl LuroCommand for HeckAddCommand {
             if nsfw {
                 heck_id = guild_settings.nsfw_hecks.len();
                 guild_settings.nsfw_hecks.insert(heck_id, heck);
-                ctx.framework.database.save_guild(&guild_id, &guild_settings).await?;
+                ctx.framework.database.modify_guild(&guild_id, &guild_settings).await?;
 
                 heck_author.name = "Guild Heck Created - NSFW Heck".to_owned()
             } else {
                 heck_id = guild_settings.sfw_hecks.len();
                 guild_settings.sfw_hecks.insert(heck_id, heck);
-                ctx.framework.database.save_guild(&guild_id, &guild_settings).await?;
+                ctx.framework.database.modify_guild(&guild_id, &guild_settings).await?;
 
                 heck_author.name = "Guild Heck Created - SFW Heck".to_owned()
             };

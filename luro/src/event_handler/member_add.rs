@@ -10,7 +10,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         let mut user = self.database.get_user(&event.user.id).await?;
         user.update_member_add(event.clone());
-        self.database.save_user(&event.user.id, &user).await?;
+        self.database.modify_user(&event.user.id, &user).await?;
 
         Ok(())
     }

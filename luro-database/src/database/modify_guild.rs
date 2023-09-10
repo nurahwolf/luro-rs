@@ -1,14 +1,13 @@
-use luro_model::{guild::LuroGuild, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, guild::LuroGuild};
 use tracing::warn;
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::LuroDatabase;
-
+use crate::{LuroDatabase, LuroDatabaseItem};
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Saves a user, overwriting whatever value used to exist
     /// Returns the old users data if it existed
-    pub async fn save_guild(&self, id: &Id<GuildMarker>, guild: &LuroGuild) -> anyhow::Result<Option<LuroGuild>> {
+    pub async fn modify_guild(&self, id: &Id<GuildMarker>, guild: &LuroGuild) -> anyhow::Result<Option<LuroGuild>> {
         let (ok, data) = match self.guild_data.write() {
             Ok(mut data) => (true, Ok(data.insert(*id, guild.clone()))),
             Err(why) => {
@@ -18,7 +17,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         };
 
         if ok {
-            self.driver.save_guild(id.get(), guild.clone()).await?;
+            LuroGuild::modify_item(&id.get(), guild).await?;
         }
 
         data

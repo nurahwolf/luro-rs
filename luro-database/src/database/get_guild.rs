@@ -1,50 +1,42 @@
-use luro_model::{guild::LuroGuild, database_driver::LuroDatabaseDriver};
-use tracing::{error, info, warn};
+use anyhow::anyhow;
+use luro_model::{database_driver::LuroDatabaseDriver, guild::LuroGuild};
+use tracing::{error, info};
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::LuroDatabase;
+use crate::{LuroDatabase, LuroDatabaseItem};
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
-    /// Attempts to get a user from the cache, otherwise gets the user from the database
+    /// Fetches a guild in the following priority order
+    ///
+    /// Luro Cache -> Luro Database -> Twilight Cache -> Twilight Client
     pub async fn get_guild(&self, id: &Id<GuildMarker>) -> anyhow::Result<LuroGuild> {
-        let mut data = match self.guild_data.read() {
-            Ok(data) => data.get(id).cloned(),
-            Err(why) => {
-                error!(why = ?why, "guild_data lock is poisoned! Please investigate!");
-                None
-            }
-        };
-
-        if data.is_none() {
-            info!(id = ?id, "guild is not in the cache, fetching from disk");
-            data = match self.driver.get_guild(id.get()).await {
-                Ok(data) => Some(data),
-                Err(why) => {
-                    warn!(why = ?why, "Failed to get guild from the database. Falling back to twilight");
-                    None
+        // Attempt to fetch the data from Luro's cache
+        match self.guild_data.read() {
+            Ok(data) => {
+                if let Some(data) = data.get(id) {
+                    return Ok(data.clone());
                 }
             }
-        }
-
-        let mut data = match data {
-            Some(data) => data,
-            None => LuroGuild::new(*id),
+            Err(why) => error!(why = ?why, "guild_data lock is poisoned! Please investigate!"),
         };
 
-        match self.config.twilight_client.guild(*id).await {
-            Ok(guild) => {
-                data.update_guild(guild.model().await?);
-            }
-            Err(why) => info!(why = ?why, "Failed to update guild"),
+        info!(id = ?id, "guild is not in Luro's cache, fetching from Luro's Database");
+        if let Ok(data) = LuroGuild::get_item(&id.get(), ()).await {
+            return Ok(data);
         }
 
-        match self.guild_data.write() {
-            Ok(mut guild) => {
-                guild.insert(*id, data.clone());
-            }
-            Err(why) => error!(why = ?why, "guild_data lock is poisoned! Please investigate!"),
+        info!(id = ?id, "guild is not in Luro's cache, fetching from Twilight's Cache");
+        if let Some(data) = self.config.cache.guild(*id) {
+            return Ok(LuroGuild::from(data));
         }
 
-        Ok(data)
+        info!(id = ?id, "guild is not in Luro's cache, fetching from Twilight's Client");
+        if let Ok(data) = self.config.twilight_client.guild(*id).await {
+            return Ok(LuroGuild::from(data.model().await?));
+        }
+
+        Err(anyhow!(
+            "Could not find any data relating to the guild. Am I still in that guild?"
+        ))
     }
 }

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::{message::LuroMessage, user::LuroUser, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, message::LuroMessage, user::LuroUser};
 use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::ChannelMarker, Id};

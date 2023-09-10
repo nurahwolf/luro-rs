@@ -35,7 +35,8 @@ async fn main() -> anyhow::Result<()> {
         env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
         env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
-    )?.into();
+    )?
+    .into();
 
     // Create the framework, Initialise tracing for logs based on bot name
     let (framework, mut shards) = Framework::new(config, tracing_subscriber).await?;

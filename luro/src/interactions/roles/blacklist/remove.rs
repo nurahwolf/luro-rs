@@ -34,7 +34,7 @@ impl LuroCommand for Remove {
         guild_settings.assignable_role_blacklist.retain(|&x| x != self.role);
         ctx.framework
             .database
-            .save_guild(&ctx.interaction.guild_id.unwrap(), &guild_settings)
+            .modify_guild(&ctx.interaction.guild_id.unwrap(), &guild_settings)
             .await?;
 
         ctx.respond(|r| {

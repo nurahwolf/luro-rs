@@ -1,4 +1,4 @@
-use luro_model::{WEBHOOK_NAME, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, WEBHOOK_NAME};
 use twilight_model::{
     channel::Webhook,
     id::{marker::ChannelMarker, Id},

@@ -9,6 +9,7 @@ pub struct Story {
     pub title: String,
     pub description: String,
     pub author: Id<UserMarker>,
+    pub nsfw: bool,
 }
 
 impl Default for Story {
@@ -18,6 +19,7 @@ impl Default for Story {
             description: Default::default(),
             // Defaults to the primary owner
             author: PRIMARY_BOT_OWNER,
+            nsfw: false,
         }
     }
 }

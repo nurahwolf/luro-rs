@@ -1,13 +1,13 @@
-use luro_model::{user::LuroUser, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, user::LuroUser};
 use tracing::warn;
 use twilight_model::id::{marker::UserMarker, Id};
 
-use crate::LuroDatabase;
+use crate::{LuroDatabase, LuroDatabaseItem};
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Saves a user, overwriting whatever value used to exist
     /// Returns the old users data if it existed in the cache
-    pub async fn save_user(&self, id: &Id<UserMarker>, user: &LuroUser) -> anyhow::Result<Option<LuroUser>> {
+    pub async fn modify_user(&self, id: &Id<UserMarker>, user: &LuroUser) -> anyhow::Result<Option<LuroUser>> {
         let (ok, data) = match self.user_data.write() {
             Ok(mut data) => (true, Ok(data.insert(*id, user.clone()))),
             Err(why) => {
@@ -17,7 +17,7 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
         };
 
         if ok {
-            self.driver.save_user(id.get(), user).await?;
+            LuroUser::modify_item(&id.get(), user).await?;
         }
 
         data

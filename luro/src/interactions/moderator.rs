@@ -103,15 +103,11 @@ impl LuroCommand for ModeratorCommands {
         let id = ctx.parse_modal_field_required(&data, "mod-warn-id")?;
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
 
-        let luro_user = ctx
-            .framework
-            .database
-            .get_user(&ctx.interaction.author_id().unwrap())
-            .await?;
+        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
 
         let mut user_data = ctx.framework.database.get_user(&user_id).await?;
         user_data.warnings.push((warning.to_owned(), author.id));
-        ctx.framework.database.save_user(&user_id, &user_data).await?;
+        ctx.framework.database.modify_user(&user_id, &user_data).await?;
 
         let mut embed = EmbedBuilder::default();
         embed
@@ -146,7 +142,7 @@ impl LuroCommand for ModeratorCommands {
 
         let mut reward = ctx.framework.database.get_user(&author.id).await?;
         reward.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&author.id, &reward).await?;
+        ctx.framework.database.modify_user(&author.id, &reward).await?;
 
         // Record the punishment
         let mut warned = ctx.framework.database.get_user(&user_id).await?;
@@ -156,7 +152,7 @@ impl LuroCommand for ModeratorCommands {
             reason: Some(warning.to_owned()),
             responsible_user: author.id,
         });
-        ctx.framework.database.save_user(&user_id, &warned).await?;
+        ctx.framework.database.modify_user(&user_id, &warned).await?;
 
         ctx.respond(|response| response.add_embed(embed)).await
     }

@@ -12,7 +12,7 @@ pub async fn role_update_listener<D: LuroDatabaseDriver>(
 
     let mut guild = framework.database.get_guild(&event.guild_id).await?;
     guild.roles.insert(event.role.id, event.role.into());
-    framework.database.save_guild(&event.guild_id, &guild).await?;
+    framework.database.modify_guild(&event.guild_id, &guild).await?;
 
     Ok(())
 }

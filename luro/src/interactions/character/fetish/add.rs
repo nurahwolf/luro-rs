@@ -68,7 +68,7 @@ impl LuroCommand for Add {
             }
         };
 
-        ctx.framework.database.save_user(&user_id, &user_data).await?;
+        ctx.framework.database.modify_user(&user_id, &user_data).await?;
 
         let mut fav = String::new();
         let mut love = String::new();

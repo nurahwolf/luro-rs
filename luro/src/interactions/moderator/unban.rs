@@ -76,7 +76,7 @@ impl LuroCommand for Unban {
         ctx.send_respond(response).await?;
 
         moderator.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&moderator.id, &moderator).await?;
+        ctx.framework.database.modify_user(&moderator.id, &moderator).await?;
 
         // If an alert channel is defined, send a message there
         ctx.framework

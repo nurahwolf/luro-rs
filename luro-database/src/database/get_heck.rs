@@ -1,5 +1,5 @@
 use luro_model::{database_driver::LuroDatabaseDriver, heck::Heck};
-use tracing::{warn, info};
+use tracing::{info, warn};
 
 use crate::LuroDatabase;
 

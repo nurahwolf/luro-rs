@@ -97,7 +97,7 @@ pub type LuroFramework = Arc<Framework<TomlDatabaseDriver>>;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv().ok();
-    
+
     // Database driver - Change this and the feature of `luro-database` to modify the driver!
     let database_driver = luro_database::toml::TomlDatabaseDriver::start().await?;
     let (filter, tracing_subscriber) = reload::Layer::new(FILTER);
@@ -107,11 +107,11 @@ async fn main() -> anyhow::Result<()> {
         env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
         env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
-    )?.into();
+    )?
+    .into();
 
     // Create the framework
-    let (luro, mut shards) =
-        Framework::builder(tracing_subscriber, config).await?;
+    let (luro, mut shards) = Framework::builder(tracing_subscriber, config).await?;
 
     // Initialise tracing for logs
     init_tracing_subscriber(filter, &luro.database.current_user.read().unwrap().name);

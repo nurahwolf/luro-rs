@@ -1,8 +1,7 @@
-use luro_model::{story::Story, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, story::Story};
 use tracing::warn;
 
 use crate::LuroDatabase;
-
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Modifies a story, overwriting whatever value used to exist

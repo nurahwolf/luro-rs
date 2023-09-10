@@ -7,7 +7,8 @@ use luro_framework::{
     Framework, InteractionCommand, InteractionComponent, InteractionModal, LuroInteraction,
 };
 use luro_model::{
-    user::character::{CharacterProfile, FetishCategory}, database_driver::LuroDatabaseDriver,
+    database_driver::LuroDatabaseDriver,
+    user::character::{CharacterProfile, FetishCategory},
 };
 use std::{collections::btree_map::Entry, fmt::Write};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -88,7 +89,7 @@ impl LuroCommandTrait for Character {
             }
         };
 
-        ctx.database.save_user(&user_id, &user_data).await?;
+        ctx.database.modify_user(&user_id, &user_data).await?;
 
         let mut embed = interaction.default_embed(&ctx).await;
         let mut description = format!("{short_description}\n- **Description:**\n{description}");

@@ -50,11 +50,7 @@ impl LuroCommand for RoleCommands {
 
         let mut embed = ctx.default_embed().await;
         let guild = ctx.framework.database.get_guild(&guild_id).await?;
-        let mut user = ctx
-            .framework
-            .database
-            .get_user(&ctx.interaction.author_id().unwrap())
-            .await?;
+        let mut user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
         let user_roles = guild.user_roles(&user);
         let user_highest_role = match guild.user_highest_role(&user) {
             Some(role) => role,
@@ -67,7 +63,7 @@ impl LuroCommand for RoleCommands {
                     .model()
                     .await?;
                 user.update_member(&guild_id, &member);
-                ctx.framework.database.save_user(&user.id, &user).await?;
+                ctx.framework.database.modify_user(&user.id, &user).await?;
                 guild
                     .user_highest_role(&user)
                     .context("Expected to get user's highest role")?

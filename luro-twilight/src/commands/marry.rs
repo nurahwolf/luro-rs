@@ -135,10 +135,7 @@ impl LuroCommandTrait for Marry {
 
         let mut proposer = ctx.database.get_user(&message.author.id).await?;
         let (mut proposee, reason) = match data {
-            Self::Someone(command) => (
-                ctx.database.get_user(&command.marry.resolved.id).await?,
-                command.reason,
-            ),
+            Self::Someone(command) => (ctx.database.get_user(&command.marry.resolved.id).await?, command.reason),
             Self::Marriages(_) => {
                 return SimpleResponse::InternalError(&anyhow!("No command data!"))
                     .respond(&ctx, &interaction)
@@ -195,8 +192,8 @@ impl LuroCommandTrait for Marry {
                         proposal,
                     },
                 );
-                ctx.database.save_user(&proposer.id, &proposer).await?;
-                ctx.database.save_user(&proposee.id, &proposee).await?;
+                ctx.database.modify_user(&proposer.id, &proposer).await?;
+                ctx.database.modify_user(&proposee.id, &proposee).await?;
 
                 interaction
                     .respond(&ctx, |response| {

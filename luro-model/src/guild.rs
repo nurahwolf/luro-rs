@@ -1,12 +1,12 @@
 #[cfg(feature = "toml-driver")]
 use crate::database_driver::drivers::toml::{
-    deserialize_role_positions::deserialize_role_positions,
-    serialize_role_positions::serialize_role_positions,
+    deserialize_role_positions::deserialize_role_positions, serialize_role_positions::serialize_role_positions,
 };
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use tracing::debug;
+use twilight_cache_inmemory::{model::CachedGuild, Reference};
 use twilight_http::Client;
 use twilight_model::{
     application::command::Command,
@@ -288,6 +288,47 @@ impl LuroGuild {
         Ok(self.update_guild(guild))
     }
 
+    pub fn update_guild_cache(&mut self, guild: &CachedGuild) -> &mut Self {
+        self.afk_channel_id = guild.afk_channel_id();
+        self.afk_timeout = Some(guild.afk_timeout());
+        self.application_id = guild.application_id();
+        self.banner = guild.banner().copied();
+        self.default_message_notifications = Some(guild.default_message_notifications());
+        self.description = guild.description().map(|x| x.to_string());
+        self.discovery_splash = guild.discovery_splash().copied();
+        self.explicit_content_filter = Some(guild.explicit_content_filter());
+        self.icon = guild.icon().copied();
+        self.id = guild.id();
+        self.joined_at = guild.joined_at();
+        self.large = guild.large();
+        self.max_members = guild.max_members();
+        self.max_presences = guild.max_presences();
+        self.max_video_channel_users = guild.max_video_channel_users();
+        self.member_count = guild.member_count();
+        self.mfa_level = Some(guild.mfa_level());
+        self.name = guild.name().to_string();
+        self.nsfw_level = Some(guild.nsfw_level());
+        self.owner_id = guild.owner_id();
+        self.owner = guild.owner();
+        self.permissions = guild.permissions();
+        self.preferred_locale = guild.preferred_locale().to_owned();
+        self.premium_progress_bar_enabled = guild.premium_progress_bar_enabled();
+        self.premium_subscription_count = guild.premium_subscription_count();
+        self.premium_tier = Some(guild.premium_tier());
+        self.public_updates_channel_id = guild.public_updates_channel_id();
+        self.rules_channel_id = guild.rules_channel_id();
+        self.safety_alerts_channel_id = guild.safety_alerts_channel_id();
+        self.splash = guild.splash().copied();
+        self.system_channel_flags = Some(guild.system_channel_flags());
+        self.system_channel_id = guild.system_channel_id();
+        self.unavailable = guild.unavailable();
+        self.vanity_url_code = guild.vanity_url_code().map(|x| x.to_string());
+        self.verification_level = Some(guild.verification_level());
+        self.widget_channel_id = guild.widget_channel_id();
+        self.widget_enabled = guild.widget_enabled();
+        self
+    }
+
     /// Update a [LuroGuild] with settings from a twilight [Guild]
     pub fn update_guild(&mut self, guild: Guild) -> &mut Self {
         let mut members = vec![];
@@ -427,6 +468,22 @@ impl From<Guild> for LuroGuild {
     fn from(guild: Guild) -> Self {
         let mut luro = Self::default();
         luro.update_guild(guild);
+        luro
+    }
+}
+
+impl From<Reference<'_, Id<GuildMarker>, CachedGuild>> for LuroGuild {
+    fn from(guild: Reference<'_, Id<GuildMarker>, CachedGuild>) -> Self {
+        let mut luro = Self::default();
+        luro.update_guild_cache(&guild);
+        luro
+    }
+}
+
+impl From<&CachedGuild> for LuroGuild {
+    fn from(guild: &CachedGuild) -> Self {
+        let mut luro = Self::default();
+        luro.update_guild_cache(guild);
         luro
     }
 }

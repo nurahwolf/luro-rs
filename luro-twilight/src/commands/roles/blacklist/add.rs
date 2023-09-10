@@ -36,7 +36,7 @@ impl LuroCommandTrait for Add {
         let mut guild_settings = ctx.database.get_guild(&interaction.guild_id.unwrap()).await?;
         guild_settings.assignable_role_blacklist.push(data.role);
         ctx.database
-            .save_guild(&interaction.guild_id.unwrap(), &guild_settings)
+            .modify_guild(&interaction.guild_id.unwrap(), &guild_settings)
             .await?;
 
         interaction

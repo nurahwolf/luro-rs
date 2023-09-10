@@ -1,7 +1,7 @@
 #![feature(async_fn_in_trait)]
 use luro_builder::embed::EmbedBuilder;
 use luro_database::LuroDatabase;
-use luro_model::{response::LuroResponse, user::LuroUser, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse, user::LuroUser};
 use slash_command::LuroCommand;
 use std::{
     collections::HashMap,

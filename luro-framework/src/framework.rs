@@ -1,8 +1,7 @@
-use std::{sync::Arc, path::PathBuf, fs};
+use std::{fs, path::PathBuf, sync::Arc};
 
 use luro_database::LuroDatabase;
-use luro_model::{database_driver::LuroDatabaseDriver, configuration::Configuration
-};
+use luro_model::{configuration::Configuration, database_driver::LuroDatabaseDriver};
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
 
 use twilight_gateway::{stream, Shard};
@@ -43,8 +42,6 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             lavalink.into()
         };
 
-
-
         #[cfg(feature = "http-client-hyper")]
         let http_client = hyper::Client::new();
 
@@ -72,10 +69,7 @@ async fn initialise_database<D: LuroDatabaseDriver>(
     let application = config.twilight_client.current_user_application().await?.model().await?;
     let current_user = config.twilight_client.current_user().await?.model().await?;
     let current_user_id = current_user.id;
-    Ok((
-        LuroDatabase::build(application, current_user, config).into(),
-        current_user_id,
-    ))
+    Ok((LuroDatabase::build(application, current_user, config).into(), current_user_id))
 }
 
 fn ensure_data_directory_exists() {

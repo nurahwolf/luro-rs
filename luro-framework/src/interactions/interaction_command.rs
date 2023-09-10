@@ -1,5 +1,5 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{response::LuroResponse, user::LuroUser, ACCENT_COLOUR, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse, user::LuroUser, ACCENT_COLOUR};
 use tracing::warn;
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{

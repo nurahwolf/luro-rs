@@ -224,12 +224,7 @@ async fn component_selector<D: LuroDatabaseDriver>(ctx: LuroSlash<D>) -> anyhow:
         .await?;
     let mut users = vec![];
     for member in guild.into_iter() {
-        if let Ok(user) = ctx
-            .framework
-            .database
-            .get_user(&member.user.id)
-            .await
-        {
+        if let Ok(user) = ctx.framework.database.get_user(&member.user.id).await {
             users.push(user)
         }
     }
@@ -308,12 +303,7 @@ async fn component_roles<D: LuroDatabaseDriver>(
         .await?;
     let mut users = vec![];
     for member in guild.into_iter() {
-        if let Ok(user) = ctx
-            .framework
-            .database
-            .get_user(&member.user.id)
-            .await
-        {
+        if let Ok(user) = ctx.framework.database.get_user(&member.user.id).await {
             users.push(user)
         }
     }

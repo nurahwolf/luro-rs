@@ -1,8 +1,11 @@
 #![feature(async_fn_in_trait)]
 
-use std::sync::{RwLock, Arc};
+use std::sync::{Arc, RwLock};
 
-use luro_model::{heck::Hecks, Stories, CommandManager, guild::LuroGuilds, Quotes, user::LuroUsers, configuration::Configuration, database_driver::LuroDatabaseDriver};
+use luro_model::{
+    configuration::Configuration, database_driver::LuroDatabaseDriver, guild::LuroGuilds, heck::Hecks, user::LuroUsers,
+    CommandManager, Quotes, Stories,
+};
 use serde::{Deserialize, Serialize};
 use twilight_model::{oauth::Application, user::CurrentUser};
 
@@ -39,7 +42,7 @@ pub struct LuroDatabase<D: LuroDatabaseDriver> {
     pub staff: RwLock<LuroUsers>,
     pub stories: RwLock<StoryManager>,
     pub user_data: Box<RwLock<LuroUsers>>,
-    pub config: Arc<Configuration<D>>
+    pub config: Arc<Configuration<D>>,
 }
 
 /// A trait for defining how to fetch items from Luro's database

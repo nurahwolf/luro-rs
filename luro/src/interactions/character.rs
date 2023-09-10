@@ -81,7 +81,7 @@ impl LuroCommand for Character {
             }
         };
 
-        ctx.framework.database.save_user(&user_id, &user_data).await?;
+        ctx.framework.database.modify_user(&user_id, &user_data).await?;
 
         let mut embed = ctx.default_embed().await;
         let mut description = format!("{short_description}\n- **Description:**\n{description}");

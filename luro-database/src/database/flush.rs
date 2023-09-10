@@ -1,5 +1,5 @@
-use std::fmt::Write;
 use luro_model::database_driver::LuroDatabaseDriver;
+use std::fmt::Write;
 use tracing::error;
 
 use crate::LuroDatabase;

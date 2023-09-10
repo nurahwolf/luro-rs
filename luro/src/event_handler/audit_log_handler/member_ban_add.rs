@@ -1,6 +1,7 @@
 use luro_framework::responses::{PunishmentType, StandardResponse};
 use luro_model::{
-    user::{actions::UserActions, actions_type::UserActionType, LuroUser}, database_driver::LuroDatabaseDriver,
+    database_driver::LuroDatabaseDriver,
+    user::{actions::UserActions, actions_type::UserActionType, LuroUser},
 };
 use std::sync::Arc;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild};
@@ -22,7 +23,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         // Reward the moderator
         moderator.moderation_actions_performed += 1;
         self.update_user(moderator).await?;
-        self.database.save_user(&moderator.id, moderator).await?;
+        self.database.modify_user(&moderator.id, moderator).await?;
 
         // Record the punishment
         punished_user.moderation_actions.push(UserActions {
@@ -32,7 +33,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             responsible_user: moderator.id,
         });
         self.update_user(punished_user).await?;
-        self.database.save_user(&punished_user.id, punished_user).await?;
+        self.database.modify_user(&punished_user.id, punished_user).await?;
 
         // Send the response
         self.send_moderator_log_channel(&Some(guild.id), response.embed).await

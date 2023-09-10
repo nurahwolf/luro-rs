@@ -69,7 +69,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 if let Some(mut data) = user_data {
                     data.message_edits += 1;
                     embed.create_field("Total Edits", &format!("Edited `{}` messages!", &data.message_edits), true);
-                    self.database.save_user(&message.author, &data).await?;
+                    self.database.modify_user(&message.author, &data).await?;
                 }
 
                 match !message.content.is_empty() {
@@ -131,7 +131,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                     }
 
                     // Save
-                    self.database.save_user(&message.author, &user).await?;
+                    self.database.modify_user(&message.author, &user).await?;
                 }
 
                 return Ok(());

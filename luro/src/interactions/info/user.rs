@@ -186,7 +186,7 @@ impl LuroCommand for InfoUser {
                 let mut role_list = String::new();
 
                 let user_roles = guild.user_roles(&luro_user);
-                ctx.framework.database.save_user(&luro_user.id, &luro_user).await?;
+                ctx.framework.database.modify_user(&luro_user.id, &luro_user).await?;
 
                 for role in &user_roles {
                     if role_list.is_empty() {

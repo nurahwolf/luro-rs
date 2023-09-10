@@ -1,4 +1,4 @@
-use luro_model::{message::LuroMessage, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, message::LuroMessage};
 use tracing::error;
 
 use crate::LuroDatabase;

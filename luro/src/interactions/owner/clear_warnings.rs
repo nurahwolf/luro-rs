@@ -69,7 +69,7 @@ impl LuroCommand for OwnerClearWarning {
             user_data.moderation_actions.drain(..);
         }
 
-        ctx.framework.database.save_user(&self.user.resolved.id, &user_data).await?;
+        ctx.framework.database.modify_user(&self.user.resolved.id, &user_data).await?;
         ctx.respond(|r| r.content("Warnings removed!").ephemeral()).await
     }
 }

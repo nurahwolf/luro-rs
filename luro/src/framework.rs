@@ -5,10 +5,8 @@ use luro_builder::embed::EmbedBuilder;
 
 use luro_database::LuroDatabase;
 use luro_model::{
-    guild::log_channel::LuroLogChannel,
-    response::LuroResponse,
-    user::LuroUser,
-    ACCENT_COLOUR, configuration::Configuration, database_driver::LuroDatabaseDriver,
+    configuration::Configuration, database_driver::LuroDatabaseDriver, guild::log_channel::LuroLogChannel,
+    response::LuroResponse, user::LuroUser, ACCENT_COLOUR,
 };
 use tracing::{debug, info};
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
@@ -281,7 +279,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn builder(
         tracing_subscriber: Handle<LevelFilter, Registry>,
-        config: Arc<Configuration<D>>
+        config: Arc<Configuration<D>>,
     ) -> anyhow::Result<(Arc<Framework<D>>, Vec<Shard>)> {
         let (database, current_user_id) = initialise_database(config.clone()).await?;
         let shards = stream::create_recommended(&config.twilight_client, config.shard_config.clone(), |_, c| c.build())
@@ -309,7 +307,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
             lavalink,
             tracing_subscriber,
             twilight_client: config.twilight_client.clone(),
-            hyper_client: hyper::Client::new()
+            hyper_client: hyper::Client::new(),
         };
 
         Ok((framework.into(), shards))
@@ -322,13 +320,10 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 }
 
 async fn initialise_database<D: LuroDatabaseDriver>(
-    config: Arc<Configuration<D>>
+    config: Arc<Configuration<D>>,
 ) -> anyhow::Result<(LuroDatabase<D>, Id<UserMarker>)> {
     let application = config.twilight_client.current_user_application().await?.model().await?;
     let current_user = config.twilight_client.current_user().await?.model().await?;
     let current_user_id = current_user.id;
-    Ok((
-        LuroDatabase::build(application, current_user, config),
-        current_user_id,
-    ))
+    Ok((LuroDatabase::build(application, current_user, config), current_user_id))
 }

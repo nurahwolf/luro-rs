@@ -1,7 +1,8 @@
 use anyhow::Error;
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{
-    user::{actions::UserActions, actions_type::UserActionType}, database_driver::LuroDatabaseDriver,
+    database_driver::LuroDatabaseDriver,
+    user::{actions::UserActions, actions_type::UserActionType},
 };
 use twilight_model::{
     channel::message::embed::EmbedField,
@@ -126,7 +127,7 @@ async fn privelege_escalation<D: LuroDatabaseDriver, T: LuroInteraction>(
         reason: Some(format!("Attempted to run the {} command", interaction.command_name())),
         responsible_user: interaction.author_id(),
     });
-    framework.database.save_user(&interaction.author_id(), &user_data).await?;
+    framework.database.modify_user(&interaction.author_id(), &user_data).await?;
     Ok(())
 }
 

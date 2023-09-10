@@ -7,10 +7,7 @@ use super::LuroSlash;
 impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// Get and return useful information about the interaction author
     pub async fn get_interaction_author<'a>(&'a self, interaction: &'a Interaction) -> anyhow::Result<LuroUser> {
-        self.framework
-            .database
-            .get_user(&interaction.author_id().unwrap())
-            .await
+        self.framework.database.get_user(&interaction.author_id().unwrap()).await
     }
 
     /// Get a specified user, else fall back to the interaction author

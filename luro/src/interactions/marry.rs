@@ -177,8 +177,8 @@ impl LuroCommand for MarryCommands {
                         proposal,
                     },
                 );
-                ctx.framework.database.save_user(&proposer.id, &proposer).await?;
-                ctx.framework.database.save_user(&proposee.id, &proposee).await?;
+                ctx.framework.database.modify_user(&proposer.id, &proposer).await?;
+                ctx.framework.database.modify_user(&proposee.id, &proposee).await?;
 
                 ctx.respond(|response| {
                     response
@@ -254,11 +254,7 @@ pub struct MarryNew {
 
 impl LuroCommand for MarryNew {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let luro_user = ctx
-            .framework
-            .database
-            .get_user(&ctx.interaction.author_id().unwrap())
-            .await?;
+        let luro_user = ctx.framework.database.get_user(&ctx.interaction.author_id().unwrap()).await?;
         let mut embed = EmbedBuilder::default();
         embed
             .author(|author| {

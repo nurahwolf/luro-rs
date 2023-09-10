@@ -1,4 +1,4 @@
-use luro_model::{story::Story, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, story::Story};
 use tracing::{info, warn};
 
 use crate::LuroDatabase;

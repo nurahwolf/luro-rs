@@ -6,14 +6,13 @@ use luro_framework::{
     command::{LuroCommandBuilder, LuroCommandTrait},
     Framework, InteractionCommand, InteractionComponent, LuroInteraction,
 };
-use luro_model::{COLOUR_DANGER, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, COLOUR_DANGER};
 use tracing::{debug, info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::InteractionData,
     id::{marker::RoleMarker, Id},
 };
-
 
 use self::{blacklist::Blacklist, menu::Menu};
 
@@ -99,7 +98,7 @@ impl LuroCommandTrait for RoleCommands {
             None => {
                 let member = ctx.twilight_client.guild_member(guild_id, user.id).await?.model().await?;
                 user.update_member(&guild_id, &member);
-                ctx.database.save_user(&user.id, &user).await?;
+                ctx.database.modify_user(&user.id, &user).await?;
                 guild
                     .user_highest_role(&user)
                     .context("Expected to get user's highest role")?

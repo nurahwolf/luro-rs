@@ -44,12 +44,7 @@ async fn load_cache<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result
     let mut errors = 0;
 
     for user in ctx.framework.twilight_cache.iter().users() {
-        let mut user_data = match ctx
-            .framework
-            .database
-            .get_user(&user.id)
-            .await
-        {
+        let mut user_data = match ctx.framework.database.get_user(&user.id).await {
             Ok(data) => data,
             Err(why) => {
                 warn!(why = ?why, "Failed to fetch {:#?} user for the following reason:", user.id);
@@ -59,7 +54,7 @@ async fn load_cache<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result
         };
 
         user_data.update_user(&user);
-        if ctx.framework.database.save_user(&user.id, &user_data).await.is_err() {
+        if ctx.framework.database.modify_user(&user.id, &user_data).await.is_err() {
             errors += 1
         }
 

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::{message::LuroMessageSource, database_driver::LuroDatabaseDriver};
+use luro_model::{database_driver::LuroDatabaseDriver, message::LuroMessageSource};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
