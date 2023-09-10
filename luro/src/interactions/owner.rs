@@ -10,7 +10,7 @@ use twilight_model::id::marker::RoleMarker;
 use twilight_model::id::Id;
 
 use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 use crate::luro_command::LuroCommand;
 
@@ -227,7 +227,7 @@ async fn component_selector<D: LuroDatabaseDriver>(ctx: LuroSlash<D>) -> anyhow:
         if let Ok(user) = ctx
             .framework
             .database
-            .get_user_cached(&member.user.id, &ctx.framework.twilight_cache)
+            .get_user(&member.user.id)
             .await
         {
             users.push(user)
@@ -311,7 +311,7 @@ async fn component_roles<D: LuroDatabaseDriver>(
         if let Ok(user) = ctx
             .framework
             .database
-            .get_user_cached(&member.user.id, &ctx.framework.twilight_cache)
+            .get_user(&member.user.id)
             .await
         {
             users.push(user)

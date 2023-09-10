@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_model::application::interaction::modal::ModalInteractionData;
 
 use super::LuroSlash;

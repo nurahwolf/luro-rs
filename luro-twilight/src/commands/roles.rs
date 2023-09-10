@@ -6,6 +6,7 @@ use luro_framework::{
     command::{LuroCommandBuilder, LuroCommandTrait},
     Framework, InteractionCommand, InteractionComponent, LuroInteraction,
 };
+use luro_model::{COLOUR_DANGER, database_driver::LuroDatabaseDriver};
 use tracing::{debug, info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -13,7 +14,6 @@ use twilight_model::{
     id::{marker::RoleMarker, Id},
 };
 
-use luro_model::{database::drivers::LuroDatabaseDriver, COLOUR_DANGER};
 
 use self::{blacklist::Blacklist, menu::Menu};
 
@@ -92,7 +92,7 @@ impl LuroCommandTrait for RoleCommands {
 
         let mut embed = interaction.default_embed(&ctx).await;
         let guild = ctx.database.get_guild(&guild_id).await?;
-        let mut user = ctx.database.get_user(&interaction.author_id(), false).await?;
+        let mut user = ctx.database.get_user(&interaction.author_id()).await?;
         let user_roles = guild.user_roles(&user);
         let user_highest_role = match guild.user_highest_role(&user) {
             Some(role) => role,

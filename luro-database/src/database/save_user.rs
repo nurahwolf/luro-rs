@@ -1,9 +1,8 @@
+use luro_model::{user::LuroUser, database_driver::LuroDatabaseDriver};
 use tracing::warn;
 use twilight_model::id::{marker::UserMarker, Id};
 
-use crate::user::LuroUser;
-
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::LuroDatabase;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Saves a user, overwriting whatever value used to exist

@@ -1,4 +1,4 @@
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_http::client::InteractionClient;
 use twilight_model::id::{marker::ApplicationMarker, Id};
 

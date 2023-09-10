@@ -1,9 +1,8 @@
+use luro_model::{guild::LuroGuild, database_driver::LuroDatabaseDriver};
 use tracing::{error, info, warn};
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::guild::LuroGuild;
-
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::LuroDatabase;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get a user from the cache, otherwise gets the user from the database

@@ -2,7 +2,7 @@ use anyhow::Context;
 
 use async_trait::async_trait;
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use rand::Rng;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -39,7 +39,7 @@ impl LuroCommandTrait for Get {
                     .await
             }
         };
-        let user = ctx.database.get_user(&quote.author, false).await?;
+        let user = ctx.database.get_user(&quote.author).await?;
 
         if data.puppet.unwrap_or_default() {
             let webhook = ctx

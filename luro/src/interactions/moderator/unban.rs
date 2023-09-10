@@ -1,6 +1,6 @@
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 use luro_framework::responses::{PunishmentType, StandardResponse};
-use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
+use luro_model::{database_driver::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
 
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -23,10 +23,10 @@ impl LuroCommand for Unban {
         let luro = ctx
             .framework
             .database
-            .get_user(&ctx.framework.twilight_client.current_user().await?.model().await?.id, false)
+            .get_user(&ctx.framework.twilight_client.current_user().await?.model().await?.id)
             .await?;
         let mut moderator = ctx.get_interaction_author(interaction).await?;
-        let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id, false).await?;
+        let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
         punished_user.update_user(&self.user.resolved);
         let mut response = ctx.acknowledge_interaction(false).await?;
         let moderator_permissions = guild.user_permission(&moderator)?;

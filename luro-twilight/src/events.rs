@@ -1,5 +1,5 @@
 use luro_framework::{Context, Framework, InteractionContext};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_gateway::Event;
 
 mod interaction_create;

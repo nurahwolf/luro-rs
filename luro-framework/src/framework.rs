@@ -1,8 +1,7 @@
 use std::{sync::Arc, path::PathBuf, fs};
 
-use luro_model::{
-    configuration::Configuration,
-    database::{drivers::LuroDatabaseDriver, LuroDatabase},
+use luro_database::LuroDatabase;
+use luro_model::{database_driver::LuroDatabaseDriver, configuration::Configuration
 };
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
 

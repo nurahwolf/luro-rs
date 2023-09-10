@@ -1,8 +1,7 @@
-use tracing::{info, warn};
+use luro_model::{database_driver::LuroDatabaseDriver, heck::Heck};
+use tracing::{warn, info};
 
-use crate::heck::Heck;
-
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::LuroDatabase;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get a heck from the cache, otherwise gets the user from the database

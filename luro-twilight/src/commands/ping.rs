@@ -10,7 +10,7 @@ use luro_framework::{
 use luro_model::response::LuroResponse;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "ping", desc = "See my ping!")]

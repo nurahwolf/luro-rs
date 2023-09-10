@@ -1,8 +1,7 @@
+use luro_model::{story::Story, database_driver::LuroDatabaseDriver};
 use tracing::{info, warn};
 
-use crate::story::Story;
-
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::LuroDatabase;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get a story from the cache, otherwise gets the user from the database

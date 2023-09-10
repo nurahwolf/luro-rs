@@ -1,4 +1,4 @@
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::{error, warn};
 use twilight_model::application::interaction::{InteractionData, InteractionType};
 

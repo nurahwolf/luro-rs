@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::error;
 use twilight_gateway::{Event, Latency, MessageSender};
 

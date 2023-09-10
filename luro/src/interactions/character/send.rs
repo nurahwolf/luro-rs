@@ -1,5 +1,5 @@
 use anyhow::Context;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::AutocompleteValue;
 use twilight_interactions::command::CommandModel;
@@ -24,7 +24,7 @@ impl CharacterSendAutocomplete {
             .author_id()
             .context("Expected to find the user running this command")?;
 
-        let user_data = ctx.framework.database.get_user(&user_id, false).await?;
+        let user_data = ctx.framework.database.get_user(&user_id).await?;
         let choices = match self.name {
             AutocompleteValue::None => user_data
                 .characters
@@ -75,7 +75,7 @@ impl LuroCommand for CharacterSend {
             .author_id()
             .context("Expected to find the user running this command")?;
 
-        let user_data = ctx.framework.database.get_user(&user_id, false).await?;
+        let user_data = ctx.framework.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
             return ctx
                 .respond(|r| {

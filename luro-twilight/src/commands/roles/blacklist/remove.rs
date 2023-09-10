@@ -2,7 +2,7 @@ use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Frame
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "remove", desc = "Remove a role to the blacklist", dm_permission = false)]

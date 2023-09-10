@@ -1,5 +1,5 @@
 #[cfg(feature = "toml-driver")]
-use crate::database::drivers::toml::{deserialize_fetish, serialize_fetish};
+use crate::database_driver::drivers::toml::{deserialize_fetish, serialize_fetish};
 use core::fmt;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

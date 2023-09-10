@@ -1,6 +1,7 @@
-use crate::message::LuroMessage;
 
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use luro_model::{message::LuroMessage, database_driver::LuroDatabaseDriver};
+
+use crate::LuroDatabase;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     pub async fn save_quote(&self, key: usize, quote: LuroMessage) -> anyhow::Result<()> {

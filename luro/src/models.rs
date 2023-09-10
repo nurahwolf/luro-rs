@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_model::{
     channel::Webhook,
     id::{marker::ChannelMarker, Id},

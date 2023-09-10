@@ -17,10 +17,10 @@ use serde::{de::DeserializeOwned, Serialize};
 use tokio::{fs, io::AsyncReadExt};
 use tracing::{debug, error, warn};
 
-mod driver;
-mod guild;
-mod heck;
-mod user;
+pub mod driver;
+pub mod guild;
+pub mod heck;
+pub mod user;
 
 /// Defaults to the toml driver
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]

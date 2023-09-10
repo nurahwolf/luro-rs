@@ -1,7 +1,7 @@
 use twilight_model::gateway::payload::incoming::ThreadUpdate;
 
 use crate::framework::Framework;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn listener_thread_update(&self, event: Box<ThreadUpdate>) -> anyhow::Result<()> {

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{channel::message::component::TextInputStyle, http::interaction::InteractionResponseType};
 
@@ -19,7 +19,7 @@ impl LuroCommandTrait for Create {
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
         let user_id = interaction.author_id();
-        let user_data = ctx.database.get_user(&user_id, false).await?;
+        let user_data = ctx.database.get_user(&user_id).await?;
         let character = user_data.characters.get(&data.name);
 
         // Create a model

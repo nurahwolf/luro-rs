@@ -1,5 +1,5 @@
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -23,7 +23,7 @@ impl LuroCommandTrait for Icon {
         let data = Self::new(interaction.data.clone())?;
         let user_id = interaction.author_id();
 
-        let mut user_data = ctx.database.get_user(&user_id, false).await?;
+        let mut user_data = ctx.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
             return interaction
                 .respond(&ctx, |r| {

@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::{info, warn};
 
-use crate::Stories;
+use crate::{Stories, LuroDatabase};
 
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get stories from the cache, otherwise gets the stories from the database

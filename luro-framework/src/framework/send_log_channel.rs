@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel, response::LuroResponse};
+use luro_model::{guild::log_channel::LuroLogChannel, response::LuroResponse, database_driver::LuroDatabaseDriver};
 use twilight_http::Response;
 use twilight_model::{
     channel::Message,

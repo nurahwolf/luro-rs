@@ -1,5 +1,5 @@
 use anyhow::Context;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use luro_model::user::character::{Fetish, FetishCategory, FetishList};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -24,7 +24,7 @@ impl LuroCommand for Add {
             .interaction
             .author_id()
             .context("Expected to find the user running this command")?;
-        let mut user_data = ctx.framework.database.get_user(&user_id, false).await?;
+        let mut user_data = ctx.framework.database.get_user(&user_id).await?;
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| {
             a.icon_url(user_data.avatar())

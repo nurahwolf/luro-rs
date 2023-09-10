@@ -1,7 +1,9 @@
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::warn;
 use twilight_model::id::{marker::UserMarker, Id};
 
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::LuroDatabase;
+
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Removes a user from the database

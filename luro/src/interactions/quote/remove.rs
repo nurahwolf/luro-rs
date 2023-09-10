@@ -1,4 +1,4 @@
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
@@ -19,7 +19,7 @@ impl LuroCommand for Remove {
             Some(quote) => quote,
             None => return ctx.respond(|r| r.content("That quote is not present!").ephemeral()).await,
         };
-        let user = ctx.framework.database.get_user(&quote.author, false).await?;
+        let user = ctx.framework.database.get_user(&quote.author).await?;
 
         ctx.framework.database.save_quotes(quotes).await?;
 

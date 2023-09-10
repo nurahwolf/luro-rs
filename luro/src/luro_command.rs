@@ -17,7 +17,7 @@ use twilight_model::{
 
 use crate::interaction::LuroSlash;
 use crate::LuroFramework;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 /// Add some custom functionality around [CommandModel]
 pub trait LuroCommand: CommandModel {

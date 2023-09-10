@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use luro_framework::command::{LuroCommandBuilder, LuroCommandTrait};
 use luro_framework::{Framework, InteractionCommand};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 mod help;

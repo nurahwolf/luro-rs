@@ -1,7 +1,8 @@
 use std::fmt::Write;
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::error;
 
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::LuroDatabase;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Flush ALL data held by the database. This will ensure all future hits go back to the raw driver

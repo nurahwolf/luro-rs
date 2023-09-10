@@ -1,5 +1,5 @@
 use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 use twilight_model::http::interaction::InteractionResponseType;
 
@@ -27,7 +27,7 @@ pub struct ModeratorWarnCommand {
 
 impl LuroCommand for ModeratorWarnCommand {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id, false).await?;
+        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
 
         if !self.new {
             if punished_user.warnings.is_empty() {

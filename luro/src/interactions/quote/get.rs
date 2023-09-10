@@ -1,6 +1,6 @@
 use anyhow::Context;
 
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use rand::Rng;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -29,7 +29,7 @@ impl LuroCommand for Get {
             Ok(quote) => quote,
             Err(_) => return ctx.respond(|r| r.content("Sorry! Quote was not found :(").ephemeral()).await,
         };
-        let user = ctx.framework.database.get_user(&quote.author, false).await?;
+        let user = ctx.framework.database.get_user(&quote.author).await?;
 
         if self.puppet.unwrap_or_default() {
             let luro_webhook = LuroWebhook::new(ctx.framework.clone());

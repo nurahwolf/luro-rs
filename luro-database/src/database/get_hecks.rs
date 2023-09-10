@@ -1,10 +1,9 @@
 use std::collections::BTreeMap;
 
-use tracing::{info, warn};
+use luro_model::{heck::Hecks, database_driver::LuroDatabaseDriver};
+use tracing::{warn, info};
 
-use crate::heck::Hecks;
-
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::LuroDatabase;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Attempts to get all hecks from the cache, otherwise gets the user from the database

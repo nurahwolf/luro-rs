@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-use luro_model::{database::drivers::LuroDatabaseDriver, heck::Heck, PRIMARY_BOT_OWNER};
+use luro_model::{database_driver::LuroDatabaseDriver, heck::Heck, PRIMARY_BOT_OWNER};
 use rand::Rng;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};

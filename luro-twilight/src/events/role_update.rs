@@ -1,5 +1,5 @@
 use luro_framework::{Context, Framework};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::info;
 use twilight_model::gateway::payload::incoming::RoleUpdate;
 

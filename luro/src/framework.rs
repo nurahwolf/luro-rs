@@ -3,12 +3,12 @@ use std::sync::Arc;
 use hyper::client::HttpConnector;
 use luro_builder::embed::EmbedBuilder;
 
+use luro_database::LuroDatabase;
 use luro_model::{
-    database::{drivers::LuroDatabaseDriver, LuroDatabase},
     guild::log_channel::LuroLogChannel,
     response::LuroResponse,
     user::LuroUser,
-    ACCENT_COLOUR, configuration::Configuration,
+    ACCENT_COLOUR, configuration::Configuration, database_driver::LuroDatabaseDriver,
 };
 use tracing::{debug, info};
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};

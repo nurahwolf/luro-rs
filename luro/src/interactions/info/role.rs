@@ -8,7 +8,7 @@ use twilight_model::id::{
 
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "role", desc = "Information about a role")]

@@ -1,4 +1,4 @@
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::ApplicationCommandData;
 
 use crate::{Framework, InteractionCommand, InteractionComponent, InteractionModal};

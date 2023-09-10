@@ -1,4 +1,4 @@
-use luro_model::{database::drivers::LuroDatabaseDriver, message::LuroMessage, user::LuroUser};
+use luro_model::{database_driver::LuroDatabaseDriver, message::LuroMessage, user::LuroUser};
 use tracing::debug;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::ChannelMarker, Id};

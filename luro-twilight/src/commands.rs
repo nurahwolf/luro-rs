@@ -5,7 +5,7 @@ use luro_framework::command::LuroCommandBuilder;
 use luro_framework::responses::SimpleResponse;
 use luro_framework::slash_command::LuroCommand;
 use luro_framework::{Framework, InteractionCommand, InteractionComponent, InteractionModal, LuroInteraction};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::application_command::CommandData;

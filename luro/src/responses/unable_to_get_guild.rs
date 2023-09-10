@@ -1,4 +1,4 @@
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use luro_model::response::LuroResponse;
 use tracing::warn;
 use twilight_util::builder::embed::EmbedBuilder;

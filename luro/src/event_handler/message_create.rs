@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Error;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::error;
 use twilight_model::gateway::payload::incoming::MessageCreate;
 
@@ -9,7 +9,7 @@ use crate::{framework::Framework, models::LuroWebhook};
 
 impl<D: LuroDatabaseDriver> Framework<D> {
     pub async fn message_create_listener(self: &Arc<Self>, message: MessageCreate) -> Result<(), Error> {
-        let user_data = self.database.get_user(&message.author.id, false).await?;
+        let user_data = self.database.get_user(&message.author.id).await?;
         let first_word = message.content.split(' ').next().unwrap_or("");
         if let Some(character_name) = user_data.character_prefix.get(first_word) {
             let character = match user_data.characters.get(character_name) {

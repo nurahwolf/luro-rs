@@ -40,7 +40,7 @@ pub const LOG_PATH: &str = "data/log/";
 pub const WEBHOOK_NAME: &str = "LuroHook";
 
 pub mod configuration;
-pub mod database;
+pub mod database_driver;
 pub mod guild;
 pub mod heck;
 pub mod message;

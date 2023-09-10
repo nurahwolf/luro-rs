@@ -1,6 +1,6 @@
 use crate::luro_command::LuroCommand;
 use crate::{interaction::LuroSlash, USERDATA_FILE_PATH};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use tokio::fs::read_dir;
 use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -47,7 +47,7 @@ async fn load_cache<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result
         let mut user_data = match ctx
             .framework
             .database
-            .get_user_cached(&user.id, &ctx.framework.twilight_cache)
+            .get_user(&user.id)
             .await
         {
             Ok(data) => data,
@@ -80,7 +80,7 @@ async fn load_disk<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result<
             Some(entry) => match entry.file_name().into_string() {
                 Ok(file) => {
                     info!("Name: {file}");
-                    match ctx.framework.database.get_user(&Id::new(file.parse()?), false).await {
+                    match ctx.framework.database.get_user(&Id::new(file.parse()?)).await {
                         Ok(_) => loaded += 1,
                         Err(_) => errors += 1,
                     }

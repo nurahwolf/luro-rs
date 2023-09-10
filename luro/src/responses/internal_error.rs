@@ -1,6 +1,6 @@
 use anyhow::Error;
 use luro_builder::embed::EmbedBuilder;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 use crate::{interaction::LuroSlash, COLOUR_DANGER};
 

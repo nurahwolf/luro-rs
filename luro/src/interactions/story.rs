@@ -17,7 +17,7 @@ use crate::COLOUR_DANGER;
 
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "story",

@@ -1,6 +1,7 @@
-use crate::Quotes;
+use luro_model::database_driver::LuroDatabaseDriver;
 
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::{Quotes, LuroDatabase};
+
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     pub async fn get_quotes(&self) -> anyhow::Result<Quotes> {

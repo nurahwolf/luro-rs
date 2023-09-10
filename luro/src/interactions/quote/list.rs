@@ -1,4 +1,4 @@
-use luro_model::{database::drivers::LuroDatabaseDriver, message::LuroMessageSource};
+use luro_model::{database_driver::LuroDatabaseDriver, message::LuroMessageSource};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};

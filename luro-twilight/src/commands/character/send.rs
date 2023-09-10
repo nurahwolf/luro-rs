@@ -2,7 +2,7 @@ use luro_framework::command::LuroCommandTrait;
 use luro_framework::Framework;
 use luro_framework::InteractionCommand;
 use luro_framework::LuroInteraction;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use std::fmt::Write;
 
 use twilight_interactions::command::AutocompleteValue;
@@ -26,7 +26,7 @@ impl CharacterSendAutocomplete {
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let user_id = interaction.author_id();
-        let user_data = ctx.database.get_user(&user_id, false).await?;
+        let user_data = ctx.database.get_user(&user_id).await?;
         let choices = match self.name {
             AutocompleteValue::None => user_data
                 .characters
@@ -80,7 +80,7 @@ impl LuroCommandTrait for CharacterSend {
         let data = Self::new(interaction.data.clone())?;
         let user_id = interaction.author_id();
 
-        let user_data = ctx.database.get_user(&user_id, false).await?;
+        let user_data = ctx.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
             return interaction
                 .respond(&ctx, |r| {

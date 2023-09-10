@@ -1,8 +1,7 @@
+use luro_model::{message::LuroMessage, database_driver::LuroDatabaseDriver};
 use tracing::error;
 
-use crate::message::LuroMessage;
-
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::LuroDatabase;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     pub async fn get_quote(&self, key: usize) -> anyhow::Result<LuroMessage> {

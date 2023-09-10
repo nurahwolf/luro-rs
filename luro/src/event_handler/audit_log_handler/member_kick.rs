@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::framework::Framework;
 use luro_framework::responses::{PunishmentType, StandardResponse};
 use luro_model::{
-    database::drivers::LuroDatabaseDriver,
+    database_driver::LuroDatabaseDriver,
     user::{actions::UserActions, actions_type::UserActionType, LuroUser},
 };
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild};

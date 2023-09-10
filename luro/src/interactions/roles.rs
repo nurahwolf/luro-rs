@@ -9,7 +9,7 @@ use twilight_model::{
 };
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use luro_model::{database::drivers::LuroDatabaseDriver, COLOUR_DANGER};
+use luro_model::{database_driver::LuroDatabaseDriver, COLOUR_DANGER};
 
 use self::blacklist::Blacklist;
 
@@ -53,7 +53,7 @@ impl LuroCommand for RoleCommands {
         let mut user = ctx
             .framework
             .database
-            .get_user(&ctx.interaction.author_id().unwrap(), false)
+            .get_user(&ctx.interaction.author_id().unwrap())
             .await?;
         let user_roles = guild.user_roles(&user);
         let user_highest_role = match guild.user_highest_role(&user) {
@@ -226,7 +226,7 @@ pub struct Menu {
 impl LuroCommand for Menu {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let interaction_author = ctx.interaction.author_id().unwrap();
-        let luro_user = ctx.framework.database.get_user(&interaction_author, false).await?;
+        let luro_user = ctx.framework.database.get_user(&interaction_author).await?;
 
         let mut owner_match = false;
 

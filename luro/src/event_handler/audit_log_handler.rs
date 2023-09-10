@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::warn;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::audit_log::AuditLogEventType};
 
@@ -20,10 +20,10 @@ impl<D: LuroDatabaseDriver> Framework<D> {
                 return Ok(());
             }
         };
-        let mut punished_user = self.database.get_user(&punished_user_id, false).await?;
+        let mut punished_user = self.database.get_user(&punished_user_id).await?;
         let mut moderator = self
             .database
-            .get_user(&event.user_id.context("No user ID for the ban author")?, false)
+            .get_user(&event.user_id.context("No user ID for the ban author")?)
             .await?;
         // Make sure this interaction was a guild
         let guild_id = match event.guild_id {

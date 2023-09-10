@@ -1,6 +1,6 @@
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use luro_model::message::LuroMessage;
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -30,7 +30,7 @@ impl LuroCommand for OwnerGetMessage {
             Some(user) => ctx
                 .framework
                 .database
-                .get_user(&user.resolved.id, false)
+                .get_user(&user.resolved.id)
                 .await?
                 .messages
                 .get(&message_id)
@@ -57,7 +57,7 @@ impl LuroCommand for OwnerGetMessage {
 
         match luro_message {
             Some(message) => {
-                let user = ctx.framework.database.get_user(&message.author, false).await?;
+                let user = ctx.framework.database.get_user(&message.author).await?;
 
                 let toml = toml::to_string_pretty(&message)?;
                 embed

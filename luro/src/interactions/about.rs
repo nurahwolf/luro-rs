@@ -3,7 +3,7 @@ use std::path::Path;
 
 use git2::{ErrorCode, Repository};
 use luro_builder::embed::EmbedBuilder;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use luro_model::user::LuroUser;
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};

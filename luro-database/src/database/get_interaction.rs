@@ -1,6 +1,7 @@
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_model::application::interaction::Interaction;
 
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
+use crate::LuroDatabase;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     pub async fn get_interaction(&self, key: &str) -> anyhow::Result<Interaction> {

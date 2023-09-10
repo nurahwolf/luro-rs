@@ -1,5 +1,5 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use luro_model::user::actions::UserActions;
 use luro_model::user::actions_type::UserActionType;
 use rand::seq::SliceRandom;
@@ -72,7 +72,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     ) -> anyhow::Result<()> {
         let command = command_name.into();
         {
-            let mut user_data = self.framework.database.get_user(user_id, false).await?;
+            let mut user_data = self.framework.database.get_user(user_id).await?;
             user_data.moderation_actions.push(UserActions {
                 action_type: vec![UserActionType::PrivilegeEscalation],
                 guild_id: *guild_id,

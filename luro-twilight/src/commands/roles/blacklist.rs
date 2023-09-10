@@ -1,7 +1,7 @@
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 use self::{add::Add, remove::Remove};
 

@@ -1,6 +1,6 @@
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{
-    database::drivers::LuroDatabaseDriver,
+    database_driver::LuroDatabaseDriver,
     guild::log_channel::LuroLogChannel,
     message::{LuroMessage, LuroMessageSource},
     COLOUR_DANGER,
@@ -17,7 +17,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         let mut description = String::new();
         let mut embed = self.default_embed(&message.guild_id).await;
-        let mut user = self.database.get_user(&message.author, false).await?;
+        let mut user = self.database.get_user(&message.author).await?;
 
         if user.bot {
             debug!("User is a bot");
@@ -33,7 +33,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
 
         match message.source {
             LuroMessageSource::MessageUpdate => {
-                let user_data = match self.database.get_user(&message.author, false).await {
+                let user_data = match self.database.get_user(&message.author).await {
                     Ok(data) => Some(data),
                     Err(why) => {
                         warn!(why = ?why, "Could not fetch user data!");

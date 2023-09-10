@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use luro_builder::embed::EmbedBuilder;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use luro_model::response::LuroResponse;
 use luro_model::user::LuroUser;
 use tracing::debug;

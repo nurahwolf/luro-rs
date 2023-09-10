@@ -1,8 +1,8 @@
+use luro_model::{database_driver::LuroDatabaseDriver, heck::Hecks};
 use tracing::warn;
 
-use crate::heck::Hecks;
+use crate::LuroDatabase;
 
-use super::{drivers::LuroDatabaseDriver, LuroDatabase};
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Modifies multiple hecks, overwriting whatever value used to exist

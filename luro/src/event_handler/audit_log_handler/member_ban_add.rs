@@ -1,7 +1,6 @@
 use luro_framework::responses::{PunishmentType, StandardResponse};
 use luro_model::{
-    database::drivers::LuroDatabaseDriver,
-    user::{actions::UserActions, actions_type::UserActionType, LuroUser},
+    user::{actions::UserActions, actions_type::UserActionType, LuroUser}, database_driver::LuroDatabaseDriver,
 };
 use std::sync::Arc;
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild};

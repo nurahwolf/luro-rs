@@ -1,17 +1,73 @@
+use std::sync::{RwLock, Arc};
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 use twilight_model::application::interaction::Interaction;
+use twilight_model::{oauth::Application, user::CurrentUser};
 
-#[cfg(feature = "toml-driver")]
-pub mod toml;
+use crate::configuration::Configuration;
+use crate::guild::{LuroGuilds, LuroGuild};
+use crate::heck::{Hecks, Heck};
+use crate::message::LuroMessage;
+use crate::story::Story;
+use crate::user::{LuroUsers, LuroUser};
+use crate::{CommandManager, Quotes, Stories};
 
-use crate::{
-    guild::LuroGuild,
-    heck::{Heck, Hecks},
-    message::LuroMessage,
-    story::Story,
-    user::{LuroUser, LuroUsers},
-    Quotes, Stories,
-};
+pub mod drivers;
+
+#[derive(Debug, Deserialize, Serialize, Default, Clone)]
+pub struct HeckManager {
+    pub nsfw: Hecks,
+    pub sfw: Hecks,
+}
+
+#[derive(Debug, Deserialize, Serialize, Default, Clone)]
+pub struct StoryManager {
+    pub nsfw: Stories,
+    pub sfw: Stories,
+}
+
+/// Luro's database context. This itself just handles an abstraction for saving and loading data from whatever database it is using in the backend, depending on the feature selected.
+///
+/// NOTE: With the TOML driver, usize keys are serialised as strings!
+#[derive(Debug)]
+pub struct LuroDatabase<D: LuroDatabaseDriver> {
+    pub application: RwLock<Application>,
+    pub command_data: RwLock<CommandManager>,
+    pub count: RwLock<usize>,
+    pub current_user: RwLock<CurrentUser>,
+    pub driver: D,
+    pub guild_data: Box<RwLock<LuroGuilds>>,
+    pub hecks: RwLock<HeckManager>,
+    pub quotes: RwLock<Quotes>,
+    pub staff: RwLock<LuroUsers>,
+    pub stories: RwLock<StoryManager>,
+    pub user_data: Box<RwLock<LuroUsers>>,
+    pub config: Arc<Configuration<D>>
+}
+
+impl<D: LuroDatabaseDriver> LuroDatabase<D> {
+    /// Build the key requirements of our database. The rest of our data is fetched as required.
+    pub fn build(
+        application: Application,
+        current_user: CurrentUser,
+        config: Arc<Configuration<D>>,
+    ) -> LuroDatabase<D> {
+        Self {
+            application: application.into(),
+            command_data: Default::default(),
+            config: config.clone(),
+            count: Default::default(),
+            current_user: current_user.into(),
+            driver: config.database_driver.clone(),
+            guild_data: Default::default(),
+            hecks: Default::default(),
+            quotes: Default::default(),
+            staff: Default::default(),
+            stories: Default::default(),
+            user_data: Default::default(),
+        }
+    }
+}
 
 /// This trait enforces all implementation required to be compatible with [LuroDatabase].
 #[async_trait]

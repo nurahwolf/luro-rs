@@ -1,6 +1,7 @@
 #![feature(async_fn_in_trait)]
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{response::LuroResponse, user::LuroUser};
+use luro_database::LuroDatabase;
+use luro_model::{response::LuroResponse, user::LuroUser, database_driver::LuroDatabaseDriver};
 use slash_command::LuroCommand;
 use std::{
     collections::HashMap,
@@ -12,7 +13,6 @@ use twilight_model::{
     id::marker::UserMarker,
 };
 
-use luro_model::database::{drivers::LuroDatabaseDriver, LuroDatabase};
 use twilight_model::{
     application::interaction::{
         application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData,

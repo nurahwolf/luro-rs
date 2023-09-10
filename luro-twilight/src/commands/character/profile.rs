@@ -1,5 +1,5 @@
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -29,7 +29,7 @@ impl LuroCommandTrait for Profile {
             Some(user) => user,
             None => interaction.author_id(),
         };
-        let user_data = ctx.database.get_user(&user_id, false).await?;
+        let user_data = ctx.database.get_user(&user_id).await?;
         let interaction_channel_nsfw = &interaction.clone().channel.unwrap().nsfw;
         let nsfw = match data.nsfw {
             Some(nsfw) => match interaction_channel_nsfw {

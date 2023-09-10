@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Error};
 
-use luro_model::{database::drivers::LuroDatabaseDriver, heck::Heck};
+use luro_model::{database_driver::LuroDatabaseDriver, heck::Heck};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::interaction::message_component::MessageComponentInteractionData, http::interaction::InteractionResponseType,
@@ -89,10 +89,10 @@ impl LuroCommand for HeckAddCommand {
             let hecks = ctx.framework.database.get_hecks(nsfw).await?;
             heck_id = hecks.len() + 1;
             if nsfw {
-                ctx.framework.database.save_heck(heck_id, heck, true).await?;
+                ctx.framework.database.save_heck(heck_id, heck).await?;
                 heck_author.name = "Global Heck Created - NSFW Heck".to_owned();
             } else {
-                ctx.framework.database.save_heck(heck_id, heck, false).await?;
+                ctx.framework.database.save_heck(heck_id, heck).await?;
                 heck_author.name = "Global Heck Created - SFW Heck".to_owned();
             };
             field.append(&mut vec![EmbedFieldBuilder::new("Global Heck", "Just created")

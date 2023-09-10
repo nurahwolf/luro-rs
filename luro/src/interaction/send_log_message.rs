@@ -1,4 +1,4 @@
-use luro_model::{database::drivers::LuroDatabaseDriver, guild::log_channel::LuroLogChannel, response::LuroResponse};
+use luro_model::{database_driver::LuroDatabaseDriver, guild::log_channel::LuroLogChannel, response::LuroResponse};
 use tracing::debug;
 
 use super::LuroSlash;

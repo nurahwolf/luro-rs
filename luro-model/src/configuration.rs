@@ -6,7 +6,7 @@ use twilight_model::gateway::{
     presence::{ActivityType, MinimalActivity, Status},
 };
 
-use crate::database::drivers::LuroDatabaseDriver;
+use crate::database_driver::LuroDatabaseDriver;
 
 #[derive(Debug)]
 pub struct Configuration<D: LuroDatabaseDriver> {

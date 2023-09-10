@@ -7,8 +7,7 @@ use luro_framework::{
     Framework, InteractionCommand, InteractionComponent, InteractionModal, LuroInteraction,
 };
 use luro_model::{
-    database::drivers::LuroDatabaseDriver,
-    user::character::{CharacterProfile, FetishCategory},
+    user::character::{CharacterProfile, FetishCategory}, database_driver::LuroDatabaseDriver,
 };
 use std::{collections::btree_map::Entry, fmt::Write};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -62,7 +61,7 @@ impl LuroCommandTrait for Character {
     async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
         let user_id = interaction.author_id();
         let nsfw = interaction.clone().channel.unwrap().nsfw.unwrap_or_default();
-        let mut user_data = ctx.database.get_user(&user_id, false).await?;
+        let mut user_data = ctx.database.get_user(&user_id).await?;
         let character_name = parse_modal_field::parse_modal_field_required(&interaction.data, "character-name")?;
         let short_description =
             parse_modal_field::parse_modal_field_required(&interaction.data, "character-short-description")?;
@@ -139,7 +138,7 @@ impl LuroCommandTrait for Character {
 
         let data = Self::new(command)?;
         let mut embed = interaction.default_embed(&ctx).await;
-        let user_data = ctx.database.get_user(&interaction.author_id(), false).await?;
+        let user_data = ctx.database.get_user(&interaction.author_id()).await?;
         let name = match data {
             Character::Profile(data) => data.name,
             Character::Create(data) => data.name,

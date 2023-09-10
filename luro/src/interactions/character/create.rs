@@ -1,5 +1,5 @@
 use anyhow::Context;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{channel::message::component::TextInputStyle, http::interaction::InteractionResponseType};
 
@@ -18,7 +18,7 @@ impl LuroCommand for Create {
             .interaction
             .author_id()
             .context("Expected to find the user running this command")?;
-        let user_data = ctx.framework.database.get_user(&user_id, false).await?;
+        let user_data = ctx.framework.database.get_user(&user_id).await?;
         let character = user_data.characters.get(&self.name);
 
         // Create a model

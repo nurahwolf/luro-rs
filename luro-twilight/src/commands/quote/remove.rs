@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
@@ -29,7 +29,7 @@ impl LuroCommandTrait for Remove {
                     .await
             }
         };
-        let user = ctx.database.get_user(&quote.author, false).await?;
+        let user = ctx.database.get_user(&quote.author).await?;
 
         ctx.database.save_quotes(quotes).await?;
 

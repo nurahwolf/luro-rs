@@ -1,5 +1,5 @@
 use anyhow::Context;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -23,7 +23,7 @@ impl LuroCommand for Proxy {
             .author_id()
             .context("Expected to find the user running this command")?;
 
-        let mut user_data = ctx.framework.database.get_user(&user_id, false).await?;
+        let mut user_data = ctx.framework.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
             return ctx
                 .respond(|r| {

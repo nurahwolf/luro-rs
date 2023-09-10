@@ -793,6 +793,7 @@ dependencies = [
  "async-trait",
  "hyper",
  "luro-builder",
+ "luro-database",
  "luro-model",
  "rand",
  "serde",

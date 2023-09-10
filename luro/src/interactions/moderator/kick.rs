@@ -2,7 +2,7 @@ use crate::interactions::send;
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 use luro_framework::responses::permission_modify_server_owner::permission_server_owner;
 use luro_framework::responses::{PunishmentType, StandardResponse};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 use luro_model::{
     guild::log_channel::LuroLogChannel,
@@ -38,10 +38,10 @@ impl LuroCommand for Kick {
         let luro = ctx
             .framework
             .database
-            .get_user(&ctx.framework.twilight_client.current_user().await?.model().await?.id, false)
+            .get_user(&ctx.framework.twilight_client.current_user().await?.model().await?.id)
             .await?;
         let mut moderator = ctx.get_interaction_author(interaction).await?;
-        let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id, false).await?;
+        let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
         punished_user.update_user(&self.user.resolved);
         let mut response = ctx.acknowledge_interaction(false).await?;
         let moderator_permissions = guild.user_permission(&moderator)?;

@@ -1,6 +1,6 @@
 #[cfg(feature = "toml-driver")]
-use crate::database::drivers::toml::{
-    deserialize_heck::deserialize_heck, deserialize_role_positions::deserialize_role_positions, serialize_heck::serialize_heck,
+use crate::database_driver::drivers::toml::{
+    deserialize_role_positions::deserialize_role_positions,
     serialize_role_positions::serialize_role_positions,
 };
 use anyhow::Context;
@@ -106,10 +106,6 @@ pub struct LuroGuild {
     #[serde(default)]
     pub name: String,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "toml-driver",
-        serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck")
-    )]
     pub nsfw_hecks: Hecks,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nsfw_level: Option<NSFWLevel>,
@@ -147,10 +143,6 @@ pub struct LuroGuild {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub safety_alerts_channel_id: Option<Id<ChannelMarker>>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(
-        feature = "toml-driver",
-        serde(deserialize_with = "deserialize_heck", serialize_with = "serialize_heck")
-    )]
     pub sfw_hecks: Hecks,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub splash: Option<ImageHash>,

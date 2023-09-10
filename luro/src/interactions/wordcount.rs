@@ -5,7 +5,7 @@ use std::{
 
 use anyhow::Context;
 
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::interaction::InteractionResponseType,

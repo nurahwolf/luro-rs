@@ -1,8 +1,7 @@
 use anyhow::Error;
 use luro_builder::embed::EmbedBuilder;
 use luro_model::{
-    database::drivers::LuroDatabaseDriver,
-    user::{actions::UserActions, actions_type::UserActionType},
+    user::{actions::UserActions, actions_type::UserActionType}, database_driver::LuroDatabaseDriver,
 };
 use twilight_model::{
     channel::message::embed::EmbedField,
@@ -120,7 +119,7 @@ async fn privelege_escalation<D: LuroDatabaseDriver, T: LuroInteraction>(
     framework: &Framework<D>,
     interaction: &T,
 ) -> anyhow::Result<()> {
-    let mut user_data = framework.database.get_user(&interaction.author_id(), false).await?;
+    let mut user_data = framework.database.get_user(&interaction.author_id()).await?;
     user_data.moderation_actions.push(UserActions {
         action_type: vec![UserActionType::PrivilegeEscalation],
         guild_id: interaction.guild_id(),

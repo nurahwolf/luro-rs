@@ -1,4 +1,4 @@
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::debug;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -38,7 +38,7 @@ impl LuroCommand for HeckSomeoneCommand {
         debug!("attempting to format the returned heck");
         let formatted_heck = format_heck(&heck, &interaction.author_id().unwrap(), &self.user.resolved.id, nsfw).await;
 
-        let luro_user = ctx.framework.database.get_user(&heck.author_id, false).await?;
+        let luro_user = ctx.framework.database.get_user(&heck.author_id).await?;
 
         // Create our response, depending on if the user wants a plaintext heck or not
         if let Some(plaintext) = self.plaintext && plaintext {

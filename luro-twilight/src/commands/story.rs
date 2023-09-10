@@ -14,7 +14,7 @@ use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle
 use twilight_model::channel::message::Component;
 use twilight_model::http::interaction::InteractionResponseType;
 
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "story",

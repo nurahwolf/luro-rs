@@ -1,4 +1,4 @@
-use luro_model::{database::drivers::LuroDatabaseDriver, user::LuroUser};
+use luro_model::{database_driver::LuroDatabaseDriver, user::LuroUser};
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::application::interaction::Interaction;
 
@@ -9,7 +9,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn get_interaction_author<'a>(&'a self, interaction: &'a Interaction) -> anyhow::Result<LuroUser> {
         self.framework
             .database
-            .get_user(&interaction.author_id().unwrap(), false)
+            .get_user(&interaction.author_id().unwrap())
             .await
     }
 
@@ -21,7 +21,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
         interaction: &'a Interaction,
     ) -> anyhow::Result<LuroUser> {
         match specified_user {
-            Some(user_defined) => self.framework.database.get_user(&user_defined.resolved.id, false).await,
+            Some(user_defined) => self.framework.database.get_user(&user_defined.resolved.id).await,
             None => self.get_interaction_author(interaction).await,
         }
     }

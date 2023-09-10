@@ -1,5 +1,5 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{database::drivers::LuroDatabaseDriver, response::LuroResponse, user::LuroUser, ACCENT_COLOUR};
+use luro_model::{response::LuroResponse, user::LuroUser, ACCENT_COLOUR, database_driver::LuroDatabaseDriver};
 use tracing::warn;
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{
@@ -147,7 +147,7 @@ impl LuroInteraction for InteractionModal {
 
     /// Get and return useful information about the interaction author
     async fn get_interaction_author<D: LuroDatabaseDriver>(&self, ctx: &Framework<D>) -> anyhow::Result<LuroUser> {
-        ctx.database.get_user(&self.author_id(), false).await
+        ctx.database.get_user(&self.author_id()).await
     }
 
     /// Get a specified user, else fall back to the interaction author
@@ -158,7 +158,7 @@ impl LuroInteraction for InteractionModal {
         specified_user: Option<&ResolvedUser>,
     ) -> anyhow::Result<LuroUser> {
         match specified_user {
-            Some(user_defined) => ctx.database.get_user(&user_defined.resolved.id, false).await,
+            Some(user_defined) => ctx.database.get_user(&user_defined.resolved.id).await,
             None => self.get_interaction_author(ctx).await,
         }
     }

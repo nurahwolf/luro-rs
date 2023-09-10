@@ -4,7 +4,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 use crate::interaction::LuroSlash;
 use crate::luro_command::LuroCommand;
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_model::database_driver::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "clear_warnings", desc = "Clears a user's warning by ID.")]
@@ -19,7 +19,7 @@ pub struct OwnerClearWarning {
 
 impl LuroCommand for OwnerClearWarning {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let mut user_data = ctx.framework.database.get_user(&self.user.resolved.id, false).await?;
+        let mut user_data = ctx.framework.database.get_user(&self.user.resolved.id).await?;
         if user_data.warnings.is_empty() {
             return ctx
                 .respond(|r| r.content("User has no warnings you stupid idiot!").ephemeral())
