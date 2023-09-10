@@ -32,7 +32,7 @@ impl LuroCommand for HeckSomeoneCommand {
         let (heck, heck_id) = get_heck(&ctx, self.id, ctx.interaction.guild_id, self.global, nsfw).await?;
 
         debug!("attempting to format the returned heck");
-        let formatted_heck = format_heck(&heck, interaction.author().as_ref().unwrap(), &self.user.resolved).await;
+        let formatted_heck = format_heck(&heck, &interaction.author_id().unwrap(), &self.user.resolved.id, nsfw).await;
 
         let luro_user = ctx.framework.database.get_user(&heck.author_id, false).await?;
 

@@ -11,8 +11,10 @@ use twilight_model::{
         component::{ActionRow, SelectMenu, SelectMenuOption, SelectMenuType},
         Component
     },
-    id::{marker::GuildMarker, Id},
-    user::User
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id
+    }
 };
 use twilight_util::builder::embed::{EmbedAuthorBuilder, EmbedBuilder};
 
@@ -114,7 +116,8 @@ async fn get_heck<D: LuroDatabaseDriver>(
     // A heck type to send if there are no hecks of the type requested!
     let no_heck = Heck {
         heck_message: "No hecks of the requested type found!".to_string(),
-        author_id: PRIMARY_BOT_OWNER
+        author_id: PRIMARY_BOT_OWNER,
+        nsfw: false
     };
 
     let mut heck_id = match id {
@@ -181,12 +184,13 @@ async fn get_heck<D: LuroDatabaseDriver>(
 }
 
 /// Replace <user> with <@hecked_user> and <author> with the caller of the heck command
-async fn format_heck(heck: &Heck, heck_author: &User, hecked_user: &User) -> Heck {
+async fn format_heck(heck: &Heck, heck_author: &Id<UserMarker>, hecked_user: &Id<UserMarker>, nsfw: bool) -> Heck {
     Heck {
         heck_message: heck
             .heck_message
-            .replace("<user>", &format!("<@{}>", &hecked_user.id))
-            .replace("<author>", &format!("<@{}>", &heck_author.id)),
-        author_id: heck.author_id
+            .replace("<user>", &format!("<@{}>", &hecked_user))
+            .replace("<author>", &format!("<@{}>", &heck_author)),
+        author_id: heck.author_id,
+        nsfw
     }
 }

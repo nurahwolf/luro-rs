@@ -1,3 +1,5 @@
+use anyhow::anyhow;
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 const GDPR_DELETE: &str = "gdpr_delete = \"THE USER REQUESTED ALL OF THEIR DATA TO BE DELETED\"";
@@ -16,6 +18,9 @@ use tokio::{fs, io::AsyncReadExt};
 use tracing::{debug, error, warn};
 
 mod driver;
+mod guild;
+mod heck;
+mod user;
 
 /// Defaults to the toml driver
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -93,7 +98,7 @@ impl TomlDatabaseDriver {
     }
 
     /// Write the passed data to file
-    async fn write<T>(data: T, path: &Path) -> anyhow::Result<()>
+    async fn write<T>(data: T, path: &Path) -> anyhow::Result<T>
     where
         T: Serialize
     {
@@ -105,6 +110,39 @@ impl TomlDatabaseDriver {
         }
 
         debug!("Path {} has bee updated with new data", path.to_string_lossy());
-        Ok(fs::write(path, struct_to_toml_string).await?)
+        fs::write(path, struct_to_toml_string).await?;
+        Ok(data)
     }
+}
+
+// Serialise a BTreeMap, changing the key from usize to String
+pub fn toml_serializer<T>(input: BTreeMap<usize, T>) -> BTreeMap<String, T> {
+    input
+        .into_iter()
+        .map(|(str_key, value)| (str_key.to_string(), value))
+        .collect::<BTreeMap<String, T>>()
+}
+
+// Deserialise a BTreeMap, changing the key from [String] to [usize]
+pub fn toml_deserializer<T>(input: BTreeMap<String, T>) -> anyhow::Result<BTreeMap<usize, T>> {
+    let original_len = input.len();
+    let data = input
+        .into_iter()
+        .map(|(key, value)| {
+            (
+                match key.parse() {
+                    Ok(usize_key) => usize_key,
+                    Err(_) => todo!()
+                },
+                value
+            )
+        })
+        .collect::<BTreeMap<usize, T>>();
+
+    // multiple strings could parse to the same int, e.g "0" and "00"
+    if data.len() < original_len {
+        return Err(anyhow!("detected duplicate integer key"));
+    }
+
+    Ok(data)
 }

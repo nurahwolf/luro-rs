@@ -80,7 +80,8 @@ impl LuroCommand for HeckAddCommand {
                 .clone()
                 .description
                 .ok_or_else(|| Error::msg("Could not find the new heck in the embed"))?,
-            author_id: interaction_author.id
+            author_id: interaction_author.id,
+            nsfw
         };
 
         // Based on our component data, should this be added as a global heck or a guild heck?

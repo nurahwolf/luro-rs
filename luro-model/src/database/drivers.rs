@@ -16,7 +16,6 @@ use crate::{
 /// This trait enforces all implementation required to be compatible with [LuroDatabase].
 #[async_trait]
 pub trait LuroDatabaseDriver: Clone + Sync + Send {
-    async fn add_guild(&self, id: u64, guild: &LuroGuild) -> anyhow::Result<()>;
     async fn add_heck(&self, heck: &Heck, nsfw: bool) -> anyhow::Result<()>;
     async fn add_stories(&self, stories: &Stories, nsfw: bool) -> anyhow::Result<()>;
     async fn add_story(&self, story: &Story, nsfw: bool) -> anyhow::Result<()>;

@@ -11,15 +11,18 @@ pub type Hecks = BTreeMap<usize, Heck>;
 /// A specific heck, used in [Hecks]. This contains the message itself, and the user ID of the author.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Heck {
+    pub author_id: Id<UserMarker>,
     pub heck_message: String,
-    pub author_id: Id<UserMarker>
+    #[serde(default)]
+    pub nsfw: bool
 }
 
 impl Default for Heck {
     fn default() -> Self {
         Self {
             heck_message: Default::default(),
-            author_id: PRIMARY_BOT_OWNER
+            author_id: PRIMARY_BOT_OWNER,
+            nsfw: false
         }
     }
 }
