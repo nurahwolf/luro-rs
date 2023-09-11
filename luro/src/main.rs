@@ -69,7 +69,7 @@ pub const BOT_NAME: &str = "luro";
 /// The name of the bot in lowercase
 
 /// [tracing_subscriber] filter level
-pub const FILTER: LevelFilter = LevelFilter::TRACE;
+pub const FILTER: LevelFilter = LevelFilter::INFO;
 // Luro's intents. Can be set to all, but rather spammy.
 pub const INTENTS: Intents = Intents::all();
 /// Luro's main accent colour

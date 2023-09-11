@@ -35,12 +35,32 @@ impl<D: LuroDatabaseDriver> LuroDatabase<D> {
 
         info!(id = ?id, "user is not in Luro's cache, fetching from Twilight's Cache");
         if let Some(data) = self.config.cache.user(*id) {
-            return Ok(LuroUser::from(data.value()));
+            let mut user = LuroUser::new(*id);
+            user.update_user(&data);
+            match self.user_data.write() {
+                Ok(mut user_data) => {
+                    if let Some(data) = user_data.insert(*id, user.clone()) {
+                        return Ok(data.clone());
+                    }
+                }
+                Err(why) => error!(why = ?why, "user_data lock is poisoned! Please investigate!"),
+            };
+            return Ok(user);
         }
 
         info!(id = ?id, "user is not in Luro's cache, fetching from Twilight's Client");
         if let Ok(data) = self.config.twilight_client.user(*id).await {
-            return Ok(LuroUser::from(&data.model().await?));
+            let mut user = LuroUser::new(*id);
+            user.update_user(&data.model().await?);
+            match self.user_data.write() {
+                Ok(mut user_data) => {
+                    if let Some(data) = user_data.insert(*id, user.clone()) {
+                        return Ok(data.clone());
+                    }
+                }
+                Err(why) => error!(why = ?why, "user_data lock is poisoned! Please investigate!"),
+            };
+            return Ok(user);
         }
 
         Err(anyhow!(

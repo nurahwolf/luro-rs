@@ -10,7 +10,11 @@ use twilight_model::{
 use twilight_util::snowflake::Snowflake;
 
 use crate::interaction::LuroSlash;
-use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse, user::actions_type::UserActionType};
+use luro_model::{
+    database_driver::LuroDatabaseDriver,
+    response::LuroResponse,
+    user::{actions_type::UserActionType, LuroUser},
+};
 
 use crate::luro_command::LuroCommand;
 
@@ -19,7 +23,9 @@ use crate::luro_command::LuroCommand;
 pub struct InfoUser {
     /// The user to get, gets yourself if not specified
     user: Option<ResolvedUser>,
-    /// Optionally try to get a user from a different guild
+    /// Can't find who you are looking for? Try searching for their name / nickname
+    search: Option<String>,
+    /// Get guild specific information from a different guild
     guild: Option<Id<GenericMarker>>,
     /// Hide the user's avatar, so that there is more space for the details
     hide_avatar: Option<bool>,
@@ -37,6 +43,48 @@ impl LuroCommand for InfoUser {
 
         let mut response = LuroResponse::default();
         let mut embed = ctx.default_embed().await;
+
+        if let Some(search) = self.search {
+            let mut description = "**Results:**\n".to_owned();
+            let mut results = vec![];
+            for user in ctx.framework.twilight_cache.iter().users() {
+                if let Some(global_name) = &user.global_name && global_name.contains(&search) {
+                    results.push(LuroUser::from(user.value()))
+                } else if user.name.contains(&search) {
+                    results.push(LuroUser::from(user.value()))
+                }
+            }
+
+            if let Ok(user_data) = ctx.framework.database.user_data.read() {
+                for user in user_data.values() {
+                    if user.name().contains(&search) {
+                        results.push(user.clone())
+                    }
+                    for guild in user.guilds.values() {
+                        if let Some(nick) = &guild.nick && nick.contains(&search) {
+                            results.push(user.clone())
+                        }
+                    }
+                }
+            }
+
+            results.sort();
+            results.dedup();
+
+            for user in &results {
+                writeln!(description, "{} - <@{1}> ({1})", user.name(), user.id)?;
+            }
+
+            if results.is_empty() {
+                description.push_str("- No results found!")
+            }
+
+            embed.description(description).colour(ctx.accent_colour().await);
+            response.add_embed(embed);
+            ctx.send_respond(response).await?;
+            return Ok(());
+        }
+
         let mut description = String::new();
         let mut timestamp = format!("- Joined discord on <t:{0}> - <t:{0}:R>\n", user_timestamp.as_secs());
 

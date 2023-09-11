@@ -2,7 +2,7 @@ use crate::luro_command::LuroCommand;
 use crate::{interaction::LuroSlash, USERDATA_FILE_PATH};
 use luro_model::database_driver::LuroDatabaseDriver;
 use tokio::fs::read_dir;
-use tracing::{info, warn};
+use tracing::{debug, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::Id;
 
@@ -67,32 +67,26 @@ async fn load_cache<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result
 async fn load_disk<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result<(usize, usize)> {
     let mut loaded = 0;
     let mut errors = 0;
-
     let mut paths = read_dir(USERDATA_FILE_PATH).await?;
 
-    match paths.next_entry().await {
-        Ok(entry) => match entry {
-            Some(entry) => match entry.file_name().into_string() {
-                Ok(file) => {
-                    info!("Name: {file}");
-                    match ctx.framework.database.get_user(&Id::new(file.parse()?)).await {
-                        Ok(_) => loaded += 1,
-                        Err(_) => errors += 1,
-                    }
+    while let Some(entry) = paths.next_entry().await? {
+        debug!("{:?}", entry.file_name());
+
+        if let Some(user_id) = entry.file_name().to_str() {
+            let user_id = &Id::new(user_id.parse()?);
+
+            if let Ok(user_data) = ctx.framework.database.user_data.read() {
+                // User is already present in the cache
+                if user_data.get(user_id).is_some() {
+                    loaded += 1;
+                    continue;
                 }
-                Err(why) => {
-                    warn!(why = ?why, "Failed to load user");
-                    errors += 1;
-                }
-            },
-            None => {
-                warn!("No data in entry");
-                errors += 1;
             }
-        },
-        Err(why) => {
-            warn!(why = ?why, "Failed to load user");
-            errors += 1;
+
+            match ctx.framework.database.get_user(user_id).await {
+                Ok(_) => loaded += 1,
+                Err(_) => errors += 1,
+            }
         }
     }
 

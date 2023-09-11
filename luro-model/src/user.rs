@@ -1,4 +1,7 @@
-use std::collections::{hash_map::Entry, BTreeMap, HashMap};
+use std::{
+    cmp::Ordering,
+    collections::{hash_map::Entry, BTreeMap, HashMap},
+};
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use twilight_cache_inmemory::model::CachedMember;
@@ -26,7 +29,7 @@ pub mod marriages;
 pub mod member;
 
 /// Some nice functionality primarily around [User] and [Member], with some added goodness
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct LuroUser {
     /// Accent color of the user's banner.
     ///
@@ -104,6 +107,20 @@ pub struct LuroUser {
     pub characters: BTreeMap<String, CharacterProfile>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub character_prefix: BTreeMap<String, String>,
+}
+
+impl Eq for LuroUser {}
+
+impl Ord for LuroUser {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.id.cmp(&other.id)
+    }
+}
+
+impl PartialOrd for LuroUser {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl From<&CurrentUser> for LuroUser {
