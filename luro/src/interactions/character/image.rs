@@ -1,22 +1,26 @@
 use anyhow::Context;
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_model::{database_driver::LuroDatabaseDriver, user::character::CharacterImage};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "icon", desc = "Set the primary icon for this character")]
-pub struct Icon {
+#[command(name = "image", desc = "Set the primary image for this character")]
+pub struct Image {
     #[command(desc = "The character to get", autocomplete = true)]
     name: String,
-    /// The URL the icon should be set to
-    icon: String,
-    /// The URL a NSFW icon
-    nsfw_icon: Option<String>,
+    /// The URL the image should be set to
+    img: String,
+    /// Is this a NSFW image?
+    nsfw: bool,
+    /// Do you want this image to show up as one of the main images in your profile?
+    fav: bool,
+    /// Overwrite an image? `0` is the primary image!
+    overwrite: Option<i64>,
 }
 
-impl LuroCommand for Icon {
+impl LuroCommand for Image {
     async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let user_id = ctx
             .interaction
@@ -35,8 +39,16 @@ impl LuroCommand for Icon {
 
         match user_data.characters.get_mut(&self.name) {
             Some(character) => {
-                character.nsfw_icon = self.nsfw_icon;
-                character.icon = self.icon
+                let image = CharacterImage {
+                    url: self.img,
+                    nsfw: self.nsfw,
+                    fav: self.fav,
+                };
+                let key = match self.overwrite {
+                    Some(id) => id as usize,
+                    None => character.images.len() + 1,
+                };
+                character.images.insert(key, image)
             }
             None => {
                 let mut characters = String::new();

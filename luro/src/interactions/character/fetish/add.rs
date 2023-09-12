@@ -9,7 +9,7 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "add", desc = "Add a fetish to a character profile")]
 pub struct Add {
-    #[command(desc = "The character that should be modified", autocomplete = true)]
+    #[command(desc = "The character to get", autocomplete = true)]
     name: String,
     /// The fetish type to add
     fetish: FetishCategory,

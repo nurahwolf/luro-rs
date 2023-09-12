@@ -83,4 +83,17 @@ pub struct CharacterProfile {
     )]
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub fetishes: BTreeMap<usize, Fetish>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
+    pub images: BTreeMap<usize, CharacterImage>,
+}
+
+/// A structure representing an image
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+pub struct CharacterImage {
+    /// The URL for the image
+    pub url: String,
+    /// If the image is NSFW or not
+    pub nsfw: bool,
+    /// If marked as a fav, it can randomly be used as the profile image
+    pub fav: bool,
 }

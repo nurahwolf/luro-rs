@@ -1,5 +1,6 @@
 use anyhow::Context;
 use luro_model::database_driver::LuroDatabaseDriver;
+use rand::{seq::SliceRandom, thread_rng};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -12,11 +13,13 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "profile", desc = "Fetch a user's character profile")]
 pub struct Profile {
-    /// The fursona to get
+    #[command(desc = "The character to get", autocomplete = true)]
     pub name: String,
-    /// The type of profile to fetch. Defaults to the channel type.
+    /// Set to true if you wish to see puppeting details for the character
+    prefix: Option<bool>,
+    /// Include NSFW details? Defaults to the channel type.
     nsfw: Option<bool>,
-    /// Fetch the character name from someone else.
+    /// Fetch the character from someone else, if you want to see someone elses character!.
     user: Option<Id<UserMarker>>,
 }
 
@@ -85,14 +88,38 @@ impl LuroCommand for Profile {
                 .name(format!("Profile by {}", user_data.name()))
         });
 
-        let mut prefix_string = String::new();
-        for (prefix, character_name) in user_data.character_prefix {
-            if self.name == character_name {
-                writeln!(prefix_string, "- `{prefix}`")?
+        if self.prefix.unwrap_or_default() {
+            let mut prefix_string = String::new();
+            for (prefix, character_name) in user_data.character_prefix {
+                if self.name == character_name {
+                    writeln!(prefix_string, "- `{prefix}`")?
+                }
+            }
+            if !prefix_string.is_empty() {
+                embed.create_field("Character Prefixes", &prefix_string, false);
             }
         }
-        if !prefix_string.is_empty() {
-            embed.create_field("Character Prefixes", &prefix_string, false);
+
+        let mut sfw_favs = vec![];
+        let mut nsfw_favs = vec![];
+        for (_, image) in character.images.iter().filter(|(_, img)| img.fav) {
+            match image.nsfw {
+                true => nsfw_favs.push(image),
+                false => sfw_favs.push(image),
+            }
+        }
+
+        {
+            let mut rng = thread_rng();
+            if nsfw {
+                if let Some(fav_img) = nsfw_favs.choose(&mut rng) {
+                    embed.image(|img| img.url(fav_img.url.clone()));
+                } else if let Some(fav_img) = sfw_favs.choose(&mut rng) {
+                    embed.image(|img| img.url(fav_img.url.clone()));
+                }
+            } else if let Some(fav_img) = sfw_favs.choose(&mut rng) {
+                embed.image(|img| img.url(fav_img.url.clone()));
+            }
         }
 
         ctx.respond(|response| {

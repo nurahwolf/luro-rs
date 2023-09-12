@@ -8,7 +8,7 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "proxy", desc = "Configure a prefix for proxying messages")]
 pub struct Proxy {
-    #[command(desc = "The character that should be modified", autocomplete = true)]
+    #[command(desc = "The character to get", autocomplete = true)]
     name: String,
     /// The prefix to cause the proxy. e.g. "+n" so that "+n hi!" appears as the character
     prefix: String,

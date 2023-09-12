@@ -232,22 +232,32 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
 #[derive(CommandModel)]
 #[command(autocomplete = true)]
 enum Autocomplete {
-    #[command(name = "send")]
-    Send(CharacterSendAutocomplete),
-    #[command(name = "proxy")]
-    Proxy(CharacterSendAutocomplete),
-    #[command(name = "icon")]
-    Icon(CharacterSendAutocomplete),
     #[command(name = "create")]
     Create(CharacterSendAutocomplete),
+    #[command(name = "fetish")]
+    Fetish(CharacterSendAutocomplete),
+    #[command(name = "icon")]
+    Icon(CharacterSendAutocomplete),
+    #[command(name = "image")]
+    Image(CharacterSendAutocomplete),
+    #[command(name = "profile")]
+    Profile(CharacterSendAutocomplete),
+    #[command(name = "proxy")]
+    Proxy(CharacterSendAutocomplete),
+    #[command(name = "send")]
+    Send(CharacterSendAutocomplete),
 }
 
 impl Autocomplete {
     async fn run<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
-            Autocomplete::Create(cmd) | Autocomplete::Icon(cmd) | Autocomplete::Send(cmd) | Autocomplete::Proxy(cmd) => {
-                cmd.run(ctx).await
-            }
+            Autocomplete::Create(cmd)
+            | Autocomplete::Icon(cmd)
+            | Autocomplete::Send(cmd)
+            | Autocomplete::Proxy(cmd)
+            | Autocomplete::Fetish(cmd)
+            | Autocomplete::Image(cmd)
+            | Autocomplete::Profile(cmd) => cmd.run(ctx).await,
         }
     }
 

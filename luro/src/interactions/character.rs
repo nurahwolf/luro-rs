@@ -16,6 +16,7 @@ use self::{create::Create, fetish::Fetish, icon::Icon, profile::Profile, proxy::
 mod create;
 mod fetish;
 mod icon;
+mod image;
 mod profile;
 mod proxy;
 pub mod send;
@@ -33,6 +34,8 @@ pub enum Character {
     Proxy(Proxy),
     #[command(name = "icon")]
     Icon(Icon),
+    #[command(name = "image")]
+    Image(image::Image),
     #[command(name = "send")]
     Send(CharacterSend),
 }
@@ -45,6 +48,7 @@ impl LuroCommand for Character {
             Self::Fetish(command) => command.run_command(ctx).await,
             Self::Proxy(command) => command.run_command(ctx).await,
             Self::Icon(command) => command.run_command(ctx).await,
+            Self::Image(command) => command.run_command(ctx).await,
             Self::Send(command) => command.run_command(ctx).await,
         }
     }
