@@ -16,7 +16,7 @@ pub struct Image {
     nsfw: bool,
     /// Do you want this image to show up as one of the main images in your profile?
     fav: bool,
-    /// Overwrite an image? `0` is the primary image!
+    /// Overwrite an image by ID
     overwrite: Option<i64>,
 }
 

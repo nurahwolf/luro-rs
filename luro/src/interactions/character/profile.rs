@@ -1,6 +1,5 @@
 use anyhow::Context;
 use luro_model::database_driver::LuroDatabaseDriver;
-use rand::{seq::SliceRandom, thread_rng};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -10,6 +9,8 @@ use twilight_model::{
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
+use super::character_profile;
+
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "profile", desc = "Fetch a user's character profile")]
 pub struct Profile {
@@ -18,7 +19,7 @@ pub struct Profile {
     /// Set to true if you wish to see puppeting details for the character
     prefix: Option<bool>,
     /// Include NSFW details? Defaults to the channel type.
-    nsfw: Option<bool>,
+    pub nsfw: Option<bool>,
     /// Fetch the character from someone else, if you want to see someone elses character!.
     user: Option<Id<UserMarker>>,
 }
@@ -72,70 +73,34 @@ impl LuroCommand for Profile {
             }
         };
 
-        let mut embed = ctx.default_embed().await;
-        let mut description = format!("{}\n", character.short_description);
-        if !character.description.is_empty() {
-            writeln!(description, "- **Description:**\n{}", character.description)?
-        }
-
-        if let Some(nsfw_description) = &character.nsfw_description && nsfw && !nsfw_description.is_empty() {
-            writeln!(description, "\n- **NSFW Description:**\n{nsfw_description}")?
-        }
-        embed.title(format!("Character Profile - {}", self.name));
-        embed.description(description);
-        embed.author(|a| {
-            a.icon_url(user_data.avatar())
-                .name(format!("Profile by {}", user_data.name()))
-        });
-
-        if self.prefix.unwrap_or_default() {
-            let mut prefix_string = String::new();
-            for (prefix, character_name) in user_data.character_prefix {
-                if self.name == character_name {
-                    writeln!(prefix_string, "- `{prefix}`")?
-                }
-            }
-            if !prefix_string.is_empty() {
-                embed.create_field("Character Prefixes", &prefix_string, false);
-            }
-        }
-
-        let mut sfw_favs = vec![];
-        let mut nsfw_favs = vec![];
-        for (_, image) in character.images.iter().filter(|(_, img)| img.fav) {
-            match image.nsfw {
-                true => nsfw_favs.push(image),
-                false => sfw_favs.push(image),
-            }
-        }
-
-        {
-            let mut rng = thread_rng();
-            if nsfw {
-                if let Some(fav_img) = nsfw_favs.choose(&mut rng) {
-                    embed.image(|img| img.url(fav_img.url.clone()));
-                } else if let Some(fav_img) = sfw_favs.choose(&mut rng) {
-                    embed.image(|img| img.url(fav_img.url.clone()));
-                }
-            } else if let Some(fav_img) = sfw_favs.choose(&mut rng) {
-                embed.image(|img| img.url(fav_img.url.clone()));
-            }
-        }
+        let embed = character_profile(&ctx, character, &user_data, nsfw, self.prefix.unwrap_or_default()).await?;
 
         ctx.respond(|response| {
             response.add_embed(embed);
-            if nsfw && !character.fetishes.is_empty() {
-                response.components(|components| {
-                    components.action_row(|row| {
+            response.components(|components| {
+                components.action_row(|row| {
+                    if nsfw && !character.fetishes.is_empty() {
                         row.button(|button| {
                             button
                                 .custom_id("character-fetish")
                                 .label("Fetishes")
                                 .style(ButtonStyle::Danger)
-                        })
+                        });
+                    }
+                    row.button(|button| {
+                        button
+                            .custom_id("character-image")
+                            .label("Cycle Image")
+                            .style(ButtonStyle::Secondary)
                     })
-                });
-            }
+                    .button(|button| {
+                        button
+                            .custom_id("character-update")
+                            .label("Update Character")
+                            .style(ButtonStyle::Secondary)
+                    })
+                })
+            });
             response
         })
         .await

@@ -1,6 +1,10 @@
+use crate::database_driver::drivers::toml::deserialize_fetish;
+use crate::database_driver::drivers::toml::deserialize_image;
+use crate::database_driver::drivers::toml::serialize_fetish;
+use crate::database_driver::drivers::toml::serialize_image;
 #[cfg(feature = "toml-driver")]
-use crate::database_driver::drivers::toml::{deserialize_fetish, serialize_fetish};
 use core::fmt;
+
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use twilight_interactions::command::{CommandOption, CreateOption};
@@ -58,6 +62,9 @@ impl fmt::Display for FetishList {
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct CharacterProfile {
+    /// The Character's name
+    #[serde(default)]
+    pub name: String,
     /// A short description for this character
     #[serde(default)]
     pub short_description: String,
@@ -83,6 +90,10 @@ pub struct CharacterProfile {
     )]
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub fetishes: BTreeMap<usize, Fetish>,
+    #[cfg_attr(
+        feature = "toml-driver",
+        serde(deserialize_with = "deserialize_image", serialize_with = "serialize_image")
+    )]
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub images: BTreeMap<usize, CharacterImage>,
 }

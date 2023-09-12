@@ -1,7 +1,7 @@
 use serde::{de, Deserialize, Deserializer, Serializer};
 use std::collections::BTreeMap;
 
-use crate::user::character::Fetish;
+use crate::user::character::{CharacterImage, Fetish};
 
 pub mod deserialize_heck;
 pub mod deserialize_role_positions;
@@ -68,6 +68,43 @@ where
     D: Deserializer<'de>,
 {
     let str_map = BTreeMap::<String, usize>::deserialize(deserializer)?;
+    let original_len = str_map.len();
+    let data = {
+        str_map
+            .into_iter()
+            .map(|(str_key, value)| match str_key.parse() {
+                Ok(int_key) => Ok((int_key, value)),
+                Err(_) => Err(de::Error::invalid_value(
+                    de::Unexpected::Str(&str_key),
+                    &"a non-negative integer",
+                )),
+            })
+            .collect::<Result<BTreeMap<_, _>, _>>()?
+    };
+    // multiple strings could parse to the same int, e.g "0" and "00"
+    if data.len() < original_len {
+        return Err(de::Error::custom("detected duplicate integer key"));
+    }
+    Ok(data)
+}
+
+pub fn serialize_image<S>(input: &BTreeMap<usize, CharacterImage>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let data = input
+        .iter()
+        .map(|(str_key, value)| (str_key.to_string(), value))
+        .collect::<BTreeMap<String, _>>();
+
+    serializer.collect_map(data)
+}
+
+pub fn deserialize_image<'de, D>(deserializer: D) -> Result<BTreeMap<usize, CharacterImage>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let str_map = BTreeMap::<String, _>::deserialize(deserializer)?;
     let original_len = str_map.len();
     let data = {
         str_map

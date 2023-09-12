@@ -145,21 +145,14 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// SAFETY: There is an unwrap here, but the type is always present on MessageComponent
     /// which is the only type this function is called on
     pub async fn handle_component(self, data: Box<MessageComponentInteractionData>) -> anyhow::Result<()> {
-        let mut message = self.interaction.message.clone().unwrap();
+        let message = self.interaction.message.clone().unwrap();
         let mut interaction = self.interaction.clone();
-        let mut new_id = true;
 
-        while new_id {
-            interaction = self.framework.database.get_interaction(&message.id.to_string()).await?;
-
-            new_id = match interaction.message {
-                Some(ref new_message) => {
-                    message = new_message.clone();
-                    true
-                }
-                None => false,
-            }
+        if let Some(author) = interaction.author() {
+            info!("Component Interaction: {} - {}", author.name, data.custom_id);
         }
+
+        interaction = self.framework.database.get_interaction(&message.id.to_string()).await?;
 
         let command = match interaction.data {
             Some(InteractionData::ApplicationCommand(ref data)) => data.clone(),
@@ -171,12 +164,8 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             }
         };
 
-        if let Some(author) = interaction.author() {
-            info!("Received component interaction - {} - {}", author.name, data.custom_id);
-        }
-
         match data.custom_id.as_str() {
-            "character-fetish" => Character::new(command).await?.handle_component(data, self).await,
+            "character-fetish" | "character-image" | "character-update" => Character::new(command).await?.handle_component(data, self).await,
             "boop" => BoopCommand::new(command).await?.handle_component(data, self).await,
             "decode" | "encode" => Base64Commands::new(command).await?.handle_component(data, self).await,
             "marry-accept" | "marry-deny" => MarryCommands::new(command).await?.handle_component(data, self).await,
