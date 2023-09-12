@@ -29,7 +29,7 @@ impl LuroCommand for Add {
                 LuroMessage::from(message)
             }
             Err(_) => {
-                debug!("Failed to get message via twilight, so lookign in the cache");
+                debug!("Failed to get message via twilight, so looking in the cache");
                 match ctx.framework.twilight_cache.message(id) {
                     Some(message) => {
                         let quote = LuroMessage::from(message.clone());
@@ -55,7 +55,7 @@ impl LuroCommand for Add {
         let slash_user = LuroUser::from(&quoted_user);
 
         let local_quotes = ctx.framework.database.get_quotes().await?;
-        let local_quote_id = local_quotes.len();
+        let local_quote_id = local_quotes.len() + 1;
 
         ctx.framework.database.save_quote(local_quote_id, quote.clone()).await?;
 
