@@ -225,6 +225,14 @@ impl LuroCommand for Character {
                 let embed = character_profile(&ctx, character, &user_data, nsfw, false).await?;
                 ctx.respond(|r|r.add_embed(embed).response_type(InteractionResponseType::UpdateMessage)).await
             },
+            "character-image-sfw" =>{
+                let embed = character_profile(&ctx, character, &user_data, false, false).await?;
+                ctx.respond(|r|r.add_embed(embed)).await
+            },
+            "character-image-nsfw" =>{
+                let embed = character_profile(&ctx, character, &user_data, true, false).await?;
+                ctx.respond(|r|r.add_embed(embed)).await
+            },
             name => ctx.internal_error_response(anyhow!("No component named {name} found!")).await,
         }
     }
