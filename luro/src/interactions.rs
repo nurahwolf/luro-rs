@@ -27,7 +27,6 @@ use self::{
 };
 use crate::interaction::LuroSlash;
 use crate::interactions::character::send::CharacterSendAutocomplete;
-use crate::interactions::heck::add::HeckAddCommand;
 
 use twilight_model::application::interaction::InteractionData;
 
@@ -152,7 +151,15 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             info!("Component Interaction: {} - {}", author.name, data.custom_id);
         }
 
-        interaction = self.framework.database.get_interaction(&message.id.to_string()).await?;
+        interaction = match self.framework.database.get_interaction(&message.id.to_string()).await {
+            Ok(data) => data,
+            Err(_) => {
+                self.framework
+                    .database
+                    .get_interaction(&message.interaction.unwrap().id.to_string())
+                    .await?
+            }
+        };
 
         let command = match interaction.data {
             Some(InteractionData::ApplicationCommand(ref data)) => data.clone(),
@@ -165,7 +172,9 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
         };
 
         match data.custom_id.as_str() {
-            "character-fetish" | "character-image" | "character-update" => Character::new(command).await?.handle_component(data, self).await,
+            "character-fetish" | "character-image" | "character-update" => {
+                Character::new(command).await?.handle_component(data, self).await
+            }
             "boop" => BoopCommand::new(command).await?.handle_component(data, self).await,
             "decode" | "encode" => Base64Commands::new(command).await?.handle_component(data, self).await,
             "marry-accept" | "marry-deny" => MarryCommands::new(command).await?.handle_component(data, self).await,
@@ -201,7 +210,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
 
         match data.custom_id.as_str() {
             "character" => Character::handle_model(data, self).await,
-            "heck-add" => HeckAddCommand::handle_model(data, self).await,
+            "heck-add" => HeckCommands::handle_model(data, self).await,
             "story-add" => StoryCommand::handle_model(data, self).await,
             "mod-warn" => ModeratorCommands::handle_model(data, self).await,
             "modify-embed" => Owner::handle_model(data, self).await,

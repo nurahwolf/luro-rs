@@ -1,15 +1,19 @@
 use anyhow::{anyhow, Context, Error};
-use luro_builder::embed::{embed_image::EmbedImageBuilder, EmbedBuilder};
+use luro_builder::embed::EmbedBuilder;
 use luro_model::{
     database_driver::LuroDatabaseDriver,
-    user::{character::{CharacterProfile, FetishCategory}, LuroUser},
+    user::{
+        character::{CharacterProfile, FetishCategory},
+        LuroUser,
+    },
 };
 use rand::seq::SliceRandom;
 use std::{collections::btree_map::Entry, fmt::Write};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{application::interaction::{
-    message_component::MessageComponentInteractionData, modal::ModalInteractionData,
-}, http::interaction::InteractionResponseType};
+use twilight_model::{
+    application::interaction::{message_component::MessageComponentInteractionData, modal::ModalInteractionData},
+    http::interaction::InteractionResponseType,
+};
 
 use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
@@ -185,52 +189,28 @@ impl LuroCommand for Character {
                 ctx.respond(|r| r.add_embed(embed).ephemeral()).await
             }
             "character-image" => {
-                let mut embed = message
-                    .embeds
-                    .first()
-                    .context("Expected for there to be an embed in this message!")?
-                    .clone();
-                let mut sfw_favs = vec![];
-                let mut nsfw_favs = vec![];
-                for (_, image) in character.images.iter().filter(|(_, img)| img.fav) {
-                    match image.nsfw {
-                        true => nsfw_favs.push(image),
-                        false => sfw_favs.push(image),
-                    }
-                }
-
-                {
-                    let mut rng = rand::thread_rng();
-                    if nsfw {
-                        if let Some(fav_img) = nsfw_favs.choose(&mut rng) {
-                            let mut image = EmbedImageBuilder::default();
-                            image.url(fav_img.url.clone());
-                            embed.image = Some(image.into());
-                        } else if let Some(fav_img) = sfw_favs.choose(&mut rng) {
-                            let mut image = EmbedImageBuilder::default();
-                            image.url(fav_img.url.clone());
-                            embed.image = Some(image.into());
-                        }
-                    } else if let Some(fav_img) = sfw_favs.choose(&mut rng) {
-                        let mut image = EmbedImageBuilder::default();
-                        image.url(fav_img.url.clone());
-                        embed.image = Some(image.into());
-                    }
-                }
-                
-                ctx.respond(|r|r.add_embed(embed).response_type(InteractionResponseType::UpdateMessage)).await
-
-            },
-            "character-update" =>{
-                let embed = character_profile(&ctx, character, &user_data, nsfw, false).await?;
-                ctx.respond(|r|r.add_embed(embed).response_type(InteractionResponseType::UpdateMessage)).await
-            },
+                let embed = character_profile(&ctx, character, &user_data, nsfw, false, None).await?;
+                ctx.respond(|r| r.add_embed(embed).response_type(InteractionResponseType::UpdateMessage))
+                    .await
+            }
+            "character-update" => {
+                let embed = character_profile(&ctx, character, &user_data, nsfw, false, None).await?;
+                ctx.respond(|r| r.add_embed(embed).response_type(InteractionResponseType::UpdateMessage))
+                    .await
+            }
             name => ctx.internal_error_response(anyhow!("No component named {name} found!")).await,
         }
     }
 }
 
-pub async fn character_profile<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>, character: &CharacterProfile, user_data: &LuroUser, nsfw: bool, prefix: bool) -> anyhow::Result<EmbedBuilder> {
+pub async fn character_profile<D: LuroDatabaseDriver>(
+    ctx: &LuroSlash<D>,
+    character: &CharacterProfile,
+    user_data: &LuroUser,
+    nsfw: bool,
+    prefix: bool,
+    id: Option<usize>,
+) -> anyhow::Result<EmbedBuilder> {
     let mut embed = ctx.default_embed().await;
     let mut description = format!("{}\n", character.short_description);
     if !character.description.is_empty() {
@@ -259,35 +239,64 @@ pub async fn character_profile<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>, charac
         }
     }
 
+    let mut sfw_images = vec![];
+    let mut nsfw_images = vec![];
     let mut sfw_favs = vec![];
     let mut nsfw_favs = vec![];
-    for (_, image) in character.images.iter().filter(|(_, img)| img.fav) {
+
+    for image in character.images.values() {
         match image.nsfw {
-            true => nsfw_favs.push(image),
-            false => sfw_favs.push(image),
+            true => {
+                if image.fav {
+                    nsfw_favs.push(image)
+                }
+                nsfw_images.push(image)
+            }
+            false => {
+                if image.fav {
+                    sfw_favs.push(image)
+                }
+                sfw_images.push(image)
+            }
         }
     }
 
-    if !sfw_favs.is_empty() {
-        embed.create_field("SFW Images", &format!("`{}`", sfw_favs.len()), true);
-    }
-
-    if !nsfw_favs.is_empty() && nsfw {
-        embed.create_field("NSFW Images", &format!("`{}`", nsfw_favs.len()), true);
-    }
-
-    {
+    let img = if let Some(id) = id {
+        character.images.get(&id)
+    } else {
         let mut rng = rand::thread_rng();
         if nsfw {
             if let Some(fav_img) = nsfw_favs.choose(&mut rng) {
-                embed.image(|img| img.url(fav_img.url.clone()));
-            } else if let Some(fav_img) = sfw_favs.choose(&mut rng) {
-                embed.image(|img| img.url(fav_img.url.clone()));
+                Some(*fav_img)
+            } else {
+                sfw_favs.choose(&mut rng).copied()
             }
-        } else if let Some(fav_img) = sfw_favs.choose(&mut rng) {
-            embed.image(|img| img.url(fav_img.url.clone()));
+        } else {
+            sfw_favs.choose(&mut rng).copied()
+        }
+    };
+
+    if let Some(character_image) = img {
+        if let Some((id, _)) = character.images.iter().find(|(_, img)| &character_image == img) {
+            let footer = format!(
+                "Image ID: {id} | Total SFW Images: {} ({}F) | Total NSFW Images: {} ({}F)",
+                sfw_images.len(),
+                sfw_favs.len(),
+                nsfw_images.len(),
+                nsfw_favs.len()
+            );
+
+            embed.footer(|f| f.text(footer));
+        }
+        if let Some(source) = &character_image.source {
+            embed.url(source);
+        }
+
+        embed.image(|img| img.url(character_image.url.clone()));
+        if !character_image.name.is_empty() {
+            embed.title(character_image.name.clone());
         }
     }
-    
+
     Ok(embed)
 }

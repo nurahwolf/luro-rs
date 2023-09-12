@@ -69,12 +69,15 @@ impl LuroCommand for Get {
             }
         }
 
+        let nsfw = self
+            .nsfw
+            .unwrap_or(ctx.interaction.channel.as_ref().unwrap().nsfw.unwrap_or_default());
         let img = if let Some(id) = self.id {
             character.images.get(&(id as usize))
         } else {
             let mut rng = rand::thread_rng();
             if self.fav.unwrap_or_default() {
-                if self.nsfw.unwrap_or_default() {
+                if nsfw {
                     if let Some(fav_img) = nsfw_favs.choose(&mut rng) {
                         Some(*fav_img)
                     } else {
@@ -83,7 +86,7 @@ impl LuroCommand for Get {
                 } else {
                     sfw_favs.choose(&mut rng).copied()
                 }
-            } else if self.nsfw.unwrap_or_default() {
+            } else if nsfw {
                 if let Some(img) = nsfw_images.choose(&mut rng) {
                     Some(*img)
                 } else {

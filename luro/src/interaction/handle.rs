@@ -8,7 +8,6 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// A handler around different type of interactions
     /// TODO: Refactor this
     pub async fn handle(self) -> anyhow::Result<()> {
-        let mut update = false;
         let interaction = &self.interaction;
 
         let data = match interaction.data.clone() {
@@ -19,30 +18,35 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             }
         };
 
-        let response = match data {
+        let (save, response) = match data {
             InteractionData::ApplicationCommand(data) => match &interaction.kind {
-                InteractionType::ApplicationCommand => {
-                    update = true;
-                    self.clone().handle_command(data).await
-                },
-                InteractionType::ApplicationCommandAutocomplete => self.clone().handle_autocomplete(data).await,
+                InteractionType::ApplicationCommand => (true, self.clone().handle_command(data).await),
+                InteractionType::ApplicationCommandAutocomplete => (true, self.clone().handle_autocomplete(data).await),
                 _ => {
                     warn!(interaction = ?interaction, "Application Command with unexpected application data!");
-                    Ok(())
+                    (false, Ok(()))
                 }
             },
-            InteractionData::MessageComponent(data) => self.clone().handle_component(data).await,
-            InteractionData::ModalSubmit(data) => self.clone().handle_modal(data).await,
-            _ => todo!(),
+            InteractionData::MessageComponent(data) => (false, self.clone().handle_component(data).await),
+            InteractionData::ModalSubmit(data) => (false, self.clone().handle_modal(data).await),
+            _ => {
+                warn!(interaction = ?interaction, "Application Command with unexpected application data!");
+                (false, Ok(()))
+            }
         };
 
         match response {
             Ok(_) => {
-                if let Ok(response) = self.interaction_client().response(&interaction.token).await && update {
+                if let Ok(response) = self.interaction_client().response(&interaction.token).await && save {
                     self.framework
                         .database
                         .save_interaction(&response.model().await?.id.to_string(), interaction)
                         .await?;
+                } else if save {
+                    self.framework
+                    .database
+                    .save_interaction(&interaction.id.to_string(), interaction)
+                    .await?;
                 }
             }
             Err(why) => {

@@ -73,7 +73,7 @@ impl LuroCommand for Profile {
             }
         };
 
-        let embed = character_profile(&ctx, character, &user_data, nsfw, self.prefix.unwrap_or_default()).await?;
+        let embed = character_profile(&ctx, character, &user_data, nsfw, self.prefix.unwrap_or_default(), None).await?;
 
         ctx.respond(|response| {
             response.add_embed(embed);

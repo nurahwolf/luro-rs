@@ -18,9 +18,9 @@ pub const PRIMARY_BOT_OWNER: Id<UserMarker> = Id::new(373524896187416576);
 pub const BOT_OWNERS: [Id<UserMarker>; 4] = [
     Id::new(1138489661187182692), // Zeron
     // Id::new(1146227925960638474), // Ferrona
-    Id::new(138791390279630849),  // Tzat
-    Id::new(261308783546859520),  // Aurora
-    Id::new(373524896187416576),  // Nurah
+    Id::new(138791390279630849), // Tzat
+    Id::new(261308783546859520), // Aurora
+    Id::new(373524896187416576), // Nurah
 ];
 /// Luro's main accent colour
 pub const ACCENT_COLOUR: u32 = 0xDABEEF;
