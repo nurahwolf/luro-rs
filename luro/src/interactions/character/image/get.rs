@@ -1,5 +1,6 @@
 use luro_model::database_driver::LuroDatabaseDriver;
 use rand::seq::SliceRandom;
+use twilight_model::channel::message::component::ButtonStyle;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -129,6 +130,23 @@ impl LuroCommand for Get {
                 .icon_url(user_data.avatar())
         });
 
-        ctx.respond(|r| r.add_embed(embed)).await
+        ctx.respond(|r| r.add_embed(embed).components(|components| {
+            components.action_row(|row| {
+                if nsfw {
+                    row.button(|button| {
+                        button
+                            .custom_id("character-image-nsfw")
+                            .label("More NSFW!")
+                            .style(ButtonStyle::Secondary)
+                    });
+                }
+                row.button(|button| {
+                    button
+                        .custom_id("character-image")
+                        .label("More SFW!")
+                        .style(ButtonStyle::Secondary)
+                })
+            })
+        })).await
     }
 }

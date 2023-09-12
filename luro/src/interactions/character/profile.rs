@@ -76,8 +76,7 @@ impl LuroCommand for Profile {
         let embed = character_profile(&ctx, character, &user_data, nsfw, self.prefix.unwrap_or_default(), None).await?;
 
         ctx.respond(|response| {
-            response.add_embed(embed);
-            response.components(|components| {
+            response.add_embed(embed).components(|components| {
                 components.action_row(|row| {
                     if nsfw && !character.fetishes.is_empty() {
                         row.button(|button| {
@@ -100,8 +99,7 @@ impl LuroCommand for Profile {
                             .style(ButtonStyle::Secondary)
                     })
                 })
-            });
-            response
+            })
         })
         .await
     }
