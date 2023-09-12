@@ -98,7 +98,7 @@ impl LuroCommand for Get {
             Some(selected_img) => {
                 if let Some((id, _)) = character.images.iter().find(|(_, img)| img == &selected_img) {
                     let footer = format!(
-                        "Image ID: {id} | Total SFW Images - {} ({}F) | Total NSFW Images - {} ({}F)",
+                        "Image ID: {id} | Total SFW Images: {} ({}F) | Total NSFW Images: {} ({}F)",
                         sfw_images.len(),
                         sfw_favs.len(),
                         nsfw_images.len(),

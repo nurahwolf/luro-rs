@@ -21,7 +21,7 @@ pub struct Add {
     /// Overwrite an image by ID
     overwrite: Option<i64>,
     /// The source URL for the image
-    source: Option<String>
+    source: Option<String>,
 }
 
 impl LuroCommand for Add {
@@ -41,20 +41,21 @@ impl LuroCommand for Add {
                 .await;
         }
 
-        match user_data.characters.get_mut(&self.name) {
+        let (image, key) = match user_data.characters.get_mut(&self.name) {
             Some(character) => {
                 let image = CharacterImage {
                     url: self.url,
                     nsfw: self.nsfw,
                     fav: self.fav,
                     name: self.img,
-                    source: self.source
+                    source: self.source,
                 };
                 let key = match self.overwrite {
                     Some(id) => id as usize,
                     None => character.images.len() + 1,
                 };
-                character.images.insert(key, image)
+                character.images.insert(key, image.clone());
+                (image, key)
             }
             None => {
                 let mut characters = String::new();
@@ -69,7 +70,24 @@ impl LuroCommand for Add {
         };
 
         ctx.framework.database.modify_user(&user_id, &user_data).await?;
+        let mut embed = ctx.default_embed().await;
+        embed.footer(|f| f.text(format!("Image ID: {key}")));
 
-        ctx.respond(|r| r.content("Done!").ephemeral()).await
+        if let Some(source) = &image.source {
+            embed.url(source);
+        }
+
+        embed.image(|img| img.url(image.url.clone()));
+        if !image.name.is_empty() {
+            embed.title(image.name.clone());
+        }
+
+        embed.author(|author| {
+            author
+                .name(format!("Character by {}", user_data.name()))
+                .icon_url(user_data.avatar())
+        });
+
+        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }
 }
