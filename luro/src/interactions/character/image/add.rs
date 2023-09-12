@@ -9,9 +9,9 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 #[command(name = "add", desc = "Set the primary image for this character")]
 pub struct Add {
     #[command(desc = "The character to get", autocomplete = true)]
-    name: String,
+    character: String,
     /// The name of the image
-    img: String,
+    name: String,
     /// The URL the image should be set to
     url: String,
     /// Is this a NSFW image?
@@ -41,13 +41,13 @@ impl LuroCommand for Add {
                 .await;
         }
 
-        let (image, key) = match user_data.characters.get_mut(&self.name) {
+        let (image, key) = match user_data.characters.get_mut(&self.character) {
             Some(character) => {
                 let image = CharacterImage {
                     url: self.url,
                     nsfw: self.nsfw,
                     fav: self.fav,
-                    name: self.img,
+                    name: self.name,
                     source: self.source,
                 };
                 let key = match self.overwrite {
