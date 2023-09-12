@@ -241,7 +241,7 @@ impl EmbedBuilder {
         self
     }
 
-    /// Build the image of the embed. You MUST set name, otherwise it defaults to ""!
+    /// Set the URL of the embed
     ///
     /// Refer to the documentation for [`EmbedImageBuilder`] for more
     /// information.

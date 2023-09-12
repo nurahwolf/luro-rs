@@ -102,9 +102,18 @@ pub struct CharacterProfile {
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct CharacterImage {
     /// The URL for the image
+    #[serde(default)]
     pub url: String,
     /// If the image is NSFW or not
+    #[serde(default)]
     pub nsfw: bool,
     /// If marked as a fav, it can randomly be used as the profile image
+    #[serde(default)]
     pub fav: bool,
+    /// The name of the image
+    #[serde(default)]
+    pub name: String,
+    /// A URL for the source of an image
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
 }
