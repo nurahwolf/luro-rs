@@ -9,13 +9,13 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 #[command(name = "add", desc = "Set the primary image for this character")]
 pub struct Add {
     #[command(desc = "The character to get", autocomplete = true)]
-    character: String,
+    pub character: String,
     /// The name of the image
     name: String,
     /// The URL the image should be set to
     url: String,
     /// Is this a NSFW image?
-    nsfw: bool,
+    pub nsfw: bool,
     /// Do you want this image to show up as one of the main images in your profile?
     fav: bool,
     /// Overwrite an image by ID

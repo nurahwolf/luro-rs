@@ -127,6 +127,10 @@ impl LuroCommand for Character {
         let (nsfw, name) = match self {
             Character::Profile(data) => (data.nsfw.unwrap_or_default(), data.name),
             Character::Create(data) => (false, data.name),
+            Character::Image(data) => match data {
+                image::Image::Add(data) => (data.nsfw, data.character),
+                image::Image::Get(data) => (data.nsfw.unwrap_or_default(), data.name),
+            },
             _ => return ctx.respond(|r| r.content("Invalid command").ephemeral()).await,
         };
         let character = user_data
@@ -188,23 +192,18 @@ impl LuroCommand for Character {
 
                 ctx.respond(|r| r.add_embed(embed).ephemeral()).await
             }
-            "character-image" => {
-                let embed = character_profile(&ctx, character, &user_data, nsfw, false, None).await?;
-                ctx.respond(|r| r.add_embed(embed).response_type(InteractionResponseType::UpdateMessage))
-                    .await
-            }
-            "character-update" => {
+            "character-image" | "character-update" => {
                 let embed = character_profile(&ctx, character, &user_data, nsfw, false, None).await?;
                 ctx.respond(|r| r.add_embed(embed).response_type(InteractionResponseType::UpdateMessage))
                     .await
             }
             "character-image-nsfw" => {
-                let embed = character_profile(&ctx, character, &user_data, true, false, None).await?;
+                let embed = character_image(&ctx, character, &user_data, true).await?;
                 ctx.respond(|r| r.add_embed(embed).response_type(InteractionResponseType::UpdateMessage))
                     .await
             }
             "character-image-sfw" => {
-                let embed = character_profile(&ctx, character, &user_data, false, false, None).await?;
+                let embed = character_image(&ctx, character, &user_data, false).await?;
                 ctx.respond(|r| r.add_embed(embed).response_type(InteractionResponseType::UpdateMessage))
                     .await
             }
@@ -212,6 +211,65 @@ impl LuroCommand for Character {
         }
     }
 }
+
+pub async fn character_image<D: LuroDatabaseDriver>(
+    ctx: &LuroSlash<D>,
+    character: &CharacterProfile,
+    user_data: &LuroUser,
+    nsfw: bool,
+)  -> anyhow::Result<EmbedBuilder> {
+    let mut embed = ctx.default_embed().await;
+
+    embed.title(format!("Character Profile - {}", character.name));
+    embed.author(|a| {
+        a.icon_url(user_data.avatar())
+            .name(format!("Character by {}", user_data.name()))
+    });
+
+    let mut sfw_images = vec![];
+    let mut nsfw_images = vec![];
+
+    for image in character.images.values() {
+        match image.nsfw {
+            true => nsfw_images.push(image),
+            false => sfw_images.push(image)
+        }
+    }
+
+    let mut rng = rand::thread_rng();
+    let img = if nsfw {
+        if let Some(fav_img) = nsfw_images.choose(&mut rng) {
+            Some(*fav_img)
+        } else {
+            sfw_images.choose(&mut rng).copied()
+        }
+    } else {
+        sfw_images.choose(&mut rng).copied()
+    };
+
+    if let Some(character_image) = img {
+        if let Some((id, _)) = character.images.iter().find(|(_, img)| &character_image == img) {
+            let footer = format!(
+                "Image ID: {id} | Total SFW Images: {} | Total NSFW Images: {}",
+                sfw_images.len(),
+                nsfw_images.len(),
+            );
+
+            embed.footer(|f| f.text(footer));
+        }
+        if let Some(source) = &character_image.source {
+            embed.url(source);
+        }
+
+        embed.image(|img| img.url(character_image.url.clone()));
+        if !character_image.name.is_empty() {
+            embed.title(character_image.name.clone());
+        }
+    }
+
+    Ok(embed)
+}
+
 
 pub async fn character_profile<D: LuroDatabaseDriver>(
     ctx: &LuroSlash<D>,

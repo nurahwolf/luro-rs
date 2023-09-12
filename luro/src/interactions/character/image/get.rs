@@ -10,11 +10,11 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 #[command(name = "get", desc = "Get an image relating to a character")]
 pub struct Get {
     #[command(desc = "The character to get", autocomplete = true)]
-    name: String,
+    pub name: String,
     /// The image ID to get
     id: Option<i64>,
     /// Is this a NSFW image?
-    nsfw: Option<bool>,
+    pub nsfw: Option<bool>,
     /// Do you just want to get favs?
     fav: Option<bool>,
 }
@@ -142,7 +142,7 @@ impl LuroCommand for Get {
                 }
                 row.button(|button| {
                     button
-                        .custom_id("character-image")
+                        .custom_id("character-image-sfw")
                         .label("More SFW!")
                         .style(ButtonStyle::Secondary)
                 })
