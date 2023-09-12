@@ -172,7 +172,9 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
         };
 
         match data.custom_id.as_str() {
-            "character-fetish" | "character-image" | "character-update" | "character-image-nsfw" | "character-image-sfw" => Character::new(command).await?.handle_component(data, self).await,
+            "character-fetish" | "character-image" | "character-update" | "character-image-nsfw" | "character-image-sfw" => {
+                Character::new(command).await?.handle_component(data, self).await
+            }
             "boop" => BoopCommand::new(command).await?.handle_component(data, self).await,
             "decode" | "encode" => Base64Commands::new(command).await?.handle_component(data, self).await,
             "marry-accept" | "marry-deny" => MarryCommands::new(command).await?.handle_component(data, self).await,

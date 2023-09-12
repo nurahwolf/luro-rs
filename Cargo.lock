@@ -1227,9 +1227,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-webpki"
-version = "0.101.4"
+version = "0.101.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d93931baf2d282fff8d3a532bbfd7653f734643161b87e3e01e59a04439bf0d"
+checksum = "45a27e3b59326c16e23d30aeb7a36a24cc0d29e71d68ff611cdfb4a01d013bed"
 dependencies = [
  "ring",
  "untrusted",
@@ -1397,9 +1397,9 @@ dependencies = [
 
 [[package]]
 name = "socket2"
-version = "0.5.3"
+version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2538b18701741680e0322a2302176d3253a35388e2e62f172f64f4f16605f877"
+checksum = "4031e820eb552adee9295814c0ced9e5cf38ddf1e8b7d566d6de8e2538ea989e"
 dependencies = [
  "libc",
  "windows-sys",
@@ -1419,9 +1419,9 @@ checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
 
 [[package]]
 name = "syn"
-version = "2.0.31"
+version = "2.0.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "718fa2415bcb8d8bd775917a1bf12a7931b6dfa890753378538118181e0cb398"
+checksum = "239814284fd6f1a4ffe4ca893952cdd93c224b6a1571c9a9eadd670295c0c9e2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1522,7 +1522,7 @@ dependencies = [
  "mio",
  "num_cpus",
  "pin-project-lite",
- "socket2 0.5.3",
+ "socket2 0.5.4",
  "tokio-macros",
  "windows-sys",
 ]
@@ -1715,8 +1715,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-cache-inmemory"
-version = "0.15.2"
-source = "git+https://github.com/twilight-rs/twilight.git?branch=next#9b5a00907144c067fc9c191a2c0e70c1f6e2b7bc"
+version = "0.15.4"
+source = "git+https://github.com/twilight-rs/twilight.git?branch=next#cbe1d103af0b9791ca6b2eea07d2beba25d7f752"
 dependencies = [
  "bitflags 2.4.0",
  "dashmap",
@@ -1726,8 +1726,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-gateway"
-version = "0.15.2"
-source = "git+https://github.com/twilight-rs/twilight.git?branch=next#9b5a00907144c067fc9c191a2c0e70c1f6e2b7bc"
+version = "0.15.4"
+source = "git+https://github.com/twilight-rs/twilight.git?branch=next#cbe1d103af0b9791ca6b2eea07d2beba25d7f752"
 dependencies = [
  "bitflags 2.4.0",
  "flate2",
@@ -1747,8 +1747,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-gateway-queue"
-version = "0.15.2"
-source = "git+https://github.com/twilight-rs/twilight.git?branch=next#9b5a00907144c067fc9c191a2c0e70c1f6e2b7bc"
+version = "0.15.4"
+source = "git+https://github.com/twilight-rs/twilight.git?branch=next#cbe1d103af0b9791ca6b2eea07d2beba25d7f752"
 dependencies = [
  "tokio",
  "tracing",
@@ -1756,8 +1756,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-http"
-version = "0.15.2"
-source = "git+https://github.com/twilight-rs/twilight.git?branch=next#9b5a00907144c067fc9c191a2c0e70c1f6e2b7bc"
+version = "0.15.4"
+source = "git+https://github.com/twilight-rs/twilight.git?branch=next#cbe1d103af0b9791ca6b2eea07d2beba25d7f752"
 dependencies = [
  "brotli",
  "hyper",
@@ -1775,8 +1775,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-http-ratelimiting"
-version = "0.15.1"
-source = "git+https://github.com/twilight-rs/twilight.git?branch=next#9b5a00907144c067fc9c191a2c0e70c1f6e2b7bc"
+version = "0.15.3"
+source = "git+https://github.com/twilight-rs/twilight.git?branch=next#cbe1d103af0b9791ca6b2eea07d2beba25d7f752"
 dependencies = [
  "futures-util",
  "tokio",
@@ -1802,8 +1802,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-lavalink"
-version = "0.15.1"
-source = "git+https://github.com/twilight-rs/twilight.git?branch=next#9b5a00907144c067fc9c191a2c0e70c1f6e2b7bc"
+version = "0.15.3"
+source = "git+https://github.com/twilight-rs/twilight.git?branch=next#cbe1d103af0b9791ca6b2eea07d2beba25d7f752"
 dependencies = [
  "dashmap",
  "futures-util",
@@ -1819,8 +1819,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-model"
-version = "0.15.2"
-source = "git+https://github.com/twilight-rs/twilight.git?branch=next#9b5a00907144c067fc9c191a2c0e70c1f6e2b7bc"
+version = "0.15.4"
+source = "git+https://github.com/twilight-rs/twilight.git?branch=next#cbe1d103af0b9791ca6b2eea07d2beba25d7f752"
 dependencies = [
  "bitflags 2.4.0",
  "serde",
@@ -1831,8 +1831,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-util"
-version = "0.15.2"
-source = "git+https://github.com/twilight-rs/twilight.git?branch=next#9b5a00907144c067fc9c191a2c0e70c1f6e2b7bc"
+version = "0.15.4"
+source = "git+https://github.com/twilight-rs/twilight.git?branch=next#cbe1d103af0b9791ca6b2eea07d2beba25d7f752"
 dependencies = [
  "twilight-model",
  "twilight-validate",
@@ -1840,8 +1840,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-validate"
-version = "0.15.1"
-source = "git+https://github.com/twilight-rs/twilight.git?branch=next#9b5a00907144c067fc9c191a2c0e70c1f6e2b7bc"
+version = "0.15.3"
+source = "git+https://github.com/twilight-rs/twilight.git?branch=next#cbe1d103af0b9791ca6b2eea07d2beba25d7f752"
 dependencies = [
  "twilight-model",
 ]

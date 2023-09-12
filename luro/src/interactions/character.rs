@@ -217,7 +217,7 @@ pub async fn character_image<D: LuroDatabaseDriver>(
     character: &CharacterProfile,
     user_data: &LuroUser,
     nsfw: bool,
-)  -> anyhow::Result<EmbedBuilder> {
+) -> anyhow::Result<EmbedBuilder> {
     let mut embed = ctx.default_embed().await;
 
     embed.title(format!("Character Profile - {}", character.name));
@@ -232,7 +232,7 @@ pub async fn character_image<D: LuroDatabaseDriver>(
     for image in character.images.values() {
         match image.nsfw {
             true => nsfw_images.push(image),
-            false => sfw_images.push(image)
+            false => sfw_images.push(image),
         }
     }
 
@@ -269,7 +269,6 @@ pub async fn character_image<D: LuroDatabaseDriver>(
 
     Ok(embed)
 }
-
 
 pub async fn character_profile<D: LuroDatabaseDriver>(
     ctx: &LuroSlash<D>,
