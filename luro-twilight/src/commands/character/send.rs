@@ -108,7 +108,7 @@ impl LuroCommandTrait for CharacterSend {
             false => user_data.avatar(),
         };
 
-        let webhook = ctx.get_webhook(interaction.clone().channel.unwrap().id).await?;
+        let webhook = ctx.get_webhook(interaction.clone().channel.id).await?;
         let webhook_token = match webhook.token {
             Some(token) => token,
             None => match ctx.twilight_client.webhook(webhook.id).await?.model().await?.token {

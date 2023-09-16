@@ -127,7 +127,7 @@ impl LuroCommandTrait for Marry {
         let data = match original_interaction.data.unwrap() {
             InteractionData::ApplicationCommand(data) => Self::new(data)?,
             _ => {
-                return SimpleResponse::InternalError(&anyhow!("No command data!"))
+                return SimpleResponse::InternalError(anyhow!("No command data!"))
                     .respond(&ctx, &interaction)
                     .await
             }
@@ -137,7 +137,7 @@ impl LuroCommandTrait for Marry {
         let (mut proposee, reason) = match data {
             Self::Someone(command) => (ctx.database.get_user(&command.marry.resolved.id).await?, command.reason),
             Self::Marriages(_) => {
-                return SimpleResponse::InternalError(&anyhow!("No command data!"))
+                return SimpleResponse::InternalError(anyhow!("No command data!"))
                     .respond(&ctx, &interaction)
                     .await
             }

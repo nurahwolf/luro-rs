@@ -1,23 +1,22 @@
+use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
+use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
+use luro_model::database_driver::LuroDatabaseDriver;
 use serde::Serialize;
 use std::fmt::Write;
 use tracing::info;
-
 use twilight_http::{request::Request, response::marker::EmptyBody, routing::Route};
+
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "modify_role",
     desc = "Modify a role while bypassing all other restrictions.",
     dm_permission = false
 )]
-pub struct ModifyRoleCommand {
+pub struct ModifyRole {
     /// The role that should be assigned. It HAS to be below the bot for this to work.
     role: Id<RoleMarker>,
     /// If set, change the role position to where this one is
@@ -37,29 +36,33 @@ struct Position {
     position: i64,
 }
 
-impl LuroCommand for ModifyRoleCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+#[async_trait]
+impl LuroCommandTrait for ModifyRole {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let (mut role_selected, mut role_position) = (None, None);
 
         // Guild to modify
         let guild = ctx
-            .framework
             .twilight_client
-            .guild(match ctx.interaction.guild_id {
+            .guild(match interaction.guild_id {
                 Some(guild_id) => guild_id,
-                None => return ctx.not_guild_response().await,
+                None => return SimpleResponse::NotGuild().respond(&ctx, &interaction).await,
             })
             .await?
             .model()
             .await?;
 
         for role in guild.roles.clone() {
-            if role.id == self.role {
+            if role.id == data.role {
                 role_selected = Some(role.clone());
             };
 
             // If self.position is defined
-            if let Some(position) = self.position {
+            if let Some(position) = data.position {
                 if role.id == position {
                     role_position = Some(role.clone());
                 }
@@ -69,7 +72,7 @@ impl LuroCommand for ModifyRoleCommand {
         if let Some(mut role_selected) = role_selected {
             let mut number = 1;
             let mut updated_role_list = Vec::new();
-            let mut update_role = ctx.framework.twilight_client.update_role(guild.id, role_selected.id);
+            let mut update_role = ctx.twilight_client.update_role(guild.id, role_selected.id);
 
             for role in guild.roles {
                 info!(role.name);
@@ -89,11 +92,11 @@ impl LuroCommand for ModifyRoleCommand {
                 })
                 .json(&positions)
                 .build();
-                ctx.framework.twilight_client.request::<EmptyBody>(request?).await?;
+                ctx.twilight_client.request::<EmptyBody>(request?).await?;
             }
 
             // If we are updating the position based on an exact number
-            if let Some(position) = self.position_num {
+            if let Some(position) = data.position_num {
                 let positions: Vec<Position> = vec![Position {
                     id: role_selected.id,
                     position,
@@ -103,15 +106,15 @@ impl LuroCommand for ModifyRoleCommand {
                 })
                 .json(&positions)
                 .build();
-                ctx.framework.twilight_client.request::<EmptyBody>(request?).await?;
+                ctx.twilight_client.request::<EmptyBody>(request?).await?;
             }
 
-            if let Some(ref name) = self.name {
+            if let Some(ref name) = data.name {
                 update_role = update_role.name(Some(name));
             }
 
             // If we are changing the colour
-            if let Some(ref colour) = self.colour {
+            if let Some(ref colour) = data.colour {
                 let colour = if colour.starts_with("0x") {
                     u32::from_str_radix(colour.as_str().strip_prefix("0x").unwrap(), 16)?
                 } else if colour.chars().all(|char| char.is_ascii_hexdigit()) {
@@ -139,7 +142,7 @@ impl LuroCommand for ModifyRoleCommand {
             embed
                 .title(updated_role.name)
                 .description(description)
-                .colour(ctx.accent_colour().await);
+                .colour(interaction.accent_colour(&ctx).await);
             if updated_role.color != 0 {
                 embed.colour(role_selected.color);
             }
@@ -154,10 +157,10 @@ impl LuroCommand for ModifyRoleCommand {
             }
 
             // TODO: Return an embed with new role information
-            ctx.respond(|r| r.add_embed(embed).ephemeral()).await
+            interaction.respond(&ctx, |r| r.add_embed(embed).ephemeral()).await
         } else {
             // TODO: Make this a response type
-            ctx.respond(|r| r.content("No role found").ephemeral()).await
+            interaction.respond(&ctx, |r| r.content("No role found").ephemeral()).await
         }
     }
 }

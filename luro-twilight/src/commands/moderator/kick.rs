@@ -1,9 +1,9 @@
-use crate::interactions::send;
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
-use luro_framework::responses::permission_modify_server_owner::permission_server_owner;
-use luro_framework::responses::{PunishmentType, StandardResponse};
-use luro_model::database::drivers::LuroDatabaseDriver;
+use async_trait::async_trait;
+use luro_framework::command::LuroCommandTrait;
+use luro_framework::responses::{PunishmentType, SimpleResponse, StandardResponse};
+use luro_framework::{Framework, InteractionCommand, LuroInteraction};
 
+use luro_model::database_driver::LuroDatabaseDriver;
 use luro_model::{
     guild::log_channel::LuroLogChannel,
     user::{actions::UserActions, actions_type::UserActionType},
@@ -30,38 +30,48 @@ pub struct Kick {
     pub details: Option<String>,
 }
 
-impl LuroCommand for Kick {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let interaction = &ctx.interaction;
+#[async_trait]
+impl LuroCommandTrait for Kick {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+        let interaction = interaction;
         let guild_id = interaction.guild_id.unwrap();
-        let guild = ctx.framework.database.get_guild(&guild_id).await?;
+        let guild = ctx.database.get_guild(&guild_id).await?;
         let luro = ctx
-            .framework
             .database
-            .get_user(&ctx.framework.twilight_client.current_user().await?.model().await?.id)
+            .get_user(&ctx.twilight_client.current_user().await?.model().await?.id)
             .await?;
-        let mut moderator = ctx.get_interaction_author(interaction).await?;
-        let mut punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
-        punished_user.update_user(&self.user.resolved);
-        let mut response = ctx.acknowledge_interaction(false).await?;
+        let mut moderator = interaction.get_interaction_author(&ctx).await?;
+        let mut punished_user = ctx.database.get_user(&data.user.resolved.id).await?;
+        punished_user.update_user(&data.user.resolved);
+        let mut response = interaction.acknowledge_interaction(&ctx, false).await?;
         let moderator_permissions = guild.user_permission(&moderator)?;
         let moderator_highest_role = guild.user_highest_role(&moderator);
         let punished_user_highest_role = guild.user_highest_role(&punished_user);
         let luro_permissions = guild.user_permission(&luro)?;
         let luro_highest_role = guild.user_highest_role(&luro);
-        let reason = reason(self.reason, self.details);
+        let reason = reason(data.reason, data.details);
 
         if !luro_permissions.contains(Permissions::KICK_MEMBERS) {
-            return ctx.bot_missing_permission_response(Permissions::KICK_MEMBERS).await;
+            return SimpleResponse::BotMissingPermission(Permissions::KICK_MEMBERS)
+                .respond(&ctx, &interaction)
+                .await;
         }
 
         if !moderator_permissions.contains(Permissions::KICK_MEMBERS) {
-            return ctx.missing_permission_response(Permissions::KICK_MEMBERS).await;
+            return SimpleResponse::MissingPermission(Permissions::KICK_MEMBERS)
+                .respond(&ctx, &interaction)
+                .await;
         }
 
         // Check if the author and the bot have required permissions.
         if guild.is_owner(&punished_user) {
-            return send(response.set_embed(permission_server_owner(&moderator.id)), ctx).await;
+            return SimpleResponse::PermissionModifyServerOwner(&moderator.id)
+                .respond(&ctx, &interaction)
+                .await;
         }
 
         // The lower the number, the higher they are on the heirarchy
@@ -70,15 +80,17 @@ impl LuroCommand for Kick {
             if let Some(moderator_highest_role) = moderator_highest_role {
                 info!("Moderator user position: {}", moderator_highest_role.0);
                 if punished_user_highest_role.0 <= moderator_highest_role.0 {
-                    return ctx.user_hierarchy_response(&punished_user.member_name(&Some(guild_id))).await;
+                    return SimpleResponse::UserHeirarchy(&punished_user.member_name(&Some(guild_id)))
+                        .respond(&ctx, &interaction)
+                        .await;
                 }
             }
 
             if let Some(luro_highest_role) = luro_highest_role {
                 info!("Luro user position: {}", luro_highest_role.0);
                 if punished_user_highest_role.0 <= luro_highest_role.0 {
-                    let name = ctx.framework.database.current_user.read().unwrap().clone().name;
-                    return ctx.bot_hierarchy_response(&name).await;
+                    let name = ctx.database.current_user.read().unwrap().clone().name;
+                    return SimpleResponse::BotHeirarchy(&name).respond(&ctx, &interaction).await;
                 }
             }
         } else {
@@ -92,10 +104,9 @@ impl LuroCommand for Kick {
         let mut embed =
             StandardResponse::new_punishment(PunishmentType::Kicked, &guild.name, &guild.id, &punished_user, &moderator);
         embed.punishment_reason(reason.as_deref(), &punished_user);
-        match ctx.framework.twilight_client.create_private_channel(punished_user.id).await {
+        match ctx.twilight_client.create_private_channel(punished_user.id).await {
             Ok(channel) => {
                 let victim_dm = ctx
-                    .framework
                     .twilight_client
                     .create_message(channel.model().await?.id)
                     .embeds(&[embed.embed().0])
@@ -110,15 +121,12 @@ impl LuroCommand for Kick {
         };
 
         response.add_embed(embed.embed().0);
-        ctx.send_respond(response).await?;
+        interaction.send_response(&ctx, response).await?;
 
-        ctx.framework
-            .twilight_client
-            .remove_guild_member(guild_id, punished_user.id)
-            .await?;
+        ctx.twilight_client.remove_guild_member(guild_id, punished_user.id).await?;
 
         moderator.moderation_actions_performed += 1;
-        ctx.framework.database.save_user(&moderator.id, &moderator).await?;
+        ctx.database.modify_user(&moderator.id, &moderator).await?;
 
         // Record the punishment
         punished_user.moderation_actions.push(UserActions {
@@ -127,11 +135,10 @@ impl LuroCommand for Kick {
             reason: reason.clone(),
             responsible_user: moderator.id,
         });
-        ctx.framework.database.save_user(&punished_user.id, &punished_user).await?;
+        ctx.database.modify_user(&punished_user.id, &punished_user).await?;
 
         // If an alert channel is defined, send a message there
-        ctx.framework
-            .send_log_channel(&Some(guild_id), embed.embed.0, LuroLogChannel::Moderator)
+        ctx.send_log_channel(&guild_id, LuroLogChannel::Moderator, |r| r.add_embed(embed.embed))
             .await?;
 
         Ok(())

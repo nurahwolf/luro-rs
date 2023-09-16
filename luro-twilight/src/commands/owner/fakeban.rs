@@ -1,12 +1,11 @@
-use crate::{
-    interaction::LuroSlash,
-    interactions::moderator::{reason, Reason},
-    luro_command::LuroCommand,
-};
-use luro_framework::responses::{PunishmentType, StandardResponse};
-use luro_model::database::drivers::LuroDatabaseDriver;
 
+use async_trait::async_trait;
+use luro_framework::{responses::{PunishmentType, StandardResponse}, command::LuroCommandTrait, InteractionCommand, Framework};
+
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
+
+use crate::commands::moderator::{Reason, reason};
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
 #[command(name = "fakeban", desc = "Ban a user", dm_permission = false)]
@@ -39,18 +38,23 @@ pub enum TimeToBan {
     SevenDays,
 }
 
-impl LuroCommand for FakeBan {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+#[async_trait]
+impl LuroCommandTrait for FakeBan {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let interaction = &ctx.interaction;
         let moderator = ctx.get_interaction_author(interaction).await?;
-        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
+        let punished_user = ctx.framework.database.get_user(&data.user.resolved.id).await?;
         let mut response = ctx.acknowledge_interaction(false).await?;
 
         let guild_id = interaction.guild_id.unwrap();
         let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
         let punished_user_id = punished_user.id;
-        let reason = reason(self.reason, self.details);
-        let period_string = match self.purge {
+        let reason = reason(data.reason, data.details);
+        let period_string = match data.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),
             TimeToBan::Hour => "Previous Hour".to_string(),
             TimeToBan::SixHours => "Previous 6 Hours".to_string(),

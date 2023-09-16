@@ -29,7 +29,7 @@ pub async fn interaction_create_listener<D: LuroDatabaseDriver>(
             }
         },
         InteractionData::MessageComponent(data) => {
-            handle_component(framework, InteractionComponent::new(interaction, data)?).await
+            handle_component(framework, InteractionComponent::new(interaction, data)).await
         }
         InteractionData::ModalSubmit(data) => handle_modal(framework, InteractionModal::new(interaction, data)).await,
         _ => todo!(),

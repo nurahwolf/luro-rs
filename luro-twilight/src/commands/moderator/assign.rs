@@ -1,49 +1,50 @@
+use async_trait::async_trait;
+use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "assign",
     desc = "Use the bot to assign a role to a user or self if not defined. You need permisison for this.",
     dm_permission = false
 )]
-pub struct AssignCommand {
+pub struct Assign {
     /// The role that should be assigned. It HAS to be below the bot for this to work.
     role: Id<RoleMarker>,
     /// Optionally the user to apply the role to. Applies to self if not defined.
     user: Option<ResolvedUser>,
 }
-
-impl LuroCommand for AssignCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let author = ctx.interaction.author_id().unwrap();
+#[async_trait]
+impl LuroCommandTrait for Assign {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+        let author = interaction.author_id();
 
         // User to action
-        let user = if let Some(user) = self.user {
+        let user = if let Some(user) = data.user {
             user.resolved.id
         } else {
             author
         };
 
         // Guild to modify
-        let guild_id = match ctx.interaction.guild_id {
+        let guild_id = match interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return ctx.not_guild_response().await,
+            None => return SimpleResponse::NotGuild().respond(&ctx, &interaction).await,
         };
 
-        ctx.framework
-            .twilight_client
-            .add_guild_member_role(guild_id, user, self.role)
-            .await?;
+        ctx.twilight_client.add_guild_member_role(guild_id, user, data.role).await?;
 
-        ctx.respond(|r| {
-            r.content(format!("Assigned the role <@&{}> successfully", self.role))
-                .ephemeral()
-        })
-        .await
+        interaction
+            .respond(&ctx, |r| {
+                r.content(format!("Assigned the role <@&{}> successfully", data.role))
+                    .ephemeral()
+            })
+            .await
     }
 }

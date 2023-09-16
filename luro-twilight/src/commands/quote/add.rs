@@ -22,7 +22,7 @@ impl LuroCommandTrait for Add {
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
 
-        let channel_id = data.channel.unwrap_or(interaction.channel.as_ref().unwrap().id);
+        let channel_id = data.channel.unwrap_or(interaction.channel.id);
         let accent_colour = interaction.accent_colour(&ctx).await;
         let id = Id::new(data.id.parse()?);
         let quoted_user;

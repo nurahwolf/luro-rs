@@ -42,15 +42,7 @@ impl LuroCommandTrait for Get {
         let user = ctx.database.get_user(&quote.author).await?;
 
         if data.puppet.unwrap_or_default() {
-            let webhook = ctx
-                .get_webhook(
-                    interaction
-                        .channel
-                        .clone()
-                        .context("Could not get channel the interaction is in")?
-                        .id,
-                )
-                .await?;
+            let webhook = ctx.get_webhook(interaction.channel.id).await?;
 
             let webhook_token = match webhook.token {
                 Some(token) => token,

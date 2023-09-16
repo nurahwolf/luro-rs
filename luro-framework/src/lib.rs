@@ -163,7 +163,7 @@ impl InteractionContext {
 #[derive(Clone, Debug)]
 pub struct InteractionCommand {
     pub application_id: Id<ApplicationMarker>,
-    pub channel: Option<Channel>,
+    pub channel: Channel,
     pub data: Box<CommandData>,
     pub guild_id: Option<Id<GuildMarker>>,
     pub id: Id<InteractionMarker>,
@@ -173,13 +173,14 @@ pub struct InteractionCommand {
     pub shard: twilight_gateway::MessageSender,
     pub token: String,
     pub user: Option<User>,
+    pub original: Interaction,
 }
 
 #[derive(Clone)]
 pub struct InteractionComponent {
     pub original: Interaction,
     pub application_id: Id<ApplicationMarker>,
-    pub channel: Option<Channel>,
+    pub channel: Channel,
     pub data: Box<MessageComponentInteractionData>,
     pub guild_id: Option<Id<GuildMarker>>,
     pub id: Id<InteractionMarker>,
@@ -195,7 +196,7 @@ pub struct InteractionComponent {
 #[derive(Clone)]
 pub struct InteractionModal {
     pub application_id: Id<ApplicationMarker>,
-    pub channel: Option<Channel>,
+    pub channel: Channel,
     pub data: ModalInteractionData,
     pub guild_id: Option<Id<GuildMarker>>,
     pub id: Id<InteractionMarker>,
@@ -206,8 +207,10 @@ pub struct InteractionModal {
     pub shard: twilight_gateway::MessageSender,
     pub token: String,
     pub user: Option<User>,
+    pub original: Interaction,
 }
 pub trait LuroInteraction {
+    fn original_interaction<D: LuroDatabaseDriver>(&self) -> &Interaction;
     async fn accent_colour<D: LuroDatabaseDriver>(&self, framework: &Framework<D>) -> u32;
     async fn acknowledge_interaction<D: LuroDatabaseDriver>(
         &self,

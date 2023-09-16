@@ -21,9 +21,9 @@ use self::ping::PingCommand;
 use self::quote::QuoteCommands;
 use self::roles::RoleCommands;
 use self::{
-    about::AboutCommand, base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands,
-    hello::HelloCommand, lewd::LewdCommands, moderator::ModeratorCommands, music::MusicCommands, owner::Owner, say::SayCommand,
-    story::StoryCommand, uwu::UwUCommand, wordcount::WordcountCommand,
+    base64::Base64Commands, boop::BoopCommand, count::CountCommand, heck::HeckCommands, hello::HelloCommand,
+    lewd::LewdCommands, music::MusicCommands, owner::Owner, say::SayCommand, story::StoryCommand, uwu::UwUCommand,
+    wordcount::WordcountCommand,
 };
 use crate::interaction::LuroSlash;
 use crate::interactions::character::send::CharacterSendAutocomplete;
@@ -33,7 +33,6 @@ use twilight_model::application::interaction::InteractionData;
 use crate::luro_command::LuroCommand;
 use crate::BOT_NAME;
 
-mod about;
 mod base64;
 mod boop;
 mod character;
@@ -45,7 +44,6 @@ mod info;
 mod lewd;
 mod luro;
 mod marry;
-mod moderator;
 mod music;
 mod owner;
 mod ping;
@@ -76,16 +74,13 @@ impl Commands {
         };
 
         // Add some default commands
-        init.global_commands.insert("about", AboutCommand::create_command().into());
         init.global_commands.insert("hello", HelloCommand::create_command().into());
         init.global_commands.insert("count", CountCommand::create_command().into());
         init.global_commands.insert("say", SayCommand::create_command().into());
-        init.global_commands.insert("mod", ModeratorCommands::create_command().into());
         init.global_commands.insert("music", MusicCommands::create_command().into());
         init.global_commands.insert("boop", BoopCommand::create_command().into());
         init.global_commands.insert("heck", HeckCommands::create_command().into());
         init.global_commands.insert("owner", Owner::create_command().into());
-        init.global_commands.insert("about", AboutCommand::create_command().into());
         init.global_commands.insert("info", InfoCommands::create_command().into());
         init.global_commands.insert("lewd", LewdCommands::create_command().into());
         init.global_commands.insert("base64", Base64Commands::create_command().into());
@@ -112,12 +107,10 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     pub async fn handle_command(self, data: Box<CommandData>) -> anyhow::Result<()> {
         // TODO: CONSTANT match for bot name...
         match data.name.as_str() {
-            "about" => AboutCommand::new(data).await?.run_command(self).await,
             "say" => SayCommand::new(data).await?.run_command(self).await,
             "info" => InfoCommands::new(data).await?.run_command(self).await,
             "hello" => HelloCommand::new(data).await?.run_command(self).await,
             "count" => CountCommand::new(data).await?.run_command(self).await,
-            "mod" => ModeratorCommands::new(data).await?.run_command(self).await,
             "music" => MusicCommands::new(data).await?.run_command(self).await,
             "boop" => BoopCommand::new(data).await?.run_command(self).await,
             "owner" => Owner::new(data).await?.run_command(self).await,
@@ -212,7 +205,6 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
             "character" => Character::handle_model(data, self).await,
             "heck-add" => HeckCommands::handle_model(data, self).await,
             "story-add" => StoryCommand::handle_model(data, self).await,
-            "mod-warn" => ModeratorCommands::handle_model(data, self).await,
             "modify-embed" => Owner::handle_model(data, self).await,
             name => {
                 warn!(name = name, "received unknown component");

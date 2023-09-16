@@ -1,20 +1,20 @@
 use std::fmt::Write;
 use std::path::Path;
 
+use async_trait::async_trait;
 use git2::{ErrorCode, Repository};
 use luro_builder::embed::EmbedBuilder;
-use luro_model::database::drivers::LuroDatabaseDriver;
-use luro_model::user::LuroUser;
+use luro_framework::{
+    command::{LuroCommandBuilder, LuroCommandTrait},
+    Framework, InteractionCommand, LuroInteraction,
+};
+use luro_model::{database_driver::LuroDatabaseDriver, user::LuroUser};
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::functions::padding_calculator;
-use crate::interaction::LuroSlash;
-use crate::luro_command::LuroCommand;
-
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "about", desc = "Information about me!")]
-pub struct AboutCommand {
+pub struct About {
     /// Show memory stats
     memory: Option<bool>,
     /// Show cache stats,
@@ -23,19 +23,25 @@ pub struct AboutCommand {
     show_username: Option<bool>,
 }
 
-impl LuroCommand for AboutCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        // Variables
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for About {}
+
+#[async_trait]
+impl LuroCommandTrait for About {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let mut description =
             "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n"
                 .to_owned();
-        let staff = ctx.framework.database.get_staff().await?;
-        let current_user = ctx.framework.twilight_client.current_user().await?.model().await?;
+        let staff = ctx.database.get_staff().await?;
+        let current_user = ctx.twilight_client.current_user().await?.model().await?;
         let mut embed = EmbedBuilder::default();
         let slash_author = LuroUser::from(&current_user);
 
         // Configuration
-        embed.colour(ctx.accent_colour().await);
+        embed.colour(interaction.accent_colour(&ctx).await);
         embed.title(&slash_author.name);
         embed.thumbnail(|thumbnail| thumbnail.url(slash_author.avatar()));
         embed.footer(|footer| footer.text("Written in twilight.rs!"));
@@ -51,16 +57,16 @@ impl LuroCommand for AboutCommand {
             .iter()
             .map(|(prefix, suffix)| (prefix.len(), suffix.len()))
             .collect();
-        let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
+        let (prefix_len, suffix_len, _) = super::wordcount::padding_calculator(word_sizes);
         for (prefix, suffix) in description_builder {
             writeln!(description, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
         }
         embed.description(description);
 
-        if self.cache.unwrap_or_default() {
+        if data.cache.unwrap_or_default() {
             let mut cache = String::new();
             let mut description_builder = vec![];
-            let stats = ctx.framework.twilight_cache.stats();
+            let stats = ctx.cache.stats();
             writeln!(cache, "```")?;
 
             if stats.guilds() != 0 {
@@ -95,7 +101,7 @@ impl LuroCommand for AboutCommand {
                 .iter()
                 .map(|(prefix, suffix)| (prefix.len(), suffix.len()))
                 .collect();
-            let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
+            let (prefix_len, suffix_len, _) = super::wordcount::padding_calculator(word_sizes);
             for (prefix, suffix) in description_builder {
                 writeln!(cache, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
             }
@@ -103,29 +109,21 @@ impl LuroCommand for AboutCommand {
             embed.field(|field| field.field("Cache Stats", &cache, false));
         }
 
-        if self.memory.unwrap_or_default() && let Some(usage) = memory_stats() {
+        if data.memory.unwrap_or_default() && let Some(usage) = memory_stats() {
             let mut memory =  String::new();
             let mut description_builder = vec![];
             description_builder.push(("- Physical memory usage:", format!("`{} MB`", usage.physical_mem / 1024 / 1024)));
             description_builder.push(("- Virtual memory usage:", format!("`{} MB`", usage.virtual_mem / 1024 / 1024)));
             let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
-            let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
+            let (prefix_len, suffix_len, _) = super::wordcount::padding_calculator(word_sizes);
             for (prefix, suffix) in description_builder {
                 writeln!(memory, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
             }
             embed.field(|field|field.field("Memory Stats", &memory, true));
         }
 
-        if let Some(application_owner) = &ctx
-            .framework
-            .twilight_client
-            .current_user_application()
-            .await?
-            .model()
-            .await?
-            .owner
-        {
-            embed.field(|field| match self.show_username.unwrap_or_default() {
+        if let Some(application_owner) = &ctx.twilight_client.current_user_application().await?.model().await?.owner {
+            embed.field(|field| match data.show_username.unwrap_or_default() {
                 true => field.field("My Creator!", &format!("- {}", application_owner.name), true),
                 false => field.field("My Creator!", &format!("- <@{}>", application_owner.id), true),
             });
@@ -133,14 +131,14 @@ impl LuroCommand for AboutCommand {
 
         let mut staff_list = String::new();
         for staff in staff.values() {
-            match self.show_username.unwrap_or_default() {
+            match data.show_username.unwrap_or_default() {
                 true => writeln!(staff_list, "- {}", &staff.name)?,
                 false => writeln!(staff_list, "- <@{}>", staff.id)?,
             }
         }
         embed.field(|field| field.field("Those with 'Administrator' access!", &staff_list, false));
 
-        ctx.respond(|r| r.add_embed(embed)).await
+        interaction.respond(&ctx, |r| r.add_embed(embed)).await
     }
 }
 

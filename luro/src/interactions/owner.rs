@@ -19,7 +19,6 @@ mod assign;
 mod clear_warnings;
 mod commands;
 mod config;
-mod fakeban;
 mod flush;
 mod get_message;
 mod guilds;
@@ -40,8 +39,6 @@ pub enum Owner {
     ClearWarning(clear_warnings::OwnerClearWarning),
     #[command(name = "commands")]
     Commands(commands::OwnerCommandsCommand),
-    #[command(name = "fakeban")]
-    FakeBan(fakeban::FakeBan),
     #[command(name = "log")]
     Log(log::LogCommand),
     #[command(name = "mass_assign")]
@@ -96,7 +93,6 @@ impl LuroCommand for Owner {
                         Self::ModifyRole(_) => "owner_modify",
                         Self::Flush(_) => "owner_save",
                         Self::Modify(_) => "owner_modify",
-                        Self::FakeBan(_) => "owner_fakeban",
                         Self::MassAssign(_) => "mass_assign",
                     },
                 )
@@ -110,7 +106,6 @@ impl LuroCommand for Owner {
             Self::ClearWarning(command) => command.run_command(ctx).await,
             Self::Commands(command) => command.run_command(ctx).await,
             // Self::Config(command) => command.run_command(ctx).await,
-            Self::FakeBan(command) => command.run_command(ctx).await,
             Self::Flush(command) => command.run_command(ctx).await,
             // Self::GetMessage(command) => command.run_command(ctx).await,
             // Self::Guilds(command) => command.run_command(ctx).await,

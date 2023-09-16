@@ -1,22 +1,24 @@
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
+use async_trait::async_trait;
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-
-use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "sync", desc = "Sync the latest guild settings", dm_permission = false)]
-pub struct SyncCommand {}
+pub struct Sync {}
 
-impl LuroCommand for SyncCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+#[async_trait]
+impl LuroCommandTrait for Sync {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
         // Can only run this command in a guild
-        let guild_id = ctx.interaction.guild_id.unwrap();
-        let mut luro_guild = ctx.framework.database.get_guild(&guild_id).await?;
-        let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
+        let guild_id = interaction.guild_id.unwrap();
+        let mut luro_guild = ctx.database.get_guild(&guild_id).await?;
+        let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
         luro_guild.update_guild(guild);
 
-        ctx.respond(|r| r.content("Updated!").ephemeral()).await
+        interaction.respond(&ctx, |r| r.content("Updated!").ephemeral()).await
     }
 }

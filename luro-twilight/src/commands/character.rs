@@ -61,7 +61,7 @@ impl LuroCommandTrait for Character {
 
     async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
         let user_id = interaction.author_id();
-        let nsfw = interaction.clone().channel.unwrap().nsfw.unwrap_or_default();
+        let nsfw = interaction.clone().channel.nsfw.unwrap_or_default();
         let mut user_data = ctx.database.get_user(&user_id).await?;
         let character_name = parse_modal_field::parse_modal_field_required(&interaction.data, "character-name")?;
         let short_description =

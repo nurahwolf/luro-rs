@@ -58,6 +58,8 @@ mod wordcount;
 pub fn default_global_commands<'a, D: LuroDatabaseDriver + 'static>() -> HashMap<&'a str, LuroCommand<D>> {
     let mut commands = HashMap::new();
     #[cfg(feature = "command-character")]
+    commands.insert(about::About::NAME, about::About::new_command());
+    #[cfg(feature = "command-character")]
     commands.insert(character::Character::NAME, character::Character::new_command());
     #[cfg(feature = "command-dice")]
     commands.insert(dice::Dice::NAME, dice::Dice::new_command());

@@ -1,6 +1,8 @@
-use crate::interaction::LuroSlash;
-use crate::luro_command::LuroCommand;
-use luro_model::database::drivers::LuroDatabaseDriver;
+
+use async_trait::async_trait;
+use luro_framework::{InteractionCommand, Framework, LuroInteraction};
+use luro_framework::command::LuroCommandTrait;
+use luro_model::database_driver::LuroDatabaseDriver;
 use luro_model::message::LuroMessage;
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -9,7 +11,7 @@ use twilight_model::id::Id;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "get_message", desc = "Gets a particular message from the cache, or user's data")]
-pub struct OwnerGetMessage {
+pub struct Message {
     /// The message ID to get
     message_id: String,
     /// If defined, attempts to find the message from this user's data if not found in the cache
@@ -17,18 +19,21 @@ pub struct OwnerGetMessage {
     /// If defined, attempts to use the client to fetch the message
     channel_id: Option<Id<ChannelMarker>>,
 }
-
-impl LuroCommand for OwnerGetMessage {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let message_id = Id::new(self.message_id.parse()?);
-        let channel_id = self.channel_id.unwrap_or(ctx.interaction.clone().channel.unwrap().id);
-        let mut embed = ctx.default_embed().await;
+#[async_trait]
+impl LuroCommandTrait for Message {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+        let message_id = Id::new(data.message_id.parse()?);
+        let channel_id = data.channel_id.unwrap_or(interaction.clone().channel.id);
+        let mut embed = interaction.default_embed(&ctx).await;
 
         // Attempts to fetch in this order
         // User Data -> Client -> Cache
-        let mut luro_message = match self.user {
+        let mut luro_message = match data.user {
             Some(user) => ctx
-                .framework
                 .database
                 .get_user(&user.resolved.id)
                 .await?
@@ -40,7 +45,7 @@ impl LuroCommand for OwnerGetMessage {
 
         // If not present, try to get from the client
         if luro_message.is_none() {
-            luro_message = match ctx.framework.twilight_client.message(channel_id, message_id).await {
+            luro_message = match ctx.twilight_client.message(channel_id, message_id).await {
                 Ok(message) => Some(LuroMessage::from(message.model().await?)),
                 Err(_) => None,
             }
@@ -49,15 +54,14 @@ impl LuroCommand for OwnerGetMessage {
         // Last ditch effort, is it in the cache?
         if luro_message.is_none() {
             luro_message = ctx
-                .framework
-                .twilight_cache
+                .cache
                 .message(message_id)
                 .map(|message| LuroMessage::from(message.clone()))
         }
 
         match luro_message {
             Some(message) => {
-                let user = ctx.framework.database.get_user(&message.author).await?;
+                let user = ctx.database.get_user(&message.author).await?;
 
                 let toml = toml::to_string_pretty(&message)?;
                 embed
@@ -72,6 +76,6 @@ impl LuroCommand for OwnerGetMessage {
                 .colour(COLOUR_DANGER),
         };
 
-        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
+        interaction.respond(&ctx, |r| r.add_embed(embed).ephemeral()).await
     }
 }

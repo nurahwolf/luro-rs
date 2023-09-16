@@ -31,7 +31,7 @@ pub const COLOUR_TRANSPARENT: u32 = 0x2F3136;
 /// Luro's SUCCESS colour
 pub const COLOUR_SUCCESS: u32 = 0xA0D995;
 /// [tracing_subscriber] filter level
-pub const FILTER: LevelFilter = LevelFilter::DEBUG;
+pub const FILTER: LevelFilter = LevelFilter::INFO;
 // Luro's intents. Can be set to all, but rather spammy.
 pub const INTENTS: Intents = Intents::all();
 /// The log path. By default this is a sub directory of DATA_PATH

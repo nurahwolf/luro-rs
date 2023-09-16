@@ -6,16 +6,29 @@ use luro_model::{
 };
 use twilight_model::{
     channel::message::embed::EmbedField,
+    guild::Permissions,
     id::{marker::UserMarker, Id},
 };
 
 use crate::{Framework, InteractionContext, LuroInteraction};
 
+use self::{
+    bot_heirarchy::bot_hierarchy_embed, bot_missing_permission::bot_missing_permission_embed,
+    missing_permissions::missing_permission_embed, not_owner::not_owner_embed,
+    permission_modify_server_owner::permission_server_owner, user_heirarchy::user_hierarchy_embed,
+};
+
+mod bot_heirarchy;
+mod bot_missing_permission;
 mod internal_error;
+mod missing_permissions;
+mod not_guild;
+mod not_owner;
 pub mod permission_modify_server_owner; // TODO: Change to private, only needs to be public for old framework
 mod permission_not_bot_staff;
 mod unknown_command;
 mod user_action;
+mod user_heirarchy;
 
 /// A wrapper around [EmbedBuilder] to make easy standardised responses
 #[derive(Default, Clone)]
@@ -72,22 +85,32 @@ impl StandardResponse {
     }
 }
 pub enum SimpleResponse<'a> {
-    InternalError(&'a Error),
+    InternalError(Error),
     PermissionNotBotStaff(),
     PermissionModifyServerOwner(&'a Id<UserMarker>),
     UnknownCommand(&'a str),
+    NotGuild(),
+    BotMissingPermission(Permissions),
+    UserHeirarchy(&'a str),
+    BotHeirarchy(&'a str),
+    MissingPermission(Permissions),
+    NotOwner(&'a Id<UserMarker>, &'a str),
 }
 
 impl<'a, 'b> SimpleResponse<'a> {
     /// Convert the response to an embed
     pub fn embed(self) -> EmbedBuilder {
         match self {
-            SimpleResponse::InternalError(error) => internal_error::internal_error(error),
-            SimpleResponse::PermissionNotBotStaff() => permission_not_bot_staff::permission_not_bot_staff(),
-            SimpleResponse::PermissionModifyServerOwner(user_id) => {
-                permission_modify_server_owner::permission_server_owner(user_id)
-            }
-            SimpleResponse::UnknownCommand(name) => unknown_command::unknown_command(name),
+            Self::InternalError(error) => internal_error::internal_error(error),
+            Self::PermissionNotBotStaff() => permission_not_bot_staff::permission_not_bot_staff(),
+            Self::PermissionModifyServerOwner(user_id) => permission_server_owner(user_id),
+            Self::UnknownCommand(name) => unknown_command::unknown_command(name),
+            Self::NotGuild() => not_guild::not_guild(),
+            Self::BotMissingPermission(permission) => bot_missing_permission_embed(permission),
+            Self::UserHeirarchy(username) => user_hierarchy_embed(username),
+            Self::BotHeirarchy(username) => bot_hierarchy_embed(username),
+            Self::MissingPermission(permission) => missing_permission_embed(permission),
+            Self::NotOwner(user_id, command_name) => not_owner_embed(user_id, command_name),
         }
     }
 

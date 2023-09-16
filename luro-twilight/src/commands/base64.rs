@@ -1,114 +1,158 @@
-use anyhow::{anyhow, Context};
-
-use luro_model::response::LuroResponse;
-
-use std::str;
-
+use anyhow::anyhow;
+use async_trait::async_trait;
 use base64::{engine::general_purpose, Engine};
-
+use luro_framework::{
+    command::{LuroCommandBuilder, LuroCommandTrait},
+    Framework, InteractionCommand, InteractionComponent, LuroInteraction,
+};
+use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse};
+use std::str;
 use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::interaction::message_component::MessageComponentInteractionData;
+use twilight_model::application::interaction::InteractionData;
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
+mod decode;
+mod encode;
 
-use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "base64", desc = "Convert to and from base64")]
-pub enum Base64Commands {
+pub enum Base64 {
     #[command(name = "decode")]
-    Decode(Base64Decode),
+    Decode(decode::Decode),
     #[command(name = "encode")]
-    Encode(Base64Encode),
+    Encode(encode::Encode),
 }
+impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Base64 {}
 
-impl LuroCommand for Base64Commands {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+#[async_trait]
+impl LuroCommandTrait for Base64 {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         // Call the appropriate subcommand.
-        match self {
-            Self::Decode(command) => command.run_command(ctx).await,
-            Self::Encode(command) => command.run_command(ctx).await,
+        match data {
+            Self::Decode(_) => decode::Decode::handle_interaction(ctx, interaction).await,
+            Self::Encode(_) => encode::Encode::handle_interaction(ctx, interaction).await,
         }
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        self,
-        data: Box<MessageComponentInteractionData>,
-        ctx: LuroSlash<D>,
+        ctx: Framework<D>,
+        interaction: InteractionComponent,
     ) -> anyhow::Result<()> {
-        let author_id = ctx.interaction.author_id().context("Expected to get interaction author ID")?;
+        let mut message = interaction.message.clone();
+        let mut original_interaction = interaction.original.clone();
+        let mut new_id = true;
+
+        while new_id {
+            original_interaction = ctx.database.get_interaction(&message.id.to_string()).await?;
+
+            new_id = match original_interaction.message {
+                Some(ref new_message) => {
+                    message = new_message.clone();
+                    true
+                }
+                None => false,
+            }
+        }
+
+        let command = match original_interaction.data {
+            Some(InteractionData::ApplicationCommand(ref data)) => data.clone(),
+            _ => {
+                return Err(anyhow!(
+                    "unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}",
+                    interaction.data
+                ))
+            }
+        };
+
+        let data = Self::new(command)?;
+        let author_id = interaction.author_id();
         // Always insure the input is decoded
-        let (input, bait) = match self {
+        let (input, bait) = match data {
             Self::Decode(command) => (decode(&command.string)?, None),
             Self::Encode(command) => (command.string, command.bait),
         };
 
-        let response = match data.custom_id.as_str() {
-            "decode" => response(&ctx, &input, true).await?,
-            "encode" => response(&ctx, &input, false).await?,
+        let response = match interaction.data.custom_id.as_str() {
+            "decode" => response(&ctx, &interaction, &input, true).await?,
+            "encode" => response(&ctx, &interaction, &input, false).await?,
             _ => {
                 warn!("No match");
                 return Ok(());
             }
         };
 
-        if let Some(bait) = bait && bait {
-            ctx.send_respond(response).await?;
-            ctx.send_message(|response|{
-                response.content(format!("<@{author_id}> got baited..."));
-                if let Some(message) = &ctx.interaction.message {
-                    response.reply(&message.id);
-                }
-                response
-            }).await?;
+        if bait.unwrap_or_default() {
+            interaction.response_update(&ctx, &response).await?;
+            interaction
+                .respond(&ctx, |response| {
+                    response
+                        .content(format!("<@{author_id}> got baited..."))
+                        .reply(&interaction.message.id)
+                })
+                .await?;
         } else {
-            ctx.send_respond(response).await?;
+            interaction.response_update(&ctx, &response).await?;
         }
 
         Ok(())
     }
 }
 
-#[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
-#[command(name = "decode", desc = "Convert a string from base64")]
-pub struct Base64Decode {
-    /// Decode this string from base64
-    #[command(max_length = 2039)]
-    string: String,
+/// Simply send a response with a few checks.
+async fn response<D: LuroDatabaseDriver>(
+    ctx: &Framework<D>,
+    interaction: &InteractionComponent,
+    input: &str,
+    decode_operation: bool,
+) -> anyhow::Result<LuroResponse> {
+    let mut response = match decode_operation {
+        true => decode_response(ctx, interaction, input).await?,
+        false => encode_response(ctx, interaction, &encode(input)).await?,
+    };
+    response.update();
+    Ok(response)
 }
 
-impl LuroCommand for Base64Decode {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        ctx.send_respond(decode_response(&ctx, &decode(&self.string)?).await?).await
-    }
+pub async fn decode_response<D: LuroDatabaseDriver, I: LuroInteraction>(
+    ctx: &Framework<D>,
+    interaction: &I,
+    input: &str,
+) -> anyhow::Result<LuroResponse> {
+    let accent_colour = interaction.accent_colour(ctx).await;
+    let mut response = LuroResponse::default();
+
+    response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("encode").label("Encode"))));
+
+    match input.len() > 2000 {
+        true => response.embed(|embed| embed.colour(accent_colour).description(format!("```\n{input}\n```"))),
+        false => response.content(format!("```\n{input}\n```")),
+    };
+    Ok(response)
 }
 
-#[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
-#[command(name = "encode", desc = "Convert a string to base64")]
-pub struct Base64Encode {
-    /// Encode this string to base64
-    string: String,
-    /// Set to true if you want to call out someone for clicking decoding this
-    bait: Option<bool>,
-}
+pub async fn encode_response<D: LuroDatabaseDriver, I: LuroInteraction>(
+    ctx: &Framework<D>,
+    interaction: &I,
+    input: &str,
+) -> anyhow::Result<LuroResponse> {
+    let accent_colour = interaction.accent_colour(ctx).await;
+    let mut response = LuroResponse::default();
 
-impl LuroCommand for Base64Encode {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        ctx.send_respond(encode_response(&ctx, &encode(&self.string)).await?).await
-    }
-}
+    response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("decode").label("Decode"))));
 
-/// Encode the passed text
-fn encode(input: &str) -> String {
-    info!("Encoding - `{input}`");
-    let result = general_purpose::STANDARD.encode(input);
-    info!("Result - `{result}`");
-    result
+    match input.len() > 2000 {
+        true => response.embed(|embed| embed.colour(accent_colour).description(format!("```\n{input}\n```"))),
+        false => response.content(format!("```\n{input}\n```")),
+    };
+    Ok(response)
 }
 
 /// Decode the passed text
-fn decode(input: &str) -> anyhow::Result<String> {
+pub fn decode(input: &str) -> anyhow::Result<String> {
     info!("Decoding `{input}`");
     let result = match general_purpose::STANDARD.decode(input) {
         Ok(decoded) => match String::from_utf8(decoded) {
@@ -123,42 +167,10 @@ fn decode(input: &str) -> anyhow::Result<String> {
     result
 }
 
-/// Simply send a response with a few checks.
-async fn response<D: LuroDatabaseDriver>(
-    ctx: &LuroSlash<D>,
-    input: &str,
-    decode_operation: bool,
-) -> anyhow::Result<LuroResponse> {
-    let mut response = match decode_operation {
-        true => decode_response(ctx, input).await?,
-        false => encode_response(ctx, &encode(input)).await?,
-    };
-    response.update();
-    Ok(response)
-}
-
-async fn decode_response<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>, input: &str) -> anyhow::Result<LuroResponse> {
-    let accent_colour = ctx.accent_colour().await;
-    let mut response = LuroResponse::default();
-
-    response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("encode").label("Encode"))));
-
-    match input.len() > 2000 {
-        true => response.embed(|embed| embed.colour(accent_colour).description(format!("```\n{input}\n```"))),
-        false => response.content(format!("```\n{input}\n```")),
-    };
-    Ok(response)
-}
-
-async fn encode_response<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>, input: &str) -> anyhow::Result<LuroResponse> {
-    let accent_colour = ctx.accent_colour().await;
-    let mut response = LuroResponse::default();
-
-    response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("decode").label("Decode"))));
-
-    match input.len() > 2000 {
-        true => response.embed(|embed| embed.colour(accent_colour).description(format!("```\n{input}\n```"))),
-        false => response.content(format!("```\n{input}\n```")),
-    };
-    Ok(response)
+/// Encode the passed text
+pub fn encode(input: &str) -> String {
+    info!("Encoding - `{input}`");
+    let result = general_purpose::STANDARD.encode(input);
+    info!("Result - `{result}`");
+    result
 }

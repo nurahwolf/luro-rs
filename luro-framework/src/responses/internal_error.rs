@@ -4,7 +4,7 @@ use luro_model::COLOUR_DANGER;
 use tracing::warn;
 
 /// A response for if the command is not known
-pub fn internal_error(error: &Error) -> EmbedBuilder {
+pub fn internal_error(error: Error) -> EmbedBuilder {
     warn!("The error {error} was raised and handled");
     let mut embed = EmbedBuilder::default();
     embed

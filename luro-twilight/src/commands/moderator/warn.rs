@@ -1,6 +1,7 @@
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
+use async_trait::async_trait;
+use luro_framework::command::LuroCommandTrait;
+use luro_framework::{Framework, InteractionCommand, LuroInteraction};
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_model::http::interaction::InteractionResponseType;
 
 use std::fmt::Write;
@@ -10,28 +11,30 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::channel::message::component::{ActionRow, TextInput, TextInputStyle};
 use twilight_model::channel::message::Component;
 
-use crate::luro_command::LuroCommand;
-
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "warn",
     desc = "Get the warnings of a user, or set a new warning",
     default_permissions = "Self::default_permissions"
 )]
-pub struct ModeratorWarnCommand {
+pub struct Warn {
     /// Want to make a new warning?
     new: bool,
     /// The user to warn / get warnings for.
     user: ResolvedUser,
 }
+#[async_trait]
+impl LuroCommandTrait for Warn {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+        let punished_user = ctx.database.get_user(&data.user.resolved.id).await?;
 
-impl LuroCommand for ModeratorWarnCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
-
-        if !self.new {
+        if !data.new {
             if punished_user.warnings.is_empty() {
-                return ctx.respond(|r| r.content("No warnings for that user!")).await;
+                return interaction.respond(&ctx, |r| r.content("No warnings for that user!")).await;
             }
 
             let mut warnings_formatted = String::new();
@@ -39,14 +42,14 @@ impl LuroCommand for ModeratorWarnCommand {
                 writeln!(warnings_formatted, "Warning by <@{user_id}>```{warning}```")?
             }
 
-            let accent_colour = ctx.accent_colour().await;
-            return ctx
-                .respond(|r| {
+            let accent_colour = interaction.accent_colour(&ctx).await;
+            return interaction
+                .respond(&ctx, |r| {
                     r.embed(|embed| {
                         embed
                             .author(|author| {
                                 author
-                                    .name(punished_user.member_name(&ctx.interaction.guild_id))
+                                    .name(punished_user.member_name(&interaction.guild_id))
                                     .icon_url(punished_user.avatar())
                             })
                             .description(warnings_formatted)
@@ -86,13 +89,14 @@ impl LuroCommand for ModeratorWarnCommand {
             }),
         ];
 
-        ctx.respond(|response| {
-            response
-                .title("Add your warning below!")
-                .custom_id("mod-warn")
-                .add_components(components)
-                .response_type(InteractionResponseType::Modal)
-        })
-        .await
+        interaction
+            .respond(&ctx, |response| {
+                response
+                    .title("Add your warning below!")
+                    .custom_id("mod-warn")
+                    .add_components(components)
+                    .response_type(InteractionResponseType::Modal)
+            })
+            .await
     }
 }

@@ -21,6 +21,12 @@ anyhow = { workspace = true } # main
 luro-dice = { path = "../luro-dice", optional = true } # command-dice
 uwuify = { version = "0.2.0", optional = true }        # command-uwu
 rand = { workspace = true, optional = true }           # command-story
+git2 = { version = "0.18", optional = true }           # command-about
+memory-stats = { version = "1", optional = true }      # command-about
+base64 = { version = "0.21", optional = true }         # command-base64
+serde = { workspace = true, optional = true }         # command-owner
+
+
 
 # Tokio
 tokio.workspace = true # main
@@ -39,6 +45,7 @@ tracing-appender = "0.2"                  # main
 tracing-subscriber = { workspace = true } # main
 
 # Twilight
+twilight-http = { workspace = true }                   # commands
 twilight-model = { workspace = true }                   # event_listener
 twilight-gateway.workspace = true                       # main
 twilight-interactions.path = "../twilight-interactions" # commands
@@ -48,8 +55,12 @@ async-trait = "0.1.73"
 # Main Features
 default = ["commands"]
 commands = [
+    "command-about",
+    "command-base64",
     "command-character",
     "command-dice",
+    "command-moderator",
+    "command-owner",
     "command-roles",
     "command-ping",
     "command-quote",
@@ -61,13 +72,16 @@ commands = [
 ]
 
 # Commands
-command-about = []
+command-about = ["dep:git2", "dep:memory-stats"]
+command-base64 = ["dep:base64"]
 command-character = []
 command-dice = ["dep:luro-dice"]
 command-roles = []
 command-marry = []
 command-quote = []
 command-ping = []
+command-moderator = []
+command-owner = ["dep:serde"]
 command-say = []
 command-story = ["dep:rand", "dep:luro-builder"]
 command-uwu = []

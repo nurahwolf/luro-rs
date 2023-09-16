@@ -3,7 +3,7 @@ use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse, us
 use tracing::warn;
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{
-    application::interaction::InteractionData,
+    application::interaction::{Interaction, InteractionData},
     channel::{message::MessageFlags, Message},
     http::interaction::InteractionResponseType,
     id::{
@@ -16,6 +16,10 @@ use twilight_model::{
 use crate::{Framework, InteractionContext, LuroInteraction};
 
 impl LuroInteraction for InteractionContext {
+    fn original_interaction<D: LuroDatabaseDriver>(&self) -> &Interaction {
+        &self.original
+    }
+
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
     async fn default_embed<D: LuroDatabaseDriver>(&self, ctx: &Framework<D>) -> EmbedBuilder {
         ctx.default_embed(self.guild_id.as_ref()).await

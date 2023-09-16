@@ -1,32 +1,36 @@
 use std::fmt::Write;
 
+use async_trait::async_trait;
+use luro_framework::{Framework, command::LuroCommandTrait, InteractionCommand, LuroInteraction};
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
 
-use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "guilds", desc = "Information about all guilds")]
-pub struct OwnerGuildsCommand {
+pub struct Guilds {
     /// Optionally include the guild ID
     show_id: Option<bool>,
 }
-
-impl LuroCommand for OwnerGuildsCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+#[async_trait]
+impl LuroCommandTrait for Guilds {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let mut guilds = String::new();
-        for guild in ctx.framework.twilight_cache.iter().guilds() {
-            if let Some(show_id) = self.show_id && show_id {
+        for guild in ctx.cache.iter().guilds() {
+            if data.show_id.unwrap_or_default() {
                 writeln!(guilds, "{} - <#{1}> - {1}", guild.name(), guild.id())?
             } else {
                 writeln!(guilds, "{} - <#{}>", guild.name(), guild.id())?
             }
         }
 
-        let accent_colour = ctx.accent_colour().await;
-        ctx.respond(|r| {
+        let accent_colour = interaction.accent_colour(&ctx).await;
+        interaction.respond(&ctx, |r| {
             r.embed(|embed| {
                 embed
                     .title("All the guilds that I am in")

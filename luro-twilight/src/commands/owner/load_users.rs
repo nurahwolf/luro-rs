@@ -1,6 +1,7 @@
-use crate::luro_command::LuroCommand;
-use crate::{interaction::LuroSlash, USERDATA_FILE_PATH};
-use luro_model::database::drivers::LuroDatabaseDriver;
+
+use async_trait::async_trait;
+use luro_framework::{InteractionCommand, Framework, command::LuroCommandTrait, LuroInteraction};
+use luro_model::database_driver::LuroDatabaseDriver;
 use tokio::fs::read_dir;
 use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -11,21 +12,26 @@ use twilight_model::id::Id;
     name = "load_users",
     desc = "For every user in the cache, load their data from the database. This is SLOW!"
 )]
-pub struct OwnerLoadUsers {
+pub struct Load {
     /// True: Load ALL users that exist in the DB. False: Load only from the cache
     from_db: bool,
 }
 
-impl LuroCommand for OwnerLoadUsers {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let response = ctx.acknowledge_interaction(true).await?;
+#[async_trait]
+impl LuroCommandTrait for Load {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
+        let response = interaction.acknowledge_interaction(&ctx, true).await?;
 
-        let (loaded, errors) = match self.from_db {
+        let (loaded, errors) = match data.from_db {
             true => load_disk(&ctx).await?,
             false => load_cache(&ctx).await?,
         };
 
-        ctx.respond(|r| {
+        interaction.respond(&ctx, |r| {
             *r = response;
             match errors != 0 {
                 true => r.content(format!(
@@ -39,15 +45,14 @@ impl LuroCommand for OwnerLoadUsers {
     }
 }
 
-async fn load_cache<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result<(usize, usize)> {
+async fn load_cache<D: LuroDatabaseDriver>(ctx: &Framework<D>) -> anyhow::Result<(usize, usize)> {
     let mut loaded = 0;
     let mut errors = 0;
 
-    for user in ctx.framework.twilight_cache.iter().users() {
+    for user in ctx.cache.iter().users() {
         let mut user_data = match ctx
-            .framework
             .database
-            .get_user_cached(&user.id, &ctx.framework.twilight_cache)
+            .get_user(&user.id)
             .await
         {
             Ok(data) => data,
@@ -59,7 +64,7 @@ async fn load_cache<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result
         };
 
         user_data.update_user(&user);
-        if ctx.framework.database.save_user(&user.id, &user_data).await.is_err() {
+        if ctx.database.modify_user(&user.id, &user_data).await.is_err() {
             errors += 1
         }
 
@@ -69,7 +74,7 @@ async fn load_cache<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result
     Ok((loaded, errors))
 }
 
-async fn load_disk<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result<(usize, usize)> {
+async fn load_disk<D: LuroDatabaseDriver>(ctx: &Framework<D>) -> anyhow::Result<(usize, usize)> {
     let mut loaded = 0;
     let mut errors = 0;
 
@@ -80,7 +85,7 @@ async fn load_disk<D: LuroDatabaseDriver>(ctx: &LuroSlash<D>) -> anyhow::Result<
             Some(entry) => match entry.file_name().into_string() {
                 Ok(file) => {
                     info!("Name: {file}");
-                    match ctx.framework.database.get_user(&Id::new(file.parse()?)).await {
+                    match ctx.database.get_user(&Id::new(file.parse()?)).await {
                         Ok(_) => loaded += 1,
                         Err(_) => errors += 1,
                     }

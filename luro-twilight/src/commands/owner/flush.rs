@@ -1,9 +1,7 @@
+use async_trait::async_trait;
+use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand};
+use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -12,8 +10,13 @@ use crate::luro_command::LuroCommand;
 )]
 pub struct Flush {}
 
-impl LuroCommand for Flush {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+#[async_trait]
+impl LuroCommandTrait for Flush {
+    async fn handle_interaction<D: LuroDatabaseDriver>(
+        ctx: Framework<D>,
+        interaction: InteractionCommand,
+    ) -> anyhow::Result<()> {
+        let data = Self::new(interaction.data.clone())?;
         let errors = ctx.framework.database.flush().await?;
         let accent_colour = ctx.accent_colour().await;
 
