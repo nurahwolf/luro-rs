@@ -1,7 +1,9 @@
 use anyhow::Context;
 use async_trait::async_trait;
 use luro_framework::{
-    command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, ComponentInteraction, ModalInteraction,
+    command::{CreateLuroCommand, ExecuteLuroCommand},
+    interactions::InteractionTrait,
+    CommandInteraction, ComponentInteraction, ModalInteraction,
 };
 use luro_model::user::character::{CharacterProfile, FetishCategory};
 use std::{collections::btree_map::Entry, fmt::Write};
@@ -32,6 +34,8 @@ pub enum Character {
     #[command(name = "send")]
     Send(CharacterSend),
 }
+
+impl CreateLuroCommand for Character {}
 
 #[async_trait]
 impl ExecuteLuroCommand for Character {

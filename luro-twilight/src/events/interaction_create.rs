@@ -1,7 +1,5 @@
 use anyhow::anyhow;
-use luro_framework::{
-    CommandInteraction, ComponentInteraction, Context, ModalInteraction,
-};
+use luro_framework::{CommandInteraction, ComponentInteraction, Context, ModalInteraction};
 
 use tracing::error;
 use twilight_model::{

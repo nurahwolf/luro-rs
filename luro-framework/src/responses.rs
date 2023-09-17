@@ -1,16 +1,10 @@
 use anyhow::Error;
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{
-    database_driver::LuroDatabaseDriver,
-    user::{actions::UserActions, actions_type::UserActionType},
-};
 use twilight_model::{
     channel::message::embed::EmbedField,
     guild::Permissions,
     id::{marker::UserMarker, Id},
 };
-
-use crate::{Framework, LuroInteraction};
 
 use self::{
     bot_heirarchy::bot_hierarchy_embed, bot_missing_permission::bot_missing_permission_embed,
@@ -103,21 +97,6 @@ impl<'a> Response<'a> {
             Self::NotOwner(user_id, command_name) => not_owner_embed(user_id, command_name),
         }
     }
-}
-
-async fn privelege_escalation<D: LuroDatabaseDriver, T: LuroInteraction>(
-    framework: &Framework,
-    interaction: &T,
-) -> anyhow::Result<()> {
-    let mut user_data = framework.database.get_user(&interaction.author_id()).await?;
-    user_data.moderation_actions.push(UserActions {
-        action_type: vec![UserActionType::PrivilegeEscalation],
-        guild_id: interaction.guild_id(),
-        reason: Some(format!("Attempted to run the {} command", interaction.command_name())),
-        responsible_user: interaction.author_id(),
-    });
-    framework.database.modify_user(&interaction.author_id(), &user_data).await?;
-    Ok(())
 }
 
 /// The type of punishment

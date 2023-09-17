@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -71,24 +71,23 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
         ];
 
         let accent_colour = ctx.accent_colour().await;
-        ctx
-            .respond(|r| {
-                if self.ephemeral.unwrap_or_default() {
-                    r.ephemeral();
-                }
-                r.embed(|embed| {
-                    embed
-                        .colour(accent_colour)
-                        .title("Dice Helper")
-                        .description(description)
-                        .create_field(shortmode_help[0], shortmode_help[1], false)
-                        .create_field(standard_help[0], standard_help[1], false)
-                        .create_field(percentile_help[0], percentile_help[1], false)
-                        .create_field(keep_help[0], keep_help[1], false)
-                        .create_field(drop_help[0], drop_help[1], false)
-                })
+        ctx.respond(|r| {
+            if self.ephemeral.unwrap_or_default() {
+                r.ephemeral();
+            }
+            r.embed(|embed| {
+                embed
+                    .colour(accent_colour)
+                    .title("Dice Helper")
+                    .description(description)
+                    .create_field(shortmode_help[0], shortmode_help[1], false)
+                    .create_field(standard_help[0], standard_help[1], false)
+                    .create_field(percentile_help[0], percentile_help[1], false)
+                    .create_field(keep_help[0], keep_help[1], false)
+                    .create_field(drop_help[0], drop_help[1], false)
             })
-            .await?;
+        })
+        .await?;
         Ok(())
     }
 }

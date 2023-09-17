@@ -1,3 +1,4 @@
+mod author;
 mod command_name;
 mod interaction_client;
 mod parse_field;
@@ -5,11 +6,12 @@ mod respond;
 mod respond_create;
 mod respond_update;
 mod response_simple;
-mod author;
 
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
-use twilight_model::{gateway::payload::incoming::InteractionCreate, application::interaction::modal::ModalInteractionData, user::User};
+use twilight_model::{
+    application::interaction::modal::ModalInteractionData, gateway::payload::incoming::InteractionCreate, user::User,
+};
 
 use crate::{Context, ModalInteraction};
 
@@ -35,26 +37,26 @@ impl<T> InteractionTrait for ModalInteraction<T> {
         }
     }
 
-        /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
-        async fn accent_colour(&self) -> u32 {
-            match self.guild_id {
-                Some(guild_id) => {
-                    match self
-                        .database
-                        .get_guild(&guild_id)
-                        .await
-                        .map(|mut x| x.highest_role_colour().map(|x| x.0))
-                    {
-                        Ok(colour) => colour.unwrap_or(ACCENT_COLOUR),
-                        Err(why) => {
-                            warn!(why = ?why, "Failed to get guild accent colour");
-                            ACCENT_COLOUR
-                        }
+    /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
+    async fn accent_colour(&self) -> u32 {
+        match self.guild_id {
+            Some(guild_id) => {
+                match self
+                    .database
+                    .get_guild(&guild_id)
+                    .await
+                    .map(|mut x| x.highest_role_colour().map(|x| x.0))
+                {
+                    Ok(colour) => colour.unwrap_or(ACCENT_COLOUR),
+                    Err(why) => {
+                        warn!(why = ?why, "Failed to get guild accent colour");
+                        ACCENT_COLOUR
                     }
                 }
-                None => ACCENT_COLOUR, // There is no guild for this interaction
             }
+            None => ACCENT_COLOUR, // There is no guild for this interaction
         }
+    }
 }
 
 impl<T> ModalInteraction<T> {

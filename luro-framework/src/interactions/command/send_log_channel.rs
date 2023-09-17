@@ -10,7 +10,7 @@ impl<T> CommandInteraction<T> {
     pub async fn send_log_channel<F: FnOnce(&mut LuroResponse) -> &mut LuroResponse>(
         &self,
         log_channel: LuroLogChannel,
-        response: F
+        response: F,
     ) -> anyhow::Result<Option<Message>> {
         debug!("Attempting to send to log channel");
         // TODO: Send event to main logging channel if not defined

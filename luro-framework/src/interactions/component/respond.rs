@@ -17,10 +17,10 @@ impl<T> ComponentInteraction<T> {
             || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
         {
             true => {
-                self.response_update( &r).await?;
+                self.response_update(&r).await?;
             }
             false => {
-                self.response_create( &r).await?;
+                self.response_create(&r).await?;
             }
         }
 

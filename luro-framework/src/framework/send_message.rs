@@ -1,4 +1,4 @@
-use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse};
+use luro_model::response::LuroResponse;
 use twilight_http::{Error, Response};
 use twilight_model::{
     channel::Message,

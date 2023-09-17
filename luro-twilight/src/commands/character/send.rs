@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use luro_framework::command::ExecuteLuroCommand;
-use luro_framework::CommandInteraction;
 use luro_framework::interactions::InteractionTrait;
+use luro_framework::CommandInteraction;
 use std::fmt::Write;
 
 use twilight_interactions::command::AutocompleteValue;

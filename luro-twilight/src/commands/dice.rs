@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::command::ExecuteLuroCommand;
+use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
 use luro_framework::CommandInteraction;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -29,6 +29,8 @@ pub enum Dice {
     #[command(name = "simple")]
     Simple(Simple),
 }
+
+impl CreateLuroCommand for Dice {}
 
 #[async_trait]
 impl ExecuteLuroCommand for Dice {

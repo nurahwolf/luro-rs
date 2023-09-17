@@ -1,6 +1,6 @@
 #![feature(async_fn_in_trait)]
 use luro_builder::embed::EmbedBuilder;
-use luro_database::{LuroDatabase, toml::TomlDatabaseDriver};
+use luro_database::{toml::TomlDatabaseDriver, LuroDatabase};
 use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse, user::LuroUser};
 use slash_command::LuroCommand;
 use std::{
@@ -64,13 +64,14 @@ pub struct CommandInteraction<T> {
     pub original: twilight_model::application::interaction::Interaction,
     pub shard: twilight_gateway::MessageSender,
     pub token: String,
-    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub tracing_subscriber:
+        tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub user: Option<twilight_model::user::User>,
 }
 
 /// Luro's primary context, which is instanced per event.
-/// 
+///
 /// Contains [Framework] and houses data containing the [Event], [Latency] and [MessageSender].
 #[derive(Clone)]
 pub struct Context {
@@ -96,7 +97,8 @@ pub struct Context {
     /// A [MessageSender] for interacting with the shard
     pub shard: twilight_gateway::MessageSender,
     /// Tracing subscriber information
-    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub tracing_subscriber:
+        tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     /// Twilight client for interacting with the Discord API
     pub twilight_client: Arc<twilight_http::Client>,
 }
@@ -332,7 +334,8 @@ pub struct ModalInteraction<T> {
     pub original: twilight_model::application::interaction::Interaction,
     pub shard: twilight_gateway::MessageSender,
     pub token: String,
-    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub tracing_subscriber:
+        tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub user: Option<twilight_model::user::User>,
 }
@@ -360,7 +363,8 @@ pub struct ComponentInteraction<T> {
     pub original: twilight_model::application::interaction::Interaction,
     pub shard: twilight_gateway::MessageSender,
     pub token: String,
-    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub tracing_subscriber:
+        tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub user: Option<twilight_model::user::User>,
 }

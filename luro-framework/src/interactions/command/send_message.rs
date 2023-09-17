@@ -1,11 +1,14 @@
 use luro_model::response::LuroResponse;
 use twilight_http::{Error, Response};
-use twilight_model::{id::{marker::ChannelMarker, Id}, channel::Message};
+use twilight_model::{
+    channel::Message,
+    id::{marker::ChannelMarker, Id},
+};
 
 use crate::CommandInteraction;
 
 impl<T> CommandInteraction<T> {
-        /// Create a response to an interaction.
+    /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
     pub async fn send_message<F>(&self, channel: &Id<ChannelMarker>, response: F) -> Result<Response<Message>, Error>
     where

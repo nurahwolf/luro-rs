@@ -1,15 +1,13 @@
-use std::collections::HashMap;
-
 use anyhow::anyhow;
-use luro_framework::command::{LuroCommandTrait, ExecuteLuroCommand};
+use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
 use luro_framework::interactions::InteractionTrait;
 use luro_framework::responses::Response;
 use luro_framework::{CommandInteraction, ComponentInteraction, ModalInteraction};
 use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
-use twilight_model::application::interaction::InteractionData;
 use twilight_model::application::interaction::application_command::CommandData;
+use twilight_model::application::interaction::InteractionData;
 
 #[cfg(feature = "command-about")]
 mod about;
@@ -63,27 +61,32 @@ pub enum LuroCommands {
     #[cfg(feature = "command-character")]
     Character(character::Character),
     #[cfg(feature = "command-dice")]
-    Dice(dice::Dice)
-
+    Dice(dice::Dice),
 }
 
 fn match_command<T: InteractionTrait>(ctx: &T, data: Box<CommandData>) -> anyhow::Result<LuroCommands> {
-   let command =  match ctx.command_name() {
+    let command = match ctx.command_name() {
+        #[cfg(feature = "command-about")]
         "about" => LuroCommands::About(about::About::new(data)?),
-        name => return Err(anyhow!("No command matching {name}"))
+        #[cfg(feature = "command-character")]
+        "character" => LuroCommands::Character(character::Character::new(data)?),
+        #[cfg(feature = "command-dice")]
+        "dice" => LuroCommands::Dice(dice::Dice::new(data)?),
+        name => return Err(anyhow!("No command matching {name}")),
     };
     Ok(command)
 }
 
-pub fn default_commands<'a>() -> HashMap<&'a str, Command> {
-    let mut commands = HashMap::new();
+pub fn default_commands() -> Vec<Command> {
+    vec![
+        #[cfg(feature = "command-about")]
+        about::About::create_command().into(),
+        #[cfg(feature = "command-character")]
+        character::Character::create_command().into(),
+        #[cfg(feature = "command-dice")]
+        dice::Dice::create_command().into(),
+    ]
 
-    #[cfg(feature = "command-about")]
-    commands.insert(about::About::NAME, about::About::create_command().into());
-    #[cfg(feature = "command-character")]
-    commands.insert(character::Character::NAME, character::Character::create_command().into());
-    #[cfg(feature = "command-dice")]
-    commands.insert(dice::Dice::NAME, dice::Dice::create_command().into());
     // #[cfg(feature = "command-marry")]
     // commands.insert(marry::Marry::NAME, marry::Marry::create_command().into());
     // #[cfg(feature = "command-ping")]
@@ -100,10 +103,7 @@ pub fn default_commands<'a>() -> HashMap<&'a str, Command> {
     // commands.insert(uwu::UwU::NAME, uwu::UwU::create_command().into());
     // #[cfg(feature = "command-wordcount")]
     // commands.insert(wordcount::Wordcount::NAME, wordcount::Wordcount::create_command().into());
-
-    commands
 }
-
 
 /// Handle incoming command interaction.
 pub async fn handle_command(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
@@ -113,7 +113,7 @@ pub async fn handle_command(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
     match command {
         #[cfg(feature = "command-about")]
         LuroCommands::About(command) => command.interaction_command(ctx).await,
-        name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await
+        name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }
 
@@ -122,7 +122,11 @@ pub async fn handle_command(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
 /// SAFETY: There is an unwrap here, but the type is always present on MessageComponent
 /// which is the only type this function is called on
 pub async fn handle_component(ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
-    info!("Received component interaction - {} - {}", ctx.author().name, ctx.data.custom_id);
+    info!(
+        "Received component interaction - {} - {}",
+        ctx.author().name,
+        ctx.data.custom_id
+    );
     let interaction = ctx.database.get_interaction(&ctx.message.id.to_string()).await?;
     let data = match interaction.data {
         Some(InteractionData::ApplicationCommand(data)) => data,
@@ -138,14 +142,17 @@ pub async fn handle_component(ctx: ComponentInteraction<()>) -> anyhow::Result<(
     match command {
         #[cfg(feature = "command-about")]
         LuroCommands::About(command) => command.interaction_component(ctx).await,
-        name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await
+        name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }
 
 /// Handle incoming modal interaction
 pub async fn handle_modal(ctx: ModalInteraction<()>) -> anyhow::Result<()> {
     info!("Received modal interaction - {} - {}", ctx.author().name, ctx.data.custom_id);
-    let interaction = ctx.database.get_interaction(&ctx.message.as_ref().unwrap().id.to_string()).await?;
+    let interaction = ctx
+        .database
+        .get_interaction(&ctx.message.as_ref().unwrap().id.to_string())
+        .await?;
     let data = match interaction.data {
         Some(InteractionData::ApplicationCommand(data)) => data,
         _ => {
@@ -160,7 +167,7 @@ pub async fn handle_modal(ctx: ModalInteraction<()>) -> anyhow::Result<()> {
     match command {
         #[cfg(feature = "command-about")]
         LuroCommands::About(command) => command.interaction_modal(ctx).await,
-        name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await
+        name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }
 

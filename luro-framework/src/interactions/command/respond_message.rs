@@ -17,8 +17,8 @@ impl<T> CommandInteraction<T> {
         match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
             || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
         {
-            true => Ok(Some(self.response_update( &r).await?)),
-            false => self.response_create( &r).await,
+            true => Ok(Some(self.response_update(&r).await?)),
+            false => self.response_create(&r).await,
         }
     }
 }

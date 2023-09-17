@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use luro_dice::{DiceRoll, RollResult, RollValue};
-use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 

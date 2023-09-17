@@ -1,5 +1,4 @@
 use anyhow::anyhow;
-use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_model::id::{marker::GuildMarker, Id};
 
 use crate::Framework;

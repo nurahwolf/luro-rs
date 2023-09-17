@@ -3,7 +3,8 @@ use twilight_model::http::interaction::InteractionResponseType;
 
 use crate::ModalInteraction;
 
-impl<T> ModalInteraction<T> {    /// Create a response to an interaction.
+impl<T> ModalInteraction<T> {
+    /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
     pub async fn respond<F>(&self, response: F) -> anyhow::Result<()>
     where
@@ -16,10 +17,10 @@ impl<T> ModalInteraction<T> {    /// Create a response to an interaction.
             || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
         {
             true => {
-                self.response_update( &r).await?;
+                self.response_update(&r).await?;
             }
             false => {
-                self.response_create( &r).await?;
+                self.response_create(&r).await?;
             }
         }
 

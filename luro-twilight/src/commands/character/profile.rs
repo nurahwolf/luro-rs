@@ -1,9 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{
-    command::ExecuteLuroCommand,
-    interactions::InteractionTrait,
-    CommandInteraction,
-};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{

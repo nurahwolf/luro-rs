@@ -1,6 +1,6 @@
 use luro_model::user::LuroUser;
 
-use crate::{CommandInteraction, interactions::InteractionTrait};
+use crate::{interactions::InteractionTrait, CommandInteraction};
 
 impl<T> CommandInteraction<T> {
     /// Get and return useful information about the interaction author

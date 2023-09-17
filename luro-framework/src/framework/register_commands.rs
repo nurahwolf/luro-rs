@@ -9,9 +9,7 @@ use twilight_model::{
 
 use crate::{slash_command::LuroCommand, Framework};
 
-impl Framework {
-    
-}
+impl Framework {}
 
 impl Framework {
     /// Register the commands present in the framework

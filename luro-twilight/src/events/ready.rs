@@ -1,13 +1,11 @@
-use anyhow::anyhow;
 use luro_framework::Context;
 use tracing::info;
-use twilight_model::{
-    application::command::Command,
-    gateway::{
-        payload::{incoming::Ready, outgoing::UpdatePresence},
-        presence::{ActivityType, MinimalActivity, Status},
-    },
+use twilight_model::gateway::{
+    payload::{incoming::Ready, outgoing::UpdatePresence},
+    presence::{ActivityType, MinimalActivity, Status},
 };
+
+use crate::commands::default_commands;
 
 pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Result<()> {
     info!("Luro is now ready!");
@@ -57,12 +55,15 @@ pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Re
     }
     info!("Owners:        {owners}");
 
-    let commands = match framework.global_commands.lock() {
-        Ok(lock) => lock.clone(),
-        Err(_) => return Err(anyhow!("Lock is poisioned!")),
-    };
+    // let commands = match framework.global_commands.lock() {
+    //     Ok(lock) => lock.clone(),
+    //     Err(_) => return Err(anyhow!("Lock is poisioned!")),
+    // };w
+    // framework.register_commands(&commands.values().map(|x| (x.create)().into()).collect::<Vec<Command>>()).await?;
 
-    framework.register_commands(&commands.iter().map(|(_, x)| (x.create)().into()).collect::<Vec<Command>>()).await?;
+    let commands = default_commands();
+    framework.register_commands(&commands).await?;
+
     info!("Registered {} global commands!", commands.len());
 
     Ok(())

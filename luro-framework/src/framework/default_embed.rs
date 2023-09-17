@@ -1,5 +1,5 @@
 use luro_builder::embed::EmbedBuilder;
-use luro_model::{database_driver::LuroDatabaseDriver, ACCENT_COLOUR};
+use luro_model::ACCENT_COLOUR;
 use tracing::error;
 use twilight_model::id::{marker::GuildMarker, Id};
 

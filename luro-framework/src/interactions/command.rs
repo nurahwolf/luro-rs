@@ -1,6 +1,10 @@
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
-use twilight_model::{application::interaction::{Interaction, application_command::CommandData}, gateway::payload::incoming::InteractionCreate, user::User};
+use twilight_model::{
+    application::interaction::{application_command::CommandData, Interaction},
+    gateway::payload::incoming::InteractionCreate,
+    user::User,
+};
 
 use crate::{CommandInteraction, Context};
 
@@ -8,6 +12,7 @@ use super::InteractionTrait;
 
 mod acknowledge_interaction;
 mod author;
+mod command_data;
 mod command_name;
 mod get_interaction_author;
 mod get_specific_user_or_author;
@@ -16,11 +21,10 @@ mod respond;
 mod respond_message;
 mod response_create;
 mod response_send;
-mod response_update;
 mod response_simple;
+mod response_update;
 mod send_log_channel;
 mod send_message;
-mod command_data;
 mod webhook;
 
 impl<T> InteractionTrait for CommandInteraction<T> {
@@ -28,7 +32,7 @@ impl<T> InteractionTrait for CommandInteraction<T> {
         &self.data.name
     }
 
-        /// The user that invoked the interaction.
+    /// The user that invoked the interaction.
     ///
     /// This will first check for the [`member`]'s
     /// [`user`][`PartialMember::user`] and then, if not present, check the

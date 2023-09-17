@@ -1,6 +1,6 @@
 use twilight_interactions::command::ApplicationCommandData;
 
-use crate::{ComponentInteraction, ModalInteraction, CommandInteraction};
+use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
 
 pub type CommandResult = std::pin::Pin<Box<dyn std::future::Future<Output = anyhow::Result<()>> + 'static + Send>>;
 

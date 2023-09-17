@@ -1,5 +1,8 @@
 use luro_builder::embed::EmbedBuilder;
-use twilight_model::{id::{Id, marker::UserMarker}, user::User};
+use twilight_model::{
+    id::{marker::UserMarker, Id},
+    user::User,
+};
 
 mod command;
 mod component;
@@ -21,7 +24,7 @@ pub trait InteractionTrait {
     fn author_id(&self) -> Id<UserMarker> {
         self.author().id
     }
-    
+
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
     async fn default_embed(&self) -> EmbedBuilder {
         let mut embed = EmbedBuilder::default();

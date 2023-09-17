@@ -67,7 +67,12 @@ async fn main() -> anyhow::Result<()> {
             Ok(event) => event,
         };
 
-        tokio::spawn(event_handler(luro_framework::Context::new(framework.clone(), event, shard.latency().clone(), shard.sender())));
+        tokio::spawn(event_handler(luro_framework::Context::new(
+            framework.clone(),
+            event,
+            shard.latency().clone(),
+            shard.sender(),
+        )));
     }
 
     Ok(())

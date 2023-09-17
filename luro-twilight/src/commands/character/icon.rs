@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -14,7 +14,6 @@ pub struct Icon {
     nsfw_icon: Option<String>,
 }
 #[async_trait::async_trait]
-
 #[async_trait]
 impl ExecuteLuroCommand for Icon {
     async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
@@ -23,7 +22,7 @@ impl ExecuteLuroCommand for Icon {
         let mut user_data = ctx.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
             return ctx
-                .respond( |r| {
+                .respond(|r| {
                     r.content(format!("Sorry, <@{user_id}> has no character profiles configured!"))
                         .ephemeral()
                 })
@@ -43,12 +42,12 @@ impl ExecuteLuroCommand for Icon {
                 }
 
                 let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", self.name, characters);
-                return ctx.respond( |r| r.content(response).ephemeral()).await;
+                return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
 
         ctx.database.modify_user(&user_id, &user_data).await?;
 
-        ctx.respond( |r| r.content("Done!").ephemeral()).await
+        ctx.respond(|r| r.content("Done!").ephemeral()).await
     }
 }
