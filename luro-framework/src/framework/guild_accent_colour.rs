@@ -4,7 +4,7 @@ use twilight_model::id::{marker::GuildMarker, Id};
 
 use crate::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl Framework {
     /// fetches the accent colour of a guild if it is specified.
     /// Returns an error if we could not get any guild settings
     pub async fn guild_accent_colour(&self, guild_id: &Id<GuildMarker>) -> anyhow::Result<Option<u32>> {

@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
@@ -19,7 +19,7 @@ pub struct Assign {
 #[async_trait]
 impl LuroCommandTrait for Assign {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -35,7 +35,7 @@ impl LuroCommandTrait for Assign {
         // Guild to modify
         let guild_id = match interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return SimpleResponse::NotGuild().respond(&ctx, &interaction).await,
+            None => return Response::NotGuild().respond(&ctx, &interaction).await,
         };
 
         ctx.twilight_client.add_guild_member_role(guild_id, user, data.role).await?;

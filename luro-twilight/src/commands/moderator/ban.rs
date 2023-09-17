@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use luro_framework::{
     command::LuroCommandTrait,
-    responses::{PunishmentType, SimpleResponse, StandardResponse},
-    Framework, InteractionCommand, LuroInteraction,
+    responses::{PunishmentType, Response, StandardResponse},
+    CommandInteraction, LuroInteraction,
 };
 use luro_model::{
     database_driver::LuroDatabaseDriver,
@@ -50,28 +50,23 @@ pub enum TimeToBan {
 
 #[async_trait]
 impl LuroCommandTrait for Ban {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let interaction = &interaction;
-        let guild_id = interaction.guild_id.unwrap();
+    async fn handle_interaction(ctx: CommandInteraction<Self>) -> anyhow::Result<()> {
+        let guild_id = ctx.guild_id.unwrap();
         let guild = ctx.database.get_guild(&guild_id).await?;
         let luro = ctx
             .database
             .get_user(&ctx.twilight_client.current_user().await?.model().await?.id)
             .await?;
-        let mut moderator = interaction.get_interaction_author(&ctx).await?;
-        let mut punished_user = ctx.database.get_user(&data.user.resolved.id).await?;
-        let mut response = interaction.acknowledge_interaction(&ctx, false).await?;
+        let mut moderator = ctx.get_interaction_author().await?;
+        let mut punished_user = ctx.database.get_user(&ctx.command.user.resolved.id).await?;
+        let mut response = ctx.acknowledge_interaction(false).await?;
         let moderator_permissions = guild.user_permission(&moderator)?;
         let moderator_highest_role = guild.user_highest_role(&moderator);
         let punished_user_highest_role = guild.user_highest_role(&punished_user);
         let luro_permissions = guild.user_permission(&luro)?;
         let luro_highest_role = guild.user_highest_role(&luro);
-        let reason = reason(data.reason, data.details);
-        let period_string = match data.purge {
+        let reason = reason(ctx.command.reason, ctx.command.details);
+        let period_string = match ctx.command.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),
             TimeToBan::Hour => "Previous Hour".to_string(),
             TimeToBan::SixHours => "Previous 6 Hours".to_string(),
@@ -82,21 +77,21 @@ impl LuroCommandTrait for Ban {
         };
 
         if !luro_permissions.contains(Permissions::BAN_MEMBERS) {
-            return SimpleResponse::BotMissingPermission(Permissions::BAN_MEMBERS)
-                .respond(&ctx, interaction)
+            return ctx
+                .response_simple(Response::BotMissingPermission(Permissions::BAN_MEMBERS))
                 .await;
         }
 
         if !moderator_permissions.contains(Permissions::BAN_MEMBERS) {
-            return SimpleResponse::BotMissingPermission(Permissions::BAN_MEMBERS)
-                .respond(&ctx, interaction)
+            return ctx
+                .response_simple(Response::MissingPermission(Permissions::BAN_MEMBERS))
                 .await;
         }
 
         // Check if the author and the bot have required permissions.
         if guild.is_owner(&punished_user) {
-            return SimpleResponse::PermissionModifyServerOwner(&moderator.id)
-                .respond(&ctx, interaction)
+            return ctx
+                .response_simple(Response::PermissionModifyServerOwner(&moderator.id))
                 .await;
         }
 
@@ -106,8 +101,8 @@ impl LuroCommandTrait for Ban {
             if let Some(moderator_highest_role) = moderator_highest_role {
                 debug!("Moderator user position: {}", moderator_highest_role.0);
                 if punished_user_highest_role.0 <= moderator_highest_role.0 {
-                    return SimpleResponse::UserHeirarchy(&punished_user.member_name(&Some(guild_id)))
-                        .respond(&ctx, interaction)
+                    return ctx
+                        .response_simple(Response::UserHeirarchy(&punished_user.member_name(&Some(guild_id))))
                         .await;
                 }
             }
@@ -116,7 +111,7 @@ impl LuroCommandTrait for Ban {
                 debug!("Luro user position: {}", luro_highest_role.0);
                 if punished_user_highest_role.0 <= luro_highest_role.0 {
                     let name = ctx.database.current_user.read().unwrap().clone().name;
-                    return SimpleResponse::BotHeirarchy(&name).respond(&ctx, interaction).await;
+                    return ctx.response_simple(Response::BotHeirarchy(&name)).await;
                 }
             }
         } else {
@@ -149,14 +144,14 @@ impl LuroCommandTrait for Ban {
         };
 
         response.add_embed(embed.embed().0);
-        interaction.send_response(&ctx, response).await?;
+        ctx.response_send(response).await?;
 
         let ban = ctx.twilight_client.create_ban(guild_id, punished_user.id);
-        debug!("Purging {:#?} seconds worth of messages!", data.purge.value());
+        debug!("Purging {:#?} seconds worth of messages!", ctx.command.purge.value());
 
         match reason {
-            None => ban.delete_message_seconds(data.purge.value() as u32).await?,
-            Some(ref reason) => ban.delete_message_seconds(data.purge as u32).reason(reason).await?,
+            None => ban.delete_message_seconds(ctx.command.purge.value() as u32).await?,
+            Some(ref reason) => ban.delete_message_seconds(ctx.command.purge as u32).reason(reason).await?,
         };
 
         moderator.moderation_actions_performed += 1;
@@ -172,7 +167,7 @@ impl LuroCommandTrait for Ban {
         ctx.database.modify_user(&punished_user.id, &punished_user).await?;
 
         // If an alert channel is defined, send a message there
-        ctx.send_log_channel(&guild_id, LuroLogChannel::Moderator, |r| r.add_embed(embed.embed))
+        ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.embed))
             .await?;
 
         Ok(())

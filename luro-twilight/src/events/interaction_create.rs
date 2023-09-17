@@ -1,38 +1,42 @@
-use luro_framework::{Framework, InteractionCommand, InteractionComponent, InteractionContext, InteractionModal};
-use luro_model::database_driver::LuroDatabaseDriver;
-use tracing::{error, warn};
-use twilight_model::application::interaction::{InteractionData, InteractionType};
+use anyhow::anyhow;
+use luro_framework::{
+    CommandInteraction, ComponentInteraction, Context, ModalInteraction,
+};
+
+use tracing::error;
+use twilight_model::{
+    application::interaction::{InteractionData, InteractionType},
+    gateway::payload::incoming::InteractionCreate,
+};
 
 use crate::commands::{handle_autocomplete, handle_command, handle_component, handle_modal};
 
-pub async fn interaction_create_listener<D: LuroDatabaseDriver>(
-    framework: Framework<D>,
-    interaction: InteractionContext,
-) -> anyhow::Result<()> {
-    let data = match interaction.data.clone() {
-        Some(data) => data,
-        None => {
-            warn!(interaction = ?interaction, "Interaction without any data!");
-            return Ok(());
-        }
-    };
-
-    let response = match data {
-        InteractionData::ApplicationCommand(data) => match &interaction.kind {
-            InteractionType::ApplicationCommand => handle_command(framework, InteractionCommand::new(interaction, data)).await,
-            InteractionType::ApplicationCommandAutocomplete => {
-                handle_autocomplete(framework, InteractionCommand::new(interaction, data)).await
+pub async fn interaction_create_listener(ctx: Context, event: Box<InteractionCreate>) -> anyhow::Result<()> {
+    let response = match event.kind {
+        InteractionType::Ping => Err(anyhow!("Got ping command, which has not handler: {:#?}", event)),
+        InteractionType::ApplicationCommand => match event.data.clone() {
+            Some(InteractionData::ApplicationCommand(data)) => {
+                handle_command(CommandInteraction::new(ctx, event, data, ())).await
             }
-            _ => {
-                warn!(interaction = ?interaction, "Application Command with unexpected application data!");
-                Ok(())
-            }
+            _ => Err(anyhow!("Got unknown interaction: {:#?}", event)),
         },
-        InteractionData::MessageComponent(data) => {
-            handle_component(framework, InteractionComponent::new(interaction, data)).await
-        }
-        InteractionData::ModalSubmit(data) => handle_modal(framework, InteractionModal::new(interaction, data)).await,
-        _ => todo!(),
+        InteractionType::MessageComponent => match event.data.clone() {
+            Some(InteractionData::MessageComponent(data)) => {
+                handle_component(ComponentInteraction::new(ctx, event, data, ())).await
+            }
+            _ => Err(anyhow!("Got unknown interaction: {:#?}", event)),
+        },
+        InteractionType::ApplicationCommandAutocomplete => match event.data.clone() {
+            Some(InteractionData::ApplicationCommand(data)) => {
+                handle_autocomplete(CommandInteraction::new(ctx, event, data, ())).await
+            }
+            _ => Err(anyhow!("Got unknown interaction: {:#?}", event)),
+        },
+        InteractionType::ModalSubmit => match event.data.clone() {
+            Some(InteractionData::ModalSubmit(data)) => handle_modal(ModalInteraction::new(ctx, event, data, ())).await,
+            _ => Err(anyhow!("Got unknown interaction: {:#?}", event)),
+        },
+        data => Err(anyhow!("Got unknown interaction: {:#?}", data)),
     };
 
     // TODO: Really shitty event handler, please change this

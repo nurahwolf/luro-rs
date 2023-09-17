@@ -10,7 +10,7 @@ pub struct Sync {}
 #[async_trait]
 impl LuroCommandTrait for Sync {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         // Can only run this command in a guild

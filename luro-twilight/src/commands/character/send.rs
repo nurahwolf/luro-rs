@@ -1,8 +1,7 @@
-use luro_framework::command::LuroCommandTrait;
-use luro_framework::Framework;
-use luro_framework::InteractionCommand;
-use luro_framework::LuroInteraction;
-use luro_model::database_driver::LuroDatabaseDriver;
+use async_trait::async_trait;
+use luro_framework::command::ExecuteLuroCommand;
+use luro_framework::CommandInteraction;
+use luro_framework::interactions::InteractionTrait;
 use std::fmt::Write;
 
 use twilight_interactions::command::AutocompleteValue;
@@ -20,12 +19,8 @@ pub struct CharacterSendAutocomplete {
 }
 
 impl CharacterSendAutocomplete {
-    pub async fn interaction_command<D: LuroDatabaseDriver>(
-        self,
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let user_id = interaction.author_id();
+    pub async fn interaction_command(self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let user_id = ctx.author_id();
         let user_data = ctx.database.get_user(&user_id).await?;
         let choices = match self.name {
             AutocompleteValue::None => user_data
@@ -52,17 +47,16 @@ impl CharacterSendAutocomplete {
             AutocompleteValue::Completed(_) => vec![],
         };
 
-        interaction
-            .respond(&ctx, |response| {
-                response
-                    .choices(choices.into_iter())
-                    .response_type(InteractionResponseType::ApplicationCommandAutocompleteResult)
-            })
-            .await
+        ctx.respond(|response| {
+            response
+                .choices(choices.into_iter())
+                .response_type(InteractionResponseType::ApplicationCommandAutocompleteResult)
+        })
+        .await
     }
 }
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "send", desc = "Send a message as a character!")]
 pub struct CharacterSend {
     #[command(desc = "The character that should be proxied", autocomplete = true)]
@@ -70,27 +64,23 @@ pub struct CharacterSend {
     /// The message to send
     message: String,
 }
-#[async_trait::async_trait]
 
-impl LuroCommandTrait for CharacterSend {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let user_id = interaction.author_id();
+#[async_trait]
+impl ExecuteLuroCommand for CharacterSend {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let user_id = ctx.author_id();
 
         let user_data = ctx.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
-            return interaction
-                .respond(&ctx, |r| {
+            return ctx
+                .respond(|r| {
                     r.content(format!("Sorry, <@{user_id}> has no character profiles configured!"))
                         .ephemeral()
                 })
                 .await;
         }
 
-        let character = match user_data.characters.get(&data.name) {
+        let character = match user_data.characters.get(&self.name) {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
@@ -99,8 +89,8 @@ impl LuroCommandTrait for CharacterSend {
                     writeln!(characters, "- {character_name}: {}", character.short_description)?
                 }
 
-                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", data.name, characters);
-                return interaction.respond(&ctx, |r| r.content(response).ephemeral()).await;
+                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", self.name, characters);
+                return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
         let character_icon = match !character.icon.is_empty() {
@@ -108,14 +98,14 @@ impl LuroCommandTrait for CharacterSend {
             false => user_data.avatar(),
         };
 
-        let webhook = ctx.get_webhook(interaction.clone().channel.id).await?;
+        let webhook = ctx.get_webhook(ctx.channel.id).await?;
         let webhook_token = match webhook.token {
             Some(token) => token,
             None => match ctx.twilight_client.webhook(webhook.id).await?.model().await?.token {
                 Some(token) => token,
                 None => {
-                    return interaction
-                        .respond(&ctx, |r| r.content("I cannot create a webhook here! Sorry!").ephemeral())
+                    return ctx
+                        .respond(|r| r.content("I cannot create a webhook here! Sorry!").ephemeral())
                         .await
                 }
             },
@@ -123,11 +113,11 @@ impl LuroCommandTrait for CharacterSend {
 
         ctx.twilight_client
             .execute_webhook(webhook.id, &webhook_token)
-            .username(&format!("{} [{}]", data.name, user_data.member_name(&interaction.guild_id)))
-            .content(&data.message)
+            .username(&format!("{} [{}]", self.name, user_data.member_name(&ctx.guild_id)))
+            .content(&self.message)
             .avatar_url(&character_icon)
             .await?;
 
-        interaction.respond(&ctx, |r| r.content("Mirrored!").ephemeral()).await
+        ctx.respond(|r| r.content("Mirrored!").ephemeral()).await
     }
 }

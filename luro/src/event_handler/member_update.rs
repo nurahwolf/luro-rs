@@ -4,7 +4,7 @@ use twilight_model::gateway::payload::incoming::MemberUpdate;
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn member_update_listener(&self, event: Box<MemberUpdate>) -> anyhow::Result<()> {
         info!("Member {} updated in guild {}", event.user.id, event.guild_id);
 

@@ -11,7 +11,7 @@ mod member_ban_add;
 mod member_ban_remove;
 mod member_kick;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn audit_log_handler(self: Arc<Self>, event: Box<GuildAuditLogEntryCreate>) -> anyhow::Result<()> {
         let punished_user_id = match &event.target_id {
             Some(id) => id.cast(),

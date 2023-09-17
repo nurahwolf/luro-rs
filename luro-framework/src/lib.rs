@@ -1,6 +1,6 @@
 #![feature(async_fn_in_trait)]
 use luro_builder::embed::EmbedBuilder;
-use luro_database::LuroDatabase;
+use luro_database::{LuroDatabase, toml::TomlDatabaseDriver};
 use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse, user::LuroUser};
 use slash_command::LuroCommand;
 use std::{
@@ -29,26 +29,90 @@ use twilight_model::{
 pub mod command;
 pub mod context;
 mod framework;
-mod interactions;
+pub mod interactions;
 #[cfg(feature = "responses")]
 pub mod responses;
 pub mod slash_command;
 
-type LuroCommandType<D> = HashMap<String, LuroCommand<D>>;
+#[cfg(feature = "database-toml")]
+pub type DatabaseEngine = TomlDatabaseDriver;
+type LuroCommandType = HashMap<String, LuroCommand<()>>;
 type LuroMutex<T> = Arc<Mutex<T>>;
 
-/// The core framework. Should be available from ALL tasks and holds key data.
-/// Context classes generally take a reference to this to perform their actions.
+/// A context spawned from a command interaction
 #[derive(Clone)]
-pub struct Framework<D: LuroDatabaseDriver> {
+pub struct CommandInteraction<T> {
+    pub command: T,
+    pub app_permissions: Option<twilight_model::guild::Permissions>,
+    pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
+    pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
+    pub channel: twilight_model::channel::Channel,
+    pub data: Box<CommandData>,
+    pub database: Arc<LuroDatabase<DatabaseEngine>>,
+    pub global_commands: LuroMutex<LuroCommandType>,
+    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
+    pub guild_id: Option<Id<GuildMarker>>,
+    pub guild_locale: Option<String>,
+    pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
+    pub id: Id<twilight_model::id::marker::InteractionMarker>,
+    pub kind: twilight_model::application::interaction::InteractionType,
+    pub latency: twilight_gateway::Latency,
+    pub lavalink: Arc<twilight_lavalink::Lavalink>,
+    pub locale: Option<String>,
+    pub member: Option<twilight_model::guild::PartialMember>,
+    pub message: Option<twilight_model::channel::Message>,
+    pub original: twilight_model::application::interaction::Interaction,
+    pub shard: twilight_gateway::MessageSender,
+    pub token: String,
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub twilight_client: Arc<twilight_http::Client>,
+    pub user: Option<twilight_model::user::User>,
+}
+
+/// Luro's primary context, which is instanced per event.
+/// 
+/// Contains [Framework] and houses data containing the [Event], [Latency] and [MessageSender].
+#[derive(Clone)]
+pub struct Context {
     /// The caching layer of the framework
     #[cfg(feature = "cache-memory")]
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     /// Luro's database, which accepts a driver that implements [LuroDatabaseDriver]
-    pub database: Arc<LuroDatabase<D>>,
+    pub database: Arc<LuroDatabase<DatabaseEngine>>,
+    /// The raw event in which this [Context] was created from
+    pub event: twilight_gateway::Event,
+    /// A [Mutex] holding a bunch of [LuroCommandType] for global commands
+    pub global_commands: LuroMutex<LuroCommandType>,
+    /// A [Mutex] holding a bunch of [LuroCommandType] for guild commands, indexed by [GuildMarker]
+    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
+    /// A HTTP client used for making web requests. Uses Hyper.
+    #[cfg(feature = "http-client-hyper")]
+    pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
+    /// Latency information from the shard that this event was spawned from
+    pub latency: twilight_gateway::Latency,
+    /// A lavalink instance for playing music
+    #[cfg(feature = "lavalink")]
+    pub lavalink: Arc<twilight_lavalink::Lavalink>,
+    /// A [MessageSender] for interacting with the shard
+    pub shard: twilight_gateway::MessageSender,
+    /// Tracing subscriber information
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    /// Twilight client for interacting with the Discord API
+    pub twilight_client: Arc<twilight_http::Client>,
+}
+
+/// The core framework. Should be available from ALL tasks and holds key data.
+/// Context classes generally take a reference to this to perform their actions.
+#[derive(Clone)]
+pub struct Framework {
+    /// The caching layer of the framework
+    #[cfg(feature = "cache-memory")]
+    pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
+    /// Luro's database, which accepts a driver that implements [LuroDatabaseDriver]
+    pub database: Arc<LuroDatabase<DatabaseEngine>>,
     /// HTTP client used for making outbound API requests
     #[cfg(feature = "http-client-hyper")]
-    pub http_client: hyper::Client<hyper::client::HttpConnector>,
+    pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
     /// Lavalink client, for playing music
     #[cfg(feature = "lavalink")]
     pub lavalink: Arc<twilight_lavalink::Lavalink>,
@@ -58,18 +122,9 @@ pub struct Framework<D: LuroDatabaseDriver> {
     pub tracing_subscriber:
         tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     /// A mutable list of global commands, keyed by [String] (command name) and containing a [ApplicationCommandData]
-    pub global_commands: LuroMutex<LuroCommandType<D>>,
+    pub global_commands: LuroMutex<LuroCommandType>,
     /// A mutable list of guild commands, keyed by [GuildMarker] and containing [LuroCommand]s
-    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType<D>>>,
-}
-
-/// Luro's primary context, which is instanced per event.
-/// More specific contexts are spawned where possible, such as [InteractionContext]
-pub struct Context {
-    /// [Latency] information about the connection to the gateway
-    pub latency: twilight_gateway::Latency,
-    /// A [MessageSender] used for communicating with the shard
-    pub shard: twilight_gateway::MessageSender,
+    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
 }
 
 /// A context sapwned only in which the event is an interaction
@@ -211,44 +266,101 @@ pub struct InteractionModal {
 }
 pub trait LuroInteraction {
     fn original_interaction<D: LuroDatabaseDriver>(&self) -> &Interaction;
-    async fn accent_colour<D: LuroDatabaseDriver>(&self, framework: &Framework<D>) -> u32;
+    async fn accent_colour<D: LuroDatabaseDriver>(&self, framework: &Framework) -> u32;
     async fn acknowledge_interaction<D: LuroDatabaseDriver>(
         &self,
-        framework: &Framework<D>,
+        framework: &Framework,
         ephemeral: bool,
     ) -> anyhow::Result<LuroResponse>;
-    async fn default_embed<D: LuroDatabaseDriver>(&self, framework: &Framework<D>) -> EmbedBuilder;
-    async fn get_interaction_author<D: LuroDatabaseDriver>(&self, framework: &Framework<D>) -> anyhow::Result<LuroUser>;
+    async fn default_embed<D: LuroDatabaseDriver>(&self, framework: &Framework) -> EmbedBuilder;
+    async fn get_interaction_author<D: LuroDatabaseDriver>(&self, framework: &Framework) -> anyhow::Result<LuroUser>;
     async fn get_specified_user_or_author<D: LuroDatabaseDriver>(
         &self,
-        framework: &Framework<D>,
+        framework: &Framework,
         specified_user: Option<&ResolvedUser>,
     ) -> anyhow::Result<LuroUser>;
-    async fn respond_message<D, F>(&self, framework: &Framework<D>, response: F) -> anyhow::Result<Option<Message>>
+    async fn respond_message<D, F>(&self, framework: &Framework, response: F) -> anyhow::Result<Option<Message>>
     where
         D: LuroDatabaseDriver,
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse;
-    async fn respond<D, F>(&self, framework: &Framework<D>, response: F) -> anyhow::Result<()>
+    async fn respond<D, F>(&self, framework: &Framework, response: F) -> anyhow::Result<()>
     where
         D: LuroDatabaseDriver,
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse;
     async fn response_create<D: LuroDatabaseDriver>(
         &self,
-        framework: &Framework<D>,
+        framework: &Framework,
         response: &LuroResponse,
     ) -> anyhow::Result<Option<Message>>;
     async fn response_update<D: LuroDatabaseDriver>(
         &self,
-        framework: &Framework<D>,
+        framework: &Framework,
         response: &LuroResponse,
     ) -> anyhow::Result<Message>;
     async fn send_response<D: LuroDatabaseDriver>(
         &self,
-        framework: &Framework<D>,
+        framework: &Framework,
         response: LuroResponse,
     ) -> anyhow::Result<Option<Message>>;
     fn author_id(&self) -> Id<UserMarker>;
     fn author(&self) -> &User;
     fn guild_id(&self) -> Option<Id<GuildMarker>>;
     fn command_name(&self) -> &str;
+}
+
+/// A context spawned from a modal interaction
+pub struct ModalInteraction<T> {
+    pub command: T,
+    pub app_permissions: Option<twilight_model::guild::Permissions>,
+    pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
+    pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
+    pub channel: twilight_model::channel::Channel,
+    pub data: ModalInteractionData,
+    pub database: Arc<LuroDatabase<DatabaseEngine>>,
+    pub global_commands: LuroMutex<LuroCommandType>,
+    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
+    pub guild_id: Option<Id<GuildMarker>>,
+    pub guild_locale: Option<String>,
+    pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
+    pub id: Id<twilight_model::id::marker::InteractionMarker>,
+    pub kind: twilight_model::application::interaction::InteractionType,
+    pub latency: twilight_gateway::Latency,
+    pub lavalink: Arc<twilight_lavalink::Lavalink>,
+    pub locale: Option<String>,
+    pub member: Option<twilight_model::guild::PartialMember>,
+    pub message: Option<twilight_model::channel::Message>,
+    pub original: twilight_model::application::interaction::Interaction,
+    pub shard: twilight_gateway::MessageSender,
+    pub token: String,
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub twilight_client: Arc<twilight_http::Client>,
+    pub user: Option<twilight_model::user::User>,
+}
+
+pub struct ComponentInteraction<T> {
+    pub command: T,
+    pub app_permissions: Option<twilight_model::guild::Permissions>,
+    pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
+    pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
+    pub channel: twilight_model::channel::Channel,
+    pub data: Box<MessageComponentInteractionData>,
+    pub database: Arc<LuroDatabase<DatabaseEngine>>,
+    pub global_commands: LuroMutex<LuroCommandType>,
+    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
+    pub guild_id: Option<Id<GuildMarker>>,
+    pub guild_locale: Option<String>,
+    pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
+    pub id: Id<twilight_model::id::marker::InteractionMarker>,
+    pub kind: twilight_model::application::interaction::InteractionType,
+    pub latency: twilight_gateway::Latency,
+    pub lavalink: Arc<twilight_lavalink::Lavalink>,
+    pub locale: Option<String>,
+    pub member: Option<twilight_model::guild::PartialMember>,
+    pub message: twilight_model::channel::Message,
+    pub original: twilight_model::application::interaction::Interaction,
+    pub shard: twilight_gateway::MessageSender,
+    pub token: String,
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub twilight_client: Arc<twilight_http::Client>,
+    pub user: Option<twilight_model::user::User>,
 }

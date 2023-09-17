@@ -1,10 +1,10 @@
+use async_trait::async_trait;
 use luro_dice::{DiceRoll, RollResult, RollValue};
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "simple", desc = "A simpler version, for those not wanting to deal with foruma")]
 pub struct Simple {
     /// Total number of dice, for example two dice
@@ -42,45 +42,41 @@ pub struct Simple {
     #[command(min_value = 1, max_value = 1000)]
     divide: Option<i64>,
 }
-#[async_trait::async_trait]
 
-impl LuroCommandTrait for Simple {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let mut roll = format!("{}d{}", data.dice, data.sides);
+#[async_trait]
+impl ExecuteLuroCommand for Simple {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let mut roll = format!("{}d{}", self.dice, self.sides);
 
-        if let Some(operation) = data.keep_highest {
+        if let Some(operation) = self.keep_highest {
             write!(roll, "kh{operation}")?
         }
 
-        if let Some(operation) = data.keep_lowest {
+        if let Some(operation) = self.keep_lowest {
             write!(roll, "kl{operation}")?
         }
 
-        if let Some(operation) = data.drop_highest {
+        if let Some(operation) = self.drop_highest {
             write!(roll, "dh{operation}")?
         }
 
-        if let Some(operation) = data.drop_lowest {
+        if let Some(operation) = self.drop_lowest {
             write!(roll, "dl{operation}")?
         }
 
-        if let Some(operation) = data.add {
+        if let Some(operation) = self.add {
             write!(roll, "+{operation}")?
         }
 
-        if let Some(operation) = data.take {
+        if let Some(operation) = self.take {
             write!(roll, "-{operation}")?
         }
 
-        if let Some(operation) = data.multiply {
+        if let Some(operation) = self.multiply {
             write!(roll, "*{operation}")?
         }
 
-        if let Some(operation) = data.divide {
+        if let Some(operation) = self.divide {
             write!(roll, "/{operation}")?
         }
 
@@ -88,7 +84,7 @@ impl LuroCommandTrait for Simple {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
-        let mut result_string = if let Some(mut reason) = data.reason {
+        let mut result_string = if let Some(mut reason) = self.reason.clone() {
             if !reason.starts_with('\\') {
                 reason = format!("```{reason}```")
             } else {
@@ -98,7 +94,7 @@ impl LuroCommandTrait for Simple {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                interaction.author_id(),
+                ctx.author_id(),
                 result.string_result,
                 result.dice_total
             )
@@ -114,14 +110,13 @@ impl LuroCommandTrait for Simple {
             result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
         }
 
-        interaction
-            .respond(&ctx, |r| {
-                if data.ephemeral.unwrap_or_default() {
-                    r.ephemeral();
-                }
-                r.content(result_string)
-            })
-            .await?;
+        ctx.respond(|r| {
+            if self.ephemeral.unwrap_or_default() {
+                r.ephemeral();
+            }
+            r.content(result_string)
+        })
+        .await?;
         Ok(())
     }
 }

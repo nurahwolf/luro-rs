@@ -1,11 +1,10 @@
 #![feature(async_fn_in_trait)]
 #![feature(let_chains)]
+
 use anyhow::Context;
-use commands::default_global_commands;
 use dotenv::dotenv;
 use events::event_handler;
 use futures_util::StreamExt;
-use luro_framework::Context as LuroContext;
 use luro_framework::Framework;
 use luro_model::{configuration::Configuration, FILTER, INTENTS, LOG_PATH};
 use std::env;
@@ -40,9 +39,6 @@ async fn main() -> anyhow::Result<()> {
 
     // Create the framework, Initialise tracing for logs based on bot name
     let (framework, mut shards) = Framework::new(config, tracing_subscriber).await?;
-    framework
-        .register_new_commands(None, default_global_commands().into_values().collect())
-        .await?;
     init_tracing_subscriber(filter, &framework.database.current_user.read().unwrap().name);
 
     // Work on our events
@@ -71,14 +67,7 @@ async fn main() -> anyhow::Result<()> {
             Ok(event) => event,
         };
 
-        tokio::spawn(event_handler(
-            framework.clone(),
-            LuroContext {
-                latency: shard.latency().clone(),
-                shard: shard.sender(),
-            },
-            event,
-        ));
+        tokio::spawn(event_handler(luro_framework::Context::new(framework.clone(), event, shard.latency().clone(), shard.sender())));
     }
 
     Ok(())

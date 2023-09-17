@@ -6,7 +6,7 @@ use twilight_model::{
 
 use crate::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl Framework {
     // Get a webhook for a channel, or create it if it does not exist
     pub async fn get_webhook(&self, channel_id: Id<ChannelMarker>) -> anyhow::Result<Webhook> {
         let webhooks = self.twilight_client.channel_webhooks(channel_id).await?.model().await?;

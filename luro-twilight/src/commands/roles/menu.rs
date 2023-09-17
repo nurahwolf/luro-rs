@@ -1,4 +1,4 @@
-use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -30,7 +30,7 @@ pub struct Menu {
 
 impl LuroCommandTrait for Menu {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -48,7 +48,7 @@ impl LuroCommandTrait for Menu {
         }
 
         if !owner_match {
-            return SimpleResponse::PermissionNotBotStaff().respond(&ctx, &interaction).await;
+            return Response::PermissionNotBotStaff().respond(&ctx, &interaction).await;
         }
 
         // SAFETY: This command can only be used in guilds

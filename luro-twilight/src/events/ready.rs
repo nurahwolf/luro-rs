@@ -1,23 +1,22 @@
-use luro_framework::{Context, Framework};
-use luro_model::database_driver::LuroDatabaseDriver;
+use anyhow::anyhow;
+use luro_framework::Context;
 use tracing::info;
-use twilight_model::gateway::{
-    payload::{incoming::Ready, outgoing::UpdatePresence},
-    presence::{ActivityType, MinimalActivity, Status},
+use twilight_model::{
+    application::command::Command,
+    gateway::{
+        payload::{incoming::Ready, outgoing::UpdatePresence},
+        presence::{ActivityType, MinimalActivity, Status},
+    },
 };
 
-pub async fn ready_listener<D: LuroDatabaseDriver>(
-    framework: Framework<D>,
-    ctx: Context,
-    event: Box<Ready>,
-) -> anyhow::Result<()> {
+pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Result<()> {
     info!("Luro is now ready!");
     info!("==================");
     info!("Username:      {}", event.user.name);
     info!("ID:            {}", event.user.id);
     info!("Guilds:        {}", event.guilds.len());
     info!("API Version:   {}", event.version);
-    if let Some(latency) = ctx.latency.average() {
+    if let Some(latency) = framework.latency.average() {
         info!("Latency:       {} ms", latency.as_millis());
     }
 
@@ -28,7 +27,7 @@ pub async fn ready_listener<D: LuroDatabaseDriver>(
         info!("Total Shards:  {}", shard_id.total());
         presence_string.push_str(format!(" | shard {}", shard_id.number()).as_str());
 
-        ctx.shard.command(&UpdatePresence::new(
+        framework.shard.command(&UpdatePresence::new(
             vec![MinimalActivity {
                 kind: ActivityType::Playing,
                 name: presence_string,
@@ -58,7 +57,13 @@ pub async fn ready_listener<D: LuroDatabaseDriver>(
     }
     info!("Owners:        {owners}");
 
-    framework.register_commands(None).await?;
+    let commands = match framework.global_commands.lock() {
+        Ok(lock) => lock.clone(),
+        Err(_) => return Err(anyhow!("Lock is poisioned!")),
+    };
+
+    framework.register_commands(&commands.iter().map(|(_, x)| (x.create)().into()).collect::<Vec<Command>>()).await?;
+    info!("Registered {} global commands!", commands.len());
 
     Ok(())
 }

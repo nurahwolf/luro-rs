@@ -1,9 +1,7 @@
 use async_trait::async_trait;
 use luro_framework::{
-    command::{LuroCommandBuilder, LuroCommandTrait},
-    Framework, InteractionCommand, LuroInteraction,
+    command::LuroCommandTrait, LuroInteraction, CommandInteraction,
 };
-use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 #[derive(CommandModel, CreateCommand)]
@@ -15,22 +13,18 @@ pub struct Say {
     user: Option<ResolvedUser>,
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Say {}
-
 #[async_trait]
 impl LuroCommandTrait for Say {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
+    async fn handle_interaction(
+        ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let content = if let Some(user) = data.user {
-            format!("Hey <@{}>!\n{}", user.resolved.id, data.message)
+        let content = if let Some(user) = ctx.command.user {
+            format!("Hey <@{}>!\n{}", user.resolved.id, ctx.command.message)
         } else {
-            data.message
+            ctx.command.message
         };
 
-        interaction.respond(&ctx, |response| response.content(content)).await?;
+        content.respond(&ctx, |response| response.content(content)).await?;
         Ok(())
     }
 }

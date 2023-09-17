@@ -1,16 +1,55 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
-use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{application::interaction::application_command::CommandData, guild::Permissions};
 
-use crate::responses::SimpleResponse;
+use crate::responses::Response;
 use crate::slash_command::LuroCommand;
-use crate::{Framework, InteractionCommand, InteractionComponent, InteractionModal};
+use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
 
-/// Simply a wrapper around [LuroCommand], ensuring that [CreateCommand] is present
-pub trait LuroCommandBuilder<D: LuroDatabaseDriver + 'static>: LuroCommandTrait + CreateCommand {
-    fn new_command() -> LuroCommand<D> {
+pub trait CreateLuroCommand: CommandModel {
+    /// Create a new command and get it's data from the interaction
+    fn new_command(data: Box<CommandData>) -> anyhow::Result<Self>
+    where
+        Self: Sized,
+    {
+        let data = *data;
+        match Self::from_interaction(data.into()) {
+            Ok(ok) => Ok(ok),
+            Err(why) => Err(anyhow!(
+                "Got interaction data, but failed to parse it to the command type specified: {why}"
+            )),
+        }
+    }
+}
+
+#[async_trait]
+pub trait ExecuteLuroCommand: Send + Sync {
+    /// Run the command / command group
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await
+    }
+
+    /// Handle a component interaction. This could be a button or other form of interaciton
+    async fn interaction_component(&self, ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+        ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await
+    }
+
+    /// Create and respond to a button interaction
+    async fn interaction_modal(&self, ctx: ModalInteraction<()>) -> anyhow::Result<()> {
+        ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await
+    }
+
+    /// Create and respond to a button interaction
+    async fn interaction_autocomplete(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await
+    }
+}
+
+/// Add some custom functionality around [CommandModel]
+#[async_trait]
+pub trait LuroCommandTrait: CommandModel + CreateCommand + Send + Sync + 'static {
+    fn new_command() -> LuroCommand<Self> {
         LuroCommand {
             name: Self::NAME,
             create: Self::create_command,
@@ -20,11 +59,7 @@ pub trait LuroCommandBuilder<D: LuroDatabaseDriver + 'static>: LuroCommandTrait 
             autocomplete: Self::handle_autocomplete,
         }
     }
-}
 
-/// Add some custom functionality around [CommandModel]
-#[async_trait]
-pub trait LuroCommandTrait: CommandModel {
     /// Create a new command and get it's data from the interaction
     fn new(data: Box<CommandData>) -> anyhow::Result<Self> {
         let data = *data;
@@ -37,38 +72,23 @@ pub trait LuroCommandTrait: CommandModel {
     }
 
     /// Run the command / command group
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        SimpleResponse::unknown_command(&ctx, &interaction).await
+    async fn handle_interaction(ctx: CommandInteraction<Self>) -> anyhow::Result<()> {
+        ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await
     }
 
     /// Handle a component interaction. This could be a button or other form of interaciton
-    async fn handle_component<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionComponent,
-    ) -> anyhow::Result<()> {
-        SimpleResponse::UnknownCommand(&interaction.data.custom_id)
-            .respond(&ctx, &interaction)
-            .await
+    async fn handle_component(ctx: ComponentInteraction<Self>) -> anyhow::Result<()> {
+        ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await
     }
 
     /// Create and respond to a button interaction
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
-        SimpleResponse::UnknownCommand(&interaction.data.custom_id)
-            .respond(&ctx, &interaction)
-            .await
+    async fn handle_modal(ctx: ModalInteraction<Self>) -> anyhow::Result<()> {
+        ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await
     }
 
     /// Create and respond to a button interaction
-    async fn handle_autocomplete<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        SimpleResponse::UnknownCommand(&interaction.data.name)
-            .respond(&ctx, &interaction)
-            .await
+    async fn handle_autocomplete(ctx: CommandInteraction<Self>) -> anyhow::Result<()> {
+        ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await
     }
 
     /// The default permissions a user needs to run this command

@@ -22,7 +22,7 @@ pub struct Message {
 #[async_trait]
 impl LuroCommandTrait for Message {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

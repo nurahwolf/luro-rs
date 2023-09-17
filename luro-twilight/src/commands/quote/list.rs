@@ -10,7 +10,7 @@ pub struct List {}
 #[async_trait]
 impl LuroCommandTrait for List {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let quotes = ctx.database.get_quotes().await?;

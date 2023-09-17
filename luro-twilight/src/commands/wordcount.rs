@@ -8,7 +8,7 @@ use std::{
 use anyhow::Context;
 use async_trait::async_trait;
 use luro_framework::{
-    command::{LuroCommandBuilder, LuroCommandTrait},
+    command::LuroCommandTrait,
     Framework, InteractionCommand, LuroInteraction,
 };
 use luro_model::database_driver::LuroDatabaseDriver;
@@ -33,12 +33,10 @@ pub struct Wordcount {
     global: Option<bool>,
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Wordcount {}
-
 #[async_trait]
 impl LuroCommandTrait for Wordcount {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

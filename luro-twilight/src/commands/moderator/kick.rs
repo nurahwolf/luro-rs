@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use luro_framework::command::LuroCommandTrait;
-use luro_framework::responses::{PunishmentType, SimpleResponse, StandardResponse};
+use luro_framework::responses::{PunishmentType, Response, StandardResponse};
 use luro_framework::{Framework, InteractionCommand, LuroInteraction};
 
 use luro_model::database_driver::LuroDatabaseDriver;
@@ -33,7 +33,7 @@ pub struct Kick {
 #[async_trait]
 impl LuroCommandTrait for Kick {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -56,20 +56,20 @@ impl LuroCommandTrait for Kick {
         let reason = reason(data.reason, data.details);
 
         if !luro_permissions.contains(Permissions::KICK_MEMBERS) {
-            return SimpleResponse::BotMissingPermission(Permissions::KICK_MEMBERS)
+            return Response::BotMissingPermission(Permissions::KICK_MEMBERS)
                 .respond(&ctx, &interaction)
                 .await;
         }
 
         if !moderator_permissions.contains(Permissions::KICK_MEMBERS) {
-            return SimpleResponse::MissingPermission(Permissions::KICK_MEMBERS)
+            return Response::MissingPermission(Permissions::KICK_MEMBERS)
                 .respond(&ctx, &interaction)
                 .await;
         }
 
         // Check if the author and the bot have required permissions.
         if guild.is_owner(&punished_user) {
-            return SimpleResponse::PermissionModifyServerOwner(&moderator.id)
+            return Response::PermissionModifyServerOwner(&moderator.id)
                 .respond(&ctx, &interaction)
                 .await;
         }
@@ -80,7 +80,7 @@ impl LuroCommandTrait for Kick {
             if let Some(moderator_highest_role) = moderator_highest_role {
                 info!("Moderator user position: {}", moderator_highest_role.0);
                 if punished_user_highest_role.0 <= moderator_highest_role.0 {
-                    return SimpleResponse::UserHeirarchy(&punished_user.member_name(&Some(guild_id)))
+                    return Response::UserHeirarchy(&punished_user.member_name(&Some(guild_id)))
                         .respond(&ctx, &interaction)
                         .await;
                 }
@@ -90,7 +90,7 @@ impl LuroCommandTrait for Kick {
                 info!("Luro user position: {}", luro_highest_role.0);
                 if punished_user_highest_role.0 <= luro_highest_role.0 {
                     let name = ctx.database.current_user.read().unwrap().clone().name;
-                    return SimpleResponse::BotHeirarchy(&name).respond(&ctx, &interaction).await;
+                    return Response::BotHeirarchy(&name).respond(&ctx, &interaction).await;
                 }
             }
         } else {

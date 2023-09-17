@@ -1,7 +1,7 @@
 use async_trait::async_trait;
-use luro_framework::command::{LuroCommandBuilder, LuroCommandTrait};
-use luro_framework::responses::SimpleResponse;
-use luro_framework::{Framework, InteractionCommand, InteractionComponent, LuroInteraction};
+use luro_framework::command::LuroCommandTrait;
+use luro_framework::responses::Response;
+use luro_framework::{Framework, InteractionCommand, InteractionComponent, LuroInteraction, CommandInteraction};
 use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_model::application::interaction::InteractionData;
 
@@ -100,25 +100,22 @@ pub enum Marry {
     Marriages(Marriages),
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Marry {}
-
 #[async_trait]
 impl LuroCommandTrait for Marry {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
+        ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
+        let data = Self::new(ctx.data.clone())?;
 
         // Call the appropriate subcommand.
-        match data {
-            Self::Someone(_) => Someone::handle_interaction(ctx, interaction).await,
-            Self::Marriages(_) => Marriages::handle_interaction(ctx, interaction).await,
+        match ctx.command {
+            Self::Someone(_) => Someone::handle_interaction(ctx).await,
+            Self::Marriages(_) => Marriages::handle_interaction(ctx).await,
         }
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionComponent,
     ) -> anyhow::Result<()> {
         let interaction_author = interaction.author_id();
@@ -127,7 +124,7 @@ impl LuroCommandTrait for Marry {
         let data = match original_interaction.data.unwrap() {
             InteractionData::ApplicationCommand(data) => Self::new(data)?,
             _ => {
-                return SimpleResponse::InternalError(anyhow!("No command data!"))
+                return Response::InternalError(anyhow!("No command data!"))
                     .respond(&ctx, &interaction)
                     .await
             }
@@ -137,7 +134,7 @@ impl LuroCommandTrait for Marry {
         let (mut proposee, reason) = match data {
             Self::Someone(command) => (ctx.database.get_user(&command.marry.resolved.id).await?, command.reason),
             Self::Marriages(_) => {
-                return SimpleResponse::InternalError(anyhow!("No command data!"))
+                return Response::InternalError(anyhow!("No command data!"))
                     .respond(&ctx, &interaction)
                     .await
             }
@@ -218,7 +215,7 @@ pub struct Marriages {
 #[async_trait]
 impl LuroCommandTrait for Marriages {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -277,7 +274,7 @@ pub struct Someone {
 #[async_trait]
 impl LuroCommandTrait for Someone {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

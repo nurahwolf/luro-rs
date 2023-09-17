@@ -11,7 +11,7 @@ use tracing::{debug, info, trace, warn};
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn response_message_modified(self: &Arc<Self>, message: &LuroMessage) -> anyhow::Result<()> {
         trace!(message = ?message, "Message Modified");
 

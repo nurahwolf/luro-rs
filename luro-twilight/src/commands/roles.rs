@@ -3,8 +3,8 @@ use anyhow::Context;
 use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
 use luro_framework::{
-    command::{LuroCommandBuilder, LuroCommandTrait},
-    Framework, InteractionCommand, InteractionComponent, LuroInteraction,
+    command::LuroCommandTrait,
+    Framework, InteractionCommand, InteractionComponent, LuroInteraction, CommandInteraction,
 };
 use luro_model::{database_driver::LuroDatabaseDriver, COLOUR_DANGER};
 use tracing::{debug, info, warn};
@@ -28,23 +28,19 @@ pub enum RoleCommands {
     Blacklist(Blacklist),
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for RoleCommands {}
-
 #[async_trait]
 impl LuroCommandTrait for RoleCommands {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
+    async fn handle_interaction(
+        ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        match data {
-            Self::Menu(_command) => menu::Menu::handle_interaction(ctx, interaction).await,
-            Self::Blacklist(_command) => blacklist::Blacklist::handle_interaction(ctx, interaction).await,
+        match ctx.command {
+            Self::Menu(_command) => menu::Menu::handle_interaction(ctx).await,
+            Self::Blacklist(_command) => blacklist::Blacklist::handle_interaction(ctx).await,
         }
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionComponent,
     ) -> anyhow::Result<()> {
         let mut message = interaction.message.clone();

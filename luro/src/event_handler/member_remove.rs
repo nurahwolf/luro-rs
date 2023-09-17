@@ -6,7 +6,7 @@ use twilight_model::gateway::payload::incoming::MemberRemove;
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn member_remove_listener(&self, event: MemberRemove) -> anyhow::Result<()> {
         info!("Member {} removed / left from guild {}", event.user.id, event.guild_id);
 

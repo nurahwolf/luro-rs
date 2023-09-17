@@ -16,7 +16,7 @@ pub struct Guilds {
 #[async_trait]
 impl LuroCommandTrait for Guilds {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

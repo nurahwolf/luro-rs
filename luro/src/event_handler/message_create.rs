@@ -7,7 +7,7 @@ use twilight_model::gateway::payload::incoming::MessageCreate;
 
 use crate::{framework::Framework, models::LuroWebhook};
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn message_create_listener(self: &Arc<Self>, message: MessageCreate) -> Result<(), Error> {
         let user_data = self.database.get_user(&message.author.id).await?;
         let first_word = message.content.split(' ').next().unwrap_or("");

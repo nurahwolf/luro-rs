@@ -1,10 +1,9 @@
 use anyhow::anyhow;
 use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
-use luro_framework::command::{LuroCommandBuilder, LuroCommandTrait};
-use luro_framework::context::parse_modal_field::parse_modal_field_required;
-use luro_framework::responses::SimpleResponse;
-use luro_framework::{Framework, InteractionCommand, InteractionComponent, InteractionModal, LuroInteraction};
+use luro_framework::command::LuroCommandTrait;
+use luro_framework::responses::Response;
+use luro_framework::{Framework, InteractionCommand, InteractionComponent, LuroInteraction, ModalInteraction};
 use luro_model::story::Story;
 use luro_model::COLOUR_DANGER;
 use rand::Rng;
@@ -31,16 +30,15 @@ pub struct StoryCommand {
     add: Option<bool>,
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for StoryCommand {}
 
 #[async_trait]
 impl LuroCommandTrait for StoryCommand {
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
-        let nsfw = interaction.channel.clone().nsfw.unwrap_or(false);
+    async fn handle_modal(ctx: ModalInteraction<Self>) -> anyhow::Result<()> {
+        let nsfw = ctx.channel.clone().nsfw.unwrap_or(false);
         let stories = ctx.database.get_stories(nsfw).await?;
         let id = stories.len() + 1;
-        let title = parse_modal_field_required(&interaction.data, "story-title")?.to_owned();
-        let description = parse_modal_field_required(&interaction.data, "story-description")?.to_owned();
+        let title = ctx.parse_field_required("story-title")?.to_owned();
+        let description = ctx.parse_field_required( "story-description")?.to_owned();
 
         ctx.database
             .save_story(
@@ -48,7 +46,7 @@ impl LuroCommandTrait for StoryCommand {
                 Story {
                     title,
                     description,
-                    author: interaction.author_id(),
+                    author: ctx.author_id(),
                     nsfw,
                 },
                 nsfw,
@@ -58,7 +56,7 @@ impl LuroCommandTrait for StoryCommand {
     }
 
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -125,7 +123,7 @@ impl LuroCommandTrait for StoryCommand {
         let story = match stories.get(&story_id) {
             Some(story) => story,
             None => {
-                return SimpleResponse::InternalError(anyhow!("There is no story with ID {story_id}."))
+                return Response::InternalError(anyhow!("There is no story with ID {story_id}."))
                     .respond(&ctx, &interaction)
                     .await
             }
@@ -152,7 +150,7 @@ impl LuroCommandTrait for StoryCommand {
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionComponent,
     ) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::default();

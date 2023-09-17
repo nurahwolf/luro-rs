@@ -1,9 +1,9 @@
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use async_trait::async_trait;
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "proxy", desc = "Configure a prefix for proxying messages")]
 pub struct Proxy {
     #[command(desc = "The character that should be modified", autocomplete = true)]
@@ -14,25 +14,21 @@ pub struct Proxy {
     remove: Option<bool>,
 }
 #[async_trait::async_trait]
-
-impl LuroCommandTrait for Proxy {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let user_id = interaction.author_id();
+#[async_trait]
+impl ExecuteLuroCommand for Proxy {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let user_id = ctx.author_id();
         let mut user_data = ctx.database.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
-            return interaction
-                .respond(&ctx, |r| {
+            return ctx
+                .respond(|r| {
                     r.content(format!("Sorry, <@{user_id}> has no character profiles configured!"))
                         .ephemeral()
                 })
                 .await;
         }
 
-        let character = match user_data.characters.get(&data.name) {
+        let character = match user_data.characters.get(&self.name) {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
@@ -41,16 +37,16 @@ impl LuroCommandTrait for Proxy {
                     writeln!(characters, "- {character_name}: {}", character.short_description)?
                 }
 
-                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", data.name, characters);
-                return interaction.respond(&ctx, |r| r.content(response).ephemeral()).await;
+                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", self.name, characters);
+                return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
 
-        if data.remove.unwrap_or_default() {
-            let content = match user_data.character_prefix.remove(&data.prefix) {
+        if self.remove.unwrap_or_default() {
+            let content = match user_data.character_prefix.remove(&self.prefix) {
                 Some(prefix) => {
                     ctx.database.modify_user(&user_id, &user_data).await?;
-                    format!("Prefix {prefix} removed from character {}!", data.name)
+                    format!("Prefix {prefix} removed from character {}!", self.name)
                 }
                 None => {
                     let mut prefix_string = String::new();
@@ -60,10 +56,10 @@ impl LuroCommandTrait for Proxy {
                     prefix_string
                 }
             };
-            return interaction.respond(&ctx, |r| r.content(content).ephemeral()).await;
+            return ctx.respond(|r| r.content(content).ephemeral()).await;
         }
 
-        user_data.character_prefix.insert(data.prefix, data.name.clone());
+        user_data.character_prefix.insert(self.prefix.clone(), self.name.clone());
         ctx.database.modify_user(&user_id, &user_data).await?;
 
         let character_icon = match !character.icon.is_empty() {
@@ -71,6 +67,6 @@ impl LuroCommandTrait for Proxy {
             false => user_data.avatar(),
         };
 
-        interaction.respond(&ctx, |response|response.embed(|embed|embed.author(|author|author.icon_url(character_icon).name(&data.name)).description("Your proxied messages will look like this now!\n\n*Note:* If I am using your avatar, make sure that I have been set with an icon! `/character icon`")).ephemeral()).await
+        ctx.respond(|response|response.embed(|embed|embed.author(|author|author.icon_url(character_icon).name(&self.name)).description("Your proxied messages will look like this now!\n\n*Note:* If I am using your avatar, make sure that I have been set with an icon! `/character icon`")).ephemeral()).await
     }
 }

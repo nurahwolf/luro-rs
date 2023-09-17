@@ -1,12 +1,13 @@
-use luro_framework::command::LuroCommandTrait;
-use luro_framework::{Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use async_trait::async_trait;
+use luro_framework::command::ExecuteLuroCommand;
+use luro_framework::interactions::InteractionTrait;
+use luro_framework::CommandInteraction;
 use luro_model::user::character::{Fetish, FetishCategory, FetishList};
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "add", desc = "Add a fetish to a character profile")]
 pub struct Add {
     #[command(desc = "The character that should be modified", autocomplete = true)]
@@ -16,41 +17,36 @@ pub struct Add {
     /// Description of that fetish
     description: String,
 }
-#[async_trait::async_trait]
 
-impl LuroCommandTrait for Add {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-
-        let mut embed = interaction.default_embed(&ctx).await;
-        let user_id = interaction.author_id();
+#[async_trait]
+impl ExecuteLuroCommand for Add {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let mut embed = ctx.default_embed().await;
+        let user_id = ctx.author_id();
         let mut user_data = ctx.database.get_user(&user_id).await?;
-        embed.title(format!("Character Profile - {}", data.name));
+        embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| {
             a.icon_url(user_data.avatar())
                 .name(format!("Profile by {}", user_data.name()))
         });
 
         if user_data.characters.is_empty() {
-            return interaction
-                .respond(&ctx, |r| {
+            return ctx
+                .respond(|r| {
                     r.content(format!("Hey <@{user_id}>, you must add a character first!!"))
                         .ephemeral()
                 })
                 .await;
         }
 
-        let character = match user_data.characters.get_mut(&data.name) {
+        let character = match user_data.characters.get_mut(&self.name) {
             Some(character) => {
                 let test = character.fetishes.len() + 1;
                 character.fetishes.insert(
                     test,
                     Fetish {
-                        category: data.fetish,
-                        description: data.description,
+                        category: self.fetish.clone(),
+                        description: self.description.clone(),
                         list: FetishList::Custom,
                     },
                 );
@@ -65,9 +61,9 @@ impl LuroCommandTrait for Add {
 
                 let response = format!(
                     "I'm afraid that you have no characters with the name `{}`! You have the following characters:\n{}",
-                    data.name, characters
+                    self.name, characters
                 );
-                return interaction.respond(&ctx, |r| r.content(response).ephemeral()).await;
+                return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
 
@@ -121,6 +117,6 @@ impl LuroCommandTrait for Add {
             embed.create_field("Limits", &limits, false);
         }
 
-        interaction.respond(&ctx, |r| r.add_embed(embed).ephemeral()).await
+        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }
 }

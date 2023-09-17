@@ -8,7 +8,7 @@ use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn subhandle_member_ban_add(
         self: &Arc<Self>,
         guild: &Guild,

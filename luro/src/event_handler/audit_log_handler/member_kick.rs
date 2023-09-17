@@ -8,7 +8,7 @@ use luro_model::{
 };
 use twilight_model::{gateway::payload::incoming::GuildAuditLogEntryCreate, guild::Guild};
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn subhandle_member_kick(
         self: &Arc<Self>,
         guild: &Guild,

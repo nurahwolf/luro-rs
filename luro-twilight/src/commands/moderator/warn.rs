@@ -26,7 +26,7 @@ pub struct Warn {
 #[async_trait]
 impl LuroCommandTrait for Warn {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

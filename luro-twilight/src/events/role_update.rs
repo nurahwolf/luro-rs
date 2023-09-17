@@ -3,9 +3,8 @@ use luro_model::database_driver::LuroDatabaseDriver;
 use tracing::info;
 use twilight_model::gateway::payload::incoming::RoleUpdate;
 
-pub async fn role_update_listener<D: LuroDatabaseDriver>(
-    framework: Framework<D>,
-    _ctx: Context,
+pub async fn role_update_listener(
+    framework: Context,
     event: RoleUpdate,
 ) -> anyhow::Result<()> {
     info!("Role {} updated in guild {}", event.role.id, event.guild_id);

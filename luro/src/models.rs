@@ -10,11 +10,11 @@ use crate::{framework::Framework, WEBHOOK_NAME};
 
 /// Used for handling webhooks
 pub struct LuroWebhook<D: LuroDatabaseDriver> {
-    framework: Arc<Framework<D>>,
+    framework: Arc<Framework>,
 }
 
 impl<D: LuroDatabaseDriver> LuroWebhook<D> {
-    pub fn new(framework: Arc<Framework<D>>) -> Self {
+    pub fn new(framework: Arc<Framework>) -> Self {
         Self { framework }
     }
 

@@ -1,9 +1,9 @@
+use async_trait::async_trait;
 use luro_dice::{DiceRoll, RollResult, RollValue};
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "roll", desc = "Roll those freaking dice!!!")]
 pub struct Roll {
     /// Standard Dice Notation: 6d20dl2-10 (6x d20 dice, drop lowest 2, take away 10 from result)
@@ -13,19 +13,15 @@ pub struct Roll {
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
     ephemeral: Option<bool>,
 }
-#[async_trait::async_trait]
 
-impl LuroCommandTrait for Roll {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let result = DiceRoll::roll_inline(&data.dice, false).unwrap_or(RollResult {
+#[async_trait]
+impl ExecuteLuroCommand for Roll {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let result = DiceRoll::roll_inline(&self.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
         });
-        let mut result_string = if let Some(mut reason) = data.reason {
+        let mut result_string = if let Some(mut reason) = self.reason.clone() {
             if !reason.starts_with('\\') {
                 reason = format!("```{reason}```")
             } else {
@@ -35,7 +31,7 @@ impl LuroCommandTrait for Roll {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                interaction.author_id(),
+                ctx.author_id(),
                 result.string_result,
                 result.dice_total
             )
@@ -51,14 +47,13 @@ impl LuroCommandTrait for Roll {
             result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
         }
 
-        interaction
-            .respond(&ctx, |r| {
-                if data.ephemeral.unwrap_or_default() {
-                    r.ephemeral();
-                }
-                r.content(result_string)
-            })
-            .await?;
+        ctx.respond(|r| {
+            if self.ephemeral.unwrap_or_default() {
+                r.ephemeral();
+            }
+            r.content(result_string)
+        })
+        .await?;
         Ok(())
     }
 }

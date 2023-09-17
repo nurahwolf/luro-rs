@@ -8,7 +8,7 @@ use twilight_model::gateway::{
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn ready_listener(&self, ready: Box<Ready>, shard: MessageSender) -> anyhow::Result<()> {
         let mut presence_string = "/about".to_owned();
         info!("Luro is now ready!");

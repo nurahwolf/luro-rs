@@ -1,12 +1,9 @@
-use luro_framework::{Context, Framework};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::Context;
 use tracing::info;
 use twilight_model::gateway::payload::incoming::UserUpdate;
-
-pub async fn user_update_listener<D: LuroDatabaseDriver>(
-    _framework: Framework<D>,
+pub async fn user_update_listener(
     _ctx: Context,
-    event: UserUpdate,
+    event: UserUpdate
 ) -> anyhow::Result<()> {
     info!("User {} updated", event.id);
 

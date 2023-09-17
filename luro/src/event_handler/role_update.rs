@@ -4,7 +4,7 @@ use twilight_model::gateway::payload::incoming::RoleUpdate;
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn role_update_listener(&self, event: RoleUpdate) -> anyhow::Result<()> {
         info!("Role {} updated in guild {}", event.role.id, event.guild_id);
 

@@ -1,7 +1,6 @@
 use async_trait::async_trait;
-use luro_framework::command::{LuroCommandBuilder, LuroCommandTrait};
-use luro_framework::{Framework, InteractionCommand};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::command::ExecuteLuroCommand;
+use luro_framework::CommandInteraction;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 mod help;
@@ -16,7 +15,7 @@ use self::roll_direction::Direction;
 use self::simple::Simple;
 use self::stats::Stats;
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "dice", desc = "Roll those freaking dice!!!")]
 pub enum Dice {
     #[command(name = "roll")]
@@ -31,21 +30,15 @@ pub enum Dice {
     Simple(Simple),
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Dice {}
-
 #[async_trait]
-impl LuroCommandTrait for Dice {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        match data {
-            Self::Roll(_command) => roll::Roll::handle_interaction(ctx, interaction).await,
-            Self::Direction(_command) => roll_direction::Direction::handle_interaction(ctx, interaction).await,
-            Self::Stats(_command) => stats::Stats::handle_interaction(ctx, interaction).await,
-            Self::Help(_command) => help::Help::handle_interaction(ctx, interaction).await,
-            Self::Simple(_command) => simple::Simple::handle_interaction(ctx, interaction).await,
+impl ExecuteLuroCommand for Dice {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        match self {
+            Self::Roll(command) => command.interaction_command(ctx).await,
+            Self::Direction(command) => command.interaction_command(ctx).await,
+            Self::Stats(command) => command.interaction_command(ctx).await,
+            Self::Help(command) => command.interaction_command(ctx).await,
+            Self::Simple(command) => command.interaction_command(ctx).await,
         }
     }
 }

@@ -8,7 +8,7 @@ use twilight_model::{
 
 use crate::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl Framework {
     /// Sends a message to the specified guild log channel. If the channel is not set, uses the catchall channel.
     ///
     /// If the catchall channel is not defined, then silently drop the log.

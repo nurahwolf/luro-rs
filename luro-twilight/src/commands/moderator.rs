@@ -1,9 +1,7 @@
 use async_trait::async_trait;
 use luro_builder::embed::EmbedBuilder;
 use luro_framework::{
-    command::{LuroCommandBuilder, LuroCommandTrait},
-    context::parse_modal_field::parse_modal_field_required,
-    Framework, InteractionCommand, InteractionModal, LuroInteraction,
+    LuroInteraction, command::LuroCommandTrait, CommandInteraction, ModalInteraction,
 };
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 use twilight_model::id::{marker::UserMarker, Id};
@@ -45,35 +43,31 @@ pub enum Moderator {
     Modify(modify::Modify),
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Moderator {}
-
 #[async_trait]
 impl LuroCommandTrait for Moderator {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
+        ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
         // Call the appropriate subcommand.
-        match data {
-            Self::Ban(_) => ban::Ban::handle_interaction(ctx, interaction).await,
-            Self::Kick(_) => kick::Kick::handle_interaction(ctx, interaction).await,
-            Self::Purge(_) => purge::Purge::handle_interaction(ctx, interaction).await,
-            Self::Setting(_) => settings::Settings::handle_interaction(ctx, interaction).await,
-            Self::Warn(_) => warn::Warn::handle_interaction(ctx, interaction).await,
-            Self::Unban(_) => unban::Unban::handle_interaction(ctx, interaction).await,
-            Self::Sync(_) => sync::Sync::handle_interaction(ctx, interaction).await,
-            Self::Modify(_) => modify::Modify::handle_interaction(ctx, interaction).await,
+        match ctx.command {
+            Self::Ban(_) => ban::Ban::handle_interaction(ctx).await,
+            Self::Kick(_) => kick::Kick::handle_interaction(ctx).await,
+            Self::Purge(_) => purge::Purge::handle_interaction(ctx).await,
+            Self::Setting(_) => settings::Settings::handle_interaction(ctx).await,
+            Self::Warn(_) => warn::Warn::handle_interaction(ctx).await,
+            Self::Unban(_) => unban::Unban::handle_interaction(ctx).await,
+            Self::Sync(_) => sync::Sync::handle_interaction(ctx).await,
+            Self::Modify(_) => modify::Modify::handle_interaction(ctx).await,
         }
     }
 
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
-        let author = interaction.author();
-        let warning = parse_modal_field_required(&interaction.data, "mod-warn-text")?;
-        let id = parse_modal_field_required(&interaction.data, "mod-warn-id")?;
+    async fn handle_modal<D: LuroDatabaseDriver>(ctx: ModalInteraction<Self>) -> anyhow::Result<()> {
+        let author = ctx.author();
+        let warning = ctx.parse_field_required("mod-warn-text")?;
+        let id = ctx.parse_field_required("mod-warn-id")?;
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
 
-        let luro_user = ctx.database.get_user(&interaction.author_id()).await?;
+        let luro_user = ctx.database.get_user(&ctx.author_id()).await?;
 
         let mut user_data = ctx.database.get_user(&user_id).await?;
         user_data.warnings.push((warning.to_owned(), author.id));
@@ -82,7 +76,7 @@ impl LuroCommandTrait for Moderator {
         let mut embed = EmbedBuilder::default();
         embed
             .description(format!("Warning Created for <@{user_id}>\n```{warning}```"))
-            .colour(interaction.accent_colour(&ctx).await)
+            .colour(ctx.accent_colour(&ctx).await)
             .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
             .author(|author| {
                 author
@@ -106,7 +100,7 @@ impl LuroCommandTrait for Moderator {
             Err(_) => embed.create_field("DM Sent", "Failed", true),
         };
 
-        ctx.send_log_channel(&interaction.guild_id.unwrap(), LuroLogChannel::Moderator, |r| {
+        ctx.send_log_channel(&ctx.guild_id.unwrap(), LuroLogChannel::Moderator, |r| {
             r.add_embed(embed.clone())
         })
         .await?;
@@ -119,13 +113,13 @@ impl LuroCommandTrait for Moderator {
         let mut warned = ctx.database.get_user(&user_id).await?;
         warned.moderation_actions.push(UserActions {
             action_type: vec![UserActionType::Warn],
-            guild_id: interaction.guild_id,
+            guild_id: ctx.guild_id,
             reason: Some(warning.to_owned()),
             responsible_user: author.id,
         });
         ctx.database.modify_user(&user_id, &warned).await?;
 
-        interaction.respond(&ctx, |response| response.add_embed(embed)).await
+        ctx.respond(|response| response.add_embed(embed)).await
     }
 }
 

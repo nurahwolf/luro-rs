@@ -10,7 +10,7 @@ use twilight_model::{
     id::{marker::UserMarker, Id},
 };
 
-use crate::{Framework, InteractionContext, LuroInteraction};
+use crate::{Framework, LuroInteraction};
 
 use self::{
     bot_heirarchy::bot_hierarchy_embed, bot_missing_permission::bot_missing_permission_embed,
@@ -73,18 +73,8 @@ impl StandardResponse {
         self.embed.0.fields.push(field);
         self
     }
-
-    /// Respond to an interaction with a standard response
-    pub async fn interaction_response<D: LuroDatabaseDriver>(
-        &self,
-        framework: Framework<D>,
-        ctx: InteractionContext,
-    ) -> anyhow::Result<()> {
-        ctx.respond(&framework, |response| response.add_embed(self.embed())).await?;
-        Ok(())
-    }
 }
-pub enum SimpleResponse<'a> {
+pub enum Response<'a> {
     InternalError(Error),
     PermissionNotBotStaff(),
     PermissionModifyServerOwner(&'a Id<UserMarker>),
@@ -97,7 +87,7 @@ pub enum SimpleResponse<'a> {
     NotOwner(&'a Id<UserMarker>, &'a str),
 }
 
-impl<'a, 'b> SimpleResponse<'a> {
+impl<'a> Response<'a> {
     /// Convert the response to an embed
     pub fn embed(self) -> EmbedBuilder {
         match self {
@@ -113,34 +103,10 @@ impl<'a, 'b> SimpleResponse<'a> {
             Self::NotOwner(user_id, command_name) => not_owner_embed(user_id, command_name),
         }
     }
-
-    pub async fn respond<D: LuroDatabaseDriver, T: LuroInteraction>(
-        self,
-        framework: &Framework<D>,
-        interaction: &'a T,
-    ) -> anyhow::Result<()> {
-        match self {
-            SimpleResponse::PermissionNotBotStaff() => privelege_escalation(framework, interaction).await,
-            _ => Ok(()),
-        }?;
-
-        interaction
-            .respond(framework, |response| response.add_embed(self.embed()))
-            .await
-    }
-
-    pub async fn unknown_command<D: LuroDatabaseDriver, T: LuroInteraction>(
-        framework: &Framework<D>,
-        interaction: &'a T,
-    ) -> anyhow::Result<()> {
-        let embed = Self::UnknownCommand(interaction.command_name()).embed();
-
-        interaction.respond(framework, |response| response.add_embed(embed)).await
-    }
 }
 
 async fn privelege_escalation<D: LuroDatabaseDriver, T: LuroInteraction>(
-    framework: &Framework<D>,
+    framework: &Framework,
     interaction: &T,
 ) -> anyhow::Result<()> {
     let mut user_data = framework.database.get_user(&interaction.author_id()).await?;

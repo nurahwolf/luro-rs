@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
 use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
@@ -22,7 +22,7 @@ pub struct Assign {
 #[async_trait]
 impl LuroCommandTrait for Assign {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -38,7 +38,7 @@ impl LuroCommandTrait for Assign {
         // Guild to modify
         let guild_id = match interaction.guild_id {
             Some(guild_id) => guild_id,
-            None => return SimpleResponse::NotGuild().respond(&ctx, &interaction).await,
+            None => return Response::NotGuild().respond(&ctx, &interaction).await,
         };
 
         // If the user wants' to remove a role
@@ -48,7 +48,7 @@ impl LuroCommandTrait for Assign {
             .remove_guild_member_role(guild_id, user.id, data.role)
             .await {
                 Ok(_) => interaction.respond(&ctx,|r|r.content(format!("Role <@&{}> removed from <@{}>!", data.role, user.id)).ephemeral()).await,
-                Err(why) => SimpleResponse::InternalError(why.into()).respond(&ctx, &interaction).await
+                Err(why) => Response::InternalError(why.into()).respond(&ctx, &interaction).await
             }
         } else {
         // Otherwise we just assign a role as expected
@@ -57,7 +57,7 @@ impl LuroCommandTrait for Assign {
             .add_guild_member_role(guild_id, user.id, data.role)
             .await {
                 Ok(_) => interaction.respond(&ctx, |r|r.content(format!("Role <@&{}> assigned to <@{}>!", data.role, user.id)).ephemeral()).await,
-                Err(why) => SimpleResponse::InternalError(why.into()).respond(&ctx, &interaction).await
+                Err(why) => Response::InternalError(why.into()).respond(&ctx, &interaction).await
             }
         }
     }

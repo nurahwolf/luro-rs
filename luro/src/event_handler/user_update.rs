@@ -4,7 +4,7 @@ use twilight_model::gateway::payload::incoming::UserUpdate;
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn user_update_listener(&self, event: UserUpdate) -> anyhow::Result<()> {
         info!("User {} updated", event.id);
 

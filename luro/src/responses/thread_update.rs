@@ -5,7 +5,7 @@ use twilight_model::gateway::payload::incoming::ThreadUpdate;
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn response_thread_update(&self, event: &ThreadUpdate) -> anyhow::Result<()> {
         let embed = self.embed_thread_update(event).await;
         self.send_log_channel(&event.guild_id, embed.into(), LuroLogChannel::Thread)

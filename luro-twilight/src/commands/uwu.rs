@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use luro_framework::{
-    command::{LuroCommandBuilder, LuroCommandTrait},
+    command::LuroCommandTrait,
     Framework, InteractionCommand, LuroInteraction,
 };
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -15,12 +15,10 @@ pub struct UwU {
     message: String,
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for UwU {}
-
 #[async_trait]
 impl LuroCommandTrait for UwU {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;

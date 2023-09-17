@@ -1,14 +1,14 @@
 use std::{fs, path::PathBuf, sync::Arc};
 
 use luro_database::LuroDatabase;
-use luro_model::{configuration::Configuration, database_driver::LuroDatabaseDriver};
+use luro_model::configuration::Configuration;
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
 
 use twilight_gateway::{stream, Shard};
 
 use twilight_model::id::{marker::UserMarker, Id};
 
-use crate::Framework;
+use crate::{Framework, Context, DatabaseEngine};
 
 #[cfg(feature = "luro-builder")]
 mod default_embed;
@@ -21,11 +21,11 @@ mod send_log_channel;
 mod send_message;
 mod webhook;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl Framework {
     pub async fn new(
-        config: Arc<Configuration<D>>,
+        config: Arc<Configuration<DatabaseEngine>>,
         tracing_subscriber: Handle<LevelFilter, Registry>,
-    ) -> anyhow::Result<(Framework<D>, Vec<Shard>)> {
+    ) -> anyhow::Result<(Framework, Vec<Shard>)> {
         // Ensure data directory exists on disk
         ensure_data_directory_exists();
 
@@ -43,7 +43,7 @@ impl<D: LuroDatabaseDriver> Framework<D> {
         };
 
         #[cfg(feature = "http-client-hyper")]
-        let http_client = hyper::Client::new();
+        let http_client = hyper::Client::new().into();
 
         let framework = Self {
             #[cfg(feature = "cache-memory")]
@@ -63,9 +63,24 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     }
 }
 
-async fn initialise_database<D: LuroDatabaseDriver>(
-    config: Arc<Configuration<D>>,
-) -> anyhow::Result<(Arc<LuroDatabase<D>>, Id<UserMarker>)> {
+impl From<Context> for Framework {
+    fn from(framework: Context) -> Self {
+        Self {
+            cache: framework.cache,
+            database: framework.database,
+            global_commands: framework.global_commands,
+            guild_commands: framework.guild_commands,
+            http_client: framework.http_client,
+            lavalink: framework.lavalink,
+            tracing_subscriber: framework.tracing_subscriber,
+            twilight_client: framework.twilight_client,
+        }
+    }
+}
+
+async fn initialise_database(
+    config: Arc<Configuration<DatabaseEngine>>,
+) -> anyhow::Result<(Arc<LuroDatabase<DatabaseEngine>>, Id<UserMarker>)> {
     let application = config.twilight_client.current_user_application().await?.model().await?;
     let current_user = config.twilight_client.current_user().await?.model().await?;
     let current_user_id = current_user.id;

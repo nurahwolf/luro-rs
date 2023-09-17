@@ -5,7 +5,7 @@ use twilight_model::gateway::payload::incoming::ThreadDelete;
 
 use crate::{framework::Framework, COLOUR_DANGER};
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     // TODO: Change this to a response type
     pub async fn response_thread_deleted(&self, event: &ThreadDelete) -> anyhow::Result<()> {
         let embed = self.embed_thread_deleted(event).await;

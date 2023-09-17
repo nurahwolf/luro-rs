@@ -1,18 +1,11 @@
-use crate::commands::anyhow;
 use anyhow::Context;
 use async_trait::async_trait;
 use luro_framework::{
-    command::{LuroCommandBuilder, LuroCommandTrait},
-    context::parse_modal_field,
-    Framework, InteractionCommand, InteractionComponent, InteractionModal, LuroInteraction,
+    command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, ComponentInteraction, ModalInteraction,
 };
-use luro_model::{
-    database_driver::LuroDatabaseDriver,
-    user::character::{CharacterProfile, FetishCategory},
-};
+use luro_model::user::character::{CharacterProfile, FetishCategory};
 use std::{collections::btree_map::Entry, fmt::Write};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::interaction::InteractionData;
 
 use self::{create::Create, fetish::Fetish, icon::Icon, profile::Profile, proxy::Proxy, send::CharacterSend};
 
@@ -23,7 +16,7 @@ mod profile;
 mod proxy;
 pub mod send;
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "character", desc = "Show off your character!")]
 pub enum Character {
     #[command(name = "profile")]
@@ -40,34 +33,27 @@ pub enum Character {
     Send(CharacterSend),
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Character {}
-
 #[async_trait]
-impl LuroCommandTrait for Character {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        match data {
-            Self::Profile(_command) => profile::Profile::handle_interaction(ctx, interaction).await,
-            Self::Create(_command) => create::Create::handle_interaction(ctx, interaction).await,
-            Self::Fetish(command) => command.interaction_command(ctx, interaction).await,
-            Self::Proxy(_command) => proxy::Proxy::handle_interaction(ctx, interaction).await,
-            Self::Icon(_command) => icon::Icon::handle_interaction(ctx, interaction).await,
-            Self::Send(_command) => send::CharacterSend::handle_interaction(ctx, interaction).await,
+impl ExecuteLuroCommand for Character {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        match self {
+            Self::Profile(command) => command.interaction_command(ctx).await,
+            Self::Create(command) => command.interaction_command(ctx).await,
+            Self::Fetish(command) => command.interaction_command(ctx).await,
+            Self::Proxy(command) => command.interaction_command(ctx).await,
+            Self::Icon(command) => command.interaction_command(ctx).await,
+            Self::Send(command) => command.interaction_command(ctx).await,
         }
     }
 
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
-        let user_id = interaction.author_id();
-        let nsfw = interaction.clone().channel.nsfw.unwrap_or_default();
+    async fn interaction_modal(&self, ctx: ModalInteraction<()>) -> anyhow::Result<()> {
+        let user_id = ctx.author_id();
+        let nsfw = ctx.channel.nsfw.unwrap_or_default();
         let mut user_data = ctx.database.get_user(&user_id).await?;
-        let character_name = parse_modal_field::parse_modal_field_required(&interaction.data, "character-name")?;
-        let short_description =
-            parse_modal_field::parse_modal_field_required(&interaction.data, "character-short-description")?;
-        let description = parse_modal_field::parse_modal_field_required(&interaction.data, "character-description")?;
-        let nsfw_description = parse_modal_field::parse_modal_field(&interaction.data, "character-nsfw-description")?;
+        let character_name = ctx.parse_field_required("character-name")?;
+        let short_description = ctx.parse_field_required("character-short-description")?;
+        let description = ctx.parse_field_required("character-description")?;
+        let nsfw_description = ctx.parse_field("character-nsfw-description")?;
 
         match user_data.characters.entry(character_name.to_owned()) {
             Entry::Vacant(entry) => entry.insert(CharacterProfile {
@@ -91,7 +77,7 @@ impl LuroCommandTrait for Character {
 
         ctx.database.modify_user(&user_id, &user_data).await?;
 
-        let mut embed = interaction.default_embed(&ctx).await;
+        let mut embed = ctx.default_embed().await;
         let mut description = format!("{short_description}\n- **Description:**\n{description}");
         if let Some(nsfw_description) = nsfw_description && nsfw {
             writeln!(description, "\n- **NSFW Description:**\n{nsfw_description}")?
@@ -104,50 +90,20 @@ impl LuroCommandTrait for Character {
                 .name(format!("Profile by {}", user_data.name()))
         });
 
-        interaction.respond(&ctx, |response| response.add_embed(embed)).await
+        ctx.respond(|response| response.add_embed(embed)).await
     }
 
-    async fn handle_component<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionComponent,
-    ) -> anyhow::Result<()> {
-        let mut message = interaction.message.clone();
-        let mut original_interaction = interaction.original.clone();
-        let mut new_id = true;
-
-        while new_id {
-            original_interaction = ctx.database.get_interaction(&message.id.to_string()).await?;
-
-            new_id = match original_interaction.message {
-                Some(ref new_message) => {
-                    message = new_message.clone();
-                    true
-                }
-                None => false,
-            }
-        }
-
-        let command = match original_interaction.data {
-            Some(InteractionData::ApplicationCommand(ref data)) => data.clone(),
-            _ => {
-                return Err(anyhow!(
-                    "unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}",
-                    interaction.data
-                ))
-            }
-        };
-
-        let data = Self::new(command)?;
-        let mut embed = interaction.default_embed(&ctx).await;
-        let user_data = ctx.database.get_user(&interaction.author_id()).await?;
-        let name = match data {
-            Character::Profile(data) => data.name,
-            Character::Create(data) => data.name,
-            _ => return interaction.respond(&ctx, |r| r.content("Invalid command").ephemeral()).await,
+    async fn interaction_component(&self, ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+        let mut embed = ctx.default_embed().await;
+        let user_data = ctx.database.get_user(&ctx.author_id()).await?;
+        let name = match self {
+            Character::Profile(data) => &data.name,
+            Character::Create(data) => &data.name,
+            _ => return ctx.respond(|r| r.content("Invalid command").ephemeral()).await,
         };
         let character = user_data
             .characters
-            .get(&name)
+            .get(name)
             .context("Could not find that character! Was it deleted?")?;
         embed.title(format!("{name}'s Fetishes"));
 
@@ -199,6 +155,6 @@ impl LuroCommandTrait for Character {
             embed.create_field("Limits", &limits, false);
         }
 
-        interaction.respond(&ctx, |r| r.add_embed(embed).ephemeral()).await
+        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }
 }

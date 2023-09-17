@@ -1,8 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{
-    command::{LuroCommandBuilder, LuroCommandTrait},
-    Framework, InteractionCommand,
-};
+use luro_framework::{command::LuroCommandTrait, CommandInteraction};
 use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -27,22 +24,17 @@ pub enum QuoteCommands {
     Remove(remove::Remove),
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for QuoteCommands {}
-
 #[async_trait]
 impl LuroCommandTrait for QuoteCommands {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
+        ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-
-        match data {
-            Self::Get(_) => add::Add::handle_interaction(ctx, interaction).await,
-            Self::Add(_) => get::Get::handle_interaction(ctx, interaction).await,
-            Self::List(_) => list::List::handle_interaction(ctx, interaction).await,
-            Self::Sort(_) => remove::Remove::handle_interaction(ctx, interaction).await,
-            Self::Remove(_) => sort::Sort::handle_interaction(ctx, interaction).await,
+        match ctx.command {
+            Self::Get(_) => add::Add::handle_interaction(ctx).await,
+            Self::Add(_) => get::Get::handle_interaction(ctx).await,
+            Self::List(_) => list::List::handle_interaction(ctx).await,
+            Self::Sort(_) => remove::Remove::handle_interaction(ctx).await,
+            Self::Remove(_) => sort::Sort::handle_interaction(ctx).await,
         }
     }
 }

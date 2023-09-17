@@ -42,7 +42,7 @@ pub struct Framework<D: LuroDatabaseDriver> {
     pub tracing_subscriber: Handle<LevelFilter, Registry>,
 }
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
     pub async fn send_message<F>(&self, channel: &Id<ChannelMarker>, response: F) -> Result<Response<Message>, Error>
@@ -255,8 +255,8 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     }
 
     /// Register commands to the Discord API.
-    pub async fn register_commands(&self, application_id: Id<ApplicationMarker>) -> anyhow::Result<()> {
-        let client = self.twilight_client.interaction(application_id);
+    pub async fn register_commands(&self) -> anyhow::Result<()> {
+        let client = self.interaction_client();
 
         match client
             .set_global_commands(
@@ -276,11 +276,11 @@ impl<D: LuroDatabaseDriver> Framework<D> {
     }
 }
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn builder(
         tracing_subscriber: Handle<LevelFilter, Registry>,
         config: Arc<Configuration<D>>,
-    ) -> anyhow::Result<(Arc<Framework<D>>, Vec<Shard>)> {
+    ) -> anyhow::Result<(Arc<Framework>, Vec<Shard>)> {
         let (database, current_user_id) = initialise_database(config.clone()).await?;
         let shards = stream::create_recommended(&config.twilight_client, config.shard_config.clone(), |_, c| c.build())
             .await?

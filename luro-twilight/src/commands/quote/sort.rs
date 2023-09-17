@@ -10,7 +10,7 @@ pub struct Sort {}
 #[async_trait]
 impl LuroCommandTrait for Sort {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let mut quotes = ctx.database.get_quotes().await?;

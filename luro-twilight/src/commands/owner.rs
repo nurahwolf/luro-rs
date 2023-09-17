@@ -1,7 +1,7 @@
 use async_trait::async_trait;
-use luro_framework::command::{LuroCommandBuilder, LuroCommandTrait};
-use luro_framework::responses::SimpleResponse;
-use luro_framework::{Framework, InteractionCommand, InteractionComponent, InteractionModal, LuroInteraction};
+use luro_framework::command::LuroCommandTrait;
+use luro_framework::responses::Response;
+use luro_framework::{Framework, InteractionComponent, InteractionModal, LuroInteraction, CommandInteraction};
 use luro_model::database_driver::LuroDatabaseDriver;
 use luro_model::BOT_OWNERS;
 use std::fmt::Write;
@@ -59,17 +59,13 @@ pub enum Owner {
 //     Log(LogCommand),
 // }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Owner {}
-
 #[async_trait]
 impl LuroCommandTrait for Owner {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
+        ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
         // Call the appropriate subcommand.
-        let interaction_author = interaction.author();
+        let interaction_author = ctx.author();
 
         let staff = match ctx.database.get_staff().await {
             Ok(data) => data.keys().copied().collect(),
@@ -81,9 +77,9 @@ impl LuroCommandTrait for Owner {
 
         // If we don't have a match, bitch at the user
         if !staff.contains(&interaction_author.id) {
-            return SimpleResponse::NotOwner(
+            return Response::NotOwner(
                 &interaction_author.id,
-                match data {
+                match ctx.command {
                     Self::Abuse(_) => "owner_abuse",
                     Self::Assign(_) => "owner_assign",
                     Self::ClearWarning(_) => "owner_clearwarning",
@@ -99,16 +95,16 @@ impl LuroCommandTrait for Owner {
                     Self::ModifyRole(_) => "owner_modify",
                 },
             )
-            .respond(&ctx, &interaction)
+            .respond(&ctx)
             .await;
         }
 
         // We know the user is good, so call the appropriate subcommand.
-        match data {
-            Self::Abuse(_) => abuse::Abuse::handle_interaction(ctx, interaction).await,
-            Self::Assign(_) => assign::Assign::handle_interaction(ctx, interaction).await,
-            Self::ClearWarning(_) => clear_warnings::Warnings::handle_interaction(ctx, interaction).await,
-            Self::Commands(_) => commands::Commands::handle_interaction(ctx, interaction).await,
+        match ctx.command {
+            Self::Abuse(_) => abuse::Abuse::handle_interaction(ctx).await,
+            Self::Assign(_) => assign::Assign::handle_interaction(ctx).await,
+            Self::ClearWarning(_) => clear_warnings::Warnings::handle_interaction(ctx).await,
+            Self::Commands(_) => commands::Commands::handle_interaction(ctx).await,
             // Self::Config(_) => "owner_config",
             // Self::FakeBan(_) => "owner_fakeban",
             // Self::Flush(_) => "owner_save",
@@ -116,12 +112,12 @@ impl LuroCommandTrait for Owner {
             // Self::Guilds(_) => "owner_guilds",
             // Self::LoadUsers(_) => "owner_loadusers",
             // Self::Log(_) => "owner_log",
-            Self::MassAssign(_) => mass_assign::MassAssign::handle_interaction(ctx, interaction).await,
-            Self::ModifyRole(_) => modify_role::ModifyRole::handle_interaction(ctx, interaction).await,
+            Self::MassAssign(_) => mass_assign::MassAssign::handle_interaction(ctx).await,
+            Self::ModifyRole(_) => modify_role::ModifyRole::handle_interaction(ctx).await,
         }
     }
 
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionModal) -> anyhow::Result<()> {
+    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework, interaction: InteractionModal) -> anyhow::Result<()> {
         let mut message_id = None;
         let mut channel_id = None;
 
@@ -169,7 +165,7 @@ impl LuroCommandTrait for Owner {
     }
 
     async fn handle_component<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionComponent,
     ) -> anyhow::Result<()> {
         match interaction.data.custom_id.as_str() {
@@ -180,7 +176,7 @@ impl LuroCommandTrait for Owner {
     }
 }
 
-async fn component_selector<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionComponent) -> anyhow::Result<()> {
+async fn component_selector<D: LuroDatabaseDriver>(ctx: Framework, interaction: InteractionComponent) -> anyhow::Result<()> {
     let mut roles_string = String::new();
     let guild_id = interaction.guild_id().unwrap();
     let mut data = None;
@@ -268,7 +264,7 @@ async fn component_selector<D: LuroDatabaseDriver>(ctx: Framework<D>, interactio
     .await
 }
 
-async fn component_roles<D: LuroDatabaseDriver>(ctx: Framework<D>, interaction: InteractionComponent) -> anyhow::Result<()> {
+async fn component_roles<D: LuroDatabaseDriver>(ctx: Framework, interaction: InteractionComponent) -> anyhow::Result<()> {
     let guild_id = interaction.guild_id().unwrap();
 
     let mut roles: Vec<Id<RoleMarker>> = interaction

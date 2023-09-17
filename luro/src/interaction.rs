@@ -31,7 +31,7 @@ mod user_utils;
 #[derive(Clone, Debug)]
 pub struct LuroSlash<D: LuroDatabaseDriver> {
     /// The framework for being able to respond to an interaction
-    pub framework: Arc<Framework<D>>,
+    pub framework: Arc<Framework>,
     /// The client is wrapped around this interaction
     pub interaction: Interaction,
     pub shard: MessageSender,
@@ -43,7 +43,7 @@ impl<D: LuroDatabaseDriver> LuroSlash<D> {
     /// This is set with some defaults:
     /// - AllowedMentions - All
     /// - InteractionResponseType - [`InteractionResponseType::ChannelMessageWithSource`]
-    pub fn new(framework: Arc<Framework<D>>, interaction: Interaction, shard: MessageSender, latency: Latency) -> Self {
+    pub fn new(framework: Arc<Framework>, interaction: Interaction, shard: MessageSender, latency: Latency) -> Self {
         Self {
             framework,
             interaction,

@@ -1,23 +1,22 @@
-use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::ApplicationCommandData;
 
-use crate::{Framework, InteractionCommand, InteractionComponent, InteractionModal};
+use crate::{ComponentInteraction, ModalInteraction, CommandInteraction};
 
 pub type CommandResult = std::pin::Pin<Box<dyn std::future::Future<Output = anyhow::Result<()>> + 'static + Send>>;
 
 /// A structure containing a standard command implementation, for progmatically loading commands
 #[derive(Clone)]
-pub struct LuroCommand<D: LuroDatabaseDriver> {
+pub struct LuroCommand<T> {
     /// The name of the command
     pub name: &'static str,
     /// The core [ApplicationCommandData] needed to create the command in Discord
     pub create: fn() -> ApplicationCommandData,
     /// Command to execute in an interaction context
-    pub interaction_command: fn(Framework<D>, InteractionCommand) -> CommandResult,
+    pub interaction_command: fn(CommandInteraction<T>) -> CommandResult,
     /// A component to execute
-    pub component: fn(Framework<D>, InteractionComponent) -> CommandResult,
+    pub component: fn(ComponentInteraction<T>) -> CommandResult,
     /// A modal to execute
-    pub modal: fn(Framework<D>, InteractionModal) -> CommandResult,
+    pub modal: fn(ModalInteraction<T>) -> CommandResult,
     /// A autocomplete to execute
-    pub autocomplete: fn(Framework<D>, InteractionCommand) -> CommandResult,
+    pub autocomplete: fn(CommandInteraction<T>) -> CommandResult,
 }

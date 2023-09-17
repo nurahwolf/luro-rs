@@ -1,4 +1,4 @@
-use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 
@@ -14,7 +14,7 @@ pub struct Add {
 
 impl LuroCommandTrait for Add {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -30,7 +30,7 @@ impl LuroCommandTrait for Add {
         }
 
         if !owner_match {
-            return SimpleResponse::PermissionNotBotStaff().respond(&ctx, &interaction).await;
+            return Response::PermissionNotBotStaff().respond(&ctx, &interaction).await;
         }
 
         let mut guild_settings = ctx.database.get_guild(&interaction.guild_id.unwrap()).await?;

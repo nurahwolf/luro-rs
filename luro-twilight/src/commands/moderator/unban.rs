@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use luro_framework::{
     command::LuroCommandTrait,
-    responses::{PunishmentType, SimpleResponse, StandardResponse},
+    responses::{PunishmentType, Response, StandardResponse},
     Framework, InteractionCommand, LuroInteraction,
 };
 use luro_model::{database_driver::LuroDatabaseDriver, guild::log_channel::LuroLogChannel};
@@ -21,7 +21,7 @@ pub struct Unban {
 #[async_trait]
 impl LuroCommandTrait for Unban {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -40,13 +40,13 @@ impl LuroCommandTrait for Unban {
         let luro_permissions = guild.user_permission(&luro)?;
 
         if !luro_permissions.contains(Permissions::BAN_MEMBERS) {
-            return SimpleResponse::BotMissingPermission(Permissions::BAN_MEMBERS)
+            return Response::BotMissingPermission(Permissions::BAN_MEMBERS)
                 .respond(&ctx, interaction)
                 .await;
         }
 
         if !moderator_permissions.contains(Permissions::BAN_MEMBERS) {
-            return SimpleResponse::MissingPermission(Permissions::BAN_MEMBERS)
+            return Response::MissingPermission(Permissions::BAN_MEMBERS)
                 .respond(&ctx, interaction)
                 .await;
         }

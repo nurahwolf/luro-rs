@@ -20,7 +20,7 @@ pub struct Load {
 #[async_trait]
 impl LuroCommandTrait for Load {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
+        ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -45,7 +45,7 @@ impl LuroCommandTrait for Load {
     }
 }
 
-async fn load_cache<D: LuroDatabaseDriver>(ctx: &Framework<D>) -> anyhow::Result<(usize, usize)> {
+async fn load_cache<D: LuroDatabaseDriver>(ctx: &Framework) -> anyhow::Result<(usize, usize)> {
     let mut loaded = 0;
     let mut errors = 0;
 
@@ -74,7 +74,7 @@ async fn load_cache<D: LuroDatabaseDriver>(ctx: &Framework<D>) -> anyhow::Result
     Ok((loaded, errors))
 }
 
-async fn load_disk<D: LuroDatabaseDriver>(ctx: &Framework<D>) -> anyhow::Result<(usize, usize)> {
+async fn load_disk<D: LuroDatabaseDriver>(ctx: &Framework) -> anyhow::Result<(usize, usize)> {
     let mut loaded = 0;
     let mut errors = 0;
 

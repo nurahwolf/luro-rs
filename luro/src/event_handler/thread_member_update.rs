@@ -4,7 +4,7 @@ use twilight_model::gateway::payload::incoming::ThreadMemberUpdate;
 use crate::framework::Framework;
 use luro_model::database_driver::LuroDatabaseDriver;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn listener_thread_member_update(&self, event: Box<ThreadMemberUpdate>) -> anyhow::Result<()> {
         info!(thread = ?event, "Thread Member Update");
 

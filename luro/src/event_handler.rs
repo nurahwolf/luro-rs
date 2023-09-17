@@ -27,7 +27,7 @@ use crate::interaction::LuroSlash;
 
 use super::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     pub async fn event_handler(self: Arc<Self>, event: Event, shard: MessageSender, latency: Latency) -> anyhow::Result<()> {
         // events we want an IMMEDIATE resposne to, such as if we don't want the cache to be updated yet.
         let callback = match event.clone() {

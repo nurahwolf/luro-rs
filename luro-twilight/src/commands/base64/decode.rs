@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use luro_framework::{
-    command::{LuroCommandBuilder, LuroCommandTrait},
-    Framework, InteractionCommand, LuroInteraction,
+    command::{LuroCommandTrait, ExecuteLuroCommand},
+    Framework, InteractionCommand, LuroInteraction, CommandInteraction,
 };
 use luro_model::database_driver::LuroDatabaseDriver;
 
@@ -17,17 +17,11 @@ pub struct Decode {
     pub string: String,
 }
 
-impl<D: LuroDatabaseDriver + 'static> LuroCommandBuilder<D> for Decode {}
-
 #[async_trait]
-impl LuroCommandTrait for Decode {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
-        ctx: Framework<D>,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let response = super::decode_response(&ctx, &interaction, &super::decode(&data.string)?).await?;
-        interaction.send_response(&ctx, response).await?;
+impl ExecuteLuroCommand for Decode {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let response = super::decode_response(ctx.accent_colour().await, &super::decode(&self.string)?).await?;
+        ctx.response_send(response).await?;
         Ok(())
     }
 }

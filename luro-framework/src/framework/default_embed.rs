@@ -5,7 +5,7 @@ use twilight_model::id::{marker::GuildMarker, Id};
 
 use crate::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl Framework {
     /// Create a default embed, with the guild's accent colour if present.
     ///
     /// Will fall back to the static [ACCENT_COLOUR] if an error occured

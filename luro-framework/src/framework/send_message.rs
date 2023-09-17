@@ -7,7 +7,7 @@ use twilight_model::{
 
 use crate::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl Framework {
     /// Sends a message to the specified channel
     ///
     /// NOTE: Make sure to create a private DM channel if you want to DM someone!

@@ -5,7 +5,7 @@ use twilight_model::gateway::payload::incoming::ThreadCreate;
 
 use crate::framework::Framework;
 
-impl<D: LuroDatabaseDriver> Framework<D> {
+impl<D: LuroDatabaseDriver> Framework {
     // TODO: Change this to a response type
     pub async fn response_thread_created(&self, event: &ThreadCreate) -> anyhow::Result<()> {
         let embed = self.embed_thread_created(event).await;

@@ -1,4 +1,4 @@
-use luro_framework::{command::LuroCommandTrait, responses::SimpleResponse, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 
@@ -14,7 +14,7 @@ pub struct Remove {
 
 impl LuroCommandTrait for Remove {
     async fn handle_interaction<D: LuroDatabaseDriver>(
-        framework: Framework<D>,
+        framework: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
@@ -32,7 +32,7 @@ impl LuroCommandTrait for Remove {
         }
 
         if !owner_match {
-            return SimpleResponse::PermissionNotBotStaff()
+            return Response::PermissionNotBotStaff()
                 .respond(&framework, &interaction)
                 .await;
         }
