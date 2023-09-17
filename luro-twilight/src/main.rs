@@ -26,7 +26,7 @@ async fn main() -> anyhow::Result<()> {
     dotenv()?;
 
     // Database driver - Change this and the feature of `luro-database` to modify the driver!
-    let database_driver = luro_database::driver_toml::TomlDatabaseDriver::start().await?;
+    let database_driver = luro_model::driver_toml::TomlDatabaseDriver::start().await?;
     let (filter, tracing_subscriber) = reload::Layer::new(FILTER);
     let config = Configuration::new(
         database_driver,

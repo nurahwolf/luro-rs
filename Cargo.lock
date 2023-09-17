@@ -675,20 +675,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
-name = "luro-database"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "async-trait",
- "luro-model",
- "serde",
- "tokio",
- "toml",
- "tracing",
- "twilight-model",
-]
-
-[[package]]
 name = "luro-dice"
 version = "0.0.1"
 dependencies = [
@@ -702,7 +688,6 @@ dependencies = [
  "anyhow",
  "async-trait",
  "hyper",
- "luro-database",
  "luro-model",
  "rand",
  "serde",
@@ -727,6 +712,8 @@ dependencies = [
  "radix_trie",
  "rand",
  "serde",
+ "tokio",
+ "toml",
  "tracing",
  "tracing-subscriber",
  "twilight-cache-inmemory",
@@ -748,7 +735,6 @@ dependencies = [
  "dotenv",
  "futures-util",
  "git2",
- "luro-database",
  "luro-dice",
  "luro-framework",
  "luro-model",
@@ -1462,9 +1448,9 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.7.8"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd79e69d3b627db300ff956027cc6c3798cef26d22526befdfcd12feeb6d2257"
+checksum = "c226a7bba6d859b63c92c4b4fe69c5b6b72d0cb897dbc8e6012298e6154cb56e"
 dependencies = [
  "serde",
  "serde_spanned",
@@ -1483,9 +1469,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.19.15"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b5bb770da30e5cbfde35a2d7b9b8a2c4b8ef89548a7a6aeab5c9a576e3e7421"
+checksum = "8ff63e60a958cefbb518ae1fd6566af80d9d4be430a33f3723dfc47d1d411d95"
 dependencies = [
  "indexmap 2.0.0",
  "serde",

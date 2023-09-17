@@ -15,7 +15,6 @@ version.workspace = true
 [dependencies]
 anyhow.workspace = true
 hyper = { workspace = true, optional = true }                   #framework
-luro-database = { path = "../luro-database" }    #framework
 luro-model.path = "../luro-model"                               #framework
 serde.workspace = true                                          #framework
 tracing.workspace = true

@@ -11,23 +11,24 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-radix_trie = { version = "0.2", optional = true } # command
-nom = { version = "7", optional = true } # command/text_args
-rand = { workspace = true, optional = true} # feature dice-roller
-
 anyhow = { workspace = true }
+async-trait = "0.1.73"
+hyper = { workspace = true }
+nom = { version = "7", optional = true } # command/text_args
+radix_trie = { version = "0.2", optional = true } # command
+rand = { workspace = true, optional = true} # feature dice-roller
 serde = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 twilight-cache-inmemory = { workspace = true }
+twilight-gateway = { workspace = true }
 twilight-http = { workspace = true }
+twilight-interactions.path = "../twilight-interactions"
 twilight-lavalink = { workspace = true }
 twilight-model = { workspace = true }
-tracing-subscriber = { workspace = true }
-twilight-interactions.path = "../twilight-interactions"
-hyper = { workspace = true }
-twilight-gateway = { workspace = true }
-tracing = { workspace = true }
 twilight-util = { workspace = true }
-async-trait = "0.1.73"
+toml.version = "*"
 
 [features]
 default = ["toml-driver", "dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders"]

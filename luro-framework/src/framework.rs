@@ -1,7 +1,6 @@
 use std::{fs, path::PathBuf, sync::Arc};
 
-use luro_database::LuroDatabase;
-use luro_model::configuration::Configuration;
+use luro_model::{configuration::Configuration, database_driver::LuroDatabase};
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
 
 use twilight_gateway::{stream, Shard};

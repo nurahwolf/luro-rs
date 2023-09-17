@@ -33,7 +33,6 @@ tokio.workspace = true # main
 futures-util = "0.3"   # main
 
 # Luro - Specify the driver using the feature setting below
-luro-database = { path = "../luro-database", features = ['toml-driver'] } # main
 luro-model.path = "../luro-model"                                         # main
 luro-framework.path = "../luro-framework"
 

@@ -1,6 +1,11 @@
 #![feature(async_fn_in_trait)]
-use luro_database::{driver_toml::TomlDatabaseDriver, LuroDatabase};
-use luro_model::{builders::EmbedBuilder, database_driver::LuroDatabaseDriver, response::LuroResponse, user::LuroUser};
+use luro_model::{
+    builders::EmbedBuilder,
+    database_driver::{LuroDatabase, LuroDatabaseDriver},
+    driver_toml::TomlDatabaseDriver,
+    response::LuroResponse,
+    user::LuroUser,
+};
 use slash_command::LuroCommand;
 use std::{
     collections::HashMap,
