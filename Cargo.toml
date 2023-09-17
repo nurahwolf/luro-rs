@@ -6,7 +6,6 @@ members = [
     "luro-framework",
     "luro-model",
     "luro-twilight",
-    "luro",
     "twilight-interactions-derive",
     "twilight-interactions",
 ]
