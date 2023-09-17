@@ -1,5 +1,6 @@
-use luro_builder::embed::EmbedBuilder;
 use twilight_model::{channel::message::Embed, http::attachment::Attachment};
+
+use crate::builders::EmbedBuilder;
 
 use super::LuroResponse;
 

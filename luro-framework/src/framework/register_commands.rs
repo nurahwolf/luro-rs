@@ -9,8 +9,6 @@ use twilight_model::{
 
 use crate::{slash_command::LuroCommand, Framework};
 
-impl Framework {}
-
 impl Framework {
     /// Register the commands present in the framework
     pub async fn register_commands(&self, guild_id: Option<Id<GuildMarker>>) -> anyhow::Result<Vec<Command>> {

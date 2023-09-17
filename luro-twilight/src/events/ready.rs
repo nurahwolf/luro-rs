@@ -1,4 +1,4 @@
-use luro_framework::Context;
+use luro_framework::{Context, Luro};
 use tracing::info;
 use twilight_model::gateway::{
     payload::{incoming::Ready, outgoing::UpdatePresence},
@@ -63,8 +63,6 @@ pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Re
 
     let commands = default_commands();
     framework.register_commands(&commands).await?;
-
-    info!("Registered {} global commands!", commands.len());
 
     Ok(())
 }

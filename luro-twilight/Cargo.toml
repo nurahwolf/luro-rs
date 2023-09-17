@@ -33,7 +33,6 @@ tokio.workspace = true # main
 futures-util = "0.3"   # main
 
 # Luro - Specify the driver using the feature setting below
-luro-builder = { path = "../luro-builder", optional = true }              # command-story
 luro-database = { path = "../luro-database", features = ['toml-driver'] } # main
 luro-model.path = "../luro-model"                                         # main
 luro-framework.path = "../luro-framework"
@@ -83,6 +82,6 @@ command-ping = []
 command-moderator = []
 command-owner = ["dep:serde"]
 command-say = []
-command-story = ["dep:rand", "dep:luro-builder"]
+command-story = ["dep:rand"]
 command-uwu = []
 command-wordcount = ["dep:uwuify"]

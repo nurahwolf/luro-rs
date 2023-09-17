@@ -1,5 +1,4 @@
-use luro_builder::embed::EmbedBuilder;
-use luro_model::COLOUR_DANGER;
+use luro_model::{COLOUR_DANGER, builders::EmbedBuilder};
 use tracing::error;
 use twilight_model::guild::Permissions;
 

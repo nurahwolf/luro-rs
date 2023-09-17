@@ -1,15 +1,16 @@
 #![feature(async_fn_in_trait)]
-use luro_builder::embed::EmbedBuilder;
 use luro_database::{toml::TomlDatabaseDriver, LuroDatabase};
-use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse, user::LuroUser};
+use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse, user::LuroUser, builders::EmbedBuilder};
 use slash_command::LuroCommand;
+use tracing::info;
+use twilight_http::client::InteractionClient;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{
-    application::interaction::{Interaction, InteractionData, InteractionType},
+    application::{interaction::{Interaction, InteractionData, InteractionType}, command::Command},
     id::marker::UserMarker,
 };
 
@@ -194,78 +195,6 @@ pub struct InteractionContext {
     pub shard: twilight_gateway::MessageSender,
 }
 
-impl InteractionContext {
-    pub fn new(interaction: Interaction, ctx: Context) -> Self {
-        Self {
-            app_permissions: interaction.app_permissions,
-            application_id: interaction.application_id,
-            channel: interaction.channel.clone(),
-            data: interaction.data.clone(),
-            guild_id: interaction.guild_id,
-            guild_locale: interaction.guild_locale.clone(),
-            id: interaction.id,
-            kind: interaction.kind,
-            latency: ctx.latency,
-            locale: interaction.locale.clone(),
-            member: interaction.member.clone(),
-            message: interaction.message.clone(),
-            original: interaction.clone(),
-            shard: ctx.shard,
-            token: interaction.token,
-            user: interaction.user,
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct InteractionCommand {
-    pub application_id: Id<ApplicationMarker>,
-    pub channel: Channel,
-    pub data: Box<CommandData>,
-    pub guild_id: Option<Id<GuildMarker>>,
-    pub id: Id<InteractionMarker>,
-    pub latency: twilight_gateway::Latency,
-    pub member: Option<PartialMember>,
-    pub permissions: Option<Permissions>,
-    pub shard: twilight_gateway::MessageSender,
-    pub token: String,
-    pub user: Option<User>,
-    pub original: Interaction,
-}
-
-#[derive(Clone)]
-pub struct InteractionComponent {
-    pub original: Interaction,
-    pub application_id: Id<ApplicationMarker>,
-    pub channel: Channel,
-    pub data: Box<MessageComponentInteractionData>,
-    pub guild_id: Option<Id<GuildMarker>>,
-    pub id: Id<InteractionMarker>,
-    pub latency: twilight_gateway::Latency,
-    pub member: Option<PartialMember>,
-    pub message: Message,
-    pub permissions: Option<Permissions>,
-    pub shard: twilight_gateway::MessageSender,
-    pub token: String,
-    pub user: Option<User>,
-}
-
-#[derive(Clone)]
-pub struct InteractionModal {
-    pub application_id: Id<ApplicationMarker>,
-    pub channel: Channel,
-    pub data: ModalInteractionData,
-    pub guild_id: Option<Id<GuildMarker>>,
-    pub id: Id<InteractionMarker>,
-    pub latency: twilight_gateway::Latency,
-    pub member: Option<PartialMember>,
-    pub message: Option<Message>,
-    pub permissions: Option<Permissions>,
-    pub shard: twilight_gateway::MessageSender,
-    pub token: String,
-    pub user: Option<User>,
-    pub original: Interaction,
-}
 pub trait LuroInteraction {
     fn original_interaction<D: LuroDatabaseDriver>(&self) -> &Interaction;
     async fn accent_colour<D: LuroDatabaseDriver>(&self, framework: &Framework) -> u32;
@@ -367,4 +296,24 @@ pub struct ComponentInteraction<T> {
         tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub user: Option<twilight_model::user::User>,
+}
+
+/// A trait that enforces the things you can access in ANY context
+pub trait Luro {
+    /// Gets the [interaction client](InteractionClient) using this framework's
+    /// [http client](Client) and [application id](ApplicationMarker)
+    fn interaction_client(&self) -> InteractionClient;
+
+    /// Register commands to the Discord API.
+    async fn register_commands(&self, commands: &[Command]) -> anyhow::Result<()> {
+        let client = self.interaction_client();
+
+        match client.set_global_commands(commands).await {
+            Ok(command_result) => Ok(info!(
+                "Successfully registered {} global commands!",
+                command_result.model().await?.len()
+            )),
+            Err(why) => Err(why.into()),
+        }
+    }
 }

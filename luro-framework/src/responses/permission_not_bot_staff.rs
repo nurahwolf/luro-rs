@@ -1,5 +1,4 @@
-use luro_builder::embed::EmbedBuilder;
-use luro_model::COLOUR_DANGER;
+use luro_model::{COLOUR_DANGER, builders::EmbedBuilder};
 
 const INSULTS: [&str; 50] = [
     "Great job motherfucker, you are not the bot owner and do not have permission to use that command.\n\n**THE COMMAND IS LITERALLY NAMED OWNER ONLY! WHAT THE HECK DID YOU THINK WOULD HAPPEN!?**",

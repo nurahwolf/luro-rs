@@ -1,4 +1,3 @@
-use luro_builder::embed::EmbedBuilder;
 use serde::{Deserialize, Serialize};
 use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::{
@@ -17,7 +16,7 @@ use twilight_model::{
     util::Timestamp,
 };
 
-use crate::PRIMARY_BOT_OWNER;
+use crate::{PRIMARY_BOT_OWNER, builders::EmbedBuilder};
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum LuroMessageSource {

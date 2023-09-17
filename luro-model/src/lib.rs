@@ -49,6 +49,9 @@ pub mod role;
 pub mod story;
 pub mod user;
 
+#[cfg(feature = "builders")]
+pub mod builders;
+
 /// A simple wrapper around quotes. Primary key is the ID of the story.
 pub type Quotes = BTreeMap<usize, LuroMessage>;
 

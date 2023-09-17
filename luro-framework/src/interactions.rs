@@ -1,4 +1,4 @@
-use luro_builder::embed::EmbedBuilder;
+use luro_model::builders::EmbedBuilder;
 use twilight_model::{
     id::{marker::UserMarker, Id},
     user::User,

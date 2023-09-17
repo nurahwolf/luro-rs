@@ -1,5 +1,4 @@
-use luro_builder::embed::EmbedBuilder;
-use luro_model::COLOUR_DANGER;
+use luro_model::{COLOUR_DANGER, builders::EmbedBuilder};
 use tracing::warn;
 
 /// A response for if the command is not known

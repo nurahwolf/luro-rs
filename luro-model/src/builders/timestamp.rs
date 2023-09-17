@@ -3,7 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use anyhow::Context;
 use twilight_model::util::Timestamp;
 
-pub struct TimestampBuilder(Timestamp);
+use super::TimestampBuilder;
 
 impl TimestampBuilder {
     pub fn from_systemtime(&mut self, systemtime: SystemTime) -> anyhow::Result<&mut Self> {

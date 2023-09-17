@@ -13,7 +13,6 @@ version.workspace = true
 [dependencies]
 radix_trie = { version = "0.2", optional = true } # command
 nom = { version = "7", optional = true } # command/text_args
-luro-builder.path = "../luro-builder" # interaction
 rand = { workspace = true, optional = true} # feature dice-roller
 
 anyhow = { workspace = true }
@@ -31,10 +30,12 @@ twilight-util = { workspace = true }
 async-trait = "0.1.73"
 
 [features]
-default = ["toml-driver", "dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory"]
-toml-driver = []
-dice-roller = ["dep:rand"]
-cache-memory = []
-luro-command = ["dep:radix_trie", "dep:nom"]
-lavalink = [] # Enable this feature to have Luro respond to lavalink events
+default = ["toml-driver", "dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders"]
+
 auto-trim = [] # Used to automatically trim message responses that are too big, sending as a file instead
+builders = ["auto-trim"]
+cache-memory = []
+dice-roller = ["dep:rand"]
+lavalink = [] # Enable this feature to have Luro respond to lavalink events
+luro-command = ["dep:radix_trie", "dep:nom"]
+toml-driver = []

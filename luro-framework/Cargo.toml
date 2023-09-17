@@ -15,7 +15,6 @@ version.workspace = true
 [dependencies]
 anyhow.workspace = true
 hyper = { workspace = true, optional = true }                   #framework
-luro-builder = { path = "../luro-builder", optional = true }    #
 luro-database = { path = "../luro-database" }    #framework
 luro-model.path = "../luro-model"                               #framework
 serde.workspace = true                                          #framework
@@ -39,12 +38,11 @@ default = [
     "database-toml",
     "http-client-hyper",
     "lavalink",
-    "luro-builder",
     "responses",
     "random-responses" # Disable this feature to get a fixed response
 ]
 http-client-hyper = ["dep:hyper"]
 lavalink = ["dep:twilight-lavalink"]
-luro-builder = ["dep:luro-builder"]
-responses = ["dep:luro-builder"]
+luro-builder = []
+responses = []
 random-responses = ["dep:rand"]

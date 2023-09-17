@@ -2,13 +2,12 @@ use twilight_model::channel::message::Component;
 
 use self::{action_row::ActionRowBuilder, select_menu::SelectMenuBuilder, text_input::TextInputBuilder};
 
+use super::ComponentBuilder;
+
 pub mod action_row;
 pub mod button;
 pub mod select_menu;
 pub mod text_input;
-
-#[derive(Default)]
-pub struct ComponentBuilder(Vec<Component>);
 
 impl ComponentBuilder {
     /// Create and add an action row

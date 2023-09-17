@@ -3,13 +3,12 @@ use std::path::Path;
 
 use async_trait::async_trait;
 use git2::{ErrorCode, Repository};
-use luro_builder::embed::EmbedBuilder;
 use luro_framework::{
     command::{CreateLuroCommand, ExecuteLuroCommand},
     interactions::InteractionTrait,
     CommandInteraction,
 };
-use luro_model::user::LuroUser;
+use luro_model::{user::LuroUser, builders::EmbedBuilder};
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 

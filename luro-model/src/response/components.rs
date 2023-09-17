@@ -1,5 +1,6 @@
-use luro_builder::components::ComponentBuilder;
 use twilight_model::channel::message::Component;
+
+use crate::builders::ComponentBuilder;
 
 use super::LuroResponse;
 
