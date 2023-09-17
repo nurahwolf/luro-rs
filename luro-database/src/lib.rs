@@ -7,12 +7,27 @@ use luro_model::{
     CommandManager, Quotes, Stories,
 };
 use serde::{Deserialize, Serialize};
-use twilight_model::{oauth::Application, user::CurrentUser};
+mod database;
 
 #[cfg(feature = "toml-driver")]
-pub mod toml;
+pub mod driver_toml;
 
-mod database;
+/// Luro's database context. This itself just handles an abstraction for saving and loading data from whatever database it is using in the backend, depending on the feature selected.
+///
+/// NOTE: With the TOML driver, usize keys are serialised as strings!
+#[derive(Debug)]
+pub struct LuroDatabase<D: LuroDatabaseDriver> {
+    pub command_data: RwLock<CommandManager>,
+    pub count: RwLock<usize>,
+    pub driver: D,
+    pub guild_data: Box<RwLock<LuroGuilds>>,
+    pub hecks: RwLock<HeckManager>,
+    pub quotes: RwLock<Quotes>,
+    pub staff: RwLock<LuroUsers>,
+    pub stories: RwLock<StoryManager>,
+    pub user_data: Box<RwLock<LuroUsers>>,
+    pub config: Arc<Configuration<D>>,
+}
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
 pub struct HeckManager {
@@ -26,26 +41,7 @@ pub struct StoryManager {
     pub sfw: Stories,
 }
 
-/// Luro's database context. This itself just handles an abstraction for saving and loading data from whatever database it is using in the backend, depending on the feature selected.
-///
-/// NOTE: With the TOML driver, usize keys are serialised as strings!
-#[derive(Debug)]
-pub struct LuroDatabase<D: LuroDatabaseDriver> {
-    pub application: RwLock<Application>,
-    pub command_data: RwLock<CommandManager>,
-    pub count: RwLock<usize>,
-    pub current_user: RwLock<CurrentUser>,
-    pub driver: D,
-    pub guild_data: Box<RwLock<LuroGuilds>>,
-    pub hecks: RwLock<HeckManager>,
-    pub quotes: RwLock<Quotes>,
-    pub staff: RwLock<LuroUsers>,
-    pub stories: RwLock<StoryManager>,
-    pub user_data: Box<RwLock<LuroUsers>>,
-    pub config: Arc<Configuration<D>>,
-}
-
-/// A trait for defining how to fetch items from Luro's database
+/// A trait to implementing on how to store them in the database
 pub trait LuroDatabaseItem {
     /// The item to fetch
     type Item;

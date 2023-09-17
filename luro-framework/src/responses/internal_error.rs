@@ -1,5 +1,5 @@
 use anyhow::Error;
-use luro_model::{COLOUR_DANGER, builders::EmbedBuilder};
+use luro_model::{builders::EmbedBuilder, COLOUR_DANGER};
 use tracing::warn;
 
 /// A response for if the command is not known

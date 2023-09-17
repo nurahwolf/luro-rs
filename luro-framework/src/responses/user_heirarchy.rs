@@ -1,4 +1,4 @@
-use luro_model::{COLOUR_DANGER, builders::EmbedBuilder};
+use luro_model::{builders::EmbedBuilder, COLOUR_DANGER};
 use tracing::warn;
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.

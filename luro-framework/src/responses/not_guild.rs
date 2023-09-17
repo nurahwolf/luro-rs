@@ -1,4 +1,4 @@
-use luro_model::{COLOUR_DANGER, builders::EmbedBuilder};
+use luro_model::{builders::EmbedBuilder, COLOUR_DANGER};
 use tracing::warn;
 
 /// Guild command invoked in not a guild context

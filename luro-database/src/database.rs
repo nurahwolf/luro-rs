@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use luro_model::{configuration::Configuration, database_driver::LuroDatabaseDriver};
-use twilight_model::{oauth::Application, user::CurrentUser};
 
 use crate::LuroDatabase;
 
@@ -30,13 +29,11 @@ mod update_user;
 
 impl<D: LuroDatabaseDriver> LuroDatabase<D> {
     /// Build the key requirements of our database. The rest of our data is fetched as required.
-    pub fn build(application: Application, current_user: CurrentUser, config: Arc<Configuration<D>>) -> LuroDatabase<D> {
+    pub fn build(config: Arc<Configuration<D>>) -> LuroDatabase<D> {
         Self {
-            application: application.into(),
             command_data: Default::default(),
             config: config.clone(),
             count: Default::default(),
-            current_user: current_user.into(),
             driver: config.database_driver.clone(),
             guild_data: Default::default(),
             hecks: Default::default(),

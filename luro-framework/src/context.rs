@@ -24,7 +24,9 @@ impl Context {
 impl Luro for Context {
     /// Gets the [interaction client](InteractionClient) using this framework's
     /// [http client](Client) and [application id](ApplicationMarker)
-    fn interaction_client(&self) -> InteractionClient {
-        self.twilight_client.interaction(self.database.application.read().unwrap().id)
+    async fn interaction_client(&self) -> anyhow::Result<InteractionClient> {
+        Ok(self
+            .twilight_client
+            .interaction(self.twilight_client.current_user_application().await?.model().await?.id))
     }
 }

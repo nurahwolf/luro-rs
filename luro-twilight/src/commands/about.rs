@@ -8,7 +8,7 @@ use luro_framework::{
     interactions::InteractionTrait,
     CommandInteraction,
 };
-use luro_model::{user::LuroUser, builders::EmbedBuilder};
+use luro_model::{builders::EmbedBuilder, user::LuroUser};
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 

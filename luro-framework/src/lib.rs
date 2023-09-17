@@ -1,16 +1,19 @@
 #![feature(async_fn_in_trait)]
-use luro_database::{toml::TomlDatabaseDriver, LuroDatabase};
-use luro_model::{database_driver::LuroDatabaseDriver, response::LuroResponse, user::LuroUser, builders::EmbedBuilder};
+use luro_database::{driver_toml::TomlDatabaseDriver, LuroDatabase};
+use luro_model::{builders::EmbedBuilder, database_driver::LuroDatabaseDriver, response::LuroResponse, user::LuroUser};
 use slash_command::LuroCommand;
-use tracing::info;
-use twilight_http::client::InteractionClient;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
+use tracing::info;
+use twilight_http::client::InteractionClient;
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{
-    application::{interaction::{Interaction, InteractionData, InteractionType}, command::Command},
+    application::{
+        command::Command,
+        interaction::{Interaction, InteractionData, InteractionType},
+    },
     id::marker::UserMarker,
 };
 
@@ -302,11 +305,11 @@ pub struct ComponentInteraction<T> {
 pub trait Luro {
     /// Gets the [interaction client](InteractionClient) using this framework's
     /// [http client](Client) and [application id](ApplicationMarker)
-    fn interaction_client(&self) -> InteractionClient;
+    async fn interaction_client(&self) -> anyhow::Result<InteractionClient>;
 
     /// Register commands to the Discord API.
     async fn register_commands(&self, commands: &[Command]) -> anyhow::Result<()> {
-        let client = self.interaction_client();
+        let client = self.interaction_client().await?;
 
         match client.set_global_commands(commands).await {
             Ok(command_result) => Ok(info!(

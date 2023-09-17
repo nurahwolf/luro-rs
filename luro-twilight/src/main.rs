@@ -26,7 +26,7 @@ async fn main() -> anyhow::Result<()> {
     dotenv()?;
 
     // Database driver - Change this and the feature of `luro-database` to modify the driver!
-    let database_driver = luro_database::toml::TomlDatabaseDriver::start().await?;
+    let database_driver = luro_database::driver_toml::TomlDatabaseDriver::start().await?;
     let (filter, tracing_subscriber) = reload::Layer::new(FILTER);
     let config = Configuration::new(
         database_driver,
@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Create the framework, Initialise tracing for logs based on bot name
     let (framework, mut shards) = Framework::new(config, tracing_subscriber).await?;
-    init_tracing_subscriber(filter, &framework.database.current_user.read().unwrap().name);
+    init_tracing_subscriber(filter, &framework.twilight_client.current_user().await?.model().await?.name);
 
     // Work on our events
     let mut stream = ShardEventStream::new(shards.iter_mut());

@@ -81,10 +81,9 @@ impl From<Context> for Framework {
 async fn initialise_database(
     config: Arc<Configuration<DatabaseEngine>>,
 ) -> anyhow::Result<(Arc<LuroDatabase<DatabaseEngine>>, Id<UserMarker>)> {
-    let application = config.twilight_client.current_user_application().await?.model().await?;
     let current_user = config.twilight_client.current_user().await?.model().await?;
     let current_user_id = current_user.id;
-    Ok((LuroDatabase::build(application, current_user, config).into(), current_user_id))
+    Ok((LuroDatabase::build(config).into(), current_user_id))
 }
 
 fn ensure_data_directory_exists() {

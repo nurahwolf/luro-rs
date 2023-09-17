@@ -1,5 +1,5 @@
-use luro_model::COLOUR_DANGER;
 use luro_model::builders::EmbedBuilder;
+use luro_model::COLOUR_DANGER;
 use rand::seq::SliceRandom;
 use tracing::warn;
 use twilight_model::id::marker::UserMarker;

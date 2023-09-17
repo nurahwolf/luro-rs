@@ -1,4 +1,4 @@
-use luro_model::{COLOUR_DANGER, builders::EmbedBuilder};
+use luro_model::{builders::EmbedBuilder, COLOUR_DANGER};
 use tracing::warn;
 
 /// An embed returned if the user is above the bot in the role hierarchy.

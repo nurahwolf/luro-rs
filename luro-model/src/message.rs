@@ -16,7 +16,7 @@ use twilight_model::{
     util::Timestamp,
 };
 
-use crate::{PRIMARY_BOT_OWNER, builders::EmbedBuilder};
+use crate::{builders::EmbedBuilder, PRIMARY_BOT_OWNER};
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum LuroMessageSource {
