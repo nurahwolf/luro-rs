@@ -77,6 +77,7 @@ impl<T> ModalInteraction<T> {
             id: interaction.id,
             kind: interaction.kind,
             latency: ctx.latency,
+            #[cfg(feature = "lavalink")]
             lavalink: ctx.lavalink,
             locale: interaction.locale.clone(),
             member: interaction.member.clone(),

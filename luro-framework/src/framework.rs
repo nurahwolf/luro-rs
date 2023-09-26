@@ -5,8 +5,6 @@ use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
 
 use twilight_gateway::{stream, Shard};
 
-use twilight_model::id::{marker::UserMarker, Id};
-
 use crate::{Context, DatabaseEngine, Framework};
 
 #[cfg(feature = "luro-builder")]
@@ -28,15 +26,16 @@ impl Framework {
         // Ensure data directory exists on disk
         ensure_data_directory_exists();
 
-        let (database, current_user_id) = initialise_database(config.clone()).await?;
+        let database = initialise_database(config.clone());
         let shards = stream::create_recommended(&config.twilight_client, config.shard_config.clone(), |_, c| c.build())
             .await?
             .collect::<Vec<_>>();
 
         #[cfg(feature = "lavalink")]
         let lavalink = {
+            let current_user = config.twilight_client.current_user().await?.model().await?;
             let socket = <std::net::SocketAddr as std::str::FromStr>::from_str(&config.lavalink_host)?;
-            let lavalink = twilight_lavalink::Lavalink::new(current_user_id, shards.len().try_into()?);
+            let lavalink = twilight_lavalink::Lavalink::new(current_user.id, shards.len().try_into()?);
             lavalink.add(socket, &config.lavalink_auth).await?;
             lavalink.into()
         };
@@ -70,6 +69,7 @@ impl From<Context> for Framework {
             global_commands: framework.global_commands,
             guild_commands: framework.guild_commands,
             http_client: framework.http_client,
+            #[cfg(feature = "lavalink")]
             lavalink: framework.lavalink,
             tracing_subscriber: framework.tracing_subscriber,
             twilight_client: framework.twilight_client,
@@ -77,12 +77,10 @@ impl From<Context> for Framework {
     }
 }
 
-async fn initialise_database(
+fn initialise_database(
     config: Arc<Configuration<DatabaseEngine>>,
-) -> anyhow::Result<(Arc<LuroDatabase<DatabaseEngine>>, Id<UserMarker>)> {
-    let current_user = config.twilight_client.current_user().await?.model().await?;
-    let current_user_id = current_user.id;
-    Ok((LuroDatabase::build(config).into(), current_user_id))
+) -> Arc<LuroDatabase<DatabaseEngine>> {
+    LuroDatabase::build(config).into()
 }
 
 fn ensure_data_directory_exists() {

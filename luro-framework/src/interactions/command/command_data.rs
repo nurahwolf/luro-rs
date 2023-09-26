@@ -19,6 +19,7 @@ impl<T> CommandInteraction<T> {
             id: self.id,
             kind: self.kind,
             latency: self.latency,
+            #[cfg(feature = "lavalink")]
             lavalink: self.lavalink,
             locale: self.locale,
             member: self.member,

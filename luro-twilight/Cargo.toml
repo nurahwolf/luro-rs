@@ -69,6 +69,7 @@ commands = [
     "command-wordcount",
 ]
 
+
 # Commands
 command-about = ["dep:git2", "dep:memory-stats"]
 command-base64 = ["dep:base64"]

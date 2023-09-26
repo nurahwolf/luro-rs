@@ -66,6 +66,7 @@ pub struct CommandInteraction<T> {
     pub id: Id<twilight_model::id::marker::InteractionMarker>,
     pub kind: twilight_model::application::interaction::InteractionType,
     pub latency: twilight_gateway::Latency,
+    #[cfg(feature = "lavalink")]
     pub lavalink: Arc<twilight_lavalink::Lavalink>,
     pub locale: Option<String>,
     pub member: Option<twilight_model::guild::PartialMember>,
@@ -264,6 +265,7 @@ pub struct ModalInteraction<T> {
     pub id: Id<twilight_model::id::marker::InteractionMarker>,
     pub kind: twilight_model::application::interaction::InteractionType,
     pub latency: twilight_gateway::Latency,
+    #[cfg(feature = "lavalink")]
     pub lavalink: Arc<twilight_lavalink::Lavalink>,
     pub locale: Option<String>,
     pub member: Option<twilight_model::guild::PartialMember>,
@@ -293,6 +295,7 @@ pub struct ComponentInteraction<T> {
     pub id: Id<twilight_model::id::marker::InteractionMarker>,
     pub kind: twilight_model::application::interaction::InteractionType,
     pub latency: twilight_gateway::Latency,
+    #[cfg(feature = "lavalink")]
     pub lavalink: Arc<twilight_lavalink::Lavalink>,
     pub locale: Option<String>,
     pub member: Option<twilight_model::guild::PartialMember>,

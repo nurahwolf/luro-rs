@@ -13,6 +13,7 @@ impl Context {
             guild_commands: framework.guild_commands,
             http_client: framework.http_client,
             latency,
+            #[cfg(feature = "lavalink")]
             lavalink: framework.lavalink,
             shard,
             tracing_subscriber: framework.tracing_subscriber,
