@@ -9,6 +9,7 @@ pub struct Story {
     pub title: String,
     pub description: String,
     pub author: Id<UserMarker>,
+    #[serde(default)]
     pub nsfw: bool,
 }
 

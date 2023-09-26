@@ -16,6 +16,8 @@ pub struct OwnerGetMessage {
     user: Option<ResolvedUser>,
     /// If defined, attempts to use the client to fetch the message
     channel_id: Option<Id<ChannelMarker>>,
+    /// Should the message be shown? Defaults to everyone
+    ephemeral: Option<bool>
 }
 
 impl LuroCommand for OwnerGetMessage {
@@ -72,6 +74,12 @@ impl LuroCommand for OwnerGetMessage {
                 .colour(COLOUR_DANGER),
         };
 
-        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
+        ctx.respond(|r|{
+            r.add_embed(embed);
+            if self.ephemeral.unwrap_or_default() {
+                r.ephemeral();
+            }
+            r
+        }).await
     }
 }
