@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -25,7 +25,7 @@ impl ExecuteLuroCommand for Profile {
             Some(user) => user,
             None => ctx.author_id(),
         };
-        let user_data = ctx.database.get_user(&user_id).await?;
+        let user_data = ctx.get_user(&user_id).await?;
         let interaction_channel_nsfw = ctx.channel.nsfw;
         let nsfw = match self.nsfw {
             Some(nsfw) => match interaction_channel_nsfw {

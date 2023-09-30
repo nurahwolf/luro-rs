@@ -12,13 +12,17 @@ version.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-async-trait = "0.1.73"
+async-trait = "0.1"
+bincode = "1.3.3"
 hyper = { workspace = true }
 nom = { version = "7", optional = true } # command/text_args
 radix_trie = { version = "0.2", optional = true } # command
 rand = { workspace = true, optional = true} # feature dice-roller
+rkyv = "0.7.42"
 serde = { workspace = true }
+sqlx = { version = "0.7", features = [ "runtime-tokio", "postgres" ], optional = true }
 tokio = { workspace = true }
+toml = { version = "*", optional = true}
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 twilight-cache-inmemory = { workspace = true }
@@ -28,15 +32,22 @@ twilight-interactions.path = "../twilight-interactions"
 twilight-lavalink = { workspace = true }
 twilight-model = { workspace = true }
 twilight-util = { workspace = true }
-toml.version = "*"
 
 [features]
-default = ["toml-driver", "dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders"]
+# Default Features
+default = ["sqlx-driver", "dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders"]
 
+## Model Features
 auto-trim = [] # Used to automatically trim message responses that are too big, sending as a file instead
+
+## Database Options
+toml-driver = ["dep:toml"]
+sqlx-driver = ["dep:sqlx"]
+
+## To investigate
 builders = ["auto-trim"]
 cache-memory = []
 dice-roller = ["dep:rand"]
 lavalink = [] # Enable this feature to have Luro respond to lavalink events
 luro-command = ["dep:radix_trie", "dep:nom"]
-toml-driver = []
+

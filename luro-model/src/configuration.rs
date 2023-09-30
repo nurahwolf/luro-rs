@@ -6,10 +6,8 @@ use twilight_model::gateway::{
     presence::{ActivityType, MinimalActivity, Status},
 };
 
-use crate::database_driver::LuroDatabaseDriver;
-
-#[derive(Debug)]
-pub struct Configuration<D: LuroDatabaseDriver> {
+#[derive(Debug, Clone)]
+pub struct Configuration {
     /// The token used for interacting with the Discord API
     pub token: String,
     /// The intents we want to listen for
@@ -24,13 +22,12 @@ pub struct Configuration<D: LuroDatabaseDriver> {
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub shard_config: Config,
-    pub database_driver: D,
+    pub connection_string: String
 }
 
-impl<D: LuroDatabaseDriver> Configuration<D> {
+impl Configuration {
     /// Create a new configuration
     pub fn new(
-        database_driver: D,
         intents: Intents,
         #[cfg(feature = "lavalink")] lavalink_auth: String,
         #[cfg(feature = "lavalink")] lavalink_host: String,
@@ -40,6 +37,7 @@ impl<D: LuroDatabaseDriver> Configuration<D> {
         let cache = twilight_cache_inmemory::InMemoryCache::new().into();
         let twilight_client = twilight_http::Client::new(token.clone()).into();
         let shard_config = shard_config_builder(intents, token.clone())?;
+        let connection_string = "postgres://localhost/luro".to_owned();
 
         Ok(Self {
             cache,
@@ -52,7 +50,7 @@ impl<D: LuroDatabaseDriver> Configuration<D> {
             #[cfg(feature = "cache-memory")]
             twilight_client,
             shard_config,
-            database_driver,
+            connection_string
         })
     }
 }

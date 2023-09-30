@@ -12,7 +12,7 @@ impl LuroDatabaseItem for Story {
     type Container = Stories;
     type Additional = bool;
 
-    async fn add_item(item: &Self::Item) -> anyhow::Result<()> {
+    async fn add_item(driver: Self::Additional, item: &Self::Item) -> anyhow::Result<()> {
         // Get a NSFW or SFW heck
         let path = match item.nsfw {
             true => Path::new(NSFW_STORIES_FILE_PATH),

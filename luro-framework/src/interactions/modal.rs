@@ -13,9 +13,23 @@ use twilight_model::{
     application::interaction::modal::ModalInteractionData, gateway::payload::incoming::InteractionCreate, user::User,
 };
 
-use crate::{Context, ModalInteraction};
+use crate::{Context, ModalInteraction, Luro};
 
 use super::InteractionTrait;
+
+impl<T> Luro for ModalInteraction<T> {
+    async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
+        Ok(self.twilight_client.interaction(self.application_id))
+    }
+
+    fn database(&self) -> std::sync::Arc<crate::DatabaseEngine> {
+        self.database.clone()
+    }
+
+    fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
+        self.twilight_client.clone()
+    }
+}
 
 impl<T> InteractionTrait for ModalInteraction<T> {
     fn command_name(&self) -> &str {
@@ -42,7 +56,6 @@ impl<T> InteractionTrait for ModalInteraction<T> {
         match self.guild_id {
             Some(guild_id) => {
                 match self
-                    .database
                     .get_guild(&guild_id)
                     .await
                     .map(|mut x| x.highest_role_colour().map(|x| x.0))

@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use luro_framework::{
     command::{CreateLuroCommand, ExecuteLuroCommand},
     interactions::InteractionTrait,
-    CommandInteraction, ComponentInteraction, ModalInteraction,
+    CommandInteraction, ComponentInteraction, ModalInteraction, Luro,
 };
 use luro_model::user::character::{CharacterProfile, FetishCategory};
 use std::{collections::btree_map::Entry, fmt::Write};
@@ -53,7 +53,7 @@ impl ExecuteLuroCommand for Character {
     async fn interaction_modal(&self, ctx: ModalInteraction<()>) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
         let nsfw = ctx.channel.nsfw.unwrap_or_default();
-        let mut user_data = ctx.database.get_user(&user_id).await?;
+        let mut user_data = ctx.get_user(&user_id).await?;
         let character_name = ctx.parse_field_required("character-name")?;
         let short_description = ctx.parse_field_required("character-short-description")?;
         let description = ctx.parse_field_required("character-description")?;
@@ -79,7 +79,7 @@ impl ExecuteLuroCommand for Character {
             }
         };
 
-        ctx.database.modify_user(&user_id, &user_data).await?;
+        ctx.database.update_user(user_data.clone()).await?;
 
         let mut embed = ctx.default_embed().await;
         let mut description = format!("{short_description}\n- **Description:**\n{description}");
@@ -99,7 +99,7 @@ impl ExecuteLuroCommand for Character {
 
     async fn interaction_component(&self, ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
-        let user_data = ctx.database.get_user(&ctx.author_id()).await?;
+        let user_data = ctx.get_user(&ctx.author_id()).await?;
         let name = match self {
             Character::Profile(data) => &data.name,
             Character::Create(data) => &data.name,

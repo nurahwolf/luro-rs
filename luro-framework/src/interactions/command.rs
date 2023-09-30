@@ -6,7 +6,7 @@ use twilight_model::{
     user::User,
 };
 
-use crate::{CommandInteraction, Context};
+use crate::{CommandInteraction, Context, Luro};
 
 use super::InteractionTrait;
 
@@ -26,6 +26,20 @@ mod response_update;
 mod send_log_channel;
 mod send_message;
 mod webhook;
+
+impl<T> Luro for CommandInteraction<T> {
+    async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
+        Ok(self.twilight_client.interaction(self.application_id))
+    }
+
+    fn database(&self) -> std::sync::Arc<crate::DatabaseEngine> {
+        self.database.clone()
+    }
+
+    fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
+        self.twilight_client.clone()
+    }
+}
 
 impl<T> InteractionTrait for CommandInteraction<T> {
     fn command_name(&self) -> &str {
@@ -52,7 +66,6 @@ impl<T> InteractionTrait for CommandInteraction<T> {
         match self.guild_id {
             Some(guild_id) => {
                 match self
-                    .database
                     .get_guild(&guild_id)
                     .await
                     .map(|mut x| x.highest_role_colour().map(|x| x.0))

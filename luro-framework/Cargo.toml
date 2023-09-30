@@ -30,16 +30,22 @@ rand = { workspace = true, optional = true } # response/permission_not_bot_staff
 async-trait = "0.1.73"
 
 [features]
-cache-memory = ["dep:twilight-cache-inmemory"]
-database-toml = []
+# Default Features
 default = [
     "cache-memory",
-    "database-toml",
+    "sqlx-driver",
     "http-client-hyper",
     # "lavalink",
     "responses",
     "random-responses" # Disable this feature to get a fixed response
 ]
+
+## Database Features
+toml-driver = []
+sqlx-driver = []
+
+## Misc
+cache-memory = ["dep:twilight-cache-inmemory"]
 http-client-hyper = ["dep:hyper"]
 lavalink = ["dep:twilight-lavalink"]
 luro-builder = []

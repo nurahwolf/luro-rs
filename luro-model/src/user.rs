@@ -18,7 +18,7 @@ use twilight_model::{
 
 /// A [HashMap] containing user specific settings ([LuroUser]), keyed by [UserMarker].
 pub type LuroUsers = HashMap<Id<UserMarker>, LuroUser>;
-use crate::message::LuroMessage;
+use crate::{message::LuroMessage, driver_sqlx::users::DatabaseUser};
 
 use self::{actions::UserActions, character::CharacterProfile, marriages::UserMarriages, member::LuroMember};
 
@@ -139,6 +139,14 @@ impl From<&User> for LuroUser {
     }
 }
 
+impl From<DatabaseUser> for LuroUser {
+    fn from(user: DatabaseUser) -> Self {
+        let mut luro_user = Self::default();
+        luro_user.update_database_user(user);
+        luro_user
+    }
+}
+
 impl LuroUser {
     pub fn new(id: Id<UserMarker>) -> Self {
         Self {
@@ -173,6 +181,12 @@ impl LuroUser {
             characters: Default::default(),
             character_prefix: Default::default(),
         }
+    }
+
+    /// Update this type from a databse user
+    pub fn update_database_user(&mut self, user: DatabaseUser) -> &mut Self {
+        self.id = Id::new(user.user_id as u64);
+        self
     }
 
     /// Update this type from a luro user

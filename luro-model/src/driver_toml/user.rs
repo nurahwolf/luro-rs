@@ -14,7 +14,7 @@ impl LuroDatabaseItem for LuroUser {
     type Container = BTreeMap<Self::Id, Self::Item>;
     type Additional = ();
 
-    async fn add_item(item: &Self::Item) -> anyhow::Result<()> {
+    async fn add_item(driver: Self::Additional, item: &Self::Item) -> anyhow::Result<()> {
         let path = format!("{0}/{1}/user_settings.toml", USERDATA_FILE_PATH, &item.id);
         TomlDatabaseDriver::write(item, Path::new(&path)).await?;
         Ok(())

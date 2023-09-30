@@ -1,7 +1,7 @@
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
 
-use crate::ComponentInteraction;
+use crate::{ComponentInteraction, Luro};
 
 impl<T> ComponentInteraction<T> {
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
@@ -9,7 +9,6 @@ impl<T> ComponentInteraction<T> {
         match self.guild_id {
             Some(guild_id) => {
                 match self
-                    .database
                     .get_guild(&guild_id)
                     .await
                     .map(|mut x| x.highest_role_colour().map(|x| x.0))

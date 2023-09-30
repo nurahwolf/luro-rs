@@ -1,6 +1,6 @@
-use std::{fs, path::PathBuf, sync::Arc};
+use std::{fs, path::PathBuf};
 
-use luro_model::{configuration::Configuration, database_driver::LuroDatabase};
+use luro_model::configuration::Configuration;
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
 
 use twilight_gateway::{stream, Shard};
@@ -20,13 +20,13 @@ mod webhook;
 
 impl Framework {
     pub async fn new(
-        config: Arc<Configuration<DatabaseEngine>>,
+        config: Configuration,
         tracing_subscriber: Handle<LevelFilter, Registry>,
     ) -> anyhow::Result<(Framework, Vec<Shard>)> {
         // Ensure data directory exists on disk
         ensure_data_directory_exists();
 
-        let database = initialise_database(config.clone());
+        let database = initialise_database(config.clone()).await?.into();
         let shards = stream::create_recommended(&config.twilight_client, config.shard_config.clone(), |_, c| c.build())
             .await?
             .collect::<Vec<_>>();
@@ -77,10 +77,10 @@ impl From<Context> for Framework {
     }
 }
 
-fn initialise_database(
-    config: Arc<Configuration<DatabaseEngine>>,
-) -> Arc<LuroDatabase<DatabaseEngine>> {
-    LuroDatabase::build(config).into()
+async fn initialise_database(
+    config: Configuration,
+) -> anyhow::Result<DatabaseEngine> {
+    Ok(DatabaseEngine::new(config).await?)
 }
 
 fn ensure_data_directory_exists() {

@@ -1,7 +1,5 @@
 use std::{collections::BTreeMap, path::Path};
 
-use twilight_model::id::Id;
-
 use crate::{guild::LuroGuild, luro_database_driver::LuroDatabaseItem};
 
 use super::TomlDatabaseDriver;
@@ -10,19 +8,19 @@ const GUILDSETTINGS_FILE_PATH: &str = "data/guilds";
 
 impl LuroDatabaseItem for LuroGuild {
     type Item = LuroGuild;
-    type Id = u64;
+    type Id = i64;
     type Container = BTreeMap<Self::Id, Self::Item>;
     type Additional = ();
 
-    async fn add_item(item: &Self::Item) -> anyhow::Result<()> {
-        let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &item.id);
+    async fn add_item(_driver: Self::Additional, item: &Self::Item) -> anyhow::Result<()> {
+        let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &item.guild_id);
         TomlDatabaseDriver::write(item, Path::new(&path)).await?;
         Ok(())
     }
 
     async fn add_items(items: &Self::Container) -> anyhow::Result<()> {
         for item in items.values() {
-            let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &item.id);
+            let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &item.guild_id);
             TomlDatabaseDriver::write(item, Path::new(&path)).await?;
         }
         Ok(())
@@ -30,7 +28,7 @@ impl LuroDatabaseItem for LuroGuild {
 
     async fn get_item(id: &Self::Id, _ctx: Self::Additional) -> anyhow::Result<Self::Item> {
         let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &id);
-        TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(Id::new(*id))).await
+        TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(*id)).await
     }
 
     async fn get_items(ids: Vec<&Self::Id>, _ctx: Self::Additional) -> anyhow::Result<Self::Container> {
@@ -39,7 +37,7 @@ impl LuroDatabaseItem for LuroGuild {
             let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &id);
             items.insert(
                 *id,
-                TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(Id::new(*id))).await?,
+                TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(*id)).await?,
             );
         }
         Ok(items)
@@ -56,7 +54,7 @@ impl LuroDatabaseItem for LuroGuild {
             let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &id);
             old_items.insert(
                 *id,
-                TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(Id::new(*id))).await?,
+                TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(*id)).await?,
             );
             TomlDatabaseDriver::write(item, Path::new(&path)).await?;
         }
@@ -65,7 +63,7 @@ impl LuroDatabaseItem for LuroGuild {
 
     async fn remove_item(id: &Self::Id, _ctx: Self::Additional) -> anyhow::Result<Option<Self::Item>> {
         let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &id);
-        let old_item = TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(Id::new(*id))).await?;
+        let old_item = TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(*id)).await?;
         TomlDatabaseDriver::gdpr_delete(Path::new(&path)).await?;
         Ok(Some(old_item))
     }
@@ -76,7 +74,7 @@ impl LuroDatabaseItem for LuroGuild {
             let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &id);
             old_items.insert(
                 *id,
-                TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(Id::new(*id))).await?,
+                TomlDatabaseDriver::get(Path::new(&path), LuroGuild::new(*id as i64)).await?,
             );
             TomlDatabaseDriver::gdpr_delete(Path::new(&path)).await?;
         }

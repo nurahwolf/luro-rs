@@ -73,7 +73,7 @@ impl LuroDatabaseDriver for TomlDatabaseDriver {
 
     async fn get_guild(&self, id: u64) -> anyhow::Result<LuroGuild> {
         let path = format!("{0}/{1}/guild_settings.toml", GUILDSETTINGS_FILE_PATH, &id);
-        Self::get(Path::new(&path), LuroGuild::new(Id::new(id))).await
+        Self::get(Path::new(&path), LuroGuild::new(id as i64)).await
     }
 
     async fn get_hecks(&self, nsfw: bool) -> anyhow::Result<Hecks> {

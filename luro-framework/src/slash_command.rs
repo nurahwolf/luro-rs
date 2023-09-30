@@ -5,7 +5,7 @@ use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
 pub type CommandResult = std::pin::Pin<Box<dyn std::future::Future<Output = anyhow::Result<()>> + 'static + Send>>;
 
 /// A structure containing a standard command implementation, for progmatically loading commands
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LuroCommand<T> {
     /// The name of the command
     pub name: &'static str,

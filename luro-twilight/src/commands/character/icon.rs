@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -19,7 +19,7 @@ impl ExecuteLuroCommand for Icon {
     async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
 
-        let mut user_data = ctx.database.get_user(&user_id).await?;
+        let mut user_data = ctx.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
             return ctx
                 .respond(|r| {
@@ -46,7 +46,7 @@ impl ExecuteLuroCommand for Icon {
             }
         };
 
-        ctx.database.modify_user(&user_id, &user_data).await?;
+        ctx.database.update_user(user_data).await?;
 
         ctx.respond(|r| r.content("Done!").ephemeral()).await
     }

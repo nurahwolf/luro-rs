@@ -31,7 +31,7 @@ use crate::{
     heck::Hecks,
     role::{LuroRole, LuroRolePositions, LuroRoles},
     user::LuroUser,
-    PRIMARY_BOT_OWNER,
+    PRIMARY_BOT_OWNER, driver_sqlx::guilds::DatabaseGuild,
 };
 
 /// A [HashMap] containing guild specific settings ([LuroGuild]), keyed by [GuildMarker].
@@ -81,8 +81,7 @@ pub struct LuroGuild {
     pub features: Vec<GuildFeature>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icon: Option<ImageHash>,
-    #[serde(default = "id")]
-    pub id: Id<GuildMarker>,
+    pub guild_id: i64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub joined_at: Option<Timestamp>,
     #[serde(default)]
@@ -172,7 +171,25 @@ pub struct LuroGuild {
     pub widget_enabled: Option<bool>,
 }
 
+impl From<DatabaseGuild> for LuroGuild {
+    fn from(guild: DatabaseGuild) -> Self {
+        let mut luro_guild = Self::default();
+        luro_guild.update_database_guild(guild);
+        luro_guild
+    }
+}
+
 impl LuroGuild {
+    /// Cast i64 to Id<GuildMarker>
+    pub fn guild_id(&self) -> Id<GuildMarker> {
+        Id::new(self.guild_id as u64)
+    }
+
+    pub fn update_database_guild(&mut self, guild: DatabaseGuild) -> &mut Self {
+        self.guild_id = guild.guild_id;
+        self
+    }
+
     pub fn sort_roles(&mut self) -> &mut Self {
         let mut roles: Vec<_> = self.roles.values().collect();
 
@@ -207,7 +224,7 @@ impl LuroGuild {
     /// However, this function is useful for if you wish to get a fresh set of roles.
     pub fn user_roles(&self, user: &LuroUser) -> Vec<&LuroRole> {
         let mut user_roles = vec![];
-        let user_guild = user.guilds.get(&self.id);
+        let user_guild = user.guilds.get(&self.guild_id());
 
         if let Some(user_guild) = user_guild {
             for user_role in &user_guild.role_ids {
@@ -243,7 +260,7 @@ impl LuroGuild {
     }
 
     pub fn get_everyone_role(&self) -> Option<LuroRole> {
-        self.roles.get(&self.id.cast()).cloned()
+        self.roles.get(&self.guild_id().cast()).cloned()
     }
 
     /// Returns the permissions a user may have
@@ -264,11 +281,11 @@ impl LuroGuild {
         let everyone_role = self
             .get_everyone_role()
             .context("Could not get everyone role from guild roles!")?;
-        Ok(PermissionCalculator::new(self.id, user.id, everyone_role.permissions, user_permissions).owner_id(self.owner_id))
+        Ok(PermissionCalculator::new(self.guild_id(), user.id, everyone_role.permissions, user_permissions).owner_id(self.owner_id))
     }
 
     pub fn update_everyone_role(&mut self) -> &mut Self {
-        self.everyone_role = self.roles.get(&self.id.cast()).cloned();
+        self.everyone_role = self.roles.get(&self.guild_id().cast()).cloned();
         self
     }
 
@@ -276,7 +293,7 @@ impl LuroGuild {
         let roles: Vec<LuroRole> = self
             .user_roles(user)
             .into_iter()
-            .filter(|x| x.id.get() != self.id.get())
+            .filter(|x| x.id.get() != self.guild_id().get())
             .cloned()
             .collect();
         roles.into_iter().map(|role| role.role_permission()).collect()
@@ -284,7 +301,7 @@ impl LuroGuild {
 
     /// Use Twilight's [Client] to update a guild automatically
     pub async fn update_guild_automatically(&mut self, client: &Client) -> anyhow::Result<&mut Self> {
-        let guild = client.guild(self.id).await?.model().await?;
+        let guild = client.guild(self.guild_id()).await?.model().await?;
         Ok(self.update_guild(guild))
     }
 
@@ -298,7 +315,7 @@ impl LuroGuild {
         self.discovery_splash = guild.discovery_splash().copied();
         self.explicit_content_filter = Some(guild.explicit_content_filter());
         self.icon = guild.icon().copied();
-        self.id = guild.id();
+        self.guild_id = guild.id().get() as i64;
         self.joined_at = guild.joined_at();
         self.large = guild.large();
         self.max_members = guild.max_members();
@@ -360,7 +377,7 @@ impl LuroGuild {
         self.explicit_content_filter = Some(guild.explicit_content_filter);
         self.features = guild.features;
         self.icon = guild.icon;
-        self.id = guild.id;
+        self.guild_id = guild.id.get() as i64;
         self.joined_at = guild.joined_at;
         self.large = guild.large;
         self.max_members = guild.max_members;
@@ -397,7 +414,7 @@ impl LuroGuild {
         self
     }
 
-    pub fn new(id: Id<GuildMarker>) -> Self {
+    pub fn new(id: i64) -> Self {
         Self {
             accent_colour_custom: Default::default(),
             accent_colour: Default::default(),
@@ -418,7 +435,7 @@ impl LuroGuild {
             explicit_content_filter: Default::default(),
             features: Default::default(),
             icon: Default::default(),
-            id,
+            guild_id: id,
             joined_at: Default::default(),
             large: Default::default(),
             max_members: Default::default(),
@@ -511,7 +528,7 @@ impl Default for LuroGuild {
             explicit_content_filter: None,
             features: Default::default(),
             icon: Default::default(),
-            id: Id::new(69),
+            guild_id: 69,
             joined_at: Default::default(),
             large: Default::default(),
             max_members: Default::default(),
@@ -525,7 +542,7 @@ impl Default for LuroGuild {
             name: Default::default(),
             nsfw_hecks: Default::default(),
             nsfw_level: Default::default(),
-            owner_id: PRIMARY_BOT_OWNER,
+            owner_id: owner_id(),
             owner: Default::default(),
             permissions: Default::default(),
             preferred_locale: Default::default(),
@@ -554,10 +571,6 @@ impl Default for LuroGuild {
             role_positions: Default::default(),
         }
     }
-}
-
-fn id() -> Id<GuildMarker> {
-    Id::new(69)
 }
 
 fn owner_id() -> Id<UserMarker> {

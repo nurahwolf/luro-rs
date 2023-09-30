@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -18,7 +18,7 @@ pub struct Proxy {
 impl ExecuteLuroCommand for Proxy {
     async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
-        let mut user_data = ctx.database.get_user(&user_id).await?;
+        let mut user_data = ctx.get_user(&user_id).await?;
         if user_data.characters.is_empty() {
             return ctx
                 .respond(|r| {
@@ -45,7 +45,7 @@ impl ExecuteLuroCommand for Proxy {
         if self.remove.unwrap_or_default() {
             let content = match user_data.character_prefix.remove(&self.prefix) {
                 Some(prefix) => {
-                    ctx.database.modify_user(&user_id, &user_data).await?;
+                    ctx.database.update_user(user_data).await?;
                     format!("Prefix {prefix} removed from character {}!", self.name)
                 }
                 None => {
@@ -60,7 +60,7 @@ impl ExecuteLuroCommand for Proxy {
         }
 
         user_data.character_prefix.insert(self.prefix.clone(), self.name.clone());
-        ctx.database.modify_user(&user_id, &user_data).await?;
+        ctx.database.update_user(user_data.clone()).await?;
 
         let character_icon = match !character.icon.is_empty() {
             true => character.icon.clone(),

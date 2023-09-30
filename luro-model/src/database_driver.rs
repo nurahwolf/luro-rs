@@ -29,27 +29,25 @@ pub struct StoryManager {
 ///
 /// NOTE: With the TOML driver, usize keys are serialised as strings!
 #[derive(Debug)]
-pub struct LuroDatabase<D: LuroDatabaseDriver> {
+pub struct LuroDatabase {
     pub command_data: RwLock<CommandManager>,
     pub count: RwLock<usize>,
-    pub driver: D,
     pub guild_data: Box<RwLock<LuroGuilds>>,
     pub hecks: RwLock<HeckManager>,
     pub quotes: RwLock<Quotes>,
     pub staff: RwLock<LuroUsers>,
     pub stories: RwLock<StoryManager>,
     pub user_data: Box<RwLock<LuroUsers>>,
-    pub config: Arc<Configuration<D>>,
+    pub config: Arc<Configuration>,
 }
 
-impl<D: LuroDatabaseDriver> LuroDatabase<D> {
+impl LuroDatabase {
     /// Build the key requirements of our database. The rest of our data is fetched as required.
-    pub fn build(config: Arc<Configuration<D>>) -> LuroDatabase<D> {
+    pub fn build(config: Arc<Configuration>) -> LuroDatabase {
         Self {
             command_data: Default::default(),
             config: config.clone(),
             count: Default::default(),
-            driver: config.database_driver.clone(),
             guild_data: Default::default(),
             hecks: Default::default(),
             quotes: Default::default(),

@@ -3,11 +3,11 @@ use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
 use luro_framework::interactions::InteractionTrait;
 use luro_framework::responses::Response;
 use luro_framework::{CommandInteraction, ComponentInteraction, ModalInteraction};
-use tracing::info;
+use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
 use twilight_model::application::interaction::application_command::CommandData;
-use twilight_model::application::interaction::InteractionData;
+use twilight_model::application::interaction::{InteractionData, Interaction};
 
 #[cfg(feature = "command-about")]
 mod about;
@@ -118,16 +118,21 @@ pub async fn handle_command(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
 }
 
 /// Handle incoming component interaction
-///
-/// SAFETY: There is an unwrap here, but the type is always present on MessageComponent
-/// which is the only type this function is called on
 pub async fn handle_component(ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
     info!(
         "Received component interaction - {} - {}",
         ctx.author().name,
         ctx.data.custom_id
     );
-    let interaction = ctx.database.get_interaction(&ctx.message.id.to_string()).await?;
+
+    let interaction: Interaction = match ctx.database.get_interaction_by_message_id(ctx.message.id.get() as i64).await? {
+        Some(interaction) => interaction.try_into()?,
+        None => {
+            warn!(ctx = ?ctx, "Attempting to handle component with an interaction that does not exist in the database");
+            return Ok(());
+        },
+    };
+    
     let data = match interaction.data {
         Some(InteractionData::ApplicationCommand(data)) => data,
         _ => {
@@ -149,10 +154,23 @@ pub async fn handle_component(ctx: ComponentInteraction<()>) -> anyhow::Result<(
 /// Handle incoming modal interaction
 pub async fn handle_modal(ctx: ModalInteraction<()>) -> anyhow::Result<()> {
     info!("Received modal interaction - {} - {}", ctx.author().name, ctx.data.custom_id);
-    let interaction = ctx
-        .database
-        .get_interaction(&ctx.message.as_ref().unwrap().id.to_string())
-        .await?;
+
+    let id = match ctx.message {
+        Some(ref message) => message.id.get() as i64,
+        None => {
+            warn!(ctx = ?ctx, "Attempting to handle modal with an interaction that does not have a message");
+            return Ok(());
+        },
+    };
+
+    let interaction: Interaction = match ctx.database.get_interaction_by_message_id(id).await? {
+        Some(interaction) => interaction.try_into()?,
+        None => {
+            warn!(ctx = ?ctx, "Attempting to handle modal with an interaction that does not exist in the database");
+            return Ok(());
+        },
+    };
+
     let data = match interaction.data {
         Some(InteractionData::ApplicationCommand(data)) => data,
         _ => {

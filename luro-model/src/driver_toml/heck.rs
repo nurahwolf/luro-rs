@@ -15,7 +15,7 @@ impl LuroDatabaseItem for Heck {
     type Container = Hecks;
     type Additional = bool;
 
-    async fn add_item(item: &Self::Item) -> anyhow::Result<()> {
+    async fn add_item(driver: Self::Additional, item: &Self::Item) -> anyhow::Result<()> {
         // Get a NSFW or SFW heck
         let path = match item.nsfw {
             true => Path::new(NSFW_HECK_FILE_PATH),

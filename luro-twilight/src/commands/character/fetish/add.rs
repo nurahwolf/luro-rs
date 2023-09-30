@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::command::ExecuteLuroCommand;
+use luro_framework::{command::ExecuteLuroCommand, Luro};
 use luro_framework::interactions::InteractionTrait;
 use luro_framework::CommandInteraction;
 use luro_model::user::character::{Fetish, FetishCategory, FetishList};
@@ -23,7 +23,7 @@ impl ExecuteLuroCommand for Add {
     async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let user_id = ctx.author_id();
-        let mut user_data = ctx.database.get_user(&user_id).await?;
+        let mut user_data = ctx.get_user(&user_id).await?;
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| {
             a.icon_url(user_data.avatar())
@@ -67,7 +67,7 @@ impl ExecuteLuroCommand for Add {
             }
         };
 
-        ctx.database.modify_user(&user_id, &user_data).await?;
+        ctx.database.update_user(user_data).await?;
 
         let mut fav = String::new();
         let mut love = String::new();

@@ -5,7 +5,7 @@ use twilight_model::{
     gateway::payload::incoming::InteractionCreate, user::User,
 };
 
-use crate::{ComponentInteraction, Context};
+use crate::{ComponentInteraction, Context, Luro};
 
 use super::InteractionTrait;
 
@@ -17,6 +17,20 @@ mod respond;
 mod respond_create;
 mod response_simple;
 mod response_update;
+
+impl<T> Luro for ComponentInteraction<T> {
+    async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
+        Ok(self.twilight_client.interaction(self.application_id))
+    }
+
+    fn database(&self) -> std::sync::Arc<crate::DatabaseEngine> {
+        self.database.clone()
+    }
+
+    fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
+        self.twilight_client.clone()
+    }
+}
 
 impl<T> InteractionTrait for ComponentInteraction<T> {
     fn command_name(&self) -> &str {
@@ -43,7 +57,6 @@ impl<T> InteractionTrait for ComponentInteraction<T> {
         match self.guild_id {
             Some(guild_id) => {
                 match self
-                    .database
                     .get_guild(&guild_id)
                     .await
                     .map(|mut x| x.highest_role_colour().map(|x| x.0))

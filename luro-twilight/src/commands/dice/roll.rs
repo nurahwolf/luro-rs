@@ -40,11 +40,11 @@ impl ExecuteLuroCommand for Roll {
         };
 
         if result.dice_total == RollValue::Int(20) {
-            result_string.push_str(&format!("\n-----\n*Whoa, a 20!! Congrats!! <3*"))
+            result_string.push_str("\n-----\n*Whoa, a 20!! Congrats!! <3*")
         }
 
         if result.dice_total == RollValue::Int(1) {
-            result_string.push_str(&format!("\n-----\n*You failed. This is known as a skill issue.*"))
+            result_string.push_str("\n-----\n*You failed. This is known as a skill issue.*")
         }
 
         ctx.respond(|r| {

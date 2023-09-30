@@ -2,7 +2,7 @@ use luro_model::{guild::log_channel::LuroLogChannel, response::LuroResponse};
 use tracing::debug;
 use twilight_model::channel::Message;
 
-use crate::CommandInteraction;
+use crate::{CommandInteraction, Luro};
 
 impl<T> CommandInteraction<T> {
     /// Attempts to send to a log channel if it is present.
@@ -13,9 +13,8 @@ impl<T> CommandInteraction<T> {
         response: F,
     ) -> anyhow::Result<Option<Message>> {
         debug!("Attempting to send to log channel");
-        // TODO: Send event to main logging channel if not defined
         let (guild_data, guild_id) = match self.guild_id {
-            Some(guild_id) => (self.database.get_guild(&guild_id).await?, guild_id),
+            Some(guild_id) => (self.get_guild(&guild_id).await?, guild_id),
             None => return Ok(None),
         };
 

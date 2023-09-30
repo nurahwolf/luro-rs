@@ -2,7 +2,7 @@
 #![feature(let_chains)]
 
 use anyhow::Context;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use events::event_handler;
 use futures_util::StreamExt;
 use luro_framework::Framework;
@@ -25,17 +25,13 @@ mod events;
 async fn main() -> anyhow::Result<()> {
     dotenv()?;
 
-    // Database driver - Change this and the feature of `luro-database` to modify the driver!
-    let database_driver = luro_model::driver_toml::TomlDatabaseDriver::start().await?;
     let (filter, tracing_subscriber) = reload::Layer::new(FILTER);
     let config = Configuration::new(
-        database_driver,
         INTENTS,
         env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?,
         env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?,
         env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?,
-    )?
-    .into();
+    )?;
 
     // Create the framework, Initialise tracing for logs based on bot name
     let (framework, mut shards) = Framework::new(config, tracing_subscriber).await?;

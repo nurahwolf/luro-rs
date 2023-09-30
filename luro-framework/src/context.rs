@@ -1,5 +1,4 @@
 use twilight_gateway::{Event, Latency, MessageSender};
-use twilight_http::client::InteractionClient;
 
 use crate::{Context, Framework, Luro};
 
@@ -23,11 +22,15 @@ impl Context {
 }
 
 impl Luro for Context {
-    /// Gets the [interaction client](InteractionClient) using this framework's
-    /// [http client](Client) and [application id](ApplicationMarker)
-    async fn interaction_client(&self) -> anyhow::Result<InteractionClient> {
-        Ok(self
-            .twilight_client
-            .interaction(self.twilight_client.current_user_application().await?.model().await?.id))
+    async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
+        Ok(self.twilight_client.interaction(self.application().await?.id))
+    }
+
+    fn database(&self) -> std::sync::Arc<crate::DatabaseEngine> {
+        self.database.clone()
+    }
+
+    fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
+        self.twilight_client.clone()
     }
 }

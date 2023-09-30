@@ -44,9 +44,8 @@ pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Re
         info!("Primary Owner: {}", owner.name);
     }
     let mut owners = String::new();
-    let staff = framework.database.get_staff().await?;
 
-    for staff in staff.values() {
+    for staff in framework.database.get_staff().await? {
         if owners.is_empty() {
             owners.push_str(&staff.name)
         } else {
