@@ -1,7 +1,7 @@
-#[cfg(feature = "toml-driver")]
-mod toml;
 #[cfg(feature = "sqlx-driver")]
 mod sqlx;
+#[cfg(feature = "toml-driver")]
+mod toml;
 
 /// Luro's database, using the toml driver
 #[cfg(feature = "toml-driver")]
@@ -29,7 +29,7 @@ pub struct DatabaseInteraction {
 }
 
 pub struct DatabaseRole {
-    pub role_id: i64
+    pub role_id: i64,
 }
 
 #[cfg(feature = "sqlx-driver")]

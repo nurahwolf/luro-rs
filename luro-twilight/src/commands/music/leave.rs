@@ -11,7 +11,7 @@ use crate::luro_command::LuroCommand;
 pub struct LeaveCommand {}
 
 impl LuroCommand for LeaveCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
         let player = ctx.framework.lavalink.player(guild_id).await.unwrap();
         player.send(Destroy::from(guild_id))?;

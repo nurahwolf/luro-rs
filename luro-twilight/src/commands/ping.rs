@@ -17,7 +17,7 @@ pub struct Ping {}
 
 #[async_trait]
 impl LuroCommandTrait for Ping {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::default();

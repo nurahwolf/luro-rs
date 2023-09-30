@@ -22,7 +22,7 @@ pub struct Configuration {
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub shard_config: Config,
-    pub connection_string: String
+    pub connection_string: String,
 }
 
 impl Configuration {
@@ -50,7 +50,7 @@ impl Configuration {
             #[cfg(feature = "cache-memory")]
             twilight_client,
             shard_config,
-            connection_string
+            connection_string,
         })
     }
 }

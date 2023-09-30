@@ -1,8 +1,6 @@
 #![feature(async_fn_in_trait)]
 use luro_database::LuroDatabase;
-use luro_model::{
-    builders::EmbedBuilder, database_driver::LuroDatabaseDriver, guild::LuroGuild, response::LuroResponse, user::LuroUser,
-};
+use luro_model::{builders::EmbedBuilder, guild::LuroGuild, response::LuroResponse, user::LuroUser};
 use slash_command::LuroCommand;
 use std::{
     collections::HashMap,
@@ -201,43 +199,25 @@ pub struct InteractionContext {
 }
 
 pub trait LuroInteraction {
-    fn original_interaction<D: LuroDatabaseDriver>(&self) -> &Interaction;
-    async fn accent_colour<D: LuroDatabaseDriver>(&self, framework: &Framework) -> u32;
-    async fn acknowledge_interaction<D: LuroDatabaseDriver>(
-        &self,
-        framework: &Framework,
-        ephemeral: bool,
-    ) -> anyhow::Result<LuroResponse>;
-    async fn default_embed<D: LuroDatabaseDriver>(&self, framework: &Framework) -> EmbedBuilder;
-    async fn get_interaction_author<D: LuroDatabaseDriver>(&self, framework: &Framework) -> anyhow::Result<LuroUser>;
-    async fn get_specified_user_or_author<D: LuroDatabaseDriver>(
+    fn original_interaction(&self) -> &Interaction;
+    async fn accent_colour(&self, framework: &Framework) -> u32;
+    async fn acknowledge_interaction(&self, framework: &Framework, ephemeral: bool) -> anyhow::Result<LuroResponse>;
+    async fn default_embed(&self, framework: &Framework) -> EmbedBuilder;
+    async fn get_interaction_author(&self, framework: &Framework) -> anyhow::Result<LuroUser>;
+    async fn get_specified_user_or_author(
         &self,
         framework: &Framework,
         specified_user: Option<&ResolvedUser>,
     ) -> anyhow::Result<LuroUser>;
-    async fn respond_message<D, F>(&self, framework: &Framework, response: F) -> anyhow::Result<Option<Message>>
+    async fn respond_message<F>(&self, framework: &Framework, response: F) -> anyhow::Result<Option<Message>>
     where
-        D: LuroDatabaseDriver,
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse;
-    async fn respond<D, F>(&self, framework: &Framework, response: F) -> anyhow::Result<()>
+    async fn respond<F>(&self, framework: &Framework, response: F) -> anyhow::Result<()>
     where
-        D: LuroDatabaseDriver,
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse;
-    async fn response_create<D: LuroDatabaseDriver>(
-        &self,
-        framework: &Framework,
-        response: &LuroResponse,
-    ) -> anyhow::Result<Option<Message>>;
-    async fn response_update<D: LuroDatabaseDriver>(
-        &self,
-        framework: &Framework,
-        response: &LuroResponse,
-    ) -> anyhow::Result<Message>;
-    async fn send_response<D: LuroDatabaseDriver>(
-        &self,
-        framework: &Framework,
-        response: LuroResponse,
-    ) -> anyhow::Result<Option<Message>>;
+    async fn response_create(&self, framework: &Framework, response: &LuroResponse) -> anyhow::Result<Option<Message>>;
+    async fn response_update(&self, framework: &Framework, response: &LuroResponse) -> anyhow::Result<Message>;
+    async fn send_response(&self, framework: &Framework, response: LuroResponse) -> anyhow::Result<Option<Message>>;
     fn author_id(&self) -> Id<UserMarker>;
     fn author(&self) -> &User;
     fn guild_id(&self) -> Option<Id<GuildMarker>>;

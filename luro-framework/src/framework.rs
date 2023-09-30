@@ -78,9 +78,7 @@ impl From<Context> for Framework {
     }
 }
 
-async fn initialise_database(
-    config: Configuration,
-) -> anyhow::Result<LuroDatabase> {
+async fn initialise_database(config: Configuration) -> anyhow::Result<LuroDatabase> {
     Ok(LuroDatabase::new(config).await?)
 }
 

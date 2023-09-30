@@ -45,7 +45,7 @@ pub enum Moderator {
 
 #[async_trait]
 impl LuroCommandTrait for Moderator {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
@@ -61,7 +61,7 @@ impl LuroCommandTrait for Moderator {
         }
     }
 
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: ModalInteraction<Self>) -> anyhow::Result<()> {
+    async fn handle_modal(ctx: ModalInteraction<Self>) -> anyhow::Result<()> {
         let author = ctx.author();
         let warning = ctx.parse_field_required("mod-warn-text")?;
         let id = ctx.parse_field_required("mod-warn-id")?;

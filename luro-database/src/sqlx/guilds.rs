@@ -39,12 +39,15 @@ impl LuroDatabase {
             guild.owner_id.get() as i64
         );
 
-        query.fetch_one(&self.0).await.map(|x|x.luro_guild())
+        query.fetch_one(&self.0).await.map(|x| x.luro_guild())
     }
 
     pub async fn get_guild(&self, id: i64) -> Result<Option<LuroGuild>, sqlx::Error> {
         let query = sqlx::query_as!(DatabaseGuild, "SELECT * FROM guilds WHERE guild_id = $1", id);
-        
-        query.fetch_optional(&self.0).await.map(|x: Option<DatabaseGuild>|x.map(|x|x.luro_guild()))
+
+        query
+            .fetch_optional(&self.0)
+            .await
+            .map(|x: Option<DatabaseGuild>| x.map(|x| x.luro_guild()))
     }
 }

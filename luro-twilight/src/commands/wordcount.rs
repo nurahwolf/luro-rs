@@ -35,7 +35,7 @@ pub struct Wordcount {
 
 #[async_trait]
 impl LuroCommandTrait for Wordcount {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

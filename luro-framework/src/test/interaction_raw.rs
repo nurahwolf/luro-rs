@@ -8,7 +8,7 @@ use crate::{LuroCommandType, LuroMutex};
 
 /// A generic context spawned from an interaction
 #[derive(Clone)]
-pub struct RawInteraction<D: LuroDatabaseDriver> {
+pub struct RawInteraction {
     pub app_permissions: Option<twilight_model::guild::Permissions>,
     pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,

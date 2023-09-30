@@ -108,7 +108,7 @@ pub struct LuroUser {
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub character_prefix: BTreeMap<String, String>,
     #[serde(default)]
-    pub user_permissions: LuroUserPermissions
+    pub user_permissions: LuroUserPermissions,
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

@@ -12,7 +12,7 @@ pub enum LuroCommands {
 }
 
 impl LuroCommand for LuroCommands {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Nickname(command) => command.run_command(ctx).await,
@@ -28,7 +28,7 @@ pub struct LuroNicknameCommand {
 }
 
 impl LuroCommand for LuroNicknameCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,
             None => return ctx.not_guild_response().await,

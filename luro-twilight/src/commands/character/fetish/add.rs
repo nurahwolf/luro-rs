@@ -1,7 +1,7 @@
 use async_trait::async_trait;
-use luro_framework::{command::ExecuteLuroCommand, Luro};
 use luro_framework::interactions::InteractionTrait;
 use luro_framework::CommandInteraction;
+use luro_framework::{command::ExecuteLuroCommand, Luro};
 use luro_model::user::character::{Fetish, FetishCategory, FetishList};
 use std::fmt::Write;
 

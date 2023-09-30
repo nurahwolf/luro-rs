@@ -9,7 +9,7 @@ use crate::luro_command::LuroCommand;
 pub struct CountCommand {}
 
 impl LuroCommand for CountCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let content;
 
         {

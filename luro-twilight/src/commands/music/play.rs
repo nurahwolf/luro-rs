@@ -26,7 +26,7 @@ pub struct PlayCommand {
 }
 
 impl LuroCommand for PlayCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let volume = self.volume.unwrap_or(10);
         let guild_id = ctx.interaction.guild_id.unwrap();
 

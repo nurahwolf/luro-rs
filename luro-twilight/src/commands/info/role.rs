@@ -22,7 +22,7 @@ pub struct InfoRole {
 }
 
 impl LuroCommand for InfoRole {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let guild_id = match ctx.interaction.guild_id {
             Some(guild_id) => guild_id,

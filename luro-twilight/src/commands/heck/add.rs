@@ -18,7 +18,7 @@ impl LuroCommand for HeckAddCommand {
     ///
     /// This modal is only shown if the user has not specified a reason in the
     /// initial command.
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         ctx.respond(|r| {
             r.title("Write your heck below!")
                 .custom_id("heck-add")
@@ -38,7 +38,7 @@ impl LuroCommand for HeckAddCommand {
         .await
     }
 
-    async fn handle_component<D: LuroDatabaseDriver>(
+    async fn handle_component(
         self,
         data: Box<MessageComponentInteractionData>,
         ctx: LuroSlash<D>,

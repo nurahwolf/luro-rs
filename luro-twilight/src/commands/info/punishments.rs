@@ -15,7 +15,7 @@ pub struct Punishments {
 }
 
 impl LuroCommand for Punishments {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
         let mut warnings = String::new();
 

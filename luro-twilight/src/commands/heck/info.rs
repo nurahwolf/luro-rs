@@ -13,7 +13,7 @@ use crate::luro_command::LuroCommand;
 pub struct HeckInfo {}
 
 impl LuroCommand for HeckInfo {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::new().title("Heck Information - Global");
         let mut global_details = String::new();
         {

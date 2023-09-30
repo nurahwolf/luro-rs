@@ -102,7 +102,7 @@ pub enum Marry {
 
 #[async_trait]
 impl LuroCommandTrait for Marry {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
         let data = Self::new(ctx.data.clone())?;
@@ -114,7 +114,7 @@ impl LuroCommandTrait for Marry {
         }
     }
 
-    async fn handle_component<D: LuroDatabaseDriver>(
+    async fn handle_component(
         ctx: Framework,
         interaction: InteractionComponent,
     ) -> anyhow::Result<()> {
@@ -214,7 +214,7 @@ pub struct Marriages {
 
 #[async_trait]
 impl LuroCommandTrait for Marriages {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
@@ -273,7 +273,7 @@ pub struct Someone {
 
 #[async_trait]
 impl LuroCommandTrait for Someone {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

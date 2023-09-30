@@ -21,7 +21,7 @@ pub struct Guild {
 }
 
 impl LuroCommand for Guild {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let mut luro_guild = String::new();
         let mut guild_description = String::new();
         let guild_id = match self.guild {

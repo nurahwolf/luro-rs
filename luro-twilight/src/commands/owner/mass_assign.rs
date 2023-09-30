@@ -11,7 +11,7 @@ pub struct MassAssign {}
 
 #[async_trait]
 impl LuroCommandTrait for MassAssign {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

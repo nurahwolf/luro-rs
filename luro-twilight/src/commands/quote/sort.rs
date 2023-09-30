@@ -9,7 +9,7 @@ pub struct Sort {}
 
 #[async_trait]
 impl LuroCommandTrait for Sort {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

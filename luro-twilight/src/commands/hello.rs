@@ -8,7 +8,7 @@ use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 pub struct HelloCommand {}
 
 impl LuroCommand for HelloCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let content = match ctx.interaction.author_id() {
             Some(author_id) => format!(
                 "Hello World! I am **{}**. It's nice to meet you, <@{}>!",

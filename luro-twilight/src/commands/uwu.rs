@@ -17,7 +17,7 @@ pub struct UwU {
 
 #[async_trait]
 impl LuroCommandTrait for UwU {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

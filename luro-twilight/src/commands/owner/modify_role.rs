@@ -38,7 +38,7 @@ struct Position {
 
 #[async_trait]
 impl LuroCommandTrait for ModifyRole {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

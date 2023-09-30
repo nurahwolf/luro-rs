@@ -14,7 +14,7 @@ use crate::luro_command::LuroCommand;
 pub struct BoopCommand {}
 
 impl LuroCommand for BoopCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
@@ -29,7 +29,7 @@ impl LuroCommand for BoopCommand {
         ctx.respond(|r| r.content("Boop Count: 0").add_components(components)).await
     }
 
-    async fn handle_component<D: LuroDatabaseDriver>(
+    async fn handle_component(
         self,
         _data: Box<MessageComponentInteractionData>,
         ctx: LuroSlash<D>,

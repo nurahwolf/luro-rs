@@ -55,7 +55,7 @@ impl LuroCommandTrait for StoryCommand {
         Ok(())
     }
 
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {
@@ -149,7 +149,7 @@ impl LuroCommandTrait for StoryCommand {
             .await
     }
 
-    async fn handle_component<D: LuroDatabaseDriver>(
+    async fn handle_component(
         ctx: Framework,
         interaction: InteractionComponent,
     ) -> anyhow::Result<()> {

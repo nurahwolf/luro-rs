@@ -14,7 +14,7 @@ use twilight_model::{
     application::interaction::modal::ModalInteractionData, gateway::payload::incoming::InteractionCreate, user::User,
 };
 
-use crate::{Context, ModalInteraction, Luro};
+use crate::{Context, Luro, ModalInteraction};
 
 use super::InteractionTrait;
 

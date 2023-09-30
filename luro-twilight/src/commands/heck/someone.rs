@@ -23,7 +23,7 @@ pub struct HeckSomeoneCommand {
 }
 
 impl LuroCommand for HeckSomeoneCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // Is the channel the interaction called in NSFW?
         let interaction = &ctx.interaction;
         let nsfw = interaction.channel.as_ref().unwrap().nsfw.unwrap_or(false);

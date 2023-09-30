@@ -18,7 +18,7 @@ pub struct Warnings {
 
 #[async_trait]
 impl LuroCommandTrait for Warnings {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

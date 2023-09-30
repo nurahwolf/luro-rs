@@ -39,7 +39,7 @@ impl LuroCommandTrait for RoleCommands {
         }
     }
 
-    async fn handle_component<D: LuroDatabaseDriver>(
+    async fn handle_component(
         ctx: Framework,
         interaction: InteractionComponent,
     ) -> anyhow::Result<()> {

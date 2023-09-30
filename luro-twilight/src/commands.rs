@@ -7,7 +7,7 @@ use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
 use twilight_model::application::interaction::application_command::CommandData;
-use twilight_model::application::interaction::{InteractionData, Interaction};
+use twilight_model::application::interaction::{Interaction, InteractionData};
 
 #[cfg(feature = "command-about")]
 mod about;
@@ -132,14 +132,18 @@ pub async fn handle_component(ctx: ComponentInteraction<()>) -> anyhow::Result<(
         ctx.data.custom_id
     );
 
-    let interaction: Interaction = match ctx.database.get_interaction_by_message_id(ctx.message.id.get() as i64).await? {
+    let interaction: Interaction = match ctx
+        .database
+        .get_interaction_by_message_id(ctx.message.id.get() as i64)
+        .await?
+    {
         Some(interaction) => interaction.try_into()?,
         None => {
             warn!(ctx = ?ctx, "Attempting to handle component with an interaction that does not exist in the database");
             return Ok(());
-        },
+        }
     };
-    
+
     let data = match interaction.data {
         Some(InteractionData::ApplicationCommand(data)) => data,
         _ => {
@@ -167,7 +171,7 @@ pub async fn handle_modal(ctx: ModalInteraction<()>) -> anyhow::Result<()> {
         None => {
             warn!(ctx = ?ctx, "Attempting to handle modal with an interaction that does not have a message");
             return Ok(());
-        },
+        }
     };
 
     let interaction: Interaction = match ctx.database.get_interaction_by_message_id(id).await? {
@@ -175,7 +179,7 @@ pub async fn handle_modal(ctx: ModalInteraction<()>) -> anyhow::Result<()> {
         None => {
             warn!(ctx = ?ctx, "Attempting to handle modal with an interaction that does not exist in the database");
             return Ok(());
-        },
+        }
     };
 
     let data = match interaction.data {

@@ -18,7 +18,7 @@ impl LuroCommandTrait for Modify {
     ///
     /// This modal is only shown if the user has not specified a reason in the
     /// initial command.
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

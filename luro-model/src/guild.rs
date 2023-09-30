@@ -31,7 +31,7 @@ use crate::{
     heck::Hecks,
     role::{LuroRole, LuroRolePositions, LuroRoles},
     user::LuroUser,
-    PRIMARY_BOT_OWNER
+    PRIMARY_BOT_OWNER,
 };
 
 /// A [HashMap] containing guild specific settings ([LuroGuild]), keyed by [GuildMarker].
@@ -263,7 +263,10 @@ impl LuroGuild {
         let everyone_role = self
             .get_everyone_role()
             .context("Could not get everyone role from guild roles!")?;
-        Ok(PermissionCalculator::new(self.guild_id, user.id, everyone_role.permissions, user_permissions).owner_id(self.owner_id))
+        Ok(
+            PermissionCalculator::new(self.guild_id, user.id, everyone_role.permissions, user_permissions)
+                .owner_id(self.owner_id),
+        )
     }
 
     pub fn update_everyone_role(&mut self) -> &mut Self {

@@ -19,7 +19,7 @@ pub struct Purge {
 
 #[async_trait]
 impl LuroCommandTrait for Purge {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

@@ -22,7 +22,7 @@ pub struct JoinCommand {
 }
 
 impl LuroCommand for JoinCommand {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let guild_id = ctx.interaction.guild_id.unwrap();
 
         ctx.shard

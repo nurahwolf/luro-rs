@@ -8,7 +8,11 @@ impl Framework {
     pub async fn guild_accent_colour(&self, guild_id: &Id<GuildMarker>) -> anyhow::Result<Option<u32>> {
         let mut guild = match self.database.get_guild(guild_id.get() as i64).await? {
             Some(guild) => guild,
-            None => self.database.update_guild(self.twilight_client.guild(*guild_id).await?.model().await?).await?,
+            None => {
+                self.database
+                    .update_guild(self.twilight_client.guild(*guild_id).await?.model().await?)
+                    .await?
+            }
         };
 
         // If a custom colour is present, return it

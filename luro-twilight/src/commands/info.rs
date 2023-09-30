@@ -24,7 +24,7 @@ pub enum InfoCommands {
 }
 
 impl LuroCommand for InfoCommands {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         match self {
             Self::Guild(command) => command.run_command(ctx).await,
             Self::Punishments(command) => command.run_command(ctx).await,

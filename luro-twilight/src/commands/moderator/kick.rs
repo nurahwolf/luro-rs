@@ -32,7 +32,7 @@ pub struct Kick {
 
 #[async_trait]
 impl LuroCommandTrait for Kick {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

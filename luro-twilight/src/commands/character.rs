@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use luro_framework::{
     command::{CreateLuroCommand, ExecuteLuroCommand},
     interactions::InteractionTrait,
-    CommandInteraction, ComponentInteraction, ModalInteraction, Luro,
+    CommandInteraction, ComponentInteraction, Luro, ModalInteraction,
 };
 use luro_model::user::character::{CharacterProfile, FetishCategory};
 use std::{collections::btree_map::Entry, fmt::Write};

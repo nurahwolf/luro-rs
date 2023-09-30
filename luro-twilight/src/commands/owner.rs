@@ -61,7 +61,7 @@ pub enum Owner {
 
 #[async_trait]
 impl LuroCommandTrait for Owner {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
@@ -117,7 +117,7 @@ impl LuroCommandTrait for Owner {
         }
     }
 
-    async fn handle_modal<D: LuroDatabaseDriver>(ctx: Framework, interaction: InteractionModal) -> anyhow::Result<()> {
+    async fn handle_modal(ctx: Framework, interaction: InteractionModal) -> anyhow::Result<()> {
         let mut message_id = None;
         let mut channel_id = None;
 
@@ -164,7 +164,7 @@ impl LuroCommandTrait for Owner {
         interaction.respond(&ctx, |r| r.content("All done!").ephemeral()).await
     }
 
-    async fn handle_component<D: LuroDatabaseDriver>(
+    async fn handle_component(
         ctx: Framework,
         interaction: InteractionComponent,
     ) -> anyhow::Result<()> {
@@ -176,7 +176,7 @@ impl LuroCommandTrait for Owner {
     }
 }
 
-async fn component_selector<D: LuroDatabaseDriver>(ctx: Framework, interaction: InteractionComponent) -> anyhow::Result<()> {
+async fn component_selector(ctx: Framework, interaction: InteractionComponent) -> anyhow::Result<()> {
     let mut roles_string = String::new();
     let guild_id = interaction.guild_id().unwrap();
     let mut data = None;
@@ -264,7 +264,7 @@ async fn component_selector<D: LuroDatabaseDriver>(ctx: Framework, interaction: 
     .await
 }
 
-async fn component_roles<D: LuroDatabaseDriver>(ctx: Framework, interaction: InteractionComponent) -> anyhow::Result<()> {
+async fn component_roles(ctx: Framework, interaction: InteractionComponent) -> anyhow::Result<()> {
     let guild_id = interaction.guild_id().unwrap();
 
     let mut roles: Vec<Id<RoleMarker>> = interaction

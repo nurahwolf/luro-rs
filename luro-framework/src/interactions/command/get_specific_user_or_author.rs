@@ -10,7 +10,11 @@ impl<T> CommandInteraction<T> {
         match specified_user {
             Some(user_defined) => Ok(match self.database.get_user(user_defined.resolved.id.get() as i64).await? {
                 Some(database_user) => database_user,
-                None => self.database.update_user(&self.twilight_client.user(user_defined.resolved.id).await?.model().await?).await?,
+                None => {
+                    self.database
+                        .update_user(&self.twilight_client.user(user_defined.resolved.id).await?.model().await?)
+                        .await?
+                }
             }),
             None => self.get_interaction_author().await,
         }

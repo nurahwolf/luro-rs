@@ -26,7 +26,7 @@ pub enum QuoteCommands {
 
 #[async_trait]
 impl LuroCommandTrait for QuoteCommands {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
         match ctx.command {

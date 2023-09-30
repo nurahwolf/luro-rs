@@ -28,7 +28,7 @@ pub struct InfoUser {
 }
 
 impl LuroCommand for InfoUser {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let response_type = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(self.gdpr_export.unwrap_or_default()).await?;
         // The user we are interested in is the interaction author, unless a user was specified

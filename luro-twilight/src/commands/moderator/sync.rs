@@ -9,7 +9,7 @@ pub struct Sync {}
 
 #[async_trait]
 impl LuroCommandTrait for Sync {
-    async fn handle_interaction<D: LuroDatabaseDriver>(
+    async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
     ) -> anyhow::Result<()> {

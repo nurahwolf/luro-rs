@@ -40,7 +40,7 @@ pub enum HeckCommands {
 }
 
 impl LuroCommand for HeckCommands {
-    async fn run_command<D: LuroDatabaseDriver>(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Add(command) => command.run_command(ctx).await,
@@ -49,7 +49,7 @@ impl LuroCommand for HeckCommands {
         }
     }
 
-    async fn handle_model<D: LuroDatabaseDriver>(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+    async fn handle_model(data: ModalInteractionData, ctx: LuroSlash<D>) -> anyhow::Result<()> {
         let luro_user = ctx.get_interaction_author(&ctx.interaction).await?;
         let heck_text = ctx.parse_modal_field_required(&data, "heck-text")?;
 
@@ -104,7 +104,7 @@ impl LuroCommand for HeckCommands {
 }
 
 /// Open the database as writeable and remove a NSFW heck from it, returning the heck removed
-async fn get_heck<D: LuroDatabaseDriver>(
+async fn get_heck(
     ctx: &LuroSlash<D>,
     id: Option<i64>,
     guild_id: Option<Id<GuildMarker>>,
