@@ -3,7 +3,10 @@ use sqlx::{Error, postgres::PgPoolOptions};
 
 use crate::LuroDatabase;
 
-pub mod guilds;
+mod guilds;
+mod interaction;
+mod roles;
+mod users;
 
 impl LuroDatabase {
     pub async fn new(config: Configuration) -> Result<Self, Error> {

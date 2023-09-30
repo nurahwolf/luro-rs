@@ -45,8 +45,8 @@ mod dice;
 // mod quote;
 // #[cfg(feature = "command-roles")]
 // mod roles;
-// #[cfg(feature = "command-say")]
-// mod say;
+#[cfg(feature = "command-say")]
+mod say;
 // #[cfg(feature = "command-story")]
 // mod story;
 // #[cfg(feature = "command-uwu")]
@@ -62,6 +62,8 @@ pub enum LuroCommands {
     Character(character::Character),
     #[cfg(feature = "command-dice")]
     Dice(dice::Dice),
+    #[cfg(feature = "command-say")]
+    Say(say::Say),
 }
 
 fn match_command<T: InteractionTrait>(ctx: &T, data: Box<CommandData>) -> anyhow::Result<LuroCommands> {
@@ -72,6 +74,8 @@ fn match_command<T: InteractionTrait>(ctx: &T, data: Box<CommandData>) -> anyhow
         "character" => LuroCommands::Character(character::Character::new(data)?),
         #[cfg(feature = "command-dice")]
         "dice" => LuroCommands::Dice(dice::Dice::new(data)?),
+        #[cfg(feature = "command-say")]
+        "say" => LuroCommands::Say(say::Say::new(data)?),
         name => return Err(anyhow!("No command matching {name}")),
     };
     Ok(command)
@@ -85,6 +89,8 @@ pub fn default_commands() -> Vec<Command> {
         character::Character::create_command().into(),
         #[cfg(feature = "command-dice")]
         dice::Dice::create_command().into(),
+        #[cfg(feature = "command-say")]
+        say::Say::create_command().into(),
     ]
 
     // #[cfg(feature = "command-marry")]
@@ -95,8 +101,7 @@ pub fn default_commands() -> Vec<Command> {
     // commands.insert(quote::QuoteCommands::NAME, quote::QuoteCommands::create_command().into());
     // #[cfg(feature = "command-roles")]
     // commands.insert(roles::RoleCommands::NAME, roles::RoleCommands::create_command().into());
-    // #[cfg(feature = "command-say")]
-    // commands.insert(say::Say::NAME, say::Say::create_command().into());
+
     // #[cfg(feature = "command-story")]
     // commands.insert(story::StoryCommand::NAME, story::StoryCommand::create_command().into());
     // #[cfg(feature = "command-uwu")]
@@ -113,6 +118,8 @@ pub async fn handle_command(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
     match command {
         #[cfg(feature = "command-about")]
         LuroCommands::About(command) => command.interaction_command(ctx).await,
+        #[cfg(feature = "command-say")]
+        LuroCommands::Say(command) => command.interaction_command(ctx).await,
         name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }

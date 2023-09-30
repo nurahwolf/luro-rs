@@ -41,10 +41,6 @@ pub const WEBHOOK_NAME: &str = "LuroHook";
 
 pub mod configuration;
 pub mod database_driver;
-#[cfg(feature = "toml-driver")]
-pub mod driver_toml;
-#[cfg(feature = "sqlx-driver")]
-pub mod driver_sqlx;
 pub mod guild;
 pub mod heck;
 pub mod luro_database_driver;

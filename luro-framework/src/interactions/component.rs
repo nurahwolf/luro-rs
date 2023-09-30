@@ -1,3 +1,4 @@
+use luro_database::LuroDatabase;
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
 use twilight_model::{
@@ -23,7 +24,7 @@ impl<T> Luro for ComponentInteraction<T> {
         Ok(self.twilight_client.interaction(self.application_id))
     }
 
-    fn database(&self) -> std::sync::Arc<crate::DatabaseEngine> {
+    fn database(&self) -> std::sync::Arc<LuroDatabase> {
         self.database.clone()
     }
 

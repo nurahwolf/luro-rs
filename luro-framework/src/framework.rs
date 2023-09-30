@@ -1,11 +1,12 @@
 use std::{fs, path::PathBuf};
 
+use luro_database::LuroDatabase;
 use luro_model::configuration::Configuration;
 use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
 
 use twilight_gateway::{stream, Shard};
 
-use crate::{Context, DatabaseEngine, Framework};
+use crate::{Context, Framework};
 
 #[cfg(feature = "luro-builder")]
 mod default_embed;
@@ -79,8 +80,8 @@ impl From<Context> for Framework {
 
 async fn initialise_database(
     config: Configuration,
-) -> anyhow::Result<DatabaseEngine> {
-    Ok(DatabaseEngine::new(config).await?)
+) -> anyhow::Result<LuroDatabase> {
+    Ok(LuroDatabase::new(config).await?)
 }
 
 fn ensure_data_directory_exists() {

@@ -7,6 +7,7 @@ mod respond_create;
 mod respond_update;
 mod response_simple;
 
+use luro_database::LuroDatabase;
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
 use twilight_model::{
@@ -22,7 +23,7 @@ impl<T> Luro for ModalInteraction<T> {
         Ok(self.twilight_client.interaction(self.application_id))
     }
 
-    fn database(&self) -> std::sync::Arc<crate::DatabaseEngine> {
+    fn database(&self) -> std::sync::Arc<LuroDatabase> {
         self.database.clone()
     }
 

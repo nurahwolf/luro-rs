@@ -1,9 +1,7 @@
 #![feature(async_fn_in_trait)]
+use luro_database::LuroDatabase;
 use luro_model::{
-    builders::EmbedBuilder,
-    database_driver::LuroDatabaseDriver,
-    response::LuroResponse,
-    user::LuroUser, guild::LuroGuild,
+    builders::EmbedBuilder, database_driver::LuroDatabaseDriver, guild::LuroGuild, response::LuroResponse, user::LuroUser,
 };
 use slash_command::LuroCommand;
 use std::{
@@ -18,7 +16,8 @@ use twilight_model::{
         command::Command,
         interaction::{Interaction, InteractionData, InteractionType},
     },
-    id::marker::UserMarker, oauth::Application,
+    id::marker::UserMarker,
+    oauth::Application,
 };
 
 use twilight_model::{
@@ -42,10 +41,6 @@ pub mod interactions;
 pub mod responses;
 pub mod slash_command;
 
-#[cfg(feature = "toml-driver")]
-pub type DatabaseEngine = luro_model::driver_toml::TomlDatabaseDriver;
-#[cfg(feature = "sqlx-driver")]
-pub type DatabaseEngine = luro_model::driver_sqlx::PostgresDriver;
 type LuroCommandType = HashMap<String, LuroCommand<()>>;
 type LuroMutex<T> = Arc<Mutex<T>>;
 
@@ -58,7 +53,7 @@ pub struct CommandInteraction<T> {
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     pub channel: twilight_model::channel::Channel,
     pub data: Box<CommandData>,
-    pub database: Arc<DatabaseEngine>,
+    pub database: Arc<LuroDatabase>,
     pub global_commands: LuroMutex<LuroCommandType>,
     pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
     pub guild_id: Option<Id<GuildMarker>>,
@@ -90,7 +85,7 @@ pub struct Context {
     #[cfg(feature = "cache-memory")]
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     /// Luro's database, which accepts a driver that implements [LuroDatabaseDriver]
-    pub database: Arc<DatabaseEngine>,
+    pub database: Arc<LuroDatabase>,
     /// The raw event in which this [Context] was created from
     pub event: twilight_gateway::Event,
     /// A [Mutex] holding a bunch of [LuroCommandType] for global commands
@@ -122,7 +117,7 @@ pub struct Framework {
     #[cfg(feature = "cache-memory")]
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     /// Luro's database driver
-    pub database: Arc<DatabaseEngine>,
+    pub database: Arc<LuroDatabase>,
     /// HTTP client used for making outbound API requests
     #[cfg(feature = "http-client-hyper")]
     pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
@@ -258,7 +253,7 @@ pub struct ModalInteraction<T> {
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     pub channel: twilight_model::channel::Channel,
     pub data: ModalInteractionData,
-    pub database: Arc<DatabaseEngine>,
+    pub database: Arc<LuroDatabase>,
     pub global_commands: LuroMutex<LuroCommandType>,
     pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
     pub guild_id: Option<Id<GuildMarker>>,
@@ -289,7 +284,7 @@ pub struct ComponentInteraction<T> {
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     pub channel: twilight_model::channel::Channel,
     pub data: Box<MessageComponentInteractionData>,
-    pub database: Arc<DatabaseEngine>,
+    pub database: Arc<LuroDatabase>,
     pub global_commands: LuroMutex<LuroCommandType>,
     pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
     pub guild_id: Option<Id<GuildMarker>>,
@@ -336,24 +331,32 @@ pub trait Luro {
     }
 
     /// Returns the database used by this context
-    fn database(&self) -> Arc<DatabaseEngine>;
+    fn database(&self) -> Arc<LuroDatabase>;
 
     /// Returns the twilight_client used by this context
     fn twilight_client(&self) -> Arc<Client>;
 
     /// Fetch and return a [LuroGuild], updating the database if not present
     async fn get_guild(&self, guild_id: &Id<GuildMarker>) -> anyhow::Result<LuroGuild> {
-        Ok(LuroGuild::from(match self.database().get_guild(guild_id.get() as i64).await? {
+        Ok(match self.database().get_guild(guild_id.get() as i64).await? {
             Some(guild) => guild,
-            None => self.database().update_guild(self.twilight_client().guild(*guild_id).await?.model().await?).await?,
-        }))
+            None => {
+                self.database()
+                    .update_guild(self.twilight_client().guild(*guild_id).await?.model().await?)
+                    .await?
+            }
+        })
     }
 
     /// Fetch and return a [LuroGuild], updating the database if not present
     async fn get_user(&self, user_id: &Id<UserMarker>) -> anyhow::Result<LuroUser> {
-        Ok(LuroUser::from(match self.database().get_user(user_id.get() as i64).await? {
+        Ok(match self.database().get_user(user_id.get() as i64).await? {
             Some(user) => user,
-            None => self.database().update_user(&self.twilight_client().user(*user_id).await?.model().await?).await?,
-        }))
+            None => {
+                self.database()
+                    .update_user(&self.twilight_client().user(*user_id).await?.model().await?)
+                    .await?
+            }
+        })
     }
 }

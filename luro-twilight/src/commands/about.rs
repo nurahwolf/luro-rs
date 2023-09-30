@@ -125,10 +125,10 @@ impl ExecuteLuroCommand for About {
         }
 
         let mut staff_list = String::new();
-        for staff in ctx.database.get_staff().await? {
+        for staff in ctx.database.get_staff().await.values() {
             match self.show_username.unwrap_or_default() {
                 true => writeln!(staff_list, "- {}", &staff.name)?,
-                false => writeln!(staff_list, "- <@{}>", staff.user_id)?,
+                false => writeln!(staff_list, "- <@{}>", staff.id)?,
             }
         }
         embed.field(|field| field.field("Those with 'Administrator' access!", &staff_list, false));

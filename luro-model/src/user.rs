@@ -18,7 +18,7 @@ use twilight_model::{
 
 /// A [HashMap] containing user specific settings ([LuroUser]), keyed by [UserMarker].
 pub type LuroUsers = HashMap<Id<UserMarker>, LuroUser>;
-use crate::{message::LuroMessage, driver_sqlx::users::DatabaseUser};
+use crate::message::LuroMessage;
 
 use self::{actions::UserActions, character::CharacterProfile, marriages::UserMarriages, member::LuroMember};
 
@@ -107,6 +107,16 @@ pub struct LuroUser {
     pub characters: BTreeMap<String, CharacterProfile>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub character_prefix: BTreeMap<String, String>,
+    #[serde(default)]
+    pub user_permissions: LuroUserPermissions
+}
+
+#[derive(Default, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LuroUserPermissions {
+    #[default]
+    User,
+    Owner,
+    Administrator,
 }
 
 impl Eq for LuroUser {}
@@ -136,14 +146,6 @@ impl From<&User> for LuroUser {
         let mut luro = Self::new(user.id);
         luro.update_user(user);
         luro
-    }
-}
-
-impl From<DatabaseUser> for LuroUser {
-    fn from(user: DatabaseUser) -> Self {
-        let mut luro_user = Self::default();
-        luro_user.update_database_user(user);
-        luro_user
     }
 }
 
@@ -180,13 +182,8 @@ impl LuroUser {
             guilds: Default::default(),
             characters: Default::default(),
             character_prefix: Default::default(),
+            user_permissions: Default::default(),
         }
-    }
-
-    /// Update this type from a databse user
-    pub fn update_database_user(&mut self, user: DatabaseUser) -> &mut Self {
-        self.id = Id::new(user.user_id as u64);
-        self
     }
 
     /// Update this type from a luro user
@@ -457,41 +454,4 @@ where
         return Err(de::Error::custom("detected duplicate integer key"));
     }
     Ok(data)
-}
-
-impl Default for LuroUser {
-    fn default() -> Self {
-        Self {
-            accent_color: Default::default(),
-            avatar: Default::default(),
-            avatar_decoration: Default::default(),
-            banner: Default::default(),
-            bot: Default::default(),
-            discriminator: Default::default(),
-            global_name: Default::default(),
-            email: Default::default(),
-            flags: Default::default(),
-            id: Id::new(69),
-            locale: Default::default(),
-            mfa_enabled: Default::default(),
-            name: Default::default(),
-            premium_type: Default::default(),
-            public_flags: Default::default(),
-            system: Default::default(),
-            verified: Default::default(),
-            wordcount: Default::default(),
-            averagesize: Default::default(),
-            wordsize: Default::default(),
-            words: Default::default(),
-            warnings: Default::default(),
-            messages: Default::default(),
-            moderation_actions: Default::default(),
-            moderation_actions_performed: Default::default(),
-            message_edits: Default::default(),
-            marriages: Default::default(),
-            guilds: Default::default(),
-            characters: Default::default(),
-            character_prefix: Default::default(),
-        }
-    }
 }

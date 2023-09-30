@@ -1,10 +1,11 @@
 use async_trait::async_trait;
 use luro_framework::{
-    command::LuroCommandTrait, LuroInteraction, CommandInteraction,
+    command::{CreateLuroCommand, ExecuteLuroCommand},
+    CommandInteraction,
 };
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "say", desc = "Make me say garbage!")]
 pub struct Say {
     /// The message to send.
@@ -13,18 +14,18 @@ pub struct Say {
     user: Option<ResolvedUser>,
 }
 
+impl CreateLuroCommand for Say {}
+
 #[async_trait]
-impl LuroCommandTrait for Say {
-    async fn handle_interaction(
-        ctx: CommandInteraction<Self>,
-    ) -> anyhow::Result<()> {
-        let content = if let Some(user) = ctx.command.user {
-            format!("Hey <@{}>!\n{}", user.resolved.id, ctx.command.message)
+impl ExecuteLuroCommand for Say {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let content = if let Some(ref user) = self.user {
+            format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
         } else {
-            ctx.command.message
+            self.message.clone()
         };
 
-        content.respond(&ctx, |response| response.content(content)).await?;
+        ctx.respond(|response| response.content(content)).await?;
         Ok(())
     }
 }

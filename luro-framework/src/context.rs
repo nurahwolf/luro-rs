@@ -26,7 +26,7 @@ impl Luro for Context {
         Ok(self.twilight_client.interaction(self.application().await?.id))
     }
 
-    fn database(&self) -> std::sync::Arc<crate::DatabaseEngine> {
+    fn database(&self) -> std::sync::Arc<luro_database::LuroDatabase> {
         self.database.clone()
     }
 

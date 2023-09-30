@@ -1,18 +1,9 @@
-use sqlx::Error;
 use twilight_model::{application::interaction::Interaction, id::Id};
 
-use super::PostgresDriver;
-pub struct DatabaseInteraction {
-    pub application_id: i64,
-    pub interaction_id: i64,
-    pub message_id: Option<i64>,
-    pub data: Vec<u8>,
-    pub kind: Vec<u8>,
-    pub token: String,
-}
+use crate::{DatabaseInteraction, LuroDatabase};
 
 impl TryFrom<Interaction> for DatabaseInteraction {
-    type Error = anyhow::Error;
+    type Error = bincode::Error;
 
     fn try_from(interaction: Interaction) -> Result<Self, Self::Error> {
         Ok(Self {
@@ -27,7 +18,7 @@ impl TryFrom<Interaction> for DatabaseInteraction {
 }
 
 impl TryInto<Interaction> for DatabaseInteraction {
-    type Error = anyhow::Error;
+    type Error = bincode::Error;
 
     fn try_into(self) -> Result<Interaction, Self::Error> {
         Ok(Interaction {
@@ -49,37 +40,23 @@ impl TryInto<Interaction> for DatabaseInteraction {
     }
 }
 
-// impl From<Interaction> for DatabaseInteraction {
-//     fn from(interaction: Interaction) -> Self {
-//         Self {
-//             interaction_id: interaction.id.get() as i64,
-//             message_id: interaction.message.map(|x| x.id.get() as i64),
-//             data: bincode::serialize(&interaction.data.unwrap()).unwrap().to_vec(),
-//         }
-//     }
-// }
-
-impl PostgresDriver {
+impl LuroDatabase {
     /// Fetches an interaction by interaction_id
-    pub async fn get_interaction(&self, id: i64) -> Result<Option<DatabaseInteraction>, Error> {
+    pub async fn get_interaction(&self, id: i64) -> Result<Option<DatabaseInteraction>, sqlx::Error> {
         let query = sqlx::query_as!(
             DatabaseInteraction,
             "SELECT * FROM interactions WHERE interaction_id = $1",
             id
         );
 
-        let data = query.fetch_optional(&self.0).await?;
-
-        Ok(data)
+        query.fetch_optional(&self.0).await
     }
 
     /// Fetches an interaction by message_id
-    pub async fn get_interaction_by_message_id(&self, id: i64) -> Result<Option<DatabaseInteraction>, Error> {
+    pub async fn get_interaction_by_message_id(&self, id: i64) -> Result<Option<DatabaseInteraction>, sqlx::Error> {
         let query = sqlx::query_as!(DatabaseInteraction, "SELECT * FROM interactions WHERE message_id = $1", id);
 
-        let data = query.fetch_optional(&self.0).await?;
-
-        Ok(data)
+        query.fetch_optional(&self.0).await
     }
 
     pub async fn update_interaction(&self, interaction: Interaction) -> anyhow::Result<DatabaseInteraction> {
