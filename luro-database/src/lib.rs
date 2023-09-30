@@ -46,3 +46,9 @@ pub struct DatabaseUser {
     pub user_id: i64,
     pub user_permissions: LuroUserPermissions,
 }
+
+pub struct DatabaseMessage {
+    pub message_id: i64,
+    pub author_id: i64,
+    pub content: Option<String>,
+}

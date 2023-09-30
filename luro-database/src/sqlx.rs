@@ -7,6 +7,7 @@ mod guilds;
 mod interaction;
 mod roles;
 mod users;
+mod messages;
 
 impl LuroDatabase {
     pub async fn new(config: Configuration) -> Result<Self, Error> {
