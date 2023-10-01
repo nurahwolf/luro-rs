@@ -1,6 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{command::ExecuteLuroCommand, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::SelectMenuType;
 
@@ -10,31 +9,27 @@ use twilight_model::channel::message::component::SelectMenuType;
 pub struct MassAssign {}
 
 #[async_trait]
-impl LuroCommandTrait for MassAssign {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        interaction
-            .respond(&ctx, |response| {
-                {
-                    response
-                        .content("Select what roles should be matched. Select none to match all users without roles.")
-                        .components(|components| {
-                            components.action_row(|row| {
-                                row.component(|component| {
-                                    component.select_menu(|menu| {
-                                        menu.custom_id("mass-assign-selector")
-                                            .kind(SelectMenuType::Role)
-                                            .max_values(25)
-                                            .min_values(0)
-                                    })
+impl ExecuteLuroCommand for MassAssign {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        ctx.respond(|response| {
+            {
+                response
+                    .content("Select what roles should be matched. Select none to match all users without roles.")
+                    .components(|components| {
+                        components.action_row(|row| {
+                            row.component(|component| {
+                                component.select_menu(|menu| {
+                                    menu.custom_id("mass-assign-selector")
+                                        .kind(SelectMenuType::Role)
+                                        .max_values(25)
+                                        .min_values(0)
                                 })
                             })
                         })
-                }
-                .ephemeral()
-            })
-            .await
+                    })
+            }
+            .ephemeral()
+        })
+        .await
     }
 }

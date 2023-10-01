@@ -1,6 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{CommandInteraction, command::ExecuteLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::GenericMarker, Id};
 
@@ -13,19 +12,15 @@ pub struct Commands {
 }
 
 #[async_trait]
-impl LuroCommandTrait for Commands {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
+impl ExecuteLuroCommand for Commands {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         let application = ctx.twilight_client.current_user_application().await?.model().await?;
         let client = ctx.twilight_client.interaction(application.id);
 
-        client.set_guild_commands(Id::new(data.guild.get()), &[]).await?;
-        interaction
-            .respond(&ctx, |r| {
-                r.content(format!("Commands set to null in guild <#{}>", data.guild))
+        client.set_guild_commands(self.guild.cast(), &[]).await?;
+        ctx
+            .respond( |r| {
+                r.content(format!("Commands set to null in guild <#{}>", self.guild))
                     .ephemeral()
             })
             .await

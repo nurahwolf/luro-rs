@@ -1,6 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{command::ExecuteLuroCommand, responses::Response, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
 
@@ -20,44 +19,40 @@ pub struct Assign {
 }
 
 #[async_trait]
-impl LuroCommandTrait for Assign {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let interaction_user = interaction.author();
+impl ExecuteLuroCommand for Assign {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let interaction_user = ctx.author();
 
         // User to action
-        let user = if let Some(user) = data.user {
-            user.resolved
+        let user = if let Some(ref user) = self.user {
+            &user.resolved
         } else {
-            interaction_user.clone()
+            interaction_user
         };
 
         // Guild to modify
-        let guild_id = match interaction.guild_id {
+        let guild_id = match ctx.guild_id {
             Some(guild_id) => guild_id,
-            None => return Response::NotGuild().respond(&ctx, &interaction).await,
+            None => return ctx.response_simple(Response::NotGuild).await,
         };
 
         // If the user wants' to remove a role
-        if let Some(remove) = data.remove && remove {
+        if let Some(remove) = self.remove && remove {
             match ctx
             .twilight_client
-            .remove_guild_member_role(guild_id, user.id, data.role)
+            .remove_guild_member_role(guild_id, user.id, self.role)
             .await {
-                Ok(_) => interaction.respond(&ctx,|r|r.content(format!("Role <@&{}> removed from <@{}>!", data.role, user.id)).ephemeral()).await,
-                Err(why) => Response::InternalError(why.into()).respond(&ctx, &interaction).await
+                Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.id)).ephemeral()).await,
+                Err(why) => return ctx.response_simple(Response::InternalError(why.into())).await
             }
         } else {
         // Otherwise we just assign a role as expected
         match ctx
             .twilight_client
-            .add_guild_member_role(guild_id, user.id, data.role)
+            .add_guild_member_role(guild_id, user.id, self.role)
             .await {
-                Ok(_) => interaction.respond(&ctx, |r|r.content(format!("Role <@&{}> assigned to <@{}>!", data.role, user.id)).ephemeral()).await,
-                Err(why) => Response::InternalError(why.into()).respond(&ctx, &interaction).await
+                Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.id)).ephemeral()).await,
+                Err(why) => return ctx.response_simple(Response::InternalError(why.into())).await
             }
         }
     }

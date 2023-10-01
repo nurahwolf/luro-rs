@@ -1,7 +1,6 @@
 use async_trait::async_trait;
-use luro_builder::embed::EmbedBuilder;
-use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{CommandInteraction, command::ExecuteLuroCommand, responses::Response, interactions::InteractionTrait};
+use luro_model::builders::EmbedBuilder;
 use serde::Serialize;
 use std::fmt::Write;
 use tracing::info;
@@ -37,32 +36,28 @@ struct Position {
 }
 
 #[async_trait]
-impl LuroCommandTrait for ModifyRole {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
+impl ExecuteLuroCommand for ModifyRole {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         let (mut role_selected, mut role_position) = (None, None);
 
         // Guild to modify
         let guild = ctx
             .twilight_client
-            .guild(match interaction.guild_id {
+            .guild(match ctx.guild_id {
                 Some(guild_id) => guild_id,
-                None => return Response::NotGuild().respond(&ctx, &interaction).await,
+                None => return ctx.response_simple(Response::NotGuild).await
             })
             .await?
             .model()
             .await?;
 
         for role in guild.roles.clone() {
-            if role.id == data.role {
+            if role.id == self.role {
                 role_selected = Some(role.clone());
             };
 
             // If self.position is defined
-            if let Some(position) = data.position {
+            if let Some(position) = self.position {
                 if role.id == position {
                     role_position = Some(role.clone());
                 }
@@ -96,7 +91,7 @@ impl LuroCommandTrait for ModifyRole {
             }
 
             // If we are updating the position based on an exact number
-            if let Some(position) = data.position_num {
+            if let Some(position) = self.position_num {
                 let positions: Vec<Position> = vec![Position {
                     id: role_selected.id,
                     position,
@@ -109,12 +104,12 @@ impl LuroCommandTrait for ModifyRole {
                 ctx.twilight_client.request::<EmptyBody>(request?).await?;
             }
 
-            if let Some(ref name) = data.name {
+            if let Some(ref name) = self.name {
                 update_role = update_role.name(Some(name));
             }
 
             // If we are changing the colour
-            if let Some(ref colour) = data.colour {
+            if let Some(ref colour) = self.colour {
                 let colour = if colour.starts_with("0x") {
                     u32::from_str_radix(colour.as_str().strip_prefix("0x").unwrap(), 16)?
                 } else if colour.chars().all(|char| char.is_ascii_hexdigit()) {
@@ -142,7 +137,7 @@ impl LuroCommandTrait for ModifyRole {
             embed
                 .title(updated_role.name)
                 .description(description)
-                .colour(interaction.accent_colour(&ctx).await);
+                .colour(ctx.accent_colour().await);
             if updated_role.color != 0 {
                 embed.colour(role_selected.color);
             }
@@ -157,10 +152,10 @@ impl LuroCommandTrait for ModifyRole {
             }
 
             // TODO: Return an embed with new role information
-            interaction.respond(&ctx, |r| r.add_embed(embed).ephemeral()).await
+            ctx.respond(|r| r.add_embed(embed).ephemeral()).await
         } else {
             // TODO: Make this a response type
-            interaction.respond(&ctx, |r| r.content("No role found").ephemeral()).await
+            ctx.respond(|r| r.content("No role found").ephemeral()).await
         }
     }
 }

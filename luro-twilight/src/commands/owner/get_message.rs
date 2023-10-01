@@ -1,8 +1,8 @@
 
 use async_trait::async_trait;
-use luro_framework::{InteractionCommand, Framework, LuroInteraction};
-use luro_framework::command::LuroCommandTrait;
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::interactions::InteractionTrait;
+use luro_framework::{CommandInteraction, Luro};
+use luro_framework::command::ExecuteLuroCommand;
 use luro_model::message::LuroMessage;
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -19,22 +19,18 @@ pub struct Message {
     /// If defined, attempts to use the client to fetch the message
     channel_id: Option<Id<ChannelMarker>>,
 }
+
 #[async_trait]
-impl LuroCommandTrait for Message {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let message_id = Id::new(data.message_id.parse()?);
-        let channel_id = data.channel_id.unwrap_or(interaction.clone().channel.id);
-        let mut embed = interaction.default_embed(&ctx).await;
+impl ExecuteLuroCommand for Message {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let message_id = Id::new(self.message_id.parse()?);
+        let channel_id = self.channel_id.unwrap_or(ctx.clone().channel.id);
+        let mut embed = ctx.default_embed().await;
 
         // Attempts to fetch in this order
         // User Data -> Client -> Cache
-        let mut luro_message = match data.user {
+        let mut luro_message = match &self.user {
             Some(user) => ctx
-                .database
                 .get_user(&user.resolved.id)
                 .await?
                 .messages
@@ -61,7 +57,7 @@ impl LuroCommandTrait for Message {
 
         match luro_message {
             Some(message) => {
-                let user = ctx.database.get_user(&message.author).await?;
+                let user = ctx.get_user(&message.author.id).await?;
 
                 let toml = toml::to_string_pretty(&message)?;
                 embed
@@ -76,6 +72,6 @@ impl LuroCommandTrait for Message {
                 .colour(COLOUR_DANGER),
         };
 
-        interaction.respond(&ctx, |r| r.add_embed(embed).ephemeral()).await
+        ctx.respond( |r| r.add_embed(embed).ephemeral()).await
     }
 }

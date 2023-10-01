@@ -1,8 +1,7 @@
 use std::convert::TryFrom;
 
 use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -17,25 +16,21 @@ pub struct Warnings {
 }
 
 #[async_trait]
-impl LuroCommandTrait for Warnings {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let mut user_data = ctx.database.get_user(&data.user.resolved.id).await?;
+impl ExecuteLuroCommand for Warnings {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let mut user_data = ctx.get_user(&self.user.resolved.id).await?;
         if user_data.warnings.is_empty() {
-            return interaction
-                .respond(&ctx, |r| r.content("User has no warnings you stupid idiot!").ephemeral())
+            return ctx
+                .respond(|r| r.content("User has no warnings you stupid idiot!").ephemeral())
                 .await;
         }
-        if let Some(index) = data.id {
+        if let Some(index) = self.id {
             let index: usize = match usize::try_from(index) {
                 Ok(index) => match index.checked_sub(1) {
                     Some(index) => index,
                     None => {
-                        return interaction
-                            .respond(&ctx, |r| {
+                        return ctx
+                            .respond( |r| {
                                 r.content("This function automatically reduces the ID by 1. You just had the buffer underflow")
                                     .ephemeral()
                             })
@@ -43,9 +38,9 @@ impl LuroCommandTrait for Warnings {
                     }
                 },
                 Err(why) => {
-                    return interaction
-                        .respond(&ctx, |r| {
-                            r.content(format!("Failed to convert `i64` to `usize`\n```{}```!", why.to_string()))
+                    return ctx
+                        .respond( |r| {
+                            r.content(format!("Failed to convert `i64` to `usize`\n```{}```!", why))
                                 .ephemeral()
                         })
                         .await
@@ -53,8 +48,8 @@ impl LuroCommandTrait for Warnings {
             };
 
             if index > user_data.warnings.len() || user_data.warnings.is_empty() {
-                return interaction
-                    .respond(&ctx, |r| {
+                return ctx
+                    .respond(|r| {
                         r.content(format!(
                             "The vector has {} elements. You are trying to remove a number greater than that.",
                             user_data.warnings.len()
@@ -69,13 +64,13 @@ impl LuroCommandTrait for Warnings {
             user_data.warnings.drain(..);
         }
 
-        if let Some(clear_punishments) = data.clear_punishments && clear_punishments {
+        if let Some(clear_punishments) = self.clear_punishments && clear_punishments {
             user_data.moderation_actions.drain(..);
         }
 
-        ctx.database.modify_user(&data.user.resolved.id, &user_data).await?;
-        interaction
-            .respond(&ctx, |r| r.content("Warnings removed!").ephemeral())
+        ctx.database.update_user(user_data).await?;
+        ctx
+            .respond( |r| r.content("Warnings removed!").ephemeral())
             .await
     }
 }

@@ -1,13 +1,9 @@
 use async_trait::async_trait;
-use luro_framework::command::LuroCommandTrait;
+use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
 use luro_framework::responses::Response;
-use luro_framework::{Framework, InteractionComponent, InteractionModal, LuroInteraction, CommandInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
-use luro_model::BOT_OWNERS;
+use luro_framework::{CommandInteraction, ComponentInteraction, Luro, ModalInteraction};
 use std::fmt::Write;
-use tracing::warn;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::interaction::InteractionData;
 use twilight_model::channel::message::component::SelectMenuType;
 use twilight_model::id::marker::RoleMarker;
 use twilight_model::id::Id;
@@ -18,7 +14,7 @@ mod clear_warnings;
 mod commands;
 // mod fakeban;
 // mod flush;
-// mod get_message;
+mod get_message;
 // mod guilds;
 // mod load_users;
 // mod log;
@@ -40,88 +36,80 @@ pub enum Owner {
     MassAssign(mass_assign::MassAssign),
     #[command(name = "modify_role")]
     ModifyRole(modify_role::ModifyRole),
+    #[command(name = "get_message")]
+    GetMessage(get_message::Message),
 }
 
 // pub enum OwnerCommands {
 //     #[command(name = "config")]
 //     #[command(name = "fakeban")]
 //     #[command(name = "flush")]
-//     #[command(name = "get_message")]
 //     #[command(name = "guilds")]
 //     #[command(name = "load_users")]
 //     #[command(name = "log")]
 //     Config(ConfigCommand),
 //     FakeBan(FakeBan),
 //     Flush(Flush),
-//     GetMessage(OwnerGetMessage),
 //     Guilds(OwnerGuildsCommand),
 //     LoadUsers(OwnerLoadUsers),
 //     Log(LogCommand),
 // }
 
-#[async_trait]
-impl LuroCommandTrait for Owner {
-    async fn handle_interaction(
-        ctx: CommandInteraction<Self>,
-    ) -> anyhow::Result<()> {
-        // Call the appropriate subcommand.
-        let interaction_author = ctx.author();
+impl CreateLuroCommand for Owner {}
 
-        let staff = match ctx.database.get_staff().await {
-            Ok(data) => data.keys().copied().collect(),
-            Err(why) => {
-                warn!(why = ?why, "Failed to load staff from database, falling back to hardcoded staff members");
-                BOT_OWNERS.to_vec()
-            }
-        };
+#[async_trait]
+impl ExecuteLuroCommand for Owner {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let interaction_author = ctx.author();
+        let staff = ctx.database.get_staff().await;
 
         // If we don't have a match, bitch at the user
-        if !staff.contains(&interaction_author.id) {
-            return Response::NotOwner(
-                &interaction_author.id,
-                match ctx.command {
-                    Self::Abuse(_) => "owner_abuse",
-                    Self::Assign(_) => "owner_assign",
-                    Self::ClearWarning(_) => "owner_clearwarning",
-                    Self::Commands(_) => "owner_commands",
-                    // Self::Config(_) => "owner_config",
-                    // Self::FakeBan(_) => "owner_fakeban",
-                    // Self::Flush(_) => "owner_save",
-                    // Self::GetMessage(_) => "owner_getmessage",
-                    // Self::Guilds(_) => "owner_guilds",
-                    // Self::LoadUsers(_) => "owner_loadusers",
-                    // Self::Log(_) => "owner_log",
-                    Self::MassAssign(_) => "mass_assign",
-                    Self::ModifyRole(_) => "owner_modify",
-                },
-            )
-            .respond(&ctx)
-            .await;
+        if !staff.contains_key(&interaction_author.id) {
+            return ctx
+                .response_simple(Response::NotOwner(
+                    &interaction_author.id,
+                    match self {
+                        Self::Abuse(_) => "owner_abuse",
+                        Self::Assign(_) => "owner_assign",
+                        Self::ClearWarning(_) => "owner_clearwarning",
+                        Self::Commands(_) => "owner_commands",
+                        // Self::Config(_) => "owner_config",
+                        // Self::FakeBan(_) => "owner_fakeban",
+                        // Self::Flush(_) => "owner_save",
+                        Self::GetMessage(_) => "owner_getmessage",
+                        // Self::Guilds(_) => "owner_guilds",
+                        // Self::LoadUsers(_) => "owner_loadusers",
+                        // Self::Log(_) => "owner_log",
+                        Self::MassAssign(_) => "mass_assign",
+                        Self::ModifyRole(_) => "owner_modify",
+                    },
+                ))
+                .await;
         }
 
         // We know the user is good, so call the appropriate subcommand.
-        match ctx.command {
-            Self::Abuse(_) => abuse::Abuse::handle_interaction(ctx).await,
-            Self::Assign(_) => assign::Assign::handle_interaction(ctx).await,
-            Self::ClearWarning(_) => clear_warnings::Warnings::handle_interaction(ctx).await,
-            Self::Commands(_) => commands::Commands::handle_interaction(ctx).await,
+        match self {
+            Self::Abuse(command) => command.interaction_command(ctx).await,
+            Self::Assign(command) => command.interaction_command(ctx).await,
+            Self::ClearWarning(command) => command.interaction_command(ctx).await,
+            Self::Commands(command) => command.interaction_command(ctx).await,
             // Self::Config(_) => "owner_config",
             // Self::FakeBan(_) => "owner_fakeban",
             // Self::Flush(_) => "owner_save",
-            // Self::GetMessage(_) => "owner_getmessage",
+            Self::GetMessage(command) => command.interaction_command(ctx).await,
             // Self::Guilds(_) => "owner_guilds",
             // Self::LoadUsers(_) => "owner_loadusers",
             // Self::Log(_) => "owner_log",
-            Self::MassAssign(_) => mass_assign::MassAssign::handle_interaction(ctx).await,
-            Self::ModifyRole(_) => modify_role::ModifyRole::handle_interaction(ctx).await,
+            Self::MassAssign(command) => command.interaction_command(ctx).await,
+            Self::ModifyRole(command) => command.interaction_command(ctx).await,
         }
     }
 
-    async fn handle_modal(ctx: Framework, interaction: InteractionModal) -> anyhow::Result<()> {
+    async fn interaction_modal(&self, ctx: ModalInteraction<()>) -> anyhow::Result<()> {
         let mut message_id = None;
         let mut channel_id = None;
 
-        for row in &interaction.data.components {
+        for row in &ctx.data.components {
             for component in &row.components {
                 if let Some(ref value) = component.value && component.custom_id.as_str() == "message-id" {
                     message_id = Some(value.clone());
@@ -134,18 +122,18 @@ impl LuroCommandTrait for Owner {
 
         let message_id = match message_id {
             Some(message_id) => Id::new(message_id.parse()?),
-            None => return interaction.respond(&ctx, |r| r.content("No message ID!").ephemeral()).await,
+            None => return ctx.respond(|r| r.content("No message ID!").ephemeral()).await,
         };
 
         let channel_id = match channel_id {
             Some(channel_id) => Id::new(channel_id.parse()?),
-            None => return interaction.respond(&ctx, |r| r.content("No channel ID!").ephemeral()).await,
+            None => return ctx.respond(|r| r.content("No channel ID!").ephemeral()).await,
         };
 
         let message = ctx.twilight_client.message(channel_id, message_id).await?.model().await?;
         let mut embed = message.embeds.first().unwrap().clone();
 
-        for row in &interaction.data.components {
+        for row in &ctx.data.components {
             for component in &row.components {
                 if let Some(ref value) = component.value && component.custom_id.as_str() == "embed-title" {
                     embed.title = Some(value.clone());
@@ -161,50 +149,33 @@ impl LuroCommandTrait for Owner {
             .embeds(Some(vec![embed]).as_deref())
             .await?;
 
-        interaction.respond(&ctx, |r| r.content("All done!").ephemeral()).await
+        ctx.respond(|r| r.content("All done!").ephemeral()).await
     }
 
-    async fn handle_component(
-        ctx: Framework,
-        interaction: InteractionComponent,
-    ) -> anyhow::Result<()> {
-        match interaction.data.custom_id.as_str() {
-            "mass-assign-selector" => component_selector(ctx, interaction).await,
-            "mass-assign-roles" | "mass-assign-remove" => component_roles(ctx, interaction).await,
-            _ => interaction.respond(&ctx, |r| r.content("Unknown Command!").ephemeral()).await,
+    async fn interaction_component(&self, ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+        match ctx.data.custom_id.as_str() {
+            "mass-assign-selector" => component_selector(ctx).await,
+            "mass-assign-roles" | "mass-assign-remove" => component_roles(ctx).await,
+            _ => ctx.respond(|r| r.content("Unknown Command!").ephemeral()).await,
         }
     }
 }
 
-async fn component_selector(ctx: Framework, interaction: InteractionComponent) -> anyhow::Result<()> {
+async fn component_selector(ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
     let mut roles_string = String::new();
-    let guild_id = interaction.guild_id().unwrap();
-    let mut data = None;
-    let mut original = interaction.original_interaction::<D>().clone();
-
-    while data.is_none() {
-        match original.data {
-            Some(InteractionData::MessageComponent(new_data)) => {
-                data = Some(new_data);
-                break;
-            }
-            _ => {
-                if let Some(message) = original.message {
-                    original = ctx.database.get_interaction(&message.id.to_string()).await?;
-                }
-            }
-        }
-    }
-
-    let data = data.unwrap();
-
-    let mut roles: Vec<Id<RoleMarker>> = data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
+    let guild_id = ctx.guild_id.unwrap();
+    let mut roles: Vec<Id<RoleMarker>> = ctx
+        .data
+        .values
+        .iter()
+        .map(|role| Id::new(role.parse::<u64>().unwrap()))
+        .collect();
 
     // let guild = ctx.framework.twilight_cache.guild_members(guild_id).unwrap();
     let guild = ctx.twilight_client.guild_members(guild_id).limit(1000).await?.model().await?;
     let mut users = vec![];
     for member in guild.into_iter() {
-        if let Ok(user) = ctx.database.get_user(&member.user.id).await {
+        if let Ok(user) = ctx.get_user(&member.user.id).await {
             users.push(user)
         }
     }
@@ -231,7 +202,7 @@ async fn component_selector(ctx: Framework, interaction: InteractionComponent) -
         writeln!(roles_string, "- <@&{role}>")?;
     }
 
-    interaction.respond(&ctx, |response| {
+    ctx.respond( |response| {
         {
             response
                 .content(format!("Found `{}` users with the role(s):\n{roles_string}\nFirst Menu: The roles to apply\nSecond Menu: The roles to remove", users.len()))
@@ -264,10 +235,10 @@ async fn component_selector(ctx: Framework, interaction: InteractionComponent) -
     .await
 }
 
-async fn component_roles(ctx: Framework, interaction: InteractionComponent) -> anyhow::Result<()> {
-    let guild_id = interaction.guild_id().unwrap();
+async fn component_roles(ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+    let guild_id = ctx.guild_id.unwrap();
 
-    let mut roles: Vec<Id<RoleMarker>> = interaction
+    let mut roles: Vec<Id<RoleMarker>> = ctx
         .data
         .values
         .iter()
@@ -278,7 +249,7 @@ async fn component_roles(ctx: Framework, interaction: InteractionComponent) -> a
     let guild = ctx.twilight_client.guild_members(guild_id).limit(1000).await?.model().await?;
     let mut users = vec![];
     for member in guild.into_iter() {
-        if let Ok(user) = ctx.database.get_user(&member.user.id).await {
+        if let Ok(user) = ctx.get_user(&member.user.id).await {
             users.push(user)
         }
     }
@@ -303,7 +274,7 @@ async fn component_roles(ctx: Framework, interaction: InteractionComponent) -> a
 
     let mut actions_performed = 0;
     let mut errors = 0;
-    match interaction.data.custom_id.as_str() {
+    match ctx.data.custom_id.as_str() {
         "mass-assign-roles" => {
             for user in users {
                 for role in &roles {
@@ -324,12 +295,12 @@ async fn component_roles(ctx: Framework, interaction: InteractionComponent) -> a
                 }
             }
         }
-        _ => return interaction.respond(&ctx, |r| r.content("It's fucked").ephemeral()).await,
+        _ => return ctx.respond(|r| r.content("It's fucked").ephemeral()).await,
     }
     let content = match errors != 0 {
         true => format!("Actioned `{actions_performed}` users, with `{errors}` errors!!"),
         false => format!("Actioned `{actions_performed}` users successfully!"),
     };
 
-    interaction.respond(&ctx, |r| r.content(content).ephemeral()).await
+    ctx.respond(|r| r.content(content).ephemeral()).await
 }

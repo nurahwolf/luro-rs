@@ -37,8 +37,8 @@ mod info;
 // mod moderator;
 // #[cfg(feature = "command-music")]
 // mod music;
-// #[cfg(feature = "command-owner")]
-// mod owner;
+#[cfg(feature = "command-owner")]
+mod owner;
 // #[cfg(feature = "command-ping")]
 // mod ping;
 // #[cfg(feature = "command-quote")]
@@ -66,6 +66,8 @@ pub enum LuroCommands {
     Say(say::Say),
     #[cfg(feature = "command-info")]
     Info(info::Info),
+    #[cfg(feature = "command-owner")]
+    Owner(owner::Owner),
 }
 
 fn match_command<T: InteractionTrait>(ctx: &T, data: Box<CommandData>) -> anyhow::Result<LuroCommands> {
@@ -80,6 +82,8 @@ fn match_command<T: InteractionTrait>(ctx: &T, data: Box<CommandData>) -> anyhow
         "say" => LuroCommands::Say(say::Say::new(data)?),
         #[cfg(feature = "command-info")]
         "info" => LuroCommands::Info(info::Info::new(data)?),
+        #[cfg(feature = "command-owner")]
+        "owner" => LuroCommands::Owner(owner::Owner::new(data)?),
         name => return Err(anyhow!("No command matching {name}")),
     };
     Ok(command)
@@ -97,23 +101,9 @@ pub fn default_commands() -> Vec<Command> {
         say::Say::create_command().into(),
         #[cfg(feature = "command-info")]
         info::Info::create_command().into(),
+        #[cfg(feature = "command-owner")]
+        owner::Owner::create_command().into(),
     ]
-
-    // #[cfg(feature = "command-marry")]
-    // commands.insert(marry::Marry::NAME, marry::Marry::create_command().into());
-    // #[cfg(feature = "command-ping")]
-    // commands.insert(ping::Ping::NAME, ping::Ping::create_command().into());
-    // #[cfg(feature = "command-quote")]
-    // commands.insert(quote::QuoteCommands::NAME, quote::QuoteCommands::create_command().into());
-    // #[cfg(feature = "command-roles")]
-    // commands.insert(roles::RoleCommands::NAME, roles::RoleCommands::create_command().into());
-
-    // #[cfg(feature = "command-story")]
-    // commands.insert(story::StoryCommand::NAME, story::StoryCommand::create_command().into());
-    // #[cfg(feature = "command-uwu")]
-    // commands.insert(uwu::UwU::NAME, uwu::UwU::create_command().into());
-    // #[cfg(feature = "command-wordcount")]
-    // commands.insert(wordcount::Wordcount::NAME, wordcount::Wordcount::create_command().into());
 }
 
 /// Handle incoming command interaction.
@@ -124,10 +114,16 @@ pub async fn handle_command(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
     match command {
         #[cfg(feature = "command-about")]
         LuroCommands::About(command) => command.interaction_command(ctx).await,
+        #[cfg(feature = "command-character")]
+        LuroCommands::Character(command) => command.interaction_command(ctx).await,
+        #[cfg(feature = "command-dice")]
+        LuroCommands::Dice(command) => command.interaction_command(ctx).await,
         #[cfg(feature = "command-say")]
         LuroCommands::Say(command) => command.interaction_command(ctx).await,
         #[cfg(feature = "command-info")]
         LuroCommands::Info(command) => command.interaction_command(ctx).await,
+        #[cfg(feature = "command-owner")]
+        LuroCommands::Owner(command) => command.interaction_command(ctx).await,
         name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }
@@ -166,6 +162,16 @@ pub async fn handle_component(ctx: ComponentInteraction<()>) -> anyhow::Result<(
     match command {
         #[cfg(feature = "command-about")]
         LuroCommands::About(command) => command.interaction_component(ctx).await,
+        #[cfg(feature = "command-character")]
+        LuroCommands::Character(command) => command.interaction_component(ctx).await,
+        #[cfg(feature = "command-dice")]
+        LuroCommands::Dice(command) => command.interaction_component(ctx).await,
+        #[cfg(feature = "command-say")]
+        LuroCommands::Say(command) => command.interaction_component(ctx).await,
+        #[cfg(feature = "command-info")]
+        LuroCommands::Info(command) => command.interaction_component(ctx).await,
+        #[cfg(feature = "command-owner")]
+        LuroCommands::Owner(command) => command.interaction_component(ctx).await,
         name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }
@@ -204,6 +210,16 @@ pub async fn handle_modal(ctx: ModalInteraction<()>) -> anyhow::Result<()> {
     match command {
         #[cfg(feature = "command-about")]
         LuroCommands::About(command) => command.interaction_modal(ctx).await,
+        #[cfg(feature = "command-character")]
+        LuroCommands::Character(command) => command.interaction_modal(ctx).await,
+        #[cfg(feature = "command-dice")]
+        LuroCommands::Dice(command) => command.interaction_modal(ctx).await,
+        #[cfg(feature = "command-say")]
+        LuroCommands::Say(command) => command.interaction_modal(ctx).await,
+        #[cfg(feature = "command-info")]
+        LuroCommands::Info(command) => command.interaction_modal(ctx).await,
+        #[cfg(feature = "command-owner")]
+        LuroCommands::Owner(command) => command.interaction_modal(ctx).await,
         name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }

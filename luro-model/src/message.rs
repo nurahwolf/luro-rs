@@ -10,7 +10,7 @@ use twilight_model::{
     },
     gateway::payload::incoming::{MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate},
     id::{
-        marker::{ApplicationMarker, ChannelMarker, GuildMarker, MessageMarker, RoleMarker, WebhookMarker},
+        marker::{ApplicationMarker, ChannelMarker, GuildMarker, MessageMarker, RoleMarker, WebhookMarker, UserMarker},
         Id,
     },
     user::User,
@@ -64,7 +64,7 @@ pub enum LuroMessageSourceV2 {
 pub struct LuroMessage {
     // Enable this if you need to migrate
     // #[serde(default = "default_user", deserialize_with = "deserialize_user_to_id")]
-    #[serde(default = "default_user")]
+    #[serde(default = "fake_user")]
     pub author: User,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub updated_content: Option<Box<LuroMessage>>,
@@ -458,11 +458,23 @@ impl From<MessageCreate> for LuroMessage {
     }
 }
 
+impl From<CachedMessage> for LuroMessage {
+    fn from(message: CachedMessage) -> Self {
+        let mut luro = Self::new(message.id(), default_user(message.author()), message.channel_id(), message.timestamp());
+        luro.from_cached_message(message);
+        luro
+    }
+}
+
 fn default_kind() -> MessageType {
     MessageType::Regular
 }
 
-fn default_user() -> User {
+fn fake_user() -> User {
+    default_user(PRIMARY_BOT_OWNER)
+}
+
+fn default_user(id: Id<UserMarker>) -> User {
     User {
         accent_color: None,
         avatar: None,
@@ -473,7 +485,7 @@ fn default_user() -> User {
         email: None,
         flags: None,
         global_name: None,
-        id: PRIMARY_BOT_OWNER,
+        id,
         locale: None,
         mfa_enabled: None,
         name: "Fake User".to_owned(),
