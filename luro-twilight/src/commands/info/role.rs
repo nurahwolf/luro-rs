@@ -1,16 +1,15 @@
 use std::fmt::Write;
 
+use async_trait::async_trait;
+use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{
     marker::{GenericMarker, RoleMarker},
     Id,
 };
 
-use crate::interaction::LuroSlash;
-use crate::luro_command::LuroCommand;
-use luro_model::database::drivers::LuroDatabaseDriver;
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "role", desc = "Information about a role")]
 pub struct InfoRole {
     /// The role to get
@@ -21,10 +20,11 @@ pub struct InfoRole {
     guid_roles: Option<bool>,
 }
 
-impl LuroCommand for InfoRole {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+#[async_trait]
+impl ExecuteLuroCommand for InfoRole {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
-        let guild_id = match ctx.interaction.guild_id {
+        let guild_id = match ctx.guild_id {
             Some(guild_id) => guild_id,
             None => match self.guild {
                 Some(guild_id) => guild_id.cast(),
@@ -35,7 +35,7 @@ impl LuroCommand for InfoRole {
                 }
             },
         };
-        let mut guild = ctx.framework.database.get_guild(&guild_id).await?;
+        let mut guild = ctx.get_guild(&guild_id).await?;
         embed.title(format!("{}'s roles", guild.name));
 
         for (position, role_id) in &guild.role_positions {

@@ -1,4 +1,5 @@
 use luro_framework::Context;
+use tracing::error;
 use twilight_gateway::Event;
 
 mod interaction_create;
@@ -11,7 +12,7 @@ mod message_update;
 mod message_delete_bulk;
 
 pub async fn event_handler(ctx: Context) -> anyhow::Result<()> {
-    match ctx.event.clone() {
+    let callback = match ctx.event.clone() {
         Event::Ready(event) => ready::ready_listener(ctx, event).await,
         Event::RoleUpdate(event) => role_update::role_update_listener(ctx, event).await,
         Event::UserUpdate(event) => user_update::user_update_listener(ctx, event).await,
@@ -21,5 +22,11 @@ pub async fn event_handler(ctx: Context) -> anyhow::Result<()> {
         Event::MessageDeleteBulk(event) => message_delete_bulk::message_delete_bulk_listener(ctx, event).await,
         Event::MessageUpdate(event) => message_update::message_update_listener(ctx, event).await,
         _ => Ok(()),
+    };
+
+    if let Err(why) = callback {
+        error!(why = ?why, "Unhandled error");
     }
+
+    Ok(())
 }

@@ -2,19 +2,17 @@ use std::fmt::Write;
 
 use std::time::Duration;
 
+use async_trait::async_trait;
+use twilight_util::snowflake::Snowflake;
+use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait, Luro};
+use luro_model::{response::LuroResponse, user::actions_type::UserActionType};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::{attachment::Attachment, interaction::InteractionResponseType},
     id::{marker::GenericMarker, Id},
 };
-use twilight_util::snowflake::Snowflake;
 
-use crate::interaction::LuroSlash;
-use luro_model::{database::drivers::LuroDatabaseDriver, response::LuroResponse, user::actions_type::UserActionType};
-
-use crate::luro_command::LuroCommand;
-
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "user", desc = "Information about a user")]
 pub struct InfoUser {
     /// The user to get, gets yourself if not specified
@@ -26,13 +24,13 @@ pub struct InfoUser {
     /// Set this if you want a copy of your data.
     gdpr_export: Option<bool>,
 }
-
-impl LuroCommand for InfoUser {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+#[async_trait]
+impl ExecuteLuroCommand for InfoUser {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         let response_type = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(self.gdpr_export.unwrap_or_default()).await?;
         // The user we are interested in is the interaction author, unless a user was specified
-        let mut luro_user = ctx.get_specified_user_or_author(&self.user, &ctx.interaction).await?;
+        let mut luro_user = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
         let user_timestamp = Duration::from_millis(luro_user.id.timestamp().unsigned_abs());
 
         let mut response = LuroResponse::default();
@@ -80,19 +78,19 @@ impl LuroCommand for InfoUser {
         // Some additional details if we are a guild
         let guild_id = match self.guild {
             Some(guild_specified) => Some(Id::new(guild_specified.get())),
-            None => ctx.interaction.guild_id,
+            None => ctx.guild_id,
         };
 
         // USER DATA SECTION
         let mut user_data_description = String::new();
         {
             if let Some(export) = self.gdpr_export && export {
-                if let Some(user_specified) = self.user {
+                if let Some(ref user_specified) = self.user {
                     // TODO: Add privilege esc tally to the person
-                    return ctx.respond(|r|r.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.interaction.author_id().unwrap())).response_type(response_type)).await
+                    return ctx.respond(|r|r.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.author_id())).response_type(response_type)).await
                 }
                 response.attachments = Some(vec![Attachment::from_bytes(
-                    format!("gdpr-export-{}.txt", ctx.interaction.author_id().unwrap()),
+                    format!("gdpr-export-{}.txt", ctx.author_id()),
                     toml::to_string_pretty(&luro_user)?.as_bytes().to_vec(),
                     1
                 )]);
@@ -176,8 +174,8 @@ impl LuroCommand for InfoUser {
         }
 
         if let Some(guild_id) = guild_id {
-            let guild = ctx.framework.database.get_guild(&guild_id).await?;
-            if let Ok(guild_member) = ctx.framework.twilight_client.guild_member(guild_id, luro_user.id).await {
+            let guild = ctx.get_guild(&guild_id).await?;
+            if let Ok(guild_member) = ctx.twilight_client.guild_member(guild_id, luro_user.id).await {
                 luro_user.update_member(&guild_id, &guild_member.model().await?);
             }
 
@@ -186,7 +184,7 @@ impl LuroCommand for InfoUser {
                 let mut role_list = String::new();
 
                 let user_roles = guild.user_roles(&luro_user);
-                ctx.framework.database.save_user(&luro_user.id, &luro_user).await?;
+                ctx.database.update_user(luro_user.clone()).await?;
 
                 for role in &user_roles {
                     if role_list.is_empty() {
@@ -262,7 +260,7 @@ impl LuroCommand for InfoUser {
         embed.create_field("Timestamps", &timestamp, true);
         embed.description(description);
         response.add_embed(embed);
-        ctx.send_respond(response).await?;
+        ctx.response_send(response).await?;
         Ok(())
     }
 }

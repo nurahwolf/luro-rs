@@ -1,12 +1,14 @@
 use std::sync::Arc;
 
+use anyhow::Context;
+use tracing_subscriber::{filter::LevelFilter, Registry, reload::{Layer, Handle}};
 use twilight_gateway::{Config, ConfigBuilder, Intents};
 use twilight_model::gateway::{
     payload::outgoing::update_presence::{UpdatePresenceError, UpdatePresencePayload},
     presence::{ActivityType, MinimalActivity, Status},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Configuration {
     /// The token used for interacting with the Discord API
     pub token: String,
@@ -23,21 +25,32 @@ pub struct Configuration {
     pub twilight_client: Arc<twilight_http::Client>,
     pub shard_config: Config,
     pub connection_string: String,
+    pub filter: Layer<tracing_subscriber::filter::LevelFilter, Registry>,
+    pub tracing_subscriber: Handle<LevelFilter, Registry>,
 }
 
 impl Configuration {
     /// Create a new configuration
     pub fn new(
         intents: Intents,
-        #[cfg(feature = "lavalink")] lavalink_auth: String,
-        #[cfg(feature = "lavalink")] lavalink_host: String,
-        token: String,
+        filter: LevelFilter,
     ) -> anyhow::Result<Self> {
-        #[cfg(feature = "cache-memory")]
-        let cache = twilight_cache_inmemory::InMemoryCache::new().into();
+        #[cfg(feature = "dotenvy")]
+        dotenvy::dotenv()?;
+
+        let token = std::env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?;
         let twilight_client = twilight_http::Client::new(token.clone()).into();
         let shard_config = shard_config_builder(intents, token.clone())?;
-        let connection_string = "postgres://localhost/luro".to_owned();
+        let (filter, tracing_subscriber) = tracing_subscriber::reload::Layer::new(filter);
+
+        #[cfg(feature = "cache-memory")]
+        let cache = twilight_cache_inmemory::InMemoryCache::new().into();
+        let connection_string = std::env::var("DATABASE_URL").unwrap_or("".to_owned());
+
+        #[cfg(feature = "lavalink")]
+        let lavalink_auth = std::env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?;
+        #[cfg(feature = "lavalink")]
+        let lavalink_host = std::env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?;
 
         Ok(Self {
             cache,
@@ -51,6 +64,8 @@ impl Configuration {
             twilight_client,
             shard_config,
             connection_string,
+            filter,
+            tracing_subscriber
         })
     }
 }

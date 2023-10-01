@@ -1017,7 +1017,9 @@ dependencies = [
  "futures-util",
  "luro-model",
  "sqlx",
+ "time",
  "toml",
+ "tracing",
  "twilight-model",
 ]
 
@@ -1056,6 +1058,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bincode",
+ "dotenvy",
  "hyper",
  "nom",
  "radix_trie",
@@ -1094,6 +1097,7 @@ dependencies = [
  "rand",
  "serde",
  "tokio",
+ "toml",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
@@ -1101,6 +1105,7 @@ dependencies = [
  "twilight-http",
  "twilight-interactions",
  "twilight-model",
+ "twilight-util",
  "uwuify",
 ]
 
@@ -1941,6 +1946,7 @@ dependencies = [
  "smallvec",
  "sqlformat",
  "thiserror",
+ "time",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -2024,6 +2030,7 @@ dependencies = [
  "sqlx-core",
  "stringprep",
  "thiserror",
+ "time",
  "tracing",
  "whoami",
 ]
@@ -2063,6 +2070,7 @@ dependencies = [
  "sqlx-core",
  "stringprep",
  "thiserror",
+ "time",
  "tracing",
  "whoami",
 ]
@@ -2085,6 +2093,7 @@ dependencies = [
  "percent-encoding",
  "serde",
  "sqlx-core",
+ "time",
  "tracing",
  "url",
 ]

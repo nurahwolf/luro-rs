@@ -25,8 +25,8 @@ mod dice;
 // mod heck;
 // #[cfg(feature = "command-hello")]
 // mod hello;
-// #[cfg(feature = "command-info")]
-// mod info;
+#[cfg(feature = "command-info")]
+mod info;
 // #[cfg(feature = "command-lewd")]
 // mod lewd;
 // #[cfg(feature = "command-luro")]
@@ -64,6 +64,8 @@ pub enum LuroCommands {
     Dice(dice::Dice),
     #[cfg(feature = "command-say")]
     Say(say::Say),
+    #[cfg(feature = "command-info")]
+    Info(info::Info),
 }
 
 fn match_command<T: InteractionTrait>(ctx: &T, data: Box<CommandData>) -> anyhow::Result<LuroCommands> {
@@ -76,6 +78,8 @@ fn match_command<T: InteractionTrait>(ctx: &T, data: Box<CommandData>) -> anyhow
         "dice" => LuroCommands::Dice(dice::Dice::new(data)?),
         #[cfg(feature = "command-say")]
         "say" => LuroCommands::Say(say::Say::new(data)?),
+        #[cfg(feature = "command-info")]
+        "info" => LuroCommands::Info(info::Info::new(data)?),
         name => return Err(anyhow!("No command matching {name}")),
     };
     Ok(command)
@@ -91,6 +95,8 @@ pub fn default_commands() -> Vec<Command> {
         dice::Dice::create_command().into(),
         #[cfg(feature = "command-say")]
         say::Say::create_command().into(),
+        #[cfg(feature = "command-info")]
+        info::Info::create_command().into(),
     ]
 
     // #[cfg(feature = "command-marry")]
@@ -120,6 +126,8 @@ pub async fn handle_command(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         LuroCommands::About(command) => command.interaction_command(ctx).await,
         #[cfg(feature = "command-say")]
         LuroCommands::Say(command) => command.interaction_command(ctx).await,
+        #[cfg(feature = "command-info")]
+        LuroCommands::Info(command) => command.interaction_command(ctx).await,
         name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }

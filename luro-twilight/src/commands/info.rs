@@ -1,7 +1,7 @@
-use luro_model::database::drivers::LuroDatabaseDriver;
+use async_trait::async_trait;
+use luro_framework::{command::{ExecuteLuroCommand, CreateLuroCommand}, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 use self::{guild::Guild, punishments::Punishments, role::InfoRole, user::InfoUser};
 
@@ -10,9 +10,9 @@ mod punishments;
 mod role;
 mod user;
 
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "info", desc = "Information about neat things")]
-pub enum InfoCommands {
+pub enum Info {
     #[command(name = "user")]
     User(InfoUser),
     #[command(name = "role")]
@@ -23,13 +23,16 @@ pub enum InfoCommands {
     Punishments(Punishments),
 }
 
-impl LuroCommand for InfoCommands {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+impl CreateLuroCommand for Info {}
+
+#[async_trait]
+impl ExecuteLuroCommand for Info {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         match self {
-            Self::Guild(command) => command.run_command(ctx).await,
-            Self::Punishments(command) => command.run_command(ctx).await,
-            Self::Role(command) => command.run_command(ctx).await,
-            Self::User(command) => command.run_command(ctx).await,
+            Self::Guild(command) => command.interaction_command(ctx).await,
+            Self::Punishments(command) => command.interaction_command(ctx).await,
+            Self::Role(command) => command.interaction_command(ctx).await,
+            Self::User(command) => command.interaction_command(ctx).await,
         }
     }
 }

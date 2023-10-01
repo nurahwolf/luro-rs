@@ -24,8 +24,9 @@ rand = { workspace = true, optional = true }           # command-story
 git2 = { version = "0.18", optional = true }           # command-about
 memory-stats = { version = "1", optional = true }      # command-about
 base64 = { version = "0.21", optional = true }         # command-base64
-serde = { workspace = true, optional = true }         # command-owner
-
+serde = { workspace = true, optional = true }          # command-owner
+toml = { version = "*", optional = true }              # command-info
+twilight-util = { workspace = true, optional = true }  # command-info
 
 
 # Tokio
@@ -33,7 +34,7 @@ tokio.workspace = true # main
 futures-util = "0.3"   # main
 
 # Luro - Specify the driver using the feature setting below
-luro-model.path = "../luro-model"                                         # main
+luro-model.path = "../luro-model"         # main
 luro-framework.path = "../luro-framework"
 
 
@@ -43,7 +44,7 @@ tracing-appender = "0.2"                  # main
 tracing-subscriber = { workspace = true } # main
 
 # Twilight
-twilight-http = { workspace = true }                   # commands
+twilight-http = { workspace = true }                    # commands
 twilight-model = { workspace = true }                   # event_listener
 twilight-gateway.workspace = true                       # main
 twilight-interactions.path = "../twilight-interactions" # commands
@@ -68,6 +69,7 @@ commands = [
     "command-uwu",
     "command-marry",
     "command-wordcount",
+    "command-info",
 ]
 
 
@@ -85,4 +87,5 @@ command-owner = ["dep:serde"]
 command-say = []
 command-story = ["dep:rand"]
 command-uwu = []
+command-info = ["dep:toml", "dep:twilight-util"]
 command-wordcount = ["dep:uwuify"]

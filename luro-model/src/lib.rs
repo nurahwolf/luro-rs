@@ -5,8 +5,6 @@ use std::collections::{BTreeMap, HashMap};
 
 use message::LuroMessage;
 use story::Story;
-use tracing_subscriber::filter::LevelFilter;
-use twilight_gateway::Intents;
 use twilight_model::{
     application::interaction::Interaction,
     id::{marker::UserMarker, Id},
@@ -30,12 +28,7 @@ pub const COLOUR_DANGER: u32 = 0xD35F5F;
 pub const COLOUR_TRANSPARENT: u32 = 0x2F3136;
 /// Luro's SUCCESS colour
 pub const COLOUR_SUCCESS: u32 = 0xA0D995;
-/// [tracing_subscriber] filter level
-pub const FILTER: LevelFilter = LevelFilter::INFO;
-// Luro's intents. Can be set to all, but rather spammy.
-pub const INTENTS: Intents = Intents::all();
-/// The log path. By default this is a sub directory of DATA_PATH
-pub const LOG_PATH: &str = "data/log/";
+
 /// The name used for Luro's webhooks
 pub const WEBHOOK_NAME: &str = "LuroHook";
 

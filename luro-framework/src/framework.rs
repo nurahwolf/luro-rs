@@ -2,7 +2,6 @@ use std::{fs, path::PathBuf};
 
 use luro_database::LuroDatabase;
 use luro_model::configuration::Configuration;
-use tracing_subscriber::{filter::LevelFilter, reload::Handle, Registry};
 
 use twilight_gateway::{stream, Shard};
 
@@ -21,13 +20,12 @@ mod webhook;
 
 impl Framework {
     pub async fn new(
-        config: Configuration,
-        tracing_subscriber: Handle<LevelFilter, Registry>,
+        config: &Configuration,
     ) -> anyhow::Result<(Framework, Vec<Shard>)> {
         // Ensure data directory exists on disk
         ensure_data_directory_exists();
 
-        let database = initialise_database(config.clone()).await?.into();
+        let database = initialise_database(config).await?.into();
         let shards = stream::create_recommended(&config.twilight_client, config.shard_config.clone(), |_, c| c.build())
             .await?
             .collect::<Vec<_>>();
@@ -54,7 +52,7 @@ impl Framework {
             guild_commands: Default::default(),
             #[cfg(feature = "lavalink")]
             lavalink,
-            tracing_subscriber,
+            tracing_subscriber: config.tracing_subscriber.clone(),
             twilight_client: config.twilight_client.clone(),
         };
 
@@ -78,7 +76,7 @@ impl From<Context> for Framework {
     }
 }
 
-async fn initialise_database(config: Configuration) -> anyhow::Result<LuroDatabase> {
+async fn initialise_database(config: &Configuration) -> anyhow::Result<LuroDatabase> {
     Ok(LuroDatabase::new(config).await?)
 }
 

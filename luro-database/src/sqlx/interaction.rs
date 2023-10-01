@@ -20,6 +20,8 @@ impl TryFrom<Interaction> for DatabaseInteraction {
 impl TryInto<Interaction> for DatabaseInteraction {
     type Error = bincode::Error;
 
+    // TODO: Remove this when possible
+    #[allow(deprecated)]
     fn try_into(self) -> Result<Interaction, Self::Error> {
         Ok(Interaction {
             app_permissions: None,

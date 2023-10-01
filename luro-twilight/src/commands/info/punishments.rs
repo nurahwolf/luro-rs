@@ -1,22 +1,20 @@
 use std::fmt::Write;
 
+use async_trait::async_trait;
+use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, Luro, interactions::InteractionTrait};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
-
-#[derive(CommandModel, CreateCommand)]
+#[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "punishments", desc = "Information about a user's punishments")]
 pub struct Punishments {
     /// The user to get
     user: ResolvedUser,
 }
 
-impl LuroCommand for Punishments {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let punished_user = ctx.framework.database.get_user(&self.user.resolved.id).await?;
+#[async_trait]
+impl ExecuteLuroCommand for Punishments {
+    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+        let punished_user = ctx.get_user(&self.user.resolved.id).await?;
         let mut warnings = String::new();
 
         for (warning, id) in &punished_user.warnings {
@@ -32,7 +30,7 @@ impl LuroCommand for Punishments {
             response.embed(|embed| {
                 embed.colour(colour).description(warnings).author(|author| {
                     author
-                        .name(format!("{}'s warnings", punished_user.member_name(&ctx.interaction.guild_id)))
+                        .name(format!("{}'s warnings", punished_user.member_name(&ctx.guild_id)))
                         .icon_url(punished_user.avatar())
                 })
             })

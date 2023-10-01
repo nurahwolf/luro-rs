@@ -10,7 +10,7 @@ mod users;
 mod messages;
 
 impl LuroDatabase {
-    pub async fn new(config: Configuration) -> Result<Self, Error> {
+    pub async fn new(config: &Configuration) -> Result<Self, Error> {
         Ok(Self(
             PgPoolOptions::new()
                 .max_connections(5)
