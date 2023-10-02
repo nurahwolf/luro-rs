@@ -9,19 +9,22 @@ impl LuroDatabase {
         let query = sqlx::query_as!(
             DatabaseUser,
             "INSERT INTO users (
+                accent_colour,
                 user_id,
                 user_permissions,
                 name
             ) VALUES
-                ($1, $2, $3)
+                ($1, $2, $3, $4)
             ON CONFLICT
                 (user_id)
             DO UPDATE SET
                 name = $3
             RETURNING
+                accent_colour,
                 user_id,
                 user_permissions as \"user_permissions: LuroUserPermissions\",
                 name",
+            user.accent_color.map(|x|x as i32),
             user.id.get() as i64,
             LuroUserPermissions::default() as _,
             user.name

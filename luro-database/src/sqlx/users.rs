@@ -14,6 +14,7 @@ mod get_user;
 mod handle_luro_user;
 mod handle_user_update;
 mod handle_user;
+mod update_user;
 
 impl DatabaseUser {
     pub fn luro_user(&self) -> LuroUser {
@@ -33,7 +34,13 @@ impl LuroDatabase {
         let mut users = HashMap::new();
         let query = sqlx::query_as!(
             DatabaseUser,
-            r#"SELECT user_id, user_permissions as "user_permissions: LuroUserPermissions", name FROM users"#,
+            "SELECT
+                accent_colour,
+                user_id,
+                user_permissions as \"user_permissions: LuroUserPermissions\",
+                name
+            FROM
+                users",
         );
 
         for user in (query.fetch(&self.0).try_next().await).into_iter().flatten() {
@@ -47,7 +54,17 @@ impl LuroDatabase {
         let mut users = HashMap::new();
         let mut query = sqlx::query_as!(
             DatabaseUser,
-            r#"SELECT user_id, user_permissions as "user_permissions: LuroUserPermissions", name FROM users WHERE user_permissions = 'OWNER' or  user_permissions = 'ADMINISTRATOR'"#,
+            "SELECT
+                accent_colour,
+                user_id,
+                user_permissions as \"user_permissions: LuroUserPermissions\",
+                name
+            FROM
+                users
+            WHERE
+                user_permissions = 'OWNER' 
+                    or
+                user_permissions = 'ADMINISTRATOR'",
         ).fetch(&self.0);
 
         while let Ok(Some(user)) = query.try_next().await {
@@ -57,20 +74,30 @@ impl LuroDatabase {
         users
     }
 
-    pub async fn update_user(&self, user: impl Into<DatabaseUserType>) -> Result<Option<LuroUser>, Error> {
-        let user = user.into();
 
-        match user {
-            DatabaseUserType::User(user) => self.handle_user(user).await,
-            DatabaseUserType::LuroUser(user) => self.handle_luro_user(user).await,
-            DatabaseUserType::UserUpdate(user) => self.handle_user_update(user).await,
-        }
-    }
 
     pub async fn register_staff(&self, user: User) -> Result<LuroUser, Error> {
         let query = sqlx::query_as!(
             DatabaseUser,
-            r#"INSERT INTO users (user_id, user_permissions, name) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET user_permissions = $2, name = $3 RETURNING user_id, user_permissions as "user_permissions: LuroUserPermissions", name"#,
+            "INSERT INTO users (
+                accent_colour,
+                user_id,
+                user_permissions,
+                name
+            ) VALUES
+                ($1, $2, $3, $4)
+            ON CONFLICT
+                (user_id)
+            DO UPDATE SET
+                accent_colour = $1,
+                user_permissions = $3,
+                name = $4
+            RETURNING
+                accent_colour,
+                user_id,
+                user_permissions as \"user_permissions: LuroUserPermissions\",
+                name",
+            user.accent_color.map(|x|x as i32),
             user.id.get() as i64,
             LuroUserPermissions::Administrator as _,
             user.name
@@ -82,7 +109,25 @@ impl LuroDatabase {
     pub async fn register_owner(&self, user: User) -> Result<LuroUser, Error> {
         let query = sqlx::query_as!(
             DatabaseUser,
-            r#"INSERT INTO users (user_id, user_permissions, name) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET user_permissions = $2, name = $3 RETURNING user_id, user_permissions as "user_permissions: LuroUserPermissions", name"#,
+            "INSERT INTO users (
+                accent_colour,
+                user_id,
+                user_permissions,
+                name
+            ) VALUES
+                ($1, $2, $3, $4)
+            ON CONFLICT
+                (user_id)
+            DO UPDATE SET
+                accent_colour = $1,
+                user_permissions = $3,
+                name = $4
+            RETURNING
+                accent_colour,
+                user_id,
+                user_permissions as \"user_permissions: LuroUserPermissions\",
+                name",
+            user.accent_color.map(|x|x as i32),
             user.id.get() as i64,
             LuroUserPermissions::Owner as _,
             user.name

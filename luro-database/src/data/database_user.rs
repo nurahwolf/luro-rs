@@ -1,7 +1,36 @@
 use luro_model::user::LuroUser;
-use twilight_model::{id::{marker::UserMarker, Id}, gateway::payload::incoming::UserUpdate, user::User};
+use twilight_model::{
+    gateway::payload::incoming::UserUpdate,
+    id::{marker::UserMarker, Id},
+    user::User,
+};
 
-use crate::{DatabaseUser, DatabaseUserType};
+use crate::{DatabaseUser, DatabaseUserType, LuroUserPermissions};
+
+impl From<DatabaseUserType> for DatabaseUser {
+    fn from(user: DatabaseUserType) -> Self {
+        match user {
+            DatabaseUserType::User(user) => Self {
+                accent_colour: user.accent_color.map(|x| x as i32),
+                user_id: user.id.get() as i64,
+                name: user.name,
+                user_permissions: LuroUserPermissions::default(),
+            },
+            DatabaseUserType::UserUpdate(user) => Self {
+                accent_colour: user.accent_color.map(|x| x as i32),
+                user_id: user.id.get() as i64,
+                name: user.name.clone(),
+                user_permissions: LuroUserPermissions::default(),
+            },
+            DatabaseUserType::LuroUser(user) => Self {
+                accent_colour: user.accent_color.map(|x| x as i32),
+                user_id: user.id.get() as i64,
+                name: user.name,
+                user_permissions: LuroUserPermissions::default(),
+            },
+        }
+    }
+}
 
 impl From<UserUpdate> for DatabaseUserType {
     fn from(user: UserUpdate) -> Self {

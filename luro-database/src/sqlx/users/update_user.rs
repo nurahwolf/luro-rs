@@ -1,10 +1,12 @@
 use luro_model::user::LuroUser;
 use sqlx::Error;
 
-use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
+use crate::{LuroDatabase, DatabaseUser, LuroUserPermissions};
 
 impl LuroDatabase {
-    pub async fn handle_luro_user(&self, user: LuroUser) -> Result<Option<LuroUser>, Error> {
+    pub async fn update_user(&self, user: impl Into<DatabaseUser>) -> Result<Option<LuroUser>, Error> {
+        let user = user.into();
+
         let query = sqlx::query_as!(
             DatabaseUser,
             "INSERT INTO users (
@@ -23,10 +25,10 @@ impl LuroDatabase {
                 user_id,
                 user_permissions as \"user_permissions: LuroUserPermissions\",
                 name",
-            user.accent_color.map(|x|x as i32),
-            user.id.get() as i64,
-            LuroUserPermissions::default() as _,
-            user.name
+            user.accent_colour as _,
+            user.user_id as _,
+            user.user_permissions as _,
+            user.name as _,
         );
 
         query.fetch_optional(&self.0).await.map(|x| x.map(|x| x.luro_user()))

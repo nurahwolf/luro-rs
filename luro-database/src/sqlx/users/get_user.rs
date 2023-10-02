@@ -8,6 +8,7 @@ impl LuroDatabase {
         let query = sqlx::query_as!(
             DatabaseUser,
             "SELECT
+                accent_colour,
                 name,
                 user_id,
                 user_permissions as \"user_permissions: LuroUserPermissions\"

@@ -61,7 +61,7 @@ pub enum LuroUserPermissions {
     Administrator,
 }
 pub struct DatabaseUser {
-    // pub accent_color: Option<u32>,
+    pub accent_colour: Option<i32>,
     // pub avatar: Option<Json<ImageHash>>,
     // pub avatar_decoration: Option<Json<ImageHash>>,
     // pub banner: Option<Json<ImageHash>>,
