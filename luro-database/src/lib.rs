@@ -1,6 +1,5 @@
-use std::collections::{BTreeMap, HashMap};
 
-use luro_model::{user::{actions::UserActions, marriages::UserMarriages, member::LuroMember, character::CharacterProfile}, guild::LuroGuild};
+use luro_model::{user::LuroUser, guild::LuroGuild, message::LuroMessage};
 use ::sqlx::types::Json;
 use time::OffsetDateTime;
 use twilight_model::{
@@ -11,9 +10,9 @@ use twilight_model::{
         },
         Attachment, Channel, ChannelMention, Message,
     },
-    gateway::payload::incoming::{MessageUpdate, GuildUpdate},
+    gateway::payload::incoming::{MessageUpdate, GuildUpdate, UserUpdate, MessageDelete, MessageCreate, MessageDeleteBulk},
     guild::{PartialMember, Guild},
-    user::{User, UserFlags, PremiumType}, util::ImageHash, id::{marker::{UserMarker, GuildMarker}, Id},
+    user::User,
 };
 
 mod data; // Added functionality around the types defined in this crate
@@ -34,6 +33,7 @@ pub struct LuroDatabase(::sqlx::Pool<::sqlx::Postgres>);
 
 #[derive(Clone)]
 pub struct DatabaseGuild {
+    pub name: String,
     pub guild_id: i64,
     pub owner_id: i64,
 }
@@ -94,27 +94,6 @@ pub struct DatabaseUser {
     pub user_permissions: LuroUserPermissions,
 }
 
-#[cfg(feature = "sqlx-driver")]
-#[derive(Default, Debug, ::sqlx::Type)]
-#[sqlx(type_name = "message_source", rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum DatabaseMessageSource {
-    /// Created from an existing message
-    Message,
-    /// Added / crafted manually
-    Custom,
-    /// Created from a cached message
-    CachedMessage,
-    /// Created from a message update event
-    MessageUpdate,
-    /// Created from a message delete event
-    MessageDelete,
-    /// Created from a message create event
-    MessageCreate,
-    /// No message :(
-    #[default]
-    None,
-}
-
 #[derive(Debug)]
 pub struct DatabaseMessage {
     pub activity: Option<Json<MessageActivity>>,
@@ -152,8 +131,53 @@ pub struct DatabaseMessage {
     pub member: Option<Json<PartialMember>>,
 }
 
+#[cfg(feature = "sqlx-driver")]
+#[derive(Default, Debug, ::sqlx::Type)]
+#[sqlx(type_name = "message_source", rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DatabaseMessageSource {
+    /// Created from an existing message
+    Message,
+    /// Added / crafted manually
+    Custom,
+    /// Created from a cached message
+    CachedMessage,
+    /// Created from a message update event
+    MessageUpdate,
+    /// Created from a message delete event
+    MessageDelete,
+    /// Created from a message create event
+    MessageCreate,
+    /// No message :(
+    #[default]
+    None,
+}
+
 pub enum DatabaseGuildType {
     Guild(Guild),
     GuildUpdate(Box<GuildUpdate>),
     LuroGuild(LuroGuild)
+}
+
+pub enum DatabaseUserType {
+    User(User),
+    UserUpdate(UserUpdate),
+    LuroUser(LuroUser)
+}
+
+pub enum DatabaseMessageType {
+    /// Created from an existing message
+    Message(Message),
+    /// Added / crafted manually
+    LuroMessage(LuroMessage),
+    /// Created from a cached message
+    #[cfg(feature = "cache")]
+    CachedMessage(twilight_cache_inmemory::model::CachedMessage),
+    /// Created from a message update event
+    MessageUpdate(MessageUpdate),
+    /// Created from a message delete event
+    MessageDelete(MessageDelete),
+    /// Created from a message delete bulk event
+    MessageDeleteBulk(MessageDeleteBulk),
+    /// Created from a message create event
+    MessageCreate(MessageCreate),
 }

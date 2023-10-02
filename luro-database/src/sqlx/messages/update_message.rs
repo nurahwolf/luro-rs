@@ -1,20 +1,20 @@
-use crate::sqlx::messages::anyhow;
-
-use luro_model::message::{LuroMessage, LuroMessageSourceV2};
+use luro_model::message::{LuroMessage, LuroMessageType};
+use sqlx::Error;
 
 use crate::LuroDatabase;
 
 impl LuroDatabase {
-    pub async fn update_message(&self, message: LuroMessageSourceV2) -> anyhow::Result<Option<LuroMessage>> {
-        Ok(match message {
-            LuroMessageSourceV2::CachedMessage(_message) => todo!(),
-            LuroMessageSourceV2::Custom(message) => self.handle_luro_message(message).await?,
-            LuroMessageSourceV2::Message(_message) => todo!(),
-            LuroMessageSourceV2::MessageCreate(message) => self.handle_message_create(message).await?,
-            LuroMessageSourceV2::MessageDelete(message) => self.handle_message_delete(message).await?,
-            LuroMessageSourceV2::MessageDeleteBulk(messages) => self.handle_message_delete_bulk(messages).await?,
-            LuroMessageSourceV2::MessageUpdate(message) => self.handle_message_update(message).await?,
-            LuroMessageSourceV2::None => return Err(anyhow!("No message data passed!")),
-        })
+    pub async fn update_message(&self, message: LuroMessageType) -> Result<Option<LuroMessage>, Error> {
+        match message {
+            #[cfg(feature = "cache")]
+            LuroMessageType::CachedMessage(message) => self.handle_cached_message(message).await,
+            LuroMessageType::Custom(message) => self.handle_luro_message(message).await,
+            LuroMessageType::Message(message) => self.handle_message(message).await,
+            LuroMessageType::MessageCreate(message) => self.handle_message_create(message).await,
+            LuroMessageType::MessageDelete(message) => self.handle_message_delete(message).await,
+            LuroMessageType::MessageDeleteBulk(messages) => self.handle_message_delete_bulk(messages).await,
+            LuroMessageType::MessageUpdate(message) => self.handle_message_update(message).await,
+            LuroMessageType::None => Ok(None),
+        }
     }
 }

@@ -40,7 +40,7 @@ pub enum LuroMessageSource {
 }
 
 #[derive(Debug, Default)]
-pub enum LuroMessageSourceV2 {
+pub enum LuroMessageType {
     /// Created from an existing message
     Message(Message),
     /// Added / crafted manually

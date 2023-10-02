@@ -1,17 +1,10 @@
 use luro_model::user::LuroUser;
 
-use crate::{interactions::InteractionTrait, CommandInteraction};
+use crate::{interactions::InteractionTrait, CommandInteraction, Luro};
 
 impl<T> CommandInteraction<T> {
     /// Get and return useful information about the interaction author
     pub async fn get_interaction_author(&self) -> anyhow::Result<LuroUser> {
-        Ok(match self.database.get_user(self.author_id().get() as i64).await? {
-            Some(database_user) => database_user,
-            None => {
-                self.database
-                    .update_user(&self.twilight_client.user(self.author_id()).await?.model().await?)
-                    .await?
-            }
-        })
+        self.get_user(&self.author_id()).await
     }
 }

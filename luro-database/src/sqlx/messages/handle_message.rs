@@ -13,14 +13,14 @@ use twilight_model::channel::{
     },
     Attachment, ChannelMention, Message,
 };
-use twilight_model::gateway::payload::incoming::{MessageCreate, MessageUpdate};
+use twilight_model::gateway::payload::incoming::MessageUpdate;
 use twilight_model::guild::PartialMember;
 use twilight_model::user::User;
 
 use crate::{DatabaseMessage, DatabaseMessageSource, LuroDatabase};
 
 impl LuroDatabase {
-    pub async fn handle_message_create(&self, message: MessageCreate) -> Result<Option<LuroMessage>, Error> {
+    pub async fn handle_message(&self, message: Message) -> Result<Option<LuroMessage>, Error> {
         debug!("Handling message_create {:#?}", message);
 
         self.update_user(message.author.clone()).await?;

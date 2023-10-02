@@ -1,5 +1,3 @@
-use anyhow::anyhow;
-
 use luro_model::message::{LuroMessage, LuroMessageSource};
 use sqlx::types::Json;
 
@@ -17,6 +15,9 @@ mod handle_message_delete;
 mod handle_message_delete_bulk;
 mod handle_message_update;
 mod update_message;
+mod handle_message;
+#[cfg(feature = "cache")]
+mod handle_cached_message;
 
 impl From<LuroMessage> for DatabaseMessage {
     fn from(message: LuroMessage) -> Self {

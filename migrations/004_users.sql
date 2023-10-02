@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
     messages BIGINT[],
     moderation_actions_performed BIGINT,
     message_edits BIGINT,
-    moderation_actions: JSONB,
+    moderation_actions JSONB,
 
     -- ordsize: Json<BTreeMap<usize, usize>>,
     -- words: Json<BTreeMap<String, usize>>,

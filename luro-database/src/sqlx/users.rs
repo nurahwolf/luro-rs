@@ -8,9 +8,12 @@ use twilight_model::{
     user::User,
 };
 
-use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
+use crate::{DatabaseUser, DatabaseUserType, LuroDatabase, LuroUserPermissions};
 
 mod get_user;
+mod handle_luro_user;
+mod handle_user_update;
+mod handle_user;
 
 impl DatabaseUser {
     pub fn luro_user(&self) -> LuroUser {
@@ -54,17 +57,14 @@ impl LuroDatabase {
         users
     }
 
-    pub async fn update_user(&self, user: impl Into<LuroUser>) -> Result<LuroUser, Error> {
+    pub async fn update_user(&self, user: impl Into<DatabaseUserType>) -> Result<Option<LuroUser>, Error> {
         let user = user.into();
-        let query = sqlx::query_as!(
-            DatabaseUser,
-            r#"INSERT INTO users (user_id, user_permissions, name) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET user_permissions = $2, name = $3 RETURNING user_id, user_permissions as "user_permissions: LuroUserPermissions", name"#,
-            user.id.get() as i64,
-            LuroUserPermissions::default() as _,
-            user.name
-        );
 
-        query.fetch_one(&self.0).await.map(|x| x.luro_user())
+        match user {
+            DatabaseUserType::User(user) => self.handle_user(user).await,
+            DatabaseUserType::LuroUser(user) => self.handle_luro_user(user).await,
+            DatabaseUserType::UserUpdate(user) => self.handle_user_update(user).await,
+        }
     }
 
     pub async fn register_staff(&self, user: User) -> Result<LuroUser, Error> {

@@ -6,7 +6,7 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
-use tracing::info;
+use tracing::{info, warn};
 use twilight_http::{client::InteractionClient, Client};
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{
@@ -333,9 +333,20 @@ pub trait Luro {
         Ok(match self.database().get_user(user_id.get() as i64).await? {
             Some(user) => user,
             None => {
-                self.database()
-                    .update_user(&self.twilight_client().user(*user_id).await?.model().await?)
-                    .await?
+                let user = self.twilight_client().user(*user_id).await?.model().await?;
+                match self.database().update_user(user.clone()).await {
+                    Ok(db_user) => match db_user {
+                        Some(user) => user,
+                        None => {
+                            warn!("User did not exist in the database, attempted to update the user but the database still did not return the user");
+                            (&user).into()
+                        },
+                    },
+                    Err(why) => {
+                        warn!(why = ?why, "Failed to get user, falling back to twilight");
+                        (&user).into()
+                    },
+                }
             }
         })
     }

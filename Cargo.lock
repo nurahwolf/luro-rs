@@ -1020,6 +1020,7 @@ dependencies = [
  "time",
  "toml",
  "tracing",
+ "twilight-cache-inmemory",
  "twilight-model",
 ]
 

@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS guilds (
-    guild_id                    INT8 NOT NULL,
-    owner_id                    INT8 NOT NULL,
+    name                        TEXT NOT NULL,
+    guild_id                    BIGINT NOT NULL,
+    owner_id                    BIGINT NOT NULL,
     PRIMARY KEY (guild_id)
 );

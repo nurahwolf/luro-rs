@@ -1,7 +1,6 @@
 use anyhow::anyhow;
 use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
 use luro_framework::interactions::InteractionTrait;
-use luro_framework::responses::Response;
 use luro_framework::{CommandInteraction, ComponentInteraction, ModalInteraction};
 use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -124,7 +123,7 @@ pub async fn handle_command(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
         LuroCommands::Info(command) => command.interaction_command(ctx).await,
         #[cfg(feature = "command-owner")]
         LuroCommands::Owner(command) => command.interaction_command(ctx).await,
-        name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
+        // name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }
 
@@ -172,7 +171,7 @@ pub async fn handle_component(ctx: ComponentInteraction<()>) -> anyhow::Result<(
         LuroCommands::Info(command) => command.interaction_component(ctx).await,
         #[cfg(feature = "command-owner")]
         LuroCommands::Owner(command) => command.interaction_component(ctx).await,
-        name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
+        // name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }
 
@@ -220,7 +219,7 @@ pub async fn handle_modal(ctx: ModalInteraction<()>) -> anyhow::Result<()> {
         LuroCommands::Info(command) => command.interaction_modal(ctx).await,
         #[cfg(feature = "command-owner")]
         LuroCommands::Owner(command) => command.interaction_modal(ctx).await,
-        name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
+        // name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
     }
 }
 

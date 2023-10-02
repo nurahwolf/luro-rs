@@ -26,11 +26,16 @@ toml = { version = "0.8", optional = true }
 twilight-model = { workspace = true }
 time = { version = "0.3", optional = true }
 tracing = { workspace = true }
+twilight-cache-inmemory = { workspace = true, optional = true } #framework
+
 
 # Default Features
 [features]
-default = ["sqlx-driver"]
+default = ["sqlx-driver", "cache"]
 
 ## Database Options
 toml-driver = ["dep:toml"]
 sqlx-driver = ["dep:sqlx", "dep:bincode", "time"]
+
+## Misc Features
+cache = ["dep:twilight-cache-inmemory"] # Only used for allowing cached items be converted to database items. If not needed, disable this feature
