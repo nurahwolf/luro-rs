@@ -1,14 +1,12 @@
 use std::fmt::Write;
 
 use async_trait::async_trait;
-use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait, Luro};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     http::attachment::Attachment,
     id::{marker::GenericMarker, Id},
 };
-
-
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "guild", desc = "Information about a guild")]

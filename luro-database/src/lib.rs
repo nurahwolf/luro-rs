@@ -1,13 +1,22 @@
+use std::collections::{BTreeMap, HashMap};
+
+use luro_model::user::{actions::UserActions, marriages::UserMarriages, member::LuroMember, character::CharacterProfile};
 use ::sqlx::types::Json;
 use time::OffsetDateTime;
-use twilight_model::{channel::{
-    message::{
-        sticker::MessageSticker, Component, Embed, MessageActivity, MessageApplication, MessageFlags, MessageInteraction,
-        MessageReference, MessageType, Reaction, RoleSubscriptionData, Mention,
+use twilight_model::{
+    channel::{
+        message::{
+            sticker::MessageSticker, Component, Embed, Mention, MessageActivity, MessageApplication, MessageFlags,
+            MessageInteraction, MessageReference, MessageType, Reaction, RoleSubscriptionData,
+        },
+        Attachment, Channel, ChannelMention, Message,
     },
-    Attachment, ChannelMention, Message, Channel,
-}, user::User, gateway::payload::incoming::MessageUpdate, guild::PartialMember};
+    gateway::payload::incoming::MessageUpdate,
+    guild::PartialMember,
+    user::{User, UserFlags, PremiumType}, util::ImageHash, id::{marker::{UserMarker, GuildMarker}, Id},
+};
 
+mod data; // Added functionality around the types defined in this crate
 #[cfg(feature = "sqlx-driver")]
 mod sqlx;
 #[cfg(feature = "toml-driver")]
@@ -52,8 +61,36 @@ pub enum LuroUserPermissions {
     Administrator,
 }
 pub struct DatabaseUser {
-    pub name: String,
+    // pub accent_color: Option<u32>,
+    // pub avatar: Option<Json<ImageHash>>,
+    // pub avatar_decoration: Option<Json<ImageHash>>,
+    // pub banner: Option<Json<ImageHash>>,
+    // pub bot: bool,
+    // pub discriminator: u16,
+    // pub global_name: Option<String>,
+    // pub email: Option<String>,
+    // pub flags: Option<Json<UserFlags>>,
     pub user_id: i64,
+    // pub locale: Option<String>,
+    // pub mfa_enabled: bool,
+    pub name: String,
+    // pub premium_type: Option<Json<PremiumType>>,
+    // pub public_flags: Option<Json<UserFlags>>,
+    // pub system: bool,
+    // pub verified: bool,
+    // pub wordcount: usize,
+    // pub averagesize: usize,
+    // pub wordsize: Json<BTreeMap<usize, usize>>,
+    // pub words: Json<BTreeMap<String, usize>>,
+    // pub warnings: Vec<(String, Id<UserMarker>)>,
+    // pub messages: Vec<i64>,
+    // pub moderation_actions: Json<Vec<UserActions>>,
+    // pub moderation_actions_performed: usize,
+    // pub message_edits: usize,
+    // pub marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
+    // pub guilds: HashMap<Id<GuildMarker>, LuroMember>,
+    // pub characters: BTreeMap<String, CharacterProfile>,
+    // pub character_prefix: BTreeMap<String, String>,
     pub user_permissions: LuroUserPermissions,
 }
 
@@ -112,5 +149,5 @@ pub struct DatabaseMessage {
     pub tts: Option<bool>,
     pub webhook_id: Option<i64>,
     pub message_updates: Option<Json<Vec<MessageUpdate>>>,
-    pub member: Option<Json<PartialMember>>
+    pub member: Option<Json<PartialMember>>,
 }

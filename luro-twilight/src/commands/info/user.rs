@@ -3,14 +3,14 @@ use std::fmt::Write;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use twilight_util::snowflake::Snowflake;
-use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait, Luro};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use luro_model::{response::LuroResponse, user::actions_type::UserActionType};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::{attachment::Attachment, interaction::InteractionResponseType},
     id::{marker::GenericMarker, Id},
 };
+use twilight_util::snowflake::Snowflake;
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "user", desc = "Information about a user")]

@@ -4,11 +4,7 @@
 use futures_util::StreamExt;
 use luro_framework::Framework;
 use luro_model::configuration::Configuration;
-use tracing_subscriber::{
-    fmt,
-    prelude::__tracing_subscriber_SubscriberExt,
-    Registry, reload::Layer,
-};
+use tracing_subscriber::{fmt, prelude::__tracing_subscriber_SubscriberExt, reload::Layer, Registry};
 use twilight_gateway::{error::ReceiveMessageErrorType, stream::ShardEventStream};
 
 // ===
@@ -30,7 +26,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Create the framework, Initialise tracing for logs based on bot name
     let (framework, mut shards) = Framework::new(&config).await?;
-    init_tracing_subscriber(config.filter, &framework.twilight_client.current_user().await?.model().await?.name);
+    init_tracing_subscriber(
+        config.filter,
+        &framework.twilight_client.current_user().await?.model().await?.name,
+    );
 
     // Work on our events
     while let Some((shard, event)) = ShardEventStream::new(shards.iter_mut()).next().await {

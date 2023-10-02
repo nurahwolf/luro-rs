@@ -6,7 +6,9 @@ use twilight_model::gateway::payload::incoming::MessageUpdate;
 pub async fn message_update_listener(ctx: Context, event: Box<MessageUpdate>) -> anyhow::Result<()> {
     debug!("Message Updated");
 
-    ctx.database.update_message(LuroMessageSourceV2::MessageUpdate(*event)).await?;
+    ctx.database
+        .update_message(LuroMessageSourceV2::MessageUpdate(*event))
+        .await?;
 
     Ok(())
 }

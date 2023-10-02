@@ -1,8 +1,7 @@
-
 use async_trait::async_trait;
+use luro_framework::command::ExecuteLuroCommand;
 use luro_framework::interactions::InteractionTrait;
 use luro_framework::{CommandInteraction, Luro};
-use luro_framework::command::ExecuteLuroCommand;
 use luro_model::message::LuroMessage;
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -30,12 +29,7 @@ impl ExecuteLuroCommand for Message {
         // Attempts to fetch in this order
         // User Data -> Client -> Cache
         let mut luro_message = match &self.user {
-            Some(user) => ctx
-                .get_user(&user.resolved.id)
-                .await?
-                .messages
-                .get(&message_id)
-                .cloned(),
+            Some(user) => ctx.get_user(&user.resolved.id).await?.messages.get(&message_id).cloned(),
             None => None,
         };
 
@@ -72,6 +66,6 @@ impl ExecuteLuroCommand for Message {
                 .colour(COLOUR_DANGER),
         };
 
-        ctx.respond( |r| r.add_embed(embed).ephemeral()).await
+        ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }
 }

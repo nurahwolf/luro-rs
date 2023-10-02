@@ -1,7 +1,11 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use tracing_subscriber::{filter::LevelFilter, Registry, reload::{Layer, Handle}};
+use tracing_subscriber::{
+    filter::LevelFilter,
+    reload::{Handle, Layer},
+    Registry,
+};
 use twilight_gateway::{Config, ConfigBuilder, Intents};
 use twilight_model::gateway::{
     payload::outgoing::update_presence::{UpdatePresenceError, UpdatePresencePayload},
@@ -31,10 +35,7 @@ pub struct Configuration {
 
 impl Configuration {
     /// Create a new configuration
-    pub fn new(
-        intents: Intents,
-        filter: LevelFilter,
-    ) -> anyhow::Result<Self> {
+    pub fn new(intents: Intents, filter: LevelFilter) -> anyhow::Result<Self> {
         #[cfg(feature = "dotenvy")]
         dotenvy::dotenv()?;
 
@@ -48,7 +49,8 @@ impl Configuration {
         let connection_string = std::env::var("DATABASE_URL").unwrap_or("".to_owned());
 
         #[cfg(feature = "lavalink")]
-        let lavalink_auth = std::env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?;
+        let lavalink_auth =
+            std::env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?;
         #[cfg(feature = "lavalink")]
         let lavalink_host = std::env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?;
 
@@ -65,7 +67,7 @@ impl Configuration {
             shard_config,
             connection_string,
             filter,
-            tracing_subscriber
+            tracing_subscriber,
         })
     }
 }

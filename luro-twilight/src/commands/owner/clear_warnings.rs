@@ -30,7 +30,7 @@ impl ExecuteLuroCommand for Warnings {
                     Some(index) => index,
                     None => {
                         return ctx
-                            .respond( |r| {
+                            .respond(|r| {
                                 r.content("This function automatically reduces the ID by 1. You just had the buffer underflow")
                                     .ephemeral()
                             })
@@ -39,7 +39,7 @@ impl ExecuteLuroCommand for Warnings {
                 },
                 Err(why) => {
                     return ctx
-                        .respond( |r| {
+                        .respond(|r| {
                             r.content(format!("Failed to convert `i64` to `usize`\n```{}```!", why))
                                 .ephemeral()
                         })
@@ -69,8 +69,6 @@ impl ExecuteLuroCommand for Warnings {
         }
 
         ctx.database.update_user(user_data).await?;
-        ctx
-            .respond( |r| r.content("Warnings removed!").ephemeral())
-            .await
+        ctx.respond(|r| r.content("Warnings removed!").ephemeral()).await
     }
 }

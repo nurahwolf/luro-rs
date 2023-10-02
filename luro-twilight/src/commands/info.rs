@@ -1,7 +1,9 @@
 use async_trait::async_trait;
-use luro_framework::{command::{ExecuteLuroCommand, CreateLuroCommand}, CommandInteraction};
+use luro_framework::{
+    command::{CreateLuroCommand, ExecuteLuroCommand},
+    CommandInteraction,
+};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-
 
 use self::{guild::Guild, punishments::Punishments, role::InfoRole, user::InfoUser};
 

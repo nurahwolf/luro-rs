@@ -5,9 +5,9 @@ use crate::LuroDatabase;
 
 mod guilds;
 mod interaction;
+mod messages;
 mod roles;
 mod users;
-mod messages;
 
 impl LuroDatabase {
     pub async fn new(config: &Configuration) -> Result<Self, Error> {

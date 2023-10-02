@@ -1,10 +1,37 @@
-CREATE TYPE user_permissions AS ENUM (
-    'USER', 'OWNER', 'ADMINISTRATOR'
-);
-
+CREATE TYPE user_permissions AS ENUM ('USER', 'OWNER', 'ADMINISTRATOR');
 CREATE TABLE IF NOT EXISTS users (
-    name                VARCHAR(64) NOT NULL,
-    user_id             INT8 NOT NULL,
-    user_permissions    user_permissions NOT NULL,
+    accent_colour INT,
+    avatar JSONB,
+    avatar_decoration JSONB,
+    banner JSONB,
+    bot BOOLEAN,
+    discriminator SMALLINT,
+    global_name TEXT,
+    email TEXT,
+    flags JSONB,
+    user_id BIGINT NOT NULL,
+    locale TEXT,
+    mfa_enabled BOOLEAN,
+    name TEXT NOT NULL,
+   premium_type JSONB,
+    public_flags JSONB,
+    system BOOLEAN,
+    verified BOOLEAN,
+    wordcount BIGINT,
+    averagesize BIGINT,
+    messages BIGINT[],
+    moderation_actions_performed BIGINT,
+    message_edits BIGINT,
+    moderation_actions: JSONB,
+
+    -- ordsize: Json<BTreeMap<usize, usize>>,
+    -- words: Json<BTreeMap<String, usize>>,
+    -- warnings: Vec<(String, Id<UserMarker>)>,
+    -- marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
+    -- guilds: HashMap<Id<GuildMarker>, LuroMember>,
+    -- characters: BTreeMap<String, CharacterProfile>,
+    -- character_prefix: BTreeMap<String, String>,
+
+    user_permissions user_permissions NOT NULL,
     PRIMARY KEY (user_id)
 );

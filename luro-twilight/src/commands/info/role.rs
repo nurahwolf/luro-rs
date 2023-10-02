@@ -1,13 +1,12 @@
 use std::fmt::Write;
 
 use async_trait::async_trait;
-use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait, Luro};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{
     marker::{GenericMarker, RoleMarker},
     Id,
 };
-
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "role", desc = "Information about a role")]

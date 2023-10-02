@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{CommandInteraction, command::ExecuteLuroCommand, responses::Response, interactions::InteractionTrait};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, responses::Response, CommandInteraction};
 use luro_model::builders::EmbedBuilder;
 use serde::Serialize;
 use std::fmt::Write;
@@ -45,7 +45,7 @@ impl ExecuteLuroCommand for ModifyRole {
             .twilight_client
             .guild(match ctx.guild_id {
                 Some(guild_id) => guild_id,
-                None => return ctx.response_simple(Response::NotGuild).await
+                None => return ctx.response_simple(Response::NotGuild).await,
             })
             .await?
             .model()

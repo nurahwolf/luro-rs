@@ -10,6 +10,8 @@ use twilight_model::{
 
 use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
 
+mod get_user;
+
 impl DatabaseUser {
     pub fn luro_user(&self) -> LuroUser {
         let mut luro_user = LuroUser::new(Id::new(self.user_id as u64));
@@ -24,16 +26,6 @@ impl DatabaseUser {
 }
 
 impl LuroDatabase {
-    pub async fn get_user(&self, id: i64) -> Result<Option<LuroUser>, Error> {
-        let query = sqlx::query_as!(
-            DatabaseUser,
-            r#"SELECT user_id, user_permissions as "user_permissions: LuroUserPermissions", name FROM users WHERE user_id = $1"#,
-            id
-        );
-
-        query.fetch_optional(&self.0).await.map(|x| x.map(|x| x.luro_user()))
-    }
-
     pub async fn get_users(&self) -> HashMap<Id<UserMarker>, LuroUser> {
         let mut users = HashMap::new();
         let query = sqlx::query_as!(

@@ -19,9 +19,7 @@ mod send_message;
 mod webhook;
 
 impl Framework {
-    pub async fn new(
-        config: &Configuration,
-    ) -> anyhow::Result<(Framework, Vec<Shard>)> {
+    pub async fn new(config: &Configuration) -> anyhow::Result<(Framework, Vec<Shard>)> {
         // Ensure data directory exists on disk
         ensure_data_directory_exists();
 

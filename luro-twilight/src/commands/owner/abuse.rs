@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, interactions::InteractionTrait, Luro};
+use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use luro_model::builders::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
@@ -54,8 +54,6 @@ impl ExecuteLuroCommand for Abuse {
             false => webhook_message.content(&self.message).await?,
         };
 
-        ctx
-            .respond(|response| response.add_embed(embed).ephemeral())
-            .await
+        ctx.respond(|response| response.add_embed(embed).ephemeral()).await
     }
 }

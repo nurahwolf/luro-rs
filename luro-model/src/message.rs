@@ -9,12 +9,13 @@ use twilight_model::{
         Attachment, Channel, ChannelMention, Message,
     },
     gateway::payload::incoming::{MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate},
+    guild::PartialMember,
     id::{
-        marker::{ApplicationMarker, ChannelMarker, GuildMarker, MessageMarker, RoleMarker, WebhookMarker, UserMarker},
+        marker::{ApplicationMarker, ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker, WebhookMarker},
         Id,
     },
     user::User,
-    util::Timestamp, guild::PartialMember,
+    util::Timestamp,
 };
 
 use crate::{builders::EmbedBuilder, PRIMARY_BOT_OWNER};
@@ -460,7 +461,12 @@ impl From<MessageCreate> for LuroMessage {
 
 impl From<CachedMessage> for LuroMessage {
     fn from(message: CachedMessage) -> Self {
-        let mut luro = Self::new(message.id(), default_user(message.author()), message.channel_id(), message.timestamp());
+        let mut luro = Self::new(
+            message.id(),
+            default_user(message.author()),
+            message.channel_id(),
+            message.timestamp(),
+        );
         luro.from_cached_message(message);
         luro
     }

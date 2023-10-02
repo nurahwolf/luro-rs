@@ -3,13 +3,13 @@ use tracing::error;
 use twilight_gateway::Event;
 
 mod interaction_create;
+mod message_create;
+mod message_delete;
+mod message_delete_bulk;
+mod message_update;
 mod ready;
 mod role_update;
 mod user_update;
-mod message_create;
-mod message_delete;
-mod message_update;
-mod message_delete_bulk;
 
 pub async fn event_handler(ctx: Context) -> anyhow::Result<()> {
     let callback = match ctx.event.clone() {
