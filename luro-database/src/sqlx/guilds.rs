@@ -12,6 +12,11 @@ impl DatabaseGuild {
     }
 }
 
+mod update_guild;
+mod handle_guild_update;
+mod handle_luro_guild;
+mod handle_guild;
+
 impl LuroDatabase {
     pub async fn get_all_guilds(&self) -> HashMap<Id<GuildMarker>, LuroGuild> {
         let mut guilds = HashMap::new();
@@ -28,18 +33,6 @@ impl LuroDatabase {
         }
 
         guilds
-    }
-
-    pub async fn update_guild(&self, guild: impl Into<LuroGuild>) -> Result<LuroGuild, sqlx::Error> {
-        let guild = guild.into();
-        let query = sqlx::query_as!(
-            DatabaseGuild,
-            "INSERT INTO guilds (guild_id, owner_id) VALUES ($1, $2) ON CONFLICT (guild_id) DO UPDATE SET owner_id = $2 RETURNING guild_id, owner_id",
-            guild.guild_id.get() as i64,
-            guild.owner_id.get() as i64
-        );
-
-        query.fetch_one(&self.0).await.map(|x| x.luro_guild())
     }
 
     pub async fn get_guild(&self, id: i64) -> Result<Option<LuroGuild>, sqlx::Error> {

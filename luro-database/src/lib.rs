@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 
-use luro_model::user::{actions::UserActions, marriages::UserMarriages, member::LuroMember, character::CharacterProfile};
+use luro_model::{user::{actions::UserActions, marriages::UserMarriages, member::LuroMember, character::CharacterProfile}, guild::LuroGuild};
 use ::sqlx::types::Json;
 use time::OffsetDateTime;
 use twilight_model::{
@@ -11,8 +11,8 @@ use twilight_model::{
         },
         Attachment, Channel, ChannelMention, Message,
     },
-    gateway::payload::incoming::MessageUpdate,
-    guild::PartialMember,
+    gateway::payload::incoming::{MessageUpdate, GuildUpdate},
+    guild::{PartialMember, Guild},
     user::{User, UserFlags, PremiumType}, util::ImageHash, id::{marker::{UserMarker, GuildMarker}, Id},
 };
 
@@ -150,4 +150,10 @@ pub struct DatabaseMessage {
     pub webhook_id: Option<i64>,
     pub message_updates: Option<Json<Vec<MessageUpdate>>>,
     pub member: Option<Json<PartialMember>>,
+}
+
+pub enum DatabaseGuildType {
+    Guild(Guild),
+    GuildUpdate(Box<GuildUpdate>),
+    LuroGuild(LuroGuild)
 }

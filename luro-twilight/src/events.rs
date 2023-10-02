@@ -10,6 +10,7 @@ mod message_update;
 mod ready;
 mod role_update;
 mod user_update;
+mod guild_update;
 
 pub async fn event_handler(ctx: Context) -> anyhow::Result<()> {
     let callback = match ctx.event.clone() {
@@ -21,6 +22,7 @@ pub async fn event_handler(ctx: Context) -> anyhow::Result<()> {
         Event::MessageDelete(event) => message_delete::message_delete_listener(ctx, event).await,
         Event::MessageDeleteBulk(event) => message_delete_bulk::message_delete_bulk_listener(ctx, event).await,
         Event::MessageUpdate(event) => message_update::message_update_listener(ctx, event).await,
+        Event::GuildUpdate(event) => guild_update::guild_update_listener(ctx, event).await,
         _ => Ok(()),
     };
 
