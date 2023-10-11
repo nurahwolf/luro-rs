@@ -1,0 +1,24 @@
+ALTER TABLE
+    roles
+ADD COLUMN
+    colour INT NOT NULL, 
+ADD COLUMN
+    flags JSONB NOT NULL,
+ADD COLUMN
+    hoist BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN
+    icon JSONB,
+ADD COLUMN
+    managed BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN
+    mentionable BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN
+    name TEXT NOT NULL,
+ADD COLUMN
+    permissions JSONB NOT NULL,
+ADD COLUMN
+    position BIGINT NOT NULL,
+ADD COLUMN
+    tags JSONB,
+ADD COLUMN
+    unicode_emoji TEXT;

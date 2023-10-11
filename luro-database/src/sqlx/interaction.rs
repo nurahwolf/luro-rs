@@ -43,6 +43,18 @@ impl TryInto<Interaction> for DatabaseInteraction {
 }
 
 impl LuroDatabase {
+        pub async fn count_interactions(&self) -> Result<i64, sqlx::Error> {
+            let query = sqlx::query!("
+            SELECT 
+                COUNT(*) as count
+            FROM 
+                interactions
+            ").fetch_all(&self.0).await?;
+    
+            let result = query.into_iter().map(|x|x.count.unwrap_or_default()).collect::<Vec<_>>();
+            Ok(result.first().copied().unwrap_or_default())
+        }
+
     /// Fetches an interaction by interaction_id
     pub async fn get_interaction(&self, id: i64) -> Result<Option<DatabaseInteraction>, sqlx::Error> {
         let query = sqlx::query_as!(

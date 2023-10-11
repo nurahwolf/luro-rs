@@ -8,13 +8,14 @@ use twilight_model::{
     user::User,
 };
 
-use crate::{DatabaseUser, DatabaseUserType, LuroDatabase, LuroUserPermissions};
+use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
 
 mod get_user;
 mod handle_luro_user;
 mod handle_user_update;
 mod handle_user;
 mod update_user;
+mod count_users;
 
 impl DatabaseUser {
     pub fn luro_user(&self) -> LuroUser {

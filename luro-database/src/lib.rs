@@ -11,8 +11,8 @@ use twilight_model::{
         Attachment, Channel, ChannelMention, Message,
     },
     gateway::payload::incoming::{MessageUpdate, GuildUpdate, UserUpdate, MessageDelete, MessageCreate, MessageDeleteBulk},
-    guild::{PartialMember, Guild},
-    user::User,
+    guild::{PartialMember, Guild, RoleTags},
+    user::User, util::ImageHash,
 };
 
 mod data; // Added functionality around the types defined in this crate
@@ -48,7 +48,19 @@ pub struct DatabaseInteraction {
 }
 
 pub struct DatabaseRole {
+    pub colour: i32,
+    pub deleted: bool,
+    pub hoist: bool,
+    pub icon: Option<Json<ImageHash>>,
     pub role_id: i64,
+    pub managed: bool,
+    pub mentionable: bool,
+    pub name: String,
+    pub permissions: i64,
+    pub position: i64,
+    pub flags: i64,
+    pub tags: Option<Json<RoleTags>>,
+    pub unicode_emoji: Option<String>,
 }
 
 #[cfg(feature = "sqlx-driver")]

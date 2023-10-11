@@ -38,12 +38,14 @@ default = [
     "http-client-hyper",
     # "lavalink",
     "responses",
-    "random-responses" # Disable this feature to get a fixed response
+    "random-responses", # Disable this feature to get a fixed response,
 ]
 
 ## Database Features
 toml-driver = []
 sqlx-driver = []
+
+
 
 ## Misc
 cache-memory = ["dep:twilight-cache-inmemory"]

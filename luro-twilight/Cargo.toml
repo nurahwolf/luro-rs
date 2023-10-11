@@ -51,9 +51,12 @@ twilight-interactions.path = "../twilight-interactions" # commands
 async-trait = "0.1.73"
 dotenvy = "0.15.7"
 
+# Optional Features
+tabled = { version = "0.14", optional = true }
+
 [features]
 # Main Features
-default = ["commands"]
+default = ["commands", "pretty-tables"]
 commands = [
     "command-about",
     "command-base64",
@@ -72,6 +75,8 @@ commands = [
     "command-info",
 ]
 
+## Luro Features
+pretty-tables = ["dep:tabled"] # As the name implies, enable pretty table output!
 
 # Commands
 command-about = ["dep:git2", "dep:memory-stats"]

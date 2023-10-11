@@ -1,0 +1,6 @@
+ALTER TABLE
+    roles
+DROP COLUMN
+    flags,
+ADD COLUMN
+    flags BIGINT NOT NULL DEFAULT 0;

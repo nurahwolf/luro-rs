@@ -15,6 +15,7 @@ mod handle_message_delete;
 mod handle_message_delete_bulk;
 mod handle_message_update;
 mod update_message;
+mod count_messages;
 mod handle_message;
 #[cfg(feature = "cache")]
 mod handle_cached_message;

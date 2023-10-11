@@ -35,6 +35,8 @@ pub struct LuroRole {
     #[serde(default)]
     pub colour: u32,
     #[serde(default)]
+    pub deleted: bool,
+    #[serde(default)]
     pub hoist: bool,
     /// Icon image hash.
     ///
@@ -98,6 +100,7 @@ impl Default for LuroRole {
     fn default() -> Self {
         Self {
             colour: Default::default(),
+            deleted: Default::default(),
             hoist: Default::default(),
             icon: Default::default(),
             id: Id::new(0),
@@ -117,6 +120,7 @@ impl From<Role> for LuroRole {
     fn from(role: Role) -> Self {
         Self {
             colour: role.color,
+            deleted: false,
             hoist: role.hoist,
             icon: role.icon,
             id: role.id,
