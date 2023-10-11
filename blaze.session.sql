@@ -1,4 +1,6 @@
-SELECT 
-    COUNT(*)
-FROM 
-    messages
+-- SELECT 
+--     COUNT(*)
+-- FROM 
+--     messages
+
+DROP TABLE roles;
