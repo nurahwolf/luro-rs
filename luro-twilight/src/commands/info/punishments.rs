@@ -1,6 +1,5 @@
 use std::fmt::Write;
 
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
@@ -11,9 +10,8 @@ pub struct Punishments {
     user: ResolvedUser,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Punishments {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let punished_user = ctx.get_user(&self.user.resolved.id).await?;
         let mut warnings = String::new();
 

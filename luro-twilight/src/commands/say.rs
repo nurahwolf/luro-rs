@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{
     command::{CreateLuroCommand, ExecuteLuroCommand},
     CommandInteraction,
@@ -16,9 +15,8 @@ pub struct Say {
 
 impl CreateLuroCommand for Say {}
 
-#[async_trait]
 impl ExecuteLuroCommand for Say {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let content = if let Some(ref user) = self.user {
             format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
         } else {

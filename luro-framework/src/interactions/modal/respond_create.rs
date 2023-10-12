@@ -4,7 +4,7 @@ use twilight_model::channel::Message;
 
 use crate::ModalInteraction;
 
-impl<T> ModalInteraction<T> {
+impl ModalInteraction {
     /// Create a response. This is used for sending a response to an interaction, as well as to defer interactions.
     /// This CANNOT be used to update a response! Use `response_update` for that!
     pub async fn response_create(&self, response: &LuroResponse) -> anyhow::Result<Option<Message>> {

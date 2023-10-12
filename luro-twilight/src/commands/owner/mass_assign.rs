@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::SelectMenuType;
@@ -8,9 +7,8 @@ use twilight_model::channel::message::component::SelectMenuType;
 /// The name is slightly annoying on this one, its for the /owner commands subcommand, which is used for registering or deregistering commands globally.
 pub struct MassAssign {}
 
-#[async_trait]
 impl ExecuteLuroCommand for MassAssign {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         ctx.respond(|response| {
             {
                 response

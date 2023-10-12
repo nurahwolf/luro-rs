@@ -3,12 +3,12 @@ use sqlx::{postgres::PgPoolOptions, Error};
 
 use crate::LuroDatabase;
 
+mod channels;
 mod guilds;
-mod interaction;
+mod interactions;
 mod messages;
 mod roles;
 mod users;
-mod channels;
 
 impl LuroDatabase {
     pub async fn new(config: &Configuration) -> Result<Self, Error> {

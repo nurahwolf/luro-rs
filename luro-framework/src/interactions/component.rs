@@ -1,12 +1,13 @@
+use anyhow::{anyhow, Context};
 use luro_database::LuroDatabase;
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
 use twilight_model::{
-    application::interaction::message_component::MessageComponentInteractionData,
-    gateway::payload::incoming::InteractionCreate, user::User,
+    application::interaction::{Interaction, InteractionData},
+    user::User,
 };
 
-use crate::{ComponentInteraction, Context, Luro};
+use crate::{ComponentInteraction, Context as LuroContext, Luro};
 
 use super::InteractionTrait;
 
@@ -19,7 +20,7 @@ mod respond_create;
 mod response_simple;
 mod response_update;
 
-impl<T> Luro for ComponentInteraction<T> {
+impl Luro for ComponentInteraction {
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
         Ok(self.twilight_client.interaction(self.application_id))
     }
@@ -33,7 +34,7 @@ impl<T> Luro for ComponentInteraction<T> {
     }
 }
 
-impl<T> InteractionTrait for ComponentInteraction<T> {
+impl InteractionTrait for ComponentInteraction {
     fn command_name(&self) -> &str {
         &self.data.custom_id
     }
@@ -74,15 +75,21 @@ impl<T> InteractionTrait for ComponentInteraction<T> {
     }
 }
 
-impl<T> ComponentInteraction<T> {
-    pub fn new(
-        ctx: Context,
-        interaction: Box<InteractionCreate>,
-        data: Box<MessageComponentInteractionData>,
-        command: T,
-    ) -> Self {
-        ComponentInteraction {
-            command,
+impl ComponentInteraction {
+    pub fn new(ctx: LuroContext, interaction: Interaction) -> anyhow::Result<Self> {
+        let data =
+            match interaction.data.clone().context(
+                "Attempting to create an 'ComponentInteraction' from an interaction that does not have any command data",
+            )? {
+                InteractionData::MessageComponent(data) => data,
+                _ => {
+                    return Err(anyhow!(
+                        "Incorrect command data, meant to get MessageComponent but actually got {:#?}",
+                        interaction
+                    ))
+                }
+            };
+        Ok(ComponentInteraction {
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,
             cache: ctx.cache,
@@ -102,12 +109,12 @@ impl<T> ComponentInteraction<T> {
             locale: interaction.locale.clone(),
             member: interaction.member.clone(),
             message: interaction.message.clone().unwrap(),
-            original: interaction.0.clone(),
+            original: interaction.clone(),
             shard: ctx.shard,
             token: interaction.token.clone(),
             tracing_subscriber: ctx.tracing_subscriber,
             twilight_client: ctx.twilight_client,
             user: interaction.user.clone(),
-        }
+        })
     }
 }

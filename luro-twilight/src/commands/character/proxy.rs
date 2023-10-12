@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -13,10 +12,9 @@ pub struct Proxy {
     /// Set to true to remove the prefix
     remove: Option<bool>,
 }
-#[async_trait::async_trait]
-#[async_trait]
+
 impl ExecuteLuroCommand for Proxy {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
         let mut user_data = ctx.get_user(&user_id).await?;
         if user_data.characters.is_empty() {

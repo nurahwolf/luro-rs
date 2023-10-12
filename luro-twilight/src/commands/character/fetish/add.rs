@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::interactions::InteractionTrait;
 use luro_framework::CommandInteraction;
 use luro_framework::{command::ExecuteLuroCommand, Luro};
@@ -18,9 +17,8 @@ pub struct Add {
     description: String,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Add {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let user_id = ctx.author_id();
         let mut user_data = ctx.get_user(&user_id).await?;

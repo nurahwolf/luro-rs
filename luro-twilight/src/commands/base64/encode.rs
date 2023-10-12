@@ -20,7 +20,7 @@ pub struct Encode {
 
 #[async_trait]
 impl ExecuteLuroCommand for Encode {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(&self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let response = super::encode_response(ctx.accent_colour().await, &super::encode(&self.string)).await?;
         ctx.response_create(&response).await?;
         Ok(())

@@ -12,11 +12,11 @@ impl DatabaseGuild {
     }
 }
 
-mod update_guild;
+mod count_guilds;
+mod handle_guild;
 mod handle_guild_update;
 mod handle_luro_guild;
-mod handle_guild;
-mod count_guilds;
+mod update_guild;
 
 impl LuroDatabase {
     pub async fn get_all_guilds(&self) -> HashMap<Id<GuildMarker>, LuroGuild> {

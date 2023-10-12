@@ -1,6 +1,9 @@
 use luro_model::role::LuroRole;
 use sqlx::types::Json;
-use twilight_model::{guild::{Role, Permissions, RoleFlags}, id::Id};
+use twilight_model::{
+    guild::{Permissions, Role, RoleFlags},
+    id::Id,
+};
 
 use crate::DatabaseRole;
 

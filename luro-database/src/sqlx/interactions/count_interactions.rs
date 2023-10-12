@@ -1,11 +1,13 @@
-impl crate::LuroDatabase {
-    pub async fn count_users(&self) -> Result<i64, sqlx::Error> {
+use crate::LuroDatabase;
+
+impl LuroDatabase {
+    pub async fn count_interactions(&self) -> Result<i64, sqlx::Error> {
         let query = sqlx::query!(
             "
         SELECT 
             COUNT(*) as count
         FROM 
-            users
+            interactions
         "
         )
         .fetch_all(&self.0)

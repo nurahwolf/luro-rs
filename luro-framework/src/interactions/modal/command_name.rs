@@ -1,6 +1,6 @@
 use crate::ModalInteraction;
 
-impl<T> ModalInteraction<T> {
+impl ModalInteraction {
     pub fn command_name(&self) -> &str {
         &self.data.custom_id
     }

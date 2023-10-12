@@ -2,7 +2,7 @@ use twilight_model::user::User;
 
 use crate::ComponentInteraction;
 
-impl<T> ComponentInteraction<T> {
+impl ComponentInteraction {
     /// The user that invoked the interaction.
     ///
     /// This will first check for the [`member`]'s

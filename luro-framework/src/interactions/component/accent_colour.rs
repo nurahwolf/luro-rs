@@ -3,7 +3,7 @@ use tracing::warn;
 
 use crate::{ComponentInteraction, Luro};
 
-impl<T> ComponentInteraction<T> {
+impl ComponentInteraction {
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     pub async fn accent_colour(&self) -> u32 {
         match self.guild_id {

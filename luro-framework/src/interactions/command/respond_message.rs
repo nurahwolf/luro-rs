@@ -3,7 +3,7 @@ use twilight_model::{channel::Message, http::interaction::InteractionResponseTyp
 
 use crate::CommandInteraction;
 
-impl<T> CommandInteraction<T> {
+impl CommandInteraction {
     /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
     /// This method returns an optional message, if the message was updated

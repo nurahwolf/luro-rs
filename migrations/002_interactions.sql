@@ -1,9 +1,17 @@
+CREATE TYPE interaction_kind AS ENUM ('PING', 'APPLICATION_COMMAND', 'MESSAGE_COMPONENT', 'APPLICATION_COMMAND_AUTOCOMPLETE', 'MODAL_SUBMIT', 'UNKNOWN');
+
 CREATE TABLE IF NOT EXISTS interactions (
-    application_id      INT8 NOT NULL,
-    interaction_id      INT8 NOT NULL,
-    message_id          INT8,
-    kind                BYTEA NOT NULL,
-    token               VARCHAR(64) NOT NULL,
-    data                BYTEA NOT NULL,
-    PRIMARY KEY (interaction_id)
+    app_permissions     BIGINT NOT NULL,
+    application_id      BIGINT NOT NULL,
+    channel_id          BIGINT NOT NULL,
+    data                JSONB,
+    guild_id            BIGINT,
+    guild_locale        TEXT,
+    interaction_id      BIGINT NOT NULL PRIMARY KEY,
+    kind                interaction_kind NOT NULL,
+    locale              TEXT,
+    member_id           BIGINT,
+    message_id          BIGINT,
+    token               TEXT NOT NULL,
+    user_id             BIGINT
 );

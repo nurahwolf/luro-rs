@@ -2,7 +2,6 @@ use std::fmt::Write;
 
 use std::time::Duration;
 
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use luro_model::{response::LuroResponse, user::actions_type::UserActionType};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -24,9 +23,9 @@ pub struct InfoUser {
     /// Set this if you want a copy of your data.
     gdpr_export: Option<bool>,
 }
-#[async_trait]
+
 impl ExecuteLuroCommand for InfoUser {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let response_type = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(self.gdpr_export.unwrap_or_default()).await?;
         // The user we are interested in is the interaction author, unless a user was specified

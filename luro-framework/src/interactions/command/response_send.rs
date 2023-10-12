@@ -3,7 +3,7 @@ use twilight_model::channel::Message;
 
 use crate::CommandInteraction;
 
-impl<T> CommandInteraction<T> {
+impl CommandInteraction {
     /// Send an existing response builder a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
     pub async fn response_send(&self, response: LuroResponse) -> anyhow::Result<Option<Message>> {

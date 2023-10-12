@@ -10,12 +10,12 @@ use twilight_model::{
 
 use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
 
+mod count_users;
 mod get_user;
 mod handle_luro_user;
-mod handle_user_update;
 mod handle_user;
+mod handle_user_update;
 mod update_user;
-mod count_users;
 
 impl DatabaseUser {
     pub fn luro_user(&self) -> LuroUser {
@@ -66,7 +66,8 @@ impl LuroDatabase {
                 user_permissions = 'OWNER' 
                     or
                 user_permissions = 'ADMINISTRATOR'",
-        ).fetch(&self.0);
+        )
+        .fetch(&self.0);
 
         while let Ok(Some(user)) = query.try_next().await {
             users.insert(Id::new(user.user_id as u64), user.luro_user());
@@ -74,8 +75,6 @@ impl LuroDatabase {
 
         users
     }
-
-
 
     pub async fn register_staff(&self, user: User) -> Result<LuroUser, Error> {
         let query = sqlx::query_as!(
@@ -98,7 +97,7 @@ impl LuroDatabase {
                 user_id,
                 user_permissions as \"user_permissions: LuroUserPermissions\",
                 name",
-            user.accent_color.map(|x|x as i32),
+            user.accent_color.map(|x| x as i32),
             user.id.get() as i64,
             LuroUserPermissions::Administrator as _,
             user.name
@@ -128,7 +127,7 @@ impl LuroDatabase {
                 user_id,
                 user_permissions as \"user_permissions: LuroUserPermissions\",
                 name",
-            user.accent_color.map(|x|x as i32),
+            user.accent_color.map(|x| x as i32),
             user.id.get() as i64,
             LuroUserPermissions::Owner as _,
             user.name

@@ -1,6 +1,6 @@
 use crate::CommandInteraction;
 
-impl<T> CommandInteraction<T> {
+impl CommandInteraction {
     // fn command_name(&self) -> &str {
     //     match self.data {
     //         Some(ref data) => match data {

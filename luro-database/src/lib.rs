@@ -1,8 +1,8 @@
-
-use luro_model::{user::LuroUser, guild::LuroGuild, message::LuroMessage};
 use ::sqlx::types::Json;
+use luro_model::{guild::LuroGuild, message::LuroMessage, user::LuroUser};
 use time::OffsetDateTime;
 use twilight_model::{
+    application::interaction::InteractionData,
     channel::{
         message::{
             sticker::MessageSticker, Component, Embed, Mention, MessageActivity, MessageApplication, MessageFlags,
@@ -10,9 +10,10 @@ use twilight_model::{
         },
         Attachment, Channel, ChannelMention, Message,
     },
-    gateway::payload::incoming::{MessageUpdate, GuildUpdate, UserUpdate, MessageDelete, MessageCreate, MessageDeleteBulk},
-    guild::{PartialMember, Guild, RoleTags},
-    user::User, util::ImageHash,
+    gateway::payload::incoming::{GuildUpdate, MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate, UserUpdate},
+    guild::{Guild, PartialMember, RoleTags},
+    user::User,
+    util::ImageHash,
 };
 
 mod data; // Added functionality around the types defined in this crate
@@ -39,12 +40,19 @@ pub struct DatabaseGuild {
 }
 
 pub struct DatabaseInteraction {
+    pub app_permissions: Option<i64>,
     pub application_id: i64,
+    pub channel_id: Option<i64>,
+    pub data: Option<Json<InteractionData>>,
+    pub guild_id: Option<i64>,
+    pub guild_locale: Option<String>,
     pub interaction_id: i64,
+    pub kind: DatabaseInteractionKind,
+    pub locale: Option<String>,
+    pub member_id: Option<i64>,
     pub message_id: Option<i64>,
-    pub data: Vec<u8>,
-    pub kind: Vec<u8>,
     pub token: String,
+    pub user_id: Option<i64>,
 }
 
 pub struct DatabaseRole {
@@ -167,13 +175,13 @@ pub enum DatabaseMessageSource {
 pub enum DatabaseGuildType {
     Guild(Guild),
     GuildUpdate(Box<GuildUpdate>),
-    LuroGuild(LuroGuild)
+    LuroGuild(LuroGuild),
 }
 
 pub enum DatabaseUserType {
     User(User),
     UserUpdate(UserUpdate),
-    LuroUser(LuroUser)
+    LuroUser(LuroUser),
 }
 
 pub enum DatabaseMessageType {
@@ -192,4 +200,16 @@ pub enum DatabaseMessageType {
     MessageDeleteBulk(MessageDeleteBulk),
     /// Created from a message create event
     MessageCreate(MessageCreate),
+}
+
+#[cfg(feature = "sqlx-driver")]
+#[derive(Debug, ::sqlx::Type)]
+#[sqlx(type_name = "interaction_kind", rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DatabaseInteractionKind {
+    ApplicationCommand,
+    ApplicationCommandAutocomplete,
+    MessageComponent,
+    ModalSubmit,
+    Ping,
+    Unknown,
 }

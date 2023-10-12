@@ -3,7 +3,7 @@ use twilight_interactions::command::ResolvedUser;
 
 use crate::{CommandInteraction, Luro};
 
-impl<T> CommandInteraction<T> {
+impl CommandInteraction {
     /// Get a specified user, else fall back to the interaction author
 
     pub async fn get_specified_user_or_author(&self, specified_user: Option<&ResolvedUser>) -> anyhow::Result<LuroUser> {

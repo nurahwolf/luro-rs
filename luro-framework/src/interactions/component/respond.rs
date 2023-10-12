@@ -3,7 +3,7 @@ use twilight_model::http::interaction::InteractionResponseType;
 
 use crate::ComponentInteraction;
 
-impl<T> ComponentInteraction<T> {
+impl ComponentInteraction {
     /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
     pub async fn respond<F>(&self, response: F) -> anyhow::Result<()>

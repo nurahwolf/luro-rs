@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use luro_model::builders::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -14,9 +13,8 @@ pub struct Abuse {
     embed: Option<bool>,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Abuse {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let webhook = ctx.get_webhook(ctx.channel.id).await?;
         let webhook_token = match webhook.token {
             Some(token) => token,

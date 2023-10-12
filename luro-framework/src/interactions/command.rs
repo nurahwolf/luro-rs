@@ -1,19 +1,18 @@
+use anyhow::{anyhow, Context};
 use luro_database::LuroDatabase;
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
 use twilight_model::{
-    application::interaction::{application_command::CommandData, Interaction},
-    gateway::payload::incoming::InteractionCreate,
+    application::interaction::{Interaction, InteractionData},
     user::User,
 };
 
-use crate::{CommandInteraction, Context, Luro};
+use crate::{CommandInteraction, Context as LuroContext, Luro};
 
 use super::InteractionTrait;
 
 mod acknowledge_interaction;
 mod author;
-mod command_data;
 mod command_name;
 mod get_interaction_author;
 mod get_specific_user_or_author;
@@ -28,7 +27,7 @@ mod send_log_channel;
 mod send_message;
 mod webhook;
 
-impl<T> Luro for CommandInteraction<T> {
+impl Luro for CommandInteraction {
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
         Ok(self.twilight_client.interaction(self.application_id))
     }
@@ -42,7 +41,7 @@ impl<T> Luro for CommandInteraction<T> {
     }
 }
 
-impl<T> InteractionTrait for CommandInteraction<T> {
+impl InteractionTrait for CommandInteraction {
     fn command_name(&self) -> &str {
         &self.data.name
     }
@@ -83,10 +82,21 @@ impl<T> InteractionTrait for CommandInteraction<T> {
     }
 }
 
-impl<T> CommandInteraction<T> {
-    pub fn new(ctx: Context, interaction: Box<InteractionCreate>, data: Box<CommandData>, command: T) -> Self {
-        CommandInteraction {
-            command,
+impl CommandInteraction {
+    pub fn new(ctx: LuroContext, interaction: Interaction) -> anyhow::Result<Self> {
+        let data =
+            match interaction.data.clone().context(
+                "Attempting to create an 'CommandInteraction' from an interaction that does not have any command data",
+            )? {
+                InteractionData::ApplicationCommand(data) => data,
+                _ => {
+                    return Err(anyhow!(
+                        "Incorrect command data, meant to get ApplicationCommand but actually got {:#?}",
+                        interaction
+                    ))
+                }
+            };
+        Ok(CommandInteraction {
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,
             cache: ctx.cache,
@@ -106,18 +116,18 @@ impl<T> CommandInteraction<T> {
             locale: interaction.locale.clone(),
             member: interaction.member.clone(),
             message: interaction.message.clone(),
-            original: interaction.0.clone(),
+            original: interaction.clone(),
             shard: ctx.shard,
             token: interaction.token.clone(),
             tracing_subscriber: ctx.tracing_subscriber,
             twilight_client: ctx.twilight_client,
             user: interaction.user.clone(),
-        }
+        })
     }
 }
 
-impl<T> From<CommandInteraction<T>> for Interaction {
-    fn from(val: CommandInteraction<T>) -> Self {
-        val.original
-    }
-}
+// impl From<CommandInteraction> for Interaction {
+//     fn from(val: CommandInteraction) -> Self {
+//         val.original
+//     }
+// }

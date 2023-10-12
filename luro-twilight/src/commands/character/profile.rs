@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -17,10 +16,9 @@ pub struct Profile {
     /// Fetch the character name from someone else.
     user: Option<Id<UserMarker>>,
 }
-#[async_trait::async_trait]
-#[async_trait]
+
 impl ExecuteLuroCommand for Profile {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = match self.user {
             Some(user) => user,
             None => ctx.author_id(),

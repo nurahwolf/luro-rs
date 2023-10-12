@@ -1,6 +1,5 @@
 use std::fmt::Write;
 
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -17,9 +16,8 @@ pub struct Guild {
     gdpr_export: Option<bool>,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Guild {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut luro_guild = String::new();
         let mut guild_description = String::new();
         let guild_id = match self.guild {

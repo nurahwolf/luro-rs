@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, responses::Response, CommandInteraction};
 use luro_model::builders::EmbedBuilder;
 use serde::Serialize;
@@ -35,9 +34,8 @@ struct Position {
     position: i64,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for ModifyRole {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let (mut role_selected, mut role_position) = (None, None);
 
         // Guild to modify

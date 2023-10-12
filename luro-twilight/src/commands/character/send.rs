@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::command::ExecuteLuroCommand;
 use luro_framework::interactions::InteractionTrait;
 use luro_framework::CommandInteraction;
@@ -20,7 +19,7 @@ pub struct CharacterSendAutocomplete {
 }
 
 impl CharacterSendAutocomplete {
-    pub async fn interaction_command(self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    pub async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
         let user_data = ctx.get_user(&user_id).await?;
         let choices = match self.name {
@@ -66,9 +65,8 @@ pub struct CharacterSend {
     message: String,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for CharacterSend {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
 
         let user_data = ctx.get_user(&user_id).await?;

@@ -4,7 +4,7 @@ use twilight_model::channel::Message;
 
 use crate::{CommandInteraction, Luro};
 
-impl<T> CommandInteraction<T> {
+impl CommandInteraction {
     /// Attempts to send to a log channel if it is present.
     /// Returns a message if a message was sent
     pub async fn send_log_channel<F: FnOnce(&mut LuroResponse) -> &mut LuroResponse>(

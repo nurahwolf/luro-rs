@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -13,10 +12,9 @@ pub struct Icon {
     /// The URL a NSFW icon
     nsfw_icon: Option<String>,
 }
-#[async_trait::async_trait]
-#[async_trait]
+
 impl ExecuteLuroCommand for Icon {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
 
         let mut user_data = ctx.get_user(&user_id).await?;

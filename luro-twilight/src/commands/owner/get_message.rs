@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::command::ExecuteLuroCommand;
 use luro_framework::interactions::InteractionTrait;
 use luro_framework::{CommandInteraction, Luro};
@@ -19,9 +18,8 @@ pub struct Message {
     channel_id: Option<Id<ChannelMarker>>,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Message {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let message_id = Id::new(self.message_id.parse()?);
         let channel_id = self.channel_id.unwrap_or(ctx.clone().channel.id);
         let mut embed = ctx.default_embed().await;

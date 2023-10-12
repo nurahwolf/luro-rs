@@ -1,6 +1,6 @@
 use luro_framework::{Context, Luro};
 use tracing::info;
-use twilight_model::gateway::payload::incoming::{RoleUpdate, RoleDelete, RoleCreate};
+use twilight_model::gateway::payload::incoming::{RoleCreate, RoleDelete, RoleUpdate};
 
 pub async fn role_update_listener(ctx: Context, event: RoleUpdate) -> anyhow::Result<()> {
     info!("Role {} updated in guild {}", event.role.id, event.guild_id);

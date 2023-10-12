@@ -7,7 +7,7 @@ use twilight_model::{
 
 use crate::CommandInteraction;
 
-impl<T> CommandInteraction<T> {
+impl CommandInteraction {
     /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
     pub async fn send_message<F>(&self, channel: &Id<ChannelMarker>, response: F) -> Result<Response<Message>, Error>

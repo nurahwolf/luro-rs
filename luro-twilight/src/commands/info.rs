@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{
     command::{CreateLuroCommand, ExecuteLuroCommand},
     CommandInteraction,
@@ -27,9 +26,8 @@ pub enum Info {
 
 impl CreateLuroCommand for Info {}
 
-#[async_trait]
 impl ExecuteLuroCommand for Info {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
             Self::Guild(command) => command.interaction_command(ctx).await,
             Self::Punishments(command) => command.interaction_command(ctx).await,

@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
 use luro_framework::responses::Response;
 use luro_framework::{CommandInteraction, ComponentInteraction, Luro, ModalInteraction};
@@ -57,9 +56,8 @@ pub enum Owner {
 
 impl CreateLuroCommand for Owner {}
 
-#[async_trait]
 impl ExecuteLuroCommand for Owner {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let interaction_author = ctx.author();
         let staff = ctx.database.get_staff().await;
 
@@ -105,7 +103,7 @@ impl ExecuteLuroCommand for Owner {
         }
     }
 
-    async fn interaction_modal(&self, ctx: ModalInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<()> {
         let mut message_id = None;
         let mut channel_id = None;
 
@@ -152,7 +150,7 @@ impl ExecuteLuroCommand for Owner {
         ctx.respond(|r| r.content("All done!").ephemeral()).await
     }
 
-    async fn interaction_component(&self, ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction) -> anyhow::Result<()> {
         match ctx.data.custom_id.as_str() {
             "mass-assign-selector" => component_selector(ctx).await,
             "mass-assign-roles" | "mass-assign-remove" => component_roles(ctx).await,
@@ -161,7 +159,7 @@ impl ExecuteLuroCommand for Owner {
     }
 }
 
-async fn component_selector(ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
     let mut roles_string = String::new();
     let guild_id = ctx.guild_id.unwrap();
     let mut roles: Vec<Id<RoleMarker>> = ctx
@@ -235,7 +233,7 @@ async fn component_selector(ctx: ComponentInteraction<()>) -> anyhow::Result<()>
     .await
 }
 
-async fn component_roles(ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
     let guild_id = ctx.guild_id.unwrap();
 
     let mut roles: Vec<Id<RoleMarker>> = ctx

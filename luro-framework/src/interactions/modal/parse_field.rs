@@ -1,7 +1,7 @@
 use crate::ModalInteraction;
 use anyhow::anyhow;
 
-impl<T> ModalInteraction<T> {
+impl ModalInteraction {
     /// Parse a field from [`ModalInteractionData`].
     ///
     /// This function try to find a field with the given name in the modal data and

@@ -10,10 +10,7 @@ use tracing::{info, warn};
 use twilight_http::{client::InteractionClient, Client};
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{
-    application::{
-        command::Command,
-        interaction::{Interaction, InteractionData, InteractionType},
-    },
+    application::{command::Command, interaction::Interaction},
     id::marker::UserMarker,
     oauth::Application,
 };
@@ -22,12 +19,8 @@ use twilight_model::{
     application::interaction::{
         application_command::CommandData, message_component::MessageComponentInteractionData, modal::ModalInteractionData,
     },
-    channel::{Channel, Message},
-    guild::{PartialMember, Permissions},
-    id::{
-        marker::{ApplicationMarker, GuildMarker, InteractionMarker},
-        Id,
-    },
+    channel::Message,
+    id::{marker::GuildMarker, Id},
     user::User,
 };
 
@@ -39,13 +32,19 @@ pub mod interactions;
 pub mod responses;
 pub mod slash_command;
 
-type LuroCommandType = HashMap<String, LuroCommand<()>>;
+type LuroCommandType = HashMap<String, LuroCommand>;
 type LuroMutex<T> = Arc<Mutex<T>>;
+
+pub enum InteractionContext {
+    CommandInteraction(CommandInteraction),
+    CommandAutocompleteInteraction(CommandInteraction),
+    ComponentInteraction(ComponentInteraction),
+    ModalInteraction(ModalInteraction),
+}
 
 /// A context spawned from a command interaction
 #[derive(Clone)]
-pub struct CommandInteraction<T> {
-    pub command: T,
+pub struct CommandInteraction {
     pub app_permissions: Option<twilight_model::guild::Permissions>,
     pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
@@ -133,71 +132,6 @@ pub struct Framework {
     pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
 }
 
-/// A context sapwned only in which the event is an interaction
-#[derive(Debug)]
-pub struct InteractionContext {
-    pub original: Interaction,
-    /// App's permissions in the channel the interaction was sent from.
-    ///
-    /// Present when the interaction is invoked in a guild.
-    pub app_permissions: Option<Permissions>,
-    /// ID of the associated application.
-    pub application_id: Id<ApplicationMarker>,
-    /// The channel the interaction was invoked in.
-    ///
-    /// Present on all interactions types, except [`Ping`].
-    ///
-    /// [`Ping`]: InteractionType::Ping
-    pub channel: Option<Channel>,
-    /// Data from the interaction.
-    ///
-    /// This field present on [`ApplicationCommand`], [`MessageComponent`],
-    /// [`ApplicationCommandAutocomplete`] and [`ModalSubmit`] interactions.
-    /// The inner enum variant matches the interaction type.
-    ///
-    /// [`ApplicationCommand`]: InteractionType::ApplicationCommand
-    /// [`MessageComponent`]: InteractionType::MessageComponent
-    /// [`ApplicationCommandAutocomplete`]: InteractionType::ApplicationCommandAutocomplete
-    /// [`ModalSubmit`]: InteractionType::ModalSubmit
-    pub data: Option<InteractionData>,
-    /// ID of the guild the interaction was invoked in.
-    pub guild_id: Option<Id<GuildMarker>>,
-    /// Guild’s preferred locale.
-    ///
-    /// Present when the interaction is invoked in a guild.
-    pub guild_locale: Option<String>,
-    /// ID of the interaction.
-    pub id: Id<InteractionMarker>,
-    /// Type of interaction.
-    pub kind: InteractionType,
-    /// Selected language of the user who invoked the interaction.
-    ///
-    /// Present on all interactions types, except [`Ping`].
-    ///
-    /// [`Ping`]: InteractionType::Ping
-    pub locale: Option<String>,
-    /// Member that invoked the interaction.
-    ///
-    /// Present when the interaction is invoked in a guild.
-    pub member: Option<PartialMember>,
-    /// Message attached to the interaction.
-    ///
-    /// Present on [`MessageComponent`] interactions.
-    ///
-    /// [`MessageComponent`]: InteractionType::MessageComponent
-    pub message: Option<Message>,
-    /// Token for responding to the interaction.
-    pub token: String,
-    /// User that invoked the interaction.
-    ///
-    /// Present when the interaction is invoked in a direct message.
-    pub user: Option<User>,
-    /// [Latency] information about the connection to the gateway
-    pub latency: twilight_gateway::Latency,
-    /// A [MessageSender] used for communicating with the shard
-    pub shard: twilight_gateway::MessageSender,
-}
-
 pub trait LuroInteraction {
     fn original_interaction(&self) -> &Interaction;
     async fn accent_colour(&self, framework: &Framework) -> u32;
@@ -226,8 +160,7 @@ pub trait LuroInteraction {
 
 /// A context spawned from a modal interaction
 #[derive(Debug)]
-pub struct ModalInteraction<T> {
-    pub command: T,
+pub struct ModalInteraction {
     pub app_permissions: Option<twilight_model::guild::Permissions>,
     pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
@@ -257,8 +190,7 @@ pub struct ModalInteraction<T> {
 }
 
 #[derive(Debug)]
-pub struct ComponentInteraction<T> {
-    pub command: T,
+pub struct ComponentInteraction {
     pub app_permissions: Option<twilight_model::guild::Permissions>,
     pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
@@ -340,12 +272,12 @@ pub trait Luro {
                         None => {
                             warn!("User did not exist in the database, attempted to update the user but the database still did not return the user");
                             (&user).into()
-                        },
+                        }
                     },
                     Err(why) => {
                         warn!(why = ?why, "Failed to get user, falling back to twilight");
                         (&user).into()
-                    },
+                    }
                 }
             }
         })

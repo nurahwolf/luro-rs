@@ -1,6 +1,5 @@
 use std::convert::TryFrom;
 
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
@@ -15,9 +14,8 @@ pub struct Warnings {
     pub clear_punishments: Option<bool>,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Warnings {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut user_data = ctx.get_user(&self.user.resolved.id).await?;
         if user_data.warnings.is_empty() {
             return ctx

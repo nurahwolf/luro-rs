@@ -24,7 +24,7 @@ impl LuroDatabase {
                 user_id,
                 user_permissions as \"user_permissions: LuroUserPermissions\",
                 name",
-            user.accent_color.map(|x|x as i32),
+            user.accent_color.map(|x| x as i32),
             user.id.get() as i64,
             LuroUserPermissions::default() as _,
             user.name

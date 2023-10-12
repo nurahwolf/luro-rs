@@ -2,6 +2,7 @@ use luro_framework::Context;
 use tracing::error;
 use twilight_gateway::Event;
 
+mod guild_update;
 mod interaction_create;
 mod message_create;
 mod message_delete;
@@ -10,7 +11,6 @@ mod message_update;
 mod ready;
 mod role;
 mod user_update;
-mod guild_update;
 
 pub async fn event_handler(ctx: Context) -> anyhow::Result<()> {
     let callback = match ctx.event.clone() {

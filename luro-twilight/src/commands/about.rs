@@ -1,7 +1,6 @@
 use std::fmt::Write;
 use std::path::Path;
 
-use async_trait::async_trait;
 use git2::{ErrorCode, Repository};
 use luro_framework::{
     command::{CreateLuroCommand, ExecuteLuroCommand},
@@ -25,9 +24,8 @@ pub struct About {
 
 impl CreateLuroCommand for About {}
 
-#[async_trait]
 impl ExecuteLuroCommand for About {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut description =
             "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n"
                 .to_owned();

@@ -1,7 +1,7 @@
 use luro_model::user::LuroUser;
 use sqlx::Error;
 
-use crate::{LuroDatabase, DatabaseUserType};
+use crate::{DatabaseUserType, LuroDatabase};
 
 impl LuroDatabase {
     pub async fn update_user(&self, user: impl Into<DatabaseUserType>) -> Result<Option<LuroUser>, Error> {

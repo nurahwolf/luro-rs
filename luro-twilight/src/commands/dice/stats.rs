@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_dice::DiceRoll;
 use luro_framework::{command::ExecuteLuroCommand, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -10,9 +9,8 @@ pub struct Stats {
     ephemeral: Option<bool>,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Stats {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         ctx.respond(|r| {
             if self.ephemeral.unwrap_or_default() {
                 r.ephemeral();

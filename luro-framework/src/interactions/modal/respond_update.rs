@@ -3,7 +3,7 @@ use twilight_model::channel::Message;
 
 use crate::ModalInteraction;
 
-impl<T> ModalInteraction<T> {
+impl ModalInteraction {
     /// Update an existing response
     pub async fn response_update(&self, response: &LuroResponse) -> anyhow::Result<Message> {
         Ok(self

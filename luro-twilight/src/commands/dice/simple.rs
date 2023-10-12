@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_dice::{DiceRoll, RollResult, RollValue};
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
 use std::fmt::Write;
@@ -43,9 +42,8 @@ pub struct Simple {
     divide: Option<i64>,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Simple {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut roll = format!("{}d{}", self.dice, self.sides);
 
         if let Some(operation) = self.keep_highest {

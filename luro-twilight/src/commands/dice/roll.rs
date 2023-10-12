@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_dice::{DiceRoll, RollResult, RollValue};
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -14,9 +13,8 @@ pub struct Roll {
     ephemeral: Option<bool>,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Roll {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let result = DiceRoll::roll_inline(&self.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)

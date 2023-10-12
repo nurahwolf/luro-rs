@@ -21,7 +21,7 @@ pub enum Base64 {
 
 #[async_trait]
 impl ExecuteLuroCommand for Base64 {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(&self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Decode(command) => command.interaction_command(ctx).await,
@@ -29,7 +29,7 @@ impl ExecuteLuroCommand for Base64 {
         }
     }
 
-    async fn interaction_component(&self, ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_component(&self, ctx: ComponentInteraction) -> anyhow::Result<()> {
         let author_id = ctx.author().id;
         // Always insure the input is decoded
         let (input, bait) = match self {
@@ -63,7 +63,7 @@ impl ExecuteLuroCommand for Base64 {
 }
 
 /// Simply send a response with a few checks.
-async fn response(ctx: &ComponentInteraction<()>, input: &str, decode_operation: bool) -> anyhow::Result<LuroResponse> {
+async fn response(ctx: &ComponentInteraction, input: &str, decode_operation: bool) -> anyhow::Result<LuroResponse> {
     let mut response = match decode_operation {
         true => decode_response(ctx.accent_colour().await, input).await?,
         false => encode_response(ctx.accent_colour().await, &encode(input)).await?,

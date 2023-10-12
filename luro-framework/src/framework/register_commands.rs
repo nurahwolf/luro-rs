@@ -50,7 +50,7 @@ impl Framework {
     pub async fn register_new_command(
         &self,
         guild_id: Option<Id<GuildMarker>>,
-        new_commands: LuroCommand<()>,
+        new_commands: LuroCommand,
     ) -> anyhow::Result<&Framework> {
         match guild_id {
             Some(guild_id) => match self.guild_commands.lock() {
@@ -75,7 +75,7 @@ impl Framework {
     pub async fn register_new_commands(
         &self,
         guild_id: Option<Id<GuildMarker>>,
-        new_commands: Vec<LuroCommand<()>>,
+        new_commands: Vec<LuroCommand>,
     ) -> anyhow::Result<&Framework> {
         match guild_id {
             Some(guild_id) => match self.guild_commands.lock() {

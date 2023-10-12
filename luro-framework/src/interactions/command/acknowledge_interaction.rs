@@ -3,7 +3,7 @@ use twilight_model::{channel::message::MessageFlags, http::interaction::Interact
 
 use crate::CommandInteraction;
 
-impl<T> CommandInteraction<T> {
+impl CommandInteraction {
     /// Acknowledge the interaction, showing a loading state. This will then be updated later.
     ///
     /// Use this for operations that take a long time. Generally its best to send this as soon as the reaction has been received.

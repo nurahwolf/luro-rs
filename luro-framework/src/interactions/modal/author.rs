@@ -2,7 +2,7 @@ use twilight_model::user::User;
 
 use crate::ModalInteraction;
 
-impl<T> ModalInteraction<T> {
+impl ModalInteraction {
     /// The user that invoked the interaction.
     ///
     /// This will first check for the [`member`]'s

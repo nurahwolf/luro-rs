@@ -7,18 +7,18 @@ use twilight_model::{id::Id, util::Timestamp};
 
 use crate::{DatabaseMessage, DatabaseMessageSource};
 
+mod count_messages;
 mod get_message;
 mod get_messages;
+#[cfg(feature = "cache")]
+mod handle_cached_message;
 mod handle_luro_message;
+mod handle_message;
 mod handle_message_create;
 mod handle_message_delete;
 mod handle_message_delete_bulk;
 mod handle_message_update;
 mod update_message;
-mod count_messages;
-mod handle_message;
-#[cfg(feature = "cache")]
-mod handle_cached_message;
 
 impl From<LuroMessage> for DatabaseMessage {
     fn from(message: LuroMessage) -> Self {

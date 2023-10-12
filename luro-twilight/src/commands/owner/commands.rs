@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::GenericMarker, Id};
@@ -11,9 +10,8 @@ pub struct Commands {
     guild: Id<GenericMarker>,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Commands {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let application = ctx.twilight_client.current_user_application().await?.model().await?;
         let client = ctx.twilight_client.interaction(application.id);
 

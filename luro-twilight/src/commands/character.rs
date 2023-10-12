@@ -1,5 +1,4 @@
 use anyhow::Context;
-use async_trait::async_trait;
 use luro_framework::{
     command::{CreateLuroCommand, ExecuteLuroCommand},
     interactions::InteractionTrait,
@@ -37,9 +36,8 @@ pub enum Character {
 
 impl CreateLuroCommand for Character {}
 
-#[async_trait]
 impl ExecuteLuroCommand for Character {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
             Self::Profile(command) => command.interaction_command(ctx).await,
             Self::Create(command) => command.interaction_command(ctx).await,
@@ -50,7 +48,7 @@ impl ExecuteLuroCommand for Character {
         }
     }
 
-    async fn interaction_modal(&self, ctx: ModalInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
         let nsfw = ctx.channel.nsfw.unwrap_or_default();
         let mut user_data = ctx.get_user(&user_id).await?;
@@ -97,17 +95,17 @@ impl ExecuteLuroCommand for Character {
         ctx.respond(|response| response.add_embed(embed)).await
     }
 
-    async fn interaction_component(&self, ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let user_data = ctx.get_user(&ctx.author_id()).await?;
         let name = match self {
-            Character::Profile(data) => &data.name,
-            Character::Create(data) => &data.name,
+            Character::Profile(data) => data.name,
+            Character::Create(data) => data.name,
             _ => return ctx.respond(|r| r.content("Invalid command").ephemeral()).await,
         };
         let character = user_data
             .characters
-            .get(name)
+            .get(&name)
             .context("Could not find that character! Was it deleted?")?;
         embed.title(format!("{name}'s Fetishes"));
 

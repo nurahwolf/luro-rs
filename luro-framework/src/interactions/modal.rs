@@ -1,3 +1,5 @@
+use anyhow::{anyhow, Context};
+
 mod author;
 mod command_name;
 mod interaction_client;
@@ -11,14 +13,15 @@ use luro_database::LuroDatabase;
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
 use twilight_model::{
-    application::interaction::modal::ModalInteractionData, gateway::payload::incoming::InteractionCreate, user::User,
+    application::interaction::{Interaction, InteractionData},
+    user::User,
 };
 
-use crate::{Context, Luro, ModalInteraction};
+use crate::{Context as LuroContext, Luro, ModalInteraction};
 
 use super::InteractionTrait;
 
-impl<T> Luro for ModalInteraction<T> {
+impl Luro for ModalInteraction {
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
         Ok(self.twilight_client.interaction(self.application_id))
     }
@@ -32,7 +35,7 @@ impl<T> Luro for ModalInteraction<T> {
     }
 }
 
-impl<T> InteractionTrait for ModalInteraction<T> {
+impl InteractionTrait for ModalInteraction {
     fn command_name(&self) -> &str {
         &self.data.custom_id
     }
@@ -73,10 +76,22 @@ impl<T> InteractionTrait for ModalInteraction<T> {
     }
 }
 
-impl<T> ModalInteraction<T> {
-    pub fn new(ctx: Context, interaction: Box<InteractionCreate>, data: ModalInteractionData, command: T) -> Self {
-        ModalInteraction {
-            command,
+impl ModalInteraction {
+    pub fn new(ctx: LuroContext, interaction: Interaction) -> anyhow::Result<Self> {
+        let data = match interaction
+            .data
+            .clone()
+            .context("Attempting to create an 'ModalInteraction' from an interaction that does not have any command data")?
+        {
+            InteractionData::ModalSubmit(data) => data,
+            _ => {
+                return Err(anyhow!(
+                    "Incorrect command data, meant to get ModalSubmit but actually got {:#?}",
+                    interaction
+                ))
+            }
+        };
+        Ok(ModalInteraction {
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,
             cache: ctx.cache,
@@ -96,12 +111,12 @@ impl<T> ModalInteraction<T> {
             locale: interaction.locale.clone(),
             member: interaction.member.clone(),
             message: interaction.message.clone(),
-            original: interaction.0.clone(),
+            original: interaction.clone(),
             shard: ctx.shard,
             token: interaction.token.clone(),
             tracing_subscriber: ctx.tracing_subscriber,
             twilight_client: ctx.twilight_client,
             user: interaction.user.clone(),
-        }
+        })
     }
 }

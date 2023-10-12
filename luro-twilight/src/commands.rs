@@ -1,12 +1,10 @@
 use anyhow::anyhow;
-use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
-use luro_framework::interactions::InteractionTrait;
-use luro_framework::{CommandInteraction, ComponentInteraction, ModalInteraction};
-use tracing::{info, warn};
+use luro_framework::command::CreateLuroCommand;
+use luro_framework::{CommandInteraction, InteractionContext};
+use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
 use twilight_model::application::interaction::application_command::CommandData;
-use twilight_model::application::interaction::{Interaction, InteractionData};
 
 #[cfg(feature = "command-about")]
 mod about;
@@ -53,41 +51,6 @@ mod say;
 // #[cfg(feature = "command-wordcount")]
 // mod wordcount;
 
-#[derive(Debug)]
-pub enum LuroCommands {
-    #[cfg(feature = "command-about")]
-    About(about::About),
-    #[cfg(feature = "command-character")]
-    Character(character::Character),
-    #[cfg(feature = "command-dice")]
-    Dice(dice::Dice),
-    #[cfg(feature = "command-say")]
-    Say(say::Say),
-    #[cfg(feature = "command-info")]
-    Info(info::Info),
-    #[cfg(feature = "command-owner")]
-    Owner(owner::Owner),
-}
-
-fn match_command<T: InteractionTrait>(ctx: &T, data: Box<CommandData>) -> anyhow::Result<LuroCommands> {
-    let command = match ctx.command_name() {
-        #[cfg(feature = "command-about")]
-        "about" => LuroCommands::About(about::About::new(data)?),
-        #[cfg(feature = "command-character")]
-        "character" => LuroCommands::Character(character::Character::new(data)?),
-        #[cfg(feature = "command-dice")]
-        "dice" => LuroCommands::Dice(dice::Dice::new(data)?),
-        #[cfg(feature = "command-say")]
-        "say" => LuroCommands::Say(say::Say::new(data)?),
-        #[cfg(feature = "command-info")]
-        "info" => LuroCommands::Info(info::Info::new(data)?),
-        #[cfg(feature = "command-owner")]
-        "owner" => LuroCommands::Owner(owner::Owner::new(data)?),
-        name => return Err(anyhow!("No command matching {name}")),
-    };
-    Ok(command)
-}
-
 pub fn default_commands() -> Vec<Command> {
     vec![
         #[cfg(feature = "command-about")]
@@ -105,127 +68,26 @@ pub fn default_commands() -> Vec<Command> {
     ]
 }
 
-/// Handle incoming command interaction.
-pub async fn handle_command(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
-    info!("Received command interaction - {} - {}", ctx.author().name, ctx.data.name);
-    let command = match_command(&ctx, ctx.data.clone())?;
-
-    match command {
-        #[cfg(feature = "command-about")]
-        LuroCommands::About(command) => command.interaction_command(ctx).await,
-        #[cfg(feature = "command-character")]
-        LuroCommands::Character(command) => command.interaction_command(ctx).await,
-        #[cfg(feature = "command-dice")]
-        LuroCommands::Dice(command) => command.interaction_command(ctx).await,
-        #[cfg(feature = "command-say")]
-        LuroCommands::Say(command) => command.interaction_command(ctx).await,
-        #[cfg(feature = "command-info")]
-        LuroCommands::Info(command) => command.interaction_command(ctx).await,
-        #[cfg(feature = "command-owner")]
-        LuroCommands::Owner(command) => command.interaction_command(ctx).await,
-        // name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
-    }
-}
-
-/// Handle incoming component interaction
-pub async fn handle_component(ctx: ComponentInteraction<()>) -> anyhow::Result<()> {
+/// Handle incoming interaction
+pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
     info!(
-        "Received component interaction - {} - {}",
-        ctx.author().name,
-        ctx.data.custom_id
+        "Handling interaction '{}' of type '{}'",
+        ctx.command_name(),
+        ctx.command_type()
     );
 
-    let interaction: Interaction = match ctx
-        .database
-        .get_interaction_by_message_id(ctx.message.id.get() as i64)
-        .await?
-    {
-        Some(interaction) => interaction.try_into()?,
-        None => {
-            warn!(ctx = ?ctx, "Attempting to handle component with an interaction that does not exist in the database");
-            return Ok(());
-        }
-    };
-
-    let data = match interaction.data {
-        Some(InteractionData::ApplicationCommand(data)) => data,
-        _ => {
-            return Err(anyhow!(
-                "unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}",
-                interaction.data
-            ))
-        }
-    };
-    let command = match_command(&ctx, data)?;
-
-    match command {
+    match ctx.command_name() {
         #[cfg(feature = "command-about")]
-        LuroCommands::About(command) => command.interaction_component(ctx).await,
-        #[cfg(feature = "command-character")]
-        LuroCommands::Character(command) => command.interaction_component(ctx).await,
-        #[cfg(feature = "command-dice")]
-        LuroCommands::Dice(command) => command.interaction_component(ctx).await,
-        #[cfg(feature = "command-say")]
-        LuroCommands::Say(command) => command.interaction_component(ctx).await,
-        #[cfg(feature = "command-info")]
-        LuroCommands::Info(command) => command.interaction_component(ctx).await,
-        #[cfg(feature = "command-owner")]
-        LuroCommands::Owner(command) => command.interaction_component(ctx).await,
-        // name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
+        "about" => match ctx {
+            InteractionContext::CommandInteraction(command) => about::About::run_interaction_command(command).await,
+            InteractionContext::CommandAutocompleteInteraction(command) => {
+                about::About::run_interaction_autocomplete(command).await
+            }
+            InteractionContext::ComponentInteraction(command) => about::About::run_interaction_component(command).await,
+            InteractionContext::ModalInteraction(command) => about::About::run_interaction_modal(command).await,
+        },
+        name => Err(anyhow!("No handler registered for command '{}'", name)),
     }
-}
-
-/// Handle incoming modal interaction
-pub async fn handle_modal(ctx: ModalInteraction<()>) -> anyhow::Result<()> {
-    info!("Received modal interaction - {} - {}", ctx.author().name, ctx.data.custom_id);
-
-    let id = match ctx.message {
-        Some(ref message) => message.id.get() as i64,
-        None => {
-            warn!(ctx = ?ctx, "Attempting to handle modal with an interaction that does not have a message");
-            return Ok(());
-        }
-    };
-
-    let interaction: Interaction = match ctx.database.get_interaction_by_message_id(id).await? {
-        Some(interaction) => interaction.try_into()?,
-        None => {
-            warn!(ctx = ?ctx, "Attempting to handle modal with an interaction that does not exist in the database");
-            return Ok(());
-        }
-    };
-
-    let data = match interaction.data {
-        Some(InteractionData::ApplicationCommand(data)) => data,
-        _ => {
-            return Err(anyhow!(
-                "unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}",
-                interaction.data
-            ))
-        }
-    };
-    let command = match_command(&ctx, data)?;
-
-    match command {
-        #[cfg(feature = "command-about")]
-        LuroCommands::About(command) => command.interaction_modal(ctx).await,
-        #[cfg(feature = "command-character")]
-        LuroCommands::Character(command) => command.interaction_modal(ctx).await,
-        #[cfg(feature = "command-dice")]
-        LuroCommands::Dice(command) => command.interaction_modal(ctx).await,
-        #[cfg(feature = "command-say")]
-        LuroCommands::Say(command) => command.interaction_modal(ctx).await,
-        #[cfg(feature = "command-info")]
-        LuroCommands::Info(command) => command.interaction_modal(ctx).await,
-        #[cfg(feature = "command-owner")]
-        LuroCommands::Owner(command) => command.interaction_modal(ctx).await,
-        // name => ctx.response_simple(Response::UnknownCommand(&format!("{:#?}", name))).await,
-    }
-}
-
-/// Handle incoming autocomplete
-pub async fn handle_autocomplete(ctx: CommandInteraction<()>) -> anyhow::Result<()> {
-    Autocomplete::new(*ctx.data.clone())?.run(ctx).await
 }
 
 #[derive(CommandModel)]
@@ -246,7 +108,7 @@ enum Autocomplete {
 }
 
 impl Autocomplete {
-    async fn run(self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn run(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
             #[cfg(feature = "command-character")]
             Autocomplete::Create(cmd) | Autocomplete::Icon(cmd) | Autocomplete::Send(cmd) | Autocomplete::Proxy(cmd) => {

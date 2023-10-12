@@ -6,6 +6,7 @@ use twilight_model::{
 
 mod command;
 mod component;
+mod interaction_context;
 mod modal;
 
 pub trait InteractionTrait {

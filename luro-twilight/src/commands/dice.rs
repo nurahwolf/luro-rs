@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
 use luro_framework::CommandInteraction;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -32,9 +31,8 @@ pub enum Dice {
 
 impl CreateLuroCommand for Dice {}
 
-#[async_trait]
 impl ExecuteLuroCommand for Dice {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
             Self::Roll(command) => command.interaction_command(ctx).await,
             Self::Direction(command) => command.interaction_command(ctx).await,

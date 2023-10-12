@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -10,9 +9,8 @@ pub struct Help {
     ephemeral: Option<bool>,
 }
 
-#[async_trait]
 impl ExecuteLuroCommand for Help {
-    async fn interaction_command(&self, ctx: CommandInteraction<()>) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let description = "Roll some dice with a brief explanation of the output all on one line, such as `1d20 = [13] = 13`.";
 
         let shortmode_help = [
