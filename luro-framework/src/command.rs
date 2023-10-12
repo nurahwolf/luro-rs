@@ -41,7 +41,7 @@ pub trait CreateLuroCommand: CommandModel + ExecuteLuroCommand {
             }
         };
 
-        let data = match interaction.data.clone().map(|x| x.0) {
+        let data = match interaction.data.clone().map(|x|x.0) {
             Some(InteractionData::ApplicationCommand(data)) => data,
             _ => {
                 return Err(anyhow!(

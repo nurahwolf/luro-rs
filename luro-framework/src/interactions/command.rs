@@ -116,7 +116,7 @@ impl CommandInteraction {
             locale: interaction.locale.clone(),
             member: interaction.member.clone(),
             message: interaction.message.clone(),
-            original: interaction.clone(),
+            // original: interaction.clone(),
             shard: ctx.shard,
             token: interaction.token.clone(),
             tracing_subscriber: ctx.tracing_subscriber,

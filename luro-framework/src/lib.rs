@@ -64,7 +64,7 @@ pub struct CommandInteraction {
     pub locale: Option<String>,
     pub member: Option<twilight_model::guild::PartialMember>,
     pub message: Option<twilight_model::channel::Message>,
-    pub original: twilight_model::application::interaction::Interaction,
+    // pub original: twilight_model::application::interaction::Interaction,
     pub shard: twilight_gateway::MessageSender,
     pub token: String,
     pub tracing_subscriber:

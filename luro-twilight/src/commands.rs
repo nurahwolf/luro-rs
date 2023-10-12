@@ -1,10 +1,9 @@
-use anyhow::anyhow;
 use luro_framework::command::CreateLuroCommand;
-use luro_framework::{CommandInteraction, InteractionContext};
+use luro_framework::InteractionContext;
 use tracing::info;
-use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
-use twilight_model::application::interaction::application_command::CommandData;
+
 
 #[cfg(feature = "command-about")]
 mod about;
@@ -70,59 +69,51 @@ pub fn default_commands() -> Vec<Command> {
 
 /// Handle incoming interaction
 pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
-    info!(
-        "Handling interaction '{}' of type '{}'",
-        ctx.command_name(),
-        ctx.command_type()
-    );
+    info!("{}: Handling interaction '{}'", ctx.command_type(), ctx.command_name());
 
     match ctx.command_name() {
         #[cfg(feature = "command-about")]
         "about" => match ctx {
             InteractionContext::CommandInteraction(command) => about::About::run_interaction_command(command).await,
-            InteractionContext::CommandAutocompleteInteraction(command) => {
-                about::About::run_interaction_autocomplete(command).await
-            }
+            InteractionContext::CommandAutocompleteInteraction(command) => about::About::run_interaction_autocomplete(command).await,
             InteractionContext::ComponentInteraction(command) => about::About::run_interaction_component(command).await,
             InteractionContext::ModalInteraction(command) => about::About::run_interaction_modal(command).await,
         },
-        name => Err(anyhow!("No handler registered for command '{}'", name)),
-    }
-}
-
-#[derive(CommandModel)]
-#[command(autocomplete = true)]
-enum Autocomplete {
-    #[cfg(feature = "command-character")]
-    #[command(name = "send")]
-    Send(character::send::CharacterSendAutocomplete),
-    #[cfg(feature = "command-character")]
-    #[command(name = "proxy")]
-    Proxy(character::send::CharacterSendAutocomplete),
-    #[cfg(feature = "command-character")]
-    #[command(name = "icon")]
-    Icon(character::send::CharacterSendAutocomplete),
-    #[cfg(feature = "command-character")]
-    #[command(name = "create")]
-    Create(character::send::CharacterSendAutocomplete),
-}
-
-impl Autocomplete {
-    async fn run(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        match self {
-            #[cfg(feature = "command-character")]
-            Autocomplete::Create(cmd) | Autocomplete::Icon(cmd) | Autocomplete::Send(cmd) | Autocomplete::Proxy(cmd) => {
-                cmd.interaction_command(ctx).await
-            }
-        }
-    }
-
-    fn new(data: CommandData) -> anyhow::Result<Self> {
-        match Self::from_interaction(data.into()) {
-            Ok(ok) => Ok(ok),
-            Err(why) => Err(anyhow!(
-                "Got interaction data, but failed to parse it to the command type specified: {why}"
-            )),
-        }
+        #[cfg(feature = "command-character")]
+        "character" => match ctx {
+            InteractionContext::CommandInteraction(command) => character::Character::run_interaction_command(command).await,
+            InteractionContext::CommandAutocompleteInteraction(command) => character::Character::run_interaction_autocomplete(command).await,
+            InteractionContext::ComponentInteraction(command) => character::Character::run_interaction_component(command).await,
+            InteractionContext::ModalInteraction(command) => character::Character::run_interaction_modal(command).await,
+        },
+        #[cfg(feature = "command-dice")]
+        "dice" => match ctx {
+            InteractionContext::CommandInteraction(command) => dice::Dice::run_interaction_command(command).await,
+            InteractionContext::CommandAutocompleteInteraction(command) => dice::Dice::run_interaction_autocomplete(command).await,
+            InteractionContext::ComponentInteraction(command) => dice::Dice::run_interaction_component(command).await,
+            InteractionContext::ModalInteraction(command) => dice::Dice::run_interaction_modal(command).await,
+        },
+        #[cfg(feature = "command-say")]
+        "say" => match ctx {
+            InteractionContext::CommandInteraction(command) => say::Say::run_interaction_command(command).await,
+            InteractionContext::CommandAutocompleteInteraction(command) => say::Say::run_interaction_autocomplete(command).await,
+            InteractionContext::ComponentInteraction(command) => say::Say::run_interaction_component(command).await,
+            InteractionContext::ModalInteraction(command) => say::Say::run_interaction_modal(command).await,
+        },
+        #[cfg(feature = "command-info")]
+        "info" => match ctx {
+            InteractionContext::CommandInteraction(command) => info::Info::run_interaction_command(command).await,
+            InteractionContext::CommandAutocompleteInteraction(command) => info::Info::run_interaction_autocomplete(command).await,
+            InteractionContext::ComponentInteraction(command) => info::Info::run_interaction_component(command).await,
+            InteractionContext::ModalInteraction(command) => info::Info::run_interaction_modal(command).await,
+        },
+        #[cfg(feature = "command-owner")]
+        "owner" => match ctx {
+            InteractionContext::CommandInteraction(command) => owner::Owner::run_interaction_command(command).await,
+            InteractionContext::CommandAutocompleteInteraction(command) => owner::Owner::run_interaction_autocomplete(command).await,
+            InteractionContext::ComponentInteraction(command) => owner::Owner::run_interaction_component(command).await,
+            InteractionContext::ModalInteraction(command) => owner::Owner::run_interaction_modal(command).await,
+        },
+        name => ctx.no_handler_response(name).await,
     }
 }

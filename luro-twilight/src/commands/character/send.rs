@@ -4,57 +4,9 @@ use luro_framework::CommandInteraction;
 use luro_framework::Luro;
 use std::fmt::Write;
 
-use twilight_interactions::command::AutocompleteValue;
 use twilight_interactions::command::CommandModel;
 use twilight_interactions::command::CreateCommand;
-use twilight_model::{
-    application::command::{CommandOptionChoice, CommandOptionChoiceValue},
-    http::interaction::InteractionResponseType,
-};
 
-#[derive(CommandModel)]
-#[command(autocomplete = true)]
-pub struct CharacterSendAutocomplete {
-    name: AutocompleteValue<String>,
-}
-
-impl CharacterSendAutocomplete {
-    pub async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user_id = ctx.author_id();
-        let user_data = ctx.get_user(&user_id).await?;
-        let choices = match self.name {
-            AutocompleteValue::None => user_data
-                .characters
-                .keys()
-                .map(|name| CommandOptionChoice {
-                    name: name.clone(),
-                    name_localizations: None,
-                    value: CommandOptionChoiceValue::String(name.clone()),
-                })
-                .collect(),
-            AutocompleteValue::Focused(input) => user_data
-                .characters
-                .keys()
-                .filter_map(|name| match name.contains(&input) {
-                    true => Some(CommandOptionChoice {
-                        name: name.clone(),
-                        name_localizations: None,
-                        value: CommandOptionChoiceValue::String(name.clone()),
-                    }),
-                    false => None,
-                })
-                .collect(),
-            AutocompleteValue::Completed(_) => vec![],
-        };
-
-        ctx.respond(|response| {
-            response
-                .choices(choices.into_iter())
-                .response_type(InteractionResponseType::ApplicationCommandAutocompleteResult)
-        })
-        .await
-    }
-}
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "send", desc = "Send a message as a character!")]

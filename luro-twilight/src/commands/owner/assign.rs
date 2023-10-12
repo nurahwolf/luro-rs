@@ -41,7 +41,7 @@ impl ExecuteLuroCommand for Assign {
             .remove_guild_member_role(guild_id, user.id, self.role)
             .await {
                 Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.id)).ephemeral()).await,
-                Err(why) => return ctx.response_simple(Response::InternalError(why.into())).await
+                Err(why) => ctx.response_simple(Response::InternalError(why.into())).await
             }
         } else {
         // Otherwise we just assign a role as expected
@@ -50,7 +50,7 @@ impl ExecuteLuroCommand for Assign {
             .add_guild_member_role(guild_id, user.id, self.role)
             .await {
                 Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.id)).ephemeral()).await,
-                Err(why) => return ctx.response_simple(Response::InternalError(why.into())).await
+                Err(why) => ctx.response_simple(Response::InternalError(why.into())).await
             }
         }
     }

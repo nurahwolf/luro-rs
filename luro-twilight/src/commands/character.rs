@@ -5,8 +5,9 @@ use luro_framework::{
     CommandInteraction, ComponentInteraction, Luro, ModalInteraction,
 };
 use luro_model::user::character::{CharacterProfile, FetishCategory};
+use twilight_model::{application::command::{CommandOptionChoice, CommandOptionChoiceValue}, http::interaction::InteractionResponseType};
 use std::{collections::btree_map::Entry, fmt::Write};
-use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_interactions::command::{CommandModel, CreateCommand, AutocompleteValue};
 
 use self::{create::Create, fetish::Fetish, icon::Icon, profile::Profile, proxy::Proxy, send::CharacterSend};
 
@@ -159,4 +160,46 @@ impl ExecuteLuroCommand for Character {
 
         ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }
+
+    async fn interaction_autocomplete(ctx: CommandInteraction) -> anyhow::Result<()> {
+        let user_id = ctx.author_id();
+        let user_data = ctx.get_user(&user_id).await?;
+        let choices = match CharacterNameAutocomplete::from_interaction((*ctx.data.clone()).into())?.name {
+            AutocompleteValue::None => user_data
+                .characters
+                .keys()
+                .map(|name| CommandOptionChoice {
+                    name: name.clone(),
+                    name_localizations: None,
+                    value: CommandOptionChoiceValue::String(name.clone()),
+                })
+                .collect(),
+            AutocompleteValue::Focused(input) => user_data
+                .characters
+                .keys()
+                .filter_map(|name| match name.contains(&input) {
+                    true => Some(CommandOptionChoice {
+                        name: name.clone(),
+                        name_localizations: None,
+                        value: CommandOptionChoiceValue::String(name.clone()),
+                    }),
+                    false => None,
+                })
+                .collect(),
+            AutocompleteValue::Completed(_) => vec![],
+        };
+
+        ctx.respond(|response| {
+            response
+                .choices(choices.into_iter())
+                .response_type(InteractionResponseType::ApplicationCommandAutocompleteResult)
+        })
+        .await
+    }
+}
+
+#[derive(CommandModel)]
+#[command(autocomplete = true)]
+pub struct CharacterNameAutocomplete {
+    name: AutocompleteValue<String>,
 }

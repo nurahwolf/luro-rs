@@ -22,14 +22,12 @@ mod events;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let rt = tokio::runtime::Builder::new_multi_thread().thread_stack_size(4096 * 1024).enable_all().build()?;
     let config = Configuration::new(INTENTS, FILTER)?;
 
     // Create the framework, Initialise tracing for logs based on bot name
     let (framework, mut shards) = Framework::new(&config).await?;
-    init_tracing_subscriber(
-        config.filter,
-        &framework.twilight_client.current_user().await?.model().await?.name,
-    );
+    init_tracing_subscriber(config.filter, &framework.twilight_client.current_user().await?.model().await?.name);
 
     // Work on our events
     while let Some((shard, event)) = ShardEventStream::new(shards.iter_mut()).next().await {
@@ -55,12 +53,20 @@ async fn main() -> anyhow::Result<()> {
             Ok(event) => event,
         };
 
-        tokio::spawn(events::event_handler(luro_framework::Context::new(
+        rt.spawn(events::event_handler(luro_framework::Context::new(
             framework.clone(),
             event,
             shard.latency().clone(),
             shard.sender(),
         )));
+
+
+        // tokio::spawn(events::event_handler(luro_framework::Context::new(
+        //     framework.clone(),
+        //     event,
+        //     shard.latency().clone(),
+        //     shard.sender(),
+        // )));
     }
 
     Ok(())
@@ -71,9 +77,6 @@ fn init_tracing_subscriber(filter: Layer<tracing_subscriber::filter::LevelFilter
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
     let layer = fmt::layer().with_writer(non_blocking);
     tracing_subscriber::util::SubscriberInitExt::init(
-        tracing_subscriber::registry()
-            .with(filter)
-            .with(layer)
-            .with(fmt::Layer::default()),
+        tracing_subscriber::registry().with(filter).with(layer).with(fmt::Layer::default()),
     );
 }
