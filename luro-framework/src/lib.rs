@@ -263,12 +263,12 @@ pub trait Luro {
     /// Fetch and return a [LuroGuild], updating the database if not present
     async fn get_user(&self, user_id: &Id<UserMarker>) -> anyhow::Result<LuroUser> {
         Ok(match self.database().get_user(user_id.get() as i64).await? {
-            Some(user) => user,
+            Some(user) => user.into(),
             None => {
                 let user = self.twilight_client().user(*user_id).await?.model().await?;
                 match self.database().update_user(user.clone()).await {
                     Ok(db_user) => match db_user {
-                        Some(user) => user,
+                        Some(user) => user.into(),
                         None => {
                             warn!("User did not exist in the database, attempted to update the user but the database still did not return the user");
                             (&user).into()

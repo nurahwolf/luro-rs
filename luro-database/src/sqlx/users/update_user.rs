@@ -1,10 +1,9 @@
-use luro_model::user::LuroUser;
 use sqlx::Error;
 
-use crate::{DatabaseUserType, LuroDatabase};
+use crate::{DatabaseUserType, LuroDatabase, DatabaseUser};
 
 impl LuroDatabase {
-    pub async fn update_user(&self, user: impl Into<DatabaseUserType>) -> Result<Option<LuroUser>, Error> {
+    pub async fn update_user(&self, user: impl Into<DatabaseUserType>) -> Result<Option<DatabaseUser>, Error> {
         let user = user.into();
 
         match user {

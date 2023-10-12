@@ -1097,6 +1097,7 @@ dependencies = [
  "dotenvy",
  "futures-util",
  "git2",
+ "luro-database",
  "luro-dice",
  "luro-framework",
  "luro-model",

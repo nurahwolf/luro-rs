@@ -1,14 +1,14 @@
+use luro_database::DatabaseUser;
 use luro_framework::{Context, Luro};
-use luro_model::{BOT_OWNERS, PRIMARY_BOT_OWNER};
-use std::collections::HashMap;
+use luro_model::{
+    user::{LuroUser, LuroUserPermissions},
+    BOT_OWNERS, PRIMARY_BOT_OWNER,
+};
 use tracing::{info, warn};
 use twilight_model::gateway::{
     payload::{incoming::Ready, outgoing::UpdatePresence},
     presence::{ActivityType, MinimalActivity, Status},
 };
-
-use luro_model::user::LuroUser;
-use twilight_model::id::{marker::UserMarker, Id};
 
 use crate::commands::default_commands;
 
@@ -32,26 +32,26 @@ pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Re
         )?)?;
     };
 
-    let mut staff = framework.database.get_staff().await;
+    let mut staff = framework.database.get_staff().await?;
 
     if staff.is_empty() {
         info!("-- Registering Staff in DB --");
 
         // Register staff
         for staff in BOT_OWNERS {
-            framework
-                .database
-                .register_staff(framework.twilight_client.user(staff).await?.model().await?)
-                .await?;
+            let mut user = LuroUser::from(&framework.twilight_client.user(staff).await?.model().await?);
+
+            user.user_permissions = LuroUserPermissions::Administrator;
+            framework.database.update_user(user).await?;
         }
 
         // Register primary owner
-        framework
-            .database
-            .register_owner(framework.twilight_client.user(PRIMARY_BOT_OWNER).await?.model().await?)
-            .await?;
+        let mut user = LuroUser::from(&framework.twilight_client.user(PRIMARY_BOT_OWNER).await?.model().await?);
 
-        staff = framework.database.get_staff().await;
+        user.user_permissions = LuroUserPermissions::Administrator;
+        framework.database.update_user(user).await?;
+
+        staff = framework.database.get_staff().await?;
     }
 
     #[cfg(not(feature = "pretty-tables"))]
@@ -75,7 +75,9 @@ async fn standard_output(framework: &Context, event: &Box<Ready>, staff: HashMap
 }
 
 #[cfg(feature = "pretty-tables")]
-async fn pretty_output(framework: &Context, event: &Ready, staff: HashMap<Id<UserMarker>, LuroUser>) {
+async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUser>) {
+    use luro_database::LuroUserPermissions;
+
     let mut builder = tabled::builder::Builder::new();
     if let Some(latency) = framework.latency.average() {
         builder.push_record(["API Latency", &latency.as_millis().to_string()]);
@@ -123,13 +125,13 @@ async fn pretty_output(framework: &Context, event: &Ready, staff: HashMap<Id<Use
     // Information from the Database
     let mut owners = String::new();
     let mut administrators = String::new();
-    for staff in staff.values() {
+    for staff in staff {
         match staff.user_permissions {
-            luro_model::user::LuroUserPermissions::Owner => match owners.is_empty() {
+            LuroUserPermissions::Owner => match owners.is_empty() {
                 true => owners.push_str(&staff.name),
                 false => owners.push_str(format!(", {}", staff.name).as_str()),
             },
-            luro_model::user::LuroUserPermissions::Administrator => match administrators.is_empty() {
+            LuroUserPermissions::Administrator => match administrators.is_empty() {
                 true => administrators.push_str(&staff.name),
                 false => administrators.push_str(format!(", {}", staff.name).as_str()),
             },

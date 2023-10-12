@@ -1,13 +1,12 @@
-use sqlx::Error;
 use twilight_model::user::UserFlags;
 use twilight_model::user::PremiumType;
 use sqlx::types::Json;
 use twilight_model::util::ImageHash;
 
-use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
+use crate::{LuroDatabase, DatabaseUser, LuroUserPermissions};
 
 impl LuroDatabase {
-    pub async fn get_user(&self, id: i64) -> Result<Option<DatabaseUser>, Error> {
+    pub async fn get_users(&self) -> Result<Vec<DatabaseUser>, sqlx::Error> {
         sqlx::query_as!(
             DatabaseUser,
             "SELECT
@@ -36,12 +35,7 @@ impl LuroDatabase {
                 words_average,
                 words_count
             FROM
-                users
-            WHERE
-                user_id = $1",
-            id
-        )
-        .fetch_optional(&self.0)
-        .await
+                users",
+        ).fetch_all(&self.0).await
     }
 }

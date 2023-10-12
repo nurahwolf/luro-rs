@@ -12,7 +12,7 @@ use twilight_model::{
     },
     gateway::payload::incoming::{GuildUpdate, MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate, UserUpdate},
     guild::{Guild, PartialMember, RoleTags},
-    user::User,
+    user::{User, UserFlags, PremiumType},
     util::ImageHash,
 };
 
@@ -72,7 +72,7 @@ pub struct DatabaseRole {
 }
 
 #[cfg(feature = "sqlx-driver")]
-#[derive(Default, ::sqlx::Type)]
+#[derive(Debug, Default, ::sqlx::Type)]
 #[sqlx(type_name = "user_permissions", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum LuroUserPermissions {
     #[default]
@@ -80,38 +80,60 @@ pub enum LuroUserPermissions {
     Owner,
     Administrator,
 }
+
+impl From<LuroUserPermissions> for luro_model::user::LuroUserPermissions {
+    fn from(permissions: LuroUserPermissions) -> Self {
+        match permissions {
+            LuroUserPermissions::User => Self::User,
+            LuroUserPermissions::Owner =>  Self::Owner,
+            LuroUserPermissions::Administrator =>  Self::Administrator,
+        }
+    }
+}
+
+impl From<luro_model::user::LuroUserPermissions> for  LuroUserPermissions {
+    fn from(permissions: luro_model::user::LuroUserPermissions) -> Self {
+        match permissions {
+            luro_model::user::LuroUserPermissions::User => Self::User,
+            luro_model::user::LuroUserPermissions::Owner => Self::Owner,
+            luro_model::user::LuroUserPermissions::Administrator => Self::Administrator,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct DatabaseUser {
-    pub accent_colour: Option<i32>,
-    // pub avatar: Option<Json<ImageHash>>,
-    // pub avatar_decoration: Option<Json<ImageHash>>,
-    // pub banner: Option<Json<ImageHash>>,
-    // pub bot: bool,
-    // pub discriminator: u16,
-    // pub global_name: Option<String>,
-    // pub email: Option<String>,
-    // pub flags: Option<Json<UserFlags>>,
-    pub user_id: i64,
-    // pub locale: Option<String>,
-    // pub mfa_enabled: bool,
-    pub name: String,
-    // pub premium_type: Option<Json<PremiumType>>,
-    // pub public_flags: Option<Json<UserFlags>>,
-    // pub system: bool,
-    // pub verified: bool,
-    // pub wordcount: usize,
-    // pub averagesize: usize,
-    // pub wordsize: Json<BTreeMap<usize, usize>>,
-    // pub words: Json<BTreeMap<String, usize>>,
-    // pub warnings: Vec<(String, Id<UserMarker>)>,
-    // pub messages: Vec<i64>,
-    // pub moderation_actions: Json<Vec<UserActions>>,
-    // pub moderation_actions_performed: usize,
-    // pub message_edits: usize,
-    // pub marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
-    // pub guilds: HashMap<Id<GuildMarker>, LuroMember>,
-    // pub characters: BTreeMap<String, CharacterProfile>,
     // pub character_prefix: BTreeMap<String, String>,
+    // pub guilds: HashMap<Id<GuildMarker>, LuroMember>,
+    // pub marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
+    // pub moderation_actions_performed: usize,
+    // pub moderation_actions: Json<Vec<UserActions>>,
+    // pub words: Json<BTreeMap<String, usize>>,
+    // pub wordsize: Json<BTreeMap<usize, usize>>,
+    pub accent_colour: Option<i32>,
+    pub avatar_decoration: Option<Json<ImageHash>>,
+    pub avatar: Option<Json<ImageHash>>,
+    pub banner: Option<Json<ImageHash>>,
+    pub bot: bool,
+    pub characters: Option<Vec<i32>>,
+    pub discriminator: i16,
+    pub email: Option<String>,
+    pub flags: Option<Json<UserFlags>>,
+    pub global_name: Option<String>,
+    pub locale: Option<String>,
+    pub message_edits: Option<i64>,
+    pub messages: Option<Vec<i64>>,
+    pub mfa_enabled: bool,
+    pub name: String,
+    pub premium_type: Option<Json<PremiumType>>,
+    pub public_flags: Option<Json<UserFlags>>,
+    pub system: bool,
+    pub user_id: i64,
     pub user_permissions: LuroUserPermissions,
+    pub verified: bool,
+    pub warnings: Option<Vec<i64>>,
+    pub words_average: Option<i64>,
+    pub words_count: Option<i64>,
 }
 
 #[derive(Debug)]

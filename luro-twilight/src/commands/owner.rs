@@ -59,10 +59,16 @@ impl CreateLuroCommand for Owner {}
 impl ExecuteLuroCommand for Owner {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let interaction_author = ctx.author();
-        let staff = ctx.database.get_staff().await;
+
+        let mut authorised = false;
+        for staff in ctx.database.get_staff().await? {
+            if staff.user_id() == interaction_author.id {
+                authorised = true
+            }
+        }
 
         // If we don't have a match, bitch at the user
-        if !staff.contains_key(&interaction_author.id) {
+        if !authorised {
             return ctx
                 .response_simple(Response::NotOwner(
                     &interaction_author.id,
