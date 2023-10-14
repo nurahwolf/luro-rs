@@ -6,7 +6,10 @@ use std::{
 use serde::{Deserialize, Serialize};
 use twilight_model::{
     guild::{Permissions, Role, RoleFlags, RoleTags},
-    id::{marker::{RoleMarker, GuildMarker}, Id},
+    id::{
+        marker::{GuildMarker, RoleMarker},
+        Id,
+    },
     util::ImageHash,
 };
 

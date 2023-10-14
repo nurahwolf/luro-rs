@@ -1,11 +1,13 @@
-impl crate::LuroDatabase {
-    pub async fn count_guild_roles(&self) -> Result<i64, sqlx::Error> {
+use crate::LuroDatabase;
+
+impl LuroDatabase {
+    pub async fn count_applications(&self) -> Result<i64, sqlx::Error> {
         sqlx::query!(
             "
         SELECT 
             COUNT(*) as count
         FROM 
-            guild_roles
+            applications
         "
         )
         .fetch_one(&self.pool)

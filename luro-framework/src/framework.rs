@@ -5,12 +5,11 @@ use luro_model::configuration::Configuration;
 
 use twilight_gateway::{stream, Shard};
 
-use crate::{Context, Framework};
+use crate::{Context, Framework, Luro};
 
 #[cfg(feature = "luro-builder")]
 mod default_embed;
 mod guild_accent_colour;
-mod interaction_client;
 mod register_commands;
 #[cfg(feature = "luro-builder")]
 mod send_log_channel;
@@ -55,6 +54,22 @@ impl Framework {
         };
 
         Ok((framework, shards))
+    }
+}
+
+impl Luro for Framework {
+    async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
+        Ok(self
+            .twilight_client
+            .interaction(self.twilight_client.current_user_application().await?.model().await?.id))
+    }
+
+    fn database(&self) -> std::sync::Arc<LuroDatabase> {
+        self.database.clone()
+    }
+
+    fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
+        self.twilight_client.clone()
     }
 }
 

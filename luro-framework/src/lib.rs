@@ -273,13 +273,26 @@ pub trait Luro {
     {
         async {
             Ok(match self.database().get_guild(guild_id.get() as i64).await? {
-                Some(guild) => guild,
-                None => {
-                    self.database()
-                        .update_guild(self.twilight_client().guild(*guild_id).await?.model().await?)
-                        .await?
-                }
+                Some(guild) => guild.into(),
+                None => self
+                    .database()
+                    .update_guild(self.twilight_client().guild(*guild_id).await?.model().await?)
+                    .await?
+                    .into(),
             })
+        }
+    }
+
+    fn get_guilds(&self) -> impl Future<Output = anyhow::Result<Vec<LuroGuild>>> + Send
+    where
+        Self: Sync,
+    {
+        async {
+            Ok(self
+                .database()
+                .get_all_guilds()
+                .await
+                .map(|x| x.into_iter().map(|x| x.into()).collect())?)
         }
     }
 

@@ -54,6 +54,10 @@ pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Re
         staff = framework.database.get_staff().await?;
     }
 
+    if let Err(why) = framework.database.update_application(event.application.clone()).await {
+        warn!("Heads up, failed to write application data to the database: {why}")
+    };
+
     #[cfg(not(feature = "pretty-tables"))]
     standard_output(&framework, &event, staff).await;
 
@@ -123,8 +127,9 @@ async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUs
     }
 
     // Information from the Database
-    let mut owners = String::new();
     let mut administrators = String::new();
+    let mut database_information = String::new();
+    let mut owners = String::new();
     for staff in staff {
         match staff.user_permissions.as_ref().unwrap_or(&LuroUserPermissions::User) {
             LuroUserPermissions::Owner => match owners.is_empty() {
@@ -142,93 +147,69 @@ async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUs
     builder = tabled::builder::Builder::new();
     builder.push_record(["Users with Owner Permission", &owners]);
     builder.push_record(["Users with Administrator Permission", &administrators]);
-    if let Ok(data) = framework.database.count_users().await {
-        builder.push_record([
-            "Total Users",
-            &data
-                .to_string()
-                .as_bytes()
-                .rchunks(3)
-                .rev()
-                .map(std::str::from_utf8)
-                .collect::<Result<Vec<&str>, _>>()
-                .unwrap()
-                .join(","),
-        ]);
-    }
-    if let Ok(data) = framework.database.count_guilds().await {
-        builder.push_record([
-            "Total Guilds",
-            &data
-                .to_string()
-                .as_bytes()
-                .rchunks(3)
-                .rev()
-                .map(std::str::from_utf8)
-                .collect::<Result<Vec<&str>, _>>()
-                .unwrap()
-                .join(","),
-        ]);
-    }
-    if let Ok(data) = framework.database.count_interactions().await {
-        builder.push_record([
-            "Total Interactions",
-            &data
-                .to_string()
-                .as_bytes()
-                .rchunks(3)
-                .rev()
-                .map(std::str::from_utf8)
-                .collect::<Result<Vec<&str>, _>>()
-                .unwrap()
-                .join(","),
-        ]);
-    }
-    if let Ok(data) = framework.database.count_messages().await {
-        builder.push_record([
-            "Total Messages",
-            &data
-                .to_string()
-                .as_bytes()
-                .rchunks(3)
-                .rev()
-                .map(std::str::from_utf8)
-                .collect::<Result<Vec<&str>, _>>()
-                .unwrap()
-                .join(","),
-        ]);
+    if let Ok(data) = framework.database.count_applications().await {
+        builder.push_record(["Total Applications", &format_number(data)]);
     }
     if let Ok(data) = framework.database.count_channels().await {
-        builder.push_record([
-            "Total Channels",
-            &data
-                .to_string()
-                .as_bytes()
-                .rchunks(3)
-                .rev()
-                .map(std::str::from_utf8)
-                .collect::<Result<Vec<&str>, _>>()
-                .unwrap()
-                .join(","),
-        ]);
+        builder.push_record(["Total Channels", &format_number(data)]);
     }
-    if let Ok(data) = framework.database.count_roles().await {
-        builder.push_record([
-            "Total Roles",
-            &data
-                .to_string()
-                .as_bytes()
-                .rchunks(3)
-                .rev()
-                .map(std::str::from_utf8)
-                .collect::<Result<Vec<&str>, _>>()
-                .unwrap()
-                .join(","),
-        ]);
+    if let Ok(data) = framework.database.count_interactions().await {
+        builder.push_record(["Total Interactions", &format_number(data)]);
     }
+    if let Ok(data) = framework.database.count_messages().await {
+        builder.push_record(["Total Messages", &format_number(data)]);
+    }
+    database_information.push_str("-- General --\n");
+    database_information.push_str(&builder.build().with(tabled::settings::Style::ascii_rounded()).to_string());
+    builder = tabled::builder::Builder::new();
 
-    info!(
-        "-- Database Information -- \n{}",
-        builder.build().with(tabled::settings::Style::ascii_rounded()).to_string()
-    )
+    // Guild Data
+    if let Ok(data) = framework.database.count_guilds().await {
+        builder.push_record(["Total Guilds", &format_number(data)]);
+    }
+    if let Ok(data) = framework.database.count_guild_channels().await {
+        builder.push_record(["Total Guild Channels", &format_number(data)]);
+    }
+    if let Ok(data) = framework.database.count_guild_roles().await {
+        builder.push_record(["Total Guild Roles", &format_number(data)]);
+    }
+    if let Ok(data) = framework.database.count_guild_members().await {
+        builder.push_record(["Total Guild Members", &format_number(data)]);
+    }
+    if let Ok(data) = framework.database.count_guild_roles().await {
+        builder.push_record(["Total Guild Roles", &format_number(data)]);
+    }
+    database_information.push_str("\n-- Guild --\n");
+    database_information.push_str(&builder.build().with(tabled::settings::Style::ascii_rounded()).to_string());
+    builder = tabled::builder::Builder::new();
+
+    // User Data
+    if let Ok(data) = framework.database.count_users().await {
+        builder.push_record(["Total Users", &format_number(data)]);
+    }
+    if let Ok(data) = framework.database.count_user_characters().await {
+        builder.push_record(["Total User Characters", &format_number(data)]);
+    }
+    if let Ok(data) = framework.database.count_user_moderation_actions().await {
+        builder.push_record(["Total User Moderation Actions", &format_number(data)]);
+    }
+    if let Ok(data) = framework.database.count_user_warnings().await {
+        builder.push_record(["Total User Warnings", &format_number(data)]);
+    }
+    database_information.push_str("\n-- User --\n");
+    database_information.push_str(&builder.build().with(tabled::settings::Style::ascii_rounded()).to_string());
+
+    info!("-- Database Information -- \n{}", database_information)
+}
+
+fn format_number(input: i64) -> String {
+    input
+        .to_string()
+        .as_bytes()
+        .rchunks(3)
+        .rev()
+        .map(std::str::from_utf8)
+        .collect::<Result<Vec<&str>, _>>()
+        .unwrap()
+        .join(",")
 }

@@ -8,7 +8,10 @@ use twilight_model::util::ImageHash;
 use luro_model::user::LuroUser;
 use twilight_model::id::Id;
 
+mod count_characters;
+mod count_moderation_actions;
 mod count_users;
+mod count_warnings;
 mod get_staff;
 mod get_user;
 mod get_users;

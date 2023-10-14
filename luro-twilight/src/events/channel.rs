@@ -1,12 +1,11 @@
 use luro_framework::Context;
-use twilight_model::gateway::payload::incoming::{ChannelCreate, ChannelUpdate, ChannelDelete, ChannelPinsUpdate};
+use twilight_model::gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate};
 
 pub async fn create(ctx: Context, event: Box<ChannelCreate>) -> anyhow::Result<()> {
     #[cfg(feature = "pretty-tables")]
     let mut builder = tabled::builder::Builder::new();
     if let Some(name) = &event.name {
         builder.push_record(["Name", name]);
-
     }
     builder.push_record(["ID", &event.id.to_string()]);
     builder.push_record(["Kind", &event.kind.name()]);
@@ -50,7 +49,6 @@ pub async fn delete(ctx: Context, event: Box<ChannelDelete>) -> anyhow::Result<(
     let mut builder = tabled::builder::Builder::new();
     if let Some(name) = &event.name {
         builder.push_record(["Name", name]);
-
     }
     builder.push_record(["ID", &event.id.to_string()]);
     builder.push_record(["Kind", &event.kind.name()]);
@@ -73,7 +71,6 @@ pub async fn update(ctx: Context, event: Box<ChannelUpdate>) -> anyhow::Result<(
     let mut builder = tabled::builder::Builder::new();
     if let Some(name) = &event.name {
         builder.push_record(["Name", name]);
-
     }
     builder.push_record(["ID", &event.id.to_string()]);
     builder.push_record(["Kind", &event.kind.name()]);

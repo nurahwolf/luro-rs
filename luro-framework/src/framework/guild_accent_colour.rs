@@ -1,19 +1,12 @@
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::Framework;
+use crate::{Framework, Luro};
 
 impl Framework {
     /// fetches the accent colour of a guild if it is specified.
     /// Returns an error if we could not get any guild settings
     pub async fn guild_accent_colour(&self, guild_id: &Id<GuildMarker>) -> anyhow::Result<Option<u32>> {
-        let mut guild = match self.database.get_guild(guild_id.get() as i64).await? {
-            Some(guild) => guild,
-            None => {
-                self.database
-                    .update_guild(self.twilight_client.guild(*guild_id).await?.model().await?)
-                    .await?
-            }
-        };
+        let mut guild = self.get_guild(guild_id).await?;
 
         // If a custom colour is present, return it
         if let Some(custom_accent_colour) = guild.accent_colour_custom {

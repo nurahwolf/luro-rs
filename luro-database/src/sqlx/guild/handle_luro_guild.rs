@@ -3,8 +3,8 @@ use luro_model::guild::LuroGuild;
 use crate::{DatabaseGuild, LuroDatabase};
 
 impl LuroDatabase {
-    pub async fn handle_luro_guild(&self, guild: LuroGuild) -> Result<LuroGuild, sqlx::Error> {
-        let query = sqlx::query_as!(
+    pub async fn handle_luro_guild(&self, guild: LuroGuild) -> Result<DatabaseGuild, sqlx::Error> {
+        sqlx::query_as!(
             DatabaseGuild,
             "INSERT INTO guilds (
                 guild_id,
@@ -24,8 +24,8 @@ impl LuroDatabase {
             guild.guild_id.get() as i64,
             guild.owner_id.get() as i64,
             guild.name
-        );
-
-        query.fetch_one(&self.pool).await.map(|x| x.luro_guild())
+        )
+        .fetch_one(&self.pool)
+        .await
     }
 }

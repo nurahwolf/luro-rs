@@ -7,7 +7,7 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
 };
 
-use crate::{slash_command::LuroCommand, Framework};
+use crate::{slash_command::LuroCommand, Framework, Luro};
 
 impl Framework {
     /// Register the commands present in the framework

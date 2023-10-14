@@ -1,9 +1,22 @@
 use sqlx::types::Json;
-use twilight_model::util::ImageHash;
+use twilight_model::{
+    gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate},
+    guild::Member,
+    id::{marker::GuildMarker, Id},
+    util::ImageHash,
+};
 
 mod get_member;
 mod get_members;
 mod update_member;
+
+pub enum DbMemberType {
+    Member(Member, Id<GuildMarker>),
+    MemberAdd(Box<MemberAdd>),
+    MemberChunk(MemberChunk),
+    MemberRemove(MemberRemove),
+    MemberUpdate(Box<MemberUpdate>),
+}
 
 pub struct DbMember {
     pub user_id: i64,

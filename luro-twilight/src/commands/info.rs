@@ -4,24 +4,25 @@ use luro_framework::{
 };
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use self::{guild::Guild, punishments::Punishments, role::InfoRole, user::InfoUser};
-
 mod guild;
 mod punishments;
 mod role;
 mod user;
+mod database;
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "info", desc = "Information about neat things")]
 pub enum Info {
     #[command(name = "user")]
-    User(InfoUser),
+    User(user::InfoUser),
     #[command(name = "role")]
-    Role(InfoRole),
+    Role(role::InfoRole),
     #[command(name = "guild")]
-    Guild(Guild),
+    Guild(guild::Guild),
     #[command(name = "punishments")]
-    Punishments(Punishments),
+    Punishments(punishments::Punishments),
+    #[command(name = "database")]
+    Database(database::Database),
 }
 
 impl CreateLuroCommand for Info {}
@@ -33,6 +34,8 @@ impl ExecuteLuroCommand for Info {
             Self::Punishments(command) => command.interaction_command(ctx).await,
             Self::Role(command) => command.interaction_command(ctx).await,
             Self::User(command) => command.interaction_command(ctx).await,
+            Self::Database(command) => command.interaction_command(ctx).await,
+
         }
     }
 }

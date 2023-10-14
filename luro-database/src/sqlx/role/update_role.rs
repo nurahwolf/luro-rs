@@ -1,9 +1,13 @@
-use twilight_model::{guild::{RoleTags, Role}, gateway::payload::incoming::{RoleCreate, RoleUpdate}, id::{Id, marker::GuildMarker}};
+use twilight_model::{
+    gateway::payload::incoming::{RoleCreate, RoleUpdate},
+    guild::{Role, RoleTags},
+    id::{marker::GuildMarker, Id},
+};
 
 use sqlx::types::Json;
 use twilight_model::util::ImageHash;
 
-use crate::{DbRole, LuroDatabase, DbRoleType};
+use crate::{DbRole, DbRoleType, LuroDatabase};
 
 impl LuroDatabase {
     pub async fn update_role(&self, role: impl Into<DbRoleType>) -> Result<DbRole, sqlx::Error> {
@@ -83,7 +87,9 @@ async fn handle_role(db: &LuroDatabase, role: impl Into<DbRole>) -> Result<DbRol
         role.role_id,
         role.tags as _,
         role.unicode_emoji,
-    ).fetch_one(&db.pool).await
+    )
+    .fetch_one(&db.pool)
+    .await
 }
 
 async fn handle_role_create(db: &LuroDatabase, role: RoleCreate) -> Result<DbRole, sqlx::Error> {
@@ -148,7 +154,9 @@ async fn handle_role_create(db: &LuroDatabase, role: RoleCreate) -> Result<DbRol
         role.role.id.get() as i64,
         role.role.tags.map(Json) as _,
         role.role.unicode_emoji,
-    ).fetch_one(&db.pool).await
+    )
+    .fetch_one(&db.pool)
+    .await
 }
 
 async fn handle_role_update(db: &LuroDatabase, role: RoleUpdate) -> Result<DbRole, sqlx::Error> {
@@ -213,7 +221,9 @@ async fn handle_role_update(db: &LuroDatabase, role: RoleUpdate) -> Result<DbRol
         role.role.id.get() as i64,
         role.role.tags.map(Json) as _,
         role.role.unicode_emoji,
-    ).fetch_one(&db.pool).await
+    )
+    .fetch_one(&db.pool)
+    .await
 }
 
 async fn handle_twilight_role(db: &LuroDatabase, role: Role, guild_id: Id<GuildMarker>) -> Result<DbRole, sqlx::Error> {
@@ -278,5 +288,7 @@ async fn handle_twilight_role(db: &LuroDatabase, role: Role, guild_id: Id<GuildM
         role.id.get() as i64,
         role.tags.map(Json) as _,
         role.unicode_emoji,
-    ).fetch_one(&db.pool).await
+    )
+    .fetch_one(&db.pool)
+    .await
 }

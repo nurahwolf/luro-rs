@@ -1,9 +1,7 @@
-use luro_model::guild::LuroGuild;
-
-use crate::{DatabaseGuildType, LuroDatabase};
+use crate::{DatabaseGuild, DatabaseGuildType, LuroDatabase};
 
 impl LuroDatabase {
-    pub async fn update_guild(&self, guild: impl Into<DatabaseGuildType>) -> Result<LuroGuild, sqlx::Error> {
+    pub async fn update_guild(&self, guild: impl Into<DatabaseGuildType>) -> Result<DatabaseGuild, sqlx::Error> {
         let guild = guild.into();
 
         match guild {
