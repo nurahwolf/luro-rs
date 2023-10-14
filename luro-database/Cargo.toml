@@ -12,21 +12,31 @@ version.workspace = true
 
 
 [dependencies]
+# Core
 anyhow = { workspace = true }
-bincode = { version = "1", optional = true }
-futures-util = "0.3" # main
+futures-util = "0.3"
 luro-model.path = "../luro-model"
+twilight-model = { workspace = true }
+time = { version = "0.3" }
+tracing = { workspace = true }
+
+# Cache
+twilight-cache-inmemory = { workspace = true, optional = true } #framework
+
+# Diesel
+diesel = { version = "2.1.0", features = ["postgres", "serde_json", "64-column-tables"], optional = true }
+diesel-derive-enum = { version = "2.1.0", features = ["postgres"], optional = true }
+
+# SQLx
 sqlx = { version = "0.7", features = [
     "runtime-tokio",
     "postgres",
     "json",
     "time",
 ], optional = true }
+
+# Toml
 toml = { version = "0.8", optional = true }
-twilight-model = { workspace = true }
-time = { version = "0.3", optional = true }
-tracing = { workspace = true }
-twilight-cache-inmemory = { workspace = true, optional = true } #framework
 
 
 # Default Features
@@ -34,8 +44,9 @@ twilight-cache-inmemory = { workspace = true, optional = true } #framework
 default = ["sqlx-driver", "cache"]
 
 ## Database Options
+diesel-driver = ["dep:diesel", "diesel-derive-enum"]
+sqlx-driver = ["dep:sqlx"]
 toml-driver = ["dep:toml"]
-sqlx-driver = ["dep:sqlx", "dep:bincode", "time"]
 
 ## Misc Features
 cache = ["dep:twilight-cache-inmemory"] # Only used for allowing cached items be converted to database items. If not needed, disable this feature

@@ -48,7 +48,7 @@ pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Re
         // Register primary owner
         let mut user = LuroUser::from(&framework.twilight_client.user(PRIMARY_BOT_OWNER).await?.model().await?);
 
-        user.user_permissions = LuroUserPermissions::Administrator;
+        user.user_permissions = LuroUserPermissions::Owner;
         framework.database.update_user(user).await?;
 
         staff = framework.database.get_staff().await?;
@@ -126,16 +126,16 @@ async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUs
     let mut owners = String::new();
     let mut administrators = String::new();
     for staff in staff {
-        match staff.user_permissions {
+        match staff.user_permissions.as_ref().unwrap_or(&LuroUserPermissions::User) {
             LuroUserPermissions::Owner => match owners.is_empty() {
                 true => owners.push_str(&staff.name),
-                false => owners.push_str(format!(", {}", staff.name).as_str()),
+                false => owners.push_str(format!(", {}", &staff.name).as_str()),
             },
             LuroUserPermissions::Administrator => match administrators.is_empty() {
                 true => administrators.push_str(&staff.name),
-                false => administrators.push_str(format!(", {}", staff.name).as_str()),
+                false => administrators.push_str(format!(", {}", &staff.name).as_str()),
             },
-            _ => warn!("User {:#?} is tagged as a regular user in the database!", staff),
+            _ => warn!("User {:#?} is tagged as a regular user in the database!", &staff),
         }
     }
 

@@ -1,10 +1,12 @@
+SELECT * from users
+
 -- SELECT 
 --     COUNT(*)
 -- FROM 
 --     messages
 
-DROP TABLE users;
-DROP TYPE user_permissions;
+-- DROP TABLE interactions;
+-- DROP TYPE interaction_kind;
 -- CREATE TYPE user_permissions AS ENUM ('USER', 'OWNER', 'ADMINISTRATOR');
 -- CREATE TABLE IF NOT EXISTS users (
 --     accent_colour INT,
@@ -43,3 +45,5 @@ DROP TYPE user_permissions;
 
 --     user_permissions user_permissions NOT NULL
 -- );
+
+

@@ -1,3 +1,4 @@
+-- Your SQL goes here
 CREATE TYPE user_permissions AS ENUM ('USER', 'OWNER', 'ADMINISTRATOR');
 CREATE TABLE IF NOT EXISTS users (
     accent_colour INT,

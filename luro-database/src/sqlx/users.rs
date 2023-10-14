@@ -17,6 +17,41 @@ mod handle_user;
 mod handle_user_update;
 mod update_user;
 
+#[derive(Debug)]
+pub struct DatabaseUser {
+    // pub character_prefix: BTreeMap<String, String>,
+    // pub guilds: HashMap<Id<GuildMarker>, LuroMember>,
+    // pub marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
+    // pub moderation_actions_performed: usize,
+    // pub moderation_actions: Json<Vec<UserActions>>,
+    // pub words: Json<BTreeMap<String, usize>>,
+    // pub wordsize: Json<BTreeMap<usize, usize>>,
+    pub accent_colour: Option<i32>,
+    pub avatar_decoration: Option<Json<ImageHash>>,
+    pub avatar: Option<Json<ImageHash>>,
+    pub banner: Option<Json<ImageHash>>,
+    pub bot: Option<bool>,
+    pub characters: Option<Vec<i32>>,
+    pub discriminator: i16,
+    pub email: Option<String>,
+    pub flags: Option<Json<UserFlags>>,
+    pub global_name: Option<String>,
+    pub locale: Option<String>,
+    pub message_edits: Option<i64>,
+    pub messages: Option<Vec<i64>>,
+    pub mfa_enabled: Option<bool>,
+    pub name: String,
+    pub premium_type: Option<Json<PremiumType>>,
+    pub public_flags: Option<Json<UserFlags>>,
+    pub system: Option<bool>,
+    pub user_id: i64,
+    pub user_permissions: Option<LuroUserPermissions>,
+    pub verified: Option<bool>,
+    pub warnings: Option<Vec<i64>>,
+    pub words_average: Option<i64>,
+    pub words_count: Option<i64>,
+}
+
 impl From<DatabaseUser> for LuroUser {
     fn from(user: DatabaseUser) -> Self {
         Self {
@@ -45,7 +80,7 @@ impl From<DatabaseUser> for LuroUser {
             premium_type: user.premium_type.map(|x|x.0),
             public_flags: user.public_flags.map(|x|x.0),
             system: user.system.unwrap_or_default(),
-            user_permissions: user.user_permissions.into(),
+            user_permissions: user.user_permissions.unwrap_or_default().into(),
             verified: user.verified.unwrap_or_default(),
             warnings: Default::default(),
             wordcount: user.words_count.map(|x|x as usize).unwrap_or_default(),

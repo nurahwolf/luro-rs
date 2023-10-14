@@ -4,7 +4,12 @@ use futures_util::TryStreamExt;
 use luro_model::guild::LuroGuild;
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::{DatabaseGuild, LuroDatabase};
+#[derive(Clone)]
+pub struct DatabaseGuild {
+    pub name: String,
+    pub guild_id: i64,
+    pub owner_id: i64,
+}
 
 impl DatabaseGuild {
     pub fn luro_guild(&self) -> LuroGuild {

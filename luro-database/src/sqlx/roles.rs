@@ -11,6 +11,22 @@ mod count_roles;
 mod delete_role;
 mod update_role;
 
+pub struct DatabaseRole {
+    pub colour: i32,
+    pub deleted: bool,
+    pub hoist: bool,
+    pub icon: Option<Json<ImageHash>>,
+    pub role_id: i64,
+    pub managed: bool,
+    pub mentionable: bool,
+    pub name: String,
+    pub permissions: i64,
+    pub position: i64,
+    pub flags: i64,
+    pub tags: Option<Json<RoleTags>>,
+    pub unicode_emoji: Option<String>,
+}
+
 impl From<Role> for DatabaseRole {
     fn from(role: Role) -> Self {
         Self {

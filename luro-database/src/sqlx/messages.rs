@@ -20,6 +20,43 @@ mod handle_message_delete_bulk;
 mod handle_message_update;
 mod update_message;
 
+#[derive(Debug)]
+pub struct DatabaseMessage {
+    pub activity: Option<Json<MessageActivity>>,
+    pub application_id: Option<i64>,
+    pub application: Option<Json<MessageApplication>>,
+    pub attachments: Option<Json<Vec<Attachment>>>,
+    pub author: Json<User>,
+    pub channel_id: i64,
+    pub components: Option<Json<Vec<Component>>>,
+    pub content: Option<String>,
+    pub deleted: Option<bool>,
+    pub edited_timestamp: Option<OffsetDateTime>,
+    pub embeds: Option<Json<Vec<Embed>>>,
+    pub flags: Option<Json<MessageFlags>>,
+    pub guild_id: Option<i64>,
+    pub id: i64,
+    pub interaction: Option<Json<MessageInteraction>>,
+    pub kind: Json<MessageType>,
+    pub mention_channels: Option<Json<Vec<ChannelMention>>>,
+    pub mention_everyone: Option<bool>,
+    pub mention_roles: Option<Vec<i64>>,
+    pub mentions: Option<Json<Vec<Mention>>>,
+    pub pinned: Option<bool>,
+    pub reactions: Option<Json<Vec<Reaction>>>,
+    pub reference: Option<Json<MessageReference>>,
+    pub referenced_message: Option<Json<Box<Message>>>,
+    pub role_subscription_data: Option<Json<RoleSubscriptionData>>,
+    pub source: DatabaseMessageSource,
+    pub sticker_items: Option<Json<Vec<MessageSticker>>>,
+    pub thread: Option<Json<Channel>>,
+    pub timestamp: time::OffsetDateTime,
+    pub tts: Option<bool>,
+    pub webhook_id: Option<i64>,
+    pub message_updates: Option<Json<Vec<MessageUpdate>>>,
+    pub member: Option<Json<PartialMember>>,
+}
+
 impl From<LuroMessage> for DatabaseMessage {
     fn from(message: LuroMessage) -> Self {
         Self {
