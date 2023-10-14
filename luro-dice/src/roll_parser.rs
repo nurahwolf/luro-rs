@@ -199,15 +199,12 @@ impl<'a> RollParser<'a> {
 
         let rolls = if self.advanced && self.accept('(', &options).is_ok() {
             let sm = self.parse_sum(&options)?;
-            self.accept(')', &options)
-                .map_err(|e| e.message("missing closing parenthesis"))?;
+            self.accept(')', &options).map_err(|e| e.message("missing closing parenthesis"))?;
 
             Some(Box::new(sm))
         } else {
             if self.advanced {
-                options = options
-                    .add_value('(')
-                    .message("tried to parse expression between parenthesis");
+                options = options.add_value('(').message("tried to parse expression between parenthesis");
             }
             self.restore(backup);
             self.parse_number(&options).map(Box::new).ok()
@@ -219,15 +216,12 @@ impl<'a> RollParser<'a> {
         let backup = self.backup();
         let sides = if self.advanced && self.accept('(', &options).is_ok() {
             let sm = self.parse_sum(&options)?;
-            self.accept(')', &options)
-                .map_err(|e| e.message("missing closing parenthesis"))?;
+            self.accept(')', &options).map_err(|e| e.message("missing closing parenthesis"))?;
 
             Some(Box::new(sm))
         } else {
             if self.advanced {
-                options = options
-                    .add_value('(')
-                    .message("tried to parse expression between parenthesis");
+                options = options.add_value('(').message("tried to parse expression between parenthesis");
             }
             self.restore(backup);
 
@@ -236,23 +230,19 @@ impl<'a> RollParser<'a> {
 
         let fm = if self.accept_string("kh", &options).is_ok() || self.accept('h', &options).is_ok() {
             FilterModifier::KeepHighest(Box::new(
-                self.parse_number(&options)
-                    .unwrap_or_else(|_| RollAst::Const("1".to_string())),
+                self.parse_number(&options).unwrap_or_else(|_| RollAst::Const("1".to_string())),
             ))
         } else if self.accept_string("dl", &options).is_ok() || self.accept('l', &options).is_ok() {
             FilterModifier::DropLowest(Box::new(
-                self.parse_number(&options)
-                    .unwrap_or_else(|_| RollAst::Const("1".to_string())),
+                self.parse_number(&options).unwrap_or_else(|_| RollAst::Const("1".to_string())),
             ))
         } else if self.accept_string("dh", &options).is_ok() {
             FilterModifier::DropHighest(Box::new(
-                self.parse_number(&options)
-                    .unwrap_or_else(|_| RollAst::Const("1".to_string())),
+                self.parse_number(&options).unwrap_or_else(|_| RollAst::Const("1".to_string())),
             ))
         } else if self.accept_string("kl", &options).is_ok() {
             FilterModifier::KeepLowest(Box::new(
-                self.parse_number(&options)
-                    .unwrap_or_else(|_| RollAst::Const("1".to_string())),
+                self.parse_number(&options).unwrap_or_else(|_| RollAst::Const("1".to_string())),
             ))
         } else {
             FilterModifier::None

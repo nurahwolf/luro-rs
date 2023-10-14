@@ -4,7 +4,6 @@ use tracing::info;
 use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
 
-
 #[cfg(feature = "command-about")]
 mod about;
 // #[cfg(feature = "command-base64")]
@@ -82,7 +81,9 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         #[cfg(feature = "command-character")]
         "character" => match ctx {
             InteractionContext::CommandInteraction(command) => character::Character::run_interaction_command(command).await,
-            InteractionContext::CommandAutocompleteInteraction(command) => character::Character::run_interaction_autocomplete(command).await,
+            InteractionContext::CommandAutocompleteInteraction(command) => {
+                character::Character::run_interaction_autocomplete(command).await
+            }
             InteractionContext::ComponentInteraction(command) => character::Character::run_interaction_component(command).await,
             InteractionContext::ModalInteraction(command) => character::Character::run_interaction_modal(command).await,
         },

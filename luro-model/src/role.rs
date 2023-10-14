@@ -6,7 +6,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use twilight_model::{
     guild::{Permissions, Role, RoleFlags, RoleTags},
-    id::{marker::RoleMarker, Id},
+    id::{marker::{RoleMarker, GuildMarker}, Id},
     util::ImageHash,
 };
 
@@ -32,6 +32,7 @@ pub type LuroRolePositions = BTreeMap<usize, Id<RoleMarker>>;
 /// [twilight-model documentation]: https://docs.rs/twilight-model/0.10.2/twilight_model/guild/struct.Role.html#impl-Ord
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct LuroRole {
+    pub guild_id: Id<GuildMarker>,
     #[serde(default)]
     pub colour: u32,
     #[serde(default)]
@@ -96,26 +97,6 @@ impl PartialOrd for LuroRole {
     }
 }
 
-impl Default for LuroRole {
-    fn default() -> Self {
-        Self {
-            colour: Default::default(),
-            deleted: Default::default(),
-            hoist: Default::default(),
-            icon: Default::default(),
-            id: Id::new(0),
-            managed: Default::default(),
-            mentionable: Default::default(),
-            name: Default::default(),
-            permissions: Permissions::empty(),
-            position: Default::default(),
-            flags: RoleFlags::empty(),
-            tags: Default::default(),
-            unicode_emoji: Default::default(),
-        }
-    }
-}
-
 impl From<Role> for LuroRole {
     fn from(role: Role) -> Self {
         Self {
@@ -124,6 +105,7 @@ impl From<Role> for LuroRole {
             hoist: role.hoist,
             icon: role.icon,
             id: role.id,
+            guild_id: Id::new(0),
             managed: role.managed,
             mentionable: role.mentionable,
             name: role.name,
@@ -132,24 +114,6 @@ impl From<Role> for LuroRole {
             flags: role.flags,
             tags: role.tags,
             unicode_emoji: role.unicode_emoji,
-        }
-    }
-}
-
-impl From<Id<RoleMarker>> for LuroRole {
-    fn from(id: Id<RoleMarker>) -> Self {
-        LuroRole {
-            id,
-            ..Default::default()
-        }
-    }
-}
-
-impl From<&Id<RoleMarker>> for LuroRole {
-    fn from(id: &Id<RoleMarker>) -> Self {
-        LuroRole {
-            id: *id,
-            ..Default::default()
         }
     }
 }

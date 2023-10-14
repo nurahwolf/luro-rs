@@ -22,7 +22,10 @@ mod events;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let rt = tokio::runtime::Builder::new_multi_thread().thread_stack_size(4096 * 1024).enable_all().build()?;
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .thread_stack_size(4096 * 1024)
+        .enable_all()
+        .build()?;
     let config = Configuration::new(INTENTS, FILTER)?;
 
     // Create the framework, Initialise tracing for logs based on bot name
@@ -59,7 +62,6 @@ async fn main() -> anyhow::Result<()> {
             shard.latency().clone(),
             shard.sender(),
         )));
-
 
         // tokio::spawn(events::event_handler(luro_framework::Context::new(
         //     framework.clone(),

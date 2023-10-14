@@ -24,11 +24,9 @@ impl StandardResponse {
                     .title(format!("👢 Kicked from {}", guild_name))
                     .colour(COLOUR_DANGER)
                     .author(|author| {
-                        author.icon_url(moderator.avatar()).name(format!(
-                            "Kicked by {} - {}",
-                            moderator.username(),
-                            moderator.id
-                        ))
+                        author
+                            .icon_url(moderator.avatar())
+                            .name(format!("Kicked by {} - {}", moderator.username(), moderator.id))
                     });
             }
             PunishmentType::Banned => {
@@ -37,11 +35,9 @@ impl StandardResponse {
                     .title(format!("🔨 Banned from {}", guild_name))
                     .colour(COLOUR_DANGER)
                     .author(|author| {
-                        author.icon_url(moderator.avatar()).name(format!(
-                            "Banned by {} - {}",
-                            moderator.username(),
-                            moderator.id
-                        ))
+                        author
+                            .icon_url(moderator.avatar())
+                            .name(format!("Banned by {} - {}", moderator.username(), moderator.id))
                     });
             }
             PunishmentType::Unbanned => {
@@ -50,11 +46,9 @@ impl StandardResponse {
                     .title(format!("🔓 Unbanned from {}", guild_name))
                     .colour(COLOUR_SUCCESS)
                     .author(|author| {
-                        author.icon_url(moderator.avatar()).name(format!(
-                            "Unbanned by {} - {}",
-                            moderator.username(),
-                            moderator.id
-                        ))
+                        author
+                            .icon_url(moderator.avatar())
+                            .name(format!("Unbanned by {} - {}", moderator.username(), moderator.id))
                     });
             }
         };

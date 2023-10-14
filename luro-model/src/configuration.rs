@@ -49,8 +49,7 @@ impl Configuration {
         let connection_string = std::env::var("DATABASE_URL").unwrap_or("".to_owned());
 
         #[cfg(feature = "lavalink")]
-        let lavalink_auth =
-            std::env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?;
+        let lavalink_auth = std::env::var("LAVALINK_AUTHORISATION").context("Failed to get the variable LAVALINK_AUTHORISATION")?;
         #[cfg(feature = "lavalink")]
         let lavalink_host = std::env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?;
 

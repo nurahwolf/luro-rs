@@ -255,12 +255,7 @@ impl<'a> CommandInputData<'a> {
         T: CommandOption,
     {
         // Find command option value
-        let value = match self
-            .options
-            .iter()
-            .find(|option| option.name == name)
-            .map(|option| &option.value)
-        {
+        let value = match self.options.iter().find(|option| option.name == name).map(|option| &option.value) {
             Some(value) => value.clone(),
             None => return Ok(None),
         };
@@ -307,10 +302,7 @@ impl<'a> CommandInputData<'a> {
     /// This method's signature is the same as the [`CommandOption`] trait,
     /// except for the explicit `'a` lifetime. It is used when parsing
     /// subcommands.
-    pub fn from_option(
-        value: CommandOptionValue,
-        resolved: Option<&'a InteractionDataResolved>,
-    ) -> Result<Self, ParseOptionErrorType> {
+    pub fn from_option(value: CommandOptionValue, resolved: Option<&'a InteractionDataResolved>) -> Result<Self, ParseOptionErrorType> {
         let options = match value {
             CommandOptionValue::SubCommand(options) | CommandOptionValue::SubCommandGroup(options) => options,
             other => return Err(ParseOptionErrorType::InvalidType(other.kind())),

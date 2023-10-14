@@ -11,12 +11,7 @@ pub fn impl_command_option(input: DeriveInput) -> Result<TokenStream> {
 
     let (variants, kind) = match input.data {
         syn::Data::Enum(DataEnum { variants, .. }) => ParsedVariant::from_variants(variants, input_span)?,
-        _ => {
-            return Err(Error::new(
-                input_span,
-                "`#[derive(CommandOption)] can only be applied to enums",
-            ))
-        }
+        _ => return Err(Error::new(input_span, "`#[derive(CommandOption)] can only be applied to enums")),
     };
 
     let parsed_init = parsed_init(kind);

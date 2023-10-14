@@ -3,8 +3,8 @@ use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::{
     channel::{
         message::{
-            sticker::MessageSticker, Component, Embed, Mention, MessageActivity, MessageApplication, MessageFlags,
-            MessageInteraction, MessageReference, MessageType, Reaction, RoleSubscriptionData,
+            sticker::MessageSticker, Component, Embed, Mention, MessageActivity, MessageApplication, MessageFlags, MessageInteraction,
+            MessageReference, MessageType, Reaction, RoleSubscriptionData,
         },
         Attachment, Channel, ChannelMention, Message,
     },

@@ -16,10 +16,7 @@ impl ExecuteLuroCommand for Commands {
         let client = ctx.twilight_client.interaction(application.id);
 
         client.set_guild_commands(self.guild.cast(), &[]).await?;
-        ctx.respond(|r| {
-            r.content(format!("Commands set to null in guild <#{}>", self.guild))
-                .ephemeral()
-        })
-        .await
+        ctx.respond(|r| r.content(format!("Commands set to null in guild <#{}>", self.guild)).ephemeral())
+            .await
     }
 }

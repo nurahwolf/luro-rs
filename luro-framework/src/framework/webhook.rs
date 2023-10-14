@@ -28,11 +28,6 @@ impl Framework {
     }
 
     pub async fn create_webhook(&self, channel_id: Id<ChannelMarker>) -> anyhow::Result<Webhook> {
-        Ok(self
-            .twilight_client
-            .create_webhook(channel_id, WEBHOOK_NAME)
-            .await?
-            .model()
-            .await?)
+        Ok(self.twilight_client.create_webhook(channel_id, WEBHOOK_NAME).await?.model().await?)
     }
 }

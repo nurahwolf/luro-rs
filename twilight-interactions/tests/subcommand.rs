@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use twilight_interactions::command::{
-    ApplicationCommandData, CommandInputData, CommandModel, CreateCommand, DescriptionLocalizations,
-};
+use twilight_interactions::command::{ApplicationCommandData, CommandInputData, CommandModel, CreateCommand, DescriptionLocalizations};
 use twilight_model::{
     application::{
         command::{CommandOption, CommandOptionType},

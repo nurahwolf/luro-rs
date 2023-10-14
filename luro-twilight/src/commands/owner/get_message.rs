@@ -41,10 +41,7 @@ impl ExecuteLuroCommand for Message {
 
         // Last ditch effort, is it in the cache?
         if luro_message.is_none() {
-            luro_message = ctx
-                .cache
-                .message(message_id)
-                .map(|message| LuroMessage::from(message.clone()))
+            luro_message = ctx.cache.message(message_id).map(|message| LuroMessage::from(message.clone()))
         }
 
         match luro_message {

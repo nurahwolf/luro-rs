@@ -5,9 +5,12 @@ use luro_framework::{
     CommandInteraction, ComponentInteraction, Luro, ModalInteraction,
 };
 use luro_model::user::character::{CharacterProfile, FetishCategory};
-use twilight_model::{application::command::{CommandOptionChoice, CommandOptionChoiceValue}, http::interaction::InteractionResponseType};
 use std::{collections::btree_map::Entry, fmt::Write};
-use twilight_interactions::command::{CommandModel, CreateCommand, AutocompleteValue};
+use twilight_interactions::command::{AutocompleteValue, CommandModel, CreateCommand};
+use twilight_model::{
+    application::command::{CommandOptionChoice, CommandOptionChoiceValue},
+    http::interaction::InteractionResponseType,
+};
 
 use self::{create::Create, fetish::Fetish, icon::Icon, profile::Profile, proxy::Proxy, send::CharacterSend};
 
@@ -88,10 +91,7 @@ impl ExecuteLuroCommand for Character {
 
         embed.title(format!("Character Profile - {character_name}"));
         embed.description(description);
-        embed.author(|a| {
-            a.icon_url(user_data.avatar())
-                .name(format!("Profile by {}", user_data.name()))
-        });
+        embed.author(|a| a.icon_url(user_data.avatar()).name(format!("Profile by {}", user_data.name())));
 
         ctx.respond(|response| response.add_embed(embed)).await
     }

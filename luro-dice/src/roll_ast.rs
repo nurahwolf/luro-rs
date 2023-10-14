@@ -89,9 +89,7 @@ impl RollAst {
                 }
             }
 
-            RollAst::Dice(None, r, fm, dp) => {
-                RollAst::Dice(Some(Box::new(RollAst::Const("1".to_string()))), r, fm, dp).interp(rolls)?
-            }
+            RollAst::Dice(None, r, fm, dp) => RollAst::Dice(Some(Box::new(RollAst::Const("1".to_string()))), r, fm, dp).interp(rolls)?,
             RollAst::Dice(l, None, fm, dp) => {
                 RollAst::Dice(l, Some(Box::new(RollAst::Const(DEFAULT_SIDES.to_string()))), fm, dp).interp(rolls)?
             }

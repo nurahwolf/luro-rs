@@ -27,8 +27,7 @@ impl CreateLuroCommand for About {}
 impl ExecuteLuroCommand for About {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut description =
-            "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n"
-                .to_owned();
+            "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n".to_owned();
         let current_user = ctx.twilight_client.current_user().await?.model().await?;
         let mut embed = EmbedBuilder::default();
         let slash_author = LuroUser::from(&current_user);

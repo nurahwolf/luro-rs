@@ -270,10 +270,7 @@ impl CommandOptionValue {
         match attr.inner() {
             Lit::Int(inner) => Ok(Self::Integer(inner.base10_parse()?)),
             Lit::Float(inner) => Ok(Self::Number(inner.base10_parse()?)),
-            _ => Err(Error::new(
-                attr.inner().span(),
-                "invalid attribute type, expected integer or float",
-            )),
+            _ => Err(Error::new(attr.inner().span(), "invalid attribute type, expected integer or float")),
         }
     }
 }

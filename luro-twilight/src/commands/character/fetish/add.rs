@@ -23,17 +23,11 @@ impl ExecuteLuroCommand for Add {
         let user_id = ctx.author_id();
         let mut user_data = ctx.get_user(&user_id).await?;
         embed.title(format!("Character Profile - {}", self.name));
-        embed.author(|a| {
-            a.icon_url(user_data.avatar())
-                .name(format!("Profile by {}", user_data.name()))
-        });
+        embed.author(|a| a.icon_url(user_data.avatar()).name(format!("Profile by {}", user_data.name())));
 
         if user_data.characters.is_empty() {
             return ctx
-                .respond(|r| {
-                    r.content(format!("Hey <@{user_id}>, you must add a character first!!"))
-                        .ephemeral()
-                })
+                .respond(|r| r.content(format!("Hey <@{user_id}>, you must add a character first!!")).ephemeral())
                 .await;
         }
 

@@ -7,7 +7,6 @@ use std::fmt::Write;
 use twilight_interactions::command::CommandModel;
 use twilight_interactions::command::CreateCommand;
 
-
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "send", desc = "Send a message as a character!")]
 pub struct CharacterSend {

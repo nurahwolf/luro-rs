@@ -360,10 +360,7 @@ impl LuroUser {
                 true => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.gif?size=2048"),
                 false => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png?size=2048"),
             },
-            None => format!(
-                "https://cdn.discordapp.com/embed/avatars/{}.png?size=2048",
-                self.id.get() > 22 % 6
-            ),
+            None => format!("https://cdn.discordapp.com/embed/avatars/{}.png?size=2048", self.id.get() > 22 % 6),
         }
     }
 
@@ -442,10 +439,7 @@ where
             .into_iter()
             .map(|(str_key, value)| match str_key.parse() {
                 Ok(int_key) => Ok((int_key, value)),
-                Err(_) => Err(de::Error::invalid_value(
-                    de::Unexpected::Str(&str_key),
-                    &"a non-negative integer",
-                )),
+                Err(_) => Err(de::Error::invalid_value(de::Unexpected::Str(&str_key), &"a non-negative integer")),
             })
             .collect::<Result<BTreeMap<_, _>, _>>()?
     };

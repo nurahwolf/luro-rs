@@ -1,9 +1,12 @@
 #![feature(async_fn_in_trait)]
+#![feature(return_position_impl_trait_in_trait)]
+
 use luro_database::LuroDatabase;
 use luro_model::{builders::EmbedBuilder, guild::LuroGuild, response::LuroResponse, user::LuroUser};
 use slash_command::LuroCommand;
 use std::{
     collections::HashMap,
+    future::Future,
     sync::{Arc, Mutex},
 };
 use tracing::{info, warn};
@@ -67,8 +70,7 @@ pub struct CommandInteraction {
     // pub original: twilight_model::application::interaction::Interaction,
     pub shard: twilight_gateway::MessageSender,
     pub token: String,
-    pub tracing_subscriber:
-        tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub user: Option<twilight_model::user::User>,
 }
@@ -100,8 +102,7 @@ pub struct Context {
     /// A [MessageSender] for interacting with the shard
     pub shard: twilight_gateway::MessageSender,
     /// Tracing subscriber information
-    pub tracing_subscriber:
-        tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     /// Twilight client for interacting with the Discord API
     pub twilight_client: Arc<twilight_http::Client>,
 }
@@ -124,8 +125,7 @@ pub struct Framework {
     /// Twilight's client for interacting with the Discord API
     pub twilight_client: Arc<twilight_http::Client>,
     /// The global tracing subscriber, for allowing manipulation within commands
-    pub tracing_subscriber:
-        tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     /// A mutable list of global commands, keyed by [String] (command name) and containing a [ApplicationCommandData]
     pub global_commands: LuroMutex<LuroCommandType>,
     /// A mutable list of guild commands, keyed by [GuildMarker] and containing [LuroCommand]s
@@ -134,24 +134,36 @@ pub struct Framework {
 
 pub trait LuroInteraction {
     fn original_interaction(&self) -> &Interaction;
-    async fn accent_colour(&self, framework: &Framework) -> u32;
-    async fn acknowledge_interaction(&self, framework: &Framework, ephemeral: bool) -> anyhow::Result<LuroResponse>;
-    async fn default_embed(&self, framework: &Framework) -> EmbedBuilder;
-    async fn get_interaction_author(&self, framework: &Framework) -> anyhow::Result<LuroUser>;
-    async fn get_specified_user_or_author(
+    fn accent_colour(&self, framework: &Framework) -> impl Future<Output = u32> + Send;
+    fn acknowledge_interaction(
+        &self,
+        framework: &Framework,
+        ephemeral: bool,
+    ) -> impl Future<Output = anyhow::Result<LuroResponse>> + Send;
+    fn default_embed(&self, framework: &Framework) -> impl Future<Output = EmbedBuilder> + Send;
+    fn get_interaction_author(&self, framework: &Framework) -> impl Future<Output = anyhow::Result<LuroUser>> + Send;
+    fn get_specified_user_or_author(
         &self,
         framework: &Framework,
         specified_user: Option<&ResolvedUser>,
-    ) -> anyhow::Result<LuroUser>;
-    async fn respond_message<F>(&self, framework: &Framework, response: F) -> anyhow::Result<Option<Message>>
+    ) -> impl Future<Output = anyhow::Result<LuroUser>> + Send;
+    fn respond_message<F>(&self, framework: &Framework, response: F) -> impl Future<Output = anyhow::Result<Option<Message>>> + Send
     where
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse;
-    async fn respond<F>(&self, framework: &Framework, response: F) -> anyhow::Result<()>
+    fn respond<F>(&self, framework: &Framework, response: F) -> impl Future<Output = anyhow::Result<()>> + Send
     where
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse;
-    async fn response_create(&self, framework: &Framework, response: &LuroResponse) -> anyhow::Result<Option<Message>>;
-    async fn response_update(&self, framework: &Framework, response: &LuroResponse) -> anyhow::Result<Message>;
-    async fn send_response(&self, framework: &Framework, response: LuroResponse) -> anyhow::Result<Option<Message>>;
+    fn response_create(
+        &self,
+        framework: &Framework,
+        response: &LuroResponse,
+    ) -> impl Future<Output = anyhow::Result<Option<Message>>> + Send;
+    fn response_update(&self, framework: &Framework, response: &LuroResponse) -> impl Future<Output = anyhow::Result<Message>> + Send;
+    fn send_response(
+        &self,
+        framework: &Framework,
+        response: LuroResponse,
+    ) -> impl Future<Output = anyhow::Result<Option<Message>>> + Send;
     fn author_id(&self) -> Id<UserMarker>;
     fn author(&self) -> &User;
     fn guild_id(&self) -> Option<Id<GuildMarker>>;
@@ -183,8 +195,7 @@ pub struct ModalInteraction {
     pub original: twilight_model::application::interaction::Interaction,
     pub shard: twilight_gateway::MessageSender,
     pub token: String,
-    pub tracing_subscriber:
-        tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub user: Option<twilight_model::user::User>,
 }
@@ -213,8 +224,7 @@ pub struct ComponentInteraction {
     pub original: twilight_model::application::interaction::Interaction,
     pub shard: twilight_gateway::MessageSender,
     pub token: String,
-    pub tracing_subscriber:
-        tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub user: Option<twilight_model::user::User>,
 }
@@ -223,22 +233,30 @@ pub struct ComponentInteraction {
 pub trait Luro {
     /// Gets the [interaction client](InteractionClient) using this framework's
     /// [http client](Client) and [application id](ApplicationMarker)
-    async fn interaction_client(&self) -> anyhow::Result<InteractionClient>;
+    fn interaction_client(&self) -> impl Future<Output = anyhow::Result<InteractionClient>> + Send;
 
-    async fn application(&self) -> anyhow::Result<Application> {
-        Ok(self.twilight_client().current_user_application().await?.model().await?)
+    fn application(&self) -> impl Future<Output = anyhow::Result<Application>> + Send
+    where
+        Self: Sync,
+    {
+        async { Ok(self.twilight_client().current_user_application().await?.model().await?) }
     }
 
     /// Register commands to the Discord API.
-    async fn register_commands(&self, commands: &[Command]) -> anyhow::Result<()> {
-        let client = self.interaction_client().await?;
+    fn register_commands(&self, commands: &[Command]) -> impl Future<Output = anyhow::Result<()>> + Send
+    where
+        Self: Sync,
+    {
+        async {
+            let client = self.interaction_client().await?;
 
-        match client.set_global_commands(commands).await {
-            Ok(command_result) => Ok(info!(
-                "Successfully registered {} global commands!",
-                command_result.model().await?.len()
-            )),
-            Err(why) => Err(why.into()),
+            match client.set_global_commands(commands).await {
+                Ok(command_result) => Ok(info!(
+                    "Successfully registered {} global commands!",
+                    command_result.model().await?.len()
+                )),
+                Err(why) => Err(why.into()),
+            }
         }
     }
 
@@ -249,37 +267,47 @@ pub trait Luro {
     fn twilight_client(&self) -> Arc<Client>;
 
     /// Fetch and return a [LuroGuild], updating the database if not present
-    async fn get_guild(&self, guild_id: &Id<GuildMarker>) -> anyhow::Result<LuroGuild> {
-        Ok(match self.database().get_guild(guild_id.get() as i64).await? {
-            Some(guild) => guild,
-            None => {
-                self.database()
-                    .update_guild(self.twilight_client().guild(*guild_id).await?.model().await?)
-                    .await?
-            }
-        })
+    fn get_guild(&self, guild_id: &Id<GuildMarker>) -> impl Future<Output = anyhow::Result<LuroGuild>> + Send
+    where
+        Self: Sync,
+    {
+        async {
+            Ok(match self.database().get_guild(guild_id.get() as i64).await? {
+                Some(guild) => guild,
+                None => {
+                    self.database()
+                        .update_guild(self.twilight_client().guild(*guild_id).await?.model().await?)
+                        .await?
+                }
+            })
+        }
     }
 
     /// Fetch and return a [LuroGuild], updating the database if not present
-    async fn get_user(&self, user_id: &Id<UserMarker>) -> anyhow::Result<LuroUser> {
-        Ok(match self.database().get_user(user_id.get() as i64).await? {
-            Some(user) => user.into(),
-            None => {
-                let user = self.twilight_client().user(*user_id).await?.model().await?;
-                match self.database().update_user(user.clone()).await {
-                    Ok(db_user) => match db_user {
-                        Some(user) => user.into(),
-                        None => {
-                            warn!("User did not exist in the database, attempted to update the user but the database still did not return the user");
+    fn get_user(&self, user_id: &Id<UserMarker>) -> impl Future<Output = anyhow::Result<LuroUser>> + Send
+    where
+        Self: Sync,
+    {
+        async {
+            Ok(match self.database().get_user(user_id.get() as i64).await? {
+                Some(user) => user.into(),
+                None => {
+                    let user = self.twilight_client().user(*user_id).await?.model().await?;
+                    match self.database().update_user(user.clone()).await {
+                        Ok(db_user) => match db_user {
+                            Some(user) => user.into(),
+                            None => {
+                                warn!("User did not exist in the database, attempted to update the user but the database still did not return the user");
+                                (&user).into()
+                            }
+                        },
+                        Err(why) => {
+                            warn!(why = ?why, "Failed to get user, falling back to twilight");
                             (&user).into()
                         }
-                    },
-                    Err(why) => {
-                        warn!(why = ?why, "Failed to get user, falling back to twilight");
-                        (&user).into()
                     }
                 }
-            }
-        })
+            })
+        }
     }
 }

@@ -9,12 +9,19 @@ pub trait LuroDatabaseItem {
     /// Additional context needed to manipulate a type
     type Driver;
 
-    async fn add_item(driver: Self::Driver, item: &Self::Item) -> anyhow::Result<()>;
-    async fn add_items(driver: Self::Driver, items: &Self::Container) -> anyhow::Result<()>;
-    async fn get_item(id: &Self::Id, ctx: Self::Driver) -> anyhow::Result<Option<Self::Item>>;
-    async fn get_items(ids: Vec<&Self::Id>, ctx: Self::Driver) -> anyhow::Result<Self::Container>;
-    async fn modify_item(driver: Self::Driver, id: &Self::Id, item: &Self::Item) -> anyhow::Result<Option<Self::Item>>;
-    async fn modify_items(driver: Self::Driver, items: &Self::Container) -> anyhow::Result<Self::Container>;
-    async fn remove_item(id: &Self::Id, ctx: Self::Driver) -> anyhow::Result<Option<Self::Item>>;
-    async fn remove_items(ids: Vec<&Self::Id>, ctx: Self::Driver) -> anyhow::Result<Self::Container>;
+    fn add_item(driver: Self::Driver, item: &Self::Item) -> impl std::future::Future<Output = anyhow::Result<()>> + Send;
+    fn add_items(driver: Self::Driver, items: &Self::Container) -> impl std::future::Future<Output = anyhow::Result<()>> + Send;
+    fn get_item(id: &Self::Id, ctx: Self::Driver) -> impl std::future::Future<Output = anyhow::Result<Option<Self::Item>>> + Send;
+    fn get_items(ids: Vec<&Self::Id>, ctx: Self::Driver) -> impl std::future::Future<Output = anyhow::Result<Self::Container>> + Send;
+    fn modify_item(
+        driver: Self::Driver,
+        id: &Self::Id,
+        item: &Self::Item,
+    ) -> impl std::future::Future<Output = anyhow::Result<Option<Self::Item>>> + Send;
+    fn modify_items(
+        driver: Self::Driver,
+        items: &Self::Container,
+    ) -> impl std::future::Future<Output = anyhow::Result<Self::Container>> + Send;
+    fn remove_item(id: &Self::Id, ctx: Self::Driver) -> impl std::future::Future<Output = anyhow::Result<Option<Self::Item>>> + Send;
+    fn remove_items(ids: Vec<&Self::Id>, ctx: Self::Driver) -> impl std::future::Future<Output = anyhow::Result<Self::Container>> + Send;
 }

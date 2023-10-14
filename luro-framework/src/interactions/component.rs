@@ -57,19 +57,13 @@ impl InteractionTrait for ComponentInteraction {
     /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
     async fn accent_colour(&self) -> u32 {
         match self.guild_id {
-            Some(guild_id) => {
-                match self
-                    .get_guild(&guild_id)
-                    .await
-                    .map(|mut x| x.highest_role_colour().map(|x| x.0))
-                {
-                    Ok(colour) => colour.unwrap_or(ACCENT_COLOUR),
-                    Err(why) => {
-                        warn!(why = ?why, "Failed to get guild accent colour");
-                        ACCENT_COLOUR
-                    }
+            Some(guild_id) => match self.get_guild(&guild_id).await.map(|mut x| x.highest_role_colour().map(|x| x.0)) {
+                Ok(colour) => colour.unwrap_or(ACCENT_COLOUR),
+                Err(why) => {
+                    warn!(why = ?why, "Failed to get guild accent colour");
+                    ACCENT_COLOUR
                 }
-            }
+            },
             None => ACCENT_COLOUR, // There is no guild for this interaction
         }
     }
@@ -77,18 +71,19 @@ impl InteractionTrait for ComponentInteraction {
 
 impl ComponentInteraction {
     pub fn new(ctx: LuroContext, interaction: Interaction) -> anyhow::Result<Self> {
-        let data =
-            match interaction.data.clone().context(
-                "Attempting to create an 'ComponentInteraction' from an interaction that does not have any command data",
-            )? {
-                InteractionData::MessageComponent(data) => data,
-                _ => {
-                    return Err(anyhow!(
-                        "Incorrect command data, meant to get MessageComponent but actually got {:#?}",
-                        interaction
-                    ))
-                }
-            };
+        let data = match interaction
+            .data
+            .clone()
+            .context("Attempting to create an 'ComponentInteraction' from an interaction that does not have any command data")?
+        {
+            InteractionData::MessageComponent(data) => data,
+            _ => {
+                return Err(anyhow!(
+                    "Incorrect command data, meant to get MessageComponent but actually got {:#?}",
+                    interaction
+                ))
+            }
+        };
         Ok(ComponentInteraction {
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,

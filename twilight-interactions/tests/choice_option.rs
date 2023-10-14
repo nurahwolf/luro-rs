@@ -45,11 +45,7 @@ pub fn name_dog() -> [(&'static str, &'static str); 1] {
 
 #[test]
 fn test_command_option_string() {
-    let parsed = ChoiceString::from_option(
-        CommandOptionValue::String("crab".to_string()),
-        CommandOptionData::default(),
-        None,
-    );
+    let parsed = ChoiceString::from_option(CommandOptionValue::String("crab".to_string()), CommandOptionData::default(), None);
     assert_eq!(parsed, Ok(ChoiceString::Crab));
     assert_eq!(ChoiceString::Dog.value(), "dog");
     assert_eq!(ChoiceString::Cat.value(), "cat");

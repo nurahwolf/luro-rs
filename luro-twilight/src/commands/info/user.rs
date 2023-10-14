@@ -96,11 +96,7 @@ impl ExecuteLuroCommand for InfoUser {
             }
 
             if !luro_user.characters.is_empty() {
-                writeln!(
-                    user_data_description,
-                    "- Has `{}` character profiles",
-                    luro_user.characters.len()
-                )?;
+                writeln!(user_data_description, "- Has `{}` character profiles", luro_user.characters.len())?;
             }
             writeln!(user_data_description, "- Typed `{}` characters", luro_user.averagesize)?;
             writeln!(
@@ -199,21 +195,13 @@ impl ExecuteLuroCommand for InfoUser {
                     }
                 }
                 writeln!(guild_information, "- Roles ({}): {role_list}", user_roles.len())?;
-                timestamp.push_str(
-                    format!(
-                        "- Joined this server at <t:{0}> - <t:{0}:R>\n",
-                        luro_member.joined_at.as_secs()
-                    )
-                    .as_str(),
-                );
+                timestamp.push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>\n", luro_member.joined_at.as_secs()).as_str());
                 if let Some(left_at) = luro_member.left_at {
                     timestamp.push_str(format!("- Left this server at <t:{0}> - <t:{0}:R>\n", left_at.as_secs()).as_str());
                 }
 
                 if let Some(member_timestamp) = luro_member.premium_since {
-                    timestamp.push_str(
-                        format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.as_secs()).as_str(),
-                    );
+                    timestamp.push_str(format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.as_secs()).as_str());
                 }
                 if let Some(nickname) = &luro_member.nick {
                     writeln!(guild_information, "- Nickname: `{nickname}`")?;

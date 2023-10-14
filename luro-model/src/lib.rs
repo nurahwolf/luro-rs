@@ -1,4 +1,5 @@
-#![feature(async_fn_in_trait)] // The database driver is async
+#![feature(return_position_impl_trait_in_trait)]
+#![feature(async_fn_in_trait)]
 #![feature(let_chains)]
 
 use std::collections::{BTreeMap, HashMap};

@@ -168,12 +168,7 @@ impl ExecuteLuroCommand for Owner {
 async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
     let mut roles_string = String::new();
     let guild_id = ctx.guild_id.unwrap();
-    let mut roles: Vec<Id<RoleMarker>> = ctx
-        .data
-        .values
-        .iter()
-        .map(|role| Id::new(role.parse::<u64>().unwrap()))
-        .collect();
+    let mut roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
     // let guild = ctx.framework.twilight_cache.guild_members(guild_id).unwrap();
     let guild = ctx.twilight_client.guild_members(guild_id).limit(1000).await?.model().await?;
@@ -242,12 +237,7 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
 async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
     let guild_id = ctx.guild_id.unwrap();
 
-    let mut roles: Vec<Id<RoleMarker>> = ctx
-        .data
-        .values
-        .iter()
-        .map(|role| Id::new(role.parse::<u64>().unwrap()))
-        .collect();
+    let mut roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
     // let guild = ctx.framework.twilight_cache.guild_members(guild_id).unwrap();
     let guild = ctx.twilight_client.guild_members(guild_id).limit(1000).await?.model().await?;

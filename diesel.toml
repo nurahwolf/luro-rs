@@ -6,4 +6,4 @@ file = "luro-database/src/schema.rs"
 custom_type_derives = ["diesel::query_builder::QueryId"]
 
 [migrations_directory]
-dir = "luro-database/src/diesel-migrations"
+dir = "luro-database/src/diesel/diesel-migrations"

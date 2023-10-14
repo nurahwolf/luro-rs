@@ -47,11 +47,7 @@ impl Framework {
     }
 
     /// Register a single command in the framework, does NOT register them discord's side. Call `register_commands` for that!
-    pub async fn register_new_command(
-        &self,
-        guild_id: Option<Id<GuildMarker>>,
-        new_commands: LuroCommand,
-    ) -> anyhow::Result<&Framework> {
+    pub async fn register_new_command(&self, guild_id: Option<Id<GuildMarker>>, new_commands: LuroCommand) -> anyhow::Result<&Framework> {
         match guild_id {
             Some(guild_id) => match self.guild_commands.lock() {
                 Ok(mut guild_commands) => {

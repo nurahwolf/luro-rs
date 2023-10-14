@@ -7,9 +7,8 @@ use twilight_model::{
 };
 
 use self::{
-    embed_author::EmbedAuthorBuilder, embed_field::EmbedFieldBuilder, embed_footer::EmbedFooterBuilder,
-    embed_image::EmbedImageBuilder, embed_provider::EmbedProviderBuilder, embed_thumbnail::EmbedThumbnailBuilder,
-    embed_video::EmbedVideoBuilder,
+    embed_author::EmbedAuthorBuilder, embed_field::EmbedFieldBuilder, embed_footer::EmbedFooterBuilder, embed_image::EmbedImageBuilder,
+    embed_provider::EmbedProviderBuilder, embed_thumbnail::EmbedThumbnailBuilder, embed_video::EmbedVideoBuilder,
 };
 
 use super::EmbedBuilder;

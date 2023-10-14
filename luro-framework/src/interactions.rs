@@ -11,7 +11,7 @@ mod modal;
 
 pub trait InteractionTrait {
     fn command_name(&self) -> &str;
-    async fn accent_colour(&self) -> u32;
+    fn accent_colour(&self) -> impl std::future::Future<Output = u32> + Send;
     fn author(&self) -> &User;
 
     /// ID of the user that invoked the interaction.
@@ -27,9 +27,14 @@ pub trait InteractionTrait {
     }
 
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
-    async fn default_embed(&self) -> EmbedBuilder {
-        let mut embed = EmbedBuilder::default();
-        embed.colour(self.accent_colour().await);
-        embed
+    fn default_embed(&self) -> impl std::future::Future<Output = EmbedBuilder> + Send
+    where
+        Self: Sync,
+    {
+        async {
+            let mut embed = EmbedBuilder::default();
+            embed.colour(self.accent_colour().await);
+            embed
+        }
     }
 }

@@ -1,5 +1,8 @@
 use diesel::{Queryable, Selectable};
-use twilight_model::{user::{PremiumType, UserFlags}, util::ImageHash};
+use twilight_model::{
+    user::{PremiumType, UserFlags},
+    util::ImageHash,
+};
 
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = crate::schema::users)]
@@ -50,13 +53,13 @@ impl From<LuroUserPermissions> for luro_model::user::LuroUserPermissions {
     fn from(permissions: LuroUserPermissions) -> Self {
         match permissions {
             LuroUserPermissions::User => Self::User,
-            LuroUserPermissions::Owner =>  Self::Owner,
-            LuroUserPermissions::Administrator =>  Self::Administrator,
+            LuroUserPermissions::Owner => Self::Owner,
+            LuroUserPermissions::Administrator => Self::Administrator,
         }
     }
 }
 
-impl From<luro_model::user::LuroUserPermissions> for  LuroUserPermissions {
+impl From<luro_model::user::LuroUserPermissions> for LuroUserPermissions {
     fn from(permissions: luro_model::user::LuroUserPermissions) -> Self {
         match permissions {
             luro_model::user::LuroUserPermissions::User => Self::User,

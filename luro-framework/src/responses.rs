@@ -8,8 +8,8 @@ use twilight_model::{
 
 use self::{
     bot_heirarchy::bot_hierarchy_embed, bot_missing_permission::bot_missing_permission_embed,
-    missing_permissions::missing_permission_embed, not_owner::not_owner_embed,
-    permission_modify_server_owner::permission_server_owner, user_heirarchy::user_hierarchy_embed,
+    missing_permissions::missing_permission_embed, not_owner::not_owner_embed, permission_modify_server_owner::permission_server_owner,
+    user_heirarchy::user_hierarchy_embed,
 };
 
 mod bot_heirarchy;
@@ -33,9 +33,7 @@ pub struct StandardResponse {
 
 impl StandardResponse {
     pub fn new() -> Self {
-        Self {
-            embed: Default::default(),
-        }
+        Self { embed: Default::default() }
     }
 
     /// Clone the internal embed and return it. Useful for if you don't want to clone it manually.

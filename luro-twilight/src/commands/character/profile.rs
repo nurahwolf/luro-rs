@@ -75,10 +75,7 @@ impl ExecuteLuroCommand for Profile {
         }
         embed.title(format!("Character Profile - {}", self.name));
         embed.description(description);
-        embed.author(|a| {
-            a.icon_url(user_data.avatar())
-                .name(format!("Profile by {}", user_data.name()))
-        });
+        embed.author(|a| a.icon_url(user_data.avatar()).name(format!("Profile by {}", user_data.name())));
 
         let mut prefix_string = String::new();
         for (prefix, character_name) in user_data.character_prefix {
@@ -95,12 +92,7 @@ impl ExecuteLuroCommand for Profile {
             if nsfw && !character.fetishes.is_empty() {
                 response.components(|components| {
                     components.action_row(|row| {
-                        row.button(|button| {
-                            button
-                                .custom_id("character-fetish")
-                                .label("Fetishes")
-                                .style(ButtonStyle::Danger)
-                        })
+                        row.button(|button| button.custom_id("character-fetish").label("Fetishes").style(ButtonStyle::Danger))
                     })
                 });
             }

@@ -80,11 +80,9 @@ impl ExecuteLuroCommand for ModifyRole {
                     id: role_selected.id,
                     position: role_position.position,
                 }];
-                let request = Request::builder(&Route::UpdateRolePositions {
-                    guild_id: guild.id.get(),
-                })
-                .json(&positions)
-                .build();
+                let request = Request::builder(&Route::UpdateRolePositions { guild_id: guild.id.get() })
+                    .json(&positions)
+                    .build();
                 ctx.twilight_client.request::<EmptyBody>(request?).await?;
             }
 
@@ -94,11 +92,9 @@ impl ExecuteLuroCommand for ModifyRole {
                     id: role_selected.id,
                     position,
                 }];
-                let request = Request::builder(&Route::UpdateRolePositions {
-                    guild_id: guild.id.get(),
-                })
-                .json(&positions)
-                .build();
+                let request = Request::builder(&Route::UpdateRolePositions { guild_id: guild.id.get() })
+                    .json(&positions)
+                    .build();
                 ctx.twilight_client.request::<EmptyBody>(request?).await?;
             }
 

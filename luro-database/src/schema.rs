@@ -154,12 +154,4 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(
-    _sqlx_migrations,
-    channels,
-    guilds,
-    interactions,
-    messages,
-    roles,
-    users,
-);
+diesel::allow_tables_to_appear_in_same_query!(_sqlx_migrations, channels, guilds, interactions, messages, roles, users,);

@@ -13,8 +13,8 @@ use twilight_model::{
     channel::{message::Sticker, Channel, StageInstance},
     gateway::presence::Presence,
     guild::{
-        AfkTimeout, DefaultMessageNotificationLevel, Emoji, ExplicitContentFilter, Guild, GuildFeature, MfaLevel, NSFWLevel,
-        Permissions, PremiumTier, SystemChannelFlags, VerificationLevel,
+        AfkTimeout, DefaultMessageNotificationLevel, Emoji, ExplicitContentFilter, Guild, GuildFeature, MfaLevel, NSFWLevel, Permissions,
+        PremiumTier, SystemChannelFlags, VerificationLevel,
     },
     id::{
         marker::{ApplicationMarker, ChannelMarker, GuildMarker, RoleMarker, UserMarker},
@@ -131,10 +131,7 @@ pub struct LuroGuild {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[cfg_attr(
         feature = "toml-driver",
-        serde(
-            deserialize_with = "deserialize_role_positions",
-            serialize_with = "serialize_role_positions"
-        )
+        serde(deserialize_with = "deserialize_role_positions", serialize_with = "serialize_role_positions")
     )]
     pub role_positions: LuroRolePositions,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -260,13 +257,8 @@ impl LuroGuild {
         user: &'a LuroUser,
         user_permissions: &'a [(Id<RoleMarker>, Permissions)],
     ) -> anyhow::Result<PermissionCalculator> {
-        let everyone_role = self
-            .get_everyone_role()
-            .context("Could not get everyone role from guild roles!")?;
-        Ok(
-            PermissionCalculator::new(self.guild_id, user.id, everyone_role.permissions, user_permissions)
-                .owner_id(self.owner_id),
-        )
+        let everyone_role = self.get_everyone_role().context("Could not get everyone role from guild roles!")?;
+        Ok(PermissionCalculator::new(self.guild_id, user.id, everyone_role.permissions, user_permissions).owner_id(self.owner_id))
     }
 
     pub fn update_everyone_role(&mut self) -> &mut Self {

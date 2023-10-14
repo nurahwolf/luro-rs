@@ -14,10 +14,7 @@ use twilight_interactions::command::{CommandOption, CreateOption};
 /// The different categories of fetishes a user can have
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq, CommandOption, CreateOption)]
 pub enum FetishCategory {
-    #[option(
-        name = "Favourite - Something this character loves to the end of the world",
-        value = "favourite"
-    )]
+    #[option(name = "Favourite - Something this character loves to the end of the world", value = "favourite")]
     Favourite,
     #[option(name = "Love - The character loves this!", value = "love")]
     Love,

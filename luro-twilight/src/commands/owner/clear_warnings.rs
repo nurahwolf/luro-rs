@@ -37,10 +37,7 @@ impl ExecuteLuroCommand for Warnings {
                 },
                 Err(why) => {
                     return ctx
-                        .respond(|r| {
-                            r.content(format!("Failed to convert `i64` to `usize`\n```{}```!", why))
-                                .ephemeral()
-                        })
+                        .respond(|r| r.content(format!("Failed to convert `i64` to `usize`\n```{}```!", why)).ephemeral())
                         .await
                 }
             };
