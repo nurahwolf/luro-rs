@@ -23,6 +23,7 @@ tracing-subscriber.workspace = true                             #framework
 twilight-cache-inmemory = { workspace = true, optional = true } #framework
 twilight-gateway.workspace = true                               #framework
 twilight-http.workspace = true                                  #framework
+twilight-util.workspace = true                                  #framework
 twilight-lavalink = { workspace = true, optional = true }       #framework
 twilight-model.workspace = true                                 #framework
 twilight-interactions.path = "../twilight-interactions"         # command

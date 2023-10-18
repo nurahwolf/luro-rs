@@ -266,7 +266,7 @@ impl LuroGuild {
         self
     }
 
-    fn user_role_permissions(&self, user: &LuroUser) -> Vec<(Id<RoleMarker>, Permissions)> {
+    pub fn user_role_permissions(&self, user: &LuroUser) -> Vec<(Id<RoleMarker>, Permissions)> {
         let roles: Vec<LuroRole> = self
             .user_roles(user)
             .into_iter()

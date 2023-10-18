@@ -6,8 +6,8 @@ impl crate::LuroDatabase {
             DbUserMarriageApprovalsCount,
             "
             SELECT 
-                COUNT(approve) as approvers,
-                COUNT(disapprove) as disapprovers
+                COUNT(approve) filter (where approve) as approvers,
+                COUNT(disapprove) filter (where disapprove) as disapprovers
             FROM 
                 user_marriage_approvals
             WHERE

@@ -1,7 +1,9 @@
 use anyhow::anyhow;
 use luro_model::response::LuroResponse;
-use tracing::warn;
-use twilight_model::application::interaction::{Interaction, InteractionType};
+use twilight_model::{
+    application::interaction::{Interaction, InteractionType},
+    http::interaction::InteractionResponseType,
+};
 
 use crate::{responses::Response, CommandInteraction, ComponentInteraction, Context, InteractionContext, ModalInteraction};
 
@@ -37,10 +39,13 @@ impl InteractionContext {
         }
     }
 
-    /// Create a simple response, genearlly used for interactions that don't exist and such
-    pub async fn no_handler_response(&self, name: &str) -> anyhow::Result<()> {
-        let no_handler_response = Response::UnknownCommand(name).embed();
-        let mut luro_response = LuroResponse::default();
+    pub async fn respond<F>(&self, response: F) -> anyhow::Result<()>
+    where
+        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse,
+    {
+        let mut r = LuroResponse::default();
+        response(&mut r);
+
         let (interaction_id, interaction_token, interaction_client) = match self {
             InteractionContext::CommandInteraction(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
             InteractionContext::CommandAutocompleteInteraction(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
@@ -48,19 +53,15 @@ impl InteractionContext {
             InteractionContext::ModalInteraction(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
         };
 
-        luro_response.add_embed(no_handler_response.clone());
-        let response = interaction_client
-            .create_response(interaction_id, interaction_token, &luro_response.interaction_response())
-            .await;
-
-        if let Err(why) = response {
-            warn!("Could not send new response, trying to update: {why}");
-            interaction_client
-                .update_response(interaction_token)
-                .embeds(Some(&[no_handler_response.0]))
-                .await?;
-        }
+        match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage {
+            true => interaction_client.update_response(interaction_token).embeds(r.embeds.as_deref()).await?.status(),
+            false => interaction_client.create_response(interaction_id, interaction_token, &r.interaction_response()).await?.status(),
+        };
 
         Ok(())
+    }
+
+    pub async fn simple_response(&self, response: Response<'_>) -> anyhow::Result<()> {
+        self.respond(|r| r.add_embed(response.embed())).await
     }
 }

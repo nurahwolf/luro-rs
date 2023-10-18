@@ -31,7 +31,7 @@ impl ExecuteLuroCommand for Someone {
         ctx.database.update_marriage(DbUserMarriage {
             proposer_id: proposer.id.get() as i64,
             proposee_id: self.marry.resolved.id.get() as i64,
-            active: false,
+            divorced: false,
             rejected: false,
             reason: reason.clone(),
         }).await?;

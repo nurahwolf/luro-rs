@@ -1,8 +1,9 @@
 #![feature(async_fn_in_trait)]
 #![feature(return_position_impl_trait_in_trait)]
 
+use anyhow::anyhow;
 use luro_database::LuroDatabase;
-use luro_model::{builders::EmbedBuilder, guild::LuroGuild, response::LuroResponse, user::LuroUser};
+use luro_model::{builders::EmbedBuilder, guild::LuroGuild, response::LuroResponse, user::LuroUser, role::LuroRole};
 use slash_command::LuroCommand;
 use std::{
     collections::HashMap,
@@ -10,13 +11,16 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tracing::{info, warn};
+use twilight_cache_inmemory::InMemoryCache;
 use twilight_http::{client::InteractionClient, Client};
 use twilight_interactions::command::ResolvedUser;
 use twilight_model::{
     application::{command::Command, interaction::Interaction},
-    id::marker::UserMarker,
+    guild::Role,
+    id::marker::{RoleMarker, UserMarker},
     oauth::Application,
 };
+use twilight_util::permission_calculator::PermissionCalculator;
 
 use twilight_model::{
     application::interaction::{
@@ -38,6 +42,7 @@ pub mod slash_command;
 type LuroCommandType = HashMap<String, LuroCommand>;
 type LuroMutex<T> = Arc<Mutex<T>>;
 
+#[derive(Clone)]
 pub enum InteractionContext {
     CommandInteraction(CommandInteraction),
     CommandAutocompleteInteraction(CommandInteraction),
@@ -171,7 +176,7 @@ pub trait LuroInteraction {
 }
 
 /// A context spawned from a modal interaction
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ModalInteraction {
     pub app_permissions: Option<twilight_model::guild::Permissions>,
     pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
@@ -200,7 +205,7 @@ pub struct ModalInteraction {
     pub user: Option<twilight_model::user::User>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ComponentInteraction {
     pub app_permissions: Option<twilight_model::guild::Permissions>,
     pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
@@ -266,7 +271,11 @@ pub trait Luro {
     /// Returns the twilight_client used by this context
     fn twilight_client(&self) -> Arc<Client>;
 
+    /// Returns the cache used by this context
+    fn cache(&self) -> Arc<InMemoryCache>;
+
     /// Fetch and return a [LuroGuild], updating the database if not present
+    /// Luro Database -> Twilight Guild
     fn get_guild(&self, guild_id: &Id<GuildMarker>) -> impl Future<Output = anyhow::Result<LuroGuild>> + Send
     where
         Self: Sync,
@@ -297,6 +306,7 @@ pub trait Luro {
     }
 
     /// Fetch and return a [LuroGuild], updating the database if not present
+    /// Luro Database -> Twilight Client
     fn get_user(&self, user_id: &Id<UserMarker>) -> impl Future<Output = anyhow::Result<LuroUser>> + Send
     where
         Self: Sync,
@@ -323,4 +333,84 @@ pub trait Luro {
             })
         }
     }
+
+    /// Fetch and return a [LuroGuild], updating the database if not present
+    /// Luro Database -> Twilight Cache
+    fn get_role(&self, role_id: Id<RoleMarker>) -> impl Future<Output = anyhow::Result<Role>> + Send
+    where
+        Self: Sync,
+    {
+        async move {
+            if let Ok(Some(role)) = self.database().get_role(role_id.get() as i64).await {
+                return Ok(role.into());
+            }
+
+            let cache = self.cache();
+            let cached_role = match cache.role(role_id) {
+                Some(role) => role,
+                None => return Err(anyhow!("No role referance in cache or database: {role_id}")),
+            };
+
+            Ok(self
+                .database()
+                .update_role((cached_role.guild_id(), cached_role.resource().clone()))
+                .await?
+                .into())
+        }
+    }
+
+    /// Fetch all guild roles. Set bypass to true to force a flush of all roles, if you want to make sure we have the most up to date roles possible, such as for highly privileged commands.
+    async fn get_guild_roles(&self, guild_id: &Id<GuildMarker>, bypass: bool) -> anyhow::Result<Vec<Role>>
+    where
+        Self: Sync,
+    {
+        // Get fresh roles at user request
+        if bypass {
+            let roles = self.twilight_client().roles(*guild_id).await?.model().await?;
+
+            for role in &roles {
+                self.database().update_role((*guild_id, role.clone())).await?;
+            }
+
+            return Ok(roles);
+        }
+
+        // Get from database
+        if let Ok(roles) = self.database().get_guild_roles(guild_id.get() as i64).await {
+            return Ok(roles.into_iter().map(|x|x.into()).collect::<Vec<Role>>())
+        }
+
+        // Database failed, fetch from client.
+        info!("Failed to find guild roles for guild {guild_id}, fetching using twilight_client");
+        let roles = self.twilight_client().roles(*guild_id).await?.model().await?;
+
+        for role in &roles {
+            self.database().update_role((*guild_id, role.clone())).await?;
+        }
+
+        Ok(roles)
+    }
+
+    // async fn get_guild_member_roles(&self, guild_id: &Id<GuildMarker>, user_id: &Id<UserMarker>, bypass: bool) -> anyhow::Result<Vec<Role>>
+    // where
+    //     Self: Sync,
+    // {
+    //     let guild_roles = self.get_guild_roles(guild_id, true).await?;
+
+
+    // }
+
+    // async fn user_permission_calculator(&self, user_id: Id<UserMarker>, guild_id: Id<GuildMarker>) -> anyhow::Result<PermissionCalculator>
+    // where
+    //     Self: Sync,
+    // {
+    //     let roles = self.get_guild_roles(&guild_id, true).await?;
+    //     let guild = self.get_guild(&guild_id).await?;
+    //     let user = self.get_user(&user_id).await?;
+
+    //     // Temp
+    //     let everyone: LuroRole = self.get_role(guild_id.cast()).await?.into();
+
+    //     Ok(PermissionCalculator::new(guild_id, user_id, everyone.permissions, &guild.user_role_permissions(&user)).owner_id(guild.owner_id))
+    // }
 }

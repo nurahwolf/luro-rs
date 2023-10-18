@@ -1096,6 +1096,7 @@ dependencies = [
  "twilight-interactions",
  "twilight-lavalink",
  "twilight-model",
+ "twilight-util",
 ]
 
 [[package]]

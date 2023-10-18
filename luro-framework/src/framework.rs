@@ -71,6 +71,10 @@ impl Luro for Framework {
     fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
         self.twilight_client.clone()
     }
+
+    fn cache(&self) -> std::sync::Arc<twilight_cache_inmemory::InMemoryCache> {
+        self.cache.clone()
+    }
 }
 
 impl From<Context> for Framework {

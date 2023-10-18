@@ -1,15 +1,18 @@
 use luro_model::role::LuroRole;
 use sqlx::types::Json;
+
 use twilight_model::{
     gateway::payload::incoming::{RoleCreate, RoleDelete, RoleUpdate},
-    guild::{Role, RoleTags},
+    guild::{Role, RoleTags, RoleFlags, Permissions},
     id::{marker::GuildMarker, Id},
     util::ImageHash,
 };
 
 mod count_roles;
 mod delete_role;
+mod get_role;
 mod update_role;
+mod get_roles;
 
 pub struct DbRole {
     pub colour: i32,
@@ -49,6 +52,25 @@ impl From<LuroRole> for DbRole {
     }
 }
 
+impl From<DbRole> for Role {
+    fn from(role: DbRole) -> Self {
+        Self {
+            color: role.colour as u32,
+            hoist: role.hoist,
+            icon: role.icon.map(|x| x.0),
+            id: Id::new(role.role_id as u64),
+            managed: role.managed,
+            mentionable: role.mentionable,
+            name: role.name,
+            permissions: Permissions::from_bits_retain(role.permissions as u64),
+            position: role.position,
+            flags: RoleFlags::from_bits_retain(role.flags as u64),
+            tags: role.tags.map(|x| x.0),
+            unicode_emoji: role.unicode_emoji,
+        }
+    }
+}
+
 pub enum DbRoleType {
     DbRole(DbRole),
     LuroRole(LuroRole),
@@ -56,6 +78,12 @@ pub enum DbRoleType {
     RoleCreate(RoleCreate),
     RoleDelete(RoleDelete),
     RoleUpdate(RoleUpdate),
+}
+
+impl From<(Id<GuildMarker>, Role)> for DbRoleType {
+    fn from(role: (Id<GuildMarker>, Role)) -> Self {
+        Self::Role(role.1, role.0)
+    }
 }
 
 impl From<LuroRole> for DbRoleType {

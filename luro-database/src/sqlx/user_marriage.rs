@@ -2,12 +2,18 @@ mod count_marriages;
 mod get_marriage;
 mod get_marriages;
 mod update_marriage;
+mod delete_marriage;
 
 #[derive(Debug)]
 pub struct DbUserMarriage {
+    /// Person who initiated the marriage
     pub proposer_id: i64,
+    /// Person who accepted the marriage
     pub proposee_id: i64,
-    pub active: bool,
+    /// Are they divorced
+    pub divorced: bool,
+    /// Was their marriage proposal rejected
     pub rejected: bool,
+    /// What was the reason for marrying
     pub reason: String,
 }

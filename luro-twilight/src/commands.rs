@@ -1,5 +1,6 @@
 use luro_framework::command::CreateLuroCommand;
 use luro_framework::InteractionContext;
+use luro_framework::responses::Response;
 use tracing::info;
 use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
@@ -72,7 +73,8 @@ pub fn default_commands() -> Vec<Command> {
 pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
     info!("{}: Handling interaction '{}'", ctx.command_type(), ctx.command_name());
 
-    match ctx.command_name() {
+    let response_handler = ctx.clone();
+    let response = match ctx.command_name() {
         #[cfg(feature = "command-about")]
         "about" => match ctx {
             InteractionContext::CommandInteraction(command) => about::About::run_interaction_command(command).await,
@@ -124,6 +126,12 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
             InteractionContext::ComponentInteraction(command) => marry::Marry::run_interaction_component(command).await,
             InteractionContext::ModalInteraction(command) => marry::Marry::run_interaction_modal(command).await,
         },
-        name => ctx.no_handler_response(name).await,
+        name => ctx.simple_response(Response::UnknownCommand(name)).await,
+    };
+
+    if let Err(why) = response {
+        response_handler.simple_response(Response::InternalError(why)).await?;
     }
+
+    Ok(())
 }

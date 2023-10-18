@@ -39,6 +39,10 @@ impl Luro for CommandInteraction {
     fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
         self.twilight_client.clone()
     }
+
+    fn cache(&self) -> std::sync::Arc<twilight_cache_inmemory::InMemoryCache> {
+        self.cache.clone()
+    }
 }
 
 impl InteractionTrait for CommandInteraction {

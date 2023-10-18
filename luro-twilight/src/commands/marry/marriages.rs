@@ -1,6 +1,7 @@
-use std::fmt::Write;
 use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
+use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_model::id::Id;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "marriages", desc = "Fetches someones marriages")]
@@ -12,30 +13,89 @@ pub struct Marriages {
 impl ExecuteLuroCommand for Marriages {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let accent_colour = ctx.accent_colour().await;
-        let user = ctx.get_user(&self.user.map(|x| x.resolved.id).unwrap_or(ctx.author_id())).await?;
-        let marriages = ctx.database.get_marriages(user.id.get() as i64).await?;
+        let author = ctx.get_user(&self.user.map(|x| x.resolved.id).unwrap_or(ctx.author_id())).await?;
+        let marriages = ctx.database.get_marriages(author.id.get() as i64).await?;
+
+        let mut marriages_detailed = vec![];
+        let mut rejected_proposals = 0;
+        let mut marriages_ended = 0;
+
+        for marriage in marriages {
+            if marriage.rejected {
+                rejected_proposals += 1;
+                continue;
+            }
+
+            if marriage.divorced {
+                marriages_ended += 1;
+                continue;
+            }
+
+            let proposer = ctx.get_user(&Id::new(marriage.proposer_id as u64)).await?;
+            let proposee = ctx.get_user(&Id::new(marriage.proposee_id as u64)).await?;
+            let approvers = ctx
+                .database
+                .count_marriage_approvers(marriage.proposer_id, marriage.proposee_id)
+                .await?;
+
+            marriages_detailed.push((marriage, proposer, proposee, approvers))
+        }
 
         ctx.respond(|response| {
             response.embed(|embed| {
                 embed
-                    .title(format!("{}'s marriages", user.name()))
-                    .thumbnail(|t|t.url(user.avatar()))
+                    .title(format!("{}'s marriages | {} total", author.name(), marriages_detailed.len()))
+                    .thumbnail(|t| t.url(author.avatar()))
                     .colour(accent_colour);
 
-                if marriages.is_empty() {
+                if marriages_detailed.is_empty() {
                     embed.description("Looks like they have no marriages yet :(");
                 }
 
-                match marriages.len() < 25 {
+                if marriages_ended != 0 {
+                    embed.create_field("Ended Marriages", &format!("A total of `{}` time(s)", marriages_ended), true);
+                }
+
+                if rejected_proposals != 0 {
+                    embed.create_field("Rejected Total", &format!("Rejected `{}` time(s)", rejected_proposals), true);
+                }
+
+                match marriages_detailed.len() < 25 {
                     true => {
-                        for marriage in marriages {
-                            embed.create_field(&user.name, &marriage.reason, false);
+                        for marriage in marriages_detailed {
+                            embed.create_field(
+                                &format!("{} and {}", marriage.1.name(), marriage.2.name()),
+                                #[cfg(debug_assertions)]
+                                &format!(
+                                    "{}\n- For and Against the marriage: `{}` | `{}`\n- Divorced: `{}`\n- Rejected: `{}`",
+                                    marriage.0.reason,
+                                    marriage.3.approvers.unwrap_or_default(),
+                                    marriage.3.disapprovers.unwrap_or_default(),
+                                    marriage.0.divorced,
+                                    marriage.0.rejected,
+                                ),
+                                #[cfg(not(debug_assertions))]
+                                &format!(
+                                    "{}\n- For and Against the marriage: `{}` | `{}`",
+                                    marriage.0.reason,
+                                    marriage.3.approvers.unwrap_or_default(),
+                                    marriage.3.disapprovers.unwrap_or_default(),
+                                ),
+                                false,
+                            );
                         }
                     }
                     false => {
                         let mut description = String::new();
-                        for marriage in marriages {
-                            writeln!(description, "- {} - <@{}>\n  - {}", marriage.reason, user.name, user.id).unwrap();
+                        for marriage in marriages_detailed {
+                            writeln!(
+                                description,
+                                "- {} and {}\n  - {}",
+                                marriage.1.name(),
+                                marriage.2.name(),
+                                marriage.0.reason
+                            )
+                            .unwrap();
                         }
                         embed.description(description);
                     }

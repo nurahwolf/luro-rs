@@ -5,6 +5,7 @@ use luro_framework::interactions::InteractionTrait;
 use luro_framework::responses::Response;
 use luro_framework::{CommandInteraction, ComponentInteraction, Luro};
 
+use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
@@ -83,6 +84,7 @@ const MARRIAGE_REASONS: [&str; 68] = [
 "<author> looks mischievously at <user>, a collar in hand, and teases, 'Ever thought of being collared by me for life?'",
 ];
 
+mod divorce;
 mod marriages;
 mod someone;
 
@@ -93,6 +95,8 @@ pub enum Marry {
     Someone(someone::Someone),
     #[command(name = "marriages")]
     Marriages(marriages::Marriages),
+    #[command(name = "divorce")]
+    Divorce(divorce::Divorce),
 }
 
 impl CreateLuroCommand for Marry {}
@@ -102,14 +106,16 @@ impl ExecuteLuroCommand for Marry {
         match self {
             Self::Someone(command) => command.interaction_command(ctx).await,
             Self::Marriages(command) => command.interaction_command(ctx).await,
+            Self::Divorce(command) => command.interaction_command(ctx).await,
         }
     }
 
     async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
         let proposer = ctx.get_user(&Id::new(invoking_interaction.user_id as u64)).await?;
-        let proposee = match self {
-            Self::Someone(command) => ctx.get_user(&command.marry.resolved.id).await?,
-            Self::Marriages(_) => {
+        let (proposee, divorce_wanted) = match self {
+            Self::Someone(command) => (ctx.get_user(&command.marry.resolved.id).await?, false),
+            Self::Divorce(command) => (ctx.get_user(&command.user.resolved.id).await?, true),
+            _ => {
                 return ctx
                     .response_simple(Response::InternalError(anyhow!("Can't find the request to marry, sorry!")))
                     .await
@@ -154,10 +160,21 @@ impl ExecuteLuroCommand for Marry {
 
         let marriage_approvals = ctx.database.get_marriage_approvals((proposer_id, proposee_id)).await?;
 
-        embed
-            .title(format!("{} has proposed!", proposer.name()))
-            .thumbnail(|t| t.url(proposer.avatar()))
-            .create_field("Their Reason", &marriage.reason, false);
+        match divorce_wanted {
+            false => embed
+                .title(format!("{} has proposed!", proposer.name()))
+                .thumbnail(|t| t.url(proposer.avatar()))
+                .create_field("Their Reason", &marriage.reason, false),
+            true => embed
+                .colour(COLOUR_DANGER)
+                .title(format!(
+                    "{} has terminated their marriage with {}!",
+                    proposer.name(),
+                    proposee.name()
+                ))
+                .thumbnail(|t| t.url(proposer.avatar()))
+                .create_field("Their Reason", &marriage.reason, false),
+        };
 
         let mut approval_list = vec![];
         let mut disapproval_list = vec![];
@@ -181,7 +198,7 @@ impl ExecuteLuroCommand for Marry {
                         false => users.push_str(&format!(", <@{user}>")),
                     }
                 }
-                users.push_str(&format!("\n- **Total:** {}", approval_list.len()));
+                users.push_str(&format!("\n- **Total:** `{}`", approval_list.len()));
                 embed.create_field("Approvers", &users, true)
             }
             true => embed.create_field("Approvers", "None!", true),
@@ -196,7 +213,7 @@ impl ExecuteLuroCommand for Marry {
                         false => users.push_str(&format!(", <@{user}>")),
                     }
                 }
-                users.push_str(&format!("\n- **Total:** {}", disapproval_list.len()));
+                users.push_str(&format!("\n- **Total:** `{}`", disapproval_list.len()));
                 embed.create_field("Disapprovers", &users, true)
             }
             true => embed.create_field("Disapprovers", "None!", true),
@@ -209,36 +226,51 @@ impl ExecuteLuroCommand for Marry {
 
         // Handle if the marriage was denied
         if &ctx.data.custom_id == "marry-deny" {
+            if divorce_wanted {
+                embed
+                .title(format!("Divorce - The worst outcome for poor {}", proposee.name()))
+                .description("They cannot believe their fate and have voted to say this action is unfair. Hopefully someone will be able to mend them soon...");
+            }
+
             ctx.database
                 .update_marriage(DbUserMarriage {
                     proposer_id,
                     proposee_id,
-                    active: false,
+                    divorced: true,
                     rejected: true,
                     reason: marriage.reason,
                 })
                 .await?;
 
-            embed.title("The marriage was rejected! Hopefully they will be able to find true love with someone else...");
-
             return ctx.respond(|r| r.update().add_embed(embed).components(|c| c)).await;
         }
 
-        // Marry them!
+        let content;
+        match divorce_wanted {
+            true => {
+                content = "".to_owned();
+                embed
+                .title(format!("Divorce - An acceptable outcome for {}", proposee.name()))
+                .description(format!("They are happy with this outcome. Maybe it was just. Maybe it was time to move on. Who knows, maybe **you** will be {}'s next true love.", proposee.name()));
+            },
+            false => {
+                content = format!("Congratulations <@{}> & <@{}>!!!", &proposer_id, &proposee_id);
+                embed.title("The marriage proceeded! May they live happily forever after!");
+            },
+        }
+
         ctx.database
             .update_marriage(DbUserMarriage {
                 proposer_id,
                 proposee_id,
-                active: true,
+                divorced: divorce_wanted,
                 rejected: false,
                 reason: marriage.reason,
             })
             .await?;
 
-        embed.title("The marriage proceeded! May they live happily forever after!");
-
         ctx.respond(|r| {
-            r.content(format!("Congratulations <@{}> & <@{}>!!!", &proposer_id, &proposee_id))
+            r.content(content)
                 .update()
                 .add_embed(embed)
                 .components(|c| c)

@@ -15,6 +15,7 @@ mod commands;
 // mod fakeban;
 // mod flush;
 mod get_message;
+mod clear_marriage;
 // mod guilds;
 // mod load_users;
 // mod log;
@@ -30,6 +31,8 @@ pub enum Owner {
     Assign(assign::Assign),
     #[command(name = "clear_warnings")]
     ClearWarning(clear_warnings::Warnings),
+    #[command(name = "clear_marriage")]
+    ClearMarriage(clear_marriage::ClearMarriage),
     #[command(name = "commands")]
     Commands(commands::Commands),
     #[command(name = "mass_assign")]
@@ -78,6 +81,7 @@ impl ExecuteLuroCommand for Owner {
                         Self::Assign(_) => "owner_assign",
                         Self::ClearWarning(_) => "owner_clearwarning",
                         Self::Commands(_) => "owner_commands",
+                        Self::ClearMarriage(_) => "clear_marriage",
                         // Self::Config(_) => "owner_config",
                         // Self::FakeBan(_) => "owner_fakeban",
                         // Self::Flush(_) => "owner_save",
@@ -98,6 +102,7 @@ impl ExecuteLuroCommand for Owner {
             Self::Assign(command) => command.interaction_command(ctx).await,
             Self::ClearWarning(command) => command.interaction_command(ctx).await,
             Self::Commands(command) => command.interaction_command(ctx).await,
+            Self::ClearMarriage(command) => command.interaction_command(ctx).await,
             // Self::Config(_) => "owner_config",
             // Self::FakeBan(_) => "owner_fakeban",
             // Self::Flush(_) => "owner_save",
