@@ -73,8 +73,17 @@ impl ExecuteLuroCommand for Database {
         if let Ok(data) = ctx.database.count_messages().await {
             builder.push_record(["Total Messages", &format_number(data)]);
         }
+        if let Ok(data) = ctx.database.count_total_words().await {
+            builder.push_record([
+                "Total Words Said - Unique",
+                &format!("{} - {}", format_number(data.0), format_number(data.1)),
+            ]);
+        }
 
-        let content = format!("**-- General Information --**\n```\n{}```", builder.build().with(tabled::settings::Style::ascii_rounded()));
+        let content = format!(
+            "**-- General Information --**\n```\n{}```",
+            builder.build().with(tabled::settings::Style::ascii_rounded())
+        );
         builder = tabled::builder::Builder::new();
 
         // Guild Data

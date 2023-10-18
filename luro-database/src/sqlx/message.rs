@@ -30,6 +30,8 @@ mod handle_message_delete;
 mod handle_message_delete_bulk;
 mod handle_message_update;
 mod update_message;
+mod count_total_words;
+mod count_user_words;
 
 #[derive(Default, Debug, ::sqlx::Type)]
 #[sqlx(type_name = "message_source", rename_all = "SCREAMING_SNAKE_CASE")]
@@ -104,6 +106,13 @@ pub struct DatabaseMessage {
     pub webhook_id: Option<i64>,
     pub message_updates: Option<Json<Vec<MessageUpdate>>>,
     pub member: Option<Json<PartialMember>>,
+}
+
+pub struct DbWordcount {
+    pub message_id: i64,
+    pub total_words: Option<i64>,
+    pub total_unique_words: Option<i64>,
+    pub message_content: Option<String>,
 }
 
 impl From<LuroMessage> for DatabaseMessage {

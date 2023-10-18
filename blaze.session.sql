@@ -1,12 +1,18 @@
-DROP TABLE warnings;
-
-CREATE TABLE IF NOT EXISTS warnings (
-    moderator_id BIGINT NOT NULL UNIQUE,
-    user_id BIGINT NOT NULL UNIQUE,
-    warning TEXT NOT NULL,
-    warning_id UUID NOT NULL PRIMARY KEY
-);
-
-ALTER TABLE warnings
-    ADD foreign key (moderator_id) references users(user_id) deferrable initially deferred,
-    ADD foreign key (user_id) references users(user_id) deferrable initially deferred;
+WITH arranged AS (
+    SELECT message_id,
+        UNNEST (
+            STRING_TO_ARRAY (
+                REGEXP_REPLACE(content, '[^\w\s]', '', 'g'),
+                ' '
+            )
+        ) AS word,
+        content
+    FROM messages
+)
+SELECT a.message_id,
+    COUNT(a.word) as total_words,
+    COUNT(DISTINCT(a.word)) as total_unique_words,
+    a.content as message_content
+FROM arranged a
+GROUP BY a.message_id,
+    a.content;
