@@ -1,3 +1,4 @@
+use luro_database::DatabaseInteraction;
 use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
 use luro_framework::responses::Response;
 use luro_framework::{CommandInteraction, ComponentInteraction, Luro, ModalInteraction};
@@ -156,7 +157,7 @@ impl ExecuteLuroCommand for Owner {
         ctx.respond(|r| r.content("All done!").ephemeral()).await
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
         match ctx.data.custom_id.as_str() {
             "mass-assign-selector" => component_selector(ctx).await,
             "mass-assign-roles" | "mass-assign-remove" => component_roles(ctx).await,

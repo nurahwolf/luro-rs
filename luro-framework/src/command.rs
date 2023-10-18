@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use tracing::warn;
+use luro_database::DatabaseInteraction;
 use twilight_interactions::command::CommandModel;
 use twilight_model::application::interaction::application_command::CommandData;
 use twilight_model::application::interaction::InteractionData;
@@ -36,25 +36,22 @@ pub trait CreateLuroCommand: CommandModel + ExecuteLuroCommand {
         Self: Send,
     {
         async {
-            let interaction = match ctx.database.get_interaction_by_message_id(ctx.message.id.get() as i64).await? {
+            let raw_interaction = match ctx.message.interaction.as_ref() {
                 Some(interaction) => interaction,
-                None => {
-                    warn!(ctx = ?ctx, "Attempting to handle component with an interaction that does not exist in the database");
-                    return Ok(());
-                }
+                None => return ctx.response_simple(Response::InternalError(anyhow!("Message does not have an interaction recorded in my database"))).await,
             };
 
-            let data = match interaction.data.clone().map(|x| x.0) {
+            let interaction = match ctx.database.get_interaction(raw_interaction.id.get() as i64).await? {
+                Some(interaction) => interaction,
+                None => return ctx.response_simple(Response::InternalError(anyhow!("Database does not contain an interaction with ID '{}'", raw_interaction.id))).await,
+            };
+
+            let data = match interaction.data.as_ref().map(|x|x.0.clone()) {
                 Some(InteractionData::ApplicationCommand(data)) => data,
-                _ => {
-                    return Err(anyhow!(
-                        "unable to parse modal data due to not receiving ApplicationCommand data\n{:#?}",
-                        interaction.data
-                    ))
-                }
+                _ => return ctx.response_simple(Response::InternalError(anyhow!("Interaction '{}' does not contain ApplicationCommandData", raw_interaction.id))).await,
             };
 
-            Self::new(data)?.interaction_component(ctx).await
+            Self::new(data)?.interaction_component(ctx, interaction).await
         }
     }
 
@@ -76,7 +73,7 @@ pub trait ExecuteLuroCommand: Sized {
     }
 
     /// Handle a component interaction. This could be a button or other form of interaciton
-    fn interaction_component(self, ctx: ComponentInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
+    fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: DatabaseInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
         async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
     }
 

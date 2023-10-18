@@ -167,9 +167,6 @@ async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUs
     if let Ok(data) = framework.database.count_guilds().await {
         builder.push_record(["Total Guilds", &format_number(data)]);
     }
-    if let Ok(data) = framework.database.count_guild_channels().await {
-        builder.push_record(["Total Guild Channels", &format_number(data)]);
-    }
     if let Ok(data) = framework.database.count_guild_roles().await {
         builder.push_record(["Total Guild Roles", &format_number(data)]);
     }
@@ -189,6 +186,9 @@ async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUs
     }
     if let Ok(data) = framework.database.count_user_characters().await {
         builder.push_record(["Total User Characters", &format_number(data)]);
+    }
+    if let Ok(data) = framework.database.count_user_marriages().await {
+        builder.push_record(["Total User Marriages", &format_number(data)]);
     }
     if let Ok(data) = framework.database.count_user_moderation_actions().await {
         builder.push_record(["Total User Moderation Actions", &format_number(data)]);

@@ -18,7 +18,6 @@ impl LuroDatabase {
                 interaction_id,
                 kind as \"kind: DatabaseInteractionKind\",
                 locale,
-                member_id,
                 message_id,
                 token,
                 user_id
@@ -43,7 +42,6 @@ impl LuroDatabase {
                 interaction_id,
                 kind as \"kind: DatabaseInteractionKind\",
                 locale,
-                member_id,
                 message_id,
                 token,
                 user_id

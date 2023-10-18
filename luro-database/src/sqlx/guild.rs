@@ -1,7 +1,6 @@
 use luro_model::guild::LuroGuild;
 use twilight_model::{gateway::payload::incoming::GuildUpdate, guild::Guild, id::Id};
 
-mod count_channels;
 mod count_guilds;
 mod count_members;
 mod get_guild;

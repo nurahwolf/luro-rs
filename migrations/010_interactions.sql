@@ -4,18 +4,20 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
+-- DROP TABLE interactions;
 CREATE TABLE IF NOT EXISTS interactions (
+    FOREIGN KEY         (guild_id, user_id) references guild_members (guild_id, user_id),
+    guild_id            bigint,
+    interaction_id      bigint PRIMARY KEY,
+    user_id             BIGINT NOT NULL references users(user_id),
+
     app_permissions     BIGINT NOT NULL,
-    application_id      BIGINT NOT NULL REFERENCES applications(application_id),
-    channel_id          BIGINT NOT NULL REFERENCES channels(channel_id),
+    application_id      BIGINT NOT NULL references applications(application_id),
+    channel_id          BIGINT NOT NULL references channels(channel_id),
     data                JSONB,
-    guild_id            BIGINT REFERENCES guilds(guild_id),
     guild_locale        TEXT,
-    interaction_id      BIGINT NOT NULL PRIMARY KEY,
     kind                interaction_kind NOT NULL,
     locale              TEXT,
-    member_id           BIGINT NOT NULL REFERENCES users(user_id), -- TODO: Change this
-    message_id          BIGINT REFERENCES messages(message_id),
-    token               TEXT NOT NULL,
-    user_id             BIGINT REFERENCES users(user_id)
+    message_id          BIGINT references messages(message_id),
+    token               TEXT NOT NULL
 );

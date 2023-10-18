@@ -1,7 +1,7 @@
 use sqlx::types::Json;
 use twilight_model::{
     gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate},
-    guild::Member,
+    guild::{Member, PartialMember},
     id::{marker::GuildMarker, Id},
     util::ImageHash,
 };
@@ -11,11 +11,12 @@ mod get_members;
 mod update_member;
 
 pub enum DbMemberType {
-    Member(Member, Id<GuildMarker>),
+    Member(Id<GuildMarker>, Member),
     MemberAdd(Box<MemberAdd>),
     MemberChunk(MemberChunk),
     MemberRemove(MemberRemove),
     MemberUpdate(Box<MemberUpdate>),
+    PartialMember(Id<GuildMarker>, PartialMember)
 }
 
 pub struct DbMember {

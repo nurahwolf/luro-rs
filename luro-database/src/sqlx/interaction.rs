@@ -27,10 +27,9 @@ pub struct DatabaseInteraction {
     pub interaction_id: i64,
     pub kind: DatabaseInteractionKind,
     pub locale: Option<String>,
-    pub member_id: Option<i64>,
     pub message_id: Option<i64>,
     pub token: String,
-    pub user_id: Option<i64>,
+    pub user_id: i64,
 }
 
 impl From<Interaction> for DatabaseInteraction {
@@ -38,10 +37,10 @@ impl From<Interaction> for DatabaseInteraction {
         Self {
             app_permissions: interaction.app_permissions.map(|x| x.bits() as i64),
             application_id: interaction.application_id.get() as i64,
-            channel_id: interaction.channel.map(|x| x.id.get() as i64).unwrap_or_default(),
-            data: interaction.data.map(Json),
+            channel_id: interaction.channel.clone().map(|x| x.id.get() as i64).unwrap_or_default(),
+            data: interaction.data.clone().map(Json),
             guild_id: interaction.guild_id.map(|x| x.get() as i64),
-            guild_locale: interaction.guild_locale,
+            guild_locale: interaction.guild_locale.clone(),
             interaction_id: interaction.id.get() as i64,
             kind: match interaction.kind {
                 twilight_model::application::interaction::InteractionType::ApplicationCommand => {
@@ -55,11 +54,10 @@ impl From<Interaction> for DatabaseInteraction {
                 twilight_model::application::interaction::InteractionType::Ping => DatabaseInteractionKind::Ping,
                 _ => DatabaseInteractionKind::Unknown,
             },
-            locale: interaction.locale,
-            member_id: interaction.member.map(|x| x.user.map(|x| x.id.get() as i64)).unwrap_or_default(),
-            message_id: interaction.message.map(|x| x.id.get() as i64),
-            token: interaction.token,
-            user_id: interaction.user.map(|x| x.id.get() as i64),
+            locale: interaction.locale.clone(),
+            message_id: interaction.message.as_ref().map(|x| x.id.get() as i64),
+            token: interaction.token.clone(),
+            user_id: interaction.author_id().unwrap().get() as i64,
         }
     }
 }

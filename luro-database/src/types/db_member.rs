@@ -1,14 +1,20 @@
 use twilight_model::{
     gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate},
-    guild::Member,
+    guild::{Member, PartialMember},
     id::{marker::GuildMarker, Id},
 };
 
 use crate::DbMemberType;
 
-impl From<(Member, Id<GuildMarker>)> for DbMemberType {
-    fn from(data: (Member, Id<GuildMarker>)) -> Self {
+impl From<(Id<GuildMarker>, Member)> for DbMemberType {
+    fn from(data: (Id<GuildMarker>, Member)) -> Self {
         Self::Member(data.0, data.1)
+    }
+}
+
+impl From<(Id<GuildMarker>, PartialMember)> for DbMemberType {
+    fn from(data: (Id<GuildMarker>, PartialMember)) -> Self {
+        Self::PartialMember(data.0, data.1)
     }
 }
 

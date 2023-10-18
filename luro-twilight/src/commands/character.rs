@@ -1,4 +1,5 @@
 use anyhow::Context;
+use luro_database::DatabaseInteraction;
 use luro_framework::{
     command::{CreateLuroCommand, ExecuteLuroCommand},
     interactions::InteractionTrait,
@@ -96,7 +97,7 @@ impl ExecuteLuroCommand for Character {
         ctx.respond(|response| response.add_embed(embed)).await
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let user_data = ctx.get_user(&ctx.author_id()).await?;
         let name = match self {

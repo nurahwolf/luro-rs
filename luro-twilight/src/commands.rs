@@ -26,8 +26,8 @@ mod info;
 // mod lewd;
 // #[cfg(feature = "command-luro")]
 // mod luro;
-// #[cfg(feature = "command-marry")]
-// mod marry;
+#[cfg(feature = "command-marry")]
+mod marry;
 // #[cfg(feature = "command-moderator")]
 // mod moderator;
 // #[cfg(feature = "command-music")]
@@ -63,6 +63,8 @@ pub fn default_commands() -> Vec<Command> {
         info::Info::create_command().into(),
         #[cfg(feature = "command-owner")]
         owner::Owner::create_command().into(),
+        #[cfg(feature = "command-marry")]
+        marry::Marry::create_command().into(),
     ]
 }
 
@@ -114,6 +116,13 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
             InteractionContext::CommandAutocompleteInteraction(command) => owner::Owner::run_interaction_autocomplete(command).await,
             InteractionContext::ComponentInteraction(command) => owner::Owner::run_interaction_component(command).await,
             InteractionContext::ModalInteraction(command) => owner::Owner::run_interaction_modal(command).await,
+        },
+        #[cfg(feature = "command-marry")]
+        "marry" | "marry-accept" | "marry-deny" => match ctx {
+            InteractionContext::CommandInteraction(command) => marry::Marry::run_interaction_command(command).await,
+            InteractionContext::CommandAutocompleteInteraction(command) => marry::Marry::run_interaction_autocomplete(command).await,
+            InteractionContext::ComponentInteraction(command) => marry::Marry::run_interaction_component(command).await,
+            InteractionContext::ModalInteraction(command) => marry::Marry::run_interaction_modal(command).await,
         },
         name => ctx.no_handler_response(name).await,
     }

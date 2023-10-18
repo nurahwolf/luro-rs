@@ -90,9 +90,6 @@ impl ExecuteLuroCommand for Database {
         if let Ok(data) = ctx.database.count_guilds().await {
             builder.push_record(["Total Guilds", &format_number(data)]);
         }
-        if let Ok(data) = ctx.database.count_guild_channels().await {
-            builder.push_record(["Total Guild Channels", &format_number(data)]);
-        }
         if let Ok(data) = ctx.database.count_guild_roles().await {
             builder.push_record(["Total Guild Roles", &format_number(data)]);
         }

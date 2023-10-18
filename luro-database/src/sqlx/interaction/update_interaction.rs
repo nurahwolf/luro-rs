@@ -16,12 +16,11 @@ impl LuroDatabase {
                 interaction_id,
                 kind,
                 locale,
-                member_id,
                 message_id,
                 token,
                 user_id
             ) VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             ON CONFLICT
                 (interaction_id)
             DO UPDATE SET
@@ -34,9 +33,8 @@ impl LuroDatabase {
                 interaction_id = $7,
                 kind = $8,
                 locale = $9,
-                member_id = $10,
-                message_id = $11,
-                user_id = $13
+                message_id = $10,
+                user_id = $12
             RETURNING 
                 app_permissions,
                 application_id,
@@ -47,7 +45,6 @@ impl LuroDatabase {
                 interaction_id,
                 kind as \"kind: DatabaseInteractionKind\",
                 locale,
-                member_id,
                 message_id,
                 token,
                 user_id
@@ -61,7 +58,6 @@ impl LuroDatabase {
             interaction.interaction_id,
             interaction.kind as _,
             interaction.locale,
-            interaction.member_id,
             interaction.message_id,
             interaction.token,
             interaction.user_id,

@@ -1,22 +1,14 @@
-use async_trait::async_trait;
-use luro_framework::command::LuroCommandTrait;
+use anyhow::{anyhow, Context};
+use luro_database::{DatabaseInteraction, DbUserMarriage, DbUserMarriageApprovals};
+use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
+use luro_framework::interactions::InteractionTrait;
 use luro_framework::responses::Response;
-use luro_framework::{Framework, InteractionCommand, InteractionComponent, LuroInteraction, CommandInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
-use twilight_model::application::interaction::InteractionData;
+use luro_framework::{CommandInteraction, ComponentInteraction, Luro};
 
-use std::fmt::Write;
-use std::time::SystemTime;
-
-use anyhow::{anyhow, Context, Error};
-
-use luro_builder::embed::EmbedBuilder;
-use luro_model::user::marriages::UserMarriages;
-use rand::seq::SliceRandom;
-use rand::thread_rng;
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
+use twilight_model::id::Id;
 
 /// An array of reasons someone would like to marry.
 /// TODO: Load this from disk once it's big enough
@@ -91,226 +83,167 @@ const MARRIAGE_REASONS: [&str; 68] = [
 "<author> looks mischievously at <user>, a collar in hand, and teases, 'Ever thought of being collared by me for life?'",
 ];
 
+mod marriages;
+mod someone;
+
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "marry", desc = "Marry a user! Or see who you have married <3")]
 pub enum Marry {
     #[command(name = "someone")]
-    Someone(Someone),
+    Someone(someone::Someone),
     #[command(name = "marriages")]
-    Marriages(Marriages),
+    Marriages(marriages::Marriages),
 }
 
-#[async_trait]
-impl LuroCommandTrait for Marry {
-    async fn handle_interaction(
-        ctx: CommandInteraction<Self>,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(ctx.data.clone())?;
+impl CreateLuroCommand for Marry {}
 
-        // Call the appropriate subcommand.
-        match ctx.command {
-            Self::Someone(_) => Someone::handle_interaction(ctx).await,
-            Self::Marriages(_) => Marriages::handle_interaction(ctx).await,
+impl ExecuteLuroCommand for Marry {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        match self {
+            Self::Someone(command) => command.interaction_command(ctx).await,
+            Self::Marriages(command) => command.interaction_command(ctx).await,
         }
     }
 
-    async fn handle_component(
-        ctx: Framework,
-        interaction: InteractionComponent,
-    ) -> anyhow::Result<()> {
-        let interaction_author = interaction.author_id();
-        let message = &interaction.message;
-        let original_interaction = ctx.database.get_interaction(&interaction.message.id.to_string()).await?;
-        let data = match original_interaction.data.unwrap() {
-            InteractionData::ApplicationCommand(data) => Self::new(data)?,
-            _ => {
-                return Response::InternalError(anyhow!("No command data!"))
-                    .respond(&ctx, &interaction)
-                    .await
-            }
-        };
-
-        let mut proposer = ctx.database.get_user(&message.author.id).await?;
-        let (mut proposee, reason) = match data {
-            Self::Someone(command) => (ctx.database.get_user(&command.marry.resolved.id).await?, command.reason),
+    async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
+        let proposer = ctx.get_user(&Id::new(invoking_interaction.user_id as u64)).await?;
+        let proposee = match self {
+            Self::Someone(command) => ctx.get_user(&command.marry.resolved.id).await?,
             Self::Marriages(_) => {
-                return Response::InternalError(anyhow!("No command data!"))
-                    .respond(&ctx, &interaction)
+                return ctx
+                    .response_simple(Response::InternalError(anyhow!("Can't find the request to marry, sorry!")))
                     .await
             }
         };
+        let (proposer_id, proposee_id) = (proposer.id.get() as i64, (proposee.id.get() as i64));
 
-        match interaction_author == proposee.id {
-            false => {
-                let content = if &interaction.data.custom_id == "marry-deny" {
-                    format!("<@{}> has voted to DENY the marriage!", &interaction_author)
-                } else {
-                    format!("<@{}> has voted for the marriage to proceed!", &interaction_author)
-                };
-                interaction.respond(&ctx, |respond| respond.content(content)).await
-            }
-            true => {
-                if &interaction.data.custom_id == "marry-deny" {
-                    return interaction
-                        .respond(&ctx, |response| {
-                            response
-                                .content(format!(
-                                    "It looks like <@{}> will never know what true love is like...",
-                                    &proposer.id
-                                ))
-                                .update()
-                                .components(|c| c)
-                        })
-                        .await;
-                }
+        let mut embed = ctx.default_embed().await;
+        let marriage = ctx
+            .database
+            .get_marriage((proposer_id, proposee_id))
+            .await?
+            .context("Expected to find marriage in database")?;
 
-                // Now get both the embed, and components from the message
-                let embed = message
-                    .embeds
-                    .first()
-                    .ok_or_else(|| Error::msg("Unable to find the original marriage embed"))?
-                    .clone();
-
-                let proposal = embed.description.ok_or_else(|| Error::msg("No author in our heck embed"))?;
-
-                proposee.marriages.insert(
-                    proposer.id,
-                    UserMarriages {
-                        timestamp: SystemTime::now(),
-                        reason: reason.clone(),
-                        proposal: proposal.clone(),
-                    },
-                );
-                proposer.marriages.insert(
-                    proposee.id,
-                    UserMarriages {
-                        timestamp: SystemTime::now(),
-                        reason,
-                        proposal,
-                    },
-                );
-                ctx.database.modify_user(&proposer.id, &proposer).await?;
-                ctx.database.modify_user(&proposee.id, &proposee).await?;
-
-                interaction
-                    .respond(&ctx, |response| {
-                        response
-                            .content(format!("Congratulations <@{}> & <@{}>!!!", &proposer.id, &proposee.id))
-                            .components(|c| c)
-                            .update()
-                    })
-                    .await
-            }
-        }
-    }
-}
-
-#[derive(CommandModel, CreateCommand)]
-#[command(name = "marriages", desc = "Fetches someones marriages")]
-pub struct Marriages {
-    /// Set this if you want to see someone elses marriages!
-    user: Option<ResolvedUser>,
-}
-
-#[async_trait]
-impl LuroCommandTrait for Marriages {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-
-        let mut marriages = vec![];
-        let luro_user = interaction.get_specified_user_or_author(&ctx, data.user.as_ref()).await?;
-        let mut embed = EmbedBuilder::default();
-        embed
-            .author(|author| {
-                author
-                    .name(format!("{}'s marriages", luro_user.name()))
-                    .icon_url(luro_user.avatar())
-            })
-            .colour(interaction.accent_colour(&ctx).await);
-
-        for (user, marriage) in luro_user.marriages.iter() {
-            marriages.push((ctx.database.get_user(user).await?, marriage));
-        }
-
-        match marriages.is_empty() {
-            true => {
-                embed.description("Looks like they have no marriages yet :(");
-            }
-            false => match marriages.len() < 25 {
+        // Handle if someone else clicked the button
+        if ctx.author_id() != proposee.id {
+            match &ctx.data.custom_id == "marry-deny" {
                 true => {
-                    for (user, marriage) in marriages {
-                        embed.create_field(user.name, marriage.reason.clone().unwrap_or(marriage.proposal.clone()), false);
-                    }
+                    ctx.database
+                        .update_marriage_approval(DbUserMarriageApprovals {
+                            user_id: ctx.author_id().get() as i64,
+                            proposer_id,
+                            proposee_id,
+                            approve: false,
+                            disapprove: true,
+                        })
+                        .await
                 }
                 false => {
-                    let mut description = String::new();
-                    for (user, marriage) in marriages {
-                        match &marriage.reason {
-                            Some(reason) => writeln!(description, "- {} - <@{}>\n  - {reason}", user.name, user.id),
-                            None => writeln!(description, "- {} - <@{}>\n  - {}", user.name, user.id, marriage.proposal),
-                        }?;
-                    }
-                    embed.description(description);
+                    ctx.database
+                        .update_marriage_approval(DbUserMarriageApprovals {
+                            user_id: ctx.author_id().get() as i64,
+                            proposer_id,
+                            proposee_id,
+                            approve: true,
+                            disapprove: false,
+                        })
+                        .await
                 }
-            },
+            }?;
+        }
+
+        let marriage_approvals = ctx.database.get_marriage_approvals((proposer_id, proposee_id)).await?;
+
+        embed
+            .title(format!("{} has proposed!", proposer.name()))
+            .thumbnail(|t| t.url(proposer.avatar()))
+            .create_field("Their Reason", &marriage.reason, false);
+
+        let mut approval_list = vec![];
+        let mut disapproval_list = vec![];
+
+        for approver in marriage_approvals {
+            if approver.approve {
+                approval_list.push(approver.user_id)
+            }
+
+            if approver.disapprove {
+                disapproval_list.push(approver.user_id)
+            }
+        }
+
+        match approval_list.is_empty() {
+            false => {
+                let mut users = String::new();
+                for user in &approval_list {
+                    match users.is_empty() {
+                        true => users.push_str(&format!("<@{user}>")),
+                        false => users.push_str(&format!(", <@{user}>")),
+                    }
+                }
+                users.push_str(&format!("\n- **Total:** {}", approval_list.len()));
+                embed.create_field("Approvers", &users, true)
+            }
+            true => embed.create_field("Approvers", "None!", true),
         };
 
-        interaction.respond(&ctx, |r| r.add_embed(embed)).await
-    }
-}
+        match disapproval_list.is_empty() {
+            false => {
+                let mut users = String::new();
+                for user in &disapproval_list {
+                    match users.is_empty() {
+                        true => users.push_str(&format!("<@{user}>")),
+                        false => users.push_str(&format!(", <@{user}>")),
+                    }
+                }
+                users.push_str(&format!("\n- **Total:** {}", disapproval_list.len()));
+                embed.create_field("Disapprovers", &users, true)
+            }
+            true => embed.create_field("Disapprovers", "None!", true),
+        };
 
-#[derive(CommandModel, CreateCommand)]
-#[command(name = "someone", desc = "Propose to someone! So lucky, aww~")]
-pub struct Someone {
-    /// Set this if you want to marry someone!
-    marry: ResolvedUser,
-    /// The reason you wish to marry them!
-    reason: Option<String>,
-}
-
-#[async_trait]
-impl LuroCommandTrait for Someone {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-
-        let luro_user = ctx.database.get_user(&interaction.author_id()).await?;
-        let mut embed = EmbedBuilder::default();
-        embed
-            .author(|author| {
-                author
-                    .name(format!("{} has proposed!", luro_user.name()))
-                    .icon_url(luro_user.avatar())
-            })
-            .colour(interaction.accent_colour(&ctx).await);
-
-        let proposal;
-        {
-            let mut rng = thread_rng();
-            proposal = MARRIAGE_REASONS
-                .choose(&mut rng)
-                .context("Expected to be able to choose a random reason")?
-                .replace("<user>", &format!("<@{}>", &data.marry.resolved.id))
-                .replace("<author>", &format!("<@{}>", &luro_user.id));
-            embed.description(proposal.clone());
+        // Handle if someone else clicked the button
+        if ctx.author_id() != proposee.id {
+            return ctx.respond(|r| r.update().add_embed(embed)).await;
         }
 
-        if let Some(reason) = data.reason {
-            embed.create_field("Their Reason", &reason, true);
+        // Handle if the marriage was denied
+        if &ctx.data.custom_id == "marry-deny" {
+            ctx.database
+                .update_marriage(DbUserMarriage {
+                    proposer_id,
+                    proposee_id,
+                    active: false,
+                    rejected: true,
+                    reason: marriage.reason,
+                })
+                .await?;
+
+            embed.title("The marriage was rejected! Hopefully they will be able to find true love with someone else...");
+
+            return ctx.respond(|r| r.update().add_embed(embed).components(|c| c)).await;
         }
 
-        interaction
-            .respond(&ctx, |r| {
-                r.add_embed(embed)
-                    .content(format!("<@{}>", &data.marry.resolved.id))
-                    .add_components(buttons())
+        // Marry them!
+        ctx.database
+            .update_marriage(DbUserMarriage {
+                proposer_id,
+                proposee_id,
+                active: true,
+                rejected: false,
+                reason: marriage.reason,
             })
-            .await
+            .await?;
+
+        embed.title("The marriage proceeded! May they live happily forever after!");
+
+        ctx.respond(|r| {
+            r.content(format!("Congratulations <@{}> & <@{}>!!!", &proposer_id, &proposee_id))
+                .update()
+                .add_embed(embed)
+                .components(|c| c)
+        })
+        .await
     }
 }
 
