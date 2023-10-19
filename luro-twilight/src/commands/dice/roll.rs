@@ -1,5 +1,5 @@
 use luro_dice::{DiceRoll, RollResult, RollValue};
-use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
+use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Context;
+use tracing::debug;
 use tracing_subscriber::{
     filter::LevelFilter,
     reload::{Handle, Layer},
@@ -53,7 +54,7 @@ impl Configuration {
         #[cfg(feature = "lavalink")]
         let lavalink_host = std::env::var("LAVALINK_HOST").context("Failed to get the variable LAVALINK_HOST")?;
 
-        Ok(Self {
+        let config = Self {
             cache,
             token,
             intents,
@@ -67,7 +68,10 @@ impl Configuration {
             connection_string,
             filter,
             tracing_subscriber,
-        })
+        };
+
+        debug!("New config created: {:#?}", config);
+        Ok(config)
     }
 }
 

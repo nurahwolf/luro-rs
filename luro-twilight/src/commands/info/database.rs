@@ -1,5 +1,5 @@
 use luro_database::LuroUserPermissions;
-use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction};
+use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction};
 
 use tracing::warn;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -89,9 +89,6 @@ impl ExecuteLuroCommand for Database {
         // Guild Data
         if let Ok(data) = ctx.database.count_guilds().await {
             builder.push_record(["Total Guilds", &format_number(data)]);
-        }
-        if let Ok(data) = ctx.database.count_guild_roles().await {
-            builder.push_record(["Total Guild Roles", &format_number(data)]);
         }
         if let Ok(data) = ctx.database.count_guild_members().await {
             builder.push_record(["Total Guild Members", &format_number(data)]);

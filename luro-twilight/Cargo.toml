@@ -18,15 +18,19 @@ dotenv = "0.15"               # main
 anyhow = { workspace = true } # main
 
 # Dependencies for commands
-luro-dice = { path = "../luro-dice", optional = true } # command-dice
-uwuify = { version = "0.2.0", optional = true }        # command-uwu
-rand = { workspace = true, optional = true }           # command-story
-git2 = { version = "0.18", optional = true }           # command-about
-memory-stats = { version = "1", optional = true }      # command-about
 base64 = { version = "0.21", optional = true }         # command-base64
+git2 = { version = "0.18", optional = true }           # command-about
+luro-dice = { path = "../luro-dice", optional = true } # command-dice
+memory-stats = { version = "1", optional = true }      # command-about
+rand = { workspace = true, optional = true }           # command-story
 serde = { workspace = true, optional = true }          # command-owner
 toml = { version = "*", optional = true }              # command-info
+twilight-lavalink = { workspace = true, optional = true }  # command-music
+hyper = { workspace = true, optional = true }  # command-music
+serde_json = { version = "*", optional = true }  # command-music
 twilight-util = { workspace = true, optional = true }  # command-info
+uwuify = { version = "0.2.0", optional = true }        # command-uwu
+
 
 
 # Tokio
@@ -62,19 +66,22 @@ default = ["commands", "pretty-tables"]
 commands = [
     "command-about",
     "command-base64",
+    "command-boop",
     "command-character",
     "command-dice",
+    "command-info",
+    "command-marry",
     "command-moderator",
+    # "command-music", # Broken on twilight-lavalink
+    "command-muzzle",
     "command-owner",
-    "command-roles",
     "command-ping",
     "command-quote",
+    "command-roles",
     "command-say",
     "command-story",
     "command-uwu",
-    "command-marry",
     "command-wordcount",
-    "command-info",
 ]
 
 ## Luro Features
@@ -83,16 +90,19 @@ pretty-tables = ["dep:tabled"] # As the name implies, enable pretty table output
 # Commands
 command-about = ["dep:git2", "dep:memory-stats"]
 command-base64 = ["dep:base64"]
+command-boop = []
 command-character = []
 command-dice = ["dep:luro-dice"]
 command-roles = []
 command-marry = []
+command-muzzle = []
+command-music = ["dep:twilight-lavalink", "dep:hyper", "dep:serde_json"]
 command-quote = []
 command-ping = []
 command-moderator = []
 command-owner = ["dep:serde"]
 command-say = []
 command-story = ["dep:rand"]
-command-uwu = []
+command-uwu = ["dep:uwuify"]
 command-info = ["dep:toml", "dep:twilight-util"]
-command-wordcount = ["dep:uwuify"]
+command-wordcount = []

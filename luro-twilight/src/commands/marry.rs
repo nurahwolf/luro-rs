@@ -1,10 +1,8 @@
 use anyhow::{anyhow, Context};
 use luro_database::{DatabaseInteraction, DbUserMarriage, DbUserMarriageApprovals};
-use luro_framework::command::{CreateLuroCommand, ExecuteLuroCommand};
-use luro_framework::interactions::InteractionTrait;
-use luro_framework::responses::Response;
-use luro_framework::{CommandInteraction, ComponentInteraction, Luro};
+use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro, CreateLuroCommand, ComponentInteraction};
 
+use luro_framework::responses::Response;
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
@@ -252,11 +250,11 @@ impl ExecuteLuroCommand for Marry {
                 embed
                 .title(format!("Divorce - An acceptable outcome for {}", proposee.name()))
                 .description(format!("They are happy with this outcome. Maybe it was just. Maybe it was time to move on. Who knows, maybe **you** will be {}'s next true love.", proposee.name()));
-            },
+            }
             false => {
                 content = format!("Congratulations <@{}> & <@{}>!!!", &proposer_id, &proposee_id);
                 embed.title("The marriage proceeded! May they live happily forever after!");
-            },
+            }
         }
 
         ctx.database
@@ -269,13 +267,8 @@ impl ExecuteLuroCommand for Marry {
             })
             .await?;
 
-        ctx.respond(|r| {
-            r.content(content)
-                .update()
-                .add_embed(embed)
-                .components(|c| c)
-        })
-        .await
+        ctx.respond(|r| r.content(content).update().add_embed(embed).components(|c| c))
+            .await
     }
 }
 

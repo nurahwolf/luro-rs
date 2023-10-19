@@ -35,18 +35,11 @@ async-trait = "0.1.73"
 # Default Features
 default = [
     "cache-memory",
-    "sqlx-driver",
     "http-client-hyper",
-    # "lavalink",
+    # "lavalink", # Broken on twilight-lavalink
     "responses",
     "random-responses", # Disable this feature to get a fixed response,
 ]
-
-## Database Features
-toml-driver = []
-sqlx-driver = []
-
-
 
 ## Misc
 cache-memory = ["dep:twilight-cache-inmemory"]

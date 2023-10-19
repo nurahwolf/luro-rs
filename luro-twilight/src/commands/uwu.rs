@@ -1,12 +1,6 @@
-use async_trait::async_trait;
-use luro_framework::{
-    command::LuroCommandTrait,
-    Framework, InteractionCommand, LuroInteraction,
-};
+use luro_framework::{CommandInteraction, CreateLuroCommand, ExecuteLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use uwuifier::uwuify_str_sse;
-
-use luro_model::database_driver::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "uwu", desc = "UwUify a message")]
@@ -15,20 +9,17 @@ pub struct UwU {
     message: String,
 }
 
-#[async_trait]
-impl LuroCommandTrait for UwU {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
+impl CreateLuroCommand for UwU {}
+
+impl ExecuteLuroCommand for UwU {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let uwu = if cfg!(target_feature = "sse4.1") {
-            unsafe { sse_uwu(&data.message) }
+            unsafe { sse_uwu(&self.message) }
         } else {
             arm_uwu()
         };
 
-        interaction.respond(&ctx, |r| r.content(uwu)).await
+        ctx.respond(|r| r.content(uwu)).await
     }
 }
 

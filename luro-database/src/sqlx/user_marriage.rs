@@ -1,8 +1,8 @@
 mod count_marriages;
+mod delete_marriage;
 mod get_marriage;
 mod get_marriages;
 mod update_marriage;
-mod delete_marriage;
 
 #[derive(Debug)]
 pub struct DbUserMarriage {

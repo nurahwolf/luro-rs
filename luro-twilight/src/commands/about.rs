@@ -3,8 +3,8 @@ use std::path::Path;
 
 use git2::{ErrorCode, Repository};
 use luro_framework::{
-    command::{CreateLuroCommand, ExecuteLuroCommand},
-    interactions::InteractionTrait,
+    {CreateLuroCommand, ExecuteLuroCommand},
+    InteractionTrait,
     CommandInteraction,
 };
 use luro_model::{builders::EmbedBuilder, user::LuroUser};

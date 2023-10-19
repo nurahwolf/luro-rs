@@ -4,7 +4,7 @@ mod count_applications;
 mod update_application;
 
 pub enum DbApplicationType {
-    PartialApplication(PartialApplication)
+    PartialApplication(PartialApplication),
 }
 
 pub struct DbApplication {

@@ -1,11 +1,10 @@
 use anyhow::anyhow;
-use luro_database::DatabaseInteraction;
 use twilight_interactions::command::CommandModel;
 use twilight_model::application::interaction::application_command::CommandData;
 use twilight_model::application::interaction::InteractionData;
 
 use crate::responses::Response;
-use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
+use crate::{CommandInteraction, ComponentInteraction, ModalInteraction, ExecuteLuroCommand};
 
 pub trait CreateLuroCommand: CommandModel + ExecuteLuroCommand {
     /// Create a new command and get it's data from the interaction
@@ -38,17 +37,37 @@ pub trait CreateLuroCommand: CommandModel + ExecuteLuroCommand {
         async {
             let raw_interaction = match ctx.message.interaction.as_ref() {
                 Some(interaction) => interaction,
-                None => return ctx.response_simple(Response::InternalError(anyhow!("Message does not have an interaction recorded in my database"))).await,
+                None => {
+                    return ctx
+                        .response_simple(Response::InternalError(anyhow!(
+                            "Message does not have an interaction recorded in my database"
+                        )))
+                        .await
+                }
             };
 
             let interaction = match ctx.database.get_interaction(raw_interaction.id.get() as i64).await? {
                 Some(interaction) => interaction,
-                None => return ctx.response_simple(Response::InternalError(anyhow!("Database does not contain an interaction with ID '{}'", raw_interaction.id))).await,
+                None => {
+                    return ctx
+                        .response_simple(Response::InternalError(anyhow!(
+                            "Database does not contain an interaction with ID '{}'",
+                            raw_interaction.id
+                        )))
+                        .await
+                }
             };
 
-            let data = match interaction.data.as_ref().map(|x|x.0.clone()) {
+            let data = match interaction.data.as_ref().map(|x| x.0.clone()) {
                 Some(InteractionData::ApplicationCommand(data)) => data,
-                _ => return ctx.response_simple(Response::InternalError(anyhow!("Interaction '{}' does not contain ApplicationCommandData", raw_interaction.id))).await,
+                _ => {
+                    return ctx
+                        .response_simple(Response::InternalError(anyhow!(
+                            "Interaction '{}' does not contain ApplicationCommandData",
+                            raw_interaction.id
+                        )))
+                        .await
+                }
             };
 
             Self::new(data)?.interaction_component(ctx, interaction).await
@@ -63,27 +82,5 @@ pub trait CreateLuroCommand: CommandModel + ExecuteLuroCommand {
     /// Execute the handler for an autocomplete context
     fn run_interaction_autocomplete(ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
         async { Self::interaction_autocomplete(ctx).await }
-    }
-}
-
-pub trait ExecuteLuroCommand: Sized {
-    /// The function to execute for the command / command group
-    fn interaction_command(self, ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
-    }
-
-    /// Handle a component interaction. This could be a button or other form of interaciton
-    fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: DatabaseInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
-    }
-
-    /// Create and respond to a button interaction
-    fn interaction_modal(ctx: ModalInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
-    }
-
-    /// Create and respond to a button interaction
-    fn interaction_autocomplete(ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
     }
 }

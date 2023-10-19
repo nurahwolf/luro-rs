@@ -1,20 +1,16 @@
+use luro_database::DatabaseInteraction;
+use luro_framework::{ComponentInteraction, CommandInteraction, CreateLuroCommand, ExecuteLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{
-    application::interaction::message_component::MessageComponentInteractionData,
-    channel::message::component::{ActionRow, Button, ButtonStyle, Component},
-};
-
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
+use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle, Component};
 
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]
 #[command(name = "boop", desc = "Boop the Bot!")]
-pub struct BoopCommand {}
+pub struct Boop {}
 
-impl LuroCommand for BoopCommand {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+impl CreateLuroCommand for Boop {}
+
+impl ExecuteLuroCommand for Boop {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
@@ -29,13 +25,9 @@ impl LuroCommand for BoopCommand {
         ctx.respond(|r| r.content("Boop Count: 0").add_components(components)).await
     }
 
-    async fn handle_component(
-        self,
-        _data: Box<MessageComponentInteractionData>,
-        ctx: LuroSlash<D>,
-    ) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction, _: DatabaseInteraction) -> anyhow::Result<()> {
         // Get message and parse number
-        let message = ctx.interaction.message.clone().unwrap();
+        let message = ctx.message.clone();
 
         let (_text, number) = message.content.split_at(12);
 
@@ -48,5 +40,3 @@ impl LuroCommand for BoopCommand {
             .await
     }
 }
-
-impl BoopCommand {}

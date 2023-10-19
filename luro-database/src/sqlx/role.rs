@@ -3,7 +3,7 @@ use sqlx::types::Json;
 
 use twilight_model::{
     gateway::payload::incoming::{RoleCreate, RoleDelete, RoleUpdate},
-    guild::{Role, RoleTags, RoleFlags, Permissions},
+    guild::{Permissions, Role, RoleFlags, RoleTags},
     id::{marker::GuildMarker, Id},
     util::ImageHash,
 };
@@ -11,8 +11,8 @@ use twilight_model::{
 mod count_roles;
 mod delete_role;
 mod get_role;
-mod update_role;
 mod get_roles;
+mod update_role;
 
 pub struct DbRole {
     pub colour: i32,

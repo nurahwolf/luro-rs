@@ -167,9 +167,6 @@ async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUs
     if let Ok(data) = framework.database.count_guilds().await {
         builder.push_record(["Total Guilds", &format_number(data)]);
     }
-    if let Ok(data) = framework.database.count_guild_roles().await {
-        builder.push_record(["Total Guild Roles", &format_number(data)]);
-    }
     if let Ok(data) = framework.database.count_guild_members().await {
         builder.push_record(["Total Guild Members", &format_number(data)]);
     }

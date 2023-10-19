@@ -6,6 +6,8 @@ pub type CommandResult = std::pin::Pin<Box<dyn std::future::Future<Output = anyh
 
 /// A structure containing a standard command implementation, for progmatically loading commands
 #[derive(Clone, Debug)]
+
+// TODO: Try Remove
 pub struct LuroCommand {
     /// The name of the command
     pub name: &'static str,

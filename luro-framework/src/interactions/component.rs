@@ -1,16 +1,15 @@
+use std::{sync::Arc, collections::HashMap};
+
 use anyhow::{anyhow, Context};
 use luro_database::LuroDatabase;
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
 use twilight_model::{
-    application::interaction::{Interaction, InteractionData},
-    user::User,
+    application::interaction::{Interaction, InteractionData, message_component::MessageComponentInteractionData},
+    user::User, id::{Id, marker::GuildMarker},
 };
 
-use crate::{ComponentInteraction, Context as LuroContext, Luro};
-
-use super::InteractionTrait;
-
+use crate::{Context as LuroContext, Luro, LuroMutex, LuroCommandType, traits::interaction::InteractionTrait};
 mod accent_colour;
 mod author;
 mod command_name;
@@ -19,6 +18,35 @@ mod respond;
 mod respond_create;
 mod response_simple;
 mod response_update;
+
+#[derive(Debug, Clone)]
+pub struct ComponentInteraction {
+    pub app_permissions: Option<twilight_model::guild::Permissions>,
+    pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
+    pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
+    pub channel: twilight_model::channel::Channel,
+    pub data: Box<MessageComponentInteractionData>,
+    pub database: Arc<LuroDatabase>,
+    pub global_commands: LuroMutex<LuroCommandType>,
+    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
+    pub guild_id: Option<Id<GuildMarker>>,
+    pub guild_locale: Option<String>,
+    pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
+    pub id: Id<twilight_model::id::marker::InteractionMarker>,
+    pub kind: twilight_model::application::interaction::InteractionType,
+    pub latency: twilight_gateway::Latency,
+    #[cfg(feature = "lavalink")]
+    pub lavalink: Arc<twilight_lavalink::Lavalink>,
+    pub locale: Option<String>,
+    pub member: Option<twilight_model::guild::PartialMember>,
+    pub message: twilight_model::channel::Message,
+    pub original: twilight_model::application::interaction::Interaction,
+    pub shard: twilight_gateway::MessageSender,
+    pub token: String,
+    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub twilight_client: Arc<twilight_http::Client>,
+    pub user: Option<twilight_model::user::User>,
+}
 
 impl Luro for ComponentInteraction {
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {

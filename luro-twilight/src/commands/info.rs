@@ -1,14 +1,14 @@
 use luro_framework::{
-    command::{CreateLuroCommand, ExecuteLuroCommand},
+    {CreateLuroCommand, ExecuteLuroCommand},
     CommandInteraction,
 };
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
+mod database;
 mod guild;
 mod punishments;
 mod role;
 mod user;
-mod database;
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "info", desc = "Information about neat things")]
@@ -35,7 +35,6 @@ impl ExecuteLuroCommand for Info {
             Self::Role(command) => command.interaction_command(ctx).await,
             Self::User(command) => command.interaction_command(ctx).await,
             Self::Database(command) => command.interaction_command(ctx).await,
-
         }
     }
 }

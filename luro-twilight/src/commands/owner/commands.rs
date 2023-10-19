@@ -1,4 +1,4 @@
-use luro_framework::{command::ExecuteLuroCommand, CommandInteraction};
+use luro_framework::{ExecuteLuroCommand, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::GenericMarker, Id};
 

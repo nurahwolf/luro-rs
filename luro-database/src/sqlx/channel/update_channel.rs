@@ -1,4 +1,7 @@
-use twilight_model::{gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelUpdate}, channel::Channel};
+use twilight_model::{
+    channel::Channel,
+    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelUpdate},
+};
 
 use crate::{sqlx::channel::DbChannel, DbChannelType, LuroDatabase};
 

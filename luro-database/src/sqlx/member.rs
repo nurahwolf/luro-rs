@@ -16,7 +16,7 @@ pub enum DbMemberType {
     MemberChunk(MemberChunk),
     MemberRemove(MemberRemove),
     MemberUpdate(Box<MemberUpdate>),
-    PartialMember(Id<GuildMarker>, PartialMember)
+    PartialMember(Id<GuildMarker>, PartialMember),
 }
 
 pub struct DbMember {

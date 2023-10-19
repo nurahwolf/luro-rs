@@ -9,6 +9,15 @@ This project has a few goals:
 - Reasonably simple to use, with a modest feature set.
 - The ability to replace most Discord bots with one that can do it all.
 
+## Project Crates
+
+- **luro-database** - A standard way to get information from several database drivers. Primary driver uses `sqlx` and connects to progress, with WIP / testing drivers for using `toml` files and `diesel`.
+- **luro-dice** - A simple dice roller library, used for the D&D commands. Can be used entirely standalone.
+- **luro-framework** - A wrapper around the `twilight` crate, allowing for standardised access of data
+- **luro-model** - Models and utility consumed throughout the rest of Luro. Can also be standalone if needed.
+- **luro-twilight** - Where the commands and events live, uses the database driver and `luro-framework` to operate.
+- **twilight-interactions** - Out of tree copy of `twilight-interactions`, just updated to work on the master branch of twilight, which this bot uses.
+
 ## IMPORTANT!!
 
 This is a complete project REBASE on the [Twilight](https://github.com/twilight-rs/twilight) library, instead of Serenity. This primarily comes down to more flexibility (and more things to learn), as the Poise and Serenity framework are not super well integrated. That, and the serenity branches seem to get out of sync a lot so it was difficult to actually get a project working.

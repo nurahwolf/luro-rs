@@ -1,11 +1,12 @@
-use crate::{LuroDatabase, DbApplicationType, DbApplication};
+use crate::{DbApplication, DbApplicationType, LuroDatabase};
 
 impl LuroDatabase {
     pub async fn update_application(&self, data: impl Into<DbApplicationType>) -> Result<DbApplication, sqlx::Error> {
         match data.into() {
-            DbApplicationType::PartialApplication(app) => sqlx::query_as!(
-                DbApplication,
-                "INSERT INTO applications (
+            DbApplicationType::PartialApplication(app) => {
+                sqlx::query_as!(
+                    DbApplication,
+                    "INSERT INTO applications (
                     application_id
                 ) VALUES
                     ($1)
@@ -16,9 +17,10 @@ impl LuroDatabase {
                 RETURNING
                     application_id",
                     app.id.get() as i64
-            )
-            .fetch_one(&self.pool)
-            .await,
-        }        
+                )
+                .fetch_one(&self.pool)
+                .await
+            }
+        }
     }
 }

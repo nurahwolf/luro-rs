@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{
     marker::{GenericMarker, RoleMarker},

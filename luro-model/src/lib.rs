@@ -42,6 +42,7 @@ pub mod response;
 pub mod role;
 pub mod story;
 pub mod user;
+pub mod functions;
 
 #[cfg(feature = "builders")]
 pub mod builders;

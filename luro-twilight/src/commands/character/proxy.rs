@@ -1,4 +1,4 @@
-use luro_framework::{command::ExecuteLuroCommand, interactions::InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 

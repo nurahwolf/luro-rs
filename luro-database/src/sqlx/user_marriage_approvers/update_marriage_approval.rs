@@ -1,4 +1,4 @@
-use crate::{LuroDatabase, DbUserMarriageApprovals};
+use crate::{DbUserMarriageApprovals, LuroDatabase};
 
 impl LuroDatabase {
     pub async fn update_marriage_approval(&self, marriage: DbUserMarriageApprovals) -> Result<DbUserMarriageApprovals, sqlx::Error> {
@@ -24,11 +24,11 @@ impl LuroDatabase {
                 proposer_id,
                 user_id
                 ",
-                marriage.approve,
-                marriage.disapprove,
-                marriage.proposee_id,
-                marriage.proposer_id,
-                marriage.user_id,
+            marriage.approve,
+            marriage.disapprove,
+            marriage.proposee_id,
+            marriage.proposer_id,
+            marriage.user_id,
         )
         .fetch_one(&self.pool)
         .await

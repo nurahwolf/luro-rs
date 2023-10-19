@@ -1,7 +1,7 @@
 use anyhow::anyhow;
-use async_trait::async_trait;
 use base64::{engine::general_purpose, Engine};
-use luro_framework::{command::ExecuteLuroCommand, CommandInteraction, ComponentInteraction};
+use luro_database::DatabaseInteraction;
+use luro_framework::{ExecuteLuroCommand, CommandInteraction, ComponentInteraction, CreateLuroCommand};
 use luro_model::response::LuroResponse;
 use std::str;
 use tracing::{info, warn};
@@ -19,9 +19,10 @@ pub enum Base64 {
     Encode(encode::Encode),
 }
 
-#[async_trait]
+impl CreateLuroCommand for Base64 {}
+
 impl ExecuteLuroCommand for Base64 {
-    async fn interaction_command(&self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
             Self::Decode(command) => command.interaction_command(ctx).await,
@@ -29,7 +30,7 @@ impl ExecuteLuroCommand for Base64 {
         }
     }
 
-    async fn interaction_component(&self, ctx: ComponentInteraction) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction, _original_interaction: DatabaseInteraction) -> anyhow::Result<()> {
         let author_id = ctx.author().id;
         // Always insure the input is decoded
         let (input, bait) = match self {

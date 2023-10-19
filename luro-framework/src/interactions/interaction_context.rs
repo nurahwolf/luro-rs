@@ -5,37 +5,45 @@ use twilight_model::{
     http::interaction::InteractionResponseType,
 };
 
-use crate::{responses::Response, CommandInteraction, ComponentInteraction, Context, InteractionContext, ModalInteraction};
+use crate::{responses::Response, CommandInteraction, ComponentInteraction, Context, ModalInteraction};
+
+#[derive(Clone)]
+pub enum InteractionContext {
+    Command(CommandInteraction),
+    CommandAutocomplete(CommandInteraction),
+    Component(ComponentInteraction),
+    Modal(ModalInteraction),
+}
 
 impl InteractionContext {
     pub fn new(ctx: Context, interaction: Interaction) -> anyhow::Result<Self> {
         match interaction.kind {
             InteractionType::Ping => Err(anyhow!("Received ping interaction with no handler")),
-            InteractionType::ApplicationCommand => Ok(Self::CommandInteraction(CommandInteraction::new(ctx, interaction)?)),
-            InteractionType::MessageComponent => Ok(Self::ComponentInteraction(ComponentInteraction::new(ctx, interaction)?)),
+            InteractionType::ApplicationCommand => Ok(Self::Command(CommandInteraction::new(ctx, interaction)?)),
+            InteractionType::MessageComponent => Ok(Self::Component(ComponentInteraction::new(ctx, interaction)?)),
             InteractionType::ApplicationCommandAutocomplete => {
-                Ok(Self::CommandAutocompleteInteraction(CommandInteraction::new(ctx, interaction)?))
+                Ok(Self::CommandAutocomplete(CommandInteraction::new(ctx, interaction)?))
             }
-            InteractionType::ModalSubmit => Ok(Self::ModalInteraction(ModalInteraction::new(ctx, interaction)?)),
+            InteractionType::ModalSubmit => Ok(Self::Modal(ModalInteraction::new(ctx, interaction)?)),
             _ => Err(anyhow!("Unexpected interaction kind")),
         }
     }
 
     pub fn command_name(&self) -> &str {
         match self {
-            Self::CommandAutocompleteInteraction(ctx) => ctx.command_name(),
-            Self::CommandInteraction(ctx) => ctx.command_name(),
-            Self::ComponentInteraction(ctx) => ctx.command_name(),
-            Self::ModalInteraction(ctx) => ctx.command_name(),
+            Self::CommandAutocomplete(ctx) => ctx.command_name(),
+            Self::Command(ctx) => ctx.command_name(),
+            Self::Component(ctx) => ctx.command_name(),
+            Self::Modal(ctx) => ctx.command_name(),
         }
     }
 
     pub fn command_type(&self) -> &str {
         match self {
-            Self::CommandAutocompleteInteraction(_) => "CommandAutocompleteInteraction",
-            Self::CommandInteraction(_) => "CommandInteraction",
-            Self::ComponentInteraction(_) => "ComponentInteraction",
-            Self::ModalInteraction(_) => "ModalInteraction",
+            Self::CommandAutocomplete(_) => "CommandAutocompleteInteraction",
+            Self::Command(_) => "CommandInteraction",
+            Self::Component(_) => "ComponentInteraction",
+            Self::Modal(_) => "ModalInteraction",
         }
     }
 
@@ -47,15 +55,24 @@ impl InteractionContext {
         response(&mut r);
 
         let (interaction_id, interaction_token, interaction_client) = match self {
-            InteractionContext::CommandInteraction(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
-            InteractionContext::CommandAutocompleteInteraction(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
-            InteractionContext::ComponentInteraction(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
-            InteractionContext::ModalInteraction(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
+            InteractionContext::Command(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
+            InteractionContext::CommandAutocomplete(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
+            InteractionContext::Component(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
+            InteractionContext::Modal(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
         };
 
-        match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage {
-            true => interaction_client.update_response(interaction_token).embeds(r.embeds.as_deref()).await?.status(),
-            false => interaction_client.create_response(interaction_id, interaction_token, &r.interaction_response()).await?.status(),
+        match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
+            || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
+        {
+            true => interaction_client
+                .update_response(interaction_token)
+                .embeds(r.embeds.as_deref())
+                .await?
+                .status(),
+            false => interaction_client
+                .create_response(interaction_id, interaction_token, &r.interaction_response())
+                .await?
+                .status(),
         };
 
         Ok(())

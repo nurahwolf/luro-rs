@@ -1,5 +1,6 @@
 use hyper::{Body, Request};
 
+use luro_framework::{ExecuteLuroCommand, CommandInteraction, responses::Response};
 use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::{
@@ -7,10 +8,6 @@ use twilight_lavalink::{
     model::{Play, Volume},
 };
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
     name = "play",
@@ -21,16 +18,19 @@ pub struct PlayCommand {
     /// What you would like me to play
     song: String,
     /// Sets the volume between 0 and 1000! 10 is the default
-    #[command(min_value = 0, max_value = 1000)]
+    #[command(min_value = 0, max_value = 1_000)]
     volume: Option<i64>,
 }
 
-impl LuroCommand for PlayCommand {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+impl ExecuteLuroCommand for PlayCommand {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let volume = self.volume.unwrap_or(10);
-        let guild_id = ctx.interaction.guild_id.unwrap();
+        let guild_id = match ctx.guild_id {
+            Some(guild_id) => guild_id,
+            None => return ctx.response_simple(Response::NotGuild).await,
+        };
 
-        let player = ctx.framework.lavalink.player(guild_id).await.unwrap();
+        let player = ctx.lavalink.player(guild_id).await?;
         let (parts, body) = twilight_lavalink::http::load_track(
             player.node().config().address,
             &self.song,
@@ -38,7 +38,7 @@ impl LuroCommand for PlayCommand {
         )?
         .into_parts();
         let req = Request::from_parts(parts, Body::from(body));
-        let res = ctx.framework.hyper_client.request(req).await?;
+        let res = ctx.http_client.request(req).await?;
         let response_bytes = hyper::body::to_bytes(res.into_body()).await?;
         let loaded = serde_json::from_slice::<LoadedTracks>(&response_bytes)?;
 

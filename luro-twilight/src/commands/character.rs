@@ -1,8 +1,8 @@
 use anyhow::Context;
 use luro_database::DatabaseInteraction;
 use luro_framework::{
-    command::{CreateLuroCommand, ExecuteLuroCommand},
-    interactions::InteractionTrait,
+    {CreateLuroCommand, ExecuteLuroCommand},
+    InteractionTrait,
     CommandInteraction, ComponentInteraction, Luro, ModalInteraction,
 };
 use luro_model::user::character::{CharacterProfile, FetishCategory};

@@ -22,7 +22,7 @@ pub use crate::sqlx::{
     role::{DbRole, DbRoleType},
     user::{DatabaseUser, DatabaseUserType, LuroUserPermissions},
     user_marriage::DbUserMarriage,
-    user_marriage_approvers::{DbUserMarriageApprovals, DbUserMarriageApprovalsCount}
+    user_marriage_approvers::{DbUserMarriageApprovals, DbUserMarriageApprovalsCount},
 };
 #[cfg(feature = "toml-driver")]
 pub use crate::toml::{DatabaseGuild, DatabaseInteraction, DatabaseInteractionKind, DatabaseUser, LuroDatabase};

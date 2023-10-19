@@ -1,7 +1,7 @@
+use crate::{DbRole, LuroDatabase};
+use sqlx::types::Json;
 use twilight_model::guild::RoleTags;
 use twilight_model::util::ImageHash;
-use sqlx::types::Json;
-use crate::{LuroDatabase, DbRole};
 
 impl LuroDatabase {
     pub async fn get_guild_roles(&self, guild_id: i64) -> Result<Vec<DbRole>, sqlx::Error> {

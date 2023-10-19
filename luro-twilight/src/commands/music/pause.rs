@@ -1,19 +1,19 @@
+use luro_framework::{ExecuteLuroCommand, CommandInteraction, responses::Response};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Pause;
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "pause", desc = "Pause / Unpause the current playing music", dm_permission = false)]
 pub struct PauseCommand {}
 
-impl LuroCommand for PauseCommand {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let guild_id = ctx.interaction.guild_id.unwrap();
+impl ExecuteLuroCommand for PauseCommand {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let guild_id = match ctx.guild_id {
+            Some(guild_id) => guild_id,
+            None => return ctx.response_simple(Response::NotGuild).await,
+        };
 
-        let player = ctx.framework.lavalink.player(guild_id).await.unwrap();
+        let player = ctx.lavalink.player(guild_id).await?;
         let paused = player.paused();
         player.send(Pause::from((guild_id, !paused)))?;
 

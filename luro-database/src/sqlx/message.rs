@@ -19,6 +19,8 @@ use twilight_model::{
 };
 
 mod count_messages;
+mod count_total_words;
+mod count_user_words;
 mod get_message;
 mod get_messages;
 #[cfg(feature = "cache")]
@@ -30,8 +32,6 @@ mod handle_message_delete;
 mod handle_message_delete_bulk;
 mod handle_message_update;
 mod update_message;
-mod count_total_words;
-mod count_user_words;
 
 #[derive(Default, Debug, ::sqlx::Type)]
 #[sqlx(type_name = "message_source", rename_all = "SCREAMING_SNAKE_CASE")]

@@ -1,5 +1,5 @@
 use luro_framework::{
-    command::{CreateLuroCommand, ExecuteLuroCommand},
+    {CreateLuroCommand, ExecuteLuroCommand},
     CommandInteraction,
 };
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};

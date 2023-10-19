@@ -36,14 +36,10 @@ twilight-util = { workspace = true }
 
 [features]
 # Default Features
-default = ["sqlx-driver", "dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders", "dotenvy"]
+default = ["dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders", "dotenvy"]
 
 ## Model Features
 auto-trim = [] # Used to automatically trim message responses that are too big, sending as a file instead
-
-## Database Options
-toml-driver = ["dep:toml"]
-sqlx-driver = ["dep:sqlx"]
 
 ## Misc Features
 dotenvy = ["dep:dotenvy"] # Enable this feature to load from a .env file

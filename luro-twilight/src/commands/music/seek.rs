@@ -1,10 +1,8 @@
+use luro_framework::{ExecuteLuroCommand, CommandInteraction, responses::Response};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Seek;
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
 
-use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "seek", desc = "Seek through the track", dm_permission = false)]
 pub struct SeekCommand {
@@ -12,11 +10,14 @@ pub struct SeekCommand {
     position: i64,
 }
 
-impl LuroCommand for SeekCommand {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let guild_id = ctx.interaction.guild_id.unwrap();
+impl ExecuteLuroCommand for SeekCommand {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let guild_id = match ctx.guild_id {
+            Some(guild_id) => guild_id,
+            None => return ctx.response_simple(Response::NotGuild).await,
+        };
 
-        let player = ctx.framework.lavalink.player(guild_id).await.unwrap();
+        let player = ctx.lavalink.player(guild_id).await?;
         player.send(Seek::from((guild_id, self.position * 1000)))?;
 
         ctx.respond(|r| r.content(format!("Seeked to {}s", self.position))).await

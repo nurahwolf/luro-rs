@@ -1,20 +1,18 @@
+use luro_framework::{CreateLuroCommand, ExecuteLuroCommand, CommandInteraction, InteractionTrait};
 use rand::Rng;
-
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "muzzle", desc = "Put a muzzle on a user")]
-pub struct MuzzleCommand {
+pub struct Muzzle {
     /// The user to muzzle.
     user: ResolvedUser,
 }
 
-impl LuroCommand for MuzzleCommand {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+impl CreateLuroCommand for Muzzle {}
+
+impl ExecuteLuroCommand for Muzzle {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // TODO: Load these from a text file
         let responses = ["<user> just got muzzled for a few seconds!!",
         "<user> just got slapped on the muzzle and told to hush.",
@@ -182,7 +180,7 @@ impl LuroCommand for MuzzleCommand {
             .get(choice)
             .unwrap()
             .replace("<user>", format!("<@{}>", self.user.resolved.id).as_str())
-            .replace("<author>", format!("<@{}>", ctx.interaction.author_id().unwrap()).as_str());
+            .replace("<author>", format!("<@{}>", ctx.author_id()).as_str());
 
         ctx.respond(|r| r.content(content)).await
     }

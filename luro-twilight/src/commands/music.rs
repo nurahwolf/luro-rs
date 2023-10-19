@@ -1,3 +1,4 @@
+use luro_framework::{CreateLuroCommand, ExecuteLuroCommand, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use self::info::InfoCommand;
@@ -7,10 +8,6 @@ use self::stop::StopCommand;
 use self::volume::VolumeCommand;
 use self::{join::JoinCommand, leave::LeaveCommand, play::PlayCommand};
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
 mod info;
 mod join;
 mod leave;
@@ -22,7 +19,7 @@ mod volume;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "music", desc = "Music commands!", dm_permission = false)]
-pub enum MusicCommands {
+pub enum Music {
     #[command(name = "play")]
     Play(PlayCommand),
     #[command(name = "join")]
@@ -41,18 +38,20 @@ pub enum MusicCommands {
     Info(InfoCommand),
 }
 
-impl LuroCommand for MusicCommands {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
+impl CreateLuroCommand for Music {}
+
+impl ExecuteLuroCommand for Music {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {
-            Self::Play(command) => command.run_command(ctx).await,
-            Self::Join(command) => command.run_command(ctx).await,
-            Self::Leave(command) => command.run_command(ctx).await,
-            Self::Pause(command) => command.run_command(ctx).await,
-            Self::Seek(command) => command.run_command(ctx).await,
-            Self::Volume(command) => command.run_command(ctx).await,
-            Self::Stop(command) => command.run_command(ctx).await,
-            Self::Info(command) => command.run_command(ctx).await,
+            Self::Play(command) => command.interaction_command(ctx).await,
+            Self::Join(command) => command.interaction_command(ctx).await,
+            Self::Leave(command) => command.interaction_command(ctx).await,
+            Self::Pause(command) => command.interaction_command(ctx).await,
+            Self::Seek(command) => command.interaction_command(ctx).await,
+            Self::Volume(command) => command.interaction_command(ctx).await,
+            Self::Stop(command) => command.interaction_command(ctx).await,
+            Self::Info(command) => command.interaction_command(ctx).await,
         }
     }
 }

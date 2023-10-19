@@ -1,25 +1,21 @@
 use std::fmt::Write;
-
+use luro_framework::{ExecuteLuroCommand, CommandInteraction, InteractionTrait, responses::Response};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use crate::interaction::LuroSlash;
-use luro_model::database::drivers::LuroDatabaseDriver;
-
-use crate::luro_command::LuroCommand;
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "info", desc = "Information about the music player", dm_permission = false)]
 pub struct InfoCommand {}
 
-impl LuroCommand for InfoCommand {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let guild_id = match ctx.interaction.guild_id {
+impl ExecuteLuroCommand for InfoCommand {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let guild_id = match ctx.guild_id {
             Some(guild_id) => guild_id,
-            None => return ctx.not_guild_response().await,
+            None => return ctx.response_simple(Response::NotGuild).await,
         };
 
         let mut description = String::new();
 
-        let stats = ctx.framework.lavalink.player(guild_id).await?.node().stats().await;
+        let stats = ctx.lavalink.player(guild_id).await?.node().stats().await;
         writeln!(
             description,
             "**Consumption:** `{}` cores assigned - `{:.2}` lavalink load - `{:.2}` system load",

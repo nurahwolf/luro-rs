@@ -1,7 +1,11 @@
 use crate::DbUserMarriageApprovalsCount;
 
 impl crate::LuroDatabase {
-    pub async fn count_marriage_approvers(&self, proposer_id: i64, proposee_id: i64) -> Result<DbUserMarriageApprovalsCount, sqlx::Error> {
+    pub async fn count_marriage_approvers(
+        &self,
+        proposer_id: i64,
+        proposee_id: i64,
+    ) -> Result<DbUserMarriageApprovalsCount, sqlx::Error> {
         sqlx::query_as!(
             DbUserMarriageApprovalsCount,
             "
