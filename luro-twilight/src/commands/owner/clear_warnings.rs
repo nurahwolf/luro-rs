@@ -16,7 +16,7 @@ pub struct Warnings {
 
 impl LuroCommand for Warnings {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let mut user_data = ctx.get_user(&self.user.resolved.id).await?;
+        let mut user_data = ctx.fetch_user(&self.user.resolved.id).await?;
         if user_data.warnings.is_empty() {
             return ctx
                 .respond(|r| r.content("User has no warnings you stupid idiot!").ephemeral())

@@ -6,7 +6,7 @@ use twilight_model::guild::PartialMember;
 use twilight_model::util::ImageHash;
 use twilight_model::{gateway::payload::incoming::MemberAdd, guild::Member};
 
-use crate::{DbMember, DbMemberType, LuroDatabase};
+use crate::{DbMember, DbMemberType, LuroDatabase, LuroMember};
 
 impl LuroDatabase {
     pub async fn update_member(&self, member: impl Into<DbMemberType>) -> Result<Option<DbMember>, sqlx::Error> {
@@ -19,8 +19,60 @@ impl LuroDatabase {
             DbMemberType::MemberRemove(member) => handle_member_remove(self, member).await,
             DbMemberType::MemberUpdate(member) => handle_member_update(self, member).await,
             DbMemberType::PartialMember(guild_id, member) => handle_partial_member(self, guild_id.get() as i64, member).await,
+            DbMemberType::LuroMember(member) => handle_luro_member(self, member).await,
         }
     }
+}
+
+async fn handle_luro_member(db: &LuroDatabase, member: LuroMember) -> Result<Option<DbMember>, sqlx::Error> {
+    sqlx::query_as!(
+        DbMember,
+        "INSERT INTO guild_members (
+            user_id,
+            guild_id,
+            avatar,
+            boosting_since,
+            communication_disabled_until,
+            deafened,
+            flags,
+            muted,
+            nickname
+        ) VALUES
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ON CONFLICT
+            (user_id, guild_id)
+        DO UPDATE SET
+            avatar = $3,
+            boosting_since = $4,
+            communication_disabled_until = $5,
+            deafened = $6,
+            flags = $7,
+            muted = $8,
+            nickname = $9
+        RETURNING
+            user_id,
+            guild_id,
+            avatar as \"avatar: Json<ImageHash>\",
+            boosting_since,
+            communication_disabled_until,
+            deafened,
+            flags,
+            muted,
+            nickname,
+            pending
+        ",
+        member.user_id,
+        member.guild_id,
+        member.avatar as _,
+        member.boosting_since,
+        member.communication_disabled_until,
+        member.deafened,
+        member.flags,
+        member.muted,
+        member.nickname,
+    )
+    .fetch_optional(&db.pool)
+    .await
 }
 
 async fn handle_partial_member(db: &LuroDatabase, guild_id: i64, member: PartialMember) -> Result<Option<DbMember>, sqlx::Error> {

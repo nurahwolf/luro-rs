@@ -43,6 +43,7 @@ pub mod response;
 pub mod role;
 pub mod story;
 pub mod user;
+pub mod types; // Migrated
 
 #[cfg(feature = "builders")]
 pub mod builders;

@@ -73,4 +73,8 @@ impl Luro for Context {
     fn cache(&self) -> std::sync::Arc<twilight_cache_inmemory::InMemoryCache> {
         self.cache.clone()
     }
+
+    fn guild_id(&self) -> Option<Id<GuildMarker>> {
+        None
+    }
 }

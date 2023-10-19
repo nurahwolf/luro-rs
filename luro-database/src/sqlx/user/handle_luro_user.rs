@@ -1,14 +1,14 @@
-use luro_model::user::LuroUser;
 use sqlx::types::Json;
 use sqlx::Error;
 use twilight_model::user::PremiumType;
 use twilight_model::user::UserFlags;
 use twilight_model::util::ImageHash;
 
+use crate::LuroUser;
 use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
 
 impl LuroDatabase {
-    pub async fn handle_luro_user(&self, user: LuroUser) -> Result<Option<DatabaseUser>, Error> {
+    pub async fn handle_luro_user(&self, user: LuroUser) -> Result<DatabaseUser, Error> {
         sqlx::query_as!(
             DatabaseUser,
             "INSERT INTO users (
@@ -25,10 +25,9 @@ impl LuroDatabase {
                 premium_type,
                 public_flags,
                 user_id,
-                user_permissions,
                 verified
             ) VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             ON CONFLICT
                 (user_id)
             DO UPDATE SET
@@ -44,8 +43,7 @@ impl LuroDatabase {
                 name = $10,
                 premium_type = $11,
                 public_flags = $12,
-                user_permissions = $14,
-                verified = $15
+                verified = $14
             RETURNING
                 accent_colour,
                 avatar as \"avatar: Json<ImageHash>\",
@@ -72,27 +70,22 @@ impl LuroDatabase {
                 words_average,
                 words_count
             ",
-            user.accent_color.map(|x| x as i32),
-            user.avatar.map(Json) as _,
-            user.banner.map(Json) as _,
+            user.accent_colour,
+            user.avatar as _,
+            user.banner as _,
             user.bot,
-            user.discriminator as i16,
+            user.discriminator,
             user.email,
-            user.flags.map(Json) as _,
+            user.flags as _,
             user.locale,
             user.mfa_enabled,
             user.name,
-            user.premium_type.map(Json) as _,
-            user.public_flags.map(Json) as _,
-            user.id.get() as i64,
-            match user.user_permissions {
-                luro_model::user::LuroUserPermissions::Administrator => LuroUserPermissions::Administrator,
-                luro_model::user::LuroUserPermissions::Owner => LuroUserPermissions::Owner,
-                luro_model::user::LuroUserPermissions::User => LuroUserPermissions::User,
-            } as _,
+            user.premium_type as _,
+            user.public_flags as _,
+            user.user_id,
             user.verified,
         )
-        .fetch_optional(&self.pool)
+        .fetch_one(&self.pool)
         .await
     }
 }

@@ -1,4 +1,6 @@
 use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_model::user::LuroUser;
+use rand::{seq::SliceRandom, thread_rng};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -16,55 +18,42 @@ pub struct Proxy {
 impl LuroCommand for Proxy {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
-        let mut user_data = ctx.get_user(&user_id).await?;
-        if user_data.characters.is_empty() {
-            return ctx
-                .respond(|r| {
-                    r.content(format!("Sorry, <@{user_id}> has no character profiles configured!"))
-                        .ephemeral()
-                })
-                .await;
-        }
-
-        let character = match user_data.characters.get(&self.name) {
+        let user = ctx.fetch_user(&user_id).await?;
+        let mut character = match user.fetch_character(&self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for (character_name, character) in user_data.characters {
-                    writeln!(characters, "- {character_name}: {}", character.short_description)?
+                for (character_name, character) in user.fetch_characters().await? {
+                    writeln!(characters, "- {character_name}: {}", character.sfw_summary)?
                 }
 
-                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", self.name, characters);
+                let response = format!("I'm afraid that user <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",user.user_id, self.name, characters);
                 return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
 
         if self.remove.unwrap_or_default() {
-            let content = match user_data.character_prefix.remove(&self.prefix) {
-                Some(prefix) => {
-                    ctx.database.update_user(user_data).await?;
-                    format!("Prefix {prefix} removed from character {}!", self.name)
-                }
-                None => {
-                    let mut prefix_string = String::new();
-                    for (prefix, character) in user_data.character_prefix {
-                        writeln!(prefix_string, "- {prefix} - {character}")?
-                    }
-                    prefix_string
-                }
-            };
-            return ctx.respond(|r| r.content(content).ephemeral()).await;
+                character.prefix = None;
+                user.update_character(character).await?;
+                return ctx
+                    .respond(|r| {
+                        r.content(format!("Prefix `{}` removed from character {}!", self.prefix, self.name))
+                            .ephemeral()
+                    })
+                    .await;
+            
         }
 
-        user_data.character_prefix.insert(self.prefix.clone(), self.name.clone());
-        ctx.database.update_user(user_data.clone()).await?;
+        character.prefix = Some(self.prefix);
+        user.update_character(character.clone()).await?;
 
-        let character_icon = match !character.icon.is_empty() {
-            true => character.icon.clone(),
-            false => user_data.avatar(),
-        };
-
-        ctx.respond(|response|response.embed(|embed|embed.author(|author|author.icon_url(character_icon).name(&self.name)).description("Your proxied messages will look like this now!\n\n*Note:* If I am using your avatar, make sure that I have been set with an icon! `/character icon`")).ephemeral()).await
+        let accent_colour = ctx.accent_colour().await;
+        let character_icon = character
+            .sfw_icons
+            .map(|x| x.choose(&mut thread_rng()).cloned())
+            .map(|x| x.unwrap_or(user.avatar()))
+            .unwrap_or(user.avatar());
+        ctx.respond(|response|response.embed(|embed|embed.colour(accent_colour).author(|author|author.icon_url(character_icon).name(&self.name)).description("Your proxied messages will look like this now!\n\n*Note:* If I am using your avatar, make sure that I have been set with an icon! `/character icon`")).ephemeral()).await
     }
 }

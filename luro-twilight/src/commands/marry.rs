@@ -107,17 +107,17 @@ impl CreateLuroCommand for Marry {
     }
 
     async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
-        let proposer = ctx.get_user(&Id::new(invoking_interaction.user_id as u64)).await?;
+        let proposer = ctx.fetch_user(&Id::new(invoking_interaction.user_id as u64)).await?;
         let (proposee, divorce_wanted) = match self {
-            Self::Someone(command) => (ctx.get_user(&command.marry.resolved.id).await?, false),
-            Self::Divorce(command) => (ctx.get_user(&command.user.resolved.id).await?, true),
+            Self::Someone(command) => (ctx.fetch_user(&command.marry.resolved.id).await?, false),
+            Self::Divorce(command) => (ctx.fetch_user(&command.user.resolved.id).await?, true),
             _ => {
                 return ctx
                     .response_simple(Response::InternalError(anyhow!("Can't find the request to marry, sorry!")))
                     .await
             }
         };
-        let (proposer_id, proposee_id) = (proposer.id.get() as i64, (proposee.id.get() as i64));
+        let (proposer_id, proposee_id) = (proposer.user_id, (proposee.user_id));
 
         let mut embed = ctx.default_embed().await;
         let marriage = ctx
@@ -127,7 +127,7 @@ impl CreateLuroCommand for Marry {
             .context("Expected to find marriage in database")?;
 
         // Handle if someone else clicked the button
-        if ctx.author_id() != proposee.id {
+        if ctx.author_id() != proposee.user_id {
             match &ctx.data.custom_id == "marry-deny" {
                 true => {
                     ctx.database
@@ -216,7 +216,7 @@ impl CreateLuroCommand for Marry {
         };
 
         // Handle if someone else clicked the button
-        if ctx.author_id() != proposee.id {
+        if ctx.author_id() != proposee.user_id {
             return ctx.respond(|r| r.update().add_embed(embed)).await;
         }
 

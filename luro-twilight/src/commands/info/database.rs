@@ -1,5 +1,5 @@
 use luro_database::LuroUserPermissions;
-use luro_framework::{CommandInteraction, InteractionTrait, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 
 use tracing::warn;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -45,7 +45,7 @@ impl LuroCommand for Database {
         let mut administrators = String::new();
         let mut owners = String::new();
         for staff in ctx.database.get_staff().await? {
-            match staff.user_permissions.as_ref().unwrap_or(&LuroUserPermissions::User) {
+            match staff.user_permissions {
                 LuroUserPermissions::Owner => match owners.is_empty() {
                     true => owners.push_str(&staff.name),
                     false => owners.push_str(format!(", {}", &staff.name).as_str()),

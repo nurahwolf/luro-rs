@@ -16,13 +16,13 @@ pub struct Divorce {
 
 impl LuroCommand for Divorce {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let proposer = ctx.get_user(&ctx.author_id()).await?;
-        let proposee = ctx.get_user(&self.user.resolved.id).await?;
+        let proposer = ctx.fetch_user(&ctx.author_id()).await?;
+        let proposee = ctx.fetch_user(&self.user.resolved.id).await?;
 
         ctx.database
             .update_marriage(DbUserMarriage {
-                proposer_id: proposer.id.get() as i64,
-                proposee_id: self.user.resolved.id.get() as i64,
+                proposer_id: proposer.user_id,
+                proposee_id: proposee.user_id,
                 divorced: true,
                 rejected: false,
                 reason: self.reason.clone(),

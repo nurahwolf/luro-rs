@@ -17,7 +17,7 @@ pub struct Someone {
 
 impl LuroCommand for Someone {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let proposer = ctx.get_user(&ctx.author_id()).await?;
+        let proposer = ctx.fetch_user(&ctx.author_id()).await?;
         let accent_colour = ctx.accent_colour().await;
 
         let reason = self.reason.unwrap_or(
@@ -25,12 +25,12 @@ impl LuroCommand for Someone {
                 .choose(&mut thread_rng())
                 .context("Expected to be able to choose a random reason")?
                 .replace("<user>", &format!("<@{}>", &self.marry.resolved.id))
-                .replace("<author>", &format!("<@{}>", &proposer.id)),
+                .replace("<author>", &format!("<@{}>", &proposer.user_id)),
         );
 
         ctx.database
             .update_marriage(DbUserMarriage {
-                proposer_id: proposer.id.get() as i64,
+                proposer_id: proposer.user_id,
                 proposee_id: self.marry.resolved.id.get() as i64,
                 divorced: false,
                 rejected: false,

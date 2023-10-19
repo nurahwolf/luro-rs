@@ -8,7 +8,7 @@ use twilight_model::util::ImageHash;
 use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
 
 impl LuroDatabase {
-    pub async fn handle_user_update(&self, user: UserUpdate) -> Result<Option<DatabaseUser>, Error> {
+    pub async fn handle_user_update(&self, user: UserUpdate) -> Result<DatabaseUser, Error> {
         sqlx::query_as!(
             DatabaseUser,
             "INSERT INTO users (
@@ -85,7 +85,7 @@ impl LuroDatabase {
             user.id.get() as i64,
             user.verified,
         )
-        .fetch_optional(&self.pool)
+        .fetch_one(&self.pool)
         .await
     }
 }

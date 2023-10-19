@@ -7,7 +7,7 @@ use twilight_model::util::ImageHash;
 use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
 
 impl LuroDatabase {
-    pub async fn get_user(&self, id: i64) -> Result<Option<DatabaseUser>, Error> {
+    pub async fn get_user(&self, user_id: i64) -> Result<Option<DatabaseUser>, Error> {
         sqlx::query_as!(
             DatabaseUser,
             "SELECT
@@ -39,7 +39,7 @@ impl LuroDatabase {
                 users
             WHERE
                 user_id = $1",
-            id
+            user_id
         )
         .fetch_optional(&self.pool)
         .await

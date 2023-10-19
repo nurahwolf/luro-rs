@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, InteractionTrait, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 
 use std::str;
 

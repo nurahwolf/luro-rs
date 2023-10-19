@@ -89,6 +89,10 @@ impl Framework {
 }
 
 impl Luro for Framework {
+    fn guild_id(&self) -> Option<Id<GuildMarker>> {
+        None
+    }
+
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
         Ok(self
             .twilight_client

@@ -1,10 +1,9 @@
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, LuroCommand};
 use std::fmt::Write;
-use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{
-    channel::message::component::ButtonStyle,
-    id::{marker::UserMarker, Id},
-};
+use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+
+
+use super::character_response;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "profile", desc = "Fetch a user's character profile")]
@@ -14,19 +13,15 @@ pub struct Profile {
     /// The type of profile to fetch. Defaults to the channel type.
     nsfw: Option<bool>,
     /// Fetch the character name from someone else.
-    user: Option<Id<UserMarker>>,
+    user: Option<ResolvedUser>,
 }
 
 impl LuroCommand for Profile {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user_id = match self.user {
-            Some(user) => user,
-            None => ctx.author_id(),
-        };
-        let user_data = ctx.get_user(&user_id).await?;
-        let interaction_channel_nsfw = ctx.channel.nsfw;
+        let user = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
+
         let nsfw = match self.nsfw {
-            Some(nsfw) => match interaction_channel_nsfw {
+            Some(nsfw) => match ctx.channel.nsfw {
                 Some(channel_nsfw) => match !channel_nsfw && nsfw {
                     true => {
                         return ctx
@@ -37,67 +32,23 @@ impl LuroCommand for Profile {
                 },
                 None => nsfw,
             },
-            None => interaction_channel_nsfw.unwrap_or_default(),
+            None => ctx.channel.nsfw.unwrap_or_default(),
         };
 
-        if user_data.characters.is_empty() {
-            return ctx
-                .respond(|r| {
-                    r.content(format!("Sorry, <@{user_id}> has no character profiles configured!"))
-                        .ephemeral()
-                })
-                .await;
-        }
-
-        let character = match user_data.characters.get(&self.name) {
+        let character = match user.fetch_character(&self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for (character_name, character) in user_data.characters {
-                    writeln!(characters, "- {character_name}: {}", character.short_description)?
+                for (character_name, character) in user.fetch_characters().await? {
+                    writeln!(characters, "- {character_name}: {}", character.sfw_summary)?
                 }
 
-                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", self.name, characters);
+                let response = format!("I'm afraid that user <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",user.user_id, self.name, characters);
                 return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
 
-        let mut embed = ctx.default_embed().await;
-        let mut description = format!("{}\n", character.short_description);
-        if !character.description.is_empty() {
-            writeln!(description, "- **Description:**\n{}", character.description)?
-        }
-
-        if let Some(nsfw_description) = &character.nsfw_description && nsfw && !nsfw_description.is_empty() {
-            writeln!(description, "\n- **NSFW Description:**\n{nsfw_description}")?
-
-        }
-        embed.title(format!("Character Profile - {}", self.name));
-        embed.description(description);
-        embed.author(|a| a.icon_url(user_data.avatar()).name(format!("Profile by {}", user_data.name())));
-
-        let mut prefix_string = String::new();
-        for (prefix, character_name) in user_data.character_prefix {
-            if self.name == character_name {
-                writeln!(prefix_string, "- `{prefix}`")?
-            }
-        }
-        if !prefix_string.is_empty() {
-            embed.create_field("Character Prefixes", &prefix_string, false);
-        }
-
-        ctx.respond(|response| {
-            response.add_embed(embed);
-            if nsfw && !character.fetishes.is_empty() {
-                response.components(|components| {
-                    components.action_row(|row| {
-                        row.button(|button| button.custom_id("character-fetish").label("Fetishes").style(ButtonStyle::Danger))
-                    })
-                });
-            }
-            response
-        })
-        .await
+        character_response(ctx, &character, &user, nsfw).await
     }
 }

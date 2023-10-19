@@ -1,9 +1,6 @@
-use luro_database::DatabaseUser;
+use luro_database::{DatabaseUser, LuroUserPermissions};
 use luro_framework::{Context, Luro};
-use luro_model::{
-    user::{LuroUser, LuroUserPermissions},
-    BOT_OWNERS, PRIMARY_BOT_OWNER,
-};
+use luro_model::{BOT_OWNERS, PRIMARY_BOT_OWNER};
 use tracing::{info, warn};
 use twilight_model::gateway::{
     payload::{incoming::Ready, outgoing::UpdatePresence},
@@ -39,17 +36,19 @@ pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Re
 
         // Register staff
         for staff in BOT_OWNERS {
-            let mut user = LuroUser::from(&framework.twilight_client.user(staff).await?.model().await?);
-
-            user.user_permissions = LuroUserPermissions::Administrator;
-            framework.database.update_user(user).await?;
+            let mut user = framework.fetch_user(&staff).await?;
+            if let Some(ref mut user_data) = user.data {
+                user_data.permissions = LuroUserPermissions::Administrator;
+                user.sync().await?;
+            }
         }
 
         // Register primary owner
-        let mut user = LuroUser::from(&framework.twilight_client.user(PRIMARY_BOT_OWNER).await?.model().await?);
-
-        user.user_permissions = LuroUserPermissions::Owner;
-        framework.database.update_user(user).await?;
+        let mut owner = framework.fetch_user(&PRIMARY_BOT_OWNER).await?;
+        if let Some(ref mut user_data) = owner.data {
+            user_data.permissions = LuroUserPermissions::Owner;
+            owner.sync().await?;
+        }
 
         staff = framework.database.get_staff().await?;
     }
@@ -80,8 +79,6 @@ async fn standard_output(framework: &Context, event: &Box<Ready>, staff: HashMap
 
 #[cfg(feature = "pretty-tables")]
 async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUser>) {
-    use luro_database::LuroUserPermissions;
-
     let mut builder = tabled::builder::Builder::new();
     if let Some(latency) = framework.latency.average() {
         builder.push_record(["API Latency", &latency.as_millis().to_string()]);
@@ -131,7 +128,7 @@ async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUs
     let mut database_information = String::new();
     let mut owners = String::new();
     for staff in staff {
-        match staff.user_permissions.as_ref().unwrap_or(&LuroUserPermissions::User) {
+        match staff.user_permissions {
             LuroUserPermissions::Owner => match owners.is_empty() {
                 true => owners.push_str(&staff.name),
                 false => owners.push_str(format!(", {}", &staff.name).as_str()),

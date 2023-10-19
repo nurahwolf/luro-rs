@@ -1,6 +1,8 @@
+use anyhow::Context;
 use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
-use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
+
+use super::character_response;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "icon", desc = "Set the primary icon for this character")]
@@ -16,36 +18,10 @@ pub struct Icon {
 impl LuroCommand for Icon {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
+        let user = ctx.fetch_user(&user_id).await?;
+        let character = user.fetch_character(&self.name).await?.context("No character with that name!")?;
+        let nsfw = ctx.channel.nsfw.unwrap_or_default();
 
-        let mut user_data = ctx.get_user(&user_id).await?;
-        if user_data.characters.is_empty() {
-            return ctx
-                .respond(|r| {
-                    r.content(format!("Sorry, <@{user_id}> has no character profiles configured!"))
-                        .ephemeral()
-                })
-                .await;
-        }
-
-        match user_data.characters.get_mut(&self.name) {
-            Some(character) => {
-                character.nsfw_icon = self.nsfw_icon.clone();
-                character.icon = self.icon.clone()
-            }
-            None => {
-                let mut characters = String::new();
-
-                for (character_name, character) in user_data.characters {
-                    writeln!(characters, "- {character_name}: {}", character.short_description)?
-                }
-
-                let response = format!("I'm afraid that user <@{user_id}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}", self.name, characters);
-                return ctx.respond(|r| r.content(response).ephemeral()).await;
-            }
-        };
-
-        ctx.database.update_user(user_data).await?;
-
-        ctx.respond(|r| r.content("Done!").ephemeral()).await
+        character_response(ctx, &character, &user, nsfw).await
     }
 }

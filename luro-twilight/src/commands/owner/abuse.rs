@@ -31,7 +31,7 @@ impl LuroCommand for Abuse {
             },
         };
 
-        let luro_user = ctx.get_user(&self.user.resolved.id).await?;
+        let luro_user = ctx.fetch_user(&self.user.resolved.id).await?;
 
         let mut embed = EmbedBuilder::default();
         embed
@@ -40,7 +40,7 @@ impl LuroCommand for Abuse {
             .author(|author| author.name(&luro_user.name()).icon_url(&luro_user.avatar()));
 
         let avatar = luro_user.avatar();
-        let name = luro_user.member_name(&ctx.guild_id);
+        let name = luro_user.name();
         let webhook_message = ctx
             .twilight_client
             .execute_webhook(webhook.id, &webhook_token)

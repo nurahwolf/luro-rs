@@ -1,6 +1,8 @@
+use anyhow::Context;
 use luro_framework::CommandInteraction;
 use luro_framework::InteractionTrait;
 use luro_framework::{Luro, LuroCommand};
+use luro_model::user::LuroUser;
 use luro_model::user::character::{Fetish, FetishCategory, FetishList};
 use std::fmt::Write;
 
@@ -21,15 +23,12 @@ impl LuroCommand for Add {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let user_id = ctx.author_id();
-        let mut user_data = ctx.get_user(&user_id).await?;
+        let user = ctx.fetch_user(&user_id).await?;
         embed.title(format!("Character Profile - {}", self.name));
-        embed.author(|a| a.icon_url(user_data.avatar()).name(format!("Profile by {}", user_data.name())));
+        embed.author(|a| a.icon_url(user.avatar()).name(format!("Profile by {}", user.name())));
 
-        if user_data.characters.is_empty() {
-            return ctx
-                .respond(|r| r.content(format!("Hey <@{user_id}>, you must add a character first!!")).ephemeral())
-                .await;
-        }
+        let character = user.fetch_character(&self.name).await?.context("Could not find that character! Was it deleted?")?;
+
 
         let character = match user_data.characters.get_mut(&self.name) {
             Some(character) => {

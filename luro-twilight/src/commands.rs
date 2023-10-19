@@ -93,7 +93,7 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "about" => about::About::handle_interaction(ctx).await,
         "base64" => base64::Base64::handle_interaction(ctx).await,
         "boop" => boop::Boop::handle_interaction(ctx).await,
-        "character" => character::Character::handle_interaction(ctx).await,
+        "character" | "character-fetish" | "character-image" | "character-update" => character::Character::handle_interaction(ctx).await,
         "dice" => dice::Dice::handle_interaction(ctx).await,
         "hello" => hello::Hello::handle_interaction(ctx).await,
         "info" => info::Info::handle_interaction(ctx).await,

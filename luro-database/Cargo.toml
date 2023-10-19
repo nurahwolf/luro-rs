@@ -19,6 +19,7 @@ luro-model.path = "../luro-model"
 twilight-model = { workspace = true }
 time = { version = "0.3" }
 tracing = { workspace = true }
+serde ={ workspace = true }
 
 # Cache
 twilight-cache-inmemory = { workspace = true, optional = true } #framework
@@ -33,6 +34,7 @@ sqlx = { version = "0.7", features = [
     "postgres",
     "json",
     "time",
+    "uuid"
 ], optional = true }
 
 # Toml

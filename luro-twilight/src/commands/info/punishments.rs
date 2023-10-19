@@ -12,7 +12,7 @@ pub struct Punishments {
 
 impl LuroCommand for Punishments {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let punished_user = ctx.get_user(&self.user.resolved.id).await?;
+        let punished_user = ctx.fetch_user(&self.user.resolved.id).await?;
         let mut warnings = String::new();
 
         for (warning, id) in &punished_user.warnings {
@@ -28,7 +28,7 @@ impl LuroCommand for Punishments {
             response.embed(|embed| {
                 embed.colour(colour).description(warnings).author(|author| {
                     author
-                        .name(format!("{}'s warnings", punished_user.member_name(&ctx.guild_id)))
+                        .name(format!("{}'s warnings", punished_user.name()))
                         .icon_url(punished_user.avatar())
                 })
             })

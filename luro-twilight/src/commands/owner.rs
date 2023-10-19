@@ -1,25 +1,25 @@
 use luro_database::DatabaseInteraction;
 use luro_framework::responses::Response;
-use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand, ModalInteraction};
+use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand, ModalInteraction, InteractionTrait};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::SelectMenuType;
 use twilight_model::id::marker::RoleMarker;
 use twilight_model::id::Id;
 
-mod abuse;
-mod assign;
-mod clear_warnings;
-mod commands;
+// mod clear_warnings;
 // mod fakeban;
 // mod flush;
-mod clear_marriage;
-mod get_message;
-// mod guilds;
 // mod load_users;
 // mod log;
-pub mod mass_assign;
+mod abuse;
+mod assign;
+mod clear_marriage;
+mod commands;
+mod get_message;
+mod guilds;
 mod modify_role;
+pub mod mass_assign;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges!")]
@@ -28,8 +28,8 @@ pub enum Owner {
     Abuse(abuse::Abuse),
     #[command(name = "assign")]
     Assign(assign::Assign),
-    #[command(name = "clear_warnings")]
-    ClearWarning(clear_warnings::Warnings),
+    // #[command(name = "clear_warnings")]
+    // ClearWarning(clear_warnings::Warnings),
     #[command(name = "clear_marriage")]
     ClearMarriage(clear_marriage::ClearMarriage),
     #[command(name = "commands")]
@@ -40,6 +40,8 @@ pub enum Owner {
     ModifyRole(modify_role::ModifyRole),
     #[command(name = "get_message")]
     GetMessage(get_message::Message),
+    #[command(name = "guilds")]
+    Guilds(guilds::Guilds),
 }
 
 // pub enum OwnerCommands {
@@ -52,59 +54,57 @@ pub enum Owner {
 //     Config(ConfigCommand),
 //     FakeBan(FakeBan),
 //     Flush(Flush),
-//     Guilds(OwnerGuildsCommand),
 //     LoadUsers(OwnerLoadUsers),
 //     Log(LogCommand),
 // }
 
+impl std::fmt::Display for Owner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            Self::Abuse(_) => "owner_abuse",
+            Self::Assign(_) => "owner_assign",
+            // Self::ClearWarning(_) => "owner_clearwarning",
+            Self::Commands(_) => "owner_commands",
+            Self::ClearMarriage(_) => "clear_marriage",
+            // Self::Config(_) => "owner_config",
+            // Self::FakeBan(_) => "owner_fakeban",
+            // Self::Flush(_) => "owner_save",
+            Self::GetMessage(_) => "owner_getmessage",
+            Self::Guilds(_) => "owner_guilds",
+            // Self::LoadUsers(_) => "owner_loadusers",
+            // Self::Log(_) => "owner_log",
+            Self::MassAssign(_) => "mass_assign",
+            Self::ModifyRole(_) => "owner_modify",
+        };
+
+        write!(f, "{}", name)
+    }
+}
+
 impl CreateLuroCommand for Owner {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let interaction_author = ctx.author();
-
         let mut authorised = false;
         for staff in ctx.database.get_staff().await? {
-            if staff.user_id() == interaction_author.id {
+            if staff.user_id() == ctx.author_id() {
                 authorised = true
             }
         }
 
-        // If we don't have a match, bitch at the user
         if !authorised {
-            return ctx
-                .response_simple(Response::NotOwner(
-                    &interaction_author.id,
-                    match self {
-                        Self::Abuse(_) => "owner_abuse",
-                        Self::Assign(_) => "owner_assign",
-                        Self::ClearWarning(_) => "owner_clearwarning",
-                        Self::Commands(_) => "owner_commands",
-                        Self::ClearMarriage(_) => "clear_marriage",
-                        // Self::Config(_) => "owner_config",
-                        // Self::FakeBan(_) => "owner_fakeban",
-                        // Self::Flush(_) => "owner_save",
-                        Self::GetMessage(_) => "owner_getmessage",
-                        // Self::Guilds(_) => "owner_guilds",
-                        // Self::LoadUsers(_) => "owner_loadusers",
-                        // Self::Log(_) => "owner_log",
-                        Self::MassAssign(_) => "mass_assign",
-                        Self::ModifyRole(_) => "owner_modify",
-                    },
-                ))
-                .await;
+            return ctx.response_simple(Response::NotOwner(&ctx.author_id(), &self.to_string())).await;
         }
 
-        // We know the user is good, so call the appropriate subcommand.
         match self {
             Self::Abuse(command) => command.interaction_command(ctx).await,
             Self::Assign(command) => command.interaction_command(ctx).await,
-            Self::ClearWarning(command) => command.interaction_command(ctx).await,
+            // Self::ClearWarning(command) => command.interaction_command(ctx).await,
             Self::Commands(command) => command.interaction_command(ctx).await,
             Self::ClearMarriage(command) => command.interaction_command(ctx).await,
             // Self::Config(_) => "owner_config",
             // Self::FakeBan(_) => "owner_fakeban",
             // Self::Flush(_) => "owner_save",
             Self::GetMessage(command) => command.interaction_command(ctx).await,
-            // Self::Guilds(_) => "owner_guilds",
+            Self::Guilds(command) => command.interaction_command(ctx).await,
             // Self::LoadUsers(_) => "owner_loadusers",
             // Self::Log(_) => "owner_log",
             Self::MassAssign(command) => command.interaction_command(ctx).await,
@@ -177,28 +177,28 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
     let guild = ctx.twilight_client.guild_members(guild_id).limit(1000).await?.model().await?;
     let mut users = vec![];
     for member in guild.into_iter() {
-        if let Ok(user) = ctx.get_user(&member.user.id).await {
+        if let Ok(user) = ctx.fetch_user(&member.user.id).await {
             users.push(user)
         }
     }
 
-    match roles.is_empty() {
-        true => roles.push(guild_id.cast()),
-        false => users.retain(|user| {
-            let mut found = false;
-            match user.guilds.get(&guild_id) {
-                Some(guild_data) => {
-                    for role in &roles {
-                        if guild_data.role_ids.contains(role) {
-                            found = true
-                        }
-                    }
-                }
-                None => found = false,
-            };
-            found
-        }),
-    };
+    // match roles.is_empty() {
+    //     true => roles.push(guild_id.cast()),
+    //     false => users.retain(|user| {
+    //         let mut found = false;
+    //         match user.guilds.get(&guild_id) {
+    //             Some(guild_data) => {
+    //                 for role in &roles {
+    //                     if guild_data.role_ids.contains(role) {
+    //                         found = true
+    //                     }
+    //                 }
+    //             }
+    //             None => found = false,
+    //         };
+    //         found
+    //     }),
+    // };
 
     for role in &roles {
         writeln!(roles_string, "- <@&{role}>")?;
@@ -242,40 +242,41 @@ async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
 
     let mut roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
-    // let guild = ctx.framework.twilight_cache.guild_members(guild_id).unwrap();
-    let guild = ctx.twilight_client.guild_members(guild_id).limit(1000).await?.model().await?;
-    let mut users = vec![];
-    for member in guild.into_iter() {
-        if let Ok(user) = ctx.get_user(&member.user.id).await {
-            users.push(user)
+    let guild = ctx.cache.guild_members(guild_id).unwrap();
+    let mut members = vec![];
+    for member in guild.iter() {
+        if let Ok(user) = ctx.fetch_member(&member, &guild_id).await {
+            members.push(user)
         }
     }
 
-    match roles.is_empty() {
-        true => roles.push(guild_id.cast()),
-        false => users.retain(|user| {
-            let mut found = false;
-            match user.guilds.get(&guild_id) {
-                Some(guild_data) => {
-                    for role in &roles {
-                        if guild_data.role_ids.contains(role) {
-                            found = true
-                        }
-                    }
-                }
-                None => found = false,
-            };
-            found
-        }),
-    };
+    // match roles.is_empty() {
+    //     true => roles.push(guild_id.cast()),
+    //     false => members.retain(|member| {
+    //         let mut found = false;
+    //         for role in member.
+
+    //         match user.guilds.get(&guild_id) {
+    //             Some(guild_data) => {
+    //                 for role in &roles {
+    //                     if guild_data.role_ids.contains(role) {
+    //                         found = true
+    //                     }
+    //                 }
+    //             }
+    //             None => found = false,
+    //         };
+    //         found
+    //     }),
+    // };
 
     let mut actions_performed = 0;
     let mut errors = 0;
     match ctx.data.custom_id.as_str() {
         "mass-assign-roles" => {
-            for user in users {
+            for user in members {
                 for role in &roles {
-                    match ctx.twilight_client.add_guild_member_role(guild_id, user.id, *role).await {
+                    match ctx.twilight_client.add_guild_member_role(guild_id, user.user_id(), *role).await {
                         Ok(_) => actions_performed += 1,
                         Err(_) => errors += 1,
                     };
@@ -283,9 +284,9 @@ async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
             }
         }
         "mass-assign-remove" => {
-            for user in users {
+            for user in members {
                 for role in &roles {
-                    match ctx.twilight_client.remove_guild_member_role(guild_id, user.id, *role).await {
+                    match ctx.twilight_client.remove_guild_member_role(guild_id, user.user_id(), *role).await {
                         Ok(_) => actions_performed += 1,
                         Err(_) => errors += 1,
                     };

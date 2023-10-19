@@ -2,12 +2,11 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, Context};
 use luro_database::LuroDatabase;
-use luro_model::ACCENT_COLOUR;
-use tracing::warn;
+use luro_model::response::LuroResponse;
 use twilight_model::{
     application::interaction::{application_command::CommandData, Interaction, InteractionData},
     id::{marker::GuildMarker, Id},
-    user::User,
+    user::User, http::interaction::InteractionResponseType,
 };
 
 use crate::{traits::interaction::InteractionTrait, Context as LuroContext, Luro, LuroCommandType, LuroMutex};
@@ -59,6 +58,33 @@ pub struct CommandInteraction {
 }
 
 impl Luro for CommandInteraction {
+    fn guild_id(&self) -> Option<Id<GuildMarker>> {
+        self.guild_id
+    }
+
+    /// Create a response to an interaction.
+    /// This automatically handles if the interaction had been deferred.
+    async fn respond<F>(&self, response: F) -> anyhow::Result<()>
+    where
+        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse + Send,
+    {
+        let mut r = LuroResponse::default();
+        response(&mut r);
+
+        match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
+            || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
+        {
+            true => {
+                self.response_update(&r).await?;
+            }
+            false => {
+                self.response_create(&r).await?;
+            }
+        }
+
+        Ok(())
+    }
+
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
         Ok(self.twilight_client.interaction(self.application_id))
     }
@@ -93,20 +119,6 @@ impl InteractionTrait for CommandInteraction {
         match self.member.as_ref() {
             Some(member) if member.user.is_some() => member.user.as_ref().unwrap(),
             _ => self.user.as_ref().unwrap(),
-        }
-    }
-
-    /// Attempts to get the guild's accent colour, else falls back to getting the hardcoded accent colour
-    async fn accent_colour(&self) -> u32 {
-        match self.guild_id {
-            Some(guild_id) => match self.get_guild(&guild_id).await.map(|mut x| x.highest_role_colour().map(|x| x.0)) {
-                Ok(colour) => colour.unwrap_or(ACCENT_COLOUR),
-                Err(why) => {
-                    warn!(why = ?why, "Failed to get guild accent colour");
-                    ACCENT_COLOUR
-                }
-            },
-            None => ACCENT_COLOUR, // There is no guild for this interaction
         }
     }
 }

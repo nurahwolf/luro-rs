@@ -11,9 +11,8 @@ pub struct Create {
 
 impl LuroCommand for Create {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user_id = ctx.author_id();
-        let user_data = ctx.get_user(&user_id).await?;
-        let character = user_data.characters.get(&self.name);
+        let user = ctx.fetch_user(&ctx.author_id()).await?;
+        let character = user.fetch_character(&self.name).await?;
 
         // Create a model
         ctx.respond(|r| {
@@ -32,28 +31,39 @@ impl LuroCommand for Create {
                         })
                         .action_row(|row| {
                             row.text_input(|text| {
-                                if let Some(character) = character {
-                                    text.value(&character.short_description);
+                                if let Some(character) = &character {
+                                    text.value(character.sfw_summary.clone());
                                 }
-                                text.custom_id("character-short-description")
-                                    .label("Short Description")
+                                text.custom_id("character-sfw-summary")
+                                    .label("SFW Summary")
                                     .max_length(250)
                                     .placeholder("An arctic wolf known as the leader of the pack")
                             })
                         })
                         .action_row(|row| {
                             row.text_input(|text| {
-                                if let Some(character) = character {
-                                    text.value(&character.description);
+                                if let Some(character) = &character {
+                                    text.value(character.sfw_summary.clone());
                                 }
-                                text.custom_id("character-description")
-                                    .label("Long Description")
+                                text.custom_id("character-nsfw-summary")
+                                    .label("NSFW Summary")
+                                    .max_length(250)
+                                    .placeholder("Always horny. Going to plow you.")
+                            })
+                        })
+                        .action_row(|row| {
+                            row.text_input(|text| {
+                                if let Some(character) = &character {
+                                    text.value(character.sfw_description.clone());
+                                }
+                                text.custom_id("character-sfw-description")
+                                    .label("SFW Description")
                                     .placeholder("Go absolutely wild here! Write to your hearts content")
                             })
                         })
                         .action_row(|row| {
                             row.text_input(|text| {
-                                if let Some(character) = character {
+                                if let Some(character) = &character {
                                     if let Some(description) = &character.nsfw_description {
                                         text.value(description);
                                     }

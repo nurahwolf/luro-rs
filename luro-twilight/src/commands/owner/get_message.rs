@@ -23,11 +23,8 @@ impl LuroCommand for Message {
         let mut embed = ctx.default_embed().await;
 
         // Attempts to fetch in this order
-        // User Data -> Client -> Cache
-        let mut luro_message = match &self.user {
-            Some(user) => ctx.get_user(&user.resolved.id).await?.messages.get(&message_id).cloned(),
-            None => None,
-        };
+        // Database -> Client -> Cache
+        let mut luro_message = ctx.database.get_message(message_id.get() as i64).await?;
 
         // If not present, try to get from the client
         if luro_message.is_none() {
@@ -44,7 +41,7 @@ impl LuroCommand for Message {
 
         match luro_message {
             Some(message) => {
-                let user = ctx.get_user(&message.author.id).await?;
+                let user = ctx.fetch_user(&message.author.id).await?;
 
                 let toml = toml::to_string_pretty(&message)?;
                 embed

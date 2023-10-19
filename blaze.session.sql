@@ -1,6 +1,16 @@
-if EXISTS (SELECT FROM user_marriages WHERE proposer_id = 392992034304294924) then
-   statements;
-end if;
+-- if EXISTS (SELECT FROM user_marriages WHERE proposer_id = 392992034304294924) then
+--    statements;
+-- end if;
+
+-- UPDATE users
+-- SET user_permissions = 'USER'
+-- WHERE user_permissions IS NULL;
+
+    -- user_permissions user_permissions NOT NULL default 'USER',
+
+
+ALTER TABLE users
+ALTER COLUMN user_permissions SET DEFAULT 'USER';
 
 -- DO $$
 --     BEGIN
