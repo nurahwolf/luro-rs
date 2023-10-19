@@ -1,17 +1,11 @@
-use std::fmt::Write;
-
 use std::{
     collections::{BTreeMap, HashMap},
     convert::TryFrom,
+    fmt::Write,
 };
 
 use anyhow::Context;
-use async_trait::async_trait;
-use luro_framework::{
-    command::LuroCommandTrait,
-    Framework, InteractionCommand, LuroInteraction,
-};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionTrait, LuroCommand, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::interaction::InteractionResponseType,
@@ -33,25 +27,22 @@ pub struct Wordcount {
     global: Option<bool>,
 }
 
-#[async_trait]
-impl LuroCommandTrait for Wordcount {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        interaction.acknowledge_interaction(&ctx, false).await?;
-        let luro_user = interaction.get_specified_user_or_author(&ctx, data.user.as_ref()).await?;
+impl CreateLuroCommand for Wordcount {}
+
+impl LuroCommand for Wordcount {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        ctx.acknowledge_interaction(false).await?;
+        let luro_user = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
         let response = InteractionResponseType::DeferredChannelMessageWithSource;
-        let accent_colour = interaction.accent_colour(&ctx).await;
+        let accent_colour = ctx.accent_colour().await;
         let mut wordcount: usize = Default::default();
         let mut averagesize: usize = Default::default();
         let mut wordsize: BTreeMap<usize, usize> = Default::default();
         let mut words: BTreeMap<String, usize> = Default::default();
         let mut content = String::new();
-        let global = data.global.unwrap_or(false);
+        let global = self.global.unwrap_or(false);
         // How many items we should get
-        let limit = match data.limit {
+        let limit = match self.limit {
             Some(limit) => limit.try_into().context("Failed to convert i64 into usize")?,
             None => 10,
         };
@@ -59,11 +50,6 @@ impl LuroCommandTrait for Wordcount {
         if global {
             let mut most_said_words: BTreeMap<Id<UserMarker>, usize> = Default::default();
             let mut user_ids = vec![];
-
-            let data = match ctx.database.user_data.read() {
-                Ok(data) => data.clone(),
-                Err(_) => HashMap::new(),
-            };
 
             for (id, user_data) in data {
                 user_ids.push(id);
@@ -114,7 +100,7 @@ impl LuroCommandTrait for Wordcount {
         )?;
 
         // Handle if a user is just interested in a word
-        if let Some(word) = data.word {
+        if let Some(word) = self.word {
             match words.get(&word) {
                 // If we are getting a single word, then we want to get it from the BTreeMap that is sorted by key
                 Some(word_count) => {
@@ -122,8 +108,8 @@ impl LuroCommandTrait for Wordcount {
                         content,
                         "-----\nSpecifically, the word `{word}` has been said about `{word_count}` times!"
                     )?;
-                    return interaction
-                        .respond(&ctx, |r| {
+                    return ctx
+                        .respond(|r| {
                             r.embed(|e| {
                                 e.description(content)
                                     .colour(accent_colour)
@@ -135,9 +121,7 @@ impl LuroCommandTrait for Wordcount {
                 }
                 None => {
                     content = format!("The word `{word}` has never been said, as far as I can see!");
-                    return interaction
-                        .respond(&ctx, |r| r.content(content).response_type(response))
-                        .await;
+                    return ctx.respond(|r| r.content(content).response_type(response)).await;
                 }
             }
         };
@@ -204,20 +188,19 @@ impl LuroCommandTrait for Wordcount {
             )?;
         }
 
-        interaction
-            .respond(&ctx, |r| {
-                r.embed(|embed| {
-                    embed
-                        .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()))
-                        .description(content)
-                        .field(|field| field.field("Word Length", &word_size, true))
-                        .field(|field| field.field("Most used words", &most_used, true))
-                        .footer(|footer| footer.text(""))
-                        .colour(accent_colour)
-                })
-                .response_type(response)
+        ctx.respond(|r| {
+            r.embed(|embed| {
+                embed
+                    .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()))
+                    .description(content)
+                    .field(|field| field.field("Word Length", &word_size, true))
+                    .field(|field| field.field("Most used words", &most_used, true))
+                    .footer(|footer| footer.text(""))
+                    .colour(accent_colour)
             })
-            .await
+            .response_type(response)
+        })
+        .await
     }
 }
 

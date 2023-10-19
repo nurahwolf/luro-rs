@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use luro_model::message::LuroMessage;
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
@@ -16,7 +16,7 @@ pub struct Message {
     channel_id: Option<Id<ChannelMarker>>,
 }
 
-impl ExecuteLuroCommand for Message {
+impl LuroCommand for Message {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let message_id = Id::new(self.message_id.parse()?);
         let channel_id = self.channel_id.unwrap_or(ctx.clone().channel.id);

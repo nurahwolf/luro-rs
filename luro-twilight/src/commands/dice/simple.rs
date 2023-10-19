@@ -1,5 +1,5 @@
 use luro_dice::{DiceRoll, RollResult, RollValue};
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -42,7 +42,7 @@ pub struct Simple {
     divide: Option<i64>,
 }
 
-impl ExecuteLuroCommand for Simple {
+impl LuroCommand for Simple {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut roll = format!("{}d{}", self.dice, self.sides);
 

@@ -1,5 +1,5 @@
 use luro_dice::{DiceRoll, RollResult, RollValue};
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -13,7 +13,7 @@ pub struct Roll {
     ephemeral: Option<bool>,
 }
 
-impl ExecuteLuroCommand for Roll {
+impl LuroCommand for Roll {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let result = DiceRoll::roll_inline(&self.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),

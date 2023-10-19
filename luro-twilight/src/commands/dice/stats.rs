@@ -1,5 +1,5 @@
 use luro_dice::DiceRoll;
-use luro_framework::{ExecuteLuroCommand, CommandInteraction};
+use luro_framework::{LuroCommand, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -9,7 +9,7 @@ pub struct Stats {
     ephemeral: Option<bool>,
 }
 
-impl ExecuteLuroCommand for Stats {
+impl LuroCommand for Stats {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         ctx.respond(|r| {
             if self.ephemeral.unwrap_or_default() {

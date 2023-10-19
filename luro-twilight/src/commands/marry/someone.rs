@@ -1,6 +1,6 @@
 use anyhow::Context;
 use luro_database::DbUserMarriage;
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
@@ -15,7 +15,7 @@ pub struct Someone {
     reason: Option<String>,
 }
 
-impl ExecuteLuroCommand for Someone {
+impl LuroCommand for Someone {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let proposer = ctx.get_user(&ctx.author_id()).await?;
         let accent_colour = ctx.accent_colour().await;

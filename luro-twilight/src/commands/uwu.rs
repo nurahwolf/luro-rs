@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, CreateLuroCommand, ExecuteLuroCommand};
+use luro_framework::{CommandInteraction, CreateLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use uwuifier::uwuify_str_sse;
 
@@ -9,9 +9,7 @@ pub struct UwU {
     message: String,
 }
 
-impl CreateLuroCommand for UwU {}
-
-impl ExecuteLuroCommand for UwU {
+impl CreateLuroCommand for UwU {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let uwu = if cfg!(target_feature = "sse4.1") {
             unsafe { sse_uwu(&self.message) }

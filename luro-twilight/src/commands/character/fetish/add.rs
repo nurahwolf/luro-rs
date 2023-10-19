@@ -1,6 +1,6 @@
 use luro_framework::InteractionTrait;
 use luro_framework::CommandInteraction;
-use luro_framework::{ExecuteLuroCommand, Luro};
+use luro_framework::{LuroCommand, Luro};
 use luro_model::user::character::{Fetish, FetishCategory, FetishList};
 use std::fmt::Write;
 
@@ -17,7 +17,7 @@ pub struct Add {
     description: String,
 }
 
-impl ExecuteLuroCommand for Add {
+impl LuroCommand for Add {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let user_id = ctx.author_id();

@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, CommandInteraction};
+use luro_framework::{LuroCommand, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use self::add::Add;
@@ -11,7 +11,7 @@ pub enum Fetish {
     #[command(name = "add")]
     Add(Add),
 }
-impl ExecuteLuroCommand for Fetish {
+impl LuroCommand for Fetish {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
             Self::Add(command) => command.interaction_command(ctx).await,

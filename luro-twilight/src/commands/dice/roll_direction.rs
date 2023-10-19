@@ -1,5 +1,5 @@
 use luro_dice::DiceRoll;
-use luro_framework::{ExecuteLuroCommand, CommandInteraction};
+use luro_framework::{LuroCommand, CommandInteraction};
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -10,7 +10,7 @@ pub struct Direction {
     ephemeral: Option<bool>,
 }
 
-impl ExecuteLuroCommand for Direction {
+impl LuroCommand for Direction {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         ctx.respond(|r| {
             if self.ephemeral.unwrap_or_default() {

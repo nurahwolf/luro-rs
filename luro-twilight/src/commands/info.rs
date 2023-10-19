@@ -1,5 +1,5 @@
 use luro_framework::{
-    {CreateLuroCommand, ExecuteLuroCommand},
+    {CreateLuroCommand, LuroCommand},
     CommandInteraction,
 };
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -25,9 +25,7 @@ pub enum Info {
     Database(database::Database),
 }
 
-impl CreateLuroCommand for Info {}
-
-impl ExecuteLuroCommand for Info {
+impl CreateLuroCommand for Info {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
             Self::Guild(command) => command.interaction_command(ctx).await,

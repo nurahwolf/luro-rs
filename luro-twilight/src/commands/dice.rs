@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, CommandInteraction, CreateLuroCommand};
+use luro_framework::{LuroCommand, CommandInteraction, CreateLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 mod help;
@@ -28,9 +28,7 @@ pub enum Dice {
     Simple(Simple),
 }
 
-impl CreateLuroCommand for Dice {}
-
-impl ExecuteLuroCommand for Dice {
+impl CreateLuroCommand for Dice {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
             Self::Roll(command) => command.interaction_command(ctx).await,

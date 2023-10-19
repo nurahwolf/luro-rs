@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
@@ -10,7 +10,7 @@ pub struct Marriages {
     user: Option<ResolvedUser>,
 }
 
-impl ExecuteLuroCommand for Marriages {
+impl LuroCommand for Marriages {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let accent_colour = ctx.accent_colour().await;
         let author = ctx.get_user(&self.user.map(|x| x.resolved.id).unwrap_or(ctx.author_id())).await?;

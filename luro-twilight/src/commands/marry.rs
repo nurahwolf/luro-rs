@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context};
 use luro_database::{DatabaseInteraction, DbUserMarriage, DbUserMarriageApprovals};
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro, CreateLuroCommand, ComponentInteraction};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro, CreateLuroCommand, ComponentInteraction};
 
 use luro_framework::responses::Response;
 use luro_model::COLOUR_DANGER;
@@ -97,9 +97,7 @@ pub enum Marry {
     Divorce(divorce::Divorce),
 }
 
-impl CreateLuroCommand for Marry {}
-
-impl ExecuteLuroCommand for Marry {
+impl CreateLuroCommand for Marry {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
             Self::Someone(command) => command.interaction_command(ctx).await,

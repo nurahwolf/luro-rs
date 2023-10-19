@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use std::time::Duration;
 
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use luro_model::{response::LuroResponse, user::actions_type::UserActionType};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
@@ -24,7 +24,7 @@ pub struct InfoUser {
     gdpr_export: Option<bool>,
 }
 
-impl ExecuteLuroCommand for InfoUser {
+impl LuroCommand for InfoUser {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let response_type = InteractionResponseType::DeferredChannelMessageWithSource;
         ctx.acknowledge_interaction(self.gdpr_export.unwrap_or_default()).await?;

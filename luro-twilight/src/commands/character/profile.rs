@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -17,7 +17,7 @@ pub struct Profile {
     user: Option<Id<UserMarker>>,
 }
 
-impl ExecuteLuroCommand for Profile {
+impl LuroCommand for Profile {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = match self.user {
             Some(user) => user,

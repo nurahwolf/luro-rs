@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine};
 use luro_database::DatabaseInteraction;
-use luro_framework::{ExecuteLuroCommand, CommandInteraction, ComponentInteraction, CreateLuroCommand};
+use luro_framework::{LuroCommand, CommandInteraction, ComponentInteraction, CreateLuroCommand};
 use luro_model::response::LuroResponse;
 use std::str;
 use tracing::{info, warn};
@@ -19,9 +19,7 @@ pub enum Base64 {
     Encode(encode::Encode),
 }
 
-impl CreateLuroCommand for Base64 {}
-
-impl ExecuteLuroCommand for Base64 {
+impl CreateLuroCommand for Base64 {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // Call the appropriate subcommand.
         match self {

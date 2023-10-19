@@ -2,7 +2,6 @@ use luro_framework::CreateLuroCommand;
 use luro_framework::responses::Response;
 use luro_framework::InteractionContext;
 use tracing::info;
-use twilight_interactions::command::CreateCommand;
 use twilight_model::application::command::Command;
 
 #[cfg(feature = "command-about")]
@@ -19,8 +18,8 @@ mod character;
 mod dice;
 // #[cfg(feature = "command-heck")]
 // mod heck;
-// #[cfg(feature = "command-hello")]
-// mod hello;
+#[cfg(feature = "command-hello")]
+mod hello;
 #[cfg(feature = "command-info")]
 mod info;
 // #[cfg(feature = "command-lewd")]
@@ -49,35 +48,39 @@ mod say;
 // mod story;
 #[cfg(feature = "command-uwu")]
 mod uwu;
-// #[cfg(feature = "command-wordcount")]
-// mod wordcount;
+#[cfg(feature = "command-wordcount")]
+mod wordcount;
 
 pub fn default_commands() -> Vec<Command> {
     vec![
         #[cfg(feature = "command-about")]
-        about::About::create_command().into(),
+        about::About::setup_command(),
         #[cfg(feature = "command-base64")]
-        base64::Base64::create_command().into(),
+        base64::Base64::setup_command(),
         #[cfg(feature = "command-boop")]
-        boop::Boop::create_command().into(),
+        boop::Boop::setup_command(),
         #[cfg(feature = "command-character")]
-        character::Character::create_command().into(),
+        character::Character::setup_command(),
         #[cfg(feature = "command-dice")]
-        dice::Dice::create_command().into(),
+        dice::Dice::setup_command(),
+        #[cfg(feature = "command-hello")]
+        hello::Hello::setup_command(),
         #[cfg(feature = "command-info")]
-        info::Info::create_command().into(),
+        info::Info::setup_command(),
         #[cfg(feature = "command-marry")]
-        marry::Marry::create_command().into(),
+        marry::Marry::setup_command(),
         #[cfg(feature = "command-muzzle")]
-        muzzle::Muzzle::create_command().into(),
+        muzzle::Muzzle::setup_command(),
         #[cfg(feature = "command-music")]
-        music::Music::create_command().into(),
+        music::Music::setup_command(),
         #[cfg(feature = "command-owner")]
-        owner::Owner::create_command().into(),
+        owner::Owner::setup_command(),
         #[cfg(feature = "command-say")]
-        say::Say::create_command().into(),
+        say::Say::setup_command(),
         #[cfg(feature = "command-uwu")]
-        uwu::UwU::create_command().into(),
+        uwu::UwU::setup_command(),
+        #[cfg(feature = "command-wordcount")]
+        wordcount::Wordcount::setup_command(),
     ]
 }
 
@@ -87,92 +90,23 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
 
     let response_handler = ctx.clone();
     let response = match ctx.command_name() {
-        #[cfg(feature = "command-about")]
-        "about" => match ctx {
-            InteractionContext::Command(command) => about::About::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => about::About::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => about::About::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => about::About::run_interaction_modal(command).await,
-        },
-        #[cfg(feature = "command-base64")]
-        "base64" => match ctx {
-            InteractionContext::Command(command) => base64::Base64::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => base64::Base64::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => base64::Base64::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => base64::Base64::run_interaction_modal(command).await,
-        },
-        #[cfg(feature = "command-boop")]
-        "boop" => match ctx {
-            InteractionContext::Command(command) => boop::Boop::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => boop::Boop::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => boop::Boop::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => boop::Boop::run_interaction_modal(command).await,
-        },
-        #[cfg(feature = "command-character")]
-        "character" => match ctx {
-            InteractionContext::Command(command) => character::Character::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => {
-                character::Character::run_interaction_autocomplete(command).await
-            }
-            InteractionContext::Component(command) => character::Character::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => character::Character::run_interaction_modal(command).await,
-        },
-        #[cfg(feature = "command-dice")]
-        "dice" => match ctx {
-            InteractionContext::Command(command) => dice::Dice::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => dice::Dice::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => dice::Dice::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => dice::Dice::run_interaction_modal(command).await,
-        },
-        #[cfg(feature = "command-say")]
-        "say" => match ctx {
-            InteractionContext::Command(command) => say::Say::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => say::Say::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => say::Say::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => say::Say::run_interaction_modal(command).await,
-        },
-        #[cfg(feature = "command-info")]
-        "info" => match ctx {
-            InteractionContext::Command(command) => info::Info::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => info::Info::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => info::Info::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => info::Info::run_interaction_modal(command).await,
-        },
-        #[cfg(feature = "command-owner")]
-        "owner" => match ctx {
-            InteractionContext::Command(command) => owner::Owner::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => owner::Owner::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => owner::Owner::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => owner::Owner::run_interaction_modal(command).await,
-        },
-        #[cfg(feature = "command-marry")]
-        "marry" | "marry-accept" | "marry-deny" => match ctx {
-            InteractionContext::Command(command) => marry::Marry::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => marry::Marry::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => marry::Marry::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => marry::Marry::run_interaction_modal(command).await,
-        },
-        #[cfg(feature = "command-muzzle")]
-        "muzzle" => match ctx {
-            InteractionContext::Command(command) => muzzle::Muzzle::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => muzzle::Muzzle::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => muzzle::Muzzle::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => muzzle::Muzzle::run_interaction_modal(command).await,
-        },
+        "about" => about::About::handle_interaction(ctx).await,
+        "base64" =>base64::Base64::handle_interaction(ctx).await,
+        "boop" => boop::Boop::handle_interaction(ctx).await,
+        "character" => character::Character::handle_interaction(ctx).await,
+        "dice" => dice::Dice::handle_interaction(ctx).await,
+        "hello" => hello::Hello::handle_interaction(ctx).await,
+        "info" => info::Info::handle_interaction(ctx).await,
+        "marry" | "marry-accept" | "marry-deny" => marry::Marry::handle_interaction(ctx).await,
         #[cfg(feature = "command-music")]
-        "music" => match ctx {
-            InteractionContext::Command(command) => music::Music::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => music::Music::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => music::Music::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => music::Music::run_interaction_modal(command).await,
-        },
+        "music" => music::Music::handle_interaction(ctx).await,
+        "muzzle" => muzzle::Muzzle::handle_interaction(ctx).await,
+        "owner" => owner::Owner::handle_interaction(ctx).await,
+        "say" => say::Say::handle_interaction(ctx).await,
         #[cfg(feature = "command-uwu")]
-        "uwu" => match ctx {
-            InteractionContext::Command(command) => uwu::UwU::run_interaction_command(command).await,
-            InteractionContext::CommandAutocomplete(command) => uwu::UwU::run_interaction_autocomplete(command).await,
-            InteractionContext::Component(command) => uwu::UwU::run_interaction_component(command).await,
-            InteractionContext::Modal(command) => uwu::UwU::run_interaction_modal(command).await,
-        },
+        "uwu" => uwu::UwU::handle_interaction(ctx).await,
+        #[cfg(feature = "command-wordcount")]
+        "wordcount" => wordcount::Wordcount::handle_interaction(ctx).await,
         name => ctx.simple_response(Response::UnknownCommand(name)).await,
     };
 

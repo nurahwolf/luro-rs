@@ -74,6 +74,7 @@ commands = [
     "command-moderator",
     # "command-music", # Broken on twilight-lavalink
     "command-muzzle",
+    "command-hello",
     "command-owner",
     "command-ping",
     "command-quote",
@@ -81,7 +82,7 @@ commands = [
     "command-say",
     "command-story",
     "command-uwu",
-    "command-wordcount",
+    # "command-wordcount", # TODO: New database
 ]
 
 ## Luro Features
@@ -96,6 +97,7 @@ command-dice = ["dep:luro-dice"]
 command-roles = []
 command-marry = []
 command-muzzle = []
+command-hello = []
 command-music = ["dep:twilight-lavalink", "dep:hyper", "dep:serde_json"]
 command-quote = []
 command-ping = []

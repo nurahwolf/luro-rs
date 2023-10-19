@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, CommandInteraction};
+use luro_framework::{LuroCommand, CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -10,7 +10,7 @@ pub struct ClearMarriage {
     pub user_2: ResolvedUser,
 }
 
-impl ExecuteLuroCommand for ClearMarriage {
+impl LuroCommand for ClearMarriage {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         ctx.database
             .delete_marriage((self.user_1.resolved.id.get() as i64, self.user_2.resolved.id.get() as i64))

@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, responses::Response};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, responses::Response};
 use luro_model::builders::EmbedBuilder;
 use serde::Serialize;
 use std::fmt::Write;
@@ -34,7 +34,7 @@ struct Position {
     position: i64,
 }
 
-impl ExecuteLuroCommand for ModifyRole {
+impl LuroCommand for ModifyRole {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let (mut role_selected, mut role_position) = (None, None);
 

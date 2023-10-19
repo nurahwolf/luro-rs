@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, CommandInteraction, InteractionTrait};
+use luro_framework::{LuroCommand, CommandInteraction, InteractionTrait};
 
 use std::str;
 
@@ -12,7 +12,7 @@ pub struct Decode {
     pub string: String,
 }
 
-impl ExecuteLuroCommand for Decode {
+impl LuroCommand for Decode {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let response = super::decode_response(ctx.accent_colour().await, &super::decode(&self.string)?).await?;
         ctx.response_send(response).await?;

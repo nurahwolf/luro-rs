@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -13,7 +13,7 @@ pub struct Icon {
     nsfw_icon: Option<String>,
 }
 
-impl ExecuteLuroCommand for Icon {
+impl LuroCommand for Icon {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
 

@@ -3,9 +3,9 @@ use luro_database::DatabaseInteraction;
 use crate::responses::Response;
 use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
 
-pub trait ExecuteLuroCommand: Sized {
+pub trait LuroCommand {
     /// The function to execute for the command / command group
-    fn interaction_command(self, ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
+    fn interaction_command(self, ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send where Self: Sized {
         async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
     }
 
@@ -14,7 +14,7 @@ pub trait ExecuteLuroCommand: Sized {
         self,
         ctx: ComponentInteraction,
         _invoking_interaction: DatabaseInteraction,
-    ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
+    ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send where Self: Sized {
         async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
     }
 

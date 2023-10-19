@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, CommandInteraction, responses::Response};
+use luro_framework::{LuroCommand, CommandInteraction, responses::Response};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
 
@@ -17,7 +17,7 @@ pub struct Assign {
     remove: Option<bool>,
 }
 
-impl ExecuteLuroCommand for Assign {
+impl LuroCommand for Assign {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let interaction_user = ctx.author();
 

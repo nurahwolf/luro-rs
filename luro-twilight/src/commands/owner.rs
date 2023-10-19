@@ -1,5 +1,5 @@
 use luro_database::DatabaseInteraction;
-use luro_framework::{ExecuteLuroCommand, CommandInteraction, Luro, CreateLuroCommand, ModalInteraction, ComponentInteraction};
+use luro_framework::{LuroCommand, CommandInteraction, Luro, CreateLuroCommand, ModalInteraction, ComponentInteraction};
 use luro_framework::responses::Response;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -57,9 +57,7 @@ pub enum Owner {
 //     Log(LogCommand),
 // }
 
-impl CreateLuroCommand for Owner {}
-
-impl ExecuteLuroCommand for Owner {
+impl CreateLuroCommand for Owner {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let interaction_author = ctx.author();
 

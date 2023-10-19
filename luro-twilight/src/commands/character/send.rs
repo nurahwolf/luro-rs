@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use std::fmt::Write;
 
 use twilight_interactions::command::CommandModel;
@@ -13,7 +13,7 @@ pub struct CharacterSend {
     message: String,
 }
 
-impl ExecuteLuroCommand for CharacterSend {
+impl LuroCommand for CharacterSend {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
 

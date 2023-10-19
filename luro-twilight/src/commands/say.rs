@@ -1,7 +1,4 @@
-use luro_framework::{
-    {CreateLuroCommand, ExecuteLuroCommand},
-    CommandInteraction,
-};
+use luro_framework::{CreateLuroCommand,CommandInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 #[derive(CommandModel, CreateCommand, Debug)]
@@ -13,9 +10,7 @@ pub struct Say {
     user: Option<ResolvedUser>,
 }
 
-impl CreateLuroCommand for Say {}
-
-impl ExecuteLuroCommand for Say {
+impl CreateLuroCommand for Say {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let content = if let Some(ref user) = self.user {
             format!("Hey <@{}>!\n{}", user.resolved.id, self.message)

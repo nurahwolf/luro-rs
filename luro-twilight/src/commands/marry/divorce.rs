@@ -1,5 +1,5 @@
 use luro_database::DbUserMarriage;
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
@@ -14,7 +14,7 @@ pub struct Divorce {
     reason: String,
 }
 
-impl ExecuteLuroCommand for Divorce {
+impl LuroCommand for Divorce {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let proposer = ctx.get_user(&ctx.author_id()).await?;
         let proposee = ctx.get_user(&self.user.resolved.id).await?;

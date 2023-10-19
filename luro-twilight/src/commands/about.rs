@@ -3,7 +3,7 @@ use std::path::Path;
 
 use git2::{ErrorCode, Repository};
 use luro_framework::{
-    {CreateLuroCommand, ExecuteLuroCommand},
+    CreateLuroCommand,
     InteractionTrait,
     CommandInteraction,
 };
@@ -22,9 +22,7 @@ pub struct About {
     show_username: Option<bool>,
 }
 
-impl CreateLuroCommand for About {}
-
-impl ExecuteLuroCommand for About {
+impl CreateLuroCommand for About {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut description =
             "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n".to_owned();

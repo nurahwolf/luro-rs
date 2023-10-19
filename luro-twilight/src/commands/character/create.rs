@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{channel::message::component::TextInputStyle, http::interaction::InteractionResponseType};
 
@@ -9,7 +9,7 @@ pub struct Create {
     pub name: String,
 }
 
-impl ExecuteLuroCommand for Create {
+impl LuroCommand for Create {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author_id();
         let user_data = ctx.get_user(&user_id).await?;

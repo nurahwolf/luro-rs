@@ -1,4 +1,4 @@
-use luro_framework::{CreateLuroCommand, ExecuteLuroCommand, CommandInteraction, InteractionTrait};
+use luro_framework::{CreateLuroCommand, CommandInteraction, InteractionTrait};
 use rand::Rng;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
@@ -9,9 +9,7 @@ pub struct Muzzle {
     user: ResolvedUser,
 }
 
-impl CreateLuroCommand for Muzzle {}
-
-impl ExecuteLuroCommand for Muzzle {
+impl CreateLuroCommand for Muzzle {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // TODO: Load these from a text file
         let responses = ["<user> just got muzzled for a few seconds!!",

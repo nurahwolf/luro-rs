@@ -1,5 +1,5 @@
 use luro_database::DatabaseInteraction;
-use luro_framework::{ComponentInteraction, CommandInteraction, CreateLuroCommand, ExecuteLuroCommand};
+use luro_framework::{ComponentInteraction, CommandInteraction, CreateLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle, Component};
 
@@ -7,9 +7,7 @@ use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle
 #[command(name = "boop", desc = "Boop the Bot!")]
 pub struct Boop {}
 
-impl CreateLuroCommand for Boop {}
-
-impl ExecuteLuroCommand for Boop {
+impl CreateLuroCommand for Boop {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {

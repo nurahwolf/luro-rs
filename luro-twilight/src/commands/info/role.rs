@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{
     marker::{GenericMarker, RoleMarker},
@@ -18,7 +18,7 @@ pub struct InfoRole {
     guid_roles: Option<bool>,
 }
 
-impl ExecuteLuroCommand for InfoRole {
+impl LuroCommand for InfoRole {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let guild_id = match ctx.guild_id {

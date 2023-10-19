@@ -1,7 +1,7 @@
 use anyhow::Context;
 use luro_database::DatabaseInteraction;
 use luro_framework::{
-    {CreateLuroCommand, ExecuteLuroCommand},
+    {CreateLuroCommand, LuroCommand},
     InteractionTrait,
     CommandInteraction, ComponentInteraction, Luro, ModalInteraction,
 };
@@ -39,9 +39,7 @@ pub enum Character {
     Send(CharacterSend),
 }
 
-impl CreateLuroCommand for Character {}
-
-impl ExecuteLuroCommand for Character {
+impl CreateLuroCommand for Character {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
             Self::Profile(command) => command.interaction_command(ctx).await,

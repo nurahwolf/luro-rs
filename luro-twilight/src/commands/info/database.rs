@@ -1,5 +1,5 @@
 use luro_database::LuroUserPermissions;
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction};
 
 use tracing::warn;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -9,7 +9,7 @@ use twilight_model::http::interaction::InteractionResponseType;
 #[command(name = "database", desc = "Information about my database")]
 pub struct Database {}
 
-impl ExecuteLuroCommand for Database {
+impl LuroCommand for Database {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         ctx.acknowledge_interaction(false).await?;
         let mut embed = ctx.default_embed().await;

@@ -9,7 +9,7 @@ pub mod responses;
 pub mod slash_command;
 pub mod traits;
 
-type LuroCommandType = std::collections::HashMap<String, LuroCommand>;
+type LuroCommandType = std::collections::HashMap<String, OldLuroCommand>;
 type LuroMutex<T> = std::sync::Arc<std::sync::Mutex<T>>;
 
 pub use crate::{
@@ -18,8 +18,8 @@ pub use crate::{
     interactions::{
         command::CommandInteraction, component::ComponentInteraction, interaction_context::InteractionContext, modal::ModalInteraction,
     },
-    slash_command::{CommandResult, LuroCommand},
+    slash_command::{CommandResult, LuroCommand as OldLuroCommand},
     traits::{
-        create_luro_command::CreateLuroCommand, execute_luro_command::ExecuteLuroCommand, luro::Luro, luro_interaction::LuroInteraction, interaction::InteractionTrait,
+        create_luro_command::CreateLuroCommand, luro_command::LuroCommand, luro::Luro, luro_interaction::LuroInteraction, interaction::InteractionTrait,
     },
 };

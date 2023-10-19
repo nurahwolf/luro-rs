@@ -1,26 +1,20 @@
-use luro_model::database::drivers::LuroDatabaseDriver;
+use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionTrait};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-
-use crate::{interaction::LuroSlash, luro_command::LuroCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "hello", desc = "Say hello")]
-pub struct HelloCommand {}
+pub struct Hello {}
 
-impl LuroCommand for HelloCommand {
-    async fn run_command(self, ctx: LuroSlash<D>) -> anyhow::Result<()> {
-        let content = match ctx.interaction.author_id() {
-            Some(author_id) => format!(
+impl CreateLuroCommand for Hello {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let current_user = ctx.twilight_client.current_user().await?.model().await?.name;
+        ctx.respond(|r| {
+            r.content(format!(
                 "Hello World! I am **{}**. It's nice to meet you, <@{}>!",
-                ctx.framework.twilight_client.current_user().await?.model().await?.name,
-                author_id
-            ),
-            None => format!(
-                "Hello World! I am **{}**. It's nice to meet you, but unfortunately I cannot see your name :(",
-                ctx.framework.twilight_client.current_user().await?.model().await?.name
-            ),
-        };
-
-        ctx.respond(|r| r.content(content)).await
+                current_user,
+                ctx.author_id()
+            ))
+        })
+        .await
     }
 }

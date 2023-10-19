@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, InteractionTrait, CommandInteraction};
+use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction};
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -9,7 +9,7 @@ pub struct Help {
     ephemeral: Option<bool>,
 }
 
-impl ExecuteLuroCommand for Help {
+impl LuroCommand for Help {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let description = "Roll some dice with a brief explanation of the output all on one line, such as `1d20 = [13] = 13`.";
 
