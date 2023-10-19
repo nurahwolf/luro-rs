@@ -29,7 +29,6 @@ pub use crate::sqlx::{
     user::{DatabaseUser, DatabaseUserType, LuroUserPermissions},
     user_marriage::DbUserMarriage,
     user_marriage_approvers::{DbUserMarriageApprovals, DbUserMarriageApprovalsCount},
-    fetish::DbFetish
 };
 #[cfg(feature = "toml-driver")]
 pub use crate::toml::{DatabaseGuild, DatabaseInteraction, DatabaseInteractionKind, DatabaseUser, LuroDatabase};

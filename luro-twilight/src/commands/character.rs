@@ -10,30 +10,28 @@ use twilight_model::{
     http::interaction::InteractionResponseType, channel::message::component::ButtonStyle,
 };
 
-use self::{create::Create, icon::Icon, profile::Profile, proxy::Proxy, send::CharacterSend};
-
 mod create;
-// mod fetish;
+mod fetish;
 mod icon;
 mod profile;
 mod proxy;
-pub mod send;
+mod send;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "character", desc = "Show off your character!")]
 pub enum Character {
     #[command(name = "profile")]
-    Profile(Profile),
+    Profile(profile::Profile),
     #[command(name = "create")]
-    Create(Create),
-    // #[command(name = "fetish")]
-    // Fetish(Fetish),
+    Create(create::Create),
+    #[command(name = "fetish")]
+    Fetish(fetish::Fetish),
     #[command(name = "proxy")]
-    Proxy(Proxy),
+    Proxy(proxy::Proxy),
     #[command(name = "icon")]
-    Icon(Icon),
+    Icon(icon::Icon),
     #[command(name = "send")]
-    Send(CharacterSend),
+    Send(send::CharacterSend),
 }
 
 impl CreateLuroCommand for Character {
@@ -41,7 +39,7 @@ impl CreateLuroCommand for Character {
         match self {
             Self::Profile(command) => command.interaction_command(ctx).await,
             Self::Create(command) => command.interaction_command(ctx).await,
-            // Self::Fetish(command) => command.interaction_command(ctx).await,
+            Self::Fetish(command) => command.interaction_command(ctx).await,
             Self::Proxy(command) => command.interaction_command(ctx).await,
             Self::Icon(command) => command.interaction_command(ctx).await,
             Self::Send(command) => command.interaction_command(ctx).await,
@@ -204,6 +202,7 @@ pub struct CharacterNameAutocomplete {
 
 pub async fn character_response<T: Luro>(ctx: T, character: &LuroCharacter, user: &LuroUser, nsfw: bool) -> anyhow::Result<()> {
     let accent_colour = ctx.accent_colour().await;
+    let fetishes = character.get_fetishes().await?;
     ctx.respond(|response| {
         response.embed(|embed| {
             embed
@@ -250,13 +249,9 @@ pub async fn character_response<T: Luro>(ctx: T, character: &LuroCharacter, user
                         .label("Update Character")
                         .style(ButtonStyle::Secondary)
                 });
-                // if nsfw && !character.fetishes.is_empty() {
-                //     response.components(|components| {
-                //         components.action_row(|row| {
-                //             row.button(|button| button.custom_id("character-fetish").label("Fetishes").style(ButtonStyle::Danger))
-                //         })
-                //     });
-                // }
+                if nsfw && !fetishes.is_empty() {
+                    row.button(|button| button.custom_id("character-fetish").label("Fetishes").style(ButtonStyle::Danger));
+                }
                 row
             })
         })

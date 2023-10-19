@@ -1,53 +1,61 @@
+use tracing::info;
+
 use crate::{sqlx::user_character::DbCharacterFetish, LuroDatabase};
 use crate::sqlx::user_character::DbUserFetishCategory;
 
-use super::DbUserCharacter;
-
 impl LuroDatabase {
-    pub async fn get_character_fetishes(&self, character: &DbUserCharacter) -> Result<Vec<DbCharacterFetish>, sqlx::Error> {
+    pub async fn update_character_fetish(&self, character: DbCharacterFetish) -> Result<DbCharacterFetish, sqlx::Error> {
+        info!("Trying to update character fetish");
         sqlx::query_as!(
             DbCharacterFetish,
             "
-                SELECT
-                    category as \"category: DbUserFetishCategory\",
+            WITH insert_1 AS (
+                INSERT INTO fetishes(creator,description,fetish_id,name)
+                VALUES ($6, $3, $4, $5)
+                ON CONFLICT (fetish_id)
+                DO UPDATE SET
+                    description = $3,
+                    creator = $6,
+                    name = $5
+                RETURNING
+                    fetish_id,
+                    description,
+                    name
+            ),
+            insert_2 AS (
+                INSERT INTO 
+                    user_characters_fetishes(
+                        category,
+                        character_name,
+                        fetish_id,
+                        user_id
+                    )
+                VALUES ($1, $2, $4, $6)
+                ON CONFLICT (user_id, character_name, fetish_id)
+                DO UPDATE SET
+                    category = $1
+                RETURNING
+                    category,
                     character_name,
-                    character_fetish.fetish_id,
-                    user_id,
-                    name,
-                    description
-                FROM user_characters_fetishes character_fetish
-                JOIN fetishes fetish_details ON character_fetish.fetish_id = fetish_details.fetish_id 
-                WHERE
-                    (user_id = $1 and character_name = $2)
+                    fetish_id,
+                    user_id
+            )
+            SELECT
+                category as \"category: DbUserFetishCategory\",
+                character_name,
+                insert_1.fetish_id,
+                user_id, name,
+                description FROM insert_2
+            JOIN insert_1 ON insert_1.fetish_id = insert_2.fetish_id
             ",
-            character.user_id,
+            character.category as _,
             character.character_name,
-        )
-        .fetch_all(&self.pool)
-        .await
-    }
-
-    pub async fn get_character_fetish(&self, character: &DbUserCharacter, fetish_id: i64) -> Result<Option<DbCharacterFetish>, sqlx::Error> {
-        sqlx::query_as!(
-            DbCharacterFetish,
-            "
-                SELECT
-                    category as \"category: DbUserFetishCategory\",
-                    character_name,
-                    character_fetish.fetish_id,
-                    user_id,
-                    name,
-                    description
-                FROM user_characters_fetishes character_fetish
-                JOIN fetishes fetish_details ON character_fetish.fetish_id = fetish_details.fetish_id 
-                WHERE
-                    (user_id = $1 and character_name = $2 and character_fetish.fetish_id = $3)
-            ",
+            character.description,
+            character.fetish_id,
+            character.name,
             character.user_id,
-            character.character_name,
-            fetish_id,
         )
-        .fetch_optional(&self.pool)
+        .fetch_one(&self.pool)
         .await
     }
 }

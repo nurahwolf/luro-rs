@@ -10,29 +10,33 @@ use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(name = "add", desc = "Add an existing fetish to a character profile")]
-pub struct Add {
+#[command(name = "create", desc = "Create a fetish and add it to a character profile")]
+pub struct Create {
     #[command(desc = "The character that should be modified", autocomplete = true)]
     character: String,
     /// The fetish category to add
-    fetish_id: i64,
+    category: FetishCategory,
+    /// The name of the fetish
+    name: String,
+    /// Description of that fetish
+    description: String,
 
 }
 
-impl LuroCommand for Add {
+impl LuroCommand for Create {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let user = ctx.fetch_user(&ctx.author_id()).await?;
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| a.icon_url(user.avatar()).name(format!("Profile by {}", user.name())));
 
-        let character = user.fetch_character(&self.name).await?.context("Could not find that character! Was it deleted?")?;
-        character.
+        let character = user.fetch_character(&self.character).await?.context("Could not find that character! Was it deleted?")?;
+        let fetish_total = ctx.database.get_fetishes().await?.len();
 
         character.update_fetish(LuroCharacterFetish {
             character_name: self.character,
             user_id: user.user_id,
-            fetish_id: (fetish_total + 1) as i64,
+            fetish_id: fetish_total as i64,
             category: match self.category {
                 FetishCategory::Favourite => LuroCharacterFetishCategory::Favourite,
                 FetishCategory::Love => LuroCharacterFetishCategory::Love,

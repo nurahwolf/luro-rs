@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
 use crate::{
-    sqlx::user_character::{DbUserCharacter, DbCharacterFetish},
+    sqlx::user_character::{DbUserCharacter, DbCharacterFetish, DbUserFetishCategory},
     LuroDatabase,
 };
 
 mod get_fetishes;
 mod new;
+mod update_fetish;
 
 #[derive(Debug, Clone)]
 pub struct LuroCharacter {
@@ -64,13 +65,34 @@ impl From<DbCharacterFetish> for LuroCharacterFetish {
             user_id: db_fetish.user_id,
             fetish_id: db_fetish.fetish_id,
             category: match db_fetish.category {
-                crate::sqlx::user_character::DbUserFetishCategory::Fav => LuroCharacterFetishCategory::Favourite,
-                crate::sqlx::user_character::DbUserFetishCategory::Love => LuroCharacterFetishCategory::Love,
-                crate::sqlx::user_character::DbUserFetishCategory::Like => LuroCharacterFetishCategory::Like,
-                crate::sqlx::user_character::DbUserFetishCategory::Neutral => LuroCharacterFetishCategory::Neutral,
-                crate::sqlx::user_character::DbUserFetishCategory::Dislike => LuroCharacterFetishCategory::Dislike,
-                crate::sqlx::user_character::DbUserFetishCategory::Hate => LuroCharacterFetishCategory::Hate,
-                crate::sqlx::user_character::DbUserFetishCategory::Limit => LuroCharacterFetishCategory::Limit,
+                DbUserFetishCategory::Fav => LuroCharacterFetishCategory::Favourite,
+                DbUserFetishCategory::Love => LuroCharacterFetishCategory::Love,
+                DbUserFetishCategory::Like => LuroCharacterFetishCategory::Like,
+                DbUserFetishCategory::Neutral => LuroCharacterFetishCategory::Neutral,
+                DbUserFetishCategory::Dislike => LuroCharacterFetishCategory::Dislike,
+                DbUserFetishCategory::Hate => LuroCharacterFetishCategory::Hate,
+                DbUserFetishCategory::Limit => LuroCharacterFetishCategory::Limit,
+            },
+            name: db_fetish.name,
+            description: db_fetish.description
+        }
+    }
+}
+
+impl From<LuroCharacterFetish> for DbCharacterFetish {
+    fn from(db_fetish: LuroCharacterFetish) -> Self {
+        Self {
+            character_name: db_fetish.character_name,
+            user_id: db_fetish.user_id,
+            fetish_id: db_fetish.fetish_id,
+            category: match db_fetish.category {
+                LuroCharacterFetishCategory::Favourite => DbUserFetishCategory::Fav,
+                LuroCharacterFetishCategory::Love => DbUserFetishCategory::Love,
+                LuroCharacterFetishCategory::Like => DbUserFetishCategory::Like,
+                LuroCharacterFetishCategory::Neutral => DbUserFetishCategory::Neutral,
+                LuroCharacterFetishCategory::Dislike => DbUserFetishCategory::Dislike,
+                LuroCharacterFetishCategory::Hate => DbUserFetishCategory::Hate,
+                LuroCharacterFetishCategory::Limit => DbUserFetishCategory::Limit,
             },
             name: db_fetish.name,
             description: db_fetish.description
