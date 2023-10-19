@@ -6,4 +6,6 @@ mod description;
 mod model;
 mod subcommand;
 
-pub use impls::{dummy_command_model, dummy_create_command, impl_command_model, impl_create_command};
+pub use impls::{
+    dummy_command_model, dummy_create_command, impl_command_model, impl_create_command,
+};

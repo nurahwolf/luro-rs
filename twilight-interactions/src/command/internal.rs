@@ -8,7 +8,9 @@
 use std::collections::HashMap;
 
 use twilight_model::{
-    application::command::{CommandOption, CommandOptionChoice, CommandOptionType, CommandOptionValue},
+    application::command::{
+        CommandOption, CommandOptionChoice, CommandOptionType, CommandOptionValue,
+    },
     channel::ChannelType,
 };
 
@@ -22,7 +24,9 @@ where
     K: ToString,
     V: ToString,
 {
-    item.into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
+    item.into_iter()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect()
 }
 
 /// Data to create a command option from.

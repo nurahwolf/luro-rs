@@ -2,15 +2,20 @@ use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
 use syn::{spanned::Spanned, DeriveInput, Error, FieldsNamed, Result};
 
-use super::parse::{channel_type, command_option_value, optional, StructField, TypeAttribute};
-use crate::{command::description::get_description, parse::find_attr};
+use super::parse::{channel_type, command_option_value, StructField, TypeAttribute};
+use crate::{
+    command::description::get_description,
+    parse::{
+        parsers::FunctionPath,
+        syntax::{find_attr, optional},
+    },
+};
 
 /// Implementation of `CreateCommand` derive macro
 pub fn impl_create_command(input: DeriveInput, fields: Option<FieldsNamed>) -> Result<TokenStream> {
     let ident = &input.ident;
     let generics = &input.generics;
     let where_clause = &generics.where_clause;
-    let span = input.span();
     let fields = match fields {
         Some(fields) => StructField::from_fields(fields)?,
         None => Vec::new(),
@@ -21,14 +26,27 @@ pub fn impl_create_command(input: DeriveInput, fields: Option<FieldsNamed>) -> R
     let capacity = fields.len();
     let (attributes, attr_span) = match find_attr(&input.attrs, "command") {
         Some(attr) => (TypeAttribute::parse(attr)?, attr.span()),
-        None => return Err(Error::new(span, "missing required #[command(...)] attribute")),
+        None => {
+            return Err(Error::new_spanned(
+                input,
+                "missing required #[command(...)] attribute",
+            ))
+        }
     };
 
     if attributes.autocomplete == Some(true) {
-        return Err(Error::new(attr_span, "cannot implement `CreateCommand` on partial model"));
+        return Err(Error::new(
+            attr_span,
+            "cannot implement `CreateCommand` on partial model",
+        ));
     }
 
-    let desc = get_description(&attributes.desc_localizations, &attributes.desc, span, &input.attrs)?;
+    let desc = get_description(
+        &attributes.desc_localizations,
+        &attributes.desc,
+        input.span(),
+        &input.attrs,
+    )?;
 
     let name = match &attributes.name {
         Some(name) => name,
@@ -39,23 +57,20 @@ pub fn impl_create_command(input: DeriveInput, fields: Option<FieldsNamed>) -> R
         Some(path) => quote! { ::std::option::Option::Some(#path())},
         None => quote! { ::std::option::Option::None },
     };
-    let dm_permission = match &attributes.dm_permission {
-        Some(dm_permission) => quote! { ::std::option::Option::Some(#dm_permission)},
-        None => quote! { ::std::option::Option::None },
-    };
-    let nsfw = match &attributes.nsfw {
-        Some(nsfw) => quote! { ::std::option::Option::Some(#nsfw) },
-        None => quote! { ::std::option::Option::None },
-    };
+    let dm_permission = optional(attributes.dm_permission);
+    let nsfw = optional(attributes.nsfw);
 
-    let field_options = fields.iter().map(field_option).collect::<Result<Vec<_>>>()?;
+    let field_options = fields
+        .iter()
+        .map(field_option)
+        .collect::<Result<Vec<_>>>()?;
 
     Ok(quote! {
         impl #generics ::twilight_interactions::command::CreateCommand for #ident #generics #where_clause {
             const NAME: &'static str = #name;
 
             fn create_command() -> ::twilight_interactions::command::ApplicationCommandData {
-                let mut command_options = ::std::vec::Vec::with_capacity(#capacity);
+                let mut __command_options = ::std::vec::Vec::with_capacity(#capacity);
 
                 #(#field_options)*
 
@@ -65,7 +80,7 @@ pub fn impl_create_command(input: DeriveInput, fields: Option<FieldsNamed>) -> R
                     name_localizations: #name_localizations,
                     description: desc.0,
                     description_localizations: desc.1,
-                    options: command_options,
+                    options: __command_options,
                     default_member_permissions: #default_permissions,
                     dm_permission: #dm_permission,
                     nsfw: #nsfw,
@@ -106,7 +121,7 @@ fn field_option(field: &StructField) -> Result<TokenStream> {
 
     Ok(quote_spanned! {span=>
         let desc = #desc;
-        command_options.push(<#ty as ::twilight_interactions::command::CreateOption>::create_option(
+        __command_options.push(<#ty as ::twilight_interactions::command::CreateOption>::create_option(
             ::twilight_interactions::command::internal::CreateOptionData {
                 name: ::std::convert::From::from(#name),
                 name_localizations: #name_localizations,
@@ -126,7 +141,7 @@ fn field_option(field: &StructField) -> Result<TokenStream> {
     })
 }
 
-fn localization_field(path: &Option<syn::Path>) -> TokenStream {
+fn localization_field(path: &Option<FunctionPath>) -> TokenStream {
     match path {
         Some(path) => {
             quote! {
@@ -149,7 +164,10 @@ fn check_fields_order(fields: &[StructField]) -> Result<()> {
         }
 
         if optional_option_added && field.kind.required() {
-            return Err(Error::new(field.span, "required options should be added before optional"));
+            return Err(Error::new(
+                field.span,
+                "required options should be added before optional",
+            ));
         }
     }
 

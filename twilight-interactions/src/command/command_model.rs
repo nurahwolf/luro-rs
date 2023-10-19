@@ -1,14 +1,11 @@
 use std::borrow::Cow;
 
-use super::internal::CommandOptionData;
-use crate::error::{ParseError, ParseOptionError, ParseOptionErrorType};
 use twilight_model::{
     application::{
         command::CommandOptionValue as NumberCommandOptionValue,
-        interaction::{
-            application_command::{CommandData, CommandDataOption, CommandOptionValue},
-            InteractionChannel, InteractionDataResolved, InteractionMember,
-        },
+        interaction::{application_command::{
+            CommandData, CommandDataOption, CommandOptionValue,
+        }, InteractionMember, InteractionDataResolved, InteractionChannel},
     },
     channel::Attachment,
     guild::Role,
@@ -18,6 +15,9 @@ use twilight_model::{
     },
     user::User,
 };
+
+use super::internal::CommandOptionData;
+use crate::error::{ParseError, ParseOptionError, ParseOptionErrorType};
 
 /// Parse command data into a concrete type.
 ///
@@ -255,13 +255,22 @@ impl<'a> CommandInputData<'a> {
         T: CommandOption,
     {
         // Find command option value
-        let value = match self.options.iter().find(|option| option.name == name).map(|option| &option.value) {
+        let value = match self
+            .options
+            .iter()
+            .find(|option| option.name == name)
+            .map(|option| &option.value)
+        {
             Some(value) => value.clone(),
             None => return Ok(None),
         };
 
         // Parse command value
-        match CommandOption::from_option(value, CommandOptionData::default(), self.resolved.as_deref()) {
+        match CommandOption::from_option(
+            value,
+            CommandOptionData::default(),
+            self.resolved.as_deref(),
+        ) {
             Ok(value) => Ok(Some(value)),
             Err(kind) => Err(ParseError::Option(ParseOptionError {
                 field: name.to_string(),
@@ -302,9 +311,13 @@ impl<'a> CommandInputData<'a> {
     /// This method's signature is the same as the [`CommandOption`] trait,
     /// except for the explicit `'a` lifetime. It is used when parsing
     /// subcommands.
-    pub fn from_option(value: CommandOptionValue, resolved: Option<&'a InteractionDataResolved>) -> Result<Self, ParseOptionErrorType> {
+    pub fn from_option(
+        value: CommandOptionValue,
+        resolved: Option<&'a InteractionDataResolved>,
+    ) -> Result<Self, ParseOptionErrorType> {
         let options = match value {
-            CommandOptionValue::SubCommand(options) | CommandOptionValue::SubCommandGroup(options) => options,
+            CommandOptionValue::SubCommand(options)
+            | CommandOptionValue::SubCommandGroup(options) => options,
             other => return Err(ParseOptionErrorType::InvalidType(other.kind())),
         };
 

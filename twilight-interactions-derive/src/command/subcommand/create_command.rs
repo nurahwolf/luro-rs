@@ -3,22 +3,40 @@ use quote::{quote, quote_spanned};
 use syn::{spanned::Spanned, DeriveInput, Error, Result, Variant};
 
 use super::parse::{ParsedVariant, TypeAttribute};
-use crate::{command::description::get_description, parse::find_attr};
+use crate::{
+    command::description::get_description,
+    parse::{
+        parsers::FunctionPath,
+        syntax::{find_attr, optional},
+    },
+};
 
 /// Implementation of `CreateCommand` derive macro
-pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item = Variant>) -> Result<TokenStream> {
+pub fn impl_create_command(
+    input: DeriveInput,
+    variants: impl IntoIterator<Item = Variant>,
+) -> Result<TokenStream> {
     let ident = &input.ident;
     let generics = &input.generics;
     let where_clause = &generics.where_clause;
-    let span = input.span();
 
     let variants = ParsedVariant::from_variants(variants, input.span())?;
     let attribute = match find_attr(&input.attrs, "command") {
         Some(attr) => TypeAttribute::parse(attr)?,
-        None => return Err(Error::new(span, "missing required #[command(...)] attribute")),
+        None => {
+            return Err(Error::new_spanned(
+                input,
+                "missing required #[command(...)] attribute",
+            ))
+        }
     };
 
-    let desc = get_description(&attribute.desc_localizations, &attribute.desc, span, &input.attrs)?;
+    let desc = get_description(
+        &attribute.desc_localizations,
+        &attribute.desc,
+        input.span(),
+        &input.attrs,
+    )?;
 
     let capacity = variants.len();
     let name = &attribute.name;
@@ -27,14 +45,8 @@ pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item 
         Some(path) => quote! { ::std::option::Option::Some(#path())},
         None => quote! { ::std::option::Option::None },
     };
-    let dm_permission = match &attribute.dm_permission {
-        Some(dm_permission) => quote! { ::std::option::Option::Some(#dm_permission)},
-        None => quote! { ::std::option::Option::None },
-    };
-    let nsfw = match &attribute.nsfw {
-        Some(nsfw) => quote! { ::std::option::Option::Some(#nsfw) },
-        None => quote! { std::option::Option::None },
-    };
+    let dm_permission = optional(attribute.dm_permission);
+    let nsfw = optional(attribute.nsfw);
 
     let variant_options = variants.iter().map(variant_option);
 
@@ -44,7 +56,7 @@ pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item 
 
             fn create_command() -> ::twilight_interactions::command::ApplicationCommandData {
                 let desc = #desc;
-                let mut command_options = ::std::vec::Vec::with_capacity(#capacity);
+                let mut __command_options = ::std::vec::Vec::with_capacity(#capacity);
 
                 #(#variant_options)*
 
@@ -53,7 +65,7 @@ pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item 
                     name_localizations: #name_localizations,
                     description: desc.0,
                     description_localizations: desc.1,
-                    options: command_options,
+                    options: __command_options,
                     default_member_permissions: #default_permissions,
                     dm_permission: #dm_permission,
                     nsfw: #nsfw,
@@ -64,7 +76,7 @@ pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item 
     })
 }
 
-fn localization_field(path: &Option<syn::Path>) -> TokenStream {
+fn localization_field(path: &Option<FunctionPath>) -> TokenStream {
     match path {
         Some(path) => {
             quote! {
@@ -83,7 +95,7 @@ fn variant_option(variant: &ParsedVariant) -> TokenStream {
     let span = variant.span;
 
     quote_spanned! {span=>
-        command_options.push(::std::convert::From::from(
+        __command_options.push(::std::convert::From::from(
             <#ty as ::twilight_interactions::command::CreateCommand>::create_command()
         ));
     }

@@ -5,7 +5,10 @@ use twilight_interactions::command::{
     CommandOption, CreateOption,
 };
 use twilight_model::application::{
-    command::{CommandOption as TwilightCommandOption, CommandOptionChoice, CommandOptionChoiceValue, CommandOptionType},
+    command::{
+        CommandOption as TwilightCommandOption, CommandOptionChoice, CommandOptionChoiceValue,
+        CommandOptionType,
+    },
     interaction::application_command::CommandOptionValue,
 };
 
@@ -45,7 +48,11 @@ pub fn name_dog() -> [(&'static str, &'static str); 1] {
 
 #[test]
 fn test_command_option_string() {
-    let parsed = ChoiceString::from_option(CommandOptionValue::String("crab".to_string()), CommandOptionData::default(), None);
+    let parsed = ChoiceString::from_option(
+        CommandOptionValue::String("crab".to_string()),
+        CommandOptionData::default(),
+        None,
+    );
     assert_eq!(parsed, Ok(ChoiceString::Crab));
     assert_eq!(ChoiceString::Dog.value(), "dog");
     assert_eq!(ChoiceString::Cat.value(), "cat");
@@ -106,7 +113,11 @@ fn test_command_option_string() {
 
 #[test]
 fn test_command_option_integer() {
-    let parsed = ChoiceInt::from_option(CommandOptionValue::Integer(2), CommandOptionData::default(), None);
+    let parsed = ChoiceInt::from_option(
+        CommandOptionValue::Integer(2),
+        CommandOptionData::default(),
+        None,
+    );
     assert_eq!(parsed, Ok(ChoiceInt::Two));
     assert_eq!(ChoiceInt::One.value(), 1);
     assert_eq!(ChoiceInt::Two.value(), 2);
@@ -167,7 +178,11 @@ fn test_command_option_integer() {
 
 #[test]
 fn test_command_option_number() {
-    let parsed = ChoiceNumber::from_option(CommandOptionValue::Number(0.5), CommandOptionData::default(), None);
+    let parsed = ChoiceNumber::from_option(
+        CommandOptionValue::Number(0.5),
+        CommandOptionData::default(),
+        None,
+    );
     assert_eq!(parsed, Ok(ChoiceNumber::Half));
     assert_eq!(ChoiceNumber::One.value(), 1.0);
     assert_eq!(ChoiceNumber::Half.value(), 0.5);
