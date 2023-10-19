@@ -1,4 +1,4 @@
-use std::{sync::Arc, collections::HashMap};
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, Context};
 
@@ -15,11 +15,12 @@ use luro_database::LuroDatabase;
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
 use twilight_model::{
-    application::interaction::{Interaction, InteractionData, modal::ModalInteractionData},
-    user::User, id::{Id, marker::GuildMarker},
+    application::interaction::{modal::ModalInteractionData, Interaction, InteractionData},
+    id::{marker::GuildMarker, Id},
+    user::User,
 };
 
-use crate::{Context as LuroContext, Luro, LuroCommandType, LuroMutex, traits::interaction::InteractionTrait};
+use crate::{traits::interaction::InteractionTrait, Context as LuroContext, Luro, LuroCommandType, LuroMutex};
 
 /// A context spawned from a modal interaction
 #[derive(Debug, Clone)]

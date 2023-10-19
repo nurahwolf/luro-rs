@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use twilight_interactions::command::{
-    ApplicationCommandData, CommandInputData, CommandModel, CreateCommand, DescriptionLocalizations,
-};
+use twilight_interactions::command::{ApplicationCommandData, CommandInputData, CommandModel, CreateCommand, DescriptionLocalizations};
 use twilight_model::{
     application::{
         command::{CommandOption, CommandOptionType},
@@ -81,12 +79,7 @@ fn test_subcommand_model() {
 
     let result = SubCommand::from_interaction(data).unwrap();
 
-    assert_eq!(
-        SubCommand::One(CommandOne {
-            option: "test".into()
-        }),
-        result
-    );
+    assert_eq!(SubCommand::One(CommandOne { option: "test".into() }), result);
 }
 
 #[test]
@@ -114,9 +107,7 @@ fn test_subcommand_group_model() {
     let result = SubCommand::from_interaction(data).unwrap();
 
     assert_eq!(
-        SubCommand::Group(Box::new(SubCommandGroup::Three(CommandThree {
-            option: "test".into()
-        }))),
+        SubCommand::Group(Box::new(SubCommandGroup::Three(CommandThree { option: "test".into() }))),
         result
     );
 }

@@ -16,10 +16,7 @@ pub fn impl_command_model(input: DeriveInput) -> Result<TokenStream> {
             )),
         },
         Data::Enum(data) => super::subcommand::impl_command_model(input, data.variants),
-        _ => Err(Error::new(
-            span,
-            "`CommandModel` can only be applied to structs or enums",
-        )),
+        _ => Err(Error::new(span, "`CommandModel` can only be applied to structs or enums")),
     }
 }
 
@@ -54,10 +51,7 @@ pub fn impl_create_command(input: DeriveInput) -> Result<TokenStream> {
             )),
         },
         Data::Enum(data) => super::subcommand::impl_create_command(input, data.variants),
-        _ => Err(Error::new(
-            span,
-            "`CreateCommand` can only be applied to structs or enums",
-        )),
+        _ => Err(Error::new(span, "`CreateCommand` can only be applied to structs or enums")),
     }
 }
 

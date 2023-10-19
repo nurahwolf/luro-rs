@@ -1,6 +1,6 @@
 use std::str;
 
-use luro_framework::{LuroCommand, CommandInteraction, InteractionTrait};
+use luro_framework::{CommandInteraction, InteractionTrait, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Default, Debug, PartialEq, Eq)]

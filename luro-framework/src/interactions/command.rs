@@ -1,15 +1,16 @@
-use std::{sync::Arc, collections::HashMap};
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, Context};
 use luro_database::LuroDatabase;
 use luro_model::ACCENT_COLOUR;
 use tracing::warn;
 use twilight_model::{
-    application::interaction::{Interaction, InteractionData, application_command::CommandData},
-    user::User, id::{Id, marker::GuildMarker},
+    application::interaction::{application_command::CommandData, Interaction, InteractionData},
+    id::{marker::GuildMarker, Id},
+    user::User,
 };
 
-use crate::{Context as LuroContext, Luro, LuroMutex, LuroCommandType, traits::interaction::InteractionTrait};
+use crate::{traits::interaction::InteractionTrait, Context as LuroContext, Luro, LuroCommandType, LuroMutex};
 
 mod acknowledge_interaction;
 mod author;

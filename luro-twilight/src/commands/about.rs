@@ -2,11 +2,7 @@ use std::fmt::Write;
 use std::path::Path;
 
 use git2::{ErrorCode, Repository};
-use luro_framework::{
-    CreateLuroCommand,
-    InteractionTrait,
-    CommandInteraction,
-};
+use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionTrait};
 use luro_model::{builders::EmbedBuilder, user::LuroUser};
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};

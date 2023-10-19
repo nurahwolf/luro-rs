@@ -1,5 +1,5 @@
 use luro_database::DbUserMarriage;
-use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 

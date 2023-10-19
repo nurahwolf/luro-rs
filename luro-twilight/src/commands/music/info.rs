@@ -1,5 +1,5 @@
+use luro_framework::{responses::Response, CommandInteraction, ExecuteLuroCommand, InteractionTrait};
 use std::fmt::Write;
-use luro_framework::{ExecuteLuroCommand, CommandInteraction, InteractionTrait, responses::Response};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]

@@ -1,6 +1,6 @@
 use anyhow::Context;
 use luro_database::DbUserMarriage;
-use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
 use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 

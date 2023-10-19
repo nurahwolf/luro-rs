@@ -14,10 +14,7 @@ impl DescriptionLocalizations {
     {
         Self {
             fallback: fallback.to_string(),
-            localizations: localizations
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
+            localizations: localizations.into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect(),
         }
     }
 }
@@ -31,11 +28,6 @@ impl NameLocalizations {
         K: ToString,
         V: ToString,
     {
-        Self(
-            localizations
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
-        )
+        Self(localizations.into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())
     }
 }

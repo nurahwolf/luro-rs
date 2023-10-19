@@ -1,6 +1,6 @@
 use hyper::{Body, Request};
 
-use luro_framework::{ExecuteLuroCommand, CommandInteraction, responses::Response};
+use luro_framework::{responses::Response, CommandInteraction, ExecuteLuroCommand};
 use tracing::info;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::{
@@ -9,11 +9,7 @@ use twilight_lavalink::{
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(
-    name = "play",
-    desc = "Give me a link or something and I'll try to play it",
-    dm_permission = false
-)]
+#[command(name = "play", desc = "Give me a link or something and I'll try to play it", dm_permission = false)]
 pub struct PlayCommand {
     /// What you would like me to play
     song: String,
@@ -31,12 +27,9 @@ impl ExecuteLuroCommand for PlayCommand {
         };
 
         let player = ctx.lavalink.player(guild_id).await?;
-        let (parts, body) = twilight_lavalink::http::load_track(
-            player.node().config().address,
-            &self.song,
-            &player.node().config().authorization,
-        )?
-        .into_parts();
+        let (parts, body) =
+            twilight_lavalink::http::load_track(player.node().config().address, &self.song, &player.node().config().authorization)?
+                .into_parts();
         let req = Request::from_parts(parts, Body::from(body));
         let res = ctx.http_client.request(req).await?;
         let response_bytes = hyper::body::to_bytes(res.into_body()).await?;

@@ -1,11 +1,11 @@
-use std::{fs, path::PathBuf, sync::Arc, collections::HashMap};
+use std::{collections::HashMap, fs, path::PathBuf, sync::Arc};
 
 use luro_database::LuroDatabase;
 use luro_model::configuration::Configuration;
 use twilight_gateway::{stream, Shard};
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::{Context, Luro, LuroMutex, LuroCommandType};
+use crate::{Context, Luro, LuroCommandType, LuroMutex};
 
 #[cfg(feature = "luro-builder")]
 mod default_embed;
@@ -58,7 +58,11 @@ impl Framework {
             let socket = <std::net::SocketAddr as std::str::FromStr>::from_str(&config.lavalink_host)?;
             let lavalink = twilight_lavalink::Lavalink::new(current_user.id, shards.len().try_into()?);
 
-            tracing::info!("Connecting to lavalink with Socket + Auth: '{}' - '{}'", socket, config.lavalink_auth);
+            tracing::info!(
+                "Connecting to lavalink with Socket + Auth: '{}' - '{}'",
+                socket,
+                config.lavalink_auth
+            );
             lavalink.add(socket, &config.lavalink_auth).await?;
             lavalink.into()
         };

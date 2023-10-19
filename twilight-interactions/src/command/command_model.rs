@@ -3,9 +3,10 @@ use std::borrow::Cow;
 use twilight_model::{
     application::{
         command::CommandOptionValue as NumberCommandOptionValue,
-        interaction::{application_command::{
-            CommandData, CommandDataOption, CommandOptionValue,
-        }, InteractionMember, InteractionDataResolved, InteractionChannel},
+        interaction::{
+            application_command::{CommandData, CommandDataOption, CommandOptionValue},
+            InteractionChannel, InteractionDataResolved, InteractionMember,
+        },
     },
     channel::Attachment,
     guild::Role,
@@ -255,22 +256,13 @@ impl<'a> CommandInputData<'a> {
         T: CommandOption,
     {
         // Find command option value
-        let value = match self
-            .options
-            .iter()
-            .find(|option| option.name == name)
-            .map(|option| &option.value)
-        {
+        let value = match self.options.iter().find(|option| option.name == name).map(|option| &option.value) {
             Some(value) => value.clone(),
             None => return Ok(None),
         };
 
         // Parse command value
-        match CommandOption::from_option(
-            value,
-            CommandOptionData::default(),
-            self.resolved.as_deref(),
-        ) {
+        match CommandOption::from_option(value, CommandOptionData::default(), self.resolved.as_deref()) {
             Ok(value) => Ok(Some(value)),
             Err(kind) => Err(ParseError::Option(ParseOptionError {
                 field: name.to_string(),
@@ -311,13 +303,9 @@ impl<'a> CommandInputData<'a> {
     /// This method's signature is the same as the [`CommandOption`] trait,
     /// except for the explicit `'a` lifetime. It is used when parsing
     /// subcommands.
-    pub fn from_option(
-        value: CommandOptionValue,
-        resolved: Option<&'a InteractionDataResolved>,
-    ) -> Result<Self, ParseOptionErrorType> {
+    pub fn from_option(value: CommandOptionValue, resolved: Option<&'a InteractionDataResolved>) -> Result<Self, ParseOptionErrorType> {
         let options = match value {
-            CommandOptionValue::SubCommand(options)
-            | CommandOptionValue::SubCommandGroup(options) => options,
+            CommandOptionValue::SubCommand(options) | CommandOptionValue::SubCommandGroup(options) => options,
             other => return Err(ParseOptionErrorType::InvalidType(other.kind())),
         };
 

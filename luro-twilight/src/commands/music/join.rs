@@ -1,4 +1,4 @@
-use luro_framework::{ExecuteLuroCommand, CommandInteraction, responses::Response};
+use luro_framework::{responses::Response, CommandInteraction, ExecuteLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use twilight_model::{
@@ -7,11 +7,7 @@ use twilight_model::{
 };
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(
-    name = "join",
-    desc = "Get me to join a voice channel to play some music!",
-    dm_permission = false
-)]
+#[command(name = "join", desc = "Get me to join a voice channel to play some music!", dm_permission = false)]
 pub struct JoinCommand {
     /// The channel to join
     #[command(channel_types = "guild_voice guild_stage_voice")]

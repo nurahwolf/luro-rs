@@ -1,9 +1,7 @@
 use anyhow::Context;
 use luro_database::DatabaseInteraction;
 use luro_framework::{
-    {CreateLuroCommand, LuroCommand},
-    InteractionTrait,
-    CommandInteraction, ComponentInteraction, Luro, ModalInteraction,
+    CommandInteraction, ComponentInteraction, InteractionTrait, Luro, ModalInteraction, {CreateLuroCommand, LuroCommand},
 };
 use luro_model::user::character::{CharacterProfile, FetishCategory};
 use std::{collections::btree_map::Entry, fmt::Write};

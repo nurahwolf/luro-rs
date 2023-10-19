@@ -1,4 +1,4 @@
-use luro_framework::{LuroCommand, CommandInteraction};
+use luro_framework::{CommandInteraction, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::SelectMenuType;
 

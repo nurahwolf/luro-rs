@@ -1,4 +1,4 @@
-use luro_framework::{CreateLuroCommand, ExecuteLuroCommand, CommandInteraction};
+use luro_framework::{CommandInteraction, CreateLuroCommand, ExecuteLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use self::info::InfoCommand;

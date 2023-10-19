@@ -2,7 +2,15 @@ use std::future::Future;
 
 use luro_model::{builders::EmbedBuilder, response::LuroResponse, user::LuroUser};
 use twilight_interactions::command::ResolvedUser;
-use twilight_model::{application::interaction::Interaction, channel::Message, id::{marker::{UserMarker, GuildMarker}, Id}, user::User};
+use twilight_model::{
+    application::interaction::Interaction,
+    channel::Message,
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
+    user::User,
+};
 
 use crate::Framework;
 

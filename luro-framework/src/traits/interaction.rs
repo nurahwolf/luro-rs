@@ -1,5 +1,8 @@
 use luro_model::builders::EmbedBuilder;
-use twilight_model::{user::User, id::{marker::UserMarker, Id}};
+use twilight_model::{
+    id::{marker::UserMarker, Id},
+    user::User,
+};
 
 pub trait InteractionTrait {
     fn command_name(&self) -> &str;

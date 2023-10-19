@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine};
 use luro_database::DatabaseInteraction;
-use luro_framework::{LuroCommand, CommandInteraction, ComponentInteraction, CreateLuroCommand};
+use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, LuroCommand};
 use luro_model::response::LuroResponse;
 use std::str;
 use tracing::{info, warn};
@@ -47,12 +47,8 @@ impl CreateLuroCommand for Base64 {
 
         if bait.unwrap_or_default() {
             ctx.response_update(&response).await?;
-            ctx.respond(|response| {
-                response
-                    .content(format!("<@{author_id}> got baited..."))
-                    .reply(&ctx.message.id)
-            })
-            .await?;
+            ctx.respond(|response| response.content(format!("<@{author_id}> got baited...")).reply(&ctx.message.id))
+                .await?;
         } else {
             ctx.response_update(&response).await?;
         }
@@ -103,9 +99,7 @@ pub fn decode(input: &str) -> anyhow::Result<String> {
             Ok(decoded_string) => Ok(decoded_string),
             Err(why) => Err(anyhow!("Failed to convert bytes into string - {why}")),
         },
-        Err(_) => Ok(format!(
-            "Don't be a cunt, I know that this is not base64 you bitch\n\n{input}"
-        )),
+        Err(_) => Ok(format!("Don't be a cunt, I know that this is not base64 you bitch\n\n{input}")),
     };
     info!("Result - `{:?}`", result);
     result

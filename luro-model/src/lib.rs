@@ -34,6 +34,7 @@ pub const COLOUR_SUCCESS: u32 = 0xA0D995;
 pub const WEBHOOK_NAME: &str = "LuroHook";
 
 pub mod configuration;
+pub mod functions;
 pub mod guild;
 pub mod heck;
 pub mod luro_database_driver;
@@ -42,7 +43,6 @@ pub mod response;
 pub mod role;
 pub mod story;
 pub mod user;
-pub mod functions;
 
 #[cfg(feature = "builders")]
 pub mod builders;

@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, Luro};
+use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 #[derive(CommandModel, CreateCommand, Debug)]

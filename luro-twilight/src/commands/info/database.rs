@@ -1,5 +1,5 @@
 use luro_database::LuroUserPermissions;
-use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction};
+use luro_framework::{CommandInteraction, InteractionTrait, LuroCommand};
 
 use tracing::warn;
 use twilight_interactions::command::{CommandModel, CreateCommand};

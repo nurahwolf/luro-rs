@@ -21,9 +21,7 @@ impl InteractionContext {
             InteractionType::Ping => Err(anyhow!("Received ping interaction with no handler")),
             InteractionType::ApplicationCommand => Ok(Self::Command(CommandInteraction::new(ctx, interaction)?)),
             InteractionType::MessageComponent => Ok(Self::Component(ComponentInteraction::new(ctx, interaction)?)),
-            InteractionType::ApplicationCommandAutocomplete => {
-                Ok(Self::CommandAutocomplete(CommandInteraction::new(ctx, interaction)?))
-            }
+            InteractionType::ApplicationCommandAutocomplete => Ok(Self::CommandAutocomplete(CommandInteraction::new(ctx, interaction)?)),
             InteractionType::ModalSubmit => Ok(Self::Modal(ModalInteraction::new(ctx, interaction)?)),
             _ => Err(anyhow!("Unexpected interaction kind")),
         }

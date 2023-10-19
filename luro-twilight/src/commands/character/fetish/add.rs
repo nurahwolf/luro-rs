@@ -1,6 +1,6 @@
-use luro_framework::InteractionTrait;
 use luro_framework::CommandInteraction;
-use luro_framework::{LuroCommand, Luro};
+use luro_framework::InteractionTrait;
+use luro_framework::{Luro, LuroCommand};
 use luro_model::user::character::{Fetish, FetishCategory, FetishList};
 use std::fmt::Write;
 

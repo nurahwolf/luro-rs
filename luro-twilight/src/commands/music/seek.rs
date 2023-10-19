@@ -1,7 +1,6 @@
-use luro_framework::{ExecuteLuroCommand, CommandInteraction, responses::Response};
+use luro_framework::{responses::Response, CommandInteraction, ExecuteLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_lavalink::model::Seek;
-
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "seek", desc = "Seek through the track", dm_permission = false)]

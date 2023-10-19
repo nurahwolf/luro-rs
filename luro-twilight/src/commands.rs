@@ -1,5 +1,5 @@
-use luro_framework::CreateLuroCommand;
 use luro_framework::responses::Response;
+use luro_framework::CreateLuroCommand;
 use luro_framework::InteractionContext;
 use tracing::info;
 use twilight_model::application::command::Command;
@@ -91,7 +91,7 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
     let response_handler = ctx.clone();
     let response = match ctx.command_name() {
         "about" => about::About::handle_interaction(ctx).await,
-        "base64" =>base64::Base64::handle_interaction(ctx).await,
+        "base64" => base64::Base64::handle_interaction(ctx).await,
         "boop" => boop::Boop::handle_interaction(ctx).await,
         "character" => character::Character::handle_interaction(ctx).await,
         "dice" => dice::Dice::handle_interaction(ctx).await,

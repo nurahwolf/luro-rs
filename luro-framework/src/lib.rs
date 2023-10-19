@@ -20,6 +20,7 @@ pub use crate::{
     },
     slash_command::{CommandResult, LuroCommand as OldLuroCommand},
     traits::{
-        create_luro_command::CreateLuroCommand, luro_command::LuroCommand, luro::Luro, luro_interaction::LuroInteraction, interaction::InteractionTrait,
+        create_luro_command::CreateLuroCommand, interaction::InteractionTrait, luro::Luro, luro_command::LuroCommand,
+        luro_interaction::LuroInteraction,
     },
 };

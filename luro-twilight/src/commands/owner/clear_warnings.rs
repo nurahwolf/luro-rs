@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use luro_framework::{LuroCommand, CommandInteraction, Luro};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]

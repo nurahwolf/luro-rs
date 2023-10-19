@@ -33,12 +33,7 @@ impl StructField {
     pub fn from_field(field: syn::Field) -> Result<Self> {
         let (kind, ty) = match extract_generic(&field.ty, "Option") {
             Some(ty) => match extract_generic(&ty, "AutocompleteValue") {
-                Some(_) => {
-                    return Err(Error::new_spanned(
-                        ty,
-                        "`AutocompleteValue` cannot be wrapped in `Option<T>`",
-                    ))
-                }
+                Some(_) => return Err(Error::new_spanned(ty, "`AutocompleteValue` cannot be wrapped in `Option<T>`")),
                 None => (FieldType::Optional, ty),
             },
             None => match extract_generic(&field.ty, "AutocompleteValue") {
@@ -53,10 +48,7 @@ impl StructField {
         };
 
         let Some(ident) = field.ident else {
-            return Err(Error::new_spanned(
-                field,
-                "expected struct field to have an identifier",
-            ));
+            return Err(Error::new_spanned(field, "expected struct field to have an identifier"));
         };
 
         Ok(Self {
@@ -242,10 +234,7 @@ impl ChannelType {
             "guild_stage_voice" => Ok(Self::GuildStageVoice),
             "guild_directory" => Ok(Self::GuildDirectory),
             "guild_forum" => Ok(Self::GuildForum),
-            invalid => Err(Error::new(
-                span,
-                format!("`{invalid}` is not a valid channel type"),
-            )),
+            invalid => Err(Error::new(span, format!("`{invalid}` is not a valid channel type"))),
         }
     }
 }
@@ -262,10 +251,7 @@ impl ParseAttribute for CommandOptionValue {
         match input {
             Lit::Int(inner) => Ok(Self::Integer(inner.base10_parse()?)),
             Lit::Float(inner) => Ok(Self::Number(inner.base10_parse()?)),
-            _ => Err(Error::new_spanned(
-                input,
-                "expected integer or floating point literal",
-            )),
+            _ => Err(Error::new_spanned(input, "expected integer or floating point literal")),
         }
     }
 }

@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use luro_database::LuroDatabase;
 use luro_model::{guild::LuroGuild, user::LuroUser};
-use std::{sync::Arc, future::Future};
+use std::{future::Future, sync::Arc};
 use tracing::{info, warn};
 use twilight_cache_inmemory::InMemoryCache;
 use twilight_http::{client::InteractionClient, Client};
@@ -9,7 +9,10 @@ use twilight_http::{client::InteractionClient, Client};
 use twilight_model::{
     application::command::Command,
     guild::Role,
-    id::{marker::{RoleMarker, UserMarker, GuildMarker}, Id},
+    id::{
+        marker::{GuildMarker, RoleMarker, UserMarker},
+        Id,
+    },
     oauth::Application,
 };
 
@@ -191,7 +194,6 @@ pub trait Luro {
     //     let roles = self.get_guild_roles(&guild_id, true).await?;
     //     let guild = self.get_guild(&guild_id).await?;
     //     let user = self.get_user(&user_id).await?;
-
 
     //     // Temp
     //     let everyone: LuroRole = self.get_role(guild_id.cast()).await?.into();

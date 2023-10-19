@@ -1,7 +1,10 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use twilight_model::{
-    application::{command::{Command, CommandOption, CommandOptionType, CommandType}, interaction::InteractionChannel},
+    application::{
+        command::{Command, CommandOption, CommandOptionType, CommandType},
+        interaction::InteractionChannel,
+    },
     channel::Attachment,
     guild::{Permissions, Role},
     id::{
@@ -202,13 +205,9 @@ impl From<ApplicationCommandData> for CommandOption {
         };
 
         if item.group {
-            data.builder(CommandOptionType::SubCommandGroup)
-                .options(item.options)
-                .build()
+            data.builder(CommandOptionType::SubCommandGroup).options(item.options).build()
         } else {
-            data.builder(CommandOptionType::SubCommand)
-                .options(item.options)
-                .build()
+            data.builder(CommandOptionType::SubCommand).options(item.options).build()
         }
     }
 }

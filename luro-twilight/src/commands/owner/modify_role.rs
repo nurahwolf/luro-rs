@@ -1,4 +1,4 @@
-use luro_framework::{LuroCommand, InteractionTrait, CommandInteraction, responses::Response};
+use luro_framework::{responses::Response, CommandInteraction, InteractionTrait, LuroCommand};
 use luro_model::builders::EmbedBuilder;
 use serde::Serialize;
 use std::fmt::Write;

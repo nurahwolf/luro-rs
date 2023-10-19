@@ -1,5 +1,5 @@
 use luro_database::DatabaseInteraction;
-use luro_framework::{ComponentInteraction, CommandInteraction, CreateLuroCommand};
+use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle, Component};
 
@@ -34,7 +34,6 @@ impl CreateLuroCommand for Boop {
             Err(_) => 0,
         };
 
-        ctx.respond(|r| r.content(format!("Boop Count: {}", value_number)).update())
-            .await
+        ctx.respond(|r| r.content(format!("Boop Count: {}", value_number)).update()).await
     }
 }

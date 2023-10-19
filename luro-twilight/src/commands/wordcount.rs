@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::Context;
-use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionTrait, LuroCommand, Luro};
+use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionTrait, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     http::interaction::InteractionResponseType,
