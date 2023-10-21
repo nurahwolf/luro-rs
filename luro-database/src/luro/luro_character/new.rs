@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{LuroCharacter, LuroDatabase, sqlx::user_character::DbUserCharacter};
+use crate::{sqlx::user_character::DbUserCharacter, LuroCharacter, LuroDatabase};
 
 impl LuroCharacter {
     pub fn new(db_character: DbUserCharacter, db: Arc<LuroDatabase>) -> Self {

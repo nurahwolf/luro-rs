@@ -26,6 +26,8 @@ mod info;
 // mod lewd;
 // #[cfg(feature = "command-luro")]
 // mod luro;
+#[cfg(feature = "command-images")]
+mod images;
 #[cfg(feature = "command-marry")]
 mod marry;
 #[cfg(feature = "command-muzzle")]
@@ -79,6 +81,8 @@ pub fn default_commands() -> Vec<Command> {
         say::Say::setup_command(),
         #[cfg(feature = "command-uwu")]
         uwu::UwU::setup_command(),
+        #[cfg(feature = "command-images")]
+        images::Images::setup_command(),
         #[cfg(feature = "command-wordcount")]
         wordcount::Wordcount::setup_command(),
     ]
@@ -93,9 +97,12 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "about" => about::About::handle_interaction(ctx).await,
         "base64" => base64::Base64::handle_interaction(ctx).await,
         "boop" => boop::Boop::handle_interaction(ctx).await,
-        "character" | "character-fetish" | "character-image" | "character-update" => character::Character::handle_interaction(ctx).await,
+        "character" | "character-fetish" | "character-image" | "character-update" | "character-image-nsfw" => {
+            character::Character::handle_interaction(ctx).await
+        }
         "dice" => dice::Dice::handle_interaction(ctx).await,
         "hello" => hello::Hello::handle_interaction(ctx).await,
+        "images" => images::Images::handle_interaction(ctx).await,
         "info" => info::Info::handle_interaction(ctx).await,
         "marry" | "marry-accept" | "marry-deny" => marry::Marry::handle_interaction(ctx).await,
         #[cfg(feature = "command-music")]

@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use luro_model::builders::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 

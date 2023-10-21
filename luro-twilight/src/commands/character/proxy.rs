@@ -1,5 +1,4 @@
 use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
-use luro_model::user::LuroUser;
 use rand::{seq::SliceRandom, thread_rng};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -34,15 +33,14 @@ impl LuroCommand for Proxy {
         };
 
         if self.remove.unwrap_or_default() {
-                character.prefix = None;
-                user.update_character(character).await?;
-                return ctx
-                    .respond(|r| {
-                        r.content(format!("Prefix `{}` removed from character {}!", self.prefix, self.name))
-                            .ephemeral()
-                    })
-                    .await;
-            
+            character.prefix = None;
+            user.update_character(character).await?;
+            return ctx
+                .respond(|r| {
+                    r.content(format!("Prefix `{}` removed from character {}!", self.prefix, self.name))
+                        .ephemeral()
+                })
+                .await;
         }
 
         character.prefix = Some(self.prefix);

@@ -1,23 +1,25 @@
-use std::fmt::Write;
 use anyhow::Context;
-use luro_database::{DatabaseInteraction, LuroCharacter, LuroUser, LuroCharacterFetishCategory};
+use luro_database::{DatabaseInteraction, LuroCharacter, LuroCharacterFetishCategory, LuroUser};
 use luro_framework::{
     CommandInteraction, ComponentInteraction, InteractionTrait, Luro, ModalInteraction, {CreateLuroCommand, LuroCommand},
 };
+use std::fmt::Write;
 use twilight_interactions::command::{AutocompleteValue, CommandModel, CreateCommand};
 use twilight_model::{
     application::command::{CommandOptionChoice, CommandOptionChoiceValue},
-    http::interaction::InteractionResponseType, channel::message::component::ButtonStyle,
+    channel::message::component::ButtonStyle,
+    http::interaction::InteractionResponseType,
 };
 
 mod create;
 mod fetish;
 mod icon;
+mod image;
 mod profile;
 mod proxy;
 mod send;
 
-#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
+#[derive(CommandModel, CreateCommand)]
 #[command(name = "character", desc = "Show off your character!")]
 pub enum Character {
     #[command(name = "profile")]
@@ -30,6 +32,8 @@ pub enum Character {
     Proxy(proxy::Proxy),
     #[command(name = "icon")]
     Icon(icon::Icon),
+    #[command(name = "img")]
+    Img(image::Image),
     #[command(name = "send")]
     Send(send::CharacterSend),
 }
@@ -37,11 +41,12 @@ pub enum Character {
 impl CreateLuroCommand for Character {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         match self {
-            Self::Profile(command) => command.interaction_command(ctx).await,
             Self::Create(command) => command.interaction_command(ctx).await,
             Self::Fetish(command) => command.interaction_command(ctx).await,
-            Self::Proxy(command) => command.interaction_command(ctx).await,
             Self::Icon(command) => command.interaction_command(ctx).await,
+            Self::Img(command) => command.interaction_command(ctx).await,
+            Self::Profile(command) => command.interaction_command(ctx).await,
+            Self::Proxy(command) => command.interaction_command(ctx).await,
             Self::Send(command) => command.interaction_command(ctx).await,
         }
     }
@@ -115,15 +120,29 @@ impl CreateLuroCommand for Character {
         let mut hate = String::new();
         let mut limits = String::new();
 
-        for fetish in &character.get_fetishes().await? {
+        for fetish in &character.fetch_fetishes().await? {
             match fetish.category {
-                LuroCharacterFetishCategory::Favourite => writeln!(fav, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Love => writeln!(love, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Like => writeln!(like, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Neutral => writeln!(neutral, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Dislike => writeln!(dislike, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Hate => writeln!(hate, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Limit => writeln!(limits, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
+                LuroCharacterFetishCategory::Favourite => {
+                    writeln!(fav, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Love => {
+                    writeln!(love, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Like => {
+                    writeln!(like, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Neutral => {
+                    writeln!(neutral, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Dislike => {
+                    writeln!(dislike, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Hate => {
+                    writeln!(hate, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Limit => {
+                    writeln!(limits, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
             }
         }
 
@@ -202,59 +221,57 @@ pub struct CharacterNameAutocomplete {
 
 pub async fn character_response<T: Luro>(ctx: T, character: &LuroCharacter, user: &LuroUser, nsfw: bool) -> anyhow::Result<()> {
     let accent_colour = ctx.accent_colour().await;
-    let fetishes = character.get_fetishes().await?;
+    let fetishes = character.fetch_fetishes().await?;
     ctx.respond(|response| {
-        response.embed(|embed| {
-            embed
-                .title(format!("{}'s Profile", character.name))
-                .author(|a| a.icon_url(user.avatar()).name(format!("Character by {}", user.name())))
-                .colour(accent_colour);
-
-            if nsfw {
-                match &character.nsfw_summary {
-                    Some(summary) => embed.create_field("NSFW Summary", summary, false),
-                    None => embed.create_field("Summary", &character.sfw_summary, false),
-                };
-
-                match &character.nsfw_description {
-                    Some(description) => embed.description(description),
-                    None => embed.description(character.sfw_description.clone()),
-                };
-            } else {
+        response
+            .embed(|embed| {
                 embed
-                    .description(character.sfw_description.clone())
-                    .create_field("Summary", &character.sfw_summary, false);
-            }
+                    .title(format!("{}'s Profile", character.name))
+                    .author(|a| a.icon_url(user.avatar()).name(format!("Character by {}", user.name())))
+                    .colour(accent_colour);
 
-            if let Some(prefix) = &character.prefix {
-                embed.create_field(
-                    "Character Prefixes",
-                    prefix,
-                    false,
-                );
-            }
+                if nsfw {
+                    match &character.nsfw_summary {
+                        Some(summary) => embed.create_field("NSFW Summary", summary, false),
+                        None => embed.create_field("Summary", &character.sfw_summary, false),
+                    };
 
-            embed
-        }).components(|components| {
-            components.action_row(|row| {
-                row.button(|button| {
-                    button
-                        .custom_id("character-image")
-                        .label("Cycle Image")
-                        .style(ButtonStyle::Secondary)
-                })
-                .button(|button| {
-                    button
-                        .custom_id("character-update")
-                        .label("Update Character")
-                        .style(ButtonStyle::Secondary)
-                });
-                if nsfw && !fetishes.is_empty() {
-                    row.button(|button| button.custom_id("character-fetish").label("Fetishes").style(ButtonStyle::Danger));
+                    match &character.nsfw_description {
+                        Some(description) => embed.description(description),
+                        None => embed.description(character.sfw_description.clone()),
+                    };
+                } else {
+                    embed
+                        .description(character.sfw_description.clone())
+                        .create_field("Summary", &character.sfw_summary, false);
                 }
-                row
+
+                if let Some(prefix) = &character.prefix {
+                    embed.create_field("Character Prefixes", prefix, false);
+                }
+
+                embed
             })
-        })
+            .components(|components| {
+                components.action_row(|row| {
+                    row.button(|button| {
+                        button
+                            .custom_id("character-image")
+                            .label("Cycle Image")
+                            .style(ButtonStyle::Secondary)
+                    })
+                    .button(|button| {
+                        button
+                            .custom_id("character-update")
+                            .label("Update Character")
+                            .style(ButtonStyle::Secondary)
+                    });
+                    if nsfw && !fetishes.is_empty() {
+                        row.button(|button| button.custom_id("character-fetish").label("Fetishes").style(ButtonStyle::Danger));
+                    }
+                    row
+                })
+            })
     })
     .await
 }

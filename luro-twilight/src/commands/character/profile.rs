@@ -2,7 +2,6 @@ use luro_framework::{CommandInteraction, LuroCommand};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
-
 use super::character_response;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]

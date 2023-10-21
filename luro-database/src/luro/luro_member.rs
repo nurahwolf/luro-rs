@@ -39,8 +39,9 @@ impl From<DbMember> for LuroMember {
             muted: db_member.muted,
             nickname: db_member.nickname,
             pending: db_member.pending,
-            user_id: db_member.user_id
-        }    }
+            user_id: db_member.user_id,
+        }
+    }
 }
 
 impl From<(Id<GuildMarker>, Member)> for LuroMember {
@@ -60,7 +61,7 @@ impl From<(Id<GuildMarker>, Member)> for LuroMember {
             muted: member.mute,
             nickname: member.nick,
             pending: member.pending,
-            user_id: member.user.id.get() as i64
+            user_id: member.user.id.get() as i64,
         }
     }
 }

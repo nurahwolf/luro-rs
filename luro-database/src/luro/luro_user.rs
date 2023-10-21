@@ -4,18 +4,18 @@ use sqlx::types::Json;
 use tracing::info;
 use twilight_model::{
     id::{marker::UserMarker, Id},
-    user::{PremiumType, UserFlags, User},
+    user::{PremiumType, User, UserFlags},
     util::ImageHash,
 };
 
-use crate::{LuroDatabase, LuroMember, LuroUserType, LuroUserData};
+use crate::{LuroDatabase, LuroMember, LuroUserData, LuroUserType};
 
-mod fetch_characters;
 mod fetch_character;
-mod update_character_text;
-mod update_character;
+mod fetch_characters;
 mod fetch_marriages;
+mod update_character;
 mod update_character_prefix;
+mod update_character_text;
 
 /// A warpper around [User], with [Member] details if [Id<GuildMarker>] was present on type creation.
 /// Details are primarily fetched from the database, but this type can be instanced from a [User] / [Member] if that fails.
@@ -145,19 +145,19 @@ impl From<LuroUser> for User {
     fn from(luro_user: LuroUser) -> Self {
         Self {
             accent_color: luro_user.accent_colour.map(|x| x as u32),
-            avatar_decoration: luro_user.avatar_decoration.map(|x|x.0),
-            avatar: luro_user.avatar.map(|x|x.0),
-            banner: luro_user.banner.map(|x|x.0),
+            avatar_decoration: luro_user.avatar_decoration.map(|x| x.0),
+            avatar: luro_user.avatar.map(|x| x.0),
+            banner: luro_user.banner.map(|x| x.0),
             bot: luro_user.bot,
             discriminator: luro_user.discriminator as u16,
             email: luro_user.email,
-            flags: luro_user.flags.map(|x|x.0),
+            flags: luro_user.flags.map(|x| x.0),
             global_name: luro_user.global_name,
             locale: luro_user.locale,
             mfa_enabled: luro_user.mfa_enabled,
             name: luro_user.name,
-            premium_type: luro_user.premium_type.map(|x|x.0),
-            public_flags: luro_user.public_flags.map(|x|x.0),
+            premium_type: luro_user.premium_type.map(|x| x.0),
+            public_flags: luro_user.public_flags.map(|x| x.0),
             system: luro_user.system,
             verified: luro_user.verified,
             id: Id::new(luro_user.user_id as u64),

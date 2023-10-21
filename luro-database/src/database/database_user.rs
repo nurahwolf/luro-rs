@@ -1,9 +1,10 @@
 use twilight_model::{
     gateway::payload::incoming::UserUpdate,
-    user::User, id::{Id, marker::UserMarker},
+    id::{marker::UserMarker, Id},
+    user::User,
 };
 
-use crate::{DatabaseUserType, DatabaseUser, LuroUser};
+use crate::{DatabaseUser, DatabaseUserType, LuroUser};
 
 impl From<UserUpdate> for DatabaseUserType {
     fn from(user: UserUpdate) -> Self {
@@ -32,7 +33,7 @@ impl DatabaseUser {
     /// Return a string that is a link to the user's avatar
     pub fn avatar(&self) -> String {
         let user_id = self.user_id;
-        match self.avatar.map(|x|x.0) {
+        match self.avatar.map(|x| x.0) {
             Some(avatar) => match avatar.is_animated() {
                 true => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.gif?size=2048"),
                 false => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png?size=2048"),

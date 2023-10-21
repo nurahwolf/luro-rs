@@ -10,6 +10,7 @@ impl LuroDatabase {
             name
         )
         .fetch_optional(&self.pool)
-        .await.map(|x|x.map(|x|x.prefix).unwrap_or(None))
+        .await
+        .map(|x| x.map(|x| x.prefix).unwrap_or(None))
     }
 }

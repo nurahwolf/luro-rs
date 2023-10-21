@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use luro_framework::{LuroCommand, CommandInteraction, Luro};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -22,14 +22,7 @@ impl LuroCommand for Guilds {
         }
 
         let accent_colour = ctx.accent_colour().await;
-        ctx.respond(|r| {
-            r.embed(|embed| {
-                embed
-                    .title("All the guilds that I am in")
-                    .description(guilds)
-                    .colour(accent_colour)
-            })
-        })
-        .await
+        ctx.respond(|r| r.embed(|embed| embed.title("All the guilds that I am in").description(guilds).colour(accent_colour)))
+            .await
     }
 }

@@ -1,7 +1,7 @@
 use tracing::info;
 
-use crate::{sqlx::user_character::DbCharacterFetish, LuroDatabase};
 use crate::sqlx::user_character::DbUserFetishCategory;
+use crate::{sqlx::user_character::DbCharacterFetish, LuroDatabase};
 
 impl LuroDatabase {
     pub async fn update_character_fetish(&self, character: DbCharacterFetish) -> Result<DbCharacterFetish, sqlx::Error> {

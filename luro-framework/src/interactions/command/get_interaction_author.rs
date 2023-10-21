@@ -1,4 +1,3 @@
-
 use luro_database::LuroUser;
 
 use crate::{CommandInteraction, InteractionTrait, Luro};

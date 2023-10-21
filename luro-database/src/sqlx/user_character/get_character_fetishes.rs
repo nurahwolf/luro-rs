@@ -1,8 +1,7 @@
-use crate::{sqlx::user_character::DbCharacterFetish, LuroDatabase};
 use crate::sqlx::user_character::DbUserFetishCategory;
+use crate::{sqlx::user_character::DbCharacterFetish, LuroDatabase};
 
 use super::DbUserCharacter;
-
 
 impl LuroDatabase {
     pub async fn get_character_fetishes(&self, character: &DbUserCharacter) -> Result<Vec<DbCharacterFetish>, sqlx::Error> {
@@ -28,7 +27,11 @@ impl LuroDatabase {
         .await
     }
 
-    pub async fn get_character_fetish(&self, character: &DbUserCharacter, fetish_id: i64) -> Result<Option<DbCharacterFetish>, sqlx::Error> {
+    pub async fn get_character_fetish(
+        &self,
+        character: &DbUserCharacter,
+        fetish_id: i64,
+    ) -> Result<Option<DbCharacterFetish>, sqlx::Error> {
         sqlx::query_as!(
             DbCharacterFetish,
             "
@@ -52,4 +55,3 @@ impl LuroDatabase {
         .await
     }
 }
-

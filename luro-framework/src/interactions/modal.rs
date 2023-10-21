@@ -12,12 +12,13 @@ mod respond_update;
 mod response_simple;
 
 use luro_database::LuroDatabase;
-use luro_model::{ACCENT_COLOUR, response::LuroResponse};
+use luro_model::{response::LuroResponse, ACCENT_COLOUR};
 use tracing::warn;
 use twilight_model::{
     application::interaction::{modal::ModalInteractionData, Interaction, InteractionData},
+    http::interaction::InteractionResponseType,
     id::{marker::GuildMarker, Id},
-    user::User, http::interaction::InteractionResponseType,
+    user::User,
 };
 
 use crate::{traits::interaction::InteractionTrait, Context as LuroContext, Luro, LuroCommandType, LuroMutex};
@@ -92,8 +93,7 @@ impl Luro for ModalInteraction {
 
         Ok(())
     }
-    
-    
+
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
         Ok(self.twilight_client.interaction(self.application_id))
     }

@@ -20,7 +20,6 @@ pub struct Create {
     name: String,
     /// Description of that fetish
     description: String,
-
 }
 
 impl LuroCommand for Create {
@@ -30,25 +29,30 @@ impl LuroCommand for Create {
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| a.icon_url(user.avatar()).name(format!("Profile by {}", user.name())));
 
-        let character = user.fetch_character(&self.character).await?.context("Could not find that character! Was it deleted?")?;
+        let character = user
+            .fetch_character(&self.character)
+            .await?
+            .context("Could not find that character! Was it deleted?")?;
         let fetish_total = ctx.database.get_fetishes().await?.len();
 
-        character.update_fetish(LuroCharacterFetish {
-            character_name: self.character,
-            user_id: user.user_id,
-            fetish_id: fetish_total as i64,
-            category: match self.category {
-                FetishCategory::Favourite => LuroCharacterFetishCategory::Favourite,
-                FetishCategory::Love => LuroCharacterFetishCategory::Love,
-                FetishCategory::Like => LuroCharacterFetishCategory::Like,
-                FetishCategory::Neutral => LuroCharacterFetishCategory::Neutral,
-                FetishCategory::Dislike => LuroCharacterFetishCategory::Dislike,
-                FetishCategory::Hate => LuroCharacterFetishCategory::Hate,
-                FetishCategory::Limit => LuroCharacterFetishCategory::Limit,
-            },
-            name: self.name,
-            description: self.description,
-        }).await?;
+        character
+            .update_fetish(LuroCharacterFetish {
+                character_name: self.character,
+                user_id: user.user_id,
+                fetish_id: fetish_total as i64,
+                category: match self.category {
+                    FetishCategory::Favourite => LuroCharacterFetishCategory::Favourite,
+                    FetishCategory::Love => LuroCharacterFetishCategory::Love,
+                    FetishCategory::Like => LuroCharacterFetishCategory::Like,
+                    FetishCategory::Neutral => LuroCharacterFetishCategory::Neutral,
+                    FetishCategory::Dislike => LuroCharacterFetishCategory::Dislike,
+                    FetishCategory::Hate => LuroCharacterFetishCategory::Hate,
+                    FetishCategory::Limit => LuroCharacterFetishCategory::Limit,
+                },
+                name: self.name,
+                description: self.description,
+            })
+            .await?;
 
         let mut fav = String::new();
         let mut love = String::new();
@@ -58,15 +62,29 @@ impl LuroCommand for Create {
         let mut hate = String::new();
         let mut limits = String::new();
 
-        for fetish in &character.get_fetishes().await? {
+        for fetish in &character.fetch_fetishes().await? {
             match fetish.category {
-                LuroCharacterFetishCategory::Favourite => writeln!(fav, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Love => writeln!(love, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Like => writeln!(like, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Neutral => writeln!(neutral, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Dislike => writeln!(dislike, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Hate => writeln!(hate, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
-                LuroCharacterFetishCategory::Limit => writeln!(limits, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?,
+                LuroCharacterFetishCategory::Favourite => {
+                    writeln!(fav, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Love => {
+                    writeln!(love, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Like => {
+                    writeln!(like, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Neutral => {
+                    writeln!(neutral, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Dislike => {
+                    writeln!(dislike, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Hate => {
+                    writeln!(hate, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
+                LuroCharacterFetishCategory::Limit => {
+                    writeln!(limits, "- `{}`: {} - {}", fetish.fetish_id, fetish.name, fetish.description)?
+                }
             }
         }
 

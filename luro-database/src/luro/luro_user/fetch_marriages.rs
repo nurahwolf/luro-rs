@@ -1,4 +1,4 @@
-use crate::{LuroUser, DbUserMarriage};
+use crate::{DbUserMarriage, LuroUser};
 
 impl LuroUser {
     pub async fn fetch_marriages(&self) -> anyhow::Result<Vec<DbUserMarriage>> {

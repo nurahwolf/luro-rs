@@ -75,6 +75,7 @@ commands = [
     # "command-music", # Broken on twilight-lavalink
     "command-muzzle",
     "command-hello",
+    "command-images",
     "command-owner",
     "command-ping",
     "command-quote",
@@ -94,17 +95,18 @@ command-base64 = ["dep:base64"]
 command-boop = []
 command-character = []
 command-dice = ["dep:luro-dice"]
-command-roles = []
-command-marry = []
-command-muzzle = []
 command-hello = []
-command-music = ["dep:twilight-lavalink", "dep:hyper", "dep:serde_json"]
-command-quote = []
-command-ping = []
+command-images = []
+command-info = ["dep:toml", "dep:twilight-util"]
+command-marry = []
 command-moderator = []
+command-music = ["dep:twilight-lavalink", "dep:hyper", "dep:serde_json"]
+command-muzzle = []
 command-owner = ["dep:serde"]
+command-ping = []
+command-quote = []
+command-roles = []
 command-say = []
 command-story = ["dep:rand"]
 command-uwu = ["dep:uwuify"]
-command-info = ["dep:toml", "dep:twilight-util"]
 command-wordcount = []

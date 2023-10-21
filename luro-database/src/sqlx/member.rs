@@ -20,7 +20,7 @@ pub enum DbMemberType {
     MemberRemove(MemberRemove),
     MemberUpdate(Box<MemberUpdate>),
     PartialMember(Id<GuildMarker>, PartialMember),
-    LuroMember(LuroMember)
+    LuroMember(LuroMember),
 }
 
 #[derive(Clone, Debug)]

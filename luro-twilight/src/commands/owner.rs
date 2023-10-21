@@ -1,6 +1,8 @@
 use luro_database::DatabaseInteraction;
 use luro_framework::responses::Response;
-use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand, ModalInteraction, InteractionTrait};
+use luro_framework::{
+    CommandInteraction, ComponentInteraction, CreateLuroCommand, InteractionTrait, Luro, LuroCommand, ModalInteraction,
+};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::SelectMenuType;
@@ -18,8 +20,8 @@ mod clear_marriage;
 mod commands;
 mod get_message;
 mod guilds;
-mod modify_role;
 pub mod mass_assign;
+mod modify_role;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges!")]
@@ -171,7 +173,7 @@ impl CreateLuroCommand for Owner {
 async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
     let mut roles_string = String::new();
     let guild_id = ctx.guild_id.unwrap();
-    let mut roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
+    let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
     // let guild = ctx.framework.twilight_cache.guild_members(guild_id).unwrap();
     let guild = ctx.twilight_client.guild_members(guild_id).limit(1000).await?.model().await?;
@@ -240,12 +242,12 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
 async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
     let guild_id = ctx.guild_id.unwrap();
 
-    let mut roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
+    let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
     let guild = ctx.cache.guild_members(guild_id).unwrap();
     let mut members = vec![];
     for member in guild.iter() {
-        if let Ok(user) = ctx.fetch_member(&member, &guild_id).await {
+        if let Ok(user) = ctx.fetch_member(member, &guild_id).await {
             members.push(user)
         }
     }

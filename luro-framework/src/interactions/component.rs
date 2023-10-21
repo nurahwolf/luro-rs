@@ -5,8 +5,9 @@ use luro_database::LuroDatabase;
 use luro_model::response::LuroResponse;
 use twilight_model::{
     application::interaction::{message_component::MessageComponentInteractionData, Interaction, InteractionData},
+    http::interaction::InteractionResponseType,
     id::{marker::GuildMarker, Id},
-    user::User, http::interaction::InteractionResponseType,
+    user::User,
 };
 
 use crate::{traits::interaction::InteractionTrait, Context as LuroContext, Luro, LuroCommandType, LuroMutex};

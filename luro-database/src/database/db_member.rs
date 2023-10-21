@@ -2,10 +2,13 @@ use anyhow::anyhow;
 use twilight_model::{
     gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate},
     guild::{Member, PartialMember},
-    id::{marker::{GuildMarker, UserMarker}, Id},
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
 };
 
-use crate::{DbMemberType, DbMember, LuroDatabase, LuroMember};
+use crate::{DbMember, DbMemberType, LuroDatabase, LuroMember};
 
 impl From<(Id<GuildMarker>, Member)> for DbMemberType {
     fn from(data: (Id<GuildMarker>, Member)) -> Self {
@@ -60,11 +63,11 @@ impl DbMember {
         let user_id = self.user_id;
 
         // Return the member's avatar if present
-        if let Some(avatar) = self.avatar.map(|x|x.0) {
+        if let Some(avatar) = self.avatar.map(|x| x.0) {
             return Ok(match avatar.is_animated() {
                 true => format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{avatar}.gif?size=2048"),
                 false => format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{avatar}.png?size=2048"),
-            })
+            });
         }
 
         // Oterwise return their user avatar

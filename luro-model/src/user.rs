@@ -28,12 +28,11 @@ pub mod character;
 pub mod marriages;
 pub mod member;
 
-
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 /// A warpper around [User], with [Member] details if [Id<GuildMarker>] was present on type creation.
 /// Details are primarily fetched from the database, but this type can be instanced from a [User] / [Member] if that fails.
 /// Also holds some additional which are relevent to Luro only. These are empty if the type was not instanced from the database.
-/// 
+///
 /// Check [LuroUserType] to know how this type was instanced.
 pub struct LuroUser {
     /// Accent color of the user's banner.

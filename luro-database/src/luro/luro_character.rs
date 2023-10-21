@@ -1,13 +1,16 @@
 use std::sync::Arc;
 
 use crate::{
-    sqlx::user_character::{DbUserCharacter, DbCharacterFetish, DbUserFetishCategory},
-    LuroDatabase,
+    sqlx::user_character::{DbCharacterFetish, DbUserCharacter, DbUserFetishCategory},
+    LuroCharacterFetishCategory, LuroDatabase,
 };
 
-mod get_fetishes;
+mod fetch_fetishes;
+mod fetch_images;
 mod new;
+mod new_image;
 mod update_fetish;
+mod update_image;
 
 #[derive(Debug, Clone)]
 pub struct LuroCharacter {
@@ -32,32 +35,6 @@ pub struct LuroCharacterFetish {
     pub description: String,
 }
 
-impl std::fmt::Display for LuroCharacterFetishCategory {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            LuroCharacterFetishCategory::Favourite => write!(f, "Favourite"),
-            LuroCharacterFetishCategory::Love => write!(f, "Love"),
-            LuroCharacterFetishCategory::Like => write!(f, "Like"),
-            LuroCharacterFetishCategory::Neutral => write!(f, "Neutral"),
-            LuroCharacterFetishCategory::Dislike => write!(f, "Dislike"),
-            LuroCharacterFetishCategory::Hate => write!(f, "Hate"),
-            LuroCharacterFetishCategory::Limit => write!(f, "Limit"),
-        }
-    }
-}
-
-#[derive(Default)]
-pub enum LuroCharacterFetishCategory {
-    Favourite,
-    Love,
-    Like,
-    #[default]
-    Neutral,
-    Dislike,
-    Hate,
-    Limit,
-}
-
 impl From<DbCharacterFetish> for LuroCharacterFetish {
     fn from(db_fetish: DbCharacterFetish) -> Self {
         Self {
@@ -74,7 +51,7 @@ impl From<DbCharacterFetish> for LuroCharacterFetish {
                 DbUserFetishCategory::Limit => LuroCharacterFetishCategory::Limit,
             },
             name: db_fetish.name,
-            description: db_fetish.description
+            description: db_fetish.description,
         }
     }
 }
@@ -95,7 +72,7 @@ impl From<LuroCharacterFetish> for DbCharacterFetish {
                 LuroCharacterFetishCategory::Limit => DbUserFetishCategory::Limit,
             },
             name: db_fetish.name,
-            description: db_fetish.description
+            description: db_fetish.description,
         }
     }
 }
