@@ -2,7 +2,7 @@ use anyhow::Context;
 use luro_database::LuroCharacterFetish;
 use luro_database::LuroCharacterFetishCategory;
 use luro_framework::CommandInteraction;
-use luro_framework::InteractionTrait;
+
 use luro_framework::{Luro, LuroCommand};
 use luro_model::user::character::FetishCategory;
 use std::fmt::Write;
@@ -30,7 +30,7 @@ impl LuroCommand for Create {
         embed.author(|a| a.icon_url(user.avatar()).name(format!("Profile by {}", user.name())));
 
         let character = user
-            .fetch_character(&self.character)
+            .fetch_character(ctx.database.clone(), &self.character)
             .await?
             .context("Could not find that character! Was it deleted?")?;
         let fetish_total = ctx.database.get_fetishes().await?.len();

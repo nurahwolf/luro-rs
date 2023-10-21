@@ -1,5 +1,4 @@
-use luro_model::role::LuroRole;
-use sqlx::types::Json;
+use sqlx::{types::Json, FromRow};
 
 use twilight_model::{
     gateway::payload::incoming::{RoleCreate, RoleDelete, RoleUpdate},
@@ -8,17 +7,20 @@ use twilight_model::{
     util::ImageHash,
 };
 
+use crate::LuroRole;
+
 mod count_roles;
 mod delete_role;
 mod get_role;
 mod get_roles;
 mod update_role;
 
+#[derive(Clone, Debug, FromRow)]
 pub struct DbRole {
     pub colour: i32,
     pub deleted: bool,
     pub hoist: bool,
-    pub icon: Option<Json<ImageHash>>,
+    pub icon: Option<String>,
     pub role_id: i64,
     pub guild_id: i64,
     pub managed: bool,
@@ -39,7 +41,7 @@ impl From<LuroRole> for DbRole {
             flags: role.flags.bits() as i64,
             guild_id: role.guild_id.get() as i64,
             hoist: role.hoist,
-            icon: role.icon.map(Json),
+            icon: role.icon.map(|x| x.to_string()),
             managed: role.managed,
             mentionable: role.mentionable,
             name: role.name,
@@ -52,19 +54,40 @@ impl From<LuroRole> for DbRole {
     }
 }
 
-impl From<DbRole> for Role {
+impl From<DbRole> for LuroRole {
     fn from(role: DbRole) -> Self {
         Self {
-            color: role.colour as u32,
+            colour: role.colour as u32,
+            deleted: role.deleted,
+            flags: RoleFlags::from_bits_retain(role.flags as u64),
+            guild_id: Id::new(role.guild_id as u64),
             hoist: role.hoist,
-            icon: role.icon.map(|x| x.0),
-            id: Id::new(role.role_id as u64),
+            icon: role.icon.map(|x| ImageHash::parse(x.as_bytes()).unwrap()), // TODO: Error handling
             managed: role.managed,
             mentionable: role.mentionable,
             name: role.name,
             permissions: Permissions::from_bits_retain(role.permissions as u64),
             position: role.position,
+            id: Id::new(role.role_id as u64),
+            tags: role.tags.map(|x| x.0),
+            unicode_emoji: role.unicode_emoji,
+        }
+    }
+}
+
+impl From<DbRole> for Role {
+    fn from(role: DbRole) -> Self {
+        Self {
+            color: role.colour as u32,
             flags: RoleFlags::from_bits_retain(role.flags as u64),
+            hoist: role.hoist,
+            icon: role.icon.map(|x| ImageHash::parse(x.as_bytes()).unwrap()), // TODO: Error handling
+            managed: role.managed,
+            mentionable: role.mentionable,
+            name: role.name,
+            permissions: Permissions::from_bits_retain(role.permissions as u64),
+            position: role.position,
+            id: Id::new(role.role_id as u64),
             tags: role.tags.map(|x| x.0),
             unicode_emoji: role.unicode_emoji,
         }

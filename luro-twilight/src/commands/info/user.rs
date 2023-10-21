@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use std::time::Duration;
 
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use luro_model::{response::LuroResponse, user::actions_type::UserActionType};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{

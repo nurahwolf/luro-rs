@@ -1,9 +1,6 @@
 use sqlx::types::Json;
 use sqlx::Error;
 use twilight_model::gateway::payload::incoming::UserUpdate;
-use twilight_model::user::PremiumType;
-use twilight_model::user::UserFlags;
-use twilight_model::util::ImageHash;
 
 use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
 
@@ -18,7 +15,7 @@ impl LuroDatabase {
                 bot,
                 discriminator,
                 email,
-                flags,
+                user_flags,
                 locale,
                 mfa_enabled,
                 name,
@@ -37,7 +34,7 @@ impl LuroDatabase {
                 bot = $4,
                 discriminator = $5,
                 email = $6,
-                flags = $7,
+                user_flags = $7,
                 locale = $8,
                 mfa_enabled = $9,
                 name = $10,
@@ -46,22 +43,22 @@ impl LuroDatabase {
                 verified = $14
             RETURNING
                 accent_colour,
-                avatar as \"avatar: Json<ImageHash>\",
-                avatar_decoration as \"avatar_decoration: Json<ImageHash>\",
-                banner as \"banner: Json<ImageHash>\",
+                avatar,
+                avatar_decoration,
+                banner,
                 bot,
                 characters,
                 discriminator,
                 email,
-                flags as \"flags: Json<UserFlags>\",
+                user_flags,
                 global_name,
                 locale,
                 message_edits,
                 messages,
                 mfa_enabled,
                 name,
-                premium_type as \"premium_type: Json<PremiumType>\",
-                public_flags as \"public_flags: Json<UserFlags>\",
+                premium_type,
+                public_flags,
                 system,
                 user_id,
                 user_permissions as \"user_permissions: LuroUserPermissions\",

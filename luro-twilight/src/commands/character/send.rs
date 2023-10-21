@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use std::fmt::Write;
@@ -18,12 +18,12 @@ pub struct CharacterSend {
 impl LuroCommand for CharacterSend {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user = ctx.fetch_user(&ctx.author.user_id()).await?;
-        let character = match user.fetch_character(&self.name).await? {
+        let character = match user.fetch_character(ctx.database.clone(), &self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for (character_name, character) in user.fetch_characters().await? {
+                for (character_name, character) in user.fetch_characters(ctx.database.clone()).await? {
                     writeln!(characters, "- {character_name}: {}", character.sfw_summary)?
                 }
 

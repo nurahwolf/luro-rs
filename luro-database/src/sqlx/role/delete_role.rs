@@ -1,7 +1,6 @@
 use twilight_model::guild::RoleTags;
 
 use sqlx::types::Json;
-use twilight_model::util::ImageHash;
 
 use crate::{DbRole, LuroDatabase};
 
@@ -22,7 +21,7 @@ impl LuroDatabase {
                 colour,
                 deleted,
                 hoist,
-                icon as \"icon: Json<ImageHash>\",
+                icon,
                 role_id,
                 guild_id,
                 managed,

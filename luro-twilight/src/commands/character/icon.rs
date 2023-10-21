@@ -1,5 +1,5 @@
 use anyhow::Context;
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 use super::character_response;
@@ -19,7 +19,10 @@ impl LuroCommand for Icon {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author.user_id();
         let user = ctx.fetch_user(&user_id).await?;
-        let character = user.fetch_character(&self.name).await?.context("No character with that name!")?;
+        let character = user
+            .fetch_character(ctx.database.clone(), &self.name)
+            .await?
+            .context("No character with that name!")?;
         let nsfw = ctx.channel.nsfw.unwrap_or_default();
 
         character_response(ctx, &character, &user, nsfw).await

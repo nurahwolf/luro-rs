@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionTrait};
+use luro_framework::{CommandInteraction, CreateLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]

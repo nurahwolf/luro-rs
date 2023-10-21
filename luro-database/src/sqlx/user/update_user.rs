@@ -8,7 +8,8 @@ impl LuroDatabase {
 
         match user {
             DatabaseUserType::User(user) => self.handle_user(user).await,
-            DatabaseUserType::LuroUser(user) => self.handle_luro_user(user).await,
+            // DatabaseUserType::LuroUser(user) => self.handle_luro_user(user).await,
+            DatabaseUserType::LuroUser(user) => todo!(),
             DatabaseUserType::UserUpdate(user) => self.handle_user_update(user).await,
         }
     }

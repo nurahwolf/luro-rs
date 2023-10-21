@@ -8,7 +8,6 @@ use twilight_model::{
     channel::Message,
     http::interaction::InteractionResponseType,
     id::{marker::GuildMarker, Id},
-    user::User,
 };
 
 use crate::{InteractionTrait, Luro, LuroContext};
@@ -51,7 +50,10 @@ pub struct ComponentInteraction {
 impl Luro for ComponentInteraction {
     fn accent_colour(&self) -> u32 {
         match &self.guild {
-            Some(guild) => guild.custom_accent_colour.unwrap_or(guild.accent_colour.unwrap_or(ACCENT_COLOUR)),
+            Some(guild) => match &guild.data {
+                Some(guild) => guild.accent_colour_custom.unwrap_or(guild.accent_colour.unwrap_or(ACCENT_COLOUR)),
+                None => ACCENT_COLOUR,
+            },
             None => ACCENT_COLOUR, // There is no guild for this interaction
         }
     }

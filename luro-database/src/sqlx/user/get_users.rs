@@ -1,8 +1,3 @@
-use sqlx::types::Json;
-use twilight_model::user::PremiumType;
-use twilight_model::user::UserFlags;
-use twilight_model::util::ImageHash;
-
 use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
 
 impl LuroDatabase {
@@ -11,22 +6,22 @@ impl LuroDatabase {
             DatabaseUser,
             "SELECT
                 accent_colour,
-                avatar as \"avatar: Json<ImageHash>\",
-                avatar_decoration as \"avatar_decoration: Json<ImageHash>\",
-                banner as \"banner: Json<ImageHash>\",
+                avatar,
+                avatar_decoration,
+                banner,
                 bot,
                 characters,
                 discriminator,
                 email,
-                flags as \"flags: Json<UserFlags>\",
+                user_flags,
                 global_name,
                 locale,
                 message_edits,
                 messages,
                 mfa_enabled,
                 name,
-                premium_type as \"premium_type: Json<PremiumType>\",
-                public_flags as \"public_flags: Json<UserFlags>\",
+                premium_type,
+                public_flags,
                 system,
                 user_id,
                 user_permissions as \"user_permissions: LuroUserPermissions\",

@@ -1,7 +1,7 @@
 use anyhow::Context;
 use luro_database::{DatabaseInteraction, LuroCharacter, LuroCharacterFetishCategory, LuroUser};
 use luro_framework::{
-    CommandInteraction, ComponentInteraction, InteractionTrait, Luro, ModalInteraction, {CreateLuroCommand, LuroCommand},
+    CommandInteraction, ComponentInteraction, Luro, ModalInteraction, {CreateLuroCommand, LuroCommand},
 };
 use std::fmt::Write;
 use twilight_interactions::command::{AutocompleteValue, CommandModel, CreateCommand};
@@ -63,7 +63,7 @@ impl CreateLuroCommand for Character {
         let sfw_description = ctx.parse_field_required("character-sfw-description")?;
         let nsfw_description = ctx.parse_field("character-nsfw-description")?;
 
-        let character = user.fetch_character(character_name).await?;
+        let character = user.fetch_character(ctx.database.clone(), character_name).await?;
         let mut character = match character {
             Some(mut character) => {
                 character.sfw_description = sfw_description.to_owned();
@@ -93,7 +93,7 @@ impl CreateLuroCommand for Character {
             },
         };
 
-        character = user.update_character_text(character).await?;
+        character = user.update_character_text(ctx.database.clone(), character).await?;
         character_response(ctx, &character, &user, nsfw).await
     }
 
@@ -106,7 +106,7 @@ impl CreateLuroCommand for Character {
             _ => return ctx.respond(|r| r.content("Invalid command").ephemeral()).await,
         };
         let character = user
-            .fetch_character(&character_name)
+            .fetch_character(ctx.database.clone(), &character_name)
             .await?
             .context("Could not find that character! Was it deleted?")?;
 
@@ -179,7 +179,7 @@ impl CreateLuroCommand for Character {
 
     async fn interaction_autocomplete(ctx: CommandInteraction) -> anyhow::Result<()> {
         let user = ctx.fetch_user(&ctx.author.user_id()).await?;
-        let characters = user.fetch_characters().await?;
+        let characters = user.fetch_characters(ctx.database.clone()).await?;
 
         let choices = match CharacterNameAutocomplete::from_interaction((*ctx.data.clone()).into())?.name {
             AutocompleteValue::None => characters

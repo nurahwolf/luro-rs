@@ -12,45 +12,46 @@ use twilight_model::id::{
 pub struct InfoRole {
     /// The role to get
     role: Id<RoleMarker>,
+    /// Show the role position
+    show_position: bool,
     /// The guild to get the role from
     guild: Option<Id<GenericMarker>>,
-    /// Show guild roles as well
-    guid_roles: Option<bool>,
 }
 
 impl LuroCommand for InfoRole {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
-        let guild = match &ctx.guild {
-            Some(guild) => guild,
-            None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+        let guild = match self.guild {
+            Some(guild_requested) => ctx.get_guild(&guild_requested.cast()).await?,
+            None => match &ctx.guild {
+                Some(guild) => guild.clone(),
+                None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+            },
         };
+        let guild_roles = ctx.get_guild_roles(&guild.guild_id(), false).await?;
+        let role = ctx.fetch_role(self.role).await?;
 
         embed.title(format!("{}'s roles", guild.name));
+        embed.create_field("Role Position", &format!("`{}`", role.position), true);
 
-        // for (position, role_id) in &guild.role_positions {
-        //     if role_id == &self.role {
-        //         embed.create_field("Role Position", &format!("`{position}`"), true);
-        //     }
-        // }
+        for role in &guild_roles {
+            if role.id == self.role {
+                embed.create_field("Role Name", &format!("`{}`", role.name), true);
+                embed.create_field("Role Colour", &format!("`{}`", role.color), true);
+            }
+        }
 
-        // if let Some(role) = guild.roles.get(&self.role) {
-        //     embed.create_field("Role Name", &format!("`{}`", role.name), true);
-        //     embed.create_field("Role Colour", &format!("`{}`", role.colour), true);
-        // }
-
-        // if self.guid_roles.unwrap_or_default() {
-        //     let mut description = String::new();
-        //     guild.sort_roles();
-        //     for luro_role in guild.role_positions.values() {
-        //         if luro_role == &self.role {
-        //             writeln!(description, "--> <@&{}> <--", luro_role)?;
-        //             continue;
-        //         }
-        //         writeln!(description, "<@&{}>", luro_role)?;
-        //     }
-        //     embed.description(description);
-        // }
+        if self.show_position {
+            let mut description = String::new();
+            for role in guild_roles {
+                if role.id == self.role {
+                    writeln!(description, "--> <@&{}> <--", role.id)?;
+                    continue;
+                }
+                writeln!(description, "<@&{}>", role.id)?;
+            }
+            embed.description(description);
+        }
 
         ctx.respond(|r| r.add_embed(embed)).await
     }

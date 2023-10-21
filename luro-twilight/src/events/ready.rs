@@ -39,7 +39,7 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
             let mut user = framework.fetch_user(&staff).await?;
             if let Some(ref mut user_data) = user.data {
                 user_data.permissions = LuroUserPermissions::Administrator;
-                user.sync().await?;
+                user.push_changes(framework.database.clone()).await?;
             }
         }
 
@@ -47,7 +47,7 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
         let mut owner = framework.fetch_user(&PRIMARY_BOT_OWNER).await?;
         if let Some(ref mut user_data) = owner.data {
             user_data.permissions = LuroUserPermissions::Owner;
-            owner.sync().await?;
+            owner.push_changes(framework.database.clone()).await?;
         }
 
         staff = framework.database.get_staff().await?;

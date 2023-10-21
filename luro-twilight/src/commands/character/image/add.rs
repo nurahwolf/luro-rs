@@ -1,6 +1,6 @@
 use anyhow::Context;
 use luro_database::LuroCharacterImage;
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
@@ -25,7 +25,10 @@ pub struct Add {
 impl LuroCommand for Add {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user = ctx.fetch_user(&ctx.author.user_id()).await?;
-        let character = user.fetch_character(&self.character).await?.context("Expected to get character")?;
+        let character = user
+            .fetch_character(ctx.database.clone(), &self.character)
+            .await?
+            .context("Expected to get character")?;
 
         let img = character
             .new_image(LuroCharacterImage {

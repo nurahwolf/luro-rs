@@ -2,7 +2,7 @@ use luro_model::{guild::log_channel::LuroLogChannel, response::LuroResponse};
 use tracing::debug;
 use twilight_model::{channel::Message, id::Id};
 
-use crate::{CommandInteraction, Luro};
+use crate::CommandInteraction;
 
 impl CommandInteraction {
     /// Attempts to send to a log channel if it is present.

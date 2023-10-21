@@ -1,8 +1,6 @@
 use luro_database::DatabaseInteraction;
 use luro_framework::standard_response::Response;
-use luro_framework::{
-    CommandInteraction, ComponentInteraction, CreateLuroCommand, InteractionTrait, Luro, LuroCommand, ModalInteraction,
-};
+use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand, ModalInteraction};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::SelectMenuType;
@@ -87,7 +85,7 @@ impl CreateLuroCommand for Owner {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut authorised = false;
         for staff in ctx.database.get_staff().await? {
-            if staff.user_id() == ctx.author.user_id() {
+            if staff.user_id == ctx.author.user_id {
                 authorised = true
             }
         }
@@ -177,8 +175,14 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
         Some(guild) => guild,
         None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
     };
+    let guild_roles = ctx.get_guild_roles(&guild.guild_id(), false).await?;
+
     let mut roles_string = String::new();
-    // let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
+    for role in &guild_roles {
+        writeln!(roles_string, "- <@&{}>", role.id)?;
+    }
+
+    let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
     // let mut users = vec![];
     // for member in guild.into_iter() {
@@ -204,10 +208,6 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
     //         found
     //     }),
     // };
-
-    // for role in &roles {
-    //     writeln!(roles_string, "- <@&{role}>")?;
-    // }
 
     // ctx.respond( |response| {
     //     {

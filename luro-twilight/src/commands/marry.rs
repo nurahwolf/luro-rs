@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context};
 use luro_database::{DatabaseInteraction, DbUserMarriage, DbUserMarriageApprovals};
-use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
 
 use luro_framework::standard_response::Response;
 use luro_model::COLOUR_DANGER;

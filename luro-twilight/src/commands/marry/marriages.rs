@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::Id;
@@ -16,7 +16,7 @@ impl LuroCommand for Marriages {
         let author = ctx
             .fetch_user(&self.user.map(|x| x.resolved.id).unwrap_or(ctx.author.user_id()))
             .await?;
-        let marriages = author.fetch_marriages().await?;
+        let marriages = author.fetch_marriages(ctx.database.clone()).await?;
 
         let mut marriages_detailed = vec![];
         let mut rejected_proposals = 0;

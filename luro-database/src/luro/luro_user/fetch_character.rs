@@ -1,14 +1,14 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
-use crate::{LuroCharacter, LuroUser};
+use crate::{LuroCharacter, LuroDatabase, LuroUser};
 
 impl LuroUser {
-    pub async fn fetch_characters(&self) -> anyhow::Result<HashMap<String, LuroCharacter>> {
+    pub async fn fetch_characters(&self, db: Arc<LuroDatabase>) -> anyhow::Result<HashMap<String, LuroCharacter>> {
         let mut map = HashMap::new();
-        let characters = self.db.get_user_characters(self.user_id).await?;
+        let characters = db.get_user_characters(self.user_id).await?;
 
         for character in characters {
-            map.insert(character.character_name.clone(), LuroCharacter::new(character, self.db.clone()));
+            map.insert(character.character_name.clone(), LuroCharacter::new(character, db.clone()));
         }
 
         Ok(map)

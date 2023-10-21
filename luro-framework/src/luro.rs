@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context};
-use luro_database::{DbMember, LuroDatabase, LuroGuild, LuroUser, LuroUserType};
+use luro_database::{DbMember, LuroDatabase, LuroGuild, LuroMember, LuroRole, LuroUser, LuroUserType};
 use luro_model::{builders::EmbedBuilder, response::LuroResponse, ACCENT_COLOUR};
 use std::{future::Future, sync::Arc};
 use tracing::{error, info, warn};
@@ -91,7 +91,7 @@ pub trait Luro {
         Self: Sync,
     {
         async {
-            Ok(match self.database().get_guild(guild_id.get() as i64).await? {
+            Ok(match self.database().get_guild(guild_id).await? {
                 Some(guild) => guild.into(),
                 None => self
                     .database()
@@ -125,33 +125,7 @@ pub trait Luro {
     where
         Self: Sync,
     {
-        async move {
-            let mut member = self.fetch_user_only(user_id).await?;
-
-            if let Ok(Some(db_member)) = self.database().get_member(user_id.get() as i64, guild_id.get() as i64).await {
-                member.update_member(db_member);
-                return Ok(member);
-            }
-
-            warn!("Failed to get member '{user_id}' in guild '{guild_id}' from the database, falling back...");
-            let twilight_member = self.twilight_client().guild_member(*guild_id, *user_id).await?.model().await?;
-
-            Ok(match self.database().update_member((*guild_id, twilight_member.clone())).await {
-                Ok(Some(db_member)) => {
-                    member.update_member(db_member);
-                    return Ok(member);
-                }
-                Ok(None) => {
-                    error!("New member was not returned from the database");
-                    LuroUserType::Member(self.database(), twilight_member, *guild_id)
-                }
-                Err(why) => {
-                    error!("Failed to write new member to database: {why}");
-                    LuroUserType::Member(self.database(), twilight_member, *guild_id)
-                }
-            }
-            .into())
-        }
+        async { LuroUser::new(self.database(), user_id.clone(), Some(guild_id.clone())).await }
     }
 
     /// Fetch and return a [LuroUser], updating the database if not present. This version does not check if a guild is present.
@@ -160,23 +134,7 @@ pub trait Luro {
     where
         Self: Sync,
     {
-        async move {
-            if let Ok(Some(user)) = self.database().get_user(user_id.get() as i64).await {
-                return Ok(LuroUserType::DbUser(self.database(), user).into());
-            }
-
-            warn!("Failed to get user '{user_id}' from the database, falling back to twilight.");
-            let twilight_user = self.twilight_client().user(*user_id).await?.model().await?;
-
-            Ok(match self.database().update_user(twilight_user.clone()).await {
-                Ok(user) => LuroUserType::DbUser(self.database(), user),
-                Err(why) => {
-                    error!("Failed to write new member to database: {why}");
-                    LuroUserType::User(self.database(), twilight_user)
-                }
-            }
-            .into())
-        }
+        async { LuroUser::new(self.database(), user_id.clone(), None).await }
     }
 
     /// Fetch and return a [LuroGuild], updating the database if not present. This version gets a member if a guild is present.
@@ -193,60 +151,17 @@ pub trait Luro {
         }
     }
 
-    /// Fetch and return a [DbMember], updating the database if the user is not present.
-    /// Luro Database -> Twilight Client
-    fn get_member(
-        &self,
-        user_id: &Id<UserMarker>,
-        guild_id: &Id<GuildMarker>,
-    ) -> impl std::future::Future<Output = anyhow::Result<DbMember>> + Send
-    where
-        Self: Sync,
-    {
-        async move {
-            if let Ok(Some(member)) = self.database().get_member(user_id.get() as i64, guild_id.get() as i64).await {
-                return Ok(member);
-            };
-
-            warn!("Failed to get user '{user_id}' from the database, falling back...");
-
-            let twilight_member = self.twilight_client().guild_member(*guild_id, *user_id).await?.model().await?;
-            match self.database().update_member((*guild_id, twilight_member.clone())).await {
-                Ok(member) => Ok(member.context("Expected member to be returned from database")?),
-                Err(why) => {
-                    error!("Failed to write new member to database: {why}");
-                    Ok(DbMember::new(guild_id.get() as i64, twilight_member))
-                }
-            }
-        }
-    }
-
     /// Fetch and return a [LuroGuild], updating the database if not present
     /// Luro Database -> Twilight Cache
-    fn get_role(&self, role_id: Id<RoleMarker>) -> impl Future<Output = anyhow::Result<Role>> + Send
+    fn fetch_role(&self, role_id: Id<RoleMarker>) -> impl Future<Output = anyhow::Result<LuroRole>> + Send
     where
         Self: Sync,
     {
-        async move {
-            if let Ok(Some(role)) = self.database().get_role(role_id.get() as i64).await {
-                return Ok(role.into());
-            }
-
-            let cache = self.cache();
-            let cached_role = match cache.role(role_id) {
-                Some(role) => role,
-                None => return Err(anyhow!("No role referance in cache or database: {role_id}")),
-            };
-
-            Ok(self
-                .database()
-                .update_role((cached_role.guild_id(), cached_role.resource().clone()))
-                .await?
-                .into())
-        }
+        async move { LuroRole::new(self.database(), role_id).await }
     }
 
-    /// Fetch all guild roles. Set bypass to true to force a flush of all roles, if you want to make sure we have the most up to date roles possible, such as for highly privileged commands.
+    /// Fetch all guild roles.
+    /// Set bypass to true to force a flush of all roles, if you want to make sure we have the most up to date roles possible, such as for highly privileged commands.
     fn get_guild_roles(
         &self,
         guild_id: &Id<GuildMarker>,
@@ -269,7 +184,7 @@ pub trait Luro {
 
             // Get from database
             if let Ok(roles) = self.database().get_guild_roles(guild_id.get() as i64).await {
-                return Ok(roles.into_iter().map(|x| x.into()).collect::<Vec<Role>>());
+                return Ok(roles.into_iter().map(|x| x.into()).collect::<Vec<_>>());
             }
 
             // Database failed, fetch from client.

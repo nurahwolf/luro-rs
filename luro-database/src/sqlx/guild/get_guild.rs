@@ -1,3 +1,5 @@
+use twilight_model::id::{marker::GuildMarker, Id};
+
 use crate::{DatabaseGuild, LuroDatabase};
 
 impl LuroDatabase {
@@ -13,8 +15,8 @@ impl LuroDatabase {
         .await
     }
 
-    pub async fn get_guild(&self, id: i64) -> Result<Option<DatabaseGuild>, sqlx::Error> {
-        sqlx::query_as!(DatabaseGuild, "SELECT * FROM guilds WHERE guild_id = $1", id)
+    pub async fn get_guild(&self, guild_id: &Id<GuildMarker>) -> Result<Option<DatabaseGuild>, sqlx::Error> {
+        sqlx::query_as!(DatabaseGuild, "SELECT * FROM guilds WHERE guild_id = $1", guild_id.get() as i64)
             .fetch_optional(&self.pool)
             .await
     }

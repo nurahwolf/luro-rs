@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use rand::{seq::SliceRandom, thread_rng};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -18,12 +18,12 @@ impl LuroCommand for Proxy {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user_id = ctx.author.user_id();
         let user = ctx.fetch_user(&user_id).await?;
-        let mut character = match user.fetch_character(&self.name).await? {
+        let mut character = match user.fetch_character(ctx.database.clone(), &self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for (character_name, character) in user.fetch_characters().await? {
+                for (character_name, character) in user.fetch_characters(ctx.database.clone()).await? {
                     writeln!(characters, "- {character_name}: {}", character.sfw_summary)?
                 }
 
@@ -34,7 +34,7 @@ impl LuroCommand for Proxy {
 
         if self.remove.unwrap_or_default() {
             character.prefix = None;
-            user.update_character(character).await?;
+            user.update_character(ctx.database.clone(), character).await?;
             return ctx
                 .respond(|r| {
                     r.content(format!("Prefix `{}` removed from character {}!", self.prefix, self.name))
@@ -44,7 +44,7 @@ impl LuroCommand for Proxy {
         }
 
         character.prefix = Some(self.prefix);
-        user.update_character(character.clone()).await?;
+        user.update_character(ctx.database.clone(), character.clone()).await?;
 
         let accent_colour = ctx.accent_colour();
         let character_icon = character

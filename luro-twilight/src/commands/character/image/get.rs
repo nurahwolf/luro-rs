@@ -1,5 +1,5 @@
 use anyhow::Context;
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::ButtonStyle;
@@ -21,7 +21,10 @@ impl LuroCommand for Get {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let nsfw = self.nsfw.unwrap_or(ctx.channel.nsfw.unwrap_or_default());
         let user = ctx.fetch_user(&ctx.author.user_id()).await?;
-        let character = user.fetch_character(&self.character).await?.context("Expected to get character")?;
+        let character = user
+            .fetch_character(ctx.database.clone(), &self.character)
+            .await?
+            .context("Expected to get character")?;
         let images = character.fetch_images().await?;
 
         let mut nsfw_images = vec![];

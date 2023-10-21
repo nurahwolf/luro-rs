@@ -9,10 +9,13 @@ mod toml;
 mod database;
 mod luro; // Functionality meant to be consumed by users of this crate. Names are prefixed with 'Luro'. // Standard Database functionality
 
+pub mod sync; // Types used by the database drivers in order to sync data to the backend driver
+
 pub use crate::luro::{
     luro_character::LuroCharacter, luro_character::LuroCharacterFetish, luro_character_fetish::LuroCharacterFetishCategory,
     luro_character_image::LuroCharacterImage, luro_guild::LuroGuild, luro_guild_alert_channels::GuildAlertChannels,
-    luro_image::LuroImage, luro_member::LuroMember, luro_user::LuroUser, luro_user_data::LuroUserData, luro_user_type::LuroUserType,
+    luro_guild_data::LuroGuildData, luro_image::LuroImage, luro_member::LuroMember, luro_role::LuroRole, luro_user::LuroUser,
+    luro_user_data::LuroUserData, luro_user_type::LuroUserType,
 };
 
 #[cfg(feature = "diesel-driver")]
@@ -21,7 +24,7 @@ pub use crate::diesel::{DatabaseGuild, DatabaseInteraction, DatabaseInteractionK
 pub use crate::sqlx::{
     application::{DbApplication, DbApplicationType},
     channel::{DbChannel, DbChannelType},
-    guild::{DatabaseGuild, DatabaseGuildType},
+    guild::DatabaseGuild,
     interaction::{DatabaseInteraction, DatabaseInteractionKind},
     luro_database::LuroDatabase,
     member::{DbMember, DbMemberType},

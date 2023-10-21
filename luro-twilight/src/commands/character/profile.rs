@@ -34,12 +34,12 @@ impl LuroCommand for Profile {
             None => ctx.channel.nsfw.unwrap_or_default(),
         };
 
-        let character = match user.fetch_character(&self.name).await? {
+        let character = match user.fetch_character(ctx.database.clone(), &self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for (character_name, character) in user.fetch_characters().await? {
+                for (character_name, character) in user.fetch_characters(ctx.database.clone()).await? {
                     writeln!(characters, "- {character_name}: {}", character.sfw_summary)?
                 }
 

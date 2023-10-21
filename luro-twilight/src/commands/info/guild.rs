@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use luro_framework::{CommandInteraction, InteractionTrait, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     http::attachment::Attachment,
@@ -18,9 +18,12 @@ pub struct Guild {
 
 impl LuroCommand for Guild {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let guild = match &ctx.guild {
-            Some(guild) => guild,
-            None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+        let guild = match self.guild {
+            Some(guild_requested) => ctx.get_guild(&guild_requested.cast()).await?,
+            None => match &ctx.guild {
+                Some(guild) => guild.clone(),
+                None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+            },
         };
         let mut luro_guild = String::new();
         let mut guild_description = String::new();

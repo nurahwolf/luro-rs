@@ -5,7 +5,6 @@ use twilight_model::{
 };
 
 use sqlx::types::Json;
-use twilight_model::util::ImageHash;
 
 use crate::{DbRole, DbRoleType, LuroDatabase};
 
@@ -65,7 +64,7 @@ async fn handle_role(db: &LuroDatabase, role: impl Into<DbRole>) -> Result<DbRol
             flags,
             guild_id,
             hoist,
-            icon as \"icon: Json<ImageHash>\",
+            icon,
             managed,
             mentionable,
             name,
@@ -132,7 +131,7 @@ async fn handle_role_create(db: &LuroDatabase, role: RoleCreate) -> Result<DbRol
             flags,
             guild_id,
             hoist,
-            icon as \"icon: Json<ImageHash>\",
+            icon,
             managed,
             mentionable,
             name,
@@ -199,7 +198,7 @@ async fn handle_role_update(db: &LuroDatabase, role: RoleUpdate) -> Result<DbRol
             flags,
             guild_id,
             hoist,
-            icon as \"icon: Json<ImageHash>\",
+            icon,
             managed,
             mentionable,
             name,
@@ -266,7 +265,7 @@ async fn handle_twilight_role(db: &LuroDatabase, role: Role, guild_id: Id<GuildM
             flags,
             guild_id,
             hoist,
-            icon as \"icon: Json<ImageHash>\",
+            icon,
             managed,
             mentionable,
             name,

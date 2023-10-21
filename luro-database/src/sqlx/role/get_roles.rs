@@ -13,7 +13,7 @@ impl LuroDatabase {
                 flags,
                 guild_id,
                 hoist,
-                icon as \"icon: Json<ImageHash>\",
+                icon,
                 managed,
                 mentionable,
                 name,
