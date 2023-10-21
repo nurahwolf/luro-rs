@@ -1,7 +1,7 @@
-use luro_framework::Context;
+use luro_framework::LuroContext;
 use twilight_model::gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate};
 
-pub async fn update(ctx: Context, event: Box<MemberUpdate>) -> anyhow::Result<()> {
+pub async fn update(ctx: LuroContext, event: Box<MemberUpdate>) -> anyhow::Result<()> {
     #[cfg(feature = "pretty-tables")]
     let mut builder = tabled::builder::Builder::new();
     builder.push_record(["ID", &event.user.id.to_string()]);
@@ -20,7 +20,7 @@ pub async fn update(ctx: Context, event: Box<MemberUpdate>) -> anyhow::Result<()
     Ok(())
 }
 
-pub async fn add(ctx: Context, event: Box<MemberAdd>) -> anyhow::Result<()> {
+pub async fn add(ctx: LuroContext, event: Box<MemberAdd>) -> anyhow::Result<()> {
     #[cfg(feature = "pretty-tables")]
     let mut builder = tabled::builder::Builder::new();
     builder.push_record(["ID", &event.user.id.to_string()]);
@@ -39,7 +39,7 @@ pub async fn add(ctx: Context, event: Box<MemberAdd>) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn delete(ctx: Context, event: MemberRemove) -> anyhow::Result<()> {
+pub async fn delete(ctx: LuroContext, event: MemberRemove) -> anyhow::Result<()> {
     #[cfg(feature = "pretty-tables")]
     let mut builder = tabled::builder::Builder::new();
     builder.push_record(["ID", &event.user.id.to_string()]);
@@ -58,7 +58,7 @@ pub async fn delete(ctx: Context, event: MemberRemove) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn chunk(ctx: Context, event: MemberChunk) -> anyhow::Result<()> {
+pub async fn chunk(ctx: LuroContext, event: MemberChunk) -> anyhow::Result<()> {
     #[cfg(feature = "pretty-tables")]
     let mut builder = tabled::builder::Builder::new();
     builder.push_record(["IDs", &format!("{:#?}", event.members)]);

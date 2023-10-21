@@ -1,7 +1,7 @@
-use luro_framework::Context;
+use luro_framework::LuroContext;
 use twilight_model::gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate};
 
-pub async fn create(ctx: Context, event: Box<ChannelCreate>) -> anyhow::Result<()> {
+pub async fn create(ctx: LuroContext, event: Box<ChannelCreate>) -> anyhow::Result<()> {
     #[cfg(feature = "pretty-tables")]
     let mut builder = tabled::builder::Builder::new();
     if let Some(name) = &event.name {
@@ -23,7 +23,7 @@ pub async fn create(ctx: Context, event: Box<ChannelCreate>) -> anyhow::Result<(
     Ok(())
 }
 
-pub async fn pins_update(ctx: Context, event: ChannelPinsUpdate) -> anyhow::Result<()> {
+pub async fn pins_update(ctx: LuroContext, event: ChannelPinsUpdate) -> anyhow::Result<()> {
     #[cfg(feature = "pretty-tables")]
     let mut builder = tabled::builder::Builder::new();
     builder.push_record(["ID", &event.channel_id.to_string()]);
@@ -44,7 +44,7 @@ pub async fn pins_update(ctx: Context, event: ChannelPinsUpdate) -> anyhow::Resu
     Ok(())
 }
 
-pub async fn delete(ctx: Context, event: Box<ChannelDelete>) -> anyhow::Result<()> {
+pub async fn delete(ctx: LuroContext, event: Box<ChannelDelete>) -> anyhow::Result<()> {
     #[cfg(feature = "pretty-tables")]
     let mut builder = tabled::builder::Builder::new();
     if let Some(name) = &event.name {
@@ -66,7 +66,7 @@ pub async fn delete(ctx: Context, event: Box<ChannelDelete>) -> anyhow::Result<(
     Ok(())
 }
 
-pub async fn update(ctx: Context, event: Box<ChannelUpdate>) -> anyhow::Result<()> {
+pub async fn update(ctx: LuroContext, event: Box<ChannelUpdate>) -> anyhow::Result<()> {
     #[cfg(feature = "pretty-tables")]
     let mut builder = tabled::builder::Builder::new();
     if let Some(name) = &event.name {

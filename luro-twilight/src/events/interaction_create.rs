@@ -1,11 +1,11 @@
-use luro_framework::{Context, InteractionContext};
+use luro_framework::{LuroContext, InteractionContext};
 
 use tracing::{error, warn};
 use twilight_model::gateway::payload::incoming::InteractionCreate;
 
 use crate::commands::handle_interaction;
 
-pub async fn interaction_create_listener(ctx: Context, event: Box<InteractionCreate>) -> anyhow::Result<()> {
+pub async fn interaction_create_listener(ctx: LuroContext, event: Box<InteractionCreate>) -> anyhow::Result<()> {
     if let Some(channel) = &event.channel {
         if let Err(why) = ctx.database.update_channel(channel.clone()).await {
             warn!("Failed to update channel: {why}")

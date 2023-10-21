@@ -56,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
             Ok(event) => event,
         };
 
-        rt.spawn(events::event_handler(luro_framework::Context::new(
+        rt.spawn(events::event_handler(luro_framework::LuroContext::new(
             framework.clone(),
             event,
             shard.latency().clone(),

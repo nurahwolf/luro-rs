@@ -1,5 +1,5 @@
 use luro_database::{DatabaseUser, LuroUserPermissions};
-use luro_framework::{Context, Luro};
+use luro_framework::{LuroContext, Luro};
 use luro_model::{BOT_OWNERS, PRIMARY_BOT_OWNER};
 use tracing::{info, warn};
 use twilight_model::gateway::{
@@ -9,7 +9,7 @@ use twilight_model::gateway::{
 
 use crate::commands::default_commands;
 
-pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Result<()> {
+pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow::Result<()> {
     info!("Luro is now ready!");
     info!("==================");
 
@@ -67,7 +67,7 @@ pub async fn ready_listener(framework: Context, event: Box<Ready>) -> anyhow::Re
 }
 
 #[cfg(not(feature = "pretty-tables"))]
-async fn standard_output(framework: &Context, event: &Box<Ready>, staff: HashMap<Id<UserMarker>, LuroUser>) {
+async fn standard_output(framework: &LuroContext, event: &Box<Ready>, staff: HashMap<Id<UserMarker>, LuroUser>) {
     info!("Username:       {}", event.user.name);
     info!("ID:             {}", event.user.id);
     info!("Guilds:         {}", event.guilds.len());
@@ -78,7 +78,7 @@ async fn standard_output(framework: &Context, event: &Box<Ready>, staff: HashMap
 }
 
 #[cfg(feature = "pretty-tables")]
-async fn pretty_output(framework: &Context, event: &Ready, staff: Vec<DatabaseUser>) {
+async fn pretty_output(framework: &LuroContext, event: &Ready, staff: Vec<DatabaseUser>) {
     let mut builder = tabled::builder::Builder::new();
     if let Some(latency) = framework.latency.average() {
         builder.push_record(["API Latency", &latency.as_millis().to_string()]);

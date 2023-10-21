@@ -1,11 +1,11 @@
-use std::{collections::HashMap, fs, path::PathBuf, sync::Arc};
+use std::{fs, path::PathBuf, sync::Arc};
 
 use luro_database::LuroDatabase;
 use luro_model::configuration::Configuration;
 use twilight_gateway::{stream, Shard};
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::{Context, Luro, LuroCommandType, LuroMutex};
+use crate::{LuroContext, Luro};
 
 #[cfg(feature = "luro-builder")]
 mod default_embed;
@@ -36,10 +36,6 @@ pub struct Framework {
     pub twilight_client: Arc<twilight_http::Client>,
     /// The global tracing subscriber, for allowing manipulation within commands
     pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
-    /// A mutable list of global commands, keyed by [String] (command name) and containing a [ApplicationCommandData]
-    pub global_commands: LuroMutex<LuroCommandType>,
-    /// A mutable list of guild commands, keyed by [GuildMarker] and containing [LuroCommand]s
-    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
 }
 
 impl Framework {
@@ -76,8 +72,6 @@ impl Framework {
             #[cfg(feature = "http-client-hyper")]
             http_client,
             database,
-            global_commands: Default::default(),
-            guild_commands: Default::default(),
             #[cfg(feature = "lavalink")]
             lavalink,
             tracing_subscriber: config.tracing_subscriber.clone(),
@@ -112,13 +106,11 @@ impl Luro for Framework {
     }
 }
 
-impl From<Context> for Framework {
-    fn from(framework: Context) -> Self {
+impl From<LuroContext> for Framework {
+    fn from(framework: LuroContext) -> Self {
         Self {
             cache: framework.cache,
             database: framework.database,
-            global_commands: framework.global_commands,
-            guild_commands: framework.guild_commands,
             http_client: framework.http_client,
             #[cfg(feature = "lavalink")]
             lavalink: framework.lavalink,

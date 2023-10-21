@@ -1,26 +1,30 @@
 #![feature(async_fn_in_trait)]
 #![feature(return_position_impl_trait_in_trait)]
 
-pub mod context;
-mod framework;
-pub mod interactions;
 #[cfg(feature = "responses")]
 pub mod responses;
-pub mod slash_command;
-pub mod traits;
 
-type LuroCommandType = std::collections::HashMap<String, OldLuroCommand>;
-type LuroMutex<T> = std::sync::Arc<std::sync::Mutex<T>>;
+mod command_interaction;
+mod component_interaction;
+mod create_luro_command;
+mod interaction_context;
+mod interaction;
+mod luro_command;
+mod luro_context;
+mod luro_framework;
+mod luro_interaction;
+mod luro;
+mod modal_interaction;
 
 pub use crate::{
-    context::Context,
-    framework::Framework,
-    interactions::{
-        command::CommandInteraction, component::ComponentInteraction, interaction_context::InteractionContext, modal::ModalInteraction,
-    },
-    slash_command::{CommandResult, LuroCommand as OldLuroCommand},
-    traits::{
-        create_luro_command::CreateLuroCommand, interaction::InteractionTrait, luro::Luro, luro_command::LuroCommand,
-        luro_interaction::LuroInteraction,
-    },
+    command_interaction::CommandInteraction,
+    component_interaction::ComponentInteraction,
+    create_luro_command::CreateLuroCommand,
+    interaction_context::InteractionContext,
+    interaction::InteractionTrait,
+    luro_command::LuroCommand,
+    luro_context::LuroContext,
+    luro_framework::Framework,
+    luro::Luro,
+    modal_interaction::ModalInteraction,
 };

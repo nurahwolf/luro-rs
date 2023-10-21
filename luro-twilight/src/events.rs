@@ -1,4 +1,4 @@
-use luro_framework::Context;
+use luro_framework::LuroContext;
 use tracing::error;
 use twilight_gateway::Event;
 
@@ -14,7 +14,7 @@ mod ready;
 mod role;
 mod user_update;
 
-pub async fn event_handler(ctx: Context) -> anyhow::Result<()> {
+pub async fn event_handler(ctx: LuroContext) -> anyhow::Result<()> {
     let callback = match ctx.event.clone() {
         Event::ChannelCreate(event) => channel::create(ctx, event).await,
         Event::ChannelDelete(event) => channel::delete(ctx, event).await,

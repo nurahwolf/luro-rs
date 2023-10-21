@@ -5,7 +5,7 @@ use twilight_model::{
     http::interaction::InteractionResponseType,
 };
 
-use crate::{responses::Response, CommandInteraction, ComponentInteraction, Context, ModalInteraction};
+use crate::{responses::Response, CommandInteraction, ComponentInteraction, LuroContext, ModalInteraction};
 
 #[derive(Clone)]
 pub enum InteractionContext {
@@ -16,7 +16,7 @@ pub enum InteractionContext {
 }
 
 impl InteractionContext {
-    pub fn new(ctx: Context, interaction: Interaction) -> anyhow::Result<Self> {
+    pub fn new(ctx: LuroContext, interaction: Interaction) -> anyhow::Result<Self> {
         match interaction.kind {
             InteractionType::Ping => Err(anyhow!("Received ping interaction with no handler")),
             InteractionType::ApplicationCommand => Ok(Self::Command(CommandInteraction::new(ctx, interaction)?)),

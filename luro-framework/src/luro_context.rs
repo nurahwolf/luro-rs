@@ -1,16 +1,16 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use luro_database::LuroDatabase;
 use twilight_gateway::{Event, Latency, MessageSender};
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::{Framework, Luro, LuroCommandType, LuroMutex};
+use crate::{Framework, Luro};
 
 /// Luro's primary context, which is instanced per event.
 ///
 /// Contains [Framework] and houses data containing the [Event], [Latency] and [MessageSender].
 #[derive(Clone)]
-pub struct Context {
+pub struct LuroContext {
     /// The caching layer of the framework
     #[cfg(feature = "cache-memory")]
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
@@ -18,10 +18,6 @@ pub struct Context {
     pub database: Arc<LuroDatabase>,
     /// The raw event in which this [Context] was created from
     pub event: twilight_gateway::Event,
-    /// A [Mutex] holding a bunch of [LuroCommandType] for global commands
-    pub global_commands: LuroMutex<LuroCommandType>,
-    /// A [Mutex] holding a bunch of [LuroCommandType] for guild commands, indexed by [GuildMarker]
-    pub guild_commands: LuroMutex<HashMap<Id<GuildMarker>, LuroCommandType>>,
     /// A HTTP client used for making web requests. Uses Hyper.
     #[cfg(feature = "http-client-hyper")]
     pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
@@ -38,14 +34,12 @@ pub struct Context {
     pub twilight_client: Arc<twilight_http::Client>,
 }
 
-impl Context {
+impl LuroContext {
     pub fn new(framework: Framework, event: Event, latency: Latency, shard: MessageSender) -> Self {
         Self {
             cache: framework.cache,
             database: framework.database,
             event,
-            global_commands: framework.global_commands,
-            guild_commands: framework.guild_commands,
             http_client: framework.http_client,
             latency,
             #[cfg(feature = "lavalink")]
@@ -57,7 +51,7 @@ impl Context {
     }
 }
 
-impl Luro for Context {
+impl Luro for LuroContext {
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
         Ok(self.twilight_client.interaction(self.application().await?.id))
     }
