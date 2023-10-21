@@ -24,7 +24,7 @@ pub struct Add {
 
 impl LuroCommand for Add {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user = ctx.fetch_user(&ctx.author_id()).await?;
+        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
         let character = user.fetch_character(&self.character).await?.context("Expected to get character")?;
 
         let img = character

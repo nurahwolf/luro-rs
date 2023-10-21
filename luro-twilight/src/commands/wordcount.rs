@@ -34,7 +34,7 @@ impl LuroCommand for Wordcount {
         ctx.acknowledge_interaction(false).await?;
         let luro_user = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
         let response = InteractionResponseType::DeferredChannelMessageWithSource;
-        let accent_colour = ctx.accent_colour().await;
+        let accent_colour = ctx.accent_colour();
         let mut wordcount: usize = Default::default();
         let mut averagesize: usize = Default::default();
         let mut wordsize: BTreeMap<usize, usize> = Default::default();

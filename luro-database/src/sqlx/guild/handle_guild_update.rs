@@ -18,9 +18,8 @@ impl LuroDatabase {
                 owner_id = $2,
                 name = $3
             RETURNING
-                guild_id,
-                owner_id,
-                name",
+                *
+            ",
             guild.id.get() as i64,
             guild.owner_id.get() as i64,
             guild.name

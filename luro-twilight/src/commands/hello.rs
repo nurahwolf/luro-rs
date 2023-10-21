@@ -12,7 +12,7 @@ impl CreateLuroCommand for Hello {
             r.content(format!(
                 "Hello World! I am **{}**. It's nice to meet you, <@{}>!",
                 current_user,
-                ctx.author_id()
+                ctx.author.user_id()
             ))
         })
         .await

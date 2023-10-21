@@ -1,4 +1,4 @@
-use luro_framework::{responses::Response, CommandInteraction, Luro, LuroCommand};
+use luro_framework::{standard_response::Response, CommandInteraction, Luro, LuroCommand};
 use luro_model::builders::EmbedBuilder;
 use serde::Serialize;
 use std::fmt::Write;
@@ -36,120 +36,113 @@ struct Position {
 
 impl LuroCommand for ModifyRole {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let (mut role_selected, mut role_position) = (None, None);
+        // let (mut role_selected, mut role_position) = (None, None);
+        let guild = match &ctx.guild {
+            Some(guild) => guild,
+            None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+        };
 
-        // Guild to modify
-        let guild = ctx
-            .twilight_client
-            .guild(match ctx.guild_id {
-                Some(guild_id) => guild_id,
-                None => return ctx.response_simple(Response::NotGuild).await,
-            })
-            .await?
-            .model()
-            .await?;
+        // for role in guild.roles.clone() {
+        //     if role.id == self.role {
+        //         role_selected = Some(role.clone());
+        //     };
 
-        for role in guild.roles.clone() {
-            if role.id == self.role {
-                role_selected = Some(role.clone());
-            };
+        //     // If self.position is defined
+        //     if let Some(position) = self.position {
+        //         if role.id == position {
+        //             role_position = Some(role.clone());
+        //         }
+        //     }
+        // }
 
-            // If self.position is defined
-            if let Some(position) = self.position {
-                if role.id == position {
-                    role_position = Some(role.clone());
-                }
-            }
-        }
+        // if let Some(mut role_selected) = role_selected {
+        //     let mut number = 1;
+        //     let mut updated_role_list = Vec::new();
+        //     let mut update_role = ctx.twilight_client.update_role(guild.id, role_selected.id);
 
-        if let Some(mut role_selected) = role_selected {
-            let mut number = 1;
-            let mut updated_role_list = Vec::new();
-            let mut update_role = ctx.twilight_client.update_role(guild.id, role_selected.id);
+        //     for role in guild.roles {
+        //         info!(role.name);
+        //         number += 1;
+        //         let mut aaa = vec![(role.id, number)];
+        //         updated_role_list.append(&mut aaa)
+        //     }
 
-            for role in guild.roles {
-                info!(role.name);
-                number += 1;
-                let mut aaa = vec![(role.id, number)];
-                updated_role_list.append(&mut aaa)
-            }
+        //     // If we are updating the position based on a previous role
+        //     if let Some(role_position) = role_position {
+        //         let positions: Vec<Position> = vec![Position {
+        //             id: role_selected.id,
+        //             position: role_position.position,
+        //         }];
+        //         let request = Request::builder(&Route::UpdateRolePositions { guild_id: guild.id.get() })
+        //             .json(&positions)
+        //             .build();
+        //         ctx.twilight_client.request::<EmptyBody>(request?).await?;
+        //     }
 
-            // If we are updating the position based on a previous role
-            if let Some(role_position) = role_position {
-                let positions: Vec<Position> = vec![Position {
-                    id: role_selected.id,
-                    position: role_position.position,
-                }];
-                let request = Request::builder(&Route::UpdateRolePositions { guild_id: guild.id.get() })
-                    .json(&positions)
-                    .build();
-                ctx.twilight_client.request::<EmptyBody>(request?).await?;
-            }
+        //     // If we are updating the position based on an exact number
+        //     if let Some(position) = self.position_num {
+        //         let positions: Vec<Position> = vec![Position {
+        //             id: role_selected.id,
+        //             position,
+        //         }];
+        //         let request = Request::builder(&Route::UpdateRolePositions { guild_id: guild.id.get() })
+        //             .json(&positions)
+        //             .build();
+        //         ctx.twilight_client.request::<EmptyBody>(request?).await?;
+        //     }
 
-            // If we are updating the position based on an exact number
-            if let Some(position) = self.position_num {
-                let positions: Vec<Position> = vec![Position {
-                    id: role_selected.id,
-                    position,
-                }];
-                let request = Request::builder(&Route::UpdateRolePositions { guild_id: guild.id.get() })
-                    .json(&positions)
-                    .build();
-                ctx.twilight_client.request::<EmptyBody>(request?).await?;
-            }
+        //     if let Some(ref name) = self.name {
+        //         update_role = update_role.name(Some(name));
+        //     }
 
-            if let Some(ref name) = self.name {
-                update_role = update_role.name(Some(name));
-            }
+        //     // If we are changing the colour
+        //     if let Some(ref colour) = self.colour {
+        //         let colour = if colour.starts_with("0x") {
+        //             u32::from_str_radix(colour.as_str().strip_prefix("0x").unwrap(), 16)?
+        //         } else if colour.chars().all(|char| char.is_ascii_hexdigit()) {
+        //             u32::from_str_radix(colour.as_str(), 16)?
+        //         } else {
+        //             colour.parse::<u32>()?
+        //         };
 
-            // If we are changing the colour
-            if let Some(ref colour) = self.colour {
-                let colour = if colour.starts_with("0x") {
-                    u32::from_str_radix(colour.as_str().strip_prefix("0x").unwrap(), 16)?
-                } else if colour.chars().all(|char| char.is_ascii_hexdigit()) {
-                    u32::from_str_radix(colour.as_str(), 16)?
-                } else {
-                    colour.parse::<u32>()?
-                };
+        //         role_selected.color = colour;
 
-                role_selected.color = colour;
+        //         if colour == 0 {
+        //             update_role = update_role.color(None)
+        //         } else {
+        //             update_role = update_role.color(Some(colour))
+        //         };
+        //     }
 
-                if colour == 0 {
-                    update_role = update_role.color(None)
-                } else {
-                    update_role = update_role.color(Some(colour))
-                };
-            }
+        //     let updated_role = update_role.await?.model().await?;
+        //     let mut embed = EmbedBuilder::default();
+        //     let mut description = String::new();
+        //     writeln!(description, "**Role:** <@&{0}> - {0}", updated_role.id)?;
+        //     writeln!(description, "**Position:** {}", updated_role.position)?;
+        //     write!(description, "**Permissons:**\n```{:?}```", updated_role.permissions)?;
 
-            let updated_role = update_role.await?.model().await?;
-            let mut embed = EmbedBuilder::default();
-            let mut description = String::new();
-            writeln!(description, "**Role:** <@&{0}> - {0}", updated_role.id)?;
-            writeln!(description, "**Position:** {}", updated_role.position)?;
-            write!(description, "**Permissons:**\n```{:?}```", updated_role.permissions)?;
+        //     embed
+        //         .title(updated_role.name)
+        //         .description(description)
+        //         .colour(ctx.accent_colour());
+        //     if updated_role.color != 0 {
+        //         embed.colour(role_selected.color);
+        //     }
+        //     if updated_role.hoist {
+        //         embed.create_field("Hoisted", "True", true);
+        //     }
+        //     if updated_role.managed {
+        //         embed.create_field("Managed", "True", true);
+        //     }
+        //     if updated_role.mentionable {
+        //         embed.create_field("Mentionable", "True", true);
+        //     }
 
-            embed
-                .title(updated_role.name)
-                .description(description)
-                .colour(ctx.accent_colour().await);
-            if updated_role.color != 0 {
-                embed.colour(role_selected.color);
-            }
-            if updated_role.hoist {
-                embed.create_field("Hoisted", "True", true);
-            }
-            if updated_role.managed {
-                embed.create_field("Managed", "True", true);
-            }
-            if updated_role.mentionable {
-                embed.create_field("Mentionable", "True", true);
-            }
-
-            // TODO: Return an embed with new role information
-            ctx.respond(|r| r.add_embed(embed).ephemeral()).await
-        } else {
-            // TODO: Make this a response type
-            ctx.respond(|r| r.content("No role found").ephemeral()).await
-        }
+        //     // TODO: Return an embed with new role information
+        //     ctx.respond(|r| r.add_embed(embed).ephemeral()).await
+        // } else {
+        // TODO: Make this a response type
+        ctx.respond(|r| r.content("No role found").ephemeral()).await
+        // }
     }
 }

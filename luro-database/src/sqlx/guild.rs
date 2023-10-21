@@ -1,5 +1,9 @@
-use luro_model::guild::LuroGuild;
-use twilight_model::{gateway::payload::incoming::GuildUpdate, guild::Guild, id::Id};
+use twilight_model::{
+    gateway::payload::incoming::GuildUpdate,
+    guild::{AfkTimeout, Guild},
+};
+
+use crate::LuroGuild;
 
 mod count_guilds;
 mod count_members;
@@ -16,26 +20,30 @@ pub enum DatabaseGuildType {
 
 #[derive(Clone)]
 pub struct DatabaseGuild {
-    pub name: String,
+    pub accent_colour: Option<i32>,
+    pub custom_accent_colour: Option<i32>,
     pub guild_id: i64,
+    pub name: String,
     pub owner_id: i64,
+    pub afk_timeout: i16,
 }
 
 impl From<DatabaseGuild> for LuroGuild {
-    fn from(guild: DatabaseGuild) -> Self {
+    fn from(db_guild: DatabaseGuild) -> Self {
         Self {
-            accent_colour_custom: Default::default(),
-            accent_colour: Default::default(),
+            custom_accent_colour: db_guild.custom_accent_colour.map(|x| x as u32),
+            accent_colour: db_guild.accent_colour.map(|x| x as u32),
+            guild_id: db_guild.guild_id,
+            name: db_guild.name,
+            owner_id: db_guild.owner_id,
             afk_channel_id: Default::default(),
-            afk_timeout: Default::default(),
+            afk_timeout: AfkTimeout::from(db_guild.afk_timeout as u16),
             application_id: Default::default(),
             approximate_member_count: Default::default(),
             approximate_presence_count: Default::default(),
-            assignable_role_blacklist: Default::default(),
             banner: Default::default(),
             catchall_log_channel: Default::default(),
             channels: Default::default(),
-            commands: Default::default(),
             default_message_notifications: Default::default(),
             description: Default::default(),
             discovery_splash: Default::default(),
@@ -44,7 +52,6 @@ impl From<DatabaseGuild> for LuroGuild {
             everyone_role: Default::default(),
             features: Default::default(),
             icon: Default::default(),
-            guild_id: Id::new(guild.guild_id as u64),
             joined_at: Default::default(),
             large: Default::default(),
             max_members: Default::default(),
@@ -55,10 +62,7 @@ impl From<DatabaseGuild> for LuroGuild {
             message_events_log_channel: Default::default(),
             mfa_level: Default::default(),
             moderator_actions_log_channel: Default::default(),
-            name: Default::default(),
-            nsfw_hecks: Default::default(),
             nsfw_level: Default::default(),
-            owner_id: Id::new(guild.owner_id as u64),
             owner: Default::default(),
             permissions: Default::default(),
             preferred_locale: Default::default(),
@@ -67,11 +71,8 @@ impl From<DatabaseGuild> for LuroGuild {
             premium_tier: Default::default(),
             presences: Default::default(),
             public_updates_channel_id: Default::default(),
-            roles: Default::default(),
-            role_positions: Default::default(),
             rules_channel_id: Default::default(),
             safety_alerts_channel_id: Default::default(),
-            sfw_hecks: Default::default(),
             splash: Default::default(),
             stage_instances: Default::default(),
             stickers: Default::default(),

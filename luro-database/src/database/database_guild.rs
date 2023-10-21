@@ -1,7 +1,6 @@
-use luro_model::guild::LuroGuild;
 use twilight_model::{gateway::payload::incoming::GuildUpdate, guild::Guild};
 
-use crate::DatabaseGuildType;
+use crate::{DatabaseGuildType, LuroGuild};
 
 impl From<Box<GuildUpdate>> for DatabaseGuildType {
     fn from(guild: Box<GuildUpdate>) -> Self {

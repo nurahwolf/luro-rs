@@ -5,11 +5,10 @@ use luro_model::configuration::Configuration;
 use twilight_gateway::{stream, Shard};
 use twilight_model::id::{marker::GuildMarker, Id};
 
-use crate::{LuroContext, Luro};
+use crate::{Luro, LuroContext};
 
 #[cfg(feature = "luro-builder")]
 mod default_embed;
-mod guild_accent_colour;
 mod register_commands;
 #[cfg(feature = "luro-builder")]
 mod send_log_channel;

@@ -11,8 +11,8 @@ mod luro; // Functionality meant to be consumed by users of this crate. Names ar
 
 pub use crate::luro::{
     luro_character::LuroCharacter, luro_character::LuroCharacterFetish, luro_character_fetish::LuroCharacterFetishCategory,
-    luro_character_image::LuroCharacterImage, luro_image::LuroImage, luro_member::LuroMember, luro_user::LuroUser,
-    luro_user_data::LuroUserData, luro_user_type::LuroUserType,
+    luro_character_image::LuroCharacterImage, luro_guild::LuroGuild, luro_guild_alert_channels::GuildAlertChannels,
+    luro_image::LuroImage, luro_member::LuroMember, luro_user::LuroUser, luro_user_data::LuroUserData, luro_user_type::LuroUserType,
 };
 
 #[cfg(feature = "diesel-driver")]

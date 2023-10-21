@@ -11,7 +11,7 @@ impl ComponentInteraction {
         let client = self.interaction_client();
         let request = response.interaction_response();
 
-        match client.create_response(self.id, &self.token, &request).await {
+        match client.create_response(self.id, &self.interaction_token, &request).await {
             Ok(_) => Ok(None),
             Err(why) => {
                 warn!(why = ?why, "Failed to send a response to an interaction, attempting to send as an update");

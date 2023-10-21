@@ -35,7 +35,7 @@ impl LuroCommand for Abuse {
 
         let mut embed = EmbedBuilder::default();
         embed
-            .colour(ctx.accent_colour().await)
+            .colour(ctx.accent_colour())
             .description(&self.message)
             .author(|author| author.name(&luro_user.name()).icon_url(&luro_user.avatar()));
 

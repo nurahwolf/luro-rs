@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context};
-use luro_database::{DbMember, LuroDatabase, LuroUser, LuroUserType};
-use luro_model::{builders::EmbedBuilder, guild::LuroGuild, response::LuroResponse, ACCENT_COLOUR};
+use luro_database::{DbMember, LuroDatabase, LuroGuild, LuroUser, LuroUserType};
+use luro_model::{builders::EmbedBuilder, response::LuroResponse, ACCENT_COLOUR};
 use std::{future::Future, sync::Arc};
 use tracing::{error, info, warn};
 use twilight_cache_inmemory::InMemoryCache;
@@ -18,8 +18,8 @@ use twilight_model::{
 
 /// A trait that enforces the things you can access in ANY context
 pub trait Luro {
-    fn accent_colour(&self) -> impl std::future::Future<Output = u32> + Send {
-        async { ACCENT_COLOUR }
+    fn accent_colour(&self) -> u32 {
+        ACCENT_COLOUR
     }
 
     /// Create a response to an interaction.
@@ -38,7 +38,7 @@ pub trait Luro {
     {
         async {
             let mut embed = EmbedBuilder::default();
-            embed.colour(self.accent_colour().await);
+            embed.colour(self.accent_colour());
             embed
         }
     }

@@ -16,7 +16,7 @@ pub struct Proxy {
 
 impl LuroCommand for Proxy {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user_id = ctx.author_id();
+        let user_id = ctx.author.user_id();
         let user = ctx.fetch_user(&user_id).await?;
         let mut character = match user.fetch_character(&self.name).await? {
             Some(character) => character,
@@ -46,7 +46,7 @@ impl LuroCommand for Proxy {
         character.prefix = Some(self.prefix);
         user.update_character(character.clone()).await?;
 
-        let accent_colour = ctx.accent_colour().await;
+        let accent_colour = ctx.accent_colour();
         let character_icon = character
             .sfw_icons
             .map(|x| x.choose(&mut thread_rng()).cloned())

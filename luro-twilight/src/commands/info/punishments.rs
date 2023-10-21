@@ -23,7 +23,7 @@ impl LuroCommand for Punishments {
             return ctx.respond(|r| r.content("User has no warnings!").ephemeral()).await;
         }
 
-        let colour = ctx.accent_colour().await;
+        let colour = ctx.accent_colour();
         ctx.respond(|response| {
             response.embed(|embed| {
                 embed.colour(colour).description(warnings).author(|author| {

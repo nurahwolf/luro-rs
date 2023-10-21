@@ -14,18 +14,18 @@ version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-hyper = { workspace = true, optional = true }                   #framework
-luro-model.path = "../luro-model"                               #framework
-luro-database.path = "../luro-database"                               #framework
-serde.workspace = true                                          #framework
+hyper = { workspace = true, optional = true }                   # framework
+luro-model.path = "../luro-model"                               # framework
+luro-database.path = "../luro-database"                         # framework
+serde.workspace = true                                          # framework
 tracing.workspace = true
-tracing-subscriber.workspace = true                             #framework
-twilight-cache-inmemory = { workspace = true, optional = true } #framework
-twilight-gateway.workspace = true                               #framework
-twilight-http.workspace = true                                  #framework
-twilight-util.workspace = true                                  #framework
-twilight-lavalink = { workspace = true, optional = true }       #framework
-twilight-model.workspace = true                                 #framework
+tracing-subscriber.workspace = true                             # framework
+twilight-cache-inmemory = { workspace = true, optional = true } # framework
+twilight-gateway.workspace = true                               # framework
+twilight-http.workspace = true                                  # framework
+twilight-util.workspace = true                                  # framework
+twilight-lavalink = { workspace = true, optional = true }       # framework
+twilight-model.workspace = true                                 # framework
 twilight-interactions.path = "../twilight-interactions"         # command
 
 rand = { workspace = true, optional = true } # response/permission_not_bot_staff

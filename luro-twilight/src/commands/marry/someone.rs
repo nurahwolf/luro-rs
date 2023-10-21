@@ -17,8 +17,8 @@ pub struct Someone {
 
 impl LuroCommand for Someone {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let proposer = ctx.fetch_user(&ctx.author_id()).await?;
-        let accent_colour = ctx.accent_colour().await;
+        let proposer = ctx.fetch_user(&ctx.author.user_id()).await?;
+        let accent_colour = ctx.accent_colour();
 
         let reason = self.reason.unwrap_or(
             MARRIAGE_REASONS

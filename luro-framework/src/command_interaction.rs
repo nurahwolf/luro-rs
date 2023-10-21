@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::{anyhow, Context};
-use luro_database::LuroDatabase;
-use luro_model::response::LuroResponse;
+use luro_model::{response::LuroResponse, ACCENT_COLOUR};
 use twilight_model::{
     application::interaction::{application_command::CommandData, Interaction, InteractionData},
     http::interaction::InteractionResponseType,
@@ -10,12 +9,10 @@ use twilight_model::{
     user::User,
 };
 
-use crate::{Luro, InteractionTrait, LuroContext};
+use crate::{InteractionTrait, Luro, LuroContext};
 
 mod acknowledge_interaction;
-mod author;
 mod command_name;
-mod get_interaction_author;
 mod get_specific_user_or_author;
 mod interaction_client;
 mod respond;
@@ -33,32 +30,38 @@ mod webhook;
 pub struct CommandInteraction {
     pub app_permissions: Option<twilight_model::guild::Permissions>,
     pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
+    /// The author of this interaction. Contains member data if this interaction was spawned in a guild.
+    pub author: luro_database::LuroUser,
     pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     pub channel: twilight_model::channel::Channel,
     pub data: Box<CommandData>,
-    pub database: Arc<LuroDatabase>,
-    pub guild_id: Option<Id<GuildMarker>>,
-    pub guild_locale: Option<String>,
+    pub database: Arc<luro_database::LuroDatabase>,
+    /// Information on the guild this interaction was spaned in.
+    pub guild: Option<luro_database::LuroGuild>,
     pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
     pub id: Id<twilight_model::id::marker::InteractionMarker>,
+    pub interaction_token: String,
     pub kind: twilight_model::application::interaction::InteractionType,
     pub latency: twilight_gateway::Latency,
     #[cfg(feature = "lavalink")]
     pub lavalink: Arc<twilight_lavalink::Lavalink>,
-    pub locale: Option<String>,
-    pub member: Option<twilight_model::guild::PartialMember>,
-    pub message: Option<twilight_model::channel::Message>,
-    // pub original: twilight_model::application::interaction::Interaction,
+    /// The locale of this interaction
+    pub locale: String,
     pub shard: twilight_gateway::MessageSender,
-    pub token: String,
     pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
     pub twilight_client: Arc<twilight_http::Client>,
-    pub user: Option<twilight_model::user::User>,
 }
 
 impl Luro for CommandInteraction {
+    fn accent_colour(&self) -> u32 {
+        match &self.guild {
+            Some(guild) => guild.custom_accent_colour.unwrap_or(guild.accent_colour.unwrap_or(ACCENT_COLOUR)),
+            None => ACCENT_COLOUR, // There is no guild for this interaction
+        }
+    }
+
     fn guild_id(&self) -> Option<Id<GuildMarker>> {
-        self.guild_id
+        self.guild.as_ref().map(|x| x.guild_id())
     }
 
     /// Create a response to an interaction.
@@ -88,7 +91,7 @@ impl Luro for CommandInteraction {
         Ok(self.twilight_client.interaction(self.application_id))
     }
 
-    fn database(&self) -> std::sync::Arc<LuroDatabase> {
+    fn database(&self) -> std::sync::Arc<luro_database::LuroDatabase> {
         self.database.clone()
     }
 
@@ -105,25 +108,10 @@ impl InteractionTrait for CommandInteraction {
     fn command_name(&self) -> &str {
         &self.data.name
     }
-
-    /// The user that invoked the interaction.
-    ///
-    /// This will first check for the [`member`]'s
-    /// [`user`][`PartialMember::user`] and then, if not present, check the
-    /// [`user`].
-    ///
-    /// [`member`]: Self::member
-    /// [`user`]: Self::user
-    fn author(&self) -> &User {
-        match self.member.as_ref() {
-            Some(member) if member.user.is_some() => member.user.as_ref().unwrap(),
-            _ => self.user.as_ref().unwrap(),
-        }
-    }
 }
 
 impl CommandInteraction {
-    pub fn new(ctx: LuroContext, interaction: Interaction) -> anyhow::Result<Self> {
+    pub async fn new(ctx: LuroContext, interaction: Interaction) -> anyhow::Result<Self> {
         let data = match interaction
             .data
             .clone()
@@ -138,29 +126,30 @@ impl CommandInteraction {
             }
         };
         Ok(CommandInteraction {
+            author: ctx
+                .fetch_user(&interaction.author_id().context("Expected to receive author ID from interaction")?)
+                .await?,
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,
-            cache: ctx.cache,
+            cache: ctx.cache.clone(),
             channel: interaction.channel.clone().unwrap(),
             data,
-            database: ctx.database,
-            guild_id: interaction.guild_id,
-            guild_locale: interaction.guild_locale.clone(),
+            database: ctx.database.clone(),
+            guild: match interaction.guild_id {
+                Some(guild_id) => Some(ctx.get_guild(&guild_id).await?),
+                None => None,
+            },
             http_client: ctx.http_client,
             id: interaction.id,
             kind: interaction.kind,
             latency: ctx.latency,
             #[cfg(feature = "lavalink")]
             lavalink: ctx.lavalink,
-            locale: interaction.locale.clone(),
-            member: interaction.member.clone(),
-            message: interaction.message.clone(),
-            // original: interaction.clone(),
+            locale: interaction.locale.clone().context("Expected to get interaction locale")?,
             shard: ctx.shard,
-            token: interaction.token.clone(),
+            interaction_token: interaction.token.clone(),
             tracing_subscriber: ctx.tracing_subscriber,
             twilight_client: ctx.twilight_client,
-            user: interaction.user.clone(),
         })
     }
 }

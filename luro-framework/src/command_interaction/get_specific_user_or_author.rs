@@ -8,8 +8,8 @@ impl CommandInteraction {
 
     pub async fn get_specified_user_or_author(&self, specified_user: Option<&ResolvedUser>) -> anyhow::Result<LuroUser> {
         match specified_user {
-            Some(user_defined) => self.fetch_user(&user_defined.resolved.id).await,
-            None => self.get_interaction_author().await,
+            Some(user) => self.fetch_user(&user.resolved.id).await,
+            None => Ok(self.author.clone()),
         }
     }
 }

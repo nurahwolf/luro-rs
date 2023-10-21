@@ -1,6 +1,4 @@
-use luro_model::guild::LuroGuild;
-
-use crate::{DatabaseGuild, LuroDatabase};
+use crate::{DatabaseGuild, LuroDatabase, LuroGuild};
 
 impl LuroDatabase {
     pub async fn handle_luro_guild(&self, guild: LuroGuild) -> Result<DatabaseGuild, sqlx::Error> {
@@ -17,12 +15,10 @@ impl LuroDatabase {
             DO UPDATE SET
                 owner_id = $2,
                 name = $3
-            RETURNING
-                guild_id,
-                owner_id,
-                name",
-            guild.guild_id.get() as i64,
-            guild.owner_id.get() as i64,
+                RETURNING
+                *",
+            guild.guild_id,
+            guild.owner_id,
             guild.name
         )
         .fetch_one(&self.pool)

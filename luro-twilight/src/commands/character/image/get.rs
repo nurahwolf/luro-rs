@@ -20,7 +20,7 @@ pub struct Get {
 impl LuroCommand for Get {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let nsfw = self.nsfw.unwrap_or(ctx.channel.nsfw.unwrap_or_default());
-        let user = ctx.fetch_user(&ctx.author_id()).await?;
+        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
         let character = user.fetch_character(&self.character).await?.context("Expected to get character")?;
         let images = character.fetch_images().await?;
 
@@ -71,7 +71,7 @@ impl LuroCommand for Get {
             }
         };
 
-        let accent_colour = ctx.accent_colour().await;
+        let accent_colour = ctx.accent_colour();
         ctx.respond(|response| {
             response
                 .embed(|embed| {

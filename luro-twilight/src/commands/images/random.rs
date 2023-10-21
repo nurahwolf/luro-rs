@@ -12,7 +12,7 @@ pub struct Random {
 
 impl LuroCommand for Random {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let accent_colour = ctx.accent_colour().await;
+        let accent_colour = ctx.accent_colour();
 
         let images = ctx.database.fetch_images_nsfw(self.nsfw).await?;
         let image = images.choose(&mut thread_rng()).context("There are no images in the database.")?;

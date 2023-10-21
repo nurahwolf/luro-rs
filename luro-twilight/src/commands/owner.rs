@@ -1,5 +1,5 @@
 use luro_database::DatabaseInteraction;
-use luro_framework::responses::Response;
+use luro_framework::standard_response::Response;
 use luro_framework::{
     CommandInteraction, ComponentInteraction, CreateLuroCommand, InteractionTrait, Luro, LuroCommand, ModalInteraction,
 };
@@ -87,13 +87,15 @@ impl CreateLuroCommand for Owner {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut authorised = false;
         for staff in ctx.database.get_staff().await? {
-            if staff.user_id() == ctx.author_id() {
+            if staff.user_id() == ctx.author.user_id() {
                 authorised = true
             }
         }
 
         if !authorised {
-            return ctx.response_simple(Response::NotOwner(&ctx.author_id(), &self.to_string())).await;
+            return ctx
+                .response_simple(Response::NotOwner(&ctx.author.user_id(), &self.to_string()))
+                .await;
         }
 
         match self {
@@ -171,18 +173,19 @@ impl CreateLuroCommand for Owner {
 }
 
 async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
+    let guild = match &ctx.guild {
+        Some(guild) => guild,
+        None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+    };
     let mut roles_string = String::new();
-    let guild_id = ctx.guild_id.unwrap();
-    let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
+    // let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
-    // let guild = ctx.framework.twilight_cache.guild_members(guild_id).unwrap();
-    let guild = ctx.twilight_client.guild_members(guild_id).limit(1000).await?.model().await?;
-    let mut users = vec![];
-    for member in guild.into_iter() {
-        if let Ok(user) = ctx.fetch_user(&member.user.id).await {
-            users.push(user)
-        }
-    }
+    // let mut users = vec![];
+    // for member in guild.into_iter() {
+    //     if let Ok(user) = ctx.fetch_user(&member.user.id).await {
+    //         users.push(user)
+    //     }
+    // }
 
     // match roles.is_empty() {
     //     true => roles.push(guild_id.cast()),
@@ -202,55 +205,60 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
     //     }),
     // };
 
-    for role in &roles {
-        writeln!(roles_string, "- <@&{role}>")?;
-    }
+    // for role in &roles {
+    //     writeln!(roles_string, "- <@&{role}>")?;
+    // }
 
-    ctx.respond( |response| {
-        {
-            response
-                .content(format!("Found `{}` users with the role(s):\n{roles_string}\nFirst Menu: The roles to apply\nSecond Menu: The roles to remove", users.len()))
-                .components(|components| {
-                    components
-                        .action_row(|row| {
-                            row.component(|component| {
-                                component.select_menu(|menu| {
-                                    menu.custom_id("mass-assign-roles")
-                                        .kind(SelectMenuType::Role)
-                                        .max_values(25)
-                                        .min_values(1)
-                                })
-                            })
-                        })
-                        .action_row(|row| {
-                            row.component(|component| {
-                                component.select_menu(|menu| {
-                                    menu.custom_id("mass-assign-remove")
-                                        .kind(SelectMenuType::Role)
-                                        .max_values(25)
-                                        .min_values(1)
-                                })
-                            })
-                        })
-                })
-        }
-        .ephemeral()
-    })
-    .await
+    // ctx.respond( |response| {
+    //     {
+    //         response
+    //             .content(format!("Found `{}` users with the role(s):\n{roles_string}\nFirst Menu: The roles to apply\nSecond Menu: The roles to remove", users.len()))
+    //             .components(|components| {
+    //                 components
+    //                     .action_row(|row| {
+    //                         row.component(|component| {
+    //                             component.select_menu(|menu| {
+    //                                 menu.custom_id("mass-assign-roles")
+    //                                     .kind(SelectMenuType::Role)
+    //                                     .max_values(25)
+    //                                     .min_values(1)
+    //                             })
+    //                         })
+    //                     })
+    //                     .action_row(|row| {
+    //                         row.component(|component| {
+    //                             component.select_menu(|menu| {
+    //                                 menu.custom_id("mass-assign-remove")
+    //                                     .kind(SelectMenuType::Role)
+    //                                     .max_values(25)
+    //                                     .min_values(1)
+    //                             })
+    //                         })
+    //                     })
+    //             })
+    //     }
+    //     .ephemeral()
+    // })
+    // .await
+
+    ctx.respond(|r| r.content("To implement")).await
 }
 
 async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
-    let guild_id = ctx.guild_id.unwrap();
+    let guild = match &ctx.guild {
+        Some(guild) => guild,
+        None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+    };
 
     let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
-    let guild = ctx.cache.guild_members(guild_id).unwrap();
-    let mut members = vec![];
-    for member in guild.iter() {
-        if let Ok(user) = ctx.fetch_member(member, &guild_id).await {
-            members.push(user)
-        }
-    }
+    // let guild = ctx.cache.guild_members(guild_id).unwrap();
+    // let mut members = vec![];
+    // for member in guild.iter() {
+    //     if let Ok(user) = ctx.fetch_member(member, &guild_id).await {
+    //         members.push(user)
+    //     }
+    // }
 
     // match roles.is_empty() {
     //     true => roles.push(guild_id.cast()),
@@ -275,26 +283,26 @@ async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
     let mut actions_performed = 0;
     let mut errors = 0;
     match ctx.data.custom_id.as_str() {
-        "mass-assign-roles" => {
-            for user in members {
-                for role in &roles {
-                    match ctx.twilight_client.add_guild_member_role(guild_id, user.user_id(), *role).await {
-                        Ok(_) => actions_performed += 1,
-                        Err(_) => errors += 1,
-                    };
-                }
-            }
-        }
-        "mass-assign-remove" => {
-            for user in members {
-                for role in &roles {
-                    match ctx.twilight_client.remove_guild_member_role(guild_id, user.user_id(), *role).await {
-                        Ok(_) => actions_performed += 1,
-                        Err(_) => errors += 1,
-                    };
-                }
-            }
-        }
+        // "mass-assign-roles" => {
+        //     for user in members {
+        //         for role in &roles {
+        //             match ctx.twilight_client.add_guild_member_role(guild.guild_id(), user.user_id(), *role).await {
+        //                 Ok(_) => actions_performed += 1,
+        //                 Err(_) => errors += 1,
+        //             };
+        //         }
+        //     }
+        // }
+        // "mass-assign-remove" => {
+        //     for user in members {
+        //         for role in &roles {
+        //             match ctx.twilight_client.remove_guild_member_role(guild.guild_id(), user.user_id(), *role).await {
+        //                 Ok(_) => actions_performed += 1,
+        //                 Err(_) => errors += 1,
+        //             };
+        //         }
+        //     }
+        // }
         _ => return ctx.respond(|r| r.content("It's fucked").ephemeral()).await,
     }
     let content = match errors != 0 {

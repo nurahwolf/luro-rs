@@ -17,14 +17,14 @@ pub struct Add {
 
 impl LuroCommand for Add {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let accent_colour = ctx.accent_colour().await;
+        let accent_colour = ctx.accent_colour();
         let img = ctx
             .database
             .new_image(LuroImage {
                 img_id: 0,
                 name: self.name,
                 nsfw: self.nsfw,
-                owner_id: ctx.author_id().get() as i64,
+                owner_id: ctx.author.user_id().get() as i64,
                 source: self.source,
                 url: self.url,
             })

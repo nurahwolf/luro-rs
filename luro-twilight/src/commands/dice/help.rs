@@ -68,7 +68,7 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
     ",
         ];
 
-        let accent_colour = ctx.accent_colour().await;
+        let accent_colour = ctx.accent_colour();
         ctx.respond(|r| {
             if self.ephemeral.unwrap_or_default() {
                 r.ephemeral();

@@ -5,7 +5,7 @@ use twilight_model::{
     http::interaction::InteractionResponseType,
 };
 
-use crate::{responses::Response, CommandInteraction, ComponentInteraction, LuroContext, ModalInteraction};
+use crate::{standard_response::Response, CommandInteraction, ComponentInteraction, LuroContext, ModalInteraction};
 
 #[derive(Clone)]
 pub enum InteractionContext {
@@ -16,13 +16,15 @@ pub enum InteractionContext {
 }
 
 impl InteractionContext {
-    pub fn new(ctx: LuroContext, interaction: Interaction) -> anyhow::Result<Self> {
+    pub async fn new(ctx: LuroContext, interaction: Interaction) -> anyhow::Result<Self> {
         match interaction.kind {
             InteractionType::Ping => Err(anyhow!("Received ping interaction with no handler")),
-            InteractionType::ApplicationCommand => Ok(Self::Command(CommandInteraction::new(ctx, interaction)?)),
-            InteractionType::MessageComponent => Ok(Self::Component(ComponentInteraction::new(ctx, interaction)?)),
-            InteractionType::ApplicationCommandAutocomplete => Ok(Self::CommandAutocomplete(CommandInteraction::new(ctx, interaction)?)),
-            InteractionType::ModalSubmit => Ok(Self::Modal(ModalInteraction::new(ctx, interaction)?)),
+            InteractionType::ApplicationCommand => Ok(Self::Command(CommandInteraction::new(ctx, interaction).await?)),
+            InteractionType::MessageComponent => Ok(Self::Component(ComponentInteraction::new(ctx, interaction).await?)),
+            InteractionType::ApplicationCommandAutocomplete => {
+                Ok(Self::CommandAutocomplete(CommandInteraction::new(ctx, interaction).await?))
+            }
+            InteractionType::ModalSubmit => Ok(Self::Modal(ModalInteraction::new(ctx, interaction).await?)),
             _ => Err(anyhow!("Unexpected interaction kind")),
         }
     }
@@ -36,15 +38,6 @@ impl InteractionContext {
         }
     }
 
-    pub fn command_type(&self) -> &str {
-        match self {
-            Self::CommandAutocomplete(_) => "CommandAutocompleteInteraction",
-            Self::Command(_) => "CommandInteraction",
-            Self::Component(_) => "ComponentInteraction",
-            Self::Modal(_) => "ModalInteraction",
-        }
-    }
-
     pub async fn respond<F>(&self, response: F) -> anyhow::Result<()>
     where
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse,
@@ -53,10 +46,10 @@ impl InteractionContext {
         response(&mut r);
 
         let (interaction_id, interaction_token, interaction_client) = match self {
-            InteractionContext::Command(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
-            InteractionContext::CommandAutocomplete(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
-            InteractionContext::Component(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
-            InteractionContext::Modal(ctx) => (ctx.id, &ctx.token, ctx.interaction_client()),
+            InteractionContext::Command(ctx) => (ctx.id, &ctx.interaction_token, ctx.interaction_client()),
+            InteractionContext::CommandAutocomplete(ctx) => (ctx.id, &ctx.interaction_token, ctx.interaction_client()),
+            InteractionContext::Component(ctx) => (ctx.id, &ctx.interaction_token, ctx.interaction_client()),
+            InteractionContext::Modal(ctx) => (ctx.id, &ctx.interaction_token, ctx.interaction_client()),
         };
 
         match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
@@ -78,5 +71,16 @@ impl InteractionContext {
 
     pub async fn simple_response(&self, response: Response<'_>) -> anyhow::Result<()> {
         self.respond(|r| r.add_embed(response.embed())).await
+    }
+}
+
+impl std::fmt::Display for InteractionContext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InteractionContext::Command(_) => write!(f, "Command Interaction"),
+            InteractionContext::CommandAutocomplete(_) => write!(f, "Command Autocomplete"),
+            InteractionContext::Component(_) => write!(f, "Component Interaction"),
+            InteractionContext::Modal(_) => write!(f, "Modal Interaction"),
+        }
     }
 }

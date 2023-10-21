@@ -17,7 +17,7 @@ pub struct CharacterSend {
 
 impl LuroCommand for CharacterSend {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user = ctx.fetch_user(&ctx.author_id()).await?;
+        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
         let character = match user.fetch_character(&self.name).await? {
             Some(character) => character,
             None => {

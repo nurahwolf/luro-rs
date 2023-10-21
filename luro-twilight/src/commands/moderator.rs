@@ -67,7 +67,7 @@ impl LuroCommandTrait for Moderator {
         let id = ctx.parse_field_required("mod-warn-id")?;
         let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
 
-        let luro_user = ctx.database.get_user(&ctx.author_id()).await?;
+        let luro_user = ctx.database.get_user(&ctx.author.user_id()).await?;
 
         let mut user_data = ctx.database.get_user(&user_id).await?;
         user_data.warnings.push((warning.to_owned(), author.id));

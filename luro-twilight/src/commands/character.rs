@@ -52,7 +52,7 @@ impl CreateLuroCommand for Character {
     }
 
     async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<()> {
-        let user_id = ctx.author_id();
+        let user_id = ctx.author.user_id();
         let nsfw: bool = ctx.channel.nsfw.unwrap_or_default();
         let user = ctx.fetch_user(&user_id).await?;
 
@@ -88,7 +88,7 @@ impl CreateLuroCommand for Character {
                 sfw_description: sfw_description.to_owned(),
                 sfw_icons: Default::default(),
                 sfw_summary: sfw_summary.to_owned(),
-                user_id: ctx.author_id().get() as i64,
+                user_id: ctx.author.user_id().get() as i64,
                 db: ctx.database.clone(),
             },
         };
@@ -99,7 +99,7 @@ impl CreateLuroCommand for Character {
 
     async fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
-        let user = ctx.fetch_user(&ctx.author_id()).await?;
+        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
         let character_name = match self {
             Character::Profile(data) => data.name,
             Character::Create(data) => data.name,
@@ -178,7 +178,7 @@ impl CreateLuroCommand for Character {
     }
 
     async fn interaction_autocomplete(ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user = ctx.fetch_user(&ctx.author_id()).await?;
+        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
         let characters = user.fetch_characters().await?;
 
         let choices = match CharacterNameAutocomplete::from_interaction((*ctx.data.clone()).into())?.name {
@@ -220,7 +220,7 @@ pub struct CharacterNameAutocomplete {
 }
 
 pub async fn character_response<T: Luro>(ctx: T, character: &LuroCharacter, user: &LuroUser, nsfw: bool) -> anyhow::Result<()> {
-    let accent_colour = ctx.accent_colour().await;
+    let accent_colour = ctx.accent_colour();
     let fetishes = character.fetch_fetishes().await?;
     ctx.respond(|response| {
         response

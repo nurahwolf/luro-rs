@@ -180,7 +180,7 @@ impl CreateLuroCommand for Muzzle {
             .get(choice)
             .unwrap()
             .replace("<user>", format!("<@{}>", self.user.resolved.id).as_str())
-            .replace("<author>", format!("<@{}>", ctx.author_id()).as_str());
+            .replace("<author>", format!("<@{}>", ctx.author.user_id()).as_str());
 
         ctx.respond(|r| r.content(content)).await
     }

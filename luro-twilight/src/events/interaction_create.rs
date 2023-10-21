@@ -1,4 +1,4 @@
-use luro_framework::{LuroContext, InteractionContext};
+use luro_framework::{InteractionContext, LuroContext};
 
 use tracing::{error, warn};
 use twilight_model::gateway::payload::incoming::InteractionCreate;
@@ -23,7 +23,7 @@ pub async fn interaction_create_listener(ctx: LuroContext, event: Box<Interactio
     }
 
     // TODO: Really shitty event handler, please change this
-    if let Err(why) = handle_interaction(InteractionContext::new(ctx, event.0)?).await {
+    if let Err(why) = handle_interaction(InteractionContext::new(ctx, event.0).await?).await {
         error!(why = ?why, "error while handling event");
     }
 

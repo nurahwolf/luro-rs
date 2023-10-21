@@ -101,10 +101,10 @@ impl LuroCommand for InfoUser {
             if let Some(export) = self.gdpr_export && export {
                 if let Some(ref user_specified) = self.user {
                     // TODO: Add privilege esc tally to the person
-                    return ctx.respond(|r|r.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.author_id())).response_type(response_type)).await
+                    return ctx.respond(|r|r.content(format!("Hey <@{}>! <@{}> is being a cunt and trying to steal your data.", user_specified.resolved.id, ctx.author.user_id())).response_type(response_type)).await
                 }
                 response.attachments = Some(vec![Attachment::from_bytes(
-                    format!("gdpr-export-{}.txt", ctx.author_id()),
+                    format!("gdpr-export-{}.txt", ctx.author.user_id()),
                     toml::to_string_pretty(&user)?.as_bytes().to_vec(),
                     1
                 )]);

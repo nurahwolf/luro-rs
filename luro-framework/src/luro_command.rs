@@ -1,6 +1,6 @@
 use luro_database::DatabaseInteraction;
 
-use crate::responses::Response;
+use crate::standard_response::Response;
 use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
 
 pub trait LuroCommand {

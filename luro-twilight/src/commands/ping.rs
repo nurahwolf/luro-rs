@@ -21,7 +21,7 @@ impl LuroCommandTrait for Ping {
         ctx: CommandInteraction<Self>,
     ) -> anyhow::Result<()> {
         let mut embed = EmbedBuilder::default();
-        embed.colour(ctx.accent_colour().await).description("🏓 Pinging!");
+        embed.colour(ctx.accent_colour()).description("🏓 Pinging!");
         if let Some(average) = ctx.latency.average() {
             embed.create_field(
                 "Average Latency",
@@ -77,7 +77,7 @@ impl LuroCommandTrait for Ping {
 
         // A random command to check latency time
         let start = Instant::now();
-        let _ = ctx.twilight_client.user(ctx.author_id()).await?.model().await?;
+        let _ = ctx.twilight_client.user(ctx.author.user_id()).await?.model().await?;
         let user = format!(
             "{}\n`Get USER` API request achnowledged and received in `{}` milliseconds!",
             sent,

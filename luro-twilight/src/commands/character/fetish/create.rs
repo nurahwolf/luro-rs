@@ -25,7 +25,7 @@ pub struct Create {
 impl LuroCommand for Create {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
-        let user = ctx.fetch_user(&ctx.author_id()).await?;
+        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| a.icon_url(user.avatar()).name(format!("Profile by {}", user.name())));
 

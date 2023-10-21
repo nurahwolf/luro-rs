@@ -27,7 +27,7 @@ impl CreateLuroCommand for About {
         let slash_author = LuroUser::from(&current_user);
 
         // Configuration
-        embed.colour(ctx.accent_colour().await);
+        embed.colour(ctx.accent_colour());
         embed.title(&slash_author.name);
         embed.thumbnail(|thumbnail| thumbnail.url(slash_author.avatar()));
         embed.footer(|footer| footer.text("Written in twilight.rs!"));

@@ -1,4 +1,4 @@
-use luro_framework::responses::Response;
+use luro_framework::standard_response::Response;
 use luro_framework::CreateLuroCommand;
 use luro_framework::InteractionContext;
 use tracing::info;
@@ -90,7 +90,7 @@ pub fn default_commands() -> Vec<Command> {
 
 /// Handle incoming interaction
 pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
-    info!("{}: Handling interaction '{}'", ctx.command_type(), ctx.command_name());
+    info!("{ctx}: Handling interaction '{}'", ctx.command_name());
 
     let response_handler = ctx.clone();
     let response = match ctx.command_name() {

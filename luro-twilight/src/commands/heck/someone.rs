@@ -40,7 +40,7 @@ impl LuroCommand for HeckSomeoneCommand {
         if let Some(plaintext) = self.plaintext && plaintext {
             ctx.respond(|r|r.content(formatted_heck.heck_message)).await
         } else {
-            let accent_colour = ctx.accent_colour().await;
+            let accent_colour = ctx.accent_colour();
             ctx.respond(|r|r.content(format!("<@{}>", self.user.resolved.id)).embed(|e|e.description(formatted_heck.heck_message).colour(accent_colour).author(|author|author.name(format!("Heck created by {}", luro_user.name())).icon_url(luro_user.avatar())).footer(|f|{
                 match nsfw {
                     true => f.text(format!("Heck ID {heck_id} - NSFW Heck")),

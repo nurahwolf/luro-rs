@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine};
 use luro_database::DatabaseInteraction;
-use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, LuroCommand};
+use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
 use luro_model::response::LuroResponse;
 use std::str;
 use tracing::{info, warn};
@@ -29,7 +29,6 @@ impl CreateLuroCommand for Base64 {
     }
 
     async fn interaction_component(self, ctx: ComponentInteraction, _original_interaction: DatabaseInteraction) -> anyhow::Result<()> {
-        let author_id = ctx.author().id;
         // Always insure the input is decoded
         let (input, bait) = match self {
             Self::Decode(command) => (decode(&command.string)?, None),
@@ -47,8 +46,12 @@ impl CreateLuroCommand for Base64 {
 
         if bait.unwrap_or_default() {
             ctx.response_update(&response).await?;
-            ctx.respond(|response| response.content(format!("<@{author_id}> got baited...")).reply(&ctx.message.id))
-                .await?;
+            ctx.respond(|response| {
+                response
+                    .content(format!("<@{}> got baited...", ctx.author.user_id))
+                    .reply(&ctx.message.id)
+            })
+            .await?;
         } else {
             ctx.response_update(&response).await?;
         }
@@ -60,8 +63,8 @@ impl CreateLuroCommand for Base64 {
 /// Simply send a response with a few checks.
 async fn response(ctx: &ComponentInteraction, input: &str, decode_operation: bool) -> anyhow::Result<LuroResponse> {
     let mut response = match decode_operation {
-        true => decode_response(ctx.accent_colour().await, input).await?,
-        false => encode_response(ctx.accent_colour().await, &encode(input)).await?,
+        true => decode_response(ctx.accent_colour(), input).await?,
+        false => encode_response(ctx.accent_colour(), &encode(input)).await?,
     };
     response.update();
     Ok(response)

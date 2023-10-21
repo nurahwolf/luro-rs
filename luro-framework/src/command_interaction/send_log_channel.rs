@@ -1,6 +1,6 @@
 use luro_model::{guild::log_channel::LuroLogChannel, response::LuroResponse};
 use tracing::debug;
-use twilight_model::channel::Message;
+use twilight_model::{channel::Message, id::Id};
 
 use crate::{CommandInteraction, Luro};
 
@@ -13,29 +13,32 @@ impl CommandInteraction {
         response: F,
     ) -> anyhow::Result<Option<Message>> {
         debug!("Attempting to send to log channel");
-        let (guild_data, guild_id) = match self.guild_id {
-            Some(guild_id) => (self.get_guild(&guild_id).await?, guild_id),
+        let guild = match &self.guild {
+            Some(guild) => guild,
             None => return Ok(None),
         };
+        let guild_alert_channels = guild.alert_channels().await?;
 
         let log_channel_requested = match log_channel {
-            LuroLogChannel::Catchall => guild_data.catchall_log_channel,
-            LuroLogChannel::Message => guild_data.message_events_log_channel,
-            LuroLogChannel::Moderator => guild_data.moderator_actions_log_channel,
-            LuroLogChannel::Thread => guild_data.thread_events_log_channel,
+            LuroLogChannel::Catchall => guild_alert_channels.catchall_log_channel,
+            LuroLogChannel::Message => guild_alert_channels.message_events_log_channel,
+            LuroLogChannel::Moderator => guild_alert_channels.moderator_actions_log_channel,
+            LuroLogChannel::Thread => guild_alert_channels.thread_events_log_channel,
         };
 
         let log_channel = match log_channel_requested {
             Some(log_channel) => log_channel,
-            None => match guild_data.catchall_log_channel {
+            None => match guild_alert_channels.catchall_log_channel {
                 Some(channel) => channel,
                 None => {
-                    debug!("Guild {guild_id} does not have a catchall channel defined");
+                    debug!("Guild {} does not have a catchall channel defined", guild.guild_id);
                     return Ok(None);
                 }
             },
         };
 
-        Ok(Some(self.send_message(&log_channel, response).await?.model().await?))
+        Ok(Some(
+            self.send_message(&Id::new(log_channel as u64), response).await?.model().await?,
+        ))
     }
 }

@@ -30,7 +30,7 @@ impl ExecuteLuroCommand for InfoCommand {
             stats.memory.free / 1024 / 1024
         )?;
 
-        let accent_colour = ctx.accent_colour().await;
+        let accent_colour = ctx.accent_colour();
         ctx.respond(|response| {
             response.embed(|embed| {
                 embed

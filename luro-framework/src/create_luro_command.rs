@@ -4,8 +4,8 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
 use twilight_model::application::interaction::application_command::CommandData;
 
-use crate::responses::Response;
-use crate::{CommandInteraction, ComponentInteraction, InteractionContext, ModalInteraction, LuroCommand};
+use crate::standard_response::Response;
+use crate::{CommandInteraction, ComponentInteraction, InteractionContext, LuroCommand, ModalInteraction};
 
 pub trait CreateLuroCommand: CommandModel + CreateCommand {
     fn handle_interaction(interaction: InteractionContext) -> impl std::future::Future<Output = anyhow::Result<()>> + Send

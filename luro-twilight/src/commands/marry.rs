@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context};
 use luro_database::{DatabaseInteraction, DbUserMarriage, DbUserMarriageApprovals};
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, InteractionTrait, Luro, LuroCommand};
 
-use luro_framework::responses::Response;
+use luro_framework::standard_response::Response;
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
@@ -127,12 +127,12 @@ impl CreateLuroCommand for Marry {
             .context("Expected to find marriage in database")?;
 
         // Handle if someone else clicked the button
-        if ctx.author_id() != proposee.user_id {
+        if ctx.author.user_id() != proposee.user_id {
             match &ctx.data.custom_id == "marry-deny" {
                 true => {
                     ctx.database
                         .update_marriage_approval(DbUserMarriageApprovals {
-                            user_id: ctx.author_id().get() as i64,
+                            user_id: ctx.author.user_id().get() as i64,
                             proposer_id,
                             proposee_id,
                             approve: false,
@@ -143,7 +143,7 @@ impl CreateLuroCommand for Marry {
                 false => {
                     ctx.database
                         .update_marriage_approval(DbUserMarriageApprovals {
-                            user_id: ctx.author_id().get() as i64,
+                            user_id: ctx.author.user_id().get() as i64,
                             proposer_id,
                             proposee_id,
                             approve: true,
@@ -216,7 +216,7 @@ impl CreateLuroCommand for Marry {
         };
 
         // Handle if someone else clicked the button
-        if ctx.author_id() != proposee.user_id {
+        if ctx.author.user_id() != proposee.user_id {
             return ctx.respond(|r| r.update().add_embed(embed)).await;
         }
 

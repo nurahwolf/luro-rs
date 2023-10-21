@@ -17,7 +17,7 @@ pub struct Icon {
 
 impl LuroCommand for Icon {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user_id = ctx.author_id();
+        let user_id = ctx.author.user_id();
         let user = ctx.fetch_user(&user_id).await?;
         let character = user.fetch_character(&self.name).await?.context("No character with that name!")?;
         let nsfw = ctx.channel.nsfw.unwrap_or_default();

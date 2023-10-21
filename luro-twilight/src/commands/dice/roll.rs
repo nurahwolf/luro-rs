@@ -29,7 +29,7 @@ impl LuroCommand for Roll {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                ctx.author_id(),
+                ctx.author.user_id(),
                 result.string_result,
                 result.dice_total
             )

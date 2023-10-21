@@ -18,7 +18,7 @@ impl LuroCommandTrait for Flush {
     ) -> anyhow::Result<()> {
         let data = Self::new(interaction.data.clone())?;
         let errors = ctx.framework.database.flush().await?;
-        let accent_colour = ctx.accent_colour().await;
+        let accent_colour = ctx.accent_colour();
 
         ctx.respond(|r| {
             r.embed(|embed| {

@@ -12,8 +12,10 @@ pub struct Marriages {
 
 impl LuroCommand for Marriages {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let accent_colour = ctx.accent_colour().await;
-        let author = ctx.fetch_user(&self.user.map(|x| x.resolved.id).unwrap_or(ctx.author_id())).await?;
+        let accent_colour = ctx.accent_colour();
+        let author = ctx
+            .fetch_user(&self.user.map(|x| x.resolved.id).unwrap_or(ctx.author.user_id()))
+            .await?;
         let marriages = author.fetch_marriages().await?;
 
         let mut marriages_detailed = vec![];

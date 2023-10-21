@@ -18,21 +18,20 @@ pub struct Guild {
 
 impl LuroCommand for Guild {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let guild = match &ctx.guild {
+            Some(guild) => guild,
+            None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+        };
         let mut luro_guild = String::new();
         let mut guild_description = String::new();
-        let guild_id = match self.guild {
-            Some(guild) => guild.cast(),
-            None => ctx.guild_id.unwrap(),
-        };
-        let guild = ctx.twilight_client.guild(guild_id).await?.model().await?;
-        let guild_settings = ctx.get_guild(&guild_id).await?;
-        let mut embed = ctx.default_embed().await;
-        embed.title(&guild_settings.name);
 
-        writeln!(luro_guild, "- Guild Name: {}", &guild_settings.name)?;
-        if !guild_settings.commands.is_empty() {
-            writeln!(luro_guild, "- Guild Commands: {:#?}", guild_settings.commands)?;
-        }
+        let mut embed = ctx.default_embed().await;
+        embed.title(&guild.name);
+
+        writeln!(luro_guild, "- Guild Name: {}", &guild.name)?;
+        // if !guild.commands.is_empty() {
+        //     writeln!(luro_guild, "- Guild Commands: {:#?}", guild.commands)?;
+        // }
 
         writeln!(guild_description, "- Owner: <@{}>", guild.owner_id)?;
         writeln!(guild_description, "- AFK Timeout: {} seconds", guild.afk_timeout.get())?;
@@ -41,16 +40,16 @@ impl LuroCommand for Guild {
 
         ctx.respond(|response| {
             if self.gdpr_export.unwrap_or_default() {
-                if guild.owner_id != ctx.author_id() {
+                if guild.owner_id != ctx.author.user_id() {
                     response.content(format!(
                         "Hey <@{}>! <@{}> is being a cunt and trying to steal your guild data!",
                         guild.owner_id,
-                        ctx.author_id()
+                        ctx.author.user_id()
                     ));
-                } else if let Ok(guild_settings) = toml::to_string_pretty(&guild_settings) {
+                } else if let Ok(guild_settings) = toml::to_string_pretty(&guild) {
                     response.attachments(
                         vec![Attachment::from_bytes(
-                            format!("gdpr-export-{}.txt", ctx.author_id()),
+                            format!("gdpr-export-{}.txt", ctx.author.user_id()),
                             guild_settings.as_bytes().to_vec(),
                             1,
                         )]

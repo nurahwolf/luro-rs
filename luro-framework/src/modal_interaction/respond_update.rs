@@ -8,7 +8,7 @@ impl ModalInteraction {
     pub async fn response_update(&self, response: &LuroResponse) -> anyhow::Result<Message> {
         Ok(self
             .interaction_client()
-            .update_response(&self.token)
+            .update_response(&self.interaction_token)
             .allowed_mentions(response.allowed_mentions.as_ref())
             .components(response.components.as_deref())
             .content(response.content.as_deref())

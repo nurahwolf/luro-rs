@@ -18,7 +18,7 @@ mod internal_error;
 mod missing_permissions;
 mod not_guild;
 mod not_owner;
-pub mod permission_modify_server_owner; // TODO: Change to private, only needs to be public for old framework
+mod permission_modify_server_owner;
 mod permission_not_bot_staff;
 mod unknown_command;
 mod user_action;
