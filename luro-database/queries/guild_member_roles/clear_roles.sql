@@ -1,0 +1,1 @@
+DELETE FROM guild_member_roles WHERE (guild_id = $1 and user_id = $2)

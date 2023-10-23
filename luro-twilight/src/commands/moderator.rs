@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionContext, LuroCommand, ModalInteraction, Luro};
+use luro_framework::{CommandInteraction, CreateLuroCommand, LuroCommand, ModalInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 use twilight_model::id::{marker::UserMarker, Id};
 

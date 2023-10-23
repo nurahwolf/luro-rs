@@ -117,6 +117,7 @@ async fn handle_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, member: Mem
     .await?
     .rows_affected();
 
+    db.clear_member_roles(guild_id, member.user.id).await?;
     for role in member.roles {
         debug!("handle_member - Trying to handle updating roles");
         db.update_role((guild_id, role)).await?;
@@ -201,11 +202,9 @@ async fn handle_member_update(db: &LuroDatabase, member: Box<MemberUpdate>) -> a
             Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
             None => None,
         },
-        member.deaf.unwrap_or_default(),
         member.guild_id.get() as i64,
         OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
         member.avatar.map(|x| x.to_string()),
-        member.mute,
         member.nick,
         member.pending,
         member.user.id.get() as i64,
