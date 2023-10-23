@@ -89,11 +89,17 @@ impl From<(Member, Id<GuildMarker>)> for LuroUser {
                 left_at: None,
                 avatar: member.avatar.map(|x| x.to_string()),
                 boosting_since: match member.premium_since {
-                    Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs()).unwrap()),
+                    Some(timestamp) => match OffsetDateTime::from_unix_timestamp(timestamp.as_secs()) {
+                        Ok(timestamp) => Some(timestamp),
+                        Err(_) => None,
+                    },
                     None => None,
                 },
                 communication_disabled_until: match member.communication_disabled_until {
-                    Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs()).unwrap()),
+                    Some(timestamp) => match OffsetDateTime::from_unix_timestamp(timestamp.as_secs()) {
+                        Ok(timestamp) => Some(timestamp),
+                        Err(_) => None,
+                    },
                     None => None,
                 },
                 joined_at: OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs()).unwrap(),

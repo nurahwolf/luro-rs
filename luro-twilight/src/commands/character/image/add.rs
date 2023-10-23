@@ -28,38 +28,40 @@ impl LuroCommand for Add {
             .author
             .fetch_character(ctx.database.clone(), &self.character)
             .await?
-            .context("Expected to get character")?;
+            .context("No character available")?;
 
-        let img = character
-            .new_image(LuroCharacterImage {
-                img_id: 0,
-                name: self.name,
-                nsfw: self.nsfw,
-                owner_id: ctx.author.user_id,
-                source: self.source,
-                url: self.url,
-                character_name: self.character,
-                favourite: self.fav,
-            })
-            .await?;
+        let img = LuroCharacterImage {
+            img_id: self.overwrite.unwrap_or_default(),
+            name: self.name,
+            nsfw: self.nsfw,
+            owner_id: ctx.author.user_id,
+            source: self.source,
+            url: self.url,
+            character_name: self.character,
+            favourite: self.fav,
+        };
+
+        match self.overwrite {
+            Some(_) => character.update_image(&img).await?,
+            None => character.new_image(&img).await?,
+        };
 
         let mut embed = ctx.default_embed().await;
-        embed.footer(|f| f.text(format!("Image ID: {}", img.img_id)));
+        embed.footer(|f| f.text(format!("Image ID: {}", img.img_id)))
+            .image(|i| i.url(img.url))
+            .author(|author| {
+                author
+                    .name(format!("Profile by {}", ctx.author.name()))
+                    .icon_url(ctx.author.avatar_url())
+        });
 
         if let Some(source) = &img.source {
             embed.url(source);
         }
 
-        embed.image(|i| i.url(img.url));
         if !img.name.is_empty() {
             embed.title(img.name);
         }
-
-        embed.author(|author| {
-            author
-                .name(format!("Profile by {}", ctx.author.name()))
-                .icon_url(ctx.author.avatar_url())
-        });
 
         ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }

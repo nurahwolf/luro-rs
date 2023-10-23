@@ -90,7 +90,7 @@ impl LuroCommand for Ban {
             return ctx.response_simple(Response::MissingPermission(Permissions::BAN_MEMBERS)).await;
         }
 
-        if !guild.is_owner(&punished_user.user_id()) {
+        if guild.is_owner(&punished_user.user_id()) {
             return ctx
                 .response_simple(Response::PermissionModifyServerOwner(&ctx.author.user_id()))
                 .await;

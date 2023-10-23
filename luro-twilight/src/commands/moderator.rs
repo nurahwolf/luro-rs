@@ -1,5 +1,6 @@
-use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionContext, LuroCommand};
+use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionContext, LuroCommand, ModalInteraction, Luro};
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
+use twilight_model::id::{marker::UserMarker, Id};
 
 mod assign;
 mod ban;
@@ -11,7 +12,7 @@ mod unban;
 // mod warn;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(name = "mod", desc = "Commands that can be used by moderators", dm_permission = false)]
+#[command(name = "moderator", desc = "Commands that can be used by moderators", dm_permission = false)]
 pub enum Moderator {
     #[command(name = "ban")]
     Ban(ban::Ban),
@@ -40,35 +41,32 @@ impl CreateLuroCommand for Moderator {
         }
     }
 
-    async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
-        // let mut embed = ctx.default_embed().await;
-        // let warning = ctx.parse_field_required("mod-warn-text")?;
-        // let id = ctx.parse_field_required("mod-warn-id")?;
-        // let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
+    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<()> {
+        let mut embed = ctx.default_embed().await;
+        let warning = ctx.parse_field_required("mod-warn-text")?;
+        let id = ctx.parse_field_required("mod-warn-id")?;
+        let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
 
-        // let luro_user = ctx.database.get_user(&ctx.author.user_id()).await?;
-
-        // let mut user_data = ctx.database.get_user(&user_id).await?;
         // user_data.warnings.push((warning.to_owned(), ctx.author.id));
         // ctx.database.modify_user(&user_id, &user_data).await?;
 
-        // embed
-        //     .description(format!("Warning Created for <@{user_id}>\n```{warning}```"))
-        //     .colour(ctx.accent_colour().await)
-        //     .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
-        //     .author(|author| author.name(format!("Warning by {}", luro_user.name())).icon_url(luro_user.avatar()));
+        embed
+            .description(format!("Warning Created for <@{user_id}>\n```{warning}```"))
+            .colour(ctx.accent_colour())
+            // .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
+            .author(|author| author.name(format!("Warning by {}", ctx.author.name())).icon_url(ctx.author.avatar_url()));
 
-        // match ctx.twilight_client.create_private_channel(user_id).await {
-        //     Ok(channel) => {
-        //         let channel = channel.model().await?;
-        //         let victim_dm = ctx.twilight_client.create_message(channel.id).embeds(&[embed.clone().into()]).await;
-        //         match victim_dm {
-        //             Ok(_) => embed.create_field("DM Sent", "Successful", true),
-        //             Err(_) => embed.create_field("DM Sent", "Failed", true),
-        //         }
-        //     }
-        //     Err(_) => embed.create_field("DM Sent", "Failed", true),
-        // };
+        match ctx.twilight_client.create_private_channel(user_id).await {
+            Ok(channel) => {
+                let channel = channel.model().await?;
+                let victim_dm = ctx.twilight_client.create_message(channel.id).embeds(&[embed.clone().into()]).await;
+                match victim_dm {
+                    Ok(_) => embed.create_field("DM Sent", "Successful", true),
+                    Err(_) => embed.create_field("DM Sent", "Failed", true),
+                }
+            }
+            Err(_) => embed.create_field("DM Sent", "Failed", true),
+        };
 
         // ctx.send_log_channel(&ctx.guild_id.unwrap(), LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))
         //     .await?;
@@ -87,8 +85,8 @@ impl CreateLuroCommand for Moderator {
         // });
         // ctx.database.modify_user(&user_id, &warned).await?;
 
-        // ctx.respond(|response| response.add_embed(embed)).await
-        ctx.respond(|response| response.content("TODO: Soon!")).await
+        ctx.respond(|response| response.add_embed(embed)).await
+        // ctx.respond(|response| response.content("TODO: Soon!")).await
     }
 }
 

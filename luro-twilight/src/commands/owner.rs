@@ -6,7 +6,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::Id;
 
 // mod clear_warnings;
-// mod fakeban;
+mod fakeban;
 // mod flush;
 // mod load_users;
 // mod log;
@@ -40,17 +40,19 @@ pub enum Owner {
     GetMessage(get_message::Message),
     #[command(name = "guilds")]
     Guilds(guilds::Guilds),
+    #[command(name = "fakeban")]
+    FakeBan(fakeban::FakeBan),
+
+
 }
 
 // pub enum OwnerCommands {
 //     #[command(name = "config")]
-//     #[command(name = "fakeban")]
 //     #[command(name = "flush")]
 //     #[command(name = "guilds")]
 //     #[command(name = "load_users")]
 //     #[command(name = "log")]
 //     Config(ConfigCommand),
-//     FakeBan(FakeBan),
 //     Flush(Flush),
 //     LoadUsers(OwnerLoadUsers),
 //     Log(LogCommand),
@@ -65,7 +67,7 @@ impl std::fmt::Display for Owner {
             Self::Commands(_) => "owner_commands",
             Self::ClearMarriage(_) => "clear_marriage",
             // Self::Config(_) => "owner_config",
-            // Self::FakeBan(_) => "owner_fakeban",
+            Self::FakeBan(_) => "owner_fakeban",
             // Self::Flush(_) => "owner_save",
             Self::GetMessage(_) => "owner_getmessage",
             Self::Guilds(_) => "owner_guilds",
@@ -101,7 +103,7 @@ impl CreateLuroCommand for Owner {
             Self::Commands(command) => command.interaction_command(ctx).await,
             Self::ClearMarriage(command) => command.interaction_command(ctx).await,
             // Self::Config(_) => "owner_config",
-            // Self::FakeBan(_) => "owner_fakeban",
+            Self::FakeBan(cmd) => cmd.interaction_command(ctx).await,
             // Self::Flush(_) => "owner_save",
             Self::GetMessage(command) => command.interaction_command(ctx).await,
             Self::Guilds(command) => command.interaction_command(ctx).await,

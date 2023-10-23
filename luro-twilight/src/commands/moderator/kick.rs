@@ -60,7 +60,7 @@ impl LuroCommand for Kick {
             return ctx.response_simple(Response::MissingPermission(Permissions::KICK_MEMBERS)).await;
         }
 
-        if !guild.is_owner(&punished_user.user_id()) {
+        if guild.is_owner(&punished_user.user_id()) {
             return ctx
                 .response_simple(Response::PermissionModifyServerOwner(&ctx.author.user_id()))
                 .await;
@@ -68,17 +68,17 @@ impl LuroCommand for Kick {
 
         // The lower the number, the higher they are on the heirarchy
         if let Some(punished_user_highest_role) = punished_user_highest_role {
-            debug!("Punished user position: {}", punished_user_highest_role.position);
+            debug!("Punished user position: {}", punished_user_highest_role);
             if let Some(moderator_highest_role) = moderator_highest_role {
-                debug!("Moderator user position: {}", moderator_highest_role.position);
-                if punished_user_highest_role.position <= moderator_highest_role.position {
+                debug!("Moderator user position: {}", moderator_highest_role);
+                if punished_user_highest_role >= moderator_highest_role {
                     return ctx.response_simple(Response::UserHeirarchy(&punished_user.name)).await;
                 }
             }
 
             if let Some(luro_highest_role) = luro_highest_role {
-                debug!("Luro user position: {}", luro_highest_role.position);
-                if punished_user_highest_role.position <= luro_highest_role.position {
+                debug!("Luro user position: {}", luro_highest_role);
+                if punished_user_highest_role >= luro_highest_role {
                     return ctx.response_simple(Response::BotHeirarchy(&luro.name())).await;
                 }
             }

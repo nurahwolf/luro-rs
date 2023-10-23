@@ -1,8 +1,6 @@
 
-use async_trait::async_trait;
-use luro_framework::{responses::{PunishmentType, StandardResponse}, command::LuroCommandTrait, InteractionCommand, Framework};
-
-use luro_model::database_driver::LuroDatabaseDriver;
+use anyhow::Context;
+use luro_framework::{CommandInteraction, LuroCommand, Luro, StandardResponse, PunishmentType};
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 
 use crate::commands::moderator::{Reason, reason};
@@ -38,23 +36,12 @@ pub enum TimeToBan {
     SevenDays,
 }
 
-#[async_trait]
-impl LuroCommandTrait for FakeBan {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let interaction = &ctx.interaction;
-        let moderator = ctx.get_interaction_author(interaction).await?;
-        let punished_user = ctx.framework.database.get_user(&data.user.resolved.id).await?;
-        let mut response = ctx.acknowledge_interaction(false).await?;
-
-        let guild_id = interaction.guild_id.unwrap();
-        let guild = ctx.framework.twilight_client.guild(guild_id).await?.model().await?;
-        let punished_user_id = punished_user.id;
-        let reason = reason(data.reason, data.details);
-        let period_string = match data.purge {
+impl LuroCommand for FakeBan {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let guild = ctx.guild.as_ref().context("Expected guild")?;
+        let punished_user = ctx.fetch_user(&self.user.resolved.id, false).await?;
+        let reason = reason(self.reason, self.details);
+        let period_string = match self.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),
             TimeToBan::Hour => "Previous Hour".to_string(),
             TimeToBan::SixHours => "Previous 6 Hours".to_string(),
@@ -66,17 +53,16 @@ impl LuroCommandTrait for FakeBan {
 
         // Checks passed, now let's action the user
         let mut embed =
-            StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.id, &punished_user, &moderator);
+            StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.guild_id(), &punished_user, &ctx.author);
         embed
             .punishment_reason(reason.as_deref(), &punished_user)
             .punishment_period(&period_string);
-        let punished_user_dm = match ctx.framework.twilight_client.create_private_channel(punished_user_id).await {
+        let punished_user_dm = match ctx.twilight_client.create_private_channel(punished_user.user_id()).await {
             Ok(channel) => channel.model().await?,
             Err(_) => return ctx.respond(|r| r.content("Could not create DM with the user!")).await,
         };
 
         let victim_dm = ctx
-            .framework
             .twilight_client
             .create_message(punished_user_dm.id)
             .embeds(&[embed.embed().0])
@@ -87,7 +73,6 @@ impl LuroCommandTrait for FakeBan {
             Err(_) => embed.create_field("DM Sent", "Failed", true),
         };
 
-        response.add_embed(embed.embed);
-        ctx.send_respond(response).await
+        ctx.respond(|r|r.add_embed(embed.embed)).await
     }
 }
