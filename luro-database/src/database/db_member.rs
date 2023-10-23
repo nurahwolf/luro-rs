@@ -1,14 +1,13 @@
-use anyhow::anyhow;
 use twilight_model::{
     gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate},
     guild::{Member, PartialMember},
     id::{
-        marker::{GuildMarker, UserMarker},
+        marker::GuildMarker,
         Id,
     },
 };
 
-use crate::{DbMember, DbMemberType, LuroDatabase};
+use crate::DbMemberType;
 
 impl From<(Id<GuildMarker>, Member)> for DbMemberType {
     fn from(data: (Id<GuildMarker>, Member)) -> Self {

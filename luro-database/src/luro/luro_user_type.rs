@@ -1,7 +1,9 @@
+use serde::{Serialize, Deserialize};
+
 /// An Enum used to tell how a [LuroUser] was created. Additionally it wraps the type that created it.
 ///
 /// There is also an implementation for turning this type into a [LuroUser]!
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum LuroUserType {
     /// A type instanced from a Twilight [User]
     User,

@@ -9,7 +9,7 @@ impl LuroDatabase {
             DatabaseUser,
             "SELECT
                 accent_colour,
-                avatar,
+                user_avatar,
                 avatar_decoration,
                 banner,
                 bot,

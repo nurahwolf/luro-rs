@@ -1,9 +1,7 @@
 use sqlx::types::Json;
 use sqlx::Error;
-use twilight_model::user::PremiumType;
+
 use twilight_model::user::User;
-use twilight_model::user::UserFlags;
-use twilight_model::util::ImageHash;
 
 use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
 
@@ -13,7 +11,7 @@ impl LuroDatabase {
             DatabaseUser,
             "INSERT INTO users (
                 accent_colour,
-                avatar,
+                user_avatar,
                 avatar_decoration,
                 banner,
                 bot,
@@ -35,7 +33,7 @@ impl LuroDatabase {
                 (user_id)
             DO UPDATE SET
                 accent_colour = $1,
-                avatar = $2,
+                user_avatar = $2,
                 avatar_decoration = $3,
                 banner = $4,
                 bot = $5,
@@ -52,7 +50,7 @@ impl LuroDatabase {
                 verified = $17
             RETURNING
             accent_colour,
-            avatar,
+            user_avatar,
             avatar_decoration,
             banner,
             bot,
@@ -77,19 +75,19 @@ impl LuroDatabase {
             words_count
             ",
             user.accent_color.map(|x| x as i32),
-            user.avatar.map(Json) as _,
-            user.avatar_decoration.map(Json) as _,
-            user.banner.map(Json) as _,
+            user.avatar.map(|x|x.to_string()),
+            user.avatar_decoration.map(|x|x.to_string()),
+            user.banner.map(|x|x.to_string()),
             user.bot,
             user.discriminator as i16,
             user.email,
-            user.flags.map(Json) as _,
+            user.flags.map(|x| x.bits() as i64),
             user.global_name,
             user.locale,
             user.mfa_enabled,
             user.name,
-            user.premium_type.map(Json) as _,
-            user.public_flags.map(Json) as _,
+            user.premium_type.map(|x| u8::from(x) as i16),
+            user.public_flags.map(|x|x.bits() as i64),
             user.system,
             user.id.get() as i64,
             user.verified,

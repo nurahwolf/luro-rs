@@ -7,13 +7,13 @@ mod database;
 mod guild;
 // mod punishments;
 mod role;
-// mod user;
+mod user;
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "info", desc = "Information about neat things")]
 pub enum Info {
-    // #[command(name = "user")]
-    // User(user::InfoUser),
+    #[command(name = "user")]
+    User(user::InfoUser),
     #[command(name = "role")]
     Role(role::InfoRole),
     #[command(name = "guild")]
@@ -30,7 +30,7 @@ impl CreateLuroCommand for Info {
             Self::Guild(command) => command.interaction_command(ctx).await,
             // Self::Punishments(command) => command.interaction_command(ctx).await,
             Self::Role(command) => command.interaction_command(ctx).await,
-            // Self::User(command) => command.interaction_command(ctx).await,
+            Self::User(command) => command.interaction_command(ctx).await,
             Self::Database(command) => command.interaction_command(ctx).await,
         }
     }

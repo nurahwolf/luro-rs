@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::anyhow;
+use serde::{Serialize, Deserialize};
 use time::OffsetDateTime;
 use tracing::info;
 use twilight_model::{
@@ -28,15 +29,15 @@ mod update_character_text;
 /// Also holds some additional which are relevent to Luro only. These are empty if the type was not instanced from the database.
 ///
 /// Check [LuroUserType] to know how this type was instanced.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LuroUser {
     pub data: Option<LuroUserData>,
     pub member: Option<LuroMember>,
     pub instance: LuroUserType,
     pub accent_colour: Option<i32>,
-    pub avatar_decoration: Option<ImageHash>,
-    pub avatar: Option<ImageHash>,
-    pub banner: Option<ImageHash>,
+    pub avatar_decoration: Option<String>,
+    pub avatar: Option<String>,
+    pub banner: Option<String>,
     pub bot: bool,
     pub discriminator: i16,
     pub email: Option<String>,
@@ -62,8 +63,20 @@ impl From<DatabaseUser> for LuroUser {
             member: None,
             accent_colour: user.accent_colour,
             avatar_decoration: user.avatar_decoration.map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
-            avatar: user.avatar.map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
-            banner: user.banner.map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
+            avatar: match user.user_avatar {
+                Some(x) => match ImageHash::parse(x.as_bytes()) {
+                    Ok(avatar) => Some(avatar),
+                    Err(_) => None,
+                },
+                None => None,
+            },
+            banner: match user.banner {
+                Some(x) => match ImageHash::parse(x.as_bytes()) {
+                    Ok(avatar) => Some(avatar),
+                    Err(_) => None,
+                },
+                None => None,
+            },
             bot: user.bot,
             discriminator: user.discriminator,
             email: user.email,
@@ -91,7 +104,7 @@ impl From<DbMember> for LuroUser {
             member: Some(LuroMember {
                 user_id: member.user_id,
                 guild_id: member.guild_id,
-                avatar: member.avatar.as_ref().map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
+                avatar: member.guild_avatar.as_ref().map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
                 boosting_since: member.boosting_since,
                 communication_disabled_until: member.communication_disabled_until,
                 deafened: member.deafened,
@@ -104,7 +117,7 @@ impl From<DbMember> for LuroUser {
             }),
             accent_colour: member.accent_colour,
             avatar_decoration: member.avatar_decoration.map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
-            avatar: member.avatar.as_ref().map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
+            avatar: member.user_avatar.as_ref().map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
             banner: member.banner.map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
             bot: member.bot,
             discriminator: member.discriminator,

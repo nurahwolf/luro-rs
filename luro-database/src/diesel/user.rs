@@ -8,13 +8,6 @@ use twilight_model::{
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct DatabaseUser {
-    // pub character_prefix: BTreeMap<String, String>,
-    // pub guilds: HashMap<Id<GuildMarker>, LuroMember>,
-    // pub marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
-    // pub moderation_actions_performed: usize,
-    // pub moderation_actions: Json<Vec<UserActions>>,
-    // pub words: Json<BTreeMap<String, usize>>,
-    // pub wordsize: Json<BTreeMap<usize, usize>>,
     pub accent_colour: Option<i32>,
     pub avatar_decoration: Option<ImageHash>,
     pub avatar: Option<ImageHash>,

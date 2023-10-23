@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Context};
-use luro_database::{DbMember, LuroDatabase, LuroGuild, LuroMember, LuroRole, LuroUser, LuroUserType};
+
+use luro_database::{LuroDatabase, LuroGuild, LuroRole, LuroUser};
 use luro_model::{builders::EmbedBuilder, response::LuroResponse, ACCENT_COLOUR};
 use std::{future::Future, sync::Arc};
-use tracing::{error, info, warn};
+use tracing::info;
 use twilight_cache_inmemory::InMemoryCache;
 use twilight_http::{client::InteractionClient, Client};
 
@@ -125,7 +125,7 @@ pub trait Luro {
     where
         Self: Sync,
     {
-        async { LuroUser::new(self.database(), user_id.clone(), Some(guild_id.clone())).await }
+        async { LuroUser::new(self.database(), *user_id, Some(*guild_id)).await }
     }
 
     /// Fetch and return a [LuroUser], updating the database if not present. This version does not check if a guild is present.
@@ -134,7 +134,7 @@ pub trait Luro {
     where
         Self: Sync,
     {
-        async { LuroUser::new(self.database(), user_id.clone(), None).await }
+        async { LuroUser::new(self.database(), *user_id, None).await }
     }
 
     /// Fetch and return a [LuroGuild], updating the database if not present. This version gets a member if a guild is present.

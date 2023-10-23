@@ -1,9 +1,5 @@
-use luro_framework::{standard_response::Response, CommandInteraction, Luro, LuroCommand};
-use luro_model::builders::EmbedBuilder;
+use luro_framework::{CommandInteraction, LuroCommand};
 use serde::Serialize;
-use std::fmt::Write;
-use tracing::info;
-use twilight_http::{request::Request, response::marker::EmptyBody, routing::Route};
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};

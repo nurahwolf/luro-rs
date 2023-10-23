@@ -1,9 +1,10 @@
-use sqlx::types::Json;
+
+use serde::{Serialize, Deserialize};
 use twilight_model::gateway::payload::incoming::UserUpdate;
-use twilight_model::user::PremiumType;
+
 use twilight_model::user::User;
-use twilight_model::user::UserFlags;
-use twilight_model::util::ImageHash;
+
+
 
 use crate::LuroUser;
 
@@ -20,7 +21,7 @@ mod handle_user_update;
 mod update_user;
 mod update_user_data;
 
-#[derive(Debug, Default, Clone, ::sqlx::Type)]
+#[derive(Debug, Default, Clone, ::sqlx::Type, Serialize, Deserialize)]
 #[sqlx(type_name = "user_permissions", rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum LuroUserPermissions {
     #[default]
@@ -39,7 +40,7 @@ pub enum DatabaseUserType {
 pub struct DatabaseUser {
     pub accent_colour: Option<i32>,
     pub avatar_decoration: Option<String>,
-    pub avatar: Option<String>,
+    pub user_avatar: Option<String>,
     pub banner: Option<String>,
     pub bot: bool,
     pub characters: Option<Vec<i32>>,

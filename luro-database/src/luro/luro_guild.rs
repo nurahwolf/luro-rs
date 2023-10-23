@@ -126,9 +126,9 @@ impl From<DatabaseGuild> for LuroGuild {
             voice_states: Default::default(),
             widget_channel_id: Default::default(),
             widget_enabled: Default::default(),
-            guild_id: Default::default(),
-            name: Default::default(),
-            owner_id: Default::default(),
+            guild_id: guild.guild_id,
+            name: guild.name,
+            owner_id: guild.owner_id,
         }
     }
 }

@@ -18,13 +18,14 @@ pub enum DbMemberType {
     MemberRemove(MemberRemove),
     MemberUpdate(Box<MemberUpdate>),
     PartialMember(Id<GuildMarker>, PartialMember),
+    // LuroMember(LuroMember)
 }
 
 #[derive(Clone, Debug, FromRow)]
 pub struct DbMember {
     pub accent_colour: Option<i32>,
     pub avatar_decoration: Option<String>,
-    pub avatar: Option<String>,
+    pub user_avatar: Option<String>,
     pub banner: Option<String>,
     pub boosting_since: Option<time::OffsetDateTime>,
     pub bot: bool,

@@ -25,7 +25,7 @@ pub struct LuroRole {
     ///
     /// [Discord Docs/Image Formatting]: https://discord.com/developers/docs/reference#image-formatting
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub icon: Option<ImageHash>,
+    pub icon: Option<String>,
     pub id: Id<RoleMarker>,
     pub managed: bool,
     pub mentionable: bool,

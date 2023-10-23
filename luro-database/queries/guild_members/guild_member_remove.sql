@@ -1,0 +1,1 @@
+UPDATE guild_members SET removed = true WHERE guild_id = $1 and user_id = $2;

@@ -1,300 +1,178 @@
-use tracing::error;
-use twilight_model::gateway::payload::incoming::{MemberRemove, MemberUpdate};
-use twilight_model::guild::PartialMember;
-use twilight_model::{gateway::payload::incoming::MemberAdd, guild::Member};
+use sqlx::{postgres::PgQueryResult, Error};
+use time::OffsetDateTime;
+use tracing::debug;
+use twilight_model::{
+    gateway::payload::incoming::{MemberAdd, MemberRemove, MemberUpdate, MemberChunk},
+    guild::{Member, PartialMember}, id::{Id, marker::GuildMarker},
+};
 
-use crate::{DbMember, DbMemberType, LuroDatabase, LuroMember};
+use crate::{DbMemberType, LuroDatabase};
 
 impl LuroDatabase {
-    pub async fn update_member(&self, member: impl Into<DbMemberType>) -> Result<Option<DbMember>, sqlx::Error> {
-        // let member = member.into();
+    /// Updates a supported member type. Returns the total number of rows modified in the database.
+    pub async fn update_member(&self, member: impl Into<DbMemberType>) -> anyhow::Result<u64> {
+        let rows_modified = match member.into() {
+            DbMemberType::Member(guild_id, member) => handle_member(self, guild_id, member).await?,
+            DbMemberType::MemberAdd(member) => handle_member_add(self, member).await?,
+            DbMemberType::MemberChunk(member) => handle_member_chunk(self, member).await?,
+            DbMemberType::MemberRemove(member) => handle_member_remove(self, member).await?.rows_affected(),
+            DbMemberType::MemberUpdate(member) => handle_member_update(self, member).await?,
+            DbMemberType::PartialMember(guild_id, member) => handle_partial_member(self, guild_id, member).await?,
+        };
 
-        // match member {
-        //     // DbMemberType::Member(guild_id, member) => handle_member(self, guild_id.get() as i64, member).await,
-        //     // DbMemberType::MemberAdd(member) => handle_member_add(self, member).await,
-        //     // DbMemberType::MemberChunk(_) => todo!(),
-        //     // DbMemberType::MemberRemove(member) => handle_member_remove(self, member).await,
-        //     // DbMemberType::MemberUpdate(member) => handle_member_update(self, member).await,
-        //     // DbMemberType::PartialMember(guild_id, member) => handle_partial_member(self, guild_id.get() as i64, member).await,
-        //     // DbMemberType::LuroMember(member) => handle_luro_member(self, member).await,v
-        // }
+        debug!("DB Member: Updated `{rows_modified}` rows!");
 
-        todo!()
+        Ok(rows_modified)
     }
 }
 
-// async fn handle_partial_member(db: &LuroDatabase, guild_id: i64, member: PartialMember) -> Result<Option<DbMember>, sqlx::Error> {
-//     let user = match member.user {
-//         Some(user) => user,
-//         None => return Ok(None),
-//     };
+async fn handle_member_chunk(db: &LuroDatabase, event: MemberChunk) -> anyhow::Result<u64> {
+    let mut rows_modified = 0;
+    for member in event.members {
+        rows_modified += db.update_user(member.user).await?;
+        rows_modified += sqlx::query_file!(
+            "queries/guild_members/update_twilight_member.sql",
+            match member.premium_since {
+                Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+                None => None,
+            },
+            match member.communication_disabled_until {
+                Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+                None => None,
+            },
+            member.deaf,
+            event.guild_id.get() as i64,
+            OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+            member.avatar.map(|x|x.to_string()),
+            member.flags.bits() as i64,
+            member.mute,
+            member.nick,
+            member.pending,
+        )
+        .execute(&db.pool)
+        .await?.rows_affected()
+    }
 
-//     if let Err(why) = db.update_user(user.clone()).await {
-//         error!("Failed to update user: {why}")
-//     }
+    Ok(rows_modified)
+}
 
-//     sqlx::query_as!(
-//         DbMember,
-//         "INSERT INTO guild_members (
-//             user_id,
-//             guild_id,
-//             avatar,
-//             boosting_since,
-//             communication_disabled_until,
-//             deafened,
-//             member_flags,
-//             muted,
-//             nickname
-//         ) VALUES
-//             ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-//         ON CONFLICT
-//             (user_id, guild_id)
-//         DO UPDATE SET
-//             avatar = $3,
-//             boosting_since = $4,
-//             communication_disabled_until = $5,
-//             deafened = $6,
-//             member_flags = $7,
-//             muted = $8,
-//             nickname = $9
-//         RETURNING
-//             user_id,
-//             guild_id,
-//             avatar,
-//             boosting_since,
-//             communication_disabled_until,
-//             deafened,
-//             member_flags,
-//             muted,
-//             nickname,
-//             pending
-//         ",
-//         user.id.get() as i64,
-//         guild_id,
-//         member.avatar.map(Json) as _,
-//         member
-//             .premium_since
-//             .map(|x| OffsetDateTime::from_unix_timestamp(x.as_secs()).unwrap()),
-//         member
-//             .communication_disabled_until
-//             .map(|x| OffsetDateTime::from_unix_timestamp(x.as_secs()).unwrap()),
-//         member.deaf,
-//         member.member_flags.bits() as i32,
-//         member.mute,
-//         member.nick,
-//     )
-//     .fetch_optional(&db.pool)
-//     .await
-// }
+async fn handle_member_remove(db: &LuroDatabase, member: MemberRemove) -> Result<PgQueryResult, Error>{
+    sqlx::query_file!(
+        "queries/guild_members/guild_member_remove.sql",
+        member.guild_id.get() as i64,
+        member.user.id.get() as i64
+    )
+    .execute(&db.pool)
+    .await
+}
 
-// async fn handle_member_remove(db: &LuroDatabase, member: MemberRemove) -> Result<Option<DbMember>, sqlx::Error> {
-//     if let Err(why) = db.update_user(member.user.clone()).await {
-//         error!("Failed to update user: {why}")
-//     }
-//     sqlx::query_as!(
-//         DbMember,
-//         "INSERT INTO guild_members (
-//             user_id,
-//             guild_id,
-//             removed
-//         ) VALUES (
-//             $1, $2, $3
-//         ) ON CONFLICT (
-//             user_id, guild_id
-//         ) DO UPDATE SET
-//             user_id = $1,
-//             guild_id = $2,
-//             removed = $3
-//         RETURNING
-//             user_id,
-//             guild_id,
-//             avatar,
-//             boosting_since,
-//             communication_disabled_until,
-//             deafened,
-//             member_flags,
-//             muted,
-//             nickname,
-//             pending
-//         ",
-//         member.user.id.get() as i64,
-//         member.guild_id.get() as i64,
-//         true
-//     )
-//     .fetch_optional(&db.pool)
-//     .await
-// }
+async fn handle_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, member: Member) -> anyhow::Result<u64> {
+    let mut rows_modified = db.update_user(member.user.clone()).await?;
+    rows_modified += sqlx::query_file!(
+        "queries/guild_members/update_twilight_member.sql",
+        match member.premium_since {
+            Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+            None => None,
+        },
+        match member.communication_disabled_until {
+            Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+            None => None,
+        },
+        member.deaf,
+        guild_id.get() as i64,
+        OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+        member.avatar.map(|x|x.to_string()),
+        member.flags.bits() as i64,
+        member.mute,
+        member.nick,
+        member.pending,
+    )
+    .execute(&db.pool)
+    .await?.rows_affected();
 
-// async fn handle_member(db: &LuroDatabase, guild_id: i64, member: Member) -> Result<Option<DbMember>, sqlx::Error> {
-//     if let Err(why) = db.update_user(member.user.clone()).await {
-//         error!("Failed to update user: {why}")
-//     }
-//     sqlx::query_as!(
-//         DbMember,
-//         "INSERT INTO guild_members (
-//             user_id,
-//             guild_id,
-//             avatar,
-//             boosting_since,
-//             communication_disabled_until,
-//             deafened,
-//             member_flags,
-//             muted,
-//             nickname,
-//             pending
-//         ) VALUES
-//             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-//         ON CONFLICT
-//             (user_id, guild_id)
-//         DO UPDATE SET
-//             avatar = $3,
-//             boosting_since = $4,
-//             communication_disabled_until = $5,
-//             deafened = $6,
-//             member_flags = $7,
-//             muted = $8,
-//             nickname = $9,
-//             pending = $10
-//         RETURNING
-//             user_id,
-//             guild_id,
-//             avatar,
-//             boosting_since,
-//             communication_disabled_until,
-//             deafened,
-//             member_flags,
-//             muted,
-//             nickname,
-//             pending
-//         ",
-//         member.user.id.get() as i64,
-//         guild_id,
-//         member.avatar.map(Json) as _,
-//         member
-//             .premium_since
-//             .map(|x| OffsetDateTime::from_unix_timestamp(x.as_secs()).unwrap()),
-//         member
-//             .communication_disabled_until
-//             .map(|x| OffsetDateTime::from_unix_timestamp(x.as_secs()).unwrap()),
-//         member.deaf,
-//         member.member_flags.bits() as i32,
-//         member.mute,
-//         member.nick,
-//         member.pending,
-//         // member.roles.iter().map(|x| x.get() as i64).collect::<Vec<_>>()
-//     )
-//     .fetch_optional(&db.pool)
-//     .await
-// }
+    Ok(rows_modified)
+}
 
-// async fn handle_member_add(db: &LuroDatabase, member: Box<MemberAdd>) -> Result<Option<DbMember>, sqlx::Error> {
-//     if let Err(why) = db.update_user(member.user.clone()).await {
-//         error!("Failed to update user: {why}")
-//     }
-//     sqlx::query_as!(
-//         DbMember,
-//         "INSERT INTO guild_members (
-//             user_id,
-//             guild_id,
-//             avatar,
-//             boosting_since,
-//             communication_disabled_until,
-//             deafened,
-//             member_flags,
-//             muted,
-//             nickname,
-//             pending
-//         ) VALUES
-//             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-//         ON CONFLICT
-//             (user_id, guild_id)
-//         DO UPDATE SET
-//             avatar = $3,
-//             boosting_since = $4,
-//             communication_disabled_until = $5,
-//             deafened = $6,
-//             member_flags = $7,
-//             muted = $8,
-//             nickname = $9,
-//             pending = $10
-//         RETURNING
-//             user_id,
-//             guild_id,
-//             avatar,
-//             boosting_since,
-//             communication_disabled_until,
-//             deafened,
-//             member_flags,
-//             muted,
-//             nickname,
-//             pending
-//         ",
-//         member.user.id.get() as i64,
-//         member.guild_id.get() as i64,
-//         member.avatar.map(Json) as _,
-//         member
-//             .premium_since
-//             .map(|x| OffsetDateTime::from_unix_timestamp(x.as_secs()).unwrap()),
-//         member
-//             .communication_disabled_until
-//             .map(|x| OffsetDateTime::from_unix_timestamp(x.as_secs()).unwrap()),
-//         member.deaf,
-//         member.member_flags.bits() as i32,
-//         member.mute,
-//         member.nick,
-//         member.pending,
-//         // member.roles.iter().map(|x| x.get() as i64).collect::<Vec<_>>()
-//     )
-//     .fetch_optional(&db.pool)
-//     .await
-// }
+async fn handle_partial_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, member: PartialMember) -> anyhow::Result<u64> {
+    let mut rows_modified = 0;
 
-// async fn handle_member_update(db: &LuroDatabase, member: Box<MemberUpdate>) -> Result<Option<DbMember>, sqlx::Error> {
-//     if let Err(why) = db.update_user(member.user.clone()).await {
-//         error!("Failed to update user: {why}")
-//     }
-//     sqlx::query_as!(
-//         DbMember,
-//         "INSERT INTO guild_members (
-//             user_id,
-//             guild_id,
-//             avatar,
-//             boosting_since,
-//             communication_disabled_until,
-//             pending
-//         ) VALUES
-//             ($1, $2, $3, $4, $5, $6)
-//         ON CONFLICT
-//             (user_id, guild_id)
-//         DO UPDATE SET
-//             avatar = $3,
-//             boosting_since = $4,
-//             communication_disabled_until = $5,
-//             pending = $6
-//         RETURNING
-//             user_id,
-//             guild_id,
-//             avatar,
-//             boosting_since,
-//             communication_disabled_until,
-//             deafened,
-//             member_flags,
-//             muted,
-//             nickname,
-//             pending
-//         ",
-//         member.user.id.get() as i64,
-//         member.guild_id.get() as i64,
-//         member.avatar.map(Json) as _,
-//         member
-//             .premium_since
-//             .map(|x| OffsetDateTime::from_unix_timestamp(x.as_secs()).unwrap()),
-//         member
-//             .communication_disabled_until
-//             .map(|x| OffsetDateTime::from_unix_timestamp(x.as_secs()).unwrap()),
-//         member.pending,
-//         // member.roles.iter().map(|x| x.get() as i64).collect::<Vec<_>>()
-//     )
-//     .fetch_optional(&db.pool)
-//     .await
-// }
+    if let Some(ref user) = member.user {
+        rows_modified += db.update_user(user.clone()).await?;
+    }
+
+    rows_modified += sqlx::query_file!(
+        "queries/guild_members/update_twilight_partial_member.sql",
+        match member.premium_since {
+            Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+            None => None,
+        },
+        match member.communication_disabled_until {
+            Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+            None => None,
+        },
+        member.deaf,
+        guild_id.get() as i64,
+        OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+        member.avatar.map(|x|x.to_string()),
+        member.flags.bits() as i64,
+        member.mute,
+        member.nick,
+    )
+    .execute(&db.pool)
+    .await?.rows_affected();
+
+    Ok(rows_modified)
+}
+
+async fn handle_member_add(db: &LuroDatabase, member: Box<MemberAdd>) -> anyhow::Result<u64> {
+    let mut rows_modified = db.update_user(member.user.clone()).await?;
+    rows_modified += sqlx::query_file!(
+        "queries/guild_members/update_twilight_member.sql",
+        match member.premium_since {
+            Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+            None => None,
+        },
+        match member.communication_disabled_until {
+            Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+            None => None,
+        },
+        member.deaf,
+        member.guild_id.get() as i64,
+        OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+        member.avatar.map(|x|x.to_string()),
+        member.flags.bits() as i64,
+        member.mute,
+        member.nick,
+        member.pending,
+    )
+    .execute(&db.pool)
+    .await?.rows_affected();
+
+    Ok(rows_modified)
+}
+
+async fn handle_member_update(db: &LuroDatabase, member: Box<MemberUpdate>) -> anyhow::Result<u64> {
+    let mut rows_modified = db.update_user(member.user.clone()).await?;
+    rows_modified += sqlx::query_file!(
+        "queries/guild_members/update_twilight_member_update.sql",
+        match member.premium_since {
+            Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+            None => None,
+        },
+        match member.communication_disabled_until {
+            Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
+            None => None,
+        },
+        member.deaf,
+        member.guild_id.get() as i64,
+        OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+        member.avatar.map(|x|x.to_string()),
+        member.mute,
+        member.nick,
+        member.pending,
+    )
+    .execute(&db.pool)
+    .await?.rows_affected();
+
+    Ok(rows_modified)
+}
