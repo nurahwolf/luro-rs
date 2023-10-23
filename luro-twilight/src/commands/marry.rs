@@ -107,10 +107,10 @@ impl CreateLuroCommand for Marry {
     }
 
     async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
-        let proposer = ctx.fetch_user(&Id::new(invoking_interaction.user_id as u64)).await?;
+        let proposer = ctx.fetch_user(&Id::new(invoking_interaction.user_id as u64), false).await?;
         let (proposee, divorce_wanted) = match self {
-            Self::Someone(command) => (ctx.fetch_user(&command.marry.resolved.id).await?, false),
-            Self::Divorce(command) => (ctx.fetch_user(&command.user.resolved.id).await?, true),
+            Self::Someone(command) => (ctx.fetch_user(&command.marry.resolved.id, false).await?, false),
+            Self::Divorce(command) => (ctx.fetch_user(&command.user.resolved.id, false).await?, true),
             _ => {
                 return ctx
                     .response_simple(Response::InternalError(anyhow!("Can't find the request to marry, sorry!")))
@@ -159,7 +159,7 @@ impl CreateLuroCommand for Marry {
         match divorce_wanted {
             false => embed
                 .title(format!("{} has proposed!", proposer.name()))
-                .thumbnail(|t| t.url(proposer.avatar()))
+                .thumbnail(|t| t.url(proposer.avatar_url()))
                 .create_field("Their Reason", &marriage.reason, false),
             true => embed
                 .colour(COLOUR_DANGER)
@@ -168,7 +168,7 @@ impl CreateLuroCommand for Marry {
                     proposer.name(),
                     proposee.name()
                 ))
-                .thumbnail(|t| t.url(proposer.avatar()))
+                .thumbnail(|t| t.url(proposer.avatar_url()))
                 .create_field("Their Reason", &marriage.reason, false),
         };
 

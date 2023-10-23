@@ -16,25 +16,23 @@ pub struct Proxy {
 
 impl LuroCommand for Proxy {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user_id = ctx.author.user_id();
-        let user = ctx.fetch_user(&user_id).await?;
-        let mut character = match user.fetch_character(ctx.database.clone(), &self.name).await? {
+        let mut character = match ctx.author.fetch_character(ctx.database.clone(), &self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for (character_name, character) in user.fetch_characters(ctx.database.clone()).await? {
+                for (character_name, character) in ctx.author.fetch_characters(ctx.database.clone()).await? {
                     writeln!(characters, "- {character_name}: {}", character.sfw_summary)?
                 }
 
-                let response = format!("I'm afraid that user <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",user.user_id, self.name, characters);
+                let response = format!("I'm afraid that user <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",ctx.author.user_id, self.name, characters);
                 return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
 
         if self.remove.unwrap_or_default() {
             character.prefix = None;
-            user.update_character(ctx.database.clone(), character).await?;
+            ctx.author.update_character(ctx.database.clone(), character).await?;
             return ctx
                 .respond(|r| {
                     r.content(format!("Prefix `{}` removed from character {}!", self.prefix, self.name))
@@ -44,14 +42,14 @@ impl LuroCommand for Proxy {
         }
 
         character.prefix = Some(self.prefix);
-        user.update_character(ctx.database.clone(), character.clone()).await?;
+        ctx.author.update_character(ctx.database.clone(), character.clone()).await?;
 
         let accent_colour = ctx.accent_colour();
         let character_icon = character
             .sfw_icons
             .map(|x| x.choose(&mut thread_rng()).cloned())
-            .map(|x| x.unwrap_or(user.avatar()))
-            .unwrap_or(user.avatar());
+            .map(|x| x.unwrap_or(ctx.author.avatar_url()))
+            .unwrap_or(ctx.author.avatar_url());
         ctx.respond(|response|response.embed(|embed|embed.colour(accent_colour).author(|author|author.icon_url(character_icon).name(&self.name)).description("Your proxied messages will look like this now!\n\n*Note:* If I am using your avatar, make sure that I have been set with an icon! `/character icon`")).ephemeral()).await
     }
 }

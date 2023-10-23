@@ -30,7 +30,7 @@ impl LuroCommand for Add {
             })
             .await?;
 
-        let image_owner = ctx.fetch_user(&twilight_model::id::Id::new(img.owner_id as u64)).await?;
+        let image_owner = ctx.fetch_user(&twilight_model::id::Id::new(img.owner_id as u64), false).await?;
 
         ctx.respond(|r| {
             r.embed(|e| {
@@ -53,7 +53,7 @@ impl LuroCommand for Add {
                     .author(|author| {
                         author
                             .name(format!("Image by {}", image_owner.name()))
-                            .icon_url(image_owner.avatar())
+                            .icon_url(image_owner.avatar_url())
                     })
             })
         })

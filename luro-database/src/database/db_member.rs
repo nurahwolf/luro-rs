@@ -1,10 +1,7 @@
 use twilight_model::{
     gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate},
     guild::{Member, PartialMember},
-    id::{
-        marker::GuildMarker,
-        Id,
-    },
+    id::{marker::GuildMarker, Id},
 };
 
 use crate::DbMemberType;

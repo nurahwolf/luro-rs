@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_framework::{CommandInteraction, LuroCommand};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use std::fmt::Write;
@@ -17,17 +17,16 @@ pub struct CharacterSend {
 
 impl LuroCommand for CharacterSend {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
-        let character = match user.fetch_character(ctx.database.clone(), &self.name).await? {
+        let character = match ctx.author.fetch_character(ctx.database.clone(), &self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for (character_name, character) in user.fetch_characters(ctx.database.clone()).await? {
+                for (character_name, character) in ctx.author.fetch_characters(ctx.database.clone()).await? {
                     writeln!(characters, "- {character_name}: {}", character.sfw_summary)?
                 }
 
-                let response = format!("I'm afraid that user <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",user.user_id, self.name, characters);
+                let response = format!("I'm afraid that user <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",ctx.author.user_id, self.name, characters);
                 return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
@@ -35,8 +34,8 @@ impl LuroCommand for CharacterSend {
         let character_icon = character
             .sfw_icons
             .map(|x| x.choose(&mut thread_rng()).cloned())
-            .map(|x| x.unwrap_or(user.avatar()))
-            .unwrap_or(user.avatar());
+            .map(|x| x.unwrap_or(ctx.author.avatar_url()))
+            .unwrap_or(ctx.author.avatar_url());
 
         let webhook = ctx.get_webhook(ctx.channel.id).await?;
         let webhook_token = match webhook.token {
@@ -53,7 +52,7 @@ impl LuroCommand for CharacterSend {
 
         ctx.twilight_client
             .execute_webhook(webhook.id, &webhook_token)
-            .username(&format!("{} [{}]", self.name, user.name()))
+            .username(&format!("{} [{}]", self.name, ctx.author.name()))
             .content(&self.message)
             .avatar_url(&character_icon)
             .await?;

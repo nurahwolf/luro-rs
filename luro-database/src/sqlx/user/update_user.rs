@@ -1,6 +1,6 @@
-use sqlx::{Error, postgres::PgQueryResult};
+use sqlx::{postgres::PgQueryResult, Error};
 use tracing::debug;
-use twilight_model::{user::User, gateway::payload::incoming::UserUpdate};
+use twilight_model::{gateway::payload::incoming::UserUpdate, user::User};
 
 use crate::{DatabaseUserType, LuroDatabase};
 

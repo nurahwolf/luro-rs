@@ -41,11 +41,11 @@ impl LuroCommand for Message {
 
         match luro_message {
             Some(message) => {
-                let user = ctx.fetch_user(&message.author.id).await?;
+                let user = ctx.fetch_user(&message.author.id, false).await?;
 
                 let toml = toml::to_string_pretty(&message)?;
                 embed
-                    .author(|author| author.name(user.name()).icon_url(user.avatar()).url(message.link()))
+                    .author(|author| author.name(user.name()).icon_url(user.avatar_url()).url(message.link()))
                     .description(message.content)
                     .create_field("Channel", &format!("<#{}>", channel_id), true)
                     .create_field("Message ID", &message_id.to_string(), true)

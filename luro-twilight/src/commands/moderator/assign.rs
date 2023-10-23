@@ -1,6 +1,4 @@
-use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{CommandInteraction, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::id::{marker::RoleMarker, Id};
 
@@ -16,35 +14,15 @@ pub struct Assign {
     /// Optionally the user to apply the role to. Applies to self if not defined.
     user: Option<ResolvedUser>,
 }
-#[async_trait]
-impl LuroCommandTrait for Assign {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let author = interaction.author_id();
 
-        // User to action
-        let user = if let Some(user) = data.user {
-            user.resolved.id
-        } else {
-            author
-        };
+impl LuroCommand for Assign {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let user = ctx.get_specified_user_or_author(self.user.as_ref(), false).await?;
+        ctx.twilight_client
+            .add_guild_member_role(ctx.guild.as_ref().unwrap().guild_id(), user.user_id(), self.role)
+            .await?;
 
-        // Guild to modify
-        let guild_id = match interaction.guild_id {
-            Some(guild_id) => guild_id,
-            None => return Response::NotGuild().respond(&ctx, &interaction).await,
-        };
-
-        ctx.twilight_client.add_guild_member_role(guild_id, user, data.role).await?;
-
-        interaction
-            .respond(&ctx, |r| {
-                r.content(format!("Assigned the role <@&{}> successfully", data.role))
-                    .ephemeral()
-            })
+        ctx.respond(|r| r.content(format!("Assigned the role <@&{}> successfully", self.role)).ephemeral())
             .await
     }
 }

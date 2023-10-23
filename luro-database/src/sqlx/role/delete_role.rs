@@ -14,7 +14,7 @@ impl LuroDatabase {
             ) VALUES
                 ($1, $2)
             ON CONFLICT
-                (role_id)
+                (role_id, guild_id)
             DO UPDATE SET
                 deleted = $1
             RETURNING

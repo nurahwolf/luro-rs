@@ -1,6 +1,5 @@
 use luro_model::message::LuroMessage;
 use sqlx::types::Json;
-use sqlx::Error;
 use time::OffsetDateTime;
 use tracing::debug;
 use twilight_model::channel::message::sticker::MessageSticker;
@@ -20,7 +19,7 @@ use twilight_model::user::User;
 use crate::{DatabaseMessage, DatabaseMessageSource, LuroDatabase};
 
 impl LuroDatabase {
-    pub async fn handle_message(&self, message: Message) -> Result<Option<LuroMessage>, Error> {
+    pub async fn handle_message(&self, message: Message) -> anyhow::Result<Option<LuroMessage>> {
         debug!("Handling message_create {:#?}", message);
 
         self.update_user(message.author.clone()).await?;
@@ -189,6 +188,6 @@ impl LuroDatabase {
                 message.member.clone().map(Json) as _
             );
 
-        query.fetch_optional(&self.pool).await.map(|x| x.map(|x| x.into()))
+        Ok(query.fetch_optional(&self.pool).await.map(|x| x.map(|x| x.into()))?)
     }
 }

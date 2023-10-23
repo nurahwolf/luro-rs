@@ -47,12 +47,12 @@ impl LuroCommand for Database {
         for staff in ctx.database.get_staff().await? {
             match staff.user_permissions {
                 LuroUserPermissions::Owner => match owners.is_empty() {
-                    true => owners.push_str(&staff.name),
-                    false => owners.push_str(format!(", {}", &staff.name).as_str()),
+                    true => owners.push_str(&staff.user_name),
+                    false => owners.push_str(format!(", {}", &staff.user_name).as_str()),
                 },
                 LuroUserPermissions::Administrator => match administrators.is_empty() {
-                    true => administrators.push_str(&staff.name),
-                    false => administrators.push_str(format!(", {}", &staff.name).as_str()),
+                    true => administrators.push_str(&staff.user_name),
+                    false => administrators.push_str(format!(", {}", &staff.user_name).as_str()),
                 },
                 _ => warn!("User {:#?} is tagged as a regular user in the database!", &staff),
             }

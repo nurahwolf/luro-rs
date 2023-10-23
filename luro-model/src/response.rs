@@ -129,4 +129,12 @@ impl LuroResponse {
         self.flags = Some(MessageFlags::EPHEMERAL);
         self
     }
+
+    /// Pass a bool to set ephemeral as a toggle
+    pub fn ephemeral_toggle(&mut self, toggle: bool) -> &mut Self {
+        if toggle {
+            self.flags = Some(MessageFlags::EPHEMERAL)
+        }
+        self
+    }
 }

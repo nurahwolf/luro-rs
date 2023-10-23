@@ -1,47 +1,34 @@
 use anyhow::Error;
-
-use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{CommandInteraction, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(
-    name = "purge",
-    desc = "Remove up to 100 messages from a channel",
-    default_permissions = "Self::default_permissions"
-)]
+#[command(name = "purge", desc = "Remove up to 100 messages from a channel")]
 pub struct Purge {
     /// Choose how many messages should be removed
     #[command(min_value = 1, max_value = 100)]
     amount: i64,
 }
 
-#[async_trait]
-impl LuroCommandTrait for Purge {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let channel = interaction.channel.id;
-        let twilight = &ctx.twilight_client;
-        let messages = twilight
-            .channel_messages(channel)
-            .limit(data.amount as u16)
+impl LuroCommand for Purge {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let messages = ctx
+            .twilight_client
+            .channel_messages(ctx.channel.id)
+            .limit(self.amount as u16)
             .await?
             .model()
             .await?;
 
-        if data.amount == 1 {
-            twilight
-                .delete_message(channel, messages.first().ok_or_else(|| Error::msg("No messages found"))?.id)
+        if self.amount == 1 {
+            ctx.twilight_client
+                .delete_message(ctx.channel.id, messages.first().ok_or_else(|| Error::msg("No messages found"))?.id)
                 .await?;
         } else {
             let message_ids = messages.into_iter().map(|messages| messages.id).collect::<Vec<_>>();
-            twilight.delete_messages(channel, &message_ids).await?;
+            ctx.twilight_client.delete_messages(ctx.channel.id, &message_ids).await?;
         }
 
-        interaction.respond(&ctx, |r| r.content("Done!!").ephemeral()).await
+        ctx.respond(|r| r.content("Done!!").ephemeral()).await
     }
 }

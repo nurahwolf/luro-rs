@@ -1,7 +1,6 @@
-use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
 use std::fmt::Write;
+use anyhow::Context;
+use luro_framework::{CommandInteraction, LuroCommand, Response, Luro};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::ChannelMarker, Id};
 
@@ -26,59 +25,47 @@ pub struct Settings {
     pub moderator_actions_log_channel: Option<Id<ChannelMarker>>,
 }
 
-#[async_trait]
-impl LuroCommandTrait for Settings {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let guild_id = match interaction.guild_id {
-            Some(guild_id) => guild_id,
-            None => return Response::NotGuild().respond(&ctx, &interaction).await,
-        };
-        let mut guild = ctx.database.get_guild(&guild_id).await?;
-        if let Ok(twilight_guild) = ctx.twilight_client.guild(guild_id).await {
-            guild.update_guild(twilight_guild.model().await?);
-        }
+impl LuroCommand for Settings {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let guild = ctx.guild.context("Expected this to be a guild")?;
 
-        let mut embed = interaction.default_embed(&ctx).await;
+        let mut embed = ctx.default_embed().await;
         embed.title(format!("Guild Setting - {}", guild.name));
-        if let Some(clear_settings) = data.clear_settings && clear_settings {
+        if let Some(clear_settings) = self.clear_settings && clear_settings {
             guild.accent_colour_custom = Default::default();
             guild.catchall_log_channel = Default::default();
             guild.commands = Default::default();
             guild.message_events_log_channel = Default::default();
             guild.moderator_actions_log_channel = Default::default();
             guild.thread_events_log_channel = Default::default();
-            guild.accent_colour_custom = data.accent_colour.clone().map(|c|parse_string_to_u32(c.as_ref()).unwrap_or_default());
+            guild.accent_colour_custom = self.accent_colour.clone().map(|c|parse_string_to_u32(c.as_ref()).unwrap_or_default());
         };
 
-        if let Some(accent_colour) = &data.accent_colour {
+        if let Some(accent_colour) = &self.accent_colour {
             guild.accent_colour_custom = match parse_string_to_u32(accent_colour) {
                 Ok(accent_colour) => Some(accent_colour),
                 Err(_) => None,
             }
         }
 
-        if let Some(catchall_log_channel) = data.catchall_log_channel {
+        if let Some(catchall_log_channel) = self.catchall_log_channel {
             guild.catchall_log_channel = Some(catchall_log_channel)
         }
 
-        if let Some(message_events_log_channel) = data.message_events_log_channel {
+        if let Some(message_events_log_channel) = self.message_events_log_channel {
             guild.message_events_log_channel = Some(message_events_log_channel)
         }
 
-        if let Some(moderator_actions_log_channel) = data.moderator_actions_log_channel {
+        if let Some(moderator_actions_log_channel) = self.moderator_actions_log_channel {
             guild.moderator_actions_log_channel = Some(moderator_actions_log_channel)
         }
 
-        if let Some(thread_events_log_channel) = data.thread_events_log_channel {
+        if let Some(thread_events_log_channel) = self.thread_events_log_channel {
             guild.thread_events_log_channel = Some(thread_events_log_channel)
         }
 
         // Call manage guild settings, which allows us to make sure that they are present both on disk and in the cache.
-        ctx.database.modify_guild(&guild_id, &guild).await?;
+        // ctx.database.modify_guild(&guild_id, &guild).await?;
         if let Some((colour, position, role)) = guild.highest_role_colour() {
             guild.accent_colour = Some(colour);
             embed.create_field(
@@ -112,7 +99,7 @@ impl LuroCommandTrait for Settings {
             embed.create_field("Blacklisted Roles from Selfassign", &blacklist, false);
         }
 
-        interaction.respond(&ctx, |r| r.add_embed(embed)).await
+        ctx.respond(|r| r.add_embed(embed)).await
     }
 }
 

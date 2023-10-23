@@ -5,10 +5,7 @@ use sqlx::Error;
 use twilight_model::guild::RoleTags;
 use twilight_model::{
     guild::{Permissions, RoleFlags},
-    id::{
-        marker::{GuildMarker, UserMarker},
-        Id,
-    },
+    id::Id,
 };
 
 use crate::{LuroDatabase, LuroMember, LuroRole, LuroUser, LuroUserData, LuroUserPermissions, LuroUserType};
@@ -30,6 +27,7 @@ impl LuroDatabase {
                     permissions: db_user.user_permissions,
                 }),
                 member: Some(LuroMember {
+                    left_at: db_user.left_at,
                     avatar: db_user.member_avatar,
                     boosting_since: db_user.boosting_since,
                     communication_disabled_until: db_user.communication_disabled_until,

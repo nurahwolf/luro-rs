@@ -36,7 +36,7 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
 
         // Register staff
         for staff in BOT_OWNERS {
-            let mut user = framework.fetch_user(&staff).await?;
+            let mut user = framework.fetch_user(&staff, true).await?;
             if let Some(ref mut user_data) = user.data {
                 user_data.permissions = LuroUserPermissions::Administrator;
                 user.push_changes(framework.database.clone()).await?;
@@ -44,7 +44,7 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
         }
 
         // Register primary owner
-        let mut owner = framework.fetch_user(&PRIMARY_BOT_OWNER).await?;
+        let mut owner = framework.fetch_user(&PRIMARY_BOT_OWNER, true).await?;
         if let Some(ref mut user_data) = owner.data {
             user_data.permissions = LuroUserPermissions::Owner;
             owner.push_changes(framework.database.clone()).await?;
@@ -130,12 +130,12 @@ async fn pretty_output(framework: &LuroContext, event: &Ready, staff: Vec<Databa
     for staff in staff {
         match staff.user_permissions {
             LuroUserPermissions::Owner => match owners.is_empty() {
-                true => owners.push_str(&staff.name),
-                false => owners.push_str(format!(", {}", &staff.name).as_str()),
+                true => owners.push_str(&staff.user_name),
+                false => owners.push_str(format!(", {}", &staff.user_name).as_str()),
             },
             LuroUserPermissions::Administrator => match administrators.is_empty() {
-                true => administrators.push_str(&staff.name),
-                false => administrators.push_str(format!(", {}", &staff.name).as_str()),
+                true => administrators.push_str(&staff.user_name),
+                false => administrators.push_str(format!(", {}", &staff.user_name).as_str()),
             },
             _ => warn!("User {:#?} is tagged as a regular user in the database!", &staff),
         }

@@ -1,7 +1,7 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::anyhow;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use tracing::info;
 use twilight_model::{
@@ -11,10 +11,10 @@ use twilight_model::{
         Id,
     },
     user::{PremiumType, User, UserFlags},
-    util::{ImageHash, Timestamp},
+    util::{image_hash::ImageHashParseError, ImageHash, Timestamp},
 };
 
-use crate::{DatabaseUser, DbMember, LuroDatabase, LuroMember, LuroUserData, LuroUserType};
+use crate::{LuroDatabase, LuroMember, LuroUserData, LuroUserType};
 
 mod fetch_character;
 mod fetch_characters;
@@ -53,89 +53,6 @@ pub struct LuroUser {
     pub verified: Option<bool>,
 }
 
-impl From<DatabaseUser> for LuroUser {
-    fn from(user: DatabaseUser) -> Self {
-        Self {
-            instance: LuroUserType::DbUser,
-            data: Some(LuroUserData {
-                permissions: user.user_permissions,
-            }),
-            member: None,
-            accent_colour: user.accent_colour,
-            avatar_decoration: user.avatar_decoration.map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
-            avatar: match user.user_avatar {
-                Some(x) => match ImageHash::parse(x.as_bytes()) {
-                    Ok(avatar) => Some(avatar),
-                    Err(_) => None,
-                },
-                None => None,
-            },
-            banner: match user.banner {
-                Some(x) => match ImageHash::parse(x.as_bytes()) {
-                    Ok(avatar) => Some(avatar),
-                    Err(_) => None,
-                },
-                None => None,
-            },
-            bot: user.bot,
-            discriminator: user.discriminator,
-            email: user.email,
-            flags: user.user_flags,
-            global_name: user.global_name,
-            locale: user.locale,
-            mfa_enabled: user.mfa_enabled,
-            name: user.name,
-            premium_type: user.premium_type,
-            public_flags: user.public_flags,
-            system: user.system,
-            verified: user.verified,
-            user_id: user.user_id,
-        }
-    }
-}
-
-impl From<DbMember> for LuroUser {
-    fn from(member: DbMember) -> Self {
-        Self {
-            instance: LuroUserType::DbMember,
-            data: Some(LuroUserData {
-                permissions: member.user_permissions,
-            }),
-            member: Some(LuroMember {
-                user_id: member.user_id,
-                guild_id: member.guild_id,
-                avatar: member.guild_avatar.as_ref().map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
-                boosting_since: member.boosting_since,
-                communication_disabled_until: member.communication_disabled_until,
-                deafened: member.deafened,
-                flags: member.member_flags,
-                muted: member.muted,
-                nickname: member.nickname,
-                pending: member.pending,
-                joined_at: member.joined_at.unwrap(),
-                roles: member.roles.unwrap().into_iter().map(|x| Id::new(x as u64)).collect::<Vec<_>>(),
-            }),
-            accent_colour: member.accent_colour,
-            avatar_decoration: member.avatar_decoration.map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
-            avatar: member.user_avatar.as_ref().map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
-            banner: member.banner.map(|x| ImageHash::parse(x.as_bytes()).unwrap()),
-            bot: member.bot,
-            discriminator: member.discriminator,
-            email: member.email,
-            flags: member.user_flags,
-            global_name: member.global_name,
-            locale: member.locale,
-            mfa_enabled: member.mfa_enabled,
-            name: member.name,
-            premium_type: member.premium_type,
-            public_flags: member.public_flags,
-            system: member.system,
-            user_id: member.user_id,
-            verified: member.verified,
-        }
-    }
-}
-
 impl From<User> for LuroUser {
     fn from(user: User) -> Self {
         Self {
@@ -143,9 +60,9 @@ impl From<User> for LuroUser {
             member: None,
             data: None,
             accent_colour: user.accent_color.map(|x| x as i32),
-            avatar_decoration: user.avatar_decoration,
-            avatar: user.avatar,
-            banner: user.banner,
+            avatar_decoration: user.avatar_decoration.map(|x| x.to_string()),
+            avatar: user.avatar.map(|x| x.to_string()),
+            banner: user.banner.map(|x| x.to_string()),
             bot: user.bot,
             discriminator: user.discriminator as i16,
             email: user.email,
@@ -169,7 +86,8 @@ impl From<(Member, Id<GuildMarker>)> for LuroUser {
             instance: LuroUserType::Member,
             data: None,
             member: Some(LuroMember {
-                avatar: member.avatar,
+                left_at: None,
+                avatar: member.avatar.map(|x| x.to_string()),
                 boosting_since: match member.premium_since {
                     Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs()).unwrap()),
                     None => None,
@@ -185,13 +103,13 @@ impl From<(Member, Id<GuildMarker>)> for LuroUser {
                 muted: member.mute,
                 nickname: member.nick,
                 pending: member.pending,
-                roles: member.roles,
+                roles: HashMap::new(),
                 user_id: member.user.id.get() as i64,
             }),
             accent_colour: member.user.accent_color.map(|x| x as i32),
-            avatar_decoration: member.user.avatar_decoration,
-            avatar: member.user.avatar,
-            banner: member.user.banner,
+            avatar_decoration: member.user.avatar_decoration.map(|x| x.to_string()),
+            avatar: member.user.avatar.map(|x| x.to_string()),
+            banner: member.user.banner.map(|x| x.to_string()),
             bot: member.user.bot,
             discriminator: member.user.discriminator as i16,
             email: member.user.email,
@@ -222,13 +140,20 @@ impl LuroUser {
         Id::new(self.user_id as u64)
     }
 
+    pub fn avatar(&self) -> Result<Option<ImageHash>, ImageHashParseError> {
+        Ok(match &self.avatar {
+            Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+            None => None,
+        })
+    }
+
     /// Return a string that is a link to the user's avatar
-    pub fn avatar(&self) -> String {
+    pub fn avatar_url(&self) -> String {
         let user_id = self.user_id;
         if let Some(member) = &self.member {
             let guild_id = member.guild_id;
 
-            if let Some(avatar) = member.avatar {
+            if let Ok(Some(avatar)) = member.avatar() {
                 info!("Guild Avatar: {:#?}", avatar.to_string());
 
                 return match avatar.is_animated() {
@@ -238,18 +163,26 @@ impl LuroUser {
             }
         }
 
-        match self.avatar {
-            Some(avatar) => match avatar.is_animated() {
+        match self.avatar() {
+            Ok(Some(avatar)) => match avatar.is_animated() {
                 true => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.gif?size=2048"),
                 false => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png?size=2048"),
             },
-            None => format!("https://cdn.discordapp.com/avatars/{}.png?size=2048", self.user_id > 22 % 6),
+            _ => format!("https://cdn.discordapp.com/avatars/{}.png?size=2048", self.user_id > 22 % 6),
         }
     }
 
+    pub fn banner(&self) -> Result<Option<ImageHash>, ImageHashParseError> {
+        Ok(match &self.banner {
+            Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+            None => None,
+        })
+    }
+
     /// Return a string that is a link to the user's banner, or [None] if they don't have one
-    pub fn banner(&self) -> Option<String> {
-        self.banner.map(|banner| match banner.is_animated() {
+    pub fn banner_url(&self) -> Option<String> {
+        // TODO: Error handling
+        self.banner().unwrap().map(|banner| match banner.is_animated() {
             true => format!("https://cdn.discordapp.com/banners/{}/{}.gif?size=4096", self.user_id, banner),
             false => format!("https://cdn.discordapp.com/banners/{}/{}.png?size=4096", self.user_id, banner),
         })
@@ -282,18 +215,29 @@ impl LuroUser {
     }
 
     /// Write back any changes to the database
-    pub async fn push_changes(&self, db: Arc<LuroDatabase>) -> anyhow::Result<LuroUser> {
-        Ok(db.update_user(self.clone()).await.map(|x| x.into())?)
+    pub async fn push_changes(&self, db: Arc<LuroDatabase>) -> anyhow::Result<u64> {
+        db.update_user(self.clone()).await
     }
 }
 
-impl From<LuroUser> for User {
-    fn from(luro_user: LuroUser) -> Self {
-        Self {
+impl TryFrom<LuroUser> for User {
+    type Error = ImageHashParseError;
+
+    fn try_from(luro_user: LuroUser) -> Result<Self, Self::Error> {
+        Ok(Self {
             accent_color: luro_user.accent_colour.map(|x| x as u32),
-            avatar_decoration: luro_user.avatar_decoration,
-            avatar: luro_user.avatar,
-            banner: luro_user.banner,
+            avatar_decoration: match luro_user.avatar_decoration {
+                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                None => None,
+            },
+            avatar: match luro_user.avatar {
+                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                None => None,
+            },
+            banner: match luro_user.banner {
+                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                None => None,
+            },
             bot: luro_user.bot,
             discriminator: luro_user.discriminator as u16,
             email: luro_user.email,
@@ -307,7 +251,7 @@ impl From<LuroUser> for User {
             system: luro_user.system,
             verified: luro_user.verified,
             id: Id::new(luro_user.user_id as u64),
-        }
+        })
     }
 }
 
@@ -317,7 +261,10 @@ impl TryFrom<LuroUser> for Member {
     fn try_from(luro_user: LuroUser) -> Result<Self, Self::Error> {
         match luro_user.member {
             Some(ref member) => Ok(Self {
-                avatar: member.avatar,
+                avatar: match &member.avatar {
+                    Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                    None => None,
+                },
                 communication_disabled_until: match member.communication_disabled_until {
                     Some(timestamp) => Some(Timestamp::from_secs(timestamp.unix_timestamp())?),
                     None => None,
@@ -332,8 +279,8 @@ impl TryFrom<LuroUser> for Member {
                     Some(timestamp) => Some(Timestamp::from_secs(timestamp.unix_timestamp())?),
                     None => None,
                 },
-                roles: member.roles.clone(),
-                user: luro_user.into(),
+                roles: vec![],
+                user: luro_user.try_into()?,
             }),
             None => Err(anyhow!(
                 "Luro User was not instanced from a type containing member data: '{}'",

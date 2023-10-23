@@ -20,8 +20,8 @@ pub struct Get {
 impl LuroCommand for Get {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let nsfw = self.nsfw.unwrap_or(ctx.channel.nsfw.unwrap_or_default());
-        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
-        let character = user
+        let character = ctx
+            .author
             .fetch_character(ctx.database.clone(), &self.character)
             .await?
             .context("Expected to get character")?;
@@ -92,7 +92,11 @@ impl LuroCommand for Get {
                         })
                         .title(selected_image.name)
                         .image(|img| img.url(selected_image.url))
-                        .author(|author| author.name(format!("Profile by {}", user.name())).icon_url(user.avatar()));
+                        .author(|author| {
+                            author
+                                .name(format!("Profile by {}", ctx.author.name()))
+                                .icon_url(ctx.author.avatar_url())
+                        });
 
                     if let Some(source) = &selected_image.source {
                         embed.url(source);

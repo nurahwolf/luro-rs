@@ -2,8 +2,12 @@ use sqlx::{postgres::PgQueryResult, Error};
 use time::OffsetDateTime;
 use tracing::debug;
 use twilight_model::{
-    gateway::payload::incoming::{MemberAdd, MemberRemove, MemberUpdate, MemberChunk},
-    guild::{Member, PartialMember}, id::{Id, marker::GuildMarker},
+    gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate},
+    guild::{Member, PartialMember},
+    id::{
+        marker::{GuildMarker, RoleMarker, UserMarker},
+        Id,
+    },
 };
 
 use crate::{DbMemberType, LuroDatabase};
@@ -24,12 +28,28 @@ impl LuroDatabase {
 
         Ok(rows_modified)
     }
+
+    pub async fn update_guild_member_roles(
+        &self,
+        guild_id: Id<GuildMarker>,
+        role_id: Id<RoleMarker>,
+        user_id: Id<UserMarker>,
+    ) -> Result<PgQueryResult, sqlx::Error> {
+        sqlx::query_file!(
+            "queries/guild_member_roles/role_update.sql",
+            guild_id.get() as i64,
+            role_id.get() as i64,
+            user_id.get() as i64,
+        )
+        .execute(&self.pool)
+        .await
+    }
 }
 
 async fn handle_member_chunk(db: &LuroDatabase, event: MemberChunk) -> anyhow::Result<u64> {
     let mut rows_modified = 0;
     for member in event.members {
-        rows_modified += db.update_user(member.user).await?;
+        rows_modified += db.update_user(member.user.clone()).await?;
         rows_modified += sqlx::query_file!(
             "queries/guild_members/update_twilight_member.sql",
             match member.premium_since {
@@ -43,22 +63,24 @@ async fn handle_member_chunk(db: &LuroDatabase, event: MemberChunk) -> anyhow::R
             member.deaf,
             event.guild_id.get() as i64,
             OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
-            member.avatar.map(|x|x.to_string()),
+            member.avatar.map(|x| x.to_string()),
             member.flags.bits() as i64,
             member.mute,
             member.nick,
             member.pending,
+            member.user.id.get() as i64,
         )
         .execute(&db.pool)
-        .await?.rows_affected()
+        .await?
+        .rows_affected()
     }
 
     Ok(rows_modified)
 }
 
-async fn handle_member_remove(db: &LuroDatabase, member: MemberRemove) -> Result<PgQueryResult, Error>{
+async fn handle_member_remove(db: &LuroDatabase, member: MemberRemove) -> Result<PgQueryResult, Error> {
     sqlx::query_file!(
-        "queries/guild_members/guild_member_remove.sql",
+        "queries/guild_members/member_removed.sql",
         member.guild_id.get() as i64,
         member.user.id.get() as i64
     )
@@ -67,7 +89,10 @@ async fn handle_member_remove(db: &LuroDatabase, member: MemberRemove) -> Result
 }
 
 async fn handle_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, member: Member) -> anyhow::Result<u64> {
+    debug!("handle_member - Trying to handle updating roles");
     let mut rows_modified = db.update_user(member.user.clone()).await?;
+
+    debug!("handle_member - Trying to handle updating member");
     rows_modified += sqlx::query_file!(
         "queries/guild_members/update_twilight_member.sql",
         match member.premium_since {
@@ -81,14 +106,23 @@ async fn handle_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, member: Mem
         member.deaf,
         guild_id.get() as i64,
         OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
-        member.avatar.map(|x|x.to_string()),
+        member.avatar.map(|x| x.to_string()),
         member.flags.bits() as i64,
         member.mute,
         member.nick,
         member.pending,
+        member.user.id.get() as i64,
     )
     .execute(&db.pool)
-    .await?.rows_affected();
+    .await?
+    .rows_affected();
+
+    for role in member.roles {
+        debug!("handle_member - Trying to handle updating roles");
+        db.update_role((guild_id, role)).await?;
+        debug!("handle_member - Trying to handle updating member roles");
+        db.update_guild_member_roles(guild_id, role, member.user.id).await?;
+    }
 
     Ok(rows_modified)
 }
@@ -113,13 +147,15 @@ async fn handle_partial_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, mem
         member.deaf,
         guild_id.get() as i64,
         OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
-        member.avatar.map(|x|x.to_string()),
+        member.avatar.map(|x| x.to_string()),
         member.flags.bits() as i64,
         member.mute,
         member.nick,
+        member.user.map(|x| x.id.get() as i64).unwrap()
     )
     .execute(&db.pool)
-    .await?.rows_affected();
+    .await?
+    .rows_affected();
 
     Ok(rows_modified)
 }
@@ -139,14 +175,16 @@ async fn handle_member_add(db: &LuroDatabase, member: Box<MemberAdd>) -> anyhow:
         member.deaf,
         member.guild_id.get() as i64,
         OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
-        member.avatar.map(|x|x.to_string()),
+        member.avatar.map(|x| x.to_string()),
         member.flags.bits() as i64,
         member.mute,
         member.nick,
         member.pending,
+        member.user.id.get() as i64,
     )
     .execute(&db.pool)
-    .await?.rows_affected();
+    .await?
+    .rows_affected();
 
     Ok(rows_modified)
 }
@@ -163,16 +201,18 @@ async fn handle_member_update(db: &LuroDatabase, member: Box<MemberUpdate>) -> a
             Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
             None => None,
         },
-        member.deaf,
+        member.deaf.unwrap_or_default(),
         member.guild_id.get() as i64,
         OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
-        member.avatar.map(|x|x.to_string()),
+        member.avatar.map(|x| x.to_string()),
         member.mute,
         member.nick,
         member.pending,
+        member.user.id.get() as i64,
     )
     .execute(&db.pool)
-    .await?.rows_affected();
+    .await?
+    .rows_affected();
 
     Ok(rows_modified)
 }

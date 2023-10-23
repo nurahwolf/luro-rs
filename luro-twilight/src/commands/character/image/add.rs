@@ -24,8 +24,8 @@ pub struct Add {
 
 impl LuroCommand for Add {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
-        let character = user
+        let character = ctx
+            .author
             .fetch_character(ctx.database.clone(), &self.character)
             .await?
             .context("Expected to get character")?;
@@ -35,7 +35,7 @@ impl LuroCommand for Add {
                 img_id: 0,
                 name: self.name,
                 nsfw: self.nsfw,
-                owner_id: user.user_id,
+                owner_id: ctx.author.user_id,
                 source: self.source,
                 url: self.url,
                 character_name: self.character,
@@ -55,7 +55,11 @@ impl LuroCommand for Add {
             embed.title(img.name);
         }
 
-        embed.author(|author| author.name(format!("Profile by {}", user.name())).icon_url(user.avatar()));
+        embed.author(|author| {
+            author
+                .name(format!("Profile by {}", ctx.author.name()))
+                .icon_url(ctx.author.avatar_url())
+        });
 
         ctx.respond(|r| r.add_embed(embed).ephemeral()).await
     }

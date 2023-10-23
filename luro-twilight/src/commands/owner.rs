@@ -3,7 +3,6 @@ use luro_framework::standard_response::Response;
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand, ModalInteraction};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::id::marker::RoleMarker;
 use twilight_model::id::Id;
 
 // mod clear_warnings;
@@ -181,7 +180,7 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
         writeln!(roles_string, "- <@&{}>", role.id)?;
     }
 
-    let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
+    // let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
     // let mut users = vec![];
     // for member in guild.into_iter() {
@@ -244,70 +243,71 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
 }
 
 async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
-    let guild = match &ctx.guild {
-        Some(guild) => guild,
-        None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
-    };
-
-    let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
-
-    // let guild = ctx.cache.guild_members(guild_id).unwrap();
-    // let mut members = vec![];
-    // for member in guild.iter() {
-    //     if let Ok(user) = ctx.fetch_member(member, &guild_id).await {
-    //         members.push(user)
-    //     }
-    // }
-
-    // match roles.is_empty() {
-    //     true => roles.push(guild_id.cast()),
-    //     false => members.retain(|member| {
-    //         let mut found = false;
-    //         for role in member.
-
-    //         match user.guilds.get(&guild_id) {
-    //             Some(guild_data) => {
-    //                 for role in &roles {
-    //                     if guild_data.role_ids.contains(role) {
-    //                         found = true
-    //                     }
-    //                 }
-    //             }
-    //             None => found = false,
-    //         };
-    //         found
-    //     }),
+    // let guild = match &ctx.guild {
+    //     Some(guild) => guild,
+    //     None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
     // };
 
-    let mut actions_performed = 0;
-    let mut errors = 0;
-    match ctx.data.custom_id.as_str() {
-        // "mass-assign-roles" => {
-        //     for user in members {
-        //         for role in &roles {
-        //             match ctx.twilight_client.add_guild_member_role(guild.guild_id(), user.user_id(), *role).await {
-        //                 Ok(_) => actions_performed += 1,
-        //                 Err(_) => errors += 1,
-        //             };
-        //         }
-        //     }
-        // }
-        // "mass-assign-remove" => {
-        //     for user in members {
-        //         for role in &roles {
-        //             match ctx.twilight_client.remove_guild_member_role(guild.guild_id(), user.user_id(), *role).await {
-        //                 Ok(_) => actions_performed += 1,
-        //                 Err(_) => errors += 1,
-        //             };
-        //         }
-        //     }
-        // }
-        _ => return ctx.respond(|r| r.content("It's fucked").ephemeral()).await,
-    }
-    let content = match errors != 0 {
-        true => format!("Actioned `{actions_performed}` users, with `{errors}` errors!!"),
-        false => format!("Actioned `{actions_performed}` users successfully!"),
-    };
+    // let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();
 
+    // // let guild = ctx.cache.guild_members(guild_id).unwrap();
+    // // let mut members = vec![];
+    // // for member in guild.iter() {
+    // //     if let Ok(user) = ctx.fetch_member(member, &guild_id).await {
+    // //         members.push(user)
+    // //     }
+    // // }
+
+    // // match roles.is_empty() {
+    // //     true => roles.push(guild_id.cast()),
+    // //     false => members.retain(|member| {
+    // //         let mut found = false;
+    // //         for role in member.
+
+    // //         match user.guilds.get(&guild_id) {
+    // //             Some(guild_data) => {
+    // //                 for role in &roles {
+    // //                     if guild_data.role_ids.contains(role) {
+    // //                         found = true
+    // //                     }
+    // //                 }
+    // //             }
+    // //             None => found = false,
+    // //         };
+    // //         found
+    // //     }),
+    // // };
+
+    // let mut actions_performed = 0;
+    // let mut errors = 0;
+    // match ctx.data.custom_id.as_str() {
+    //     // "mass-assign-roles" => {
+    //     //     for user in members {
+    //     //         for role in &roles {
+    //     //             match ctx.twilight_client.add_guild_member_role(guild.guild_id(), user.user_id(), *role).await {
+    //     //                 Ok(_) => actions_performed += 1,
+    //     //                 Err(_) => errors += 1,
+    //     //             };
+    //     //         }
+    //     //     }
+    //     // }
+    //     // "mass-assign-remove" => {
+    //     //     for user in members {
+    //     //         for role in &roles {
+    //     //             match ctx.twilight_client.remove_guild_member_role(guild.guild_id(), user.user_id(), *role).await {
+    //     //                 Ok(_) => actions_performed += 1,
+    //     //                 Err(_) => errors += 1,
+    //     //             };
+    //     //         }
+    //     //     }
+    //     // }
+    //     _ => return ctx.respond(|r| r.content("It's fucked").ephemeral()).await,
+    // }
+    // let content = match errors != 0 {
+    //     true => format!("Actioned `{actions_performed}` users, with `{errors}` errors!!"),
+    //     false => format!("Actioned `{actions_performed}` users successfully!"),
+    // };
+
+    let content = "WIP!";
     ctx.respond(|r| r.content(content).ephemeral()).await
 }

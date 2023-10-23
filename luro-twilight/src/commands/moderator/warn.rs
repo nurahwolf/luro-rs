@@ -1,7 +1,4 @@
-use async_trait::async_trait;
-use luro_framework::command::LuroCommandTrait;
-use luro_framework::{Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{CommandInteraction, LuroCommand};
 use twilight_model::http::interaction::InteractionResponseType;
 
 use std::fmt::Write;
@@ -23,18 +20,14 @@ pub struct Warn {
     /// The user to warn / get warnings for.
     user: ResolvedUser,
 }
-#[async_trait]
-impl LuroCommandTrait for Warn {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let punished_user = ctx.database.get_user(&data.user.resolved.id).await?;
 
-        if !data.new {
+impl LuroCommand for Warn {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        let punished_user = ctx.get_user(&self.user.resolved.id, false).await?;
+
+        if !self.new {
             if punished_user.warnings.is_empty() {
-                return interaction.respond(&ctx, |r| r.content("No warnings for that user!")).await;
+                return ctx.respond( |r| r.content("No warnings for that user!")).await;
             }
 
             let mut warnings_formatted = String::new();
@@ -42,15 +35,15 @@ impl LuroCommandTrait for Warn {
                 writeln!(warnings_formatted, "Warning by <@{user_id}>```{warning}```")?
             }
 
-            let accent_colour = interaction.accent_colour(&ctx).await;
-            return interaction
-                .respond(&ctx, |r| {
+            let accent_colour = ctx.accent_colour().await;
+            return ctx
+                .respond( |r| {
                     r.embed(|embed| {
                         embed
                             .author(|author| {
                                 author
-                                    .name(punished_user.member_name(&interaction.guild_id))
-                                    .icon_url(punished_user.avatar())
+                                    .name(punished_user.name())
+                                    .icon_url(punished_user.avatar_url())
                             })
                             .description(warnings_formatted)
                             .footer(|footer| {
@@ -89,8 +82,8 @@ impl LuroCommandTrait for Warn {
             }),
         ];
 
-        interaction
-            .respond(&ctx, |response| {
+        ctx
+            .respond(|response| {
                 response
                     .title("Add your warning below!")
                     .custom_id("mod-warn")

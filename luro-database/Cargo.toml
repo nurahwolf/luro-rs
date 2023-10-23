@@ -13,6 +13,7 @@ version.workspace = true
 
 [dependencies]
 twilight-http = { workspace = true } # Used for fetching data if not present in the selected database driver
+twilight-util = { workspace = true } # Used for fetching data if not present in the selected database driver
 twilight-cache-inmemory = { workspace = true, optional = true } # Can be enabled and used as a fallback
 
 # Core

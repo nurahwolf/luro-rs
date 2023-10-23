@@ -1,26 +1,14 @@
-use async_trait::async_trait;
-use luro_builder::embed::EmbedBuilder;
-use luro_framework::{
-    LuroInteraction, command::LuroCommandTrait, CommandInteraction, ModalInteraction,
-};
+use luro_framework::{CommandInteraction, CreateLuroCommand, InteractionContext, LuroCommand};
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
-use twilight_model::id::{marker::UserMarker, Id};
-
-use luro_model::{
-    database_driver::LuroDatabaseDriver,
-    guild::log_channel::LuroLogChannel,
-    user::{actions::UserActions, actions_type::UserActionType},
-};
 
 mod assign;
 mod ban;
 mod kick;
 mod modify;
 mod purge;
-mod settings;
-mod sync;
+// mod settings;
 mod unban;
-mod warn;
+// mod warn;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "mod", desc = "Commands that can be used by moderators", dm_permission = false)]
@@ -31,95 +19,76 @@ pub enum Moderator {
     Kick(kick::Kick),
     #[command(name = "purge")]
     Purge(purge::Purge),
-    #[command(name = "settings")]
-    Setting(settings::Settings),
-    #[command(name = "warn")]
-    Warn(warn::Warn),
+    // #[command(name = "settings")]
+    // Setting(settings::Settings),
+    // #[command(name = "warn")]
+    // Warn(warn::Warn),
     #[command(name = "unban")]
     Unban(unban::Unban),
-    #[command(name = "sync")]
-    Sync(sync::Sync),
     #[command(name = "modify")]
     Modify(modify::Modify),
 }
 
-#[async_trait]
-impl LuroCommandTrait for Moderator {
-    async fn handle_interaction(
-        ctx: CommandInteraction<Self>,
-    ) -> anyhow::Result<()> {
-        // Call the appropriate subcommand.
-        match ctx.command {
-            Self::Ban(_) => ban::Ban::handle_interaction(ctx).await,
-            Self::Kick(_) => kick::Kick::handle_interaction(ctx).await,
-            Self::Purge(_) => purge::Purge::handle_interaction(ctx).await,
-            Self::Setting(_) => settings::Settings::handle_interaction(ctx).await,
-            Self::Warn(_) => warn::Warn::handle_interaction(ctx).await,
-            Self::Unban(_) => unban::Unban::handle_interaction(ctx).await,
-            Self::Sync(_) => sync::Sync::handle_interaction(ctx).await,
-            Self::Modify(_) => modify::Modify::handle_interaction(ctx).await,
+impl CreateLuroCommand for Moderator {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        match self {
+            Self::Ban(cmd) => cmd.interaction_command(ctx).await,
+            Self::Kick(cmd) => cmd.interaction_command(ctx).await,
+            Self::Purge(cmd) => cmd.interaction_command(ctx).await,
+            Self::Unban(cmd) => cmd.interaction_command(ctx).await,
+            Self::Modify(cmd) => cmd.interaction_command(ctx).await,
         }
     }
 
-    async fn handle_modal(ctx: ModalInteraction<Self>) -> anyhow::Result<()> {
-        let author = ctx.author();
-        let warning = ctx.parse_field_required("mod-warn-text")?;
-        let id = ctx.parse_field_required("mod-warn-id")?;
-        let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
+    async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
+        // let mut embed = ctx.default_embed().await;
+        // let warning = ctx.parse_field_required("mod-warn-text")?;
+        // let id = ctx.parse_field_required("mod-warn-id")?;
+        // let user_id: Id<UserMarker> = Id::new(id.parse::<u64>()?);
 
-        let luro_user = ctx.database.get_user(&ctx.author.user_id()).await?;
+        // let luro_user = ctx.database.get_user(&ctx.author.user_id()).await?;
 
-        let mut user_data = ctx.database.get_user(&user_id).await?;
-        user_data.warnings.push((warning.to_owned(), author.id));
-        ctx.database.modify_user(&user_id, &user_data).await?;
+        // let mut user_data = ctx.database.get_user(&user_id).await?;
+        // user_data.warnings.push((warning.to_owned(), ctx.author.id));
+        // ctx.database.modify_user(&user_id, &user_data).await?;
 
-        let mut embed = EmbedBuilder::default();
-        embed
-            .description(format!("Warning Created for <@{user_id}>\n```{warning}```"))
-            .colour(ctx.accent_colour(&ctx).await)
-            .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
-            .author(|author| {
-                author
-                    .name(format!("Warning by {}", luro_user.name()))
-                    .icon_url(luro_user.avatar())
-            });
+        // embed
+        //     .description(format!("Warning Created for <@{user_id}>\n```{warning}```"))
+        //     .colour(ctx.accent_colour().await)
+        //     .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
+        //     .author(|author| author.name(format!("Warning by {}", luro_user.name())).icon_url(luro_user.avatar()));
 
-        match ctx.twilight_client.create_private_channel(user_id).await {
-            Ok(channel) => {
-                let channel = channel.model().await?;
-                let victim_dm = ctx
-                    .twilight_client
-                    .create_message(channel.id)
-                    .embeds(&[embed.clone().into()])
-                    .await;
-                match victim_dm {
-                    Ok(_) => embed.create_field("DM Sent", "Successful", true),
-                    Err(_) => embed.create_field("DM Sent", "Failed", true),
-                }
-            }
-            Err(_) => embed.create_field("DM Sent", "Failed", true),
-        };
+        // match ctx.twilight_client.create_private_channel(user_id).await {
+        //     Ok(channel) => {
+        //         let channel = channel.model().await?;
+        //         let victim_dm = ctx.twilight_client.create_message(channel.id).embeds(&[embed.clone().into()]).await;
+        //         match victim_dm {
+        //             Ok(_) => embed.create_field("DM Sent", "Successful", true),
+        //             Err(_) => embed.create_field("DM Sent", "Failed", true),
+        //         }
+        //     }
+        //     Err(_) => embed.create_field("DM Sent", "Failed", true),
+        // };
 
-        ctx.send_log_channel(&ctx.guild_id.unwrap(), LuroLogChannel::Moderator, |r| {
-            r.add_embed(embed.clone())
-        })
-        .await?;
+        // ctx.send_log_channel(&ctx.guild_id.unwrap(), LuroLogChannel::Moderator, |r| r.add_embed(embed.clone()))
+        //     .await?;
 
-        let mut reward = ctx.database.get_user(&author.id).await?;
-        reward.moderation_actions_performed += 1;
-        ctx.database.modify_user(&author.id, &reward).await?;
+        // let mut reward = ctx.database.get_user(&author.id).await?;
+        // reward.moderation_actions_performed += 1;
+        // ctx.database.modify_user(&author.id, &reward).await?;
 
-        // Record the punishment
-        let mut warned = ctx.database.get_user(&user_id).await?;
-        warned.moderation_actions.push(UserActions {
-            action_type: vec![UserActionType::Warn],
-            guild_id: ctx.guild_id,
-            reason: Some(warning.to_owned()),
-            responsible_user: author.id,
-        });
-        ctx.database.modify_user(&user_id, &warned).await?;
+        // // Record the punishment
+        // let mut warned = ctx.database.get_user(&user_id).await?;
+        // warned.moderation_actions.push(UserActions {
+        //     action_type: vec![UserActionType::Warn],
+        //     guild_id: ctx.guild_id,
+        //     reason: Some(warning.to_owned()),
+        //     responsible_user: author.id,
+        // });
+        // ctx.database.modify_user(&user_id, &warned).await?;
 
-        ctx.respond(|response| response.add_embed(embed)).await
+        // ctx.respond(|response| response.add_embed(embed)).await
+        ctx.respond(|response| response.content("TODO: Soon!")).await
     }
 }
 
@@ -152,10 +121,7 @@ pub enum Reason {
     Vile,
 
     /// A completely custom reason if the others do not fit
-    #[option(
-        name = "Custom Reason - A completely custom reason if the others do not fit",
-        value = "custom"
-    )]
+    #[option(name = "Custom Reason - A completely custom reason if the others do not fit", value = "custom")]
     Custom,
 }
 

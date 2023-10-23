@@ -10,7 +10,7 @@ mod respond_create;
 mod respond_update;
 mod response_simple;
 
-use luro_database::LuroDatabase;
+use luro_database::{LuroDatabase, LuroUser};
 use luro_model::{response::LuroResponse, ACCENT_COLOUR};
 
 use twilight_model::{
@@ -126,9 +126,7 @@ impl ModalInteraction {
             }
         };
         Ok(ModalInteraction {
-            author: ctx
-                .fetch_user(&interaction.author_id().context("Expected to receive author ID from interaction")?)
-                .await?,
+            author: LuroUser::new(ctx.database.clone(), interaction.author_id().unwrap(), interaction.guild_id, false).await?,
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,
             cache: ctx.cache.clone(),

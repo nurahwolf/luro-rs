@@ -1,8 +1,4 @@
-
 use sqlx::Error;
-
-
-
 
 use crate::LuroUserData;
 use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
@@ -21,7 +17,7 @@ impl LuroDatabase {
                 accent_colour,
                 user_avatar,
                 avatar_decoration,
-                banner,
+                user_banner,
                 bot,
                 characters,
                 discriminator,
@@ -32,10 +28,10 @@ impl LuroDatabase {
                 message_edits,
                 messages,
                 mfa_enabled,
-                name,
+                user_name,
                 premium_type,
                 public_flags,
-                system,
+                user_system,
                 user_id,
                 user_permissions as \"user_permissions: LuroUserPermissions\",
                 verified,

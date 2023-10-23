@@ -1,31 +1,33 @@
 use std::sync::Arc;
 
-
-
-use twilight_model::id::{marker::RoleMarker, Id};
+use anyhow::Context;
+use tracing::{error, warn};
+use twilight_model::id::{
+    marker::{GuildMarker, RoleMarker},
+    Id,
+};
 
 use crate::{LuroDatabase, LuroRole};
 
 impl LuroRole {
-    pub async fn new(db: Arc<LuroDatabase>, role_id: Id<RoleMarker>) -> anyhow::Result<Self> {
-        // TODO: Redo this
-        // if let Ok(Some(role)) = self.database().get_role(role_id.get() as i64).await {
-        //     return Ok(role.into());
-        // }
-
-        // let cache = self.cache();
-        // let cached_role = match cache.role(role_id) {
-        //     Some(role) => role,
-        //     None => return Err(anyhow!("No role referance in cache or database: {role_id}")),
-        // };
-
-        // Ok(self
-        //     .database()
-        //     .update_role((cached_role.guild_id(), cached_role.resource().clone()))
-        //     .await?
-        //     .into())
-
-        let role = db.get_role(&role_id).await?.unwrap().into();
-        Ok(role)
+    pub async fn new(db: Arc<LuroDatabase>, guild_id: Id<GuildMarker>, role_id: Id<RoleMarker>) -> anyhow::Result<Self> {
+        // TODO: Return from twilight if the database failed
+        match db.get_role(&guild_id, &role_id).await {
+            Ok(Some(role)) => Ok(role),
+            Ok(None) => {
+                warn!("Failed to get role from database, falling back to twlight client");
+                for role in db.twilight_client.roles(guild_id).await?.model().await? {
+                    db.update_role((guild_id, role)).await?;
+                }
+                Ok(db.get_role(&guild_id, &role_id).await?.context("Expected to get updated role")?)
+            }
+            Err(why) => {
+                error!(why = ?why, "Got an error while trying to fetch role from database");
+                for role in db.twilight_client.roles(guild_id).await?.model().await? {
+                    db.update_role((guild_id, role)).await?;
+                }
+                Ok(db.get_role(&guild_id, &role_id).await?.context("Expected to get updated role")?)
+            }
+        }
     }
 }

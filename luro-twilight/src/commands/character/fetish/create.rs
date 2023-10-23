@@ -25,11 +25,14 @@ pub struct Create {
 impl LuroCommand for Create {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
-        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
         embed.title(format!("Character Profile - {}", self.name));
-        embed.author(|a| a.icon_url(user.avatar()).name(format!("Profile by {}", user.name())));
+        embed.author(|a| {
+            a.icon_url(ctx.author.avatar_url())
+                .name(format!("Profile by {}", ctx.author.name()))
+        });
 
-        let character = user
+        let character = ctx
+            .author
             .fetch_character(ctx.database.clone(), &self.character)
             .await?
             .context("Could not find that character! Was it deleted?")?;
@@ -38,7 +41,7 @@ impl LuroCommand for Create {
         character
             .update_fetish(LuroCharacterFetish {
                 character_name: self.character,
-                user_id: user.user_id,
+                user_id: ctx.author.user_id,
                 fetish_id: fetish_total as i64,
                 category: match self.category {
                     FetishCategory::Favourite => LuroCharacterFetishCategory::Favourite,

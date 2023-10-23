@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// An Enum used to tell how a [LuroUser] was created. Additionally it wraps the type that created it.
 ///

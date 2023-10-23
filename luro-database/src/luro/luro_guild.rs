@@ -17,9 +17,14 @@ use twilight_model::{
 use crate::{DatabaseGuild, LuroGuildData};
 
 mod alert_channels;
+mod fetch_role;
+mod get_everyone_role;
+mod get_member_highest_role;
 mod get_members;
 mod guild_id;
+mod is_owner;
 mod new;
+mod owner_id;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LuroGuild {

@@ -1,5 +1,4 @@
-
-use luro_database::{LuroDatabase, LuroGuild, LuroRole, LuroUser};
+use luro_database::{LuroDatabase, LuroGuild, LuroUser};
 use luro_model::{builders::EmbedBuilder, response::LuroResponse, ACCENT_COLOUR};
 use std::{future::Future, sync::Arc};
 use tracing::info;
@@ -10,7 +9,7 @@ use twilight_model::{
     application::command::Command,
     guild::Role,
     id::{
-        marker::{GuildMarker, RoleMarker, UserMarker},
+        marker::{GuildMarker, UserMarker},
         Id,
     },
     oauth::Application,
@@ -121,43 +120,39 @@ pub trait Luro {
         &self,
         user_id: &Id<UserMarker>,
         guild_id: &Id<GuildMarker>,
+        new_data: bool,
     ) -> impl std::future::Future<Output = anyhow::Result<LuroUser>> + Send
     where
         Self: Sync,
     {
-        async { LuroUser::new(self.database(), *user_id, Some(*guild_id)).await }
+        async move { LuroUser::new(self.database(), *user_id, Some(*guild_id), new_data).await }
     }
 
     /// Fetch and return a [LuroUser], updating the database if not present. This version does not check if a guild is present.
     /// Luro Database -> Twilight Client
-    fn fetch_user_only(&self, user_id: &Id<UserMarker>) -> impl std::future::Future<Output = anyhow::Result<LuroUser>> + Send
+    fn fetch_user_only(
+        &self,
+        user_id: &Id<UserMarker>,
+        new_data: bool,
+    ) -> impl std::future::Future<Output = anyhow::Result<LuroUser>> + Send
     where
         Self: Sync,
     {
-        async { LuroUser::new(self.database(), *user_id, None).await }
+        async move { LuroUser::new(self.database(), *user_id, None, new_data).await }
     }
 
     /// Fetch and return a [LuroGuild], updating the database if not present. This version gets a member if a guild is present.
     /// Luro Database -> Twilight Client
-    fn fetch_user(&self, user_id: &Id<UserMarker>) -> impl std::future::Future<Output = anyhow::Result<LuroUser>> + Send
+    fn fetch_user(&self, user_id: &Id<UserMarker>, new_data: bool) -> impl std::future::Future<Output = anyhow::Result<LuroUser>> + Send
     where
         Self: Sync,
     {
-        async {
+        async move {
             match self.guild_id() {
-                Some(guild_id) => self.fetch_member(user_id, &guild_id).await,
-                None => self.fetch_user_only(user_id).await,
+                Some(guild_id) => self.fetch_member(user_id, &guild_id, new_data).await,
+                None => self.fetch_user_only(user_id, new_data).await,
             }
         }
-    }
-
-    /// Fetch and return a [LuroGuild], updating the database if not present
-    /// Luro Database -> Twilight Cache
-    fn fetch_role(&self, role_id: Id<RoleMarker>) -> impl Future<Output = anyhow::Result<LuroRole>> + Send
-    where
-        Self: Sync,
-    {
-        async move { LuroRole::new(self.database(), role_id).await }
     }
 
     /// Fetch all guild roles.
@@ -205,18 +200,5 @@ pub trait Luro {
     // {
     //     let guild_roles = self.get_guild_roles(guild_id, true).await?;
 
-    // }
-
-    // async fn user_permission_calculator(&self, user_id: Id<UserMarker>, guild_id: Id<GuildMarker>) -> anyhow::Result<PermissionCalculator>
-    // where
-    //     Self: Sync,
-    // {
-    //     let roles = self.get_guild_roles(&guild_id, true).await?;
-    //     let guild = self.get_guild(&guild_id).await?;
-    //     let user = self.get_user(&user_id).await?;
-
-    //     // Temp
-    //     let everyone: LuroRole = self.get_role(guild_id.cast()).await?.into();
-    //     Ok(PermissionCalculator::new(guild_id, user_id, everyone.permissions, &guild.user_role_permissions(&user)).owner_id(guild.owner_id))
     // }
 }

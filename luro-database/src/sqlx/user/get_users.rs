@@ -1,4 +1,4 @@
-use crate::{DatabaseUser, LuroDatabase, LuroUserPermissions};
+use crate::LuroDatabase;
 
 impl LuroDatabase {
     // pub async fn get_users(&self) -> Result<Vec<DatabaseUser>, sqlx::Error> {

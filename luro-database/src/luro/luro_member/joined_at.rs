@@ -1,4 +1,4 @@
-use twilight_model::util::{Timestamp, datetime::TimestampParseError};
+use twilight_model::util::{datetime::TimestampParseError, Timestamp};
 
 use crate::LuroMember;
 

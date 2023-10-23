@@ -52,9 +52,7 @@ impl CreateLuroCommand for Character {
     }
 
     async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<()> {
-        let user_id = ctx.author.user_id();
         let nsfw: bool = ctx.channel.nsfw.unwrap_or_default();
-        let user = ctx.fetch_user(&user_id).await?;
 
         // Modal
         let character_name = ctx.parse_field_required("character-name")?;
@@ -63,7 +61,7 @@ impl CreateLuroCommand for Character {
         let sfw_description = ctx.parse_field_required("character-sfw-description")?;
         let nsfw_description = ctx.parse_field("character-nsfw-description")?;
 
-        let character = user.fetch_character(ctx.database.clone(), character_name).await?;
+        let character = ctx.author.fetch_character(ctx.database.clone(), character_name).await?;
         let mut character = match character {
             Some(mut character) => {
                 character.sfw_description = sfw_description.to_owned();
@@ -93,19 +91,19 @@ impl CreateLuroCommand for Character {
             },
         };
 
-        character = user.update_character_text(ctx.database.clone(), character).await?;
-        character_response(ctx, &character, &user, nsfw).await
+        character = ctx.author.update_character_text(ctx.database.clone(), character).await?;
+        character_response(ctx.clone(), &character, &ctx.author, nsfw).await
     }
 
     async fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
-        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
         let character_name = match self {
             Character::Profile(data) => data.name,
             Character::Create(data) => data.name,
             _ => return ctx.respond(|r| r.content("Invalid command").ephemeral()).await,
         };
-        let character = user
+        let character = ctx
+            .author
             .fetch_character(ctx.database.clone(), &character_name)
             .await?
             .context("Could not find that character! Was it deleted?")?;
@@ -178,8 +176,7 @@ impl CreateLuroCommand for Character {
     }
 
     async fn interaction_autocomplete(ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user = ctx.fetch_user(&ctx.author.user_id()).await?;
-        let characters = user.fetch_characters(ctx.database.clone()).await?;
+        let characters = ctx.author.fetch_characters(ctx.database.clone()).await?;
 
         let choices = match CharacterNameAutocomplete::from_interaction((*ctx.data.clone()).into())?.name {
             AutocompleteValue::None => characters
@@ -227,7 +224,7 @@ pub async fn character_response<T: Luro>(ctx: T, character: &LuroCharacter, user
             .embed(|embed| {
                 embed
                     .title(format!("{}'s Profile", character.name))
-                    .author(|a| a.icon_url(user.avatar()).name(format!("Character by {}", user.name())))
+                    .author(|a| a.icon_url(user.avatar_url()).name(format!("Character by {}", user.name())))
                     .colour(accent_colour);
 
                 if nsfw {

@@ -1,7 +1,10 @@
 use twilight_model::{
     gateway::payload::incoming::{RoleCreate, RoleUpdate},
     guild::{Role, RoleTags},
-    id::{marker::GuildMarker, Id},
+    id::{
+        marker::{GuildMarker, RoleMarker},
+        Id,
+    },
 };
 
 use sqlx::types::Json;
@@ -10,17 +13,35 @@ use crate::{DbRole, DbRoleType, LuroDatabase};
 
 impl LuroDatabase {
     pub async fn update_role(&self, role: impl Into<DbRoleType>) -> Result<DbRole, sqlx::Error> {
-        let role: DbRoleType = role.into();
-
-        match role {
+        match role.into() {
             DbRoleType::DbRole(role) => handle_role(self, role).await,
             DbRoleType::LuroRole(role) => handle_role(self, role).await,
             DbRoleType::Role(role, guild_id) => handle_twilight_role(self, role, guild_id).await,
             DbRoleType::RoleCreate(role) => handle_role_create(self, role).await,
             DbRoleType::RoleDelete(role) => self.delete_role(role.role_id.get() as i64).await,
             DbRoleType::RoleUpdate(role) => handle_role_update(self, role).await,
+            DbRoleType::RoleId(guild_id, role_id) => handle_role_id(self, guild_id, role_id).await,
         }
     }
+}
+
+async fn handle_role_id(db: &LuroDatabase, guild_id: Id<GuildMarker>, role_id: Id<RoleMarker>) -> Result<DbRole, sqlx::Error> {
+    sqlx::query_file!(
+        "queries/guild_roles/update_twilight_role_id.sql",
+        guild_id.get() as i64,
+        role_id.get() as i64,
+    )
+    .execute(&db.pool)
+    .await?;
+
+    sqlx::query_file_as!(
+        DbRole,
+        "queries/guild_roles/get_role.sql",
+        guild_id.get() as i64,
+        role_id.get() as i64,
+    )
+    .fetch_one(&db.pool)
+    .await
 }
 
 async fn handle_role(db: &LuroDatabase, role: impl Into<DbRole>) -> Result<DbRole, sqlx::Error> {
@@ -44,7 +65,7 @@ async fn handle_role(db: &LuroDatabase, role: impl Into<DbRole>) -> Result<DbRol
         ) VALUES
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         ON CONFLICT
-            (role_id)
+            (role_id, guild_id)
         DO UPDATE SET
             colour = $1,
             role_flags = $2,
@@ -111,7 +132,7 @@ async fn handle_role_create(db: &LuroDatabase, role: RoleCreate) -> Result<DbRol
         ) VALUES
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         ON CONFLICT
-            (role_id)
+            (role_id, guild_id)
         DO UPDATE SET
             colour = $1,
             role_flags = $2,
@@ -178,7 +199,7 @@ async fn handle_role_update(db: &LuroDatabase, role: RoleUpdate) -> Result<DbRol
         ) VALUES
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         ON CONFLICT
-            (role_id)
+            (role_id, guild_id)
         DO UPDATE SET
             colour = $1,
             role_flags = $2,
@@ -245,7 +266,7 @@ async fn handle_twilight_role(db: &LuroDatabase, role: Role, guild_id: Id<GuildM
         ) VALUES
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         ON CONFLICT
-            (role_id)
+            (role_id, guild_id)
         DO UPDATE SET
             colour = $1,
             role_flags = $2,

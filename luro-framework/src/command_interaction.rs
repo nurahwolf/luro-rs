@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::{anyhow, Context};
+use luro_database::LuroUser;
 use luro_model::{response::LuroResponse, ACCENT_COLOUR};
 use twilight_model::{
     application::interaction::{application_command::CommandData, Interaction, InteractionData},
@@ -128,9 +129,7 @@ impl CommandInteraction {
             }
         };
         Ok(CommandInteraction {
-            author: ctx
-                .fetch_user(&interaction.author_id().context("Expected to receive author ID from interaction")?)
-                .await?,
+            author: LuroUser::new(ctx.database.clone(), interaction.author_id().unwrap(), interaction.guild_id, false).await?,
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,
             cache: ctx.cache.clone(),

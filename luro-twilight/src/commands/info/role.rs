@@ -29,7 +29,7 @@ impl LuroCommand for InfoRole {
             },
         };
         let guild_roles = ctx.get_guild_roles(&guild.guild_id(), false).await?;
-        let role = ctx.fetch_role(self.role).await?;
+        let role = guild.fetch_role(ctx.database.clone(), self.role).await?;
 
         embed.title(format!("{}'s roles", guild.name));
         embed.create_field("Role Position", &format!("`{}`", role.position), true);

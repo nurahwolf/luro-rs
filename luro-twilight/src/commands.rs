@@ -30,12 +30,12 @@ mod info;
 mod images;
 #[cfg(feature = "command-marry")]
 mod marry;
-#[cfg(feature = "command-muzzle")]
-mod muzzle;
-// #[cfg(feature = "command-moderator")]
-// mod moderator;
+#[cfg(feature = "command-moderator")]
+mod moderator;
 #[cfg(feature = "command-music")]
 mod music;
+#[cfg(feature = "command-muzzle")]
+mod muzzle;
 #[cfg(feature = "command-owner")]
 mod owner;
 // #[cfg(feature = "command-ping")]
@@ -67,6 +67,8 @@ pub fn default_commands() -> Vec<Command> {
         dice::Dice::setup_command(),
         #[cfg(feature = "command-hello")]
         hello::Hello::setup_command(),
+        #[cfg(feature = "command-moderator")]
+        moderator::Moderator::setup_command(),
         #[cfg(feature = "command-info")]
         info::Info::setup_command(),
         #[cfg(feature = "command-marry")]
@@ -96,6 +98,7 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
     let response = match ctx.command_name() {
         "about" => about::About::handle_interaction(ctx).await,
         "base64" => base64::Base64::handle_interaction(ctx).await,
+        "moderator" | "moderator-warn" => moderator::Moderator::handle_interaction(ctx).await,
         "boop" => boop::Boop::handle_interaction(ctx).await,
         "character" | "character-fetish" | "character-image" | "character-update" | "character-image-nsfw" => {
             character::Character::handle_interaction(ctx).await

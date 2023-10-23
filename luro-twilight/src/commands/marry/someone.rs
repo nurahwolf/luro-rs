@@ -17,7 +17,7 @@ pub struct Someone {
 
 impl LuroCommand for Someone {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let proposer = ctx.fetch_user(&ctx.author.user_id()).await?;
+        let proposer = ctx.author.clone();
         let accent_colour = ctx.accent_colour();
 
         let reason = self.reason.unwrap_or(
@@ -44,7 +44,7 @@ impl LuroCommand for Someone {
                     embed
                         .colour(accent_colour)
                         .title(format!("{} has proposed!", proposer.name()))
-                        .thumbnail(|t| t.url(proposer.avatar()))
+                        .thumbnail(|t| t.url(proposer.avatar_url()))
                         .create_field("Their Reason", &reason, false)
                         .create_field("Approvers", "None!", false)
                         .create_field("Disapprovers", "None!", false)

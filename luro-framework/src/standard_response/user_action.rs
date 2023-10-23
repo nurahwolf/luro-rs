@@ -1,4 +1,5 @@
-use luro_model::{user::LuroUser, COLOUR_DANGER, COLOUR_SUCCESS};
+use luro_database::LuroUser;
+use luro_model::{COLOUR_DANGER, COLOUR_SUCCESS};
 use twilight_model::id::{marker::GuildMarker, Id};
 
 use super::{PunishmentType, StandardResponse};
@@ -16,7 +17,7 @@ impl StandardResponse {
         response
             .embed
             .create_field("Guild ID", &guild_id.to_string(), true)
-            .thumbnail(|thumbnail| thumbnail.url(punished_user.avatar()));
+            .thumbnail(|thumbnail| thumbnail.url(punished_user.avatar_url()));
         match kind {
             PunishmentType::Kicked => {
                 response
@@ -24,9 +25,11 @@ impl StandardResponse {
                     .title(format!("👢 Kicked from {}", guild_name))
                     .colour(COLOUR_DANGER)
                     .author(|author| {
-                        author
-                            .icon_url(moderator.avatar())
-                            .name(format!("Kicked by {} - {}", moderator.username(), moderator.id))
+                        author.icon_url(moderator.avatar_url()).name(format!(
+                            "Kicked by {} - {}",
+                            moderator.username(),
+                            moderator.user_id
+                        ))
                     });
             }
             PunishmentType::Banned => {
@@ -35,9 +38,11 @@ impl StandardResponse {
                     .title(format!("🔨 Banned from {}", guild_name))
                     .colour(COLOUR_DANGER)
                     .author(|author| {
-                        author
-                            .icon_url(moderator.avatar())
-                            .name(format!("Banned by {} - {}", moderator.username(), moderator.id))
+                        author.icon_url(moderator.avatar_url()).name(format!(
+                            "Banned by {} - {}",
+                            moderator.username(),
+                            moderator.user_id
+                        ))
                     });
             }
             PunishmentType::Unbanned => {
@@ -46,9 +51,11 @@ impl StandardResponse {
                     .title(format!("🔓 Unbanned from {}", guild_name))
                     .colour(COLOUR_SUCCESS)
                     .author(|author| {
-                        author
-                            .icon_url(moderator.avatar())
-                            .name(format!("Unbanned by {} - {}", moderator.username(), moderator.id))
+                        author.icon_url(moderator.avatar_url()).name(format!(
+                            "Unbanned by {} - {}",
+                            moderator.username(),
+                            moderator.user_id
+                        ))
                     });
             }
         };
@@ -68,18 +75,18 @@ impl StandardResponse {
                 if reason.starts_with("```") {
                     self.embed.description(format!(
                         "**User:** <@{0}> - {1}\n**User ID:** {0}\n{reason}",
-                        punished_user.id, punished_user.name
+                        punished_user.user_id, punished_user.name
                     ))
                 } else {
                     self.embed.description(format!(
                         "**User:** <@{0}> - {1}\n**User ID:** {0}\n```{reason}```",
-                        punished_user.id, punished_user.name
+                        punished_user.user_id, punished_user.name
                     ))
                 }
             }
             None => self.embed.description(format!(
                 "**User:** <@{0}> - {1}\n**User ID:** {0}",
-                punished_user.id, punished_user.name
+                punished_user.user_id, punished_user.name
             )),
         };
         self

@@ -8,9 +8,10 @@ INSERT INTO guild_members (
     member_flags,
     muted,
     nickname,
-    pending
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-ON CONFLICT (user_id)
+    pending,
+    user_id
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+ON CONFLICT (guild_id, user_id)
     DO UPDATE SET
         boosting_since = $1,
         communication_disabled_until = $2,

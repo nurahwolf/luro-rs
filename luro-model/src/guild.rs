@@ -29,8 +29,6 @@ pub mod log_channel;
 
 use crate::{
     heck::Hecks,
-    role::{LuroRole, LuroRolePositions, LuroRoles},
-    user::LuroUser,
     PRIMARY_BOT_OWNER,
 };
 
@@ -220,8 +218,6 @@ impl LuroGuild {
     }
 
     /// Gets a position in [RolePosition] for what the user's highest role is.
-    ///
-    /// Returns None if the user has no roles.
     pub fn user_highest_role(&self, user: &LuroUser) -> Option<(usize, Id<RoleMarker>)> {
         let user_roles = self.user_roles(user);
 

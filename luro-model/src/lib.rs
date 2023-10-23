@@ -35,12 +35,12 @@ pub const WEBHOOK_NAME: &str = "LuroHook";
 
 pub mod configuration;
 pub mod functions;
-pub mod guild;
+// pub mod guild;
 pub mod heck;
 pub mod luro_database_driver;
 pub mod message;
 pub mod response;
-pub mod role;
+// pub mod role;
 pub mod story;
 pub mod types;
 pub mod user; // Migrated

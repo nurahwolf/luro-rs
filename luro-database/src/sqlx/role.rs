@@ -3,7 +3,10 @@ use sqlx::{types::Json, FromRow};
 use twilight_model::{
     gateway::payload::incoming::{RoleCreate, RoleDelete, RoleUpdate},
     guild::{Permissions, Role, RoleFlags, RoleTags},
-    id::{marker::GuildMarker, Id},
+    id::{
+        marker::{GuildMarker, RoleMarker},
+        Id,
+    },
     util::ImageHash,
 };
 
@@ -62,7 +65,7 @@ impl From<DbRole> for LuroRole {
             flags: RoleFlags::from_bits_retain(role.role_flags as u64),
             guild_id: Id::new(role.guild_id as u64),
             hoist: role.hoist,
-            icon: role.icon.map(|x| ImageHash::parse(x.as_bytes()).unwrap()), // TODO: Error handling
+            icon: role.icon,
             managed: role.managed,
             mentionable: role.mentionable,
             name: role.role_name,
@@ -95,6 +98,7 @@ impl From<DbRole> for Role {
 }
 
 pub enum DbRoleType {
+    RoleId(Id<GuildMarker>, Id<RoleMarker>),
     DbRole(DbRole),
     LuroRole(LuroRole),
     Role(Role, Id<GuildMarker>),
@@ -106,6 +110,12 @@ pub enum DbRoleType {
 impl From<(Id<GuildMarker>, Role)> for DbRoleType {
     fn from(role: (Id<GuildMarker>, Role)) -> Self {
         Self::Role(role.1, role.0)
+    }
+}
+
+impl From<(Id<GuildMarker>, Id<RoleMarker>)> for DbRoleType {
+    fn from((guild_id, role_id): (Id<GuildMarker>, Id<RoleMarker>)) -> Self {
+        Self::RoleId(guild_id, role_id)
     }
 }
 

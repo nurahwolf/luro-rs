@@ -33,10 +33,10 @@ struct Position {
 impl LuroCommand for ModifyRole {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // let (mut role_selected, mut role_position) = (None, None);
-        let guild = match &ctx.guild {
-            Some(guild) => guild,
-            None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
-        };
+        // let guild = match &ctx.guild {
+        //     Some(guild) => guild,
+        //     None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+        // };
 
         // for role in guild.roles.clone() {
         //     if role.id == self.role {

@@ -16,8 +16,8 @@ pub struct Divorce {
 
 impl LuroCommand for Divorce {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let proposer = ctx.fetch_user(&ctx.author.user_id()).await?;
-        let proposee = ctx.fetch_user(&self.user.resolved.id).await?;
+        let proposer = ctx.author.clone();
+        let proposee = ctx.fetch_user(&self.user.resolved.id, false).await?;
 
         ctx.database
             .update_marriage(DbUserMarriage {
@@ -39,7 +39,7 @@ impl LuroCommand for Divorce {
                             proposer.name(),
                             proposee.name()
                         ))
-                        .thumbnail(|t| t.url(proposer.avatar()))
+                        .thumbnail(|t| t.url(proposer.avatar_url()))
                         .create_field("Their Reason", &self.reason, false)
                         .create_field("Approvers", "None!", false)
                         .create_field("Disapprovers", "None!", false)

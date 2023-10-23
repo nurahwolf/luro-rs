@@ -31,15 +31,15 @@ impl LuroCommand for Abuse {
             },
         };
 
-        let luro_user = ctx.fetch_user(&self.user.resolved.id).await?;
+        let luro_user = ctx.fetch_user(&self.user.resolved.id, false).await?;
 
         let mut embed = EmbedBuilder::default();
         embed
             .colour(ctx.accent_colour())
             .description(&self.message)
-            .author(|author| author.name(&luro_user.name()).icon_url(&luro_user.avatar()));
+            .author(|author| author.name(&luro_user.name()).icon_url(&luro_user.avatar_url()));
 
-        let avatar = luro_user.avatar();
+        let avatar = luro_user.avatar_url();
         let name = luro_user.name();
         let webhook_message = ctx
             .twilight_client
