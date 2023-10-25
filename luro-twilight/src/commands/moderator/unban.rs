@@ -1,14 +1,14 @@
 use anyhow::Context;
 use luro_framework::{CommandInteraction, Luro, LuroCommand, PunishmentType, Response, StandardResponse};
 use twilight_http::request::AuditLogReason;
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::guild::Permissions;
+use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::{guild::Permissions, id::{Id, marker::UserMarker}};
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
 #[command(name = "unban", desc = "Unban a user", dm_permission = false)]
 pub struct Unban {
     /// The user to ban
-    pub user: ResolvedUser,
+    pub user: Id<UserMarker>,
     /// The reason they should be unbanned.
     pub reason: String,
 }
@@ -19,7 +19,7 @@ impl LuroCommand for Unban {
         let luro = ctx
             .fetch_user(&ctx.twilight_client.current_user().await?.model().await?.id, true)
             .await?;
-        let punished_user = ctx.fetch_user(&self.user.resolved.id, true).await?;
+        let punished_user = ctx.fetch_user(&self.user, false).await?;
         let mut response = ctx.acknowledge_interaction(false).await?;
         let moderator_permissions = ctx
             .author

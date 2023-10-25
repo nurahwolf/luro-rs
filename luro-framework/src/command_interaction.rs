@@ -137,7 +137,7 @@ impl CommandInteraction {
             data,
             database: ctx.database.clone(),
             guild: match interaction.guild_id {
-                Some(guild_id) => Some(ctx.get_guild(&guild_id).await?),
+                Some(guild_id) => Some(ctx.database.get_guild(guild_id).await?),
                 None => None,
             },
             http_client: ctx.http_client,

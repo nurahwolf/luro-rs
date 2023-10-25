@@ -11,3 +11,4 @@ pub mod luro_role;
 pub mod luro_user;
 pub mod luro_user_data;
 pub mod luro_user_type;
+pub mod luro_word_count;

@@ -1,4 +1,4 @@
-use sqlx::{postgres::PgQueryResult, Error};
+use sqlx::postgres::PgQueryResult;
 use time::OffsetDateTime;
 use tracing::debug;
 use twilight_model::{
@@ -19,7 +19,7 @@ impl LuroDatabase {
             DbMemberType::Member(guild_id, member) => handle_member(self, guild_id, member).await?,
             DbMemberType::MemberAdd(member) => handle_member_add(self, member).await?,
             DbMemberType::MemberChunk(member) => handle_member_chunk(self, member).await?,
-            DbMemberType::MemberRemove(member) => handle_member_remove(self, member).await?.rows_affected(),
+            DbMemberType::MemberRemove(member) => handle_member_remove(self, member).await?,
             DbMemberType::MemberUpdate(member) => handle_member_update(self, member).await?,
             DbMemberType::PartialMember(guild_id, member) => handle_partial_member(self, guild_id, member).await?,
         };
@@ -78,14 +78,16 @@ async fn handle_member_chunk(db: &LuroDatabase, event: MemberChunk) -> anyhow::R
     Ok(rows_modified)
 }
 
-async fn handle_member_remove(db: &LuroDatabase, member: MemberRemove) -> Result<PgQueryResult, Error> {
-    sqlx::query_file!(
+async fn handle_member_remove(db: &LuroDatabase, member: MemberRemove) -> anyhow::Result<u64> {
+    let mut rows_updated = db.update_user(member.user.clone()).await?;
+    rows_updated += sqlx::query_file!(
         "queries/guild_members/member_removed.sql",
         member.guild_id.get() as i64,
         member.user.id.get() as i64
     )
     .execute(&db.pool)
-    .await
+    .await?.rows_affected();
+    Ok(rows_updated)
 }
 
 async fn handle_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, member: Member) -> anyhow::Result<u64> {

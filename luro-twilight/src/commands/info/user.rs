@@ -5,10 +5,7 @@ use std::time::Duration;
 use luro_database::LuroUser;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::{
-    http::attachment::Attachment,
-    id::{marker::GenericMarker, Id},
-};
+use twilight_model::{http::attachment::Attachment, id::Id};
 use twilight_util::snowflake::Snowflake;
 
 #[derive(CommandModel, CreateCommand, Debug)]
@@ -17,7 +14,7 @@ pub struct InfoUser {
     /// The user to get, gets yourself if not specified
     user: Option<ResolvedUser>,
     /// Optionally try to get a user from a different guild
-    guild: Option<Id<GenericMarker>>,
+    guild: Option<i64>,
     /// Hide the user's avatar, so that there is more space for the details
     hide_avatar: Option<bool>,
     /// Set this if you want a copy of your data.
@@ -28,8 +25,8 @@ impl LuroCommand for InfoUser {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // Fetch the user requested. Additional check for if we want another guild.
         let mut user = ctx.get_specified_user_or_author(self.user.as_ref(), true).await?;
-        if let Some(guild_id) = self.guild {
-            user = LuroUser::new(ctx.database.clone(), user.user_id(), Some(guild_id.cast()), true).await?
+        if let Some(guild_id) = self.guild.map(|x| Id::new(x as u64)) {
+            user = LuroUser::new(ctx.database.clone(), user.user_id(), Some(guild_id), true).await?
         }
 
         // Base embed
@@ -40,7 +37,8 @@ impl LuroCommand for InfoUser {
                     .name(format!("Infomation on {} | {}", user.name, user.user_id))
                     .icon_url(user.avatar_url())
             })
-            .thumbnail(|t| t.url(user.avatar_url()));
+            .thumbnail(|t| t.url(user.avatar_url()))
+            .description(format!("Hiya <@{}>! This is what I know about you.", user.user_id));
         if !self.hide_avatar.unwrap_or_default() {
             embed.thumbnail(|thumbnail| thumbnail.url(user.avatar_url()));
         }
@@ -54,20 +52,36 @@ impl LuroCommand for InfoUser {
         );
 
         // Luro data
-        if let Some(ref user_data) = user.data {
-            let mut luro_information = String::new();
-            writeln!(luro_information, "- Is marked as `{}` in my database!", user_data.permissions)?;
+        let mut luro_information = String::new();
 
-            if let Ok(user_characters) = user.fetch_characters(ctx.database.clone()).await {
-                if !user_characters.is_empty() {
-                    writeln!(luro_information, "- Has `{}` character profiles", user_characters.len())?;
-                }
+        if let Ok(user_characters) = user.fetch_characters(ctx.database.clone()).await {
+            if !user_characters.is_empty() {
+                writeln!(luro_information, "- Has `{}` character profiles", user_characters.len())?;
             }
+        }
 
-            let marriages = user.fetch_marriages(ctx.database.clone()).await?;
+        if let Ok(marriages) = user.fetch_marriages(ctx.database.clone()).await {
             if !marriages.is_empty() {
                 writeln!(luro_information, "- Has `{}` marriages!", marriages.len())?;
             }
+        }
+
+        if let Ok(word_count) = user.fetch_message_count(ctx.database.clone()).await && word_count.total_messages.unwrap_or_default() != 0 {
+            if let Some(count) = word_count.total_messages && count != 0 { writeln!(luro_information, "- Has sent `{count}` messages!")? };
+            if let Some(count) = word_count.total_words && count != 0 { writeln!(luro_information, "  - `{count}` words said!")? };
+            if let Some(count) = word_count.total_unique_words && count != 0 { writeln!(luro_information, "  - `{count}` unique words said!")? };
+            if let Some(count) = word_count.total_custom_messages && count != 0 { writeln!(luro_information, "  - `{count}` custom messages")? };
+            if let Some(count) = word_count.total_message_creates && count != 0 { writeln!(luro_information, "  - `{count}` messages created")? };
+            if let Some(count) = word_count.total_message_cached && count != 0 { writeln!(luro_information, "  - `{count}` messages cached")? };
+            if let Some(count) = word_count.total_message_deletes && count != 0 { writeln!(luro_information, "  - `{count}` messages deleted")? };
+            if let Some(count) = word_count.total_message_updates && count != 0 { writeln!(luro_information, "  - `{count}` messages updated")? };
+            if let Some(count) = word_count.total_message_message && count != 0 { writeln!(luro_information, "  - `{count}` messages stored")? };
+        } else {
+            writeln!(luro_information, "- Has sent no recorded messages")?;
+        }
+
+        if let Some(ref user_data) = user.data {
+            writeln!(luro_information, "- Is marked as `{}` in my database!", user_data.permissions)?;
 
             // writeln!(user_data_description, "- Typed `{}` characters", user.averagesize)?;
             // writeln!(
@@ -124,64 +138,60 @@ impl LuroCommand for InfoUser {
             // if !user.warnings.is_empty() {
             //     writeln!(user_data_description, "- Has `{}` active warnings", user.warnings.len())?;
             // }
+        }
 
+        if !luro_information.is_empty() {
             embed.create_field("Luro Information", &luro_information, false);
         }
 
         // Member only information
-        match user.member {
-            Some(ref member) => {
-                let mut guild_information = String::new();
-                let mut role_list = String::new();
+        if let Some(ref member) = user.member {
+            let mut guild_information = String::new();
+            let mut role_list = String::new();
 
-                timestamp.push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>\n", member.joined_at.unix_timestamp()).as_str());
-                embed.description(format!("Hiya <@{}>! This is what I know about you.\n\nLooks like I was able to map you to the guild <#{}>, so I'm showing you information related to there.", user.user_id, member.guild_id));
+            timestamp.push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>\n", member.joined_at.unix_timestamp()).as_str());
 
-                if let Some(left_at) = member.left_at {
-                    timestamp.push_str(format!("- Left this server at <t:{0}> - <t:{0}:R>\n", left_at.unix_timestamp()).as_str());
-                }
-                if let Some(member_timestamp) = member.boosting_since {
-                    timestamp
-                        .push_str(format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.unix_timestamp()).as_str());
-                }
-                if let Some(nickname) = &member.nickname {
-                    writeln!(guild_information, "- Nickname: `{nickname}`")?;
-                }
-                if member.deafened {
-                    writeln!(guild_information, "- Deafened: `true`")?;
-                }
-                if member.muted {
-                    writeln!(guild_information, "- Muted: `true`")?;
-                }
-                if member.pending {
-                    writeln!(guild_information, "- Pending: `true`")?;
-                }
-                if let Ok(Some(timestamp)) = member.communication_disabled_until() {
-                    writeln!(guild_information, "- Timed out until: <t:{}:R>", timestamp.as_secs())?;
-                }
-
-                // TODO: Once member_banner is a thing in [Member]
-                // if let Some(banner) = get_member_banner(&member, guild_id, user) {
-                //     embed = embed.image(ImageSource::url(banner)?)
-                // }
-
-                for role_id in member.sorted_roles() {
-                    if role_list.is_empty() {
-                        write!(role_list, "<@&{role_id}>")?;
-                        continue;
-                    };
-                    write!(role_list, ", <@&{role_id}>")?
-                }
-
-                writeln!(guild_information, "- Roles ({}): {role_list}", member.roles.len())?;
-                embed.create_field("Guild Information", &guild_information, false);
-                if let Ok(member_permissions) = member.permission_calculator(ctx.database.clone(), &member.role_permissions()).await {
-                    embed.create_field("Guild Permissions", &format!("```rs\n{:#?}```", member_permissions.root()), false);
-                    // TODO: Complete this
-                }
+            if let Some(left_at) = member.left_at {
+                timestamp.push_str(format!("- Left this server at <t:{0}> - <t:{0}:R>\n", left_at.unix_timestamp()).as_str());
             }
-            None => {
-                embed.description(format!("Hiya <@{}>! This is what I know about you.", user.user_id));
+            if let Some(member_timestamp) = member.boosting_since {
+                timestamp
+                    .push_str(format!("- Boosted this server since <t:{0}> - <t:{0}:R>", member_timestamp.unix_timestamp()).as_str());
+            }
+            if let Some(nickname) = &member.nickname {
+                writeln!(guild_information, "- Nickname: `{nickname}`")?;
+            }
+            if member.deafened {
+                writeln!(guild_information, "- Deafened: `true`")?;
+            }
+            if member.muted {
+                writeln!(guild_information, "- Muted: `true`")?;
+            }
+            if member.pending {
+                writeln!(guild_information, "- Pending: `true`")?;
+            }
+            if let Ok(Some(timestamp)) = member.communication_disabled_until() {
+                writeln!(guild_information, "- Timed out until: <t:{}:R>", timestamp.as_secs())?;
+            }
+
+            // TODO: Once member_banner is a thing in [Member]
+            // if let Some(banner) = get_member_banner(&member, guild_id, user) {
+            //     embed = embed.image(ImageSource::url(banner)?)
+            // }
+
+            for role_id in member.sorted_roles() {
+                if role_list.is_empty() {
+                    write!(role_list, "<@&{role_id}>")?;
+                    continue;
+                };
+                write!(role_list, ", <@&{role_id}>")?
+            }
+
+            writeln!(guild_information, "- Roles ({}): {role_list}", member.roles.len())?;
+            embed.create_field("Guild Information", &guild_information, false);
+            if let Ok(member_permissions) = member.permission_calculator(ctx.database.clone(), &member.role_permissions()).await {
+                embed.create_field("Guild Permissions", &format!("```rs\n{:#?}```", member_permissions.root()), false);
+                // TODO: Complete this
             }
         }
 
@@ -218,6 +228,9 @@ impl LuroCommand for InfoUser {
                 luro_database::LuroUserType::Member => "Twilight Member - Data fetched using the Discord API, including guild data",
                 luro_database::LuroUserType::DbUser => "Luro User - Data fetched from my database only, with includes your custom stuff!",
                 luro_database::LuroUserType::DbMember => "Luro Member - Data fetched from my database, including guild information!",
+                luro_database::LuroUserType::DbMemberNoRoles => {
+                    "Luro Member without roles - User and member information fetched from my database, but no roles were present"
+                }
             },
             false,
         );

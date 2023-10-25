@@ -7,11 +7,12 @@ use twilight_model::{
         thread::{ThreadMember, ThreadMetadata},
         Channel,
     },
-    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate},
+    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate}, id::{Id, marker::ChannelMarker},
 };
 
 mod count_channels;
 mod update_channel;
+mod get_channel;
 
 pub struct DbChannel {
     pub application_id: Option<i64>, // applications
@@ -53,10 +54,17 @@ pub struct DbChannel {
 }
 
 pub enum DbChannelType {
+    ChannelID(Id<ChannelMarker>),
     DbChannel(DbChannel),
     Channel(Channel),
     ChannelCreate(Box<ChannelCreate>),
     ChannelDelete(Box<ChannelDelete>),
     ChannelUpdate(Box<ChannelUpdate>),
     ChannelPinsUpdate(ChannelPinsUpdate),
+}
+
+impl From<Id<ChannelMarker>> for DbChannelType {
+    fn from(value: Id<ChannelMarker>) -> Self {
+        Self::ChannelID(value)
+    }
 }

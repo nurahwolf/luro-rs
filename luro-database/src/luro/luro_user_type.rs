@@ -13,6 +13,9 @@ pub enum LuroUserType {
     DbUser,
     /// A type instanced from our database, with guild information available
     DbMember,
+    /// A type instanced from our database, with guild information, but the user has no roles recorded in the database
+    DbMemberNoRoles,
+
 }
 
 impl std::fmt::Display for LuroUserType {
@@ -22,6 +25,7 @@ impl std::fmt::Display for LuroUserType {
             LuroUserType::Member => write!(f, "Twilight Member"),
             LuroUserType::DbUser => write!(f, "Database User"),
             LuroUserType::DbMember => write!(f, "Database Member"),
+            LuroUserType::DbMemberNoRoles => write!(f, "Database Member - No Roles Present"),
         }
     }
 }

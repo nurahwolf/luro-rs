@@ -7,7 +7,7 @@ use twilight_model::id::Id;
 
 // mod clear_warnings;
 mod fakeban;
-// mod flush;
+mod flush;
 // mod load_users;
 mod log;
 mod abuse;
@@ -26,6 +26,8 @@ pub enum Owner {
     Abuse(abuse::Abuse),
     #[command(name = "assign")]
     Assign(assign::Assign),
+    #[command(name = "flush")]
+    Flush(flush::Flush),
     // #[command(name = "clear_warnings")]
     // ClearWarning(clear_warnings::Warnings),
     #[command(name = "clear_marriage")]
@@ -48,11 +50,9 @@ pub enum Owner {
 
 // pub enum OwnerCommands {
 //     #[command(name = "config")]
-//     #[command(name = "flush")]
 //     #[command(name = "guilds")]
 //     #[command(name = "load_users")]
 //     Config(ConfigCommand),
-//     Flush(Flush),
 //     LoadUsers(OwnerLoadUsers),
 // }
 
@@ -66,7 +66,7 @@ impl std::fmt::Display for Owner {
             Self::ClearMarriage(_) => "clear_marriage",
             // Self::Config(_) => "owner_config",
             Self::FakeBan(_) => "owner_fakeban",
-            // Self::Flush(_) => "owner_save",
+            Self::Flush(_) => "owner_flush",
             Self::GetMessage(_) => "owner_getmessage",
             Self::Guilds(_) => "owner_guilds",
             // Self::LoadUsers(_) => "owner_loadusers",
@@ -102,7 +102,7 @@ impl CreateLuroCommand for Owner {
             Self::ClearMarriage(command) => command.interaction_command(ctx).await,
             // Self::Config(_) => "owner_config",
             Self::FakeBan(cmd) => cmd.interaction_command(ctx).await,
-            // Self::Flush(_) => "owner_save",
+            Self::Flush(cmd) => cmd.interaction_command(ctx).await,
             Self::GetMessage(command) => command.interaction_command(ctx).await,
             Self::Guilds(command) => command.interaction_command(ctx).await,
             // Self::LoadUsers(_) => "owner_loadusers",

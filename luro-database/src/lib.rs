@@ -16,6 +16,8 @@ pub use crate::luro::{
     luro_character_image::LuroCharacterImage, luro_guild::LuroGuild, luro_guild_alert_channels::GuildAlertChannels,
     luro_guild_data::LuroGuildData, luro_image::LuroImage, luro_member::LuroMember, luro_role::LuroRole, luro_user::LuroUser,
     luro_user_data::LuroUserData, luro_user_type::LuroUserType,
+    luro_word_count::WordCount,
+    luro_channel::LuroChannel,
 };
 
 #[cfg(feature = "diesel-driver")]

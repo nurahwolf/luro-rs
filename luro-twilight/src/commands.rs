@@ -79,12 +79,15 @@ pub fn default_commands() -> Vec<Command> {
         music::Music::setup_command(),
         #[cfg(feature = "command-owner")]
         owner::Owner::setup_command(),
-        #[cfg(feature = "command-say")]
-        say::Say::setup_command(),
+
         #[cfg(feature = "command-uwu")]
         uwu::UwU::setup_command(),
         #[cfg(feature = "command-images")]
         images::Images::setup_command(),
+        #[cfg(feature = "command-say")]
+        say::Say::setup_command(),
+        // #[cfg(feature = "command-story")]
+        // story::Story::setup_command(),
         #[cfg(feature = "command-wordcount")]
         wordcount::Wordcount::setup_command(),
     ]
@@ -112,7 +115,10 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "music" => music::Music::handle_interaction(ctx).await,
         "muzzle" => muzzle::Muzzle::handle_interaction(ctx).await,
         "owner" => owner::Owner::handle_interaction(ctx).await,
+        // "quote" => quote::Quote::handle_interaction(ctx).await,
+        // "roles" => roles::Roles::handle_interaction(ctx).await,
         "say" => say::Say::handle_interaction(ctx).await,
+        // "story" => story::Story::handle_interaction(ctx).await,
         #[cfg(feature = "command-uwu")]
         "uwu" => uwu::UwU::handle_interaction(ctx).await,
         #[cfg(feature = "command-wordcount")]

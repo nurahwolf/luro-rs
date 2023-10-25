@@ -22,13 +22,13 @@ impl LuroCommand for InfoRole {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut embed = ctx.default_embed().await;
         let guild = match self.guild {
-            Some(guild_requested) => ctx.get_guild(&guild_requested.cast()).await?,
+            Some(guild_requested) => ctx.get_guild(guild_requested.cast(), false).await?,
             None => match &ctx.guild {
                 Some(guild) => guild.clone(),
                 None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
             },
         };
-        let guild_roles = ctx.get_guild_roles(&guild.guild_id(), false).await?;
+        let guild_roles = ctx.get_guild_roles(&guild.guild_id(), true).await?;
         let role = guild.fetch_role(ctx.database.clone(), self.role).await?;
 
         embed.title(format!("{}'s roles", guild.name));

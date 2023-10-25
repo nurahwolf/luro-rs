@@ -88,6 +88,7 @@ mod custom_id;
 mod embed;
 mod response_type;
 mod title;
+mod deferred;
 
 impl LuroResponse {
     /// Returns an ['InteractionResponse'] based on the variables of this structure. Only used for interaction responses.

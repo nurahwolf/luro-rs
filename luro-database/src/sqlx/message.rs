@@ -32,6 +32,7 @@ mod handle_message_delete;
 mod handle_message_delete_bulk;
 mod handle_message_update;
 mod update_message;
+mod count_messages_by_user;
 
 #[derive(Default, Debug, ::sqlx::Type)]
 #[sqlx(type_name = "message_source", rename_all = "SCREAMING_SNAKE_CASE")]

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
@@ -14,7 +14,7 @@ use twilight_model::{
     util::{image_hash::ImageHashParseError, ImageHash, Timestamp},
 };
 
-use crate::{LuroDatabase, LuroMember, LuroUserData, LuroUserType};
+use crate::{LuroMember, LuroUserData, LuroUserType};
 
 mod fetch_character;
 mod fetch_characters;
@@ -23,6 +23,8 @@ mod new;
 mod update_character;
 mod update_character_prefix;
 mod update_character_text;
+mod update_permissions;
+mod fetch_message_count;
 
 /// A warpper around [User], with [Member] details if [Id<GuildMarker>] was present on type creation.
 /// Details are primarily fetched from the database, but this type can be instanced from a [User] / [Member] if that fails.
@@ -218,11 +220,6 @@ impl LuroUser {
             true => self.name.clone(),
             false => format!("{}#{}", self.name, self.discriminator),
         }
-    }
-
-    /// Write back any changes to the database
-    pub async fn push_changes(&self, db: Arc<LuroDatabase>) -> anyhow::Result<u64> {
-        db.update_user(self.clone()).await
     }
 }
 

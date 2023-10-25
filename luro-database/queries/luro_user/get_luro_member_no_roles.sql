@@ -10,19 +10,6 @@ SELECT
     guild_members.muted,
     guild_members.nickname,
     guild_members.pending,
-    guild_roles.colour,
-    guild_roles.deleted,
-    guild_roles.hoist,
-    guild_roles.icon,
-    guild_roles.managed,
-    guild_roles.mentionable,
-    guild_roles.permissions,
-    guild_roles.position,
-    guild_roles.role_flags,
-    guild_roles.role_id,
-    guild_roles.role_name,
-    guild_roles.tags as "tags: Json<RoleTags>",
-    guild_roles.unicode_emoji,
     users.accent_colour,
     users.avatar_decoration,
     users.averagesize,
@@ -52,7 +39,5 @@ SELECT
     users.words_count
 FROM users
     JOIN guild_members ON guild_members.user_id = users.user_id
-    JOIN guild_member_roles ON guild_member_roles.user_id = users.user_id AND guild_members.guild_id = guild_member_roles.guild_id AND guild_members.user_id = guild_member_roles.user_id
-    JOIN guild_roles ON guild_roles.role_id = guild_member_roles.role_id
 WHERE
     guild_members.guild_id = $1 and users.user_id = $2 

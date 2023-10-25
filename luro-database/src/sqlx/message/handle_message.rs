@@ -58,9 +58,10 @@ impl LuroDatabase {
                     timestamp,
                     tts,
                     webhook_id,
-                    member
+                    member,
+                    author_id
                 ) VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, false, $9, $10, $11 , $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, false, $9, $10, $11 , $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)
                 ON CONFLICT
                     (message_id)
                 DO UPDATE SET
@@ -68,6 +69,7 @@ impl LuroDatabase {
                     application_id = $2,
                     application = $3,
                     attachments = $4,
+                    author_id = $32,
                     author = $5,
                     channel_id = $6,
                     components = $7,
@@ -185,7 +187,8 @@ impl LuroDatabase {
                 OffsetDateTime::from_unix_timestamp(message.timestamp.as_secs()).unwrap(),
                 message.tts,
                 message.webhook_id.map(|x|x.get() as i64),
-                message.member.clone().map(Json) as _
+                message.member.clone().map(Json) as _,
+                message.author.id.get() as i64,
             );
 
         Ok(query.fetch_optional(&self.pool).await.map(|x| x.map(|x| x.into()))?)

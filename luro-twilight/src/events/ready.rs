@@ -39,7 +39,7 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
             let mut user = framework.fetch_user(&staff, true).await?;
             if let Some(ref mut user_data) = user.data {
                 user_data.permissions = LuroUserPermissions::Administrator;
-                user.push_changes(framework.database.clone()).await?;
+                user.update_permissions(framework.database.clone()).await?;
             }
         }
 
@@ -47,7 +47,7 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
         let mut owner = framework.fetch_user(&PRIMARY_BOT_OWNER, true).await?;
         if let Some(ref mut user_data) = owner.data {
             user_data.permissions = LuroUserPermissions::Owner;
-            owner.push_changes(framework.database.clone()).await?;
+            owner.update_permissions(framework.database.clone()).await?;
         }
 
         staff = framework.database.get_staff().await?;
@@ -154,7 +154,7 @@ async fn pretty_output(framework: &LuroContext, event: &Ready, staff: Vec<Databa
         builder.push_record(["Total Interactions", &format_number(data)]);
     }
     if let Ok(data) = framework.database.count_messages().await {
-        builder.push_record(["Total Messages", &format_number(data)]);
+        builder.push_record(["Total Messages", &format_number(data.total_messages.unwrap_or_default())]);
     }
     database_information.push_str("-- General --\n");
     database_information.push_str(&builder.build().with(tabled::settings::Style::ascii_rounded()).to_string());

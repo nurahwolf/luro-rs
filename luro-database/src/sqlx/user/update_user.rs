@@ -1,6 +1,6 @@
 use sqlx::{postgres::PgQueryResult, Error};
 use tracing::debug;
-use twilight_model::{gateway::payload::incoming::UserUpdate, user::User};
+use twilight_model::{gateway::payload::incoming::UserUpdate, user::User, id::{Id, marker::UserMarker}};
 
 use crate::{DatabaseUserType, LuroDatabase};
 
@@ -8,8 +8,7 @@ impl LuroDatabase {
     pub async fn update_user(&self, user: impl Into<DatabaseUserType>) -> anyhow::Result<u64> {
         let rows_modified = match user.into() {
             DatabaseUserType::User(user) => handle_user(self, user).await?.rows_affected(),
-            // DatabaseUserType::LuroUser(user) => self.handle_luro_user(user).await,
-            DatabaseUserType::LuroUser(_user) => todo!(),
+            DatabaseUserType::UserID(user) => handle_user_id(self, user).await?.rows_affected(),
             DatabaseUserType::UserUpdate(user) => handle_user_update(self, user).await?.rows_affected(),
         };
 
@@ -17,6 +16,15 @@ impl LuroDatabase {
 
         Ok(rows_modified)
     }
+}
+
+async fn handle_user_id(db: &LuroDatabase, user: Id<UserMarker>) -> Result<PgQueryResult, Error> {
+    sqlx::query_file!(
+        "queries/users/update_twilight_user_id.sql",
+        user.get() as i64,
+    )
+    .execute(&db.pool)
+    .await
 }
 
 async fn handle_user(db: &LuroDatabase, user: User) -> Result<PgQueryResult, Error> {

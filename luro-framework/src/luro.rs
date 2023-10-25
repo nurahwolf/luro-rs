@@ -1,7 +1,7 @@
-use luro_database::{LuroDatabase, LuroGuild, LuroUser};
+use luro_database::{LuroDatabase, LuroGuild, LuroUser, LuroChannel};
 use luro_model::{builders::EmbedBuilder, response::LuroResponse, ACCENT_COLOUR};
 use std::{future::Future, sync::Arc};
-use tracing::info;
+use tracing::{info, warn, error};
 use twilight_cache_inmemory::InMemoryCache;
 use twilight_http::{client::InteractionClient, Client};
 
@@ -9,7 +9,7 @@ use twilight_model::{
     application::command::Command,
     guild::Role,
     id::{
-        marker::{GuildMarker, UserMarker},
+        marker::{GuildMarker, UserMarker, ChannelMarker},
         Id,
     },
     oauth::Application,
@@ -84,20 +84,22 @@ pub trait Luro {
     fn cache(&self) -> Arc<InMemoryCache>;
 
     /// Fetch and return a [LuroGuild], updating the database if not present
+    /// Set fresh to true in order to fetch fresh data using the API
+    /// 
     /// Luro Database -> Twilight Guild
-    fn get_guild(&self, guild_id: &Id<GuildMarker>) -> impl Future<Output = anyhow::Result<LuroGuild>> + Send
+    fn get_guild(&self, guild_id: Id<GuildMarker>, fresh: bool) -> impl Future<Output = anyhow::Result<LuroGuild>> + Send
     where
         Self: Sync,
     {
-        async {
-            Ok(match self.database().get_guild(guild_id).await? {
-                Some(guild) => guild.into(),
-                None => self
-                    .database()
-                    .update_guild(self.twilight_client().guild(*guild_id).await?.model().await?)
-                    .await?
-                    .into(),
-            })
+        async move {
+            if fresh {
+                let twilight_guild = self.twilight_client().guild(guild_id).await?.model().await?;
+                if let Err(why) =  self.database().update_guild(twilight_guild).await {
+                    error!(why = ?why, "failed to sync guild `{guild_id}` to the database");
+                }
+            }
+
+            self.database().get_guild(guild_id).await
         }
     }
 
@@ -118,14 +120,28 @@ pub trait Luro {
     /// Luro Database -> Twilight Client
     fn fetch_member(
         &self,
-        user_id: &Id<UserMarker>,
-        guild_id: &Id<GuildMarker>,
-        new_data: bool,
+        user_id: Id<UserMarker>,
+        guild_id: Id<GuildMarker>,
+        fetch: bool,
     ) -> impl std::future::Future<Output = anyhow::Result<LuroUser>> + Send
     where
         Self: Sync,
     {
-        async move { LuroUser::new(self.database(), *user_id, Some(*guild_id), new_data).await }
+        async move { if fetch {
+            let member = self.twilight_client().guild_member(guild_id, user_id).await?.model().await?;
+            if let Err(why) = self.database().update_member((guild_id, member)).await {
+                error!(why = ?why, "failed to sync member `{user_id}` of guild `{guild_id}` to the database");
+            }
+        }
+    
+        match self.database().get_member(user_id, guild_id).await {
+            Ok(member) => Ok(member),
+            Err(why) => {
+                warn!("fetch_member - Failed to fetch member `{user_id}` of guild `{guild_id}`, are they not a member of that guild?");
+                self.database().get_user(user_id).await
+            },
+        }
+     }
     }
 
     /// Fetch and return a [LuroUser], updating the database if not present. This version does not check if a guild is present.
@@ -141,17 +157,54 @@ pub trait Luro {
         async move { LuroUser::new(self.database(), *user_id, None, new_data).await }
     }
 
-    /// Fetch and return a [LuroGuild], updating the database if not present. This version gets a member if a guild is present.
+    /// Fetch and return a [LuroUser], updating the database if not present. This version gets a member if a guild is present.
     /// Luro Database -> Twilight Client
-    fn fetch_user(&self, user_id: &Id<UserMarker>, new_data: bool) -> impl std::future::Future<Output = anyhow::Result<LuroUser>> + Send
+    fn fetch_user(&self, user_id: &Id<UserMarker>, fresh: bool) -> impl std::future::Future<Output = anyhow::Result<LuroUser>> + Send
     where
         Self: Sync,
     {
         async move {
             match self.guild_id() {
-                Some(guild_id) => self.fetch_member(user_id, &guild_id, new_data).await,
-                None => self.fetch_user_only(user_id, new_data).await,
+                Some(guild_id) => self.fetch_member(user_id, &guild_id, fresh).await,
+                None => self.fetch_user_only(user_id, fresh).await,
             }
+        }
+    }
+
+    /// Fetch and return a [LuroChannel], updating the database if not present.
+    /// Set fresh to true in order to fetch fresh data using the API
+    /// 
+    /// Luro Database -> Twilight Client
+    /// 
+    /// TODO: Finish this implementation
+    fn fetch_channel(&self, channel_id: Id<ChannelMarker>, fresh: bool) -> impl std::future::Future<Output = anyhow::Result<LuroChannel>> + Send
+    where
+        Self: Sync,
+    {
+        async move {
+            if fresh {
+                let twilight_channel = self.twilight_client().channel(channel_id).await?.model().await?;
+                if let Err(why) =  self.database().update_channel(twilight_channel).await {
+                    error!(why = ?why, "failed to sync channel `{channel_id}` to the database");
+                }
+            }
+
+            if let Ok(Some(channel)) = self.database().get_channel(channel_id).await {
+                return Ok(channel)
+            }
+
+            warn!("Failed to find channel `{channel_id}` in the database, falling back to Twilight");
+            let twilight_channel = self.twilight_client().channel(channel_id).await?.model().await?;
+
+            if let Err(why) =  self.database().update_channel(twilight_channel.clone()).await {
+                error!(why = ?why, "failed to sync channel `{channel_id}` to the database");
+            }
+
+            if let Ok(Some(channel)) = self.database().get_channel(channel_id).await {
+                return Ok(channel)
+            }
+
+            Ok(twilight_channel.into())
         }
     }
 

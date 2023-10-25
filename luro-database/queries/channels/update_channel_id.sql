@@ -1,0 +1,1 @@
+INSERT INTO channels (channel_id) VALUES ($1) ON CONFLICT (channel_id) DO NOTHING

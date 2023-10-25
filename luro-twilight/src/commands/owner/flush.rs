@@ -1,6 +1,4 @@
-use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
@@ -10,25 +8,44 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 )]
 pub struct Flush {}
 
-#[async_trait]
-impl LuroCommandTrait for Flush {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
-        let data = Self::new(interaction.data.clone())?;
-        let errors = ctx.framework.database.flush().await?;
-        let accent_colour = ctx.accent_colour();
+impl LuroCommand for Flush {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+        ctx.acknowledge_interaction(false).await?;
+        let mut users = 0;
+        let mut channels = 0;
+        let mut guild = 0;
+        let mut errors = 0;
+
+        for message in ctx.database.get_messages().await.values() {
+            match ctx.fetch_user(&message.author.id, false).await {
+                Ok(_) => users += 1,
+                Err(_) => errors += 1,
+            }
+
+            match ctx.fetch_channel(message.channel_id, false).await {
+                Ok(_) => channels += 1,
+                Err(_) => errors += 1,
+            }
+
+            if let Some(guild_id) = message.guild_id {
+                match ctx.get_guild(guild_id, false).await {
+                    Ok(_) => guild += 1,
+                    Err(_) => errors += 1,
+                }
+            }
+        }
 
         ctx.respond(|r| {
             r.embed(|embed| {
-                match errors.is_empty() {
-                    true => embed.description("Flushed all data with no errors!"),
-                    false => embed.description(format!("Flushed with the following errors:\n```\n{errors}\n```")),
-                };
-                embed.title("Database flushed!").colour(accent_colour)
+                embed
+                    .title("Database flushed!")
+                    .description(format!("- Updated `{users}` users\n
+                    - Updated `{channels}` channels\n
+                    - Updated `{guild}` guilds\n
+                    - Had `{errors}` errors!"))
+                    .colour(ctx.accent_colour())
             })
-            .ephemeral()
+            .deferred()
         })
         .await
     }

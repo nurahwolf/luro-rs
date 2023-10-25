@@ -25,7 +25,9 @@ impl LuroDatabase {
         let query = sqlx::query_as!(
             DatabaseMessage,
             "UPDATE messages
-                SET message_updates = message_updates || $2
+                SET 
+                    message_updates = message_updates || $2,
+                    source = $3
                 WHERE message_id = $1
                 RETURNING
                     activity as \"activity: Json<MessageActivity>\",
@@ -64,6 +66,7 @@ impl LuroDatabase {
             ",
             message.id.get() as i64,
             Json(message) as _,
+            DatabaseMessageSource::MessageUpdate as _,
         );
 
         query.fetch_optional(&self.pool).await.map(|x| x.map(|x| x.into()))
