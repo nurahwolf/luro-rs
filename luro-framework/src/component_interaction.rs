@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::{anyhow, Context};
-use luro_database::{LuroDatabase, LuroUser};
+use luro_database::LuroDatabase;
 use luro_model::{response::LuroResponse, ACCENT_COLOUR};
 use twilight_model::{
     application::interaction::{message_component::MessageComponentInteractionData, Interaction, InteractionData},
@@ -124,7 +124,18 @@ impl ComponentInteraction {
             }
         };
         Ok(ComponentInteraction {
-            author: LuroUser::new(ctx.database.clone(), interaction.author_id().unwrap(), interaction.guild_id, false).await?,
+            author: match interaction.guild_id {
+                Some(guild_id) => {
+                    ctx.database
+                        .get_member(interaction.author_id().context("Expected to get author")?, guild_id)
+                        .await?
+                }
+                None => {
+                    ctx.database
+                        .get_user(interaction.author_id().context("Expected to get author")?)
+                        .await?
+                }
+            },
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,
             cache: ctx.cache.clone(),

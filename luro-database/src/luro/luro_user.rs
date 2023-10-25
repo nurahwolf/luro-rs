@@ -19,7 +19,6 @@ use crate::{LuroMember, LuroUserData, LuroUserType};
 mod fetch_character;
 mod fetch_characters;
 mod fetch_marriages;
-mod new;
 mod update_character;
 mod update_character_prefix;
 mod update_character_text;

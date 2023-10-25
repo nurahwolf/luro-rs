@@ -43,8 +43,9 @@ pub struct LuroGuild {
     pub explicit_content_filter: ExplicitContentFilter,
     pub features: Vec<GuildFeature>,
     pub guild_id: i64,
-    pub icon: Option<ImageHash>,
-    pub joined_at: Option<Timestamp>,
+    pub icon: Option<String>,
+    #[serde(skip)]
+    pub joined_at: Option<time::OffsetDateTime>,
     pub large: bool,
     pub max_members: Option<u64>,
     pub max_presences: Option<u64>,

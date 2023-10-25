@@ -17,9 +17,9 @@ impl LuroCommand for Unban {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let guild = ctx.guild.clone().context("Expected this to be a guild")?;
         let luro = ctx
-            .fetch_user(&ctx.twilight_client.current_user().await?.model().await?.id, true)
+            .fetch_user(ctx.twilight_client.current_user().await?.model().await?.id, true)
             .await?;
-        let punished_user = ctx.fetch_user(&self.user, false).await?;
+        let punished_user = ctx.fetch_user(self.user, false).await?;
         let mut response = ctx.acknowledge_interaction(false).await?;
         let moderator_permissions = ctx
             .author

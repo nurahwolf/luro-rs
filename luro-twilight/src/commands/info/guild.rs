@@ -4,22 +4,24 @@ use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     http::attachment::Attachment,
-    id::{marker::GenericMarker, Id},
+    id::Id,
 };
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "guild", desc = "Information about a guild")]
 pub struct Guild {
     /// Get the details of a different guild
-    guild: Option<Id<GenericMarker>>,
+    guild: Option<String>,
     /// Set this if you want a copy of your data (GUILD OWNER ONLY).
     gdpr_export: Option<bool>,
+    /// Set to true if you want to get the data from the API instead of the database
+    refresh: Option<bool>
 }
 
 impl LuroCommand for Guild {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let guild = match self.guild {
-            Some(guild_requested) => ctx.get_guild(guild_requested.cast(), true).await?,
+            Some(guild_requested) => ctx.get_guild(Id::new(guild_requested.parse()?), self.refresh.unwrap_or_default()).await?,
             None => match &ctx.guild {
                 Some(guild) => guild.clone(),
                 None => return ctx.response_simple(luro_framework::Response::NotGuild).await,

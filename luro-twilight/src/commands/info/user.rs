@@ -2,7 +2,6 @@ use std::fmt::Write;
 
 use std::time::Duration;
 
-use luro_database::LuroUser;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{http::attachment::Attachment, id::Id};
@@ -19,14 +18,16 @@ pub struct InfoUser {
     hide_avatar: Option<bool>,
     /// Set this if you want a copy of your data.
     gdpr_export: Option<bool>,
+    /// Set this to true to get fresh data, if for some reason your profile is out of date
+    sync: Option<bool>
 }
 
 impl LuroCommand for InfoUser {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // Fetch the user requested. Additional check for if we want another guild.
-        let mut user = ctx.get_specified_user_or_author(self.user.as_ref(), true).await?;
+        let mut user = ctx.get_specified_user_or_author(self.user.as_ref(), self.sync.unwrap_or_default()).await?;
         if let Some(guild_id) = self.guild.map(|x| Id::new(x as u64)) {
-            user = LuroUser::new(ctx.database.clone(), user.user_id(), Some(guild_id), true).await?
+            user = ctx.fetch_member(user.user_id(), guild_id, self.sync.unwrap_or_default()).await?
         }
 
         // Base embed
@@ -148,6 +149,12 @@ impl LuroCommand for InfoUser {
         if let Some(ref member) = user.member {
             let mut guild_information = String::new();
             let mut role_list = String::new();
+
+            if let Ok(guild) = ctx.get_guild(member.guild_id(), self.sync.unwrap_or_default()).await {
+                if guild.owner_id == user.user_id {
+                    writeln!(guild_information, "- Is the owner of this guild!")?;
+                }
+            }
 
             timestamp.push_str(format!("- Joined this server at <t:{0}> - <t:{0}:R>\n", member.joined_at.unix_timestamp()).as_str());
 

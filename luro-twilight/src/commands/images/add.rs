@@ -1,6 +1,7 @@
 use luro_database::LuroImage;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::id::Id;
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "add", desc = "Add an image to the database!")]
@@ -30,7 +31,7 @@ impl LuroCommand for Add {
             })
             .await?;
 
-        let image_owner = ctx.fetch_user(&twilight_model::id::Id::new(img.owner_id as u64), false).await?;
+        let image_owner = ctx.fetch_user(Id::new(img.owner_id as u64), false).await?;
 
         ctx.respond(|r| {
             r.embed(|e| {

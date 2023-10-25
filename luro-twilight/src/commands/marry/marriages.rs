@@ -31,8 +31,8 @@ impl LuroCommand for Marriages {
                 continue;
             }
 
-            let proposer = ctx.fetch_user(&Id::new(marriage.proposer_id as u64), false).await?;
-            let proposee = ctx.fetch_user(&Id::new(marriage.proposee_id as u64), false).await?;
+            let proposer = ctx.fetch_user(Id::new(marriage.proposer_id as u64), false).await?;
+            let proposee = ctx.fetch_user(Id::new(marriage.proposee_id as u64), false).await?;
             let approvers = ctx
                 .database
                 .count_marriage_approvers(marriage.proposer_id, marriage.proposee_id)
@@ -63,24 +63,27 @@ impl LuroCommand for Marriages {
                 match marriages_detailed.len() < 25 {
                     true => {
                         for marriage in marriages_detailed {
+                            let mut status = String::new();
+
+                            if let Some(approvers) = marriage.3.approvers && approvers != 0 {
+                                write!(status, " | {approvers} Approvals").unwrap();
+                            }
+
+                            if let Some(disapprovers) = marriage.3.disapprovers && disapprovers != 0 {
+                                write!(status, " | {disapprovers} Disapprovals").unwrap();
+                            }
+
+                            if marriage.0.divorced {
+                                write!(status, " | Devorced").unwrap();
+                            }
+
+                            if marriage.0.rejected {
+                                write!(status, " | Rejected").unwrap();
+                            }
+
                             embed.create_field(
-                                &format!("{} and {}", marriage.1.name(), marriage.2.name()),
-                                #[cfg(debug_assertions)]
-                                &format!(
-                                    "{}\n- For and Against the marriage: `{}` | `{}`\n- Divorced: `{}`\n- Rejected: `{}`",
-                                    marriage.0.reason,
-                                    marriage.3.approvers.unwrap_or_default(),
-                                    marriage.3.disapprovers.unwrap_or_default(),
-                                    marriage.0.divorced,
-                                    marriage.0.rejected,
-                                ),
-                                #[cfg(not(debug_assertions))]
-                                &format!(
-                                    "{}\n- For and Against the marriage: `{}` | `{}`",
-                                    marriage.0.reason,
-                                    marriage.3.approvers.unwrap_or_default(),
-                                    marriage.3.disapprovers.unwrap_or_default(),
-                                ),
+                                &format!("{} and {}{status}", marriage.1.name(), marriage.2.name()),
+                                &marriage.0.reason,
                                 false,
                             );
                         }

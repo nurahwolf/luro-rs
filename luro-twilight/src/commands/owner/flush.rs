@@ -1,3 +1,5 @@
+use std::collections::{hash_map::Entry, HashMap};
+
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -11,26 +13,32 @@ pub struct Flush {}
 impl LuroCommand for Flush {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         ctx.acknowledge_interaction(false).await?;
-        let mut users = 0;
-        let mut channels = 0;
-        let mut guild = 0;
+        let mut users = HashMap::new();
+        let mut channels = HashMap::new();
+        let mut guilds = HashMap::new();
         let mut errors = 0;
 
         for message in ctx.database.get_messages().await.values() {
-            match ctx.fetch_user(&message.author.id, false).await {
-                Ok(_) => users += 1,
-                Err(_) => errors += 1,
+            if let Entry::Vacant(entry) = users.entry(message.author.id) {
+                entry.insert(());
+                if ctx.fetch_user_only(message.author.id, false).await.is_err() {
+                    errors += 1
+                }
             }
 
-            match ctx.fetch_channel(message.channel_id, false).await {
-                Ok(_) => channels += 1,
-                Err(_) => errors += 1,
+            if let Entry::Vacant(entry) = channels.entry(message.channel_id) {
+                entry.insert(());
+                if ctx.fetch_channel(message.channel_id, false).await.is_err() {
+                    errors += 1
+                }
             }
 
             if let Some(guild_id) = message.guild_id {
-                match ctx.get_guild(guild_id, false).await {
-                    Ok(_) => guild += 1,
-                    Err(_) => errors += 1,
+                if let Entry::Vacant(entry) = guilds.entry(guild_id) {
+                    entry.insert(());
+                    if ctx.get_guild(guild_id, false).await.is_err() {
+                        errors += 1
+                    }
                 }
             }
         }
@@ -39,10 +47,12 @@ impl LuroCommand for Flush {
             r.embed(|embed| {
                 embed
                     .title("Database flushed!")
-                    .description(format!("- Updated `{users}` users\n
-                    - Updated `{channels}` channels\n
-                    - Updated `{guild}` guilds\n
-                    - Had `{errors}` errors!"))
+                    .description(format!(
+                        "- Updated `{}` users\n- Updated `{}` channels\n- Updated `{}` guilds\n- Had `{errors}` errors!",
+                        users.len(),
+                        channels.len(),
+                        guilds.len()
+                    ))
                     .colour(ctx.accent_colour())
             })
             .deferred()
