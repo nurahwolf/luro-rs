@@ -79,7 +79,6 @@ pub fn default_commands() -> Vec<Command> {
         music::Music::setup_command(),
         #[cfg(feature = "command-owner")]
         owner::Owner::setup_command(),
-
         #[cfg(feature = "command-uwu")]
         uwu::UwU::setup_command(),
         #[cfg(feature = "command-images")]

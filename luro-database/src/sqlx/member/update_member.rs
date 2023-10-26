@@ -86,7 +86,8 @@ async fn handle_member_remove(db: &LuroDatabase, member: MemberRemove) -> anyhow
         member.user.id.get() as i64
     )
     .execute(&db.pool)
-    .await?.rows_affected();
+    .await?
+    .rows_affected();
     Ok(rows_updated)
 }
 

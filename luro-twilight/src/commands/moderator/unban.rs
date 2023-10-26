@@ -2,7 +2,10 @@ use anyhow::Context;
 use luro_framework::{CommandInteraction, Luro, LuroCommand, PunishmentType, Response, StandardResponse};
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{guild::Permissions, id::{Id, marker::UserMarker}};
+use twilight_model::{
+    guild::Permissions,
+    id::{marker::UserMarker, Id},
+};
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
 #[command(name = "unban", desc = "Unban a user", dm_permission = false)]
@@ -55,12 +58,12 @@ impl LuroCommand for Unban {
         let mut embed = StandardResponse::new_punishment(
             PunishmentType::Unbanned,
             &guild.name,
-            &guild.guild_id(),
+            &guild.guild_id,
             &punished_user,
             &ctx.author.clone(),
         );
         embed.punishment_reason(Some(&self.reason), &punished_user);
-        match ctx.twilight_client.create_private_channel(punished_user.user_id()).await {
+        match ctx.twilight_client.create_private_channel(punished_user.user_id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .twilight_client
@@ -78,7 +81,7 @@ impl LuroCommand for Unban {
 
         let unban = ctx
             .twilight_client
-            .delete_ban(guild.guild_id(), punished_user.user_id())
+            .delete_ban(guild.guild_id, punished_user.user_id)
             .reason(&self.reason)
             .await;
         match unban {
@@ -93,7 +96,7 @@ impl LuroCommand for Unban {
         // ctx.database.modify_user(&moderator.id, &moderator).await?;
 
         // If an alert channel is defined, send a message there
-        // ctx.send_log_channel(&guild.guild_id(), LuroLogChannel::Moderator, |r| r.add_embed(embed.embed))
+        // ctx.send_log_channel(&guild.guild_id, LuroLogChannel::Moderator, |r| r.add_embed(embed.embed))
         //     .await?;
 
         Ok(())

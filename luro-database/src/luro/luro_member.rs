@@ -86,16 +86,13 @@ impl LuroMember {
         let guild = LuroGuild::new(db.clone(), self.guild_id()).await?;
         let everyone_role = guild.get_everyone_role(db).await?;
 
-        Ok(
-            PermissionCalculator::new(self.guild_id(), self.user_id(), everyone_role.permissions, member_roles)
-                .owner_id(guild.owner_id()),
-        )
+        Ok(PermissionCalculator::new(self.guild_id(), self.user_id(), everyone_role.permissions, member_roles).owner_id(guild.owner_id))
     }
 
     /// Gets all roles and their permissions, excluding the everyone role
     pub fn role_permissions(&self) -> Vec<(Id<RoleMarker>, Permissions)> {
         let mut new_roles = self.roles.clone();
-        new_roles.retain(|_, role| role.id != self.guild_id().cast());
-        new_roles.values().map(|x| (x.id, x.permissions)).collect()
+        new_roles.retain(|_, role| role.role_id != self.guild_id().cast());
+        new_roles.values().map(|x| (x.role_id, x.permissions)).collect()
     }
 }

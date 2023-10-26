@@ -46,7 +46,7 @@ impl LuroCommandTrait for StoryCommand {
                 Story {
                     title,
                     description,
-                    author: ctx.author.user_id(),
+                    author: ctx.author.user_id,
                     nsfw,
                 },
                 nsfw,

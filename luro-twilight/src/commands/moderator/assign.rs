@@ -19,7 +19,7 @@ impl LuroCommand for Assign {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let user = ctx.get_specified_user_or_author(self.user.as_ref(), false).await?;
         ctx.twilight_client
-            .add_guild_member_role(ctx.guild.as_ref().unwrap().guild_id(), user.user_id(), self.role)
+            .add_guild_member_role(ctx.guild.as_ref().unwrap().guild_id, user.user_id, self.role)
             .await?;
 
         ctx.respond(|r| r.content(format!("Assigned the role <@&{}> successfully", self.role)).ephemeral())

@@ -34,7 +34,7 @@ impl LuroCommand for Add {
             img_id: self.overwrite.unwrap_or_default(),
             name: self.name,
             nsfw: self.nsfw,
-            owner_id: ctx.author.user_id,
+            owner_id: ctx.author.user_id.get() as i64,
             source: self.source,
             url: self.url,
             character_name: self.character,
@@ -47,13 +47,14 @@ impl LuroCommand for Add {
         };
 
         let mut embed = ctx.default_embed().await;
-        embed.footer(|f| f.text(format!("Image ID: {}", img.img_id)))
+        embed
+            .footer(|f| f.text(format!("Image ID: {}", img.img_id)))
             .image(|i| i.url(img.url))
             .author(|author| {
                 author
                     .name(format!("Profile by {}", ctx.author.name()))
                     .icon_url(ctx.author.avatar_url())
-        });
+            });
 
         if let Some(source) = &img.source {
             embed.url(source);

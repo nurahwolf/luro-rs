@@ -25,7 +25,7 @@ impl LuroCommand for Add {
                 img_id: 0,
                 name: self.name,
                 nsfw: self.nsfw,
-                owner_id: ctx.author.user_id().get() as i64,
+                owner_id: ctx.author.user_id.get() as i64,
                 source: self.source,
                 url: self.url,
             })

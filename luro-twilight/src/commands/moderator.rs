@@ -1,4 +1,4 @@
-use luro_framework::{CommandInteraction, CreateLuroCommand, LuroCommand, ModalInteraction, Luro};
+use luro_framework::{CommandInteraction, CreateLuroCommand, Luro, LuroCommand, ModalInteraction};
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 use twilight_model::id::{marker::UserMarker, Id};
 
@@ -54,7 +54,11 @@ impl CreateLuroCommand for Moderator {
             .description(format!("Warning Created for <@{user_id}>\n```{warning}```"))
             .colour(ctx.accent_colour())
             // .footer(|footer| footer.text(format!("User has a total of {} warnings.", user_data.warnings.len())))
-            .author(|author| author.name(format!("Warning by {}", ctx.author.name())).icon_url(ctx.author.avatar_url()));
+            .author(|author| {
+                author
+                    .name(format!("Warning by {}", ctx.author.name()))
+                    .icon_url(ctx.author.avatar_url())
+            });
 
         match ctx.twilight_client.create_private_channel(user_id).await {
             Ok(channel) => {

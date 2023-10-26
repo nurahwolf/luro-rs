@@ -59,9 +59,9 @@ impl LuroCommand for Kick {
             return ctx.response_simple(Response::MissingPermission(Permissions::KICK_MEMBERS)).await;
         }
 
-        if guild.is_owner(&punished_user.user_id()) {
+        if guild.is_owner(&punished_user.user_id) {
             return ctx
-                .response_simple(Response::PermissionModifyServerOwner(&ctx.author.user_id()))
+                .response_simple(Response::PermissionModifyServerOwner(&ctx.author.user_id))
                 .await;
         }
 
@@ -99,9 +99,9 @@ impl LuroCommand for Kick {
 
         // Checks passed, now let's action the user
         let mut embed =
-            StandardResponse::new_punishment(PunishmentType::Kicked, &guild.name, &guild.guild_id(), &punished_user, &ctx.author);
+            StandardResponse::new_punishment(PunishmentType::Kicked, &guild.name, &guild.guild_id, &punished_user, &ctx.author);
         embed.punishment_reason(reason.as_deref(), &punished_user);
-        match ctx.twilight_client.create_private_channel(punished_user.user_id()).await {
+        match ctx.twilight_client.create_private_channel(punished_user.user_id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .twilight_client
@@ -121,7 +121,7 @@ impl LuroCommand for Kick {
         ctx.response_send(response).await?;
 
         ctx.twilight_client
-            .remove_guild_member(guild.guild_id(), punished_user.user_id())
+            .remove_guild_member(guild.guild_id, punished_user.user_id)
             .await?;
 
         // moderator.moderation_actions_performed += 1;

@@ -1,5 +1,8 @@
 use sqlx::postgres::PgQueryResult;
-use twilight_model::id::{marker::{UserMarker, GuildMarker}, Id};
+use twilight_model::id::{
+    marker::{GuildMarker, UserMarker},
+    Id,
+};
 
 use crate::LuroDatabase;
 

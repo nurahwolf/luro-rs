@@ -77,7 +77,7 @@ impl LuroCommandTrait for Ping {
 
         // A random command to check latency time
         let start = Instant::now();
-        let _ = ctx.twilight_client.user(ctx.author.user_id()).await?.model().await?;
+        let _ = ctx.twilight_client.user(ctx.author.user_id).await?.model().await?;
         let user = format!(
             "{}\n`Get USER` API request achnowledged and received in `{}` milliseconds!",
             sent,

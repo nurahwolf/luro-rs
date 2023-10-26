@@ -86,7 +86,7 @@ impl CreateLuroCommand for Character {
                 sfw_description: sfw_description.to_owned(),
                 sfw_icons: Default::default(),
                 sfw_summary: sfw_summary.to_owned(),
-                user_id: ctx.author.user_id().get() as i64,
+                user_id: ctx.author.user_id.get() as i64,
                 db: ctx.database.clone(),
             },
         };

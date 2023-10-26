@@ -92,9 +92,7 @@ impl LuroCommand for Simple {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                ctx.author.user_id(),
-                result.string_result,
-                result.dice_total
+                ctx.author.user_id, result.string_result, result.dice_total
             )
         } else {
             format!("**Result:** `{}`\n**Total:** `{}`", result.string_result, result.dice_total)

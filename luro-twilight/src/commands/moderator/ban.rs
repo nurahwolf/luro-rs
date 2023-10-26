@@ -90,9 +90,9 @@ impl LuroCommand for Ban {
             return ctx.response_simple(Response::MissingPermission(Permissions::BAN_MEMBERS)).await;
         }
 
-        if guild.is_owner(&punished_user.user_id()) {
+        if guild.is_owner(&punished_user.user_id) {
             return ctx
-                .response_simple(Response::PermissionModifyServerOwner(&ctx.author.user_id()))
+                .response_simple(Response::PermissionModifyServerOwner(&ctx.author.user_id))
                 .await;
         }
 
@@ -121,11 +121,11 @@ impl LuroCommand for Ban {
 
         // Checks passed, now let's action the user
         let mut embed =
-            StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.guild_id(), &punished_user, &ctx.author);
+            StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.guild_id, &punished_user, &ctx.author);
         embed
             .punishment_reason(reason.as_deref(), &punished_user)
             .punishment_period(&period_string);
-        match ctx.twilight_client.create_private_channel(punished_user.user_id()).await {
+        match ctx.twilight_client.create_private_channel(punished_user.user_id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .twilight_client
@@ -144,7 +144,7 @@ impl LuroCommand for Ban {
         response.add_embed(embed.embed().0);
         ctx.response_send(response).await?;
 
-        let ban = ctx.twilight_client.create_ban(guild.guild_id(), punished_user.user_id());
+        let ban = ctx.twilight_client.create_ban(guild.guild_id, punished_user.user_id);
         debug!("Purging {:#?} seconds worth of messages!", self.purge.value());
 
         match reason {

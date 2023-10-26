@@ -1,21 +1,21 @@
 use twilight_model::{
     gateway::payload::incoming::{RoleCreate, RoleUpdate},
-    guild::{Role, RoleTags},
+    guild::Role,
     id::{
         marker::{GuildMarker, RoleMarker},
         Id,
     },
 };
 
-use sqlx::types::Json;
+use sqlx::{postgres::PgQueryResult, types::Json};
 
-use crate::{DbRole, DbRoleType, LuroDatabase};
+use crate::{DbRoleType, LuroDatabase, LuroRole};
 
 impl LuroDatabase {
-    pub async fn update_role(&self, role: impl Into<DbRoleType>) -> Result<DbRole, sqlx::Error> {
+    pub async fn update_role(&self, role: impl Into<DbRoleType>) -> Result<PgQueryResult, sqlx::Error> {
         match role.into() {
-            DbRoleType::DbRole(role) => handle_role(self, role).await,
-            DbRoleType::LuroRole(role) => handle_role(self, role).await,
+            DbRoleType::DbRole(_) => todo!(),
+            DbRoleType::LuroRole(role) => handle_luro_role(self, role).await,
             DbRoleType::Role(role, guild_id) => handle_twilight_role(self, role, guild_id).await,
             DbRoleType::RoleCreate(role) => handle_role_create(self, role).await,
             DbRoleType::RoleDelete(role) => self.delete_role(role.role_id.get() as i64).await,
@@ -25,94 +25,42 @@ impl LuroDatabase {
     }
 }
 
-async fn handle_role_id(db: &LuroDatabase, guild_id: Id<GuildMarker>, role_id: Id<RoleMarker>) -> Result<DbRole, sqlx::Error> {
+async fn handle_role_id(db: &LuroDatabase, guild_id: Id<GuildMarker>, role_id: Id<RoleMarker>) -> Result<PgQueryResult, sqlx::Error> {
     sqlx::query_file!(
         "queries/guild_roles/update_twilight_role_id.sql",
         guild_id.get() as i64,
         role_id.get() as i64,
     )
     .execute(&db.pool)
-    .await?;
-
-    sqlx::query_file_as!(
-        DbRole,
-        "queries/guild_roles/get_role.sql",
-        guild_id.get() as i64,
-        role_id.get() as i64,
-    )
-    .fetch_one(&db.pool)
     .await
 }
 
-async fn handle_role(db: &LuroDatabase, role: impl Into<DbRole>) -> Result<DbRole, sqlx::Error> {
-    let role = role.into();
-    sqlx::query_as!(
-        DbRole,
-        "INSERT INTO guild_roles (
-            colour,
-            role_flags,
-            guild_id,
-            hoist,
-            icon,
-            managed,
-            mentionable,
-            role_name,
-            permissions,
-            position,
-            role_id,
-            tags,
-            unicode_emoji
-        ) VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        ON CONFLICT
-            (role_id, guild_id)
-        DO UPDATE SET
-            colour = $1,
-            role_flags = $2,
-            guild_id = $3,
-            hoist = $4,
-            icon = $5,
-            managed = $6,
-            mentionable = $7,
-            role_name = $8,
-            permissions = $9,
-            position = $10,
-            tags = $12,
-            unicode_emoji = $13
-        RETURNING
-            colour,
-            deleted,
-            role_flags,
-            guild_id,
-            hoist,
-            icon,
-            managed,
-            mentionable,
-            role_name,
-            permissions,
-            position,
-            role_id,
-            tags as \"tags: Json<RoleTags>\",
-            unicode_emoji",
-        role.colour,
-        role.role_flags,
-        role.guild_id,
+async fn handle_luro_role(db: &LuroDatabase, role: LuroRole) -> Result<PgQueryResult, sqlx::Error> {
+    if let Some(data) = role.data {
+        db.update_role_data(data, role.guild_id, role.role_id).await?;
+    }
+
+    sqlx::query_file!(
+        "queries/guild_roles/update_role.sql",
+        role.colour as i32,
+        role.guild_id.get() as i64,
         role.hoist,
-        role.icon as _,
+        role.icon.map(Json) as _,
         role.managed,
         role.mentionable,
-        role.role_name,
-        role.permissions,
+        role.permissions.bits() as i32,
         role.position,
-        role.role_id,
-        role.tags as _,
+        role.flags.bits() as i32,
+        role.role_id.get() as i64,
+        role.name,
+        role.tags.map(Json) as _,
         role.unicode_emoji,
     )
-    .fetch_one(&db.pool)
+    .execute(&db.pool)
     .await
 }
 
-async fn handle_role_create(db: &LuroDatabase, role: RoleCreate) -> Result<DbRole, sqlx::Error> {
+async fn handle_role_create(db: &LuroDatabase, role: RoleCreate) -> Result<PgQueryResult, sqlx::Error> {
     sqlx::query_as!(
         DbRole,
         "INSERT INTO guild_roles (
@@ -146,21 +94,7 @@ async fn handle_role_create(db: &LuroDatabase, role: RoleCreate) -> Result<DbRol
             position = $10,
             tags = $12,
             unicode_emoji = $13
-        RETURNING
-            colour,
-            deleted,
-            role_flags,
-            guild_id,
-            hoist,
-            icon,
-            managed,
-            mentionable,
-            role_name,
-            permissions,
-            position,
-            role_id,
-            tags as \"tags: Json<RoleTags>\",
-            unicode_emoji",
+            ",
         role.role.color as i32,
         role.role.flags.bits() as i32,
         role.guild_id.get() as i64,
@@ -175,11 +109,11 @@ async fn handle_role_create(db: &LuroDatabase, role: RoleCreate) -> Result<DbRol
         role.role.tags.map(Json) as _,
         role.role.unicode_emoji,
     )
-    .fetch_one(&db.pool)
+    .execute(&db.pool)
     .await
 }
 
-async fn handle_role_update(db: &LuroDatabase, role: RoleUpdate) -> Result<DbRole, sqlx::Error> {
+async fn handle_role_update(db: &LuroDatabase, role: RoleUpdate) -> Result<PgQueryResult, sqlx::Error> {
     sqlx::query_as!(
         DbRole,
         "INSERT INTO guild_roles (
@@ -212,22 +146,7 @@ async fn handle_role_update(db: &LuroDatabase, role: RoleUpdate) -> Result<DbRol
             permissions = $9,
             position = $10,
             tags = $12,
-            unicode_emoji = $13
-        RETURNING
-            colour,
-            deleted,
-            role_flags,
-            guild_id,
-            hoist,
-            icon,
-            managed,
-            mentionable,
-            role_name,
-            permissions,
-            position,
-            role_id,
-            tags as \"tags: Json<RoleTags>\",
-            unicode_emoji",
+            unicode_emoji = $13",
         role.role.color as i32,
         role.role.flags.bits() as i32,
         role.guild_id.get() as i64,
@@ -242,73 +161,27 @@ async fn handle_role_update(db: &LuroDatabase, role: RoleUpdate) -> Result<DbRol
         role.role.tags.map(Json) as _,
         role.role.unicode_emoji,
     )
-    .fetch_one(&db.pool)
+    .execute(&db.pool)
     .await
 }
 
-async fn handle_twilight_role(db: &LuroDatabase, role: Role, guild_id: Id<GuildMarker>) -> Result<DbRole, sqlx::Error> {
-    sqlx::query_as!(
-        DbRole,
-        "INSERT INTO guild_roles (
-            colour,
-            role_flags,
-            guild_id,
-            hoist,
-            icon,
-            managed,
-            mentionable,
-            role_name,
-            permissions,
-            position,
-            role_id,
-            tags,
-            unicode_emoji
-        ) VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        ON CONFLICT
-            (role_id, guild_id)
-        DO UPDATE SET
-            colour = $1,
-            role_flags = $2,
-            guild_id = $3,
-            hoist = $4,
-            icon = $5,
-            managed = $6,
-            mentionable = $7,
-            role_name = $8,
-            permissions = $9,
-            position = $10,
-            tags = $12,
-            unicode_emoji = $13
-        RETURNING
-            colour,
-            deleted,
-            role_flags,
-            guild_id,
-            hoist,
-            icon,
-            managed,
-            mentionable,
-            role_name,
-            permissions,
-            position,
-            role_id,
-            tags as \"tags: Json<RoleTags>\",
-            unicode_emoji",
+async fn handle_twilight_role(db: &LuroDatabase, role: Role, guild_id: Id<GuildMarker>) -> Result<PgQueryResult, sqlx::Error> {
+    sqlx::query_file!(
+        "queries/guild_roles/update_role.sql",
         role.color as i32,
-        role.flags.bits() as i32,
         guild_id.get() as i64,
         role.hoist,
         role.icon.map(Json) as _,
         role.managed,
         role.mentionable,
-        role.name,
         role.permissions.bits() as i32,
         role.position,
+        role.flags.bits() as i32,
         role.id.get() as i64,
+        role.name,
         role.tags.map(Json) as _,
         role.unicode_emoji,
     )
-    .fetch_one(&db.pool)
+    .execute(&db.pool)
     .await
 }

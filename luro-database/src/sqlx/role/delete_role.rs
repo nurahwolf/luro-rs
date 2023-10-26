@@ -1,11 +1,9 @@
-use twilight_model::guild::RoleTags;
+use sqlx::postgres::PgQueryResult;
 
-use sqlx::types::Json;
-
-use crate::{DbRole, LuroDatabase};
+use crate::LuroDatabase;
 
 impl LuroDatabase {
-    pub async fn delete_role(&self, role_id: i64) -> Result<DbRole, sqlx::Error> {
+    pub async fn delete_role(&self, role_id: i64) -> Result<PgQueryResult, sqlx::Error> {
         sqlx::query_as!(
             DbRole,
             "INSERT INTO guild_roles (
@@ -16,26 +14,11 @@ impl LuroDatabase {
             ON CONFLICT
                 (role_id, guild_id)
             DO UPDATE SET
-                deleted = $1
-            RETURNING
-                colour,
-                deleted,
-                hoist,
-                icon,
-                role_id,
-                guild_id,
-                managed,
-                mentionable,
-                role_name,
-                permissions,
-                position,
-                role_flags,
-                tags as \"tags: Json<RoleTags>\",
-                unicode_emoji",
+                deleted = $1",
             true,
             role_id,
         )
-        .fetch_one(&self.pool)
+        .execute(&self.pool)
         .await
     }
 }

@@ -1,4 +1,8 @@
-use twilight_model::{gateway::payload::incoming::UserUpdate, user::User, id::{marker::UserMarker, Id}};
+use twilight_model::{
+    gateway::payload::incoming::UserUpdate,
+    id::{marker::UserMarker, Id},
+    user::User,
+};
 
 use crate::DatabaseUserType;
 

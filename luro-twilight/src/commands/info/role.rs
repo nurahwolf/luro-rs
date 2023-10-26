@@ -28,7 +28,7 @@ impl LuroCommand for InfoRole {
                 None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
             },
         };
-        let guild_roles = ctx.get_guild_roles(&guild.guild_id(), true).await?;
+        let guild_roles = ctx.get_guild_roles(guild.guild_id, true).await?;
         let role = guild.fetch_role(ctx.database.clone(), self.role).await?;
 
         embed.title(format!("{}'s roles", guild.name));

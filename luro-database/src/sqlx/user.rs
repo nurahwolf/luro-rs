@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use twilight_model::gateway::payload::incoming::UserUpdate;
 
-use twilight_model::id::Id;
 use twilight_model::id::marker::UserMarker;
+use twilight_model::id::Id;
 use twilight_model::user::User;
 
 mod count_characters;

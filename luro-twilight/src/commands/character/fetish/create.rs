@@ -41,7 +41,7 @@ impl LuroCommand for Create {
         character
             .update_fetish(LuroCharacterFetish {
                 character_name: self.character,
-                user_id: ctx.author.user_id,
+                user_id: ctx.author.user_id.get() as i64,
                 fetish_id: fetish_total as i64,
                 category: match self.category {
                     FetishCategory::Favourite => LuroCharacterFetishCategory::Favourite,

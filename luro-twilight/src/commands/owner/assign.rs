@@ -29,7 +29,7 @@ impl LuroCommand for Assign {
         if let Some(remove) = self.remove && remove {
             match ctx
             .twilight_client
-            .remove_guild_member_role(guild.guild_id(), user.user_id(), self.role)
+            .remove_guild_member_role(guild.guild_id, user.user_id, self.role)
             .await {
                 Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.user_id)).ephemeral()).await,
                 Err(why) => ctx.response_simple(Response::InternalError(why.into())).await
@@ -38,7 +38,7 @@ impl LuroCommand for Assign {
         // Otherwise we just assign a role as expected
         match ctx
             .twilight_client
-            .add_guild_member_role(guild.guild_id(), user.user_id(), self.role)
+            .add_guild_member_role(guild.guild_id, user.user_id, self.role)
             .await {
                 Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.user_id)).ephemeral()).await,
                 Err(why) => ctx.response_simple(Response::InternalError(why.into())).await

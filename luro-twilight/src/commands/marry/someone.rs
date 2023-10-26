@@ -30,7 +30,7 @@ impl LuroCommand for Someone {
 
         ctx.database
             .update_marriage(DbUserMarriage {
-                proposer_id: proposer.user_id,
+                proposer_id: proposer.user_id.get() as i64,
                 proposee_id: self.marry.resolved.id.get() as i64,
                 divorced: false,
                 rejected: false,

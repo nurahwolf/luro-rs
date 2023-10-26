@@ -19,15 +19,17 @@ pub struct InfoUser {
     /// Set this if you want a copy of your data.
     gdpr_export: Option<bool>,
     /// Set this to true to get fresh data, if for some reason your profile is out of date
-    sync: Option<bool>
+    sync: Option<bool>,
 }
 
 impl LuroCommand for InfoUser {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         // Fetch the user requested. Additional check for if we want another guild.
-        let mut user = ctx.get_specified_user_or_author(self.user.as_ref(), self.sync.unwrap_or_default()).await?;
+        let mut user = ctx
+            .get_specified_user_or_author(self.user.as_ref(), self.sync.unwrap_or_default())
+            .await?;
         if let Some(guild_id) = self.guild.map(|x| Id::new(x as u64)) {
-            user = ctx.fetch_member(user.user_id(), guild_id, self.sync.unwrap_or_default()).await?
+            user = ctx.fetch_member(user.user_id, guild_id, self.sync.unwrap_or_default()).await?
         }
 
         // Base embed
@@ -49,7 +51,7 @@ impl LuroCommand for InfoUser {
 
         let mut timestamp = format!(
             "- Joined discord on <t:{0}> - <t:{0}:R>\n",
-            Duration::from_millis(user.user_id().timestamp().unsigned_abs()).as_secs()
+            Duration::from_millis(user.user_id.timestamp().unsigned_abs()).as_secs()
         );
 
         // Luro data
@@ -205,7 +207,7 @@ impl LuroCommand for InfoUser {
         // Standard user only information
         let mut user_information = String::new();
         if let Some(accent_color) = user.accent_colour {
-            embed.colour(accent_color as u32);
+            embed.colour(accent_color);
             writeln!(user_information, "- Accent Colour: `{accent_color:X}`")?;
         }
         if let Some(email) = &user.email {
@@ -226,7 +228,10 @@ impl LuroCommand for InfoUser {
         if user.bot {
             writeln!(user_information, " - Bot: `true`")?;
         }
-        embed.create_field("User Information", &user_information, false);
+
+        if !user_information.is_empty() {
+            embed.create_field("User Information", &user_information, false);
+        }
         embed.create_field("Timestamps", &timestamp, false);
         embed.create_field(
             "Data Source",
@@ -250,12 +255,11 @@ impl LuroCommand for InfoUser {
                     response.set_embeds(vec![]);
                     response.content(format!(
                         "Hey <@{}>! <@{}> is being a cunt and trying to steal your data.",
-                        user.user_id(),
-                        ctx.author.user_id()
+                        user.user_id, ctx.author.user_id
                     ));
                 } else {
                     response.ephemeral().attachments = Some(vec![Attachment::from_bytes(
-                        format!("gdpr-export-{}.txt", ctx.author.user_id()),
+                        format!("gdpr-export-{}.txt", ctx.author.user_id),
                         toml::to_string_pretty(&user).unwrap().as_bytes().to_vec(), // TODO: Handle this unwrap
                         1,
                     )]);

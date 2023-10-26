@@ -2,10 +2,7 @@ use std::fmt::Write;
 
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{
-    http::attachment::Attachment,
-    id::Id,
-};
+use twilight_model::{http::attachment::Attachment, id::Id};
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "guild", desc = "Information about a guild")]
@@ -15,13 +12,16 @@ pub struct Guild {
     /// Set this if you want a copy of your data (GUILD OWNER ONLY).
     gdpr_export: Option<bool>,
     /// Set to true if you want to get the data from the API instead of the database
-    refresh: Option<bool>
+    refresh: Option<bool>,
 }
 
 impl LuroCommand for Guild {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let guild = match self.guild {
-            Some(guild_requested) => ctx.get_guild(Id::new(guild_requested.parse()?), self.refresh.unwrap_or_default()).await?,
+            Some(guild_requested) => {
+                ctx.get_guild(Id::new(guild_requested.parse()?), self.refresh.unwrap_or_default())
+                    .await?
+            }
             None => match &ctx.guild {
                 Some(guild) => guild.clone(),
                 None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
@@ -45,16 +45,15 @@ impl LuroCommand for Guild {
 
         ctx.respond(|response| {
             if self.gdpr_export.unwrap_or_default() {
-                if guild.owner_id != ctx.author.user_id() {
+                if guild.owner_id != ctx.author.user_id {
                     response.content(format!(
                         "Hey <@{}>! <@{}> is being a cunt and trying to steal your guild data!",
-                        guild.owner_id,
-                        ctx.author.user_id()
+                        guild.owner_id, ctx.author.user_id
                     ));
                 } else if let Ok(guild_settings) = toml::to_string_pretty(&guild) {
                     response.attachments(
                         vec![Attachment::from_bytes(
-                            format!("gdpr-export-{}.txt", ctx.author.user_id()),
+                            format!("gdpr-export-{}.txt", ctx.author.user_id),
                             guild_settings.as_bytes().to_vec(),
                             1,
                         )]

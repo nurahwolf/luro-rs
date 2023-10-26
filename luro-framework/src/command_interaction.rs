@@ -63,7 +63,7 @@ impl Luro for CommandInteraction {
     }
 
     fn guild_id(&self) -> Option<Id<GuildMarker>> {
-        self.guild.as_ref().map(|x| x.guild_id())
+        self.guild.as_ref().map(|x| x.guild_id)
     }
 
     /// Create a response to an interaction.
@@ -129,8 +129,16 @@ impl CommandInteraction {
         };
         Ok(CommandInteraction {
             author: match interaction.guild_id {
-                Some(guild_id) => ctx.database.get_member(interaction.author_id().context("Expected to get author")?, guild_id).await?,
-                None => ctx.database.get_user(interaction.author_id().context("Expected to get author")?).await?,
+                Some(guild_id) => {
+                    ctx.database
+                        .get_member(interaction.author_id().context("Expected to get author")?, guild_id)
+                        .await?
+                }
+                None => {
+                    ctx.database
+                        .get_user(interaction.author_id().context("Expected to get author")?)
+                        .await?
+                }
             },
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,

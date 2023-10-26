@@ -122,19 +122,19 @@ impl CreateLuroCommand for Marry {
         let mut embed = ctx.default_embed().await;
         let marriage = ctx
             .database
-            .get_marriage((proposer_id, proposee_id))
+            .get_marriage(proposer_id, proposee_id)
             .await?
             .context("Expected to find marriage in database")?;
 
         // Handle if someone else clicked the button
-        if ctx.author.user_id() != proposee.user_id {
+        if ctx.author.user_id != proposee.user_id {
             match &ctx.data.custom_id == "marry-deny" {
                 true => {
                     ctx.database
                         .update_marriage_approval(DbUserMarriageApprovals {
-                            user_id: ctx.author.user_id().get() as i64,
-                            proposer_id,
-                            proposee_id,
+                            user_id: ctx.author.user_id.get() as i64,
+                            proposer_id: proposer_id.get() as i64,
+                            proposee_id: proposee_id.get() as i64,
                             approve: false,
                             disapprove: true,
                         })
@@ -143,9 +143,9 @@ impl CreateLuroCommand for Marry {
                 false => {
                     ctx.database
                         .update_marriage_approval(DbUserMarriageApprovals {
-                            user_id: ctx.author.user_id().get() as i64,
-                            proposer_id,
-                            proposee_id,
+                            user_id: ctx.author.user_id.get() as i64,
+                            proposer_id: proposer_id.get() as i64,
+                            proposee_id: proposee_id.get() as i64,
                             approve: true,
                             disapprove: false,
                         })
@@ -154,7 +154,7 @@ impl CreateLuroCommand for Marry {
             }?;
         }
 
-        let marriage_approvals = ctx.database.get_marriage_approvals((proposer_id, proposee_id)).await?;
+        let marriage_approvals = ctx.database.get_marriage_approvals(proposer_id, proposee_id).await?;
 
         match divorce_wanted {
             false => embed
@@ -216,7 +216,7 @@ impl CreateLuroCommand for Marry {
         };
 
         // Handle if someone else clicked the button
-        if ctx.author.user_id() != proposee.user_id {
+        if ctx.author.user_id != proposee.user_id {
             return ctx.respond(|r| r.update().add_embed(embed)).await;
         }
 
@@ -230,8 +230,8 @@ impl CreateLuroCommand for Marry {
 
             ctx.database
                 .update_marriage(DbUserMarriage {
-                    proposer_id,
-                    proposee_id,
+                    proposer_id: proposer_id.get() as i64,
+                    proposee_id: proposee_id.get() as i64,
                     divorced: true,
                     rejected: true,
                     reason: marriage.reason,
@@ -257,8 +257,8 @@ impl CreateLuroCommand for Marry {
 
         ctx.database
             .update_marriage(DbUserMarriage {
-                proposer_id,
-                proposee_id,
+                proposer_id: proposer_id.get() as i64,
+                proposee_id: proposee_id.get() as i64,
                 divorced: divorce_wanted,
                 rejected: false,
                 reason: marriage.reason,

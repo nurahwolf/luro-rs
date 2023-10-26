@@ -1,6 +1,10 @@
 use sqlx::{postgres::PgQueryResult, Error};
 use tracing::debug;
-use twilight_model::{gateway::payload::incoming::UserUpdate, user::User, id::{Id, marker::UserMarker}};
+use twilight_model::{
+    gateway::payload::incoming::UserUpdate,
+    id::{marker::UserMarker, Id},
+    user::User,
+};
 
 use crate::{DatabaseUserType, LuroDatabase};
 
@@ -19,12 +23,9 @@ impl LuroDatabase {
 }
 
 async fn handle_user_id(db: &LuroDatabase, user: Id<UserMarker>) -> Result<PgQueryResult, Error> {
-    sqlx::query_file!(
-        "queries/users/update_twilight_user_id.sql",
-        user.get() as i64,
-    )
-    .execute(&db.pool)
-    .await
+    sqlx::query_file!("queries/users/update_twilight_user_id.sql", user.get() as i64,)
+        .execute(&db.pool)
+        .await
 }
 
 async fn handle_user(db: &LuroDatabase, user: User) -> Result<PgQueryResult, Error> {

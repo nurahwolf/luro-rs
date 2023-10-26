@@ -7,12 +7,13 @@ use twilight_model::{
         thread::{ThreadMember, ThreadMetadata},
         Channel,
     },
-    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate}, id::{Id, marker::ChannelMarker},
+    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate},
+    id::{marker::ChannelMarker, Id},
 };
 
 mod count_channels;
-mod update_channel;
 mod get_channel;
+mod update_channel;
 
 pub struct DbChannel {
     pub application_id: Option<i64>, // applications

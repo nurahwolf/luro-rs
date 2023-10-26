@@ -11,7 +11,7 @@ use twilight_model::{
         Id,
     },
     user::{PremiumType, User, UserFlags},
-    util::{image_hash::ImageHashParseError, ImageHash, Timestamp},
+    util::{ImageHash, Timestamp},
 };
 
 use crate::{LuroMember, LuroUserData, LuroUserType};
@@ -19,11 +19,11 @@ use crate::{LuroMember, LuroUserData, LuroUserType};
 mod fetch_character;
 mod fetch_characters;
 mod fetch_marriages;
+mod fetch_message_count;
 mod update_character;
 mod update_character_prefix;
 mod update_character_text;
 mod update_permissions;
-mod fetch_message_count;
 
 /// A warpper around [User], with [Member] details if [Id<GuildMarker>] was present on type creation.
 /// Details are primarily fetched from the database, but this type can be instanced from a [User] / [Member] if that fails.
@@ -35,22 +35,22 @@ pub struct LuroUser {
     pub data: Option<LuroUserData>,
     pub member: Option<LuroMember>,
     pub instance: LuroUserType,
-    pub accent_colour: Option<i32>,
-    pub avatar_decoration: Option<String>,
-    pub avatar: Option<String>,
-    pub banner: Option<String>,
+    pub accent_colour: Option<u32>,
+    pub avatar_decoration: Option<ImageHash>,
+    pub avatar: Option<ImageHash>,
+    pub banner: Option<ImageHash>,
     pub bot: bool,
-    pub discriminator: i16,
+    pub discriminator: u16,
     pub email: Option<String>,
-    pub flags: Option<i64>,
+    pub flags: Option<UserFlags>,
     pub global_name: Option<String>,
     pub locale: Option<String>,
     pub mfa_enabled: Option<bool>,
     pub name: String,
-    pub premium_type: Option<i16>,
-    pub public_flags: Option<i64>,
+    pub premium_type: Option<PremiumType>,
+    pub public_flags: Option<UserFlags>,
     pub system: Option<bool>,
-    pub user_id: i64,
+    pub user_id: Id<UserMarker>,
     pub verified: Option<bool>,
 }
 
@@ -60,23 +60,23 @@ impl From<User> for LuroUser {
             instance: LuroUserType::User,
             member: None,
             data: None,
-            accent_colour: user.accent_color.map(|x| x as i32),
-            avatar_decoration: user.avatar_decoration.map(|x| x.to_string()),
-            avatar: user.avatar.map(|x| x.to_string()),
-            banner: user.banner.map(|x| x.to_string()),
+            accent_colour: user.accent_color,
+            avatar_decoration: user.avatar_decoration,
+            avatar: user.avatar,
+            banner: user.banner,
             bot: user.bot,
-            discriminator: user.discriminator as i16,
+            discriminator: user.discriminator,
             email: user.email,
-            flags: user.flags.map(|x| x.bits() as i64),
+            flags: user.flags,
             global_name: user.global_name,
             locale: user.locale,
             mfa_enabled: user.mfa_enabled,
             name: user.name,
-            premium_type: user.premium_type.map(|x| u8::from(x) as i16),
-            public_flags: user.public_flags.map(|x| x.bits() as i64),
+            premium_type: user.premium_type,
+            public_flags: user.public_flags,
             system: user.system,
             verified: user.verified,
-            user_id: user.id.get() as i64,
+            user_id: user.id,
         }
     }
 }
@@ -113,23 +113,23 @@ impl From<(Member, Id<GuildMarker>)> for LuroUser {
                 roles: HashMap::new(),
                 user_id: member.user.id.get() as i64,
             }),
-            accent_colour: member.user.accent_color.map(|x| x as i32),
-            avatar_decoration: member.user.avatar_decoration.map(|x| x.to_string()),
-            avatar: member.user.avatar.map(|x| x.to_string()),
-            banner: member.user.banner.map(|x| x.to_string()),
+            accent_colour: member.user.accent_color,
+            avatar_decoration: member.user.avatar_decoration,
+            avatar: member.user.avatar,
+            banner: member.user.banner,
             bot: member.user.bot,
-            discriminator: member.user.discriminator as i16,
+            discriminator: member.user.discriminator,
             email: member.user.email,
-            flags: member.user.flags.map(|x| x.bits() as i64),
+            flags: member.user.flags,
             global_name: member.user.global_name,
             locale: member.user.locale,
             mfa_enabled: member.user.mfa_enabled,
             name: member.user.name.clone(),
-            premium_type: member.user.premium_type.map(|x| u8::from(x) as i16),
-            public_flags: member.user.public_flags.map(|x| x.bits() as i64),
+            premium_type: member.user.premium_type,
+            public_flags: member.user.public_flags,
             system: member.user.system,
             verified: member.user.verified,
-            user_id: member.user.id.get() as i64,
+            user_id: member.user.id,
         }
     }
 }
@@ -140,18 +140,6 @@ impl LuroUser {
         let member = member.into();
         self.member = Some(member);
         self
-    }
-
-    /// Returns a [Id<UserMarker>].
-    pub fn user_id(&self) -> Id<UserMarker> {
-        Id::new(self.user_id as u64)
-    }
-
-    pub fn avatar(&self) -> Result<Option<ImageHash>, ImageHashParseError> {
-        Ok(match &self.avatar {
-            Some(img) => Some(ImageHash::parse(img.as_bytes())?),
-            None => None,
-        })
     }
 
     /// Return a string that is a link to the user's avatar
@@ -170,28 +158,20 @@ impl LuroUser {
             }
         }
 
-        match self.avatar() {
-            Ok(Some(avatar)) => match avatar.is_animated() {
+        match self.avatar {
+            Some(avatar) => match avatar.is_animated() {
                 true => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.gif?size=2048"),
                 false => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png?size=2048"),
             },
-            _ => format!("https://cdn.discordapp.com/avatars/{}.png?size=2048", self.user_id > 22 % 6),
+            _ => format!("https://cdn.discordapp.com/avatars/{}.png?size=2048", self.user_id.get() > 22 % 6),
         }
-    }
-
-    pub fn banner(&self) -> Result<Option<ImageHash>, ImageHashParseError> {
-        Ok(match &self.banner {
-            Some(img) => Some(ImageHash::parse(img.as_bytes())?),
-            None => None,
-        })
     }
 
     /// Return a string that is a link to the user's banner, or [None] if they don't have one
     pub fn banner_url(&self) -> Option<String> {
-        // TODO: Error handling
-        self.banner().unwrap().map(|banner| match banner.is_animated() {
-            true => format!("https://cdn.discordapp.com/banners/{}/{}.gif?size=4096", self.user_id, banner),
-            false => format!("https://cdn.discordapp.com/banners/{}/{}.png?size=4096", self.user_id, banner),
+        self.banner.map(|x| match x.is_animated() {
+            true => format!("https://cdn.discordapp.com/banners/{}/{}.gif?size=4096", self.user_id, x),
+            false => format!("https://cdn.discordapp.com/banners/{}/{}.png?size=4096", self.user_id, x),
         })
     }
 
@@ -222,38 +202,27 @@ impl LuroUser {
     }
 }
 
-impl TryFrom<LuroUser> for User {
-    type Error = ImageHashParseError;
-
-    fn try_from(luro_user: LuroUser) -> Result<Self, Self::Error> {
-        Ok(Self {
-            accent_color: luro_user.accent_colour.map(|x| x as u32),
-            avatar_decoration: match luro_user.avatar_decoration {
-                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
-                None => None,
-            },
-            avatar: match luro_user.avatar {
-                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
-                None => None,
-            },
-            banner: match luro_user.banner {
-                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
-                None => None,
-            },
+impl From<LuroUser> for User {
+    fn from(luro_user: LuroUser) -> Self {
+        Self {
+            accent_color: luro_user.accent_colour,
             bot: luro_user.bot,
-            discriminator: luro_user.discriminator as u16,
+            discriminator: luro_user.discriminator,
             email: luro_user.email,
-            flags: luro_user.flags.map(|x| UserFlags::from_bits_retain(x as u64)),
+            flags: luro_user.flags,
             global_name: luro_user.global_name,
             locale: luro_user.locale,
             mfa_enabled: luro_user.mfa_enabled,
             name: luro_user.name,
-            premium_type: luro_user.premium_type.map(|x| PremiumType::from(x as u8)),
-            public_flags: luro_user.public_flags.map(|x| UserFlags::from_bits_retain(x as u64)),
+            premium_type: luro_user.premium_type,
+            public_flags: luro_user.public_flags,
             system: luro_user.system,
             verified: luro_user.verified,
-            id: Id::new(luro_user.user_id as u64),
-        })
+            id: luro_user.user_id,
+            avatar: luro_user.avatar,
+            avatar_decoration: luro_user.avatar_decoration,
+            banner: luro_user.banner,
+        }
     }
 }
 

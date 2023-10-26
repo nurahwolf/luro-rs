@@ -7,10 +7,10 @@ use twilight_model::{
 
 use crate::LuroUserPermissions;
 
+mod clear_roles;
 mod get_member;
 mod get_members;
 mod update_member;
-mod clear_roles;
 
 pub enum DbMemberType {
     Member(Id<GuildMarker>, Member),

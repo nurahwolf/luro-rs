@@ -1,4 +1,4 @@
-use sqlx::{types::Json, postgres::PgQueryResult};
+use sqlx::{postgres::PgQueryResult, types::Json};
 use twilight_model::{
     channel::{
         forum::{DefaultReaction, ForumTag},
@@ -6,7 +6,8 @@ use twilight_model::{
         thread::{ThreadMember, ThreadMetadata},
         Channel,
     },
-    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelUpdate}, id::{Id, marker::ChannelMarker},
+    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelUpdate},
+    id::{marker::ChannelMarker, Id},
 };
 
 use crate::{sqlx::channel::DbChannel, DbChannelType, LuroDatabase};
@@ -16,22 +17,21 @@ impl LuroDatabase {
         let channel: DbChannelType = channel.into();
 
         match channel {
-            DbChannelType::ChannelID(channel) => handle_channel_id(self, channel).await.map(|x|x.rows_affected()),
+            DbChannelType::ChannelID(channel) => handle_channel_id(self, channel).await.map(|x| x.rows_affected()),
             DbChannelType::DbChannel(_) => todo!(),
-            DbChannelType::Channel(channel) => handle_channel(self, channel).await.map(|_|0),
-            DbChannelType::ChannelCreate(channel) => handle_channel_create(self, channel).await.map(|_|0),
-            DbChannelType::ChannelDelete(channel) => handle_channel_delete(self, channel).await.map(|_|0),
-            DbChannelType::ChannelUpdate(channel) => handle_channel_update(self, channel).await.map(|_|0),
+            DbChannelType::Channel(channel) => handle_channel(self, channel).await.map(|_| 0),
+            DbChannelType::ChannelCreate(channel) => handle_channel_create(self, channel).await.map(|_| 0),
+            DbChannelType::ChannelDelete(channel) => handle_channel_delete(self, channel).await.map(|_| 0),
+            DbChannelType::ChannelUpdate(channel) => handle_channel_update(self, channel).await.map(|_| 0),
             DbChannelType::ChannelPinsUpdate(_) => todo!(),
         }
     }
 }
 
 async fn handle_channel_id(db: &LuroDatabase, channel: Id<ChannelMarker>) -> Result<PgQueryResult, sqlx::Error> {
-    sqlx::query_file!(
-        "queries/channels/update_channel_id.sql",
-        channel.get() as i64
-    ).execute(&db.pool).await
+    sqlx::query_file!("queries/channels/update_channel_id.sql", channel.get() as i64)
+        .execute(&db.pool)
+        .await
 }
 
 async fn handle_channel(db: &LuroDatabase, channel: Channel) -> Result<DbChannel, sqlx::Error> {

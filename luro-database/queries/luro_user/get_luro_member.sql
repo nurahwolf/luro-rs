@@ -51,8 +51,8 @@ SELECT
     users.words_average,
     users.words_count
 FROM users
-    JOIN guild_members ON guild_members.user_id = users.user_id
-    JOIN guild_member_roles ON guild_member_roles.user_id = users.user_id AND guild_members.guild_id = guild_member_roles.guild_id AND guild_members.user_id = guild_member_roles.user_id
-    JOIN guild_roles ON guild_roles.role_id = guild_member_roles.role_id
+    LEFT JOIN guild_members ON guild_members.user_id = users.user_id
+    LEFT JOIN guild_member_roles ON guild_member_roles.user_id = users.user_id AND guild_members.guild_id = guild_member_roles.guild_id AND guild_members.user_id = guild_member_roles.user_id
+    LEFT JOIN guild_roles ON guild_roles.role_id = guild_member_roles.role_id
 WHERE
     guild_members.guild_id = $1 and users.user_id = $2 

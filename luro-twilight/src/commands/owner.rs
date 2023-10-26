@@ -9,13 +9,13 @@ use twilight_model::id::Id;
 mod fakeban;
 mod flush;
 // mod load_users;
-mod log;
 mod abuse;
 mod assign;
 mod clear_marriage;
 mod commands;
 mod get_message;
 mod guilds;
+mod log;
 pub mod mass_assign;
 mod modify_role;
 
@@ -90,7 +90,7 @@ impl CreateLuroCommand for Owner {
 
         if !authorised {
             return ctx
-                .response_simple(Response::NotOwner(&ctx.author.user_id(), &self.to_string()))
+                .response_simple(Response::NotOwner(&ctx.author.user_id, &self.to_string()))
                 .await;
         }
 
@@ -173,7 +173,7 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
         Some(guild) => guild,
         None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
     };
-    let guild_roles = ctx.get_guild_roles(&guild.guild_id(), false).await?;
+    let guild_roles = ctx.get_guild_roles(guild.guild_id, false).await?;
 
     let mut roles_string = String::new();
     for role in &guild_roles {
@@ -284,7 +284,7 @@ async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
     //     // "mass-assign-roles" => {
     //     //     for user in members {
     //     //         for role in &roles {
-    //     //             match ctx.twilight_client.add_guild_member_role(guild.guild_id(), user.user_id(), *role).await {
+    //     //             match ctx.twilight_client.add_guild_member_role(guild.guild_id, user.user_id, *role).await {
     //     //                 Ok(_) => actions_performed += 1,
     //     //                 Err(_) => errors += 1,
     //     //             };
@@ -294,7 +294,7 @@ async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
     //     // "mass-assign-remove" => {
     //     //     for user in members {
     //     //         for role in &roles {
-    //     //             match ctx.twilight_client.remove_guild_member_role(guild.guild_id(), user.user_id(), *role).await {
+    //     //             match ctx.twilight_client.remove_guild_member_role(guild.guild_id, user.user_id, *role).await {
     //     //                 Ok(_) => actions_performed += 1,
     //     //                 Err(_) => errors += 1,
     //     //             };

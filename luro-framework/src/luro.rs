@@ -219,7 +219,7 @@ pub trait Luro {
     /// Set bypass to true to force a flush of all roles, if you want to make sure we have the most up to date roles possible, such as for highly privileged commands.
     fn get_guild_roles(
         &self,
-        guild_id: &Id<GuildMarker>,
+        guild_id: Id<GuildMarker>,
         bypass: bool,
     ) -> impl std::future::Future<Output = anyhow::Result<Vec<Role>>> + Send
     where
@@ -228,26 +228,26 @@ pub trait Luro {
         async move {
             // Get fresh roles at user request
             if bypass {
-                let roles = self.twilight_client().roles(*guild_id).await?.model().await?;
+                let roles = self.twilight_client().roles(guild_id).await?.model().await?;
 
                 for role in &roles {
-                    self.database().update_role((*guild_id, role.clone())).await?;
+                    self.database().update_role((guild_id, role.clone())).await?;
                 }
 
                 return Ok(roles);
             }
 
             // Get from database
-            if let Ok(roles) = self.database().get_guild_roles(guild_id.get() as i64).await {
+            if let Ok(roles) = self.database().get_guild_roles(guild_id).await {
                 return Ok(roles.into_iter().map(|x| x.into()).collect::<Vec<_>>());
             }
 
             // Database failed, fetch from client.
             info!("Failed to find guild roles for guild {guild_id}, fetching using twilight_client");
-            let roles = self.twilight_client().roles(*guild_id).await?.model().await?;
+            let roles = self.twilight_client().roles(guild_id).await?.model().await?;
 
             for role in &roles {
-                self.database().update_role((*guild_id, role.clone())).await?;
+                self.database().update_role((guild_id, role.clone())).await?;
             }
 
             Ok(roles)

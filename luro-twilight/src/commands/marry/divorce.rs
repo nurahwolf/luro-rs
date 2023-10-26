@@ -21,8 +21,8 @@ impl LuroCommand for Divorce {
 
         ctx.database
             .update_marriage(DbUserMarriage {
-                proposer_id: proposer.user_id,
-                proposee_id: proposee.user_id,
+                proposer_id: proposer.user_id.get() as i64,
+                proposee_id: proposee.user_id.get() as i64,
                 divorced: true,
                 rejected: false,
                 reason: self.reason.clone(),

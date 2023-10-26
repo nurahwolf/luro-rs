@@ -1,6 +1,6 @@
-use std::fmt::Write;
 use luro_database::LuroUserPermissions;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use std::fmt::Write;
 
 use tracing::warn;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -131,7 +131,11 @@ impl LuroCommand for Database {
         if let Ok(data) = ctx.database.count_user_warnings().await {
             builder.push_record(["Total User Warnings", &format_number(data)]);
         }
-        embed.create_field("-- User Information --", &format!("```\n{}```", builder.build().with(tabled::settings::Style::ascii_rounded())), false);
+        embed.create_field(
+            "-- User Information --",
+            &format!("```\n{}```", builder.build().with(tabled::settings::Style::ascii_rounded())),
+            false,
+        );
 
         ctx.respond(|response| {
             response

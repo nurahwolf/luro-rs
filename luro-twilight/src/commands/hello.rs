@@ -11,8 +11,7 @@ impl CreateLuroCommand for Hello {
         ctx.respond(|r| {
             r.content(format!(
                 "Hello World! I am **{}**. It's nice to meet you, <@{}>!",
-                current_user,
-                ctx.author.user_id()
+                current_user, ctx.author.user_id
             ))
         })
         .await

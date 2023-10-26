@@ -61,7 +61,7 @@ impl Luro for ModalInteraction {
     }
 
     fn guild_id(&self) -> Option<Id<GuildMarker>> {
-        self.guild.as_ref().map(|x| x.guild_id())
+        self.guild.as_ref().map(|x| x.guild_id)
     }
 
     /// Create a response to an interaction.
