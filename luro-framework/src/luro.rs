@@ -107,13 +107,7 @@ pub trait Luro {
     where
         Self: Sync,
     {
-        async {
-            Ok(self
-                .database()
-                .get_all_guilds()
-                .await
-                .map(|x| x.into_iter().map(|x| x.into()).collect())?)
-        }
+        async { self.database().get_all_guilds().await }
     }
 
     /// Fetch and return a [LuroUser], updating the database if not present. This version ensures a [Member] context is applied.

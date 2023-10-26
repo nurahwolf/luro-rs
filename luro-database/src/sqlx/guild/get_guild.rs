@@ -5,23 +5,34 @@ use twilight_model::{id::{marker::GuildMarker, Id}, guild::{AfkTimeout, DefaultM
 use crate::{LuroDatabase, LuroGuild, LuroGuildData};
 
 impl LuroDatabase {
-    pub async fn get_all_guilds(&self) -> Result<Vec<LuroGuild>, sqlx::Error> {
+    pub async fn get_all_guilds(&self) -> anyhow::Result<Vec<LuroGuild>> {
         let mut guilds = vec![];
         let mut query = sqlx::query_file!("queries/guilds/get_guilds.sql")
             .fetch(&self.pool);
 
         while let Ok(Some(guild)) = query.try_next().await {
+            let mut channels = vec![];
+            for channel in guild.channels.unwrap_or_default() {
+                match self.get_channel(Id::new(channel as u64)).await {
+                    Ok(Some(channel)) => channels.push(channel),
+                    _ => warn!("Failed to get channel {channel} in guild {}", guild.guild_id),
+                }
+            }
+
             guilds.push(LuroGuild {
                 data: Some(LuroGuildData {
                     accent_colour: guild.accent_colour.map(|x|x as u32),
                     accent_colour_custom: guild.custom_accent_colour.map(|x|x as u32),
                 }),
-                afk_channel_id: Default::default(),
+                afk_channel_id: guild.afk_channel_id.map(|x|Id::new(x as u64)),
                 afk_timeout: AfkTimeout::from(guild.afk_timeout as u16),
-                application_id: Default::default(),
-                approximate_member_count: guild.total_members.map(|x|x as u64),
-                approximate_presence_count: Default::default(),
-                banner: Default::default(),
+                application_id: guild.application_id.map(|x|Id::new(x as u64)),
+                approximate_member_count: guild.members.map(|x|x as u64),
+                approximate_presence_count: Default::default(), // TODO: Complete this
+                banner: match guild.banner {
+                    Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                    None => None
+                },
                 channels: Default::default(),
                 default_message_notifications: DefaultMessageNotificationLevel::from(guild.default_message_notifications as u8),
                 description: Default::default(),

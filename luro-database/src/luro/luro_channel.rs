@@ -1,3 +1,4 @@
+use serde::{Serialize, Deserialize};
 use sqlx::types::Json;
 use time::OffsetDateTime;
 use twilight_model::{
@@ -17,6 +18,7 @@ use twilight_model::{
 
 use crate::DbChannel;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LuroChannel {
     /// ID of the application that created the channel.
     pub application_id: Option<Id<ApplicationMarker>>,

@@ -26,7 +26,6 @@ pub use crate::diesel::{DatabaseGuild, DatabaseInteraction, DatabaseInteractionK
 pub use crate::sqlx::{
     application::{DbApplication, DbApplicationType},
     channel::{DbChannel, DbChannelType},
-    guild::DatabaseGuild,
     interaction::{DatabaseInteraction, DatabaseInteractionKind},
     luro_database::LuroDatabase,
     member::{DbMember, DbMemberType},
