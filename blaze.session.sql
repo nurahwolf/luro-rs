@@ -1,3 +1,7 @@
+CREATE TYPE gender AS ENUM ('MALE', 'FEMALE', 'TRANS_FEMALE', 'TRANS_MALE', 'ITS_COMPLICATED');
+CREATE TYPE sexuality AS ENUM ('STRAIGHT', 'BISEXUAL', 'PANSEXUAL', 'LESBIAN', 'GAY');
+
+
 -- if EXISTS (SELECT FROM user_marriages WHERE proposer_id = 392992034304294924) then
 --    statements;
 -- end if;
@@ -9,8 +13,8 @@
     -- user_permissions user_permissions NOT NULL default 'USER',
 
 
-ALTER TABLE users
-ALTER COLUMN user_permissions SET DEFAULT 'USER';
+-- ALTER TABLE users
+-- ALTER COLUMN user_permissions SET DEFAULT 'USER';
 
 -- DO $$
 --     BEGIN

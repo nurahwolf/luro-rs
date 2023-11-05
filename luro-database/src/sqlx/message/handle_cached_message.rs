@@ -113,6 +113,7 @@ impl LuroDatabase {
                     mention_roles as \"mention_roles: Vec<i64>\",
                     mentions as \"mentions: Json<Vec<Mention>>\",
                     pinned,
+                    author_id,
                     reactions as \"reactions: Json<Vec<Reaction>>\",
                     reference as \"reference: Json<MessageReference>\",
                     referenced_message as \"referenced_message: Json<Box<Message>>\",

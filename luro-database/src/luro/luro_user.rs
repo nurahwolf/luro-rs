@@ -1,17 +1,13 @@
-use std::collections::HashMap;
-
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
-use tracing::info;
 use twilight_model::{
-    guild::{Member, MemberFlags},
+    guild::Member,
     id::{
         marker::{GuildMarker, UserMarker},
         Id,
     },
     user::{PremiumType, User, UserFlags},
-    util::{ImageHash, Timestamp},
+    util::ImageHash,
 };
 
 use crate::{LuroMember, LuroUserData, LuroUserType};
@@ -24,6 +20,7 @@ mod update_character;
 mod update_character_prefix;
 mod update_character_text;
 mod update_permissions;
+mod sync;
 
 /// A warpper around [User], with [Member] details if [Id<GuildMarker>] was present on type creation.
 /// Details are primarily fetched from the database, but this type can be instanced from a [User] / [Member] if that fails.
@@ -32,19 +29,19 @@ mod update_permissions;
 /// Check [LuroUserType] to know how this type was instanced.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LuroUser {
-    pub data: Option<LuroUserData>,
-    pub member: Option<LuroMember>,
-    pub instance: LuroUserType,
     pub accent_colour: Option<u32>,
     pub avatar_decoration: Option<ImageHash>,
     pub avatar: Option<ImageHash>,
     pub banner: Option<ImageHash>,
     pub bot: bool,
+    pub data: Option<LuroUserData>,
     pub discriminator: u16,
     pub email: Option<String>,
     pub flags: Option<UserFlags>,
     pub global_name: Option<String>,
+    pub instance: LuroUserType,
     pub locale: Option<String>,
+    pub member: Option<LuroMember>,
     pub mfa_enabled: Option<bool>,
     pub name: String,
     pub premium_type: Option<PremiumType>,
@@ -87,31 +84,19 @@ impl From<(Member, Id<GuildMarker>)> for LuroUser {
             instance: LuroUserType::Member,
             data: None,
             member: Some(LuroMember {
-                left_at: None,
-                avatar: member.avatar.map(|x| x.to_string()),
-                boosting_since: match member.premium_since {
-                    Some(timestamp) => match OffsetDateTime::from_unix_timestamp(timestamp.as_secs()) {
-                        Ok(timestamp) => Some(timestamp),
-                        Err(_) => None,
-                    },
-                    None => None,
-                },
-                communication_disabled_until: match member.communication_disabled_until {
-                    Some(timestamp) => match OffsetDateTime::from_unix_timestamp(timestamp.as_secs()) {
-                        Ok(timestamp) => Some(timestamp),
-                        Err(_) => None,
-                    },
-                    None => None,
-                },
-                joined_at: OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs()).unwrap(),
+                data: None,
+                avatar: member.avatar,
+                boosting_since: member.premium_since,
+                communication_disabled_until: member.communication_disabled_until,
+                joined_at: member.joined_at,
                 deafened: member.deaf,
-                flags: member.flags.bits() as i64,
-                guild_id: guild_id.get() as i64,
+                flags: member.flags,
+                guild_id,
                 muted: member.mute,
                 nickname: member.nick,
                 pending: member.pending,
-                roles: HashMap::new(),
-                user_id: member.user.id.get() as i64,
+                roles: member.roles,
+                user_id: member.user.id,
             }),
             accent_colour: member.user.accent_color,
             avatar_decoration: member.user.avatar_decoration,
@@ -148,9 +133,7 @@ impl LuroUser {
         if let Some(member) = &self.member {
             let guild_id = member.guild_id;
 
-            if let Ok(Some(avatar)) = member.avatar() {
-                info!("Guild Avatar: {:#?}", avatar.to_string());
-
+            if let Some(avatar) = member.avatar {
                 return match avatar.is_animated() {
                     true => format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{avatar}.gif?size=2048"),
                     false => format!("https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{avatar}.png?size=2048"),
@@ -232,26 +215,17 @@ impl TryFrom<LuroUser> for Member {
     fn try_from(luro_user: LuroUser) -> Result<Self, Self::Error> {
         match luro_user.member {
             Some(ref member) => Ok(Self {
-                avatar: match &member.avatar {
-                    Some(img) => Some(ImageHash::parse(img.as_bytes())?),
-                    None => None,
-                },
-                communication_disabled_until: match member.communication_disabled_until {
-                    Some(timestamp) => Some(Timestamp::from_secs(timestamp.unix_timestamp())?),
-                    None => None,
-                },
+                avatar: member.avatar,
+                communication_disabled_until: member.communication_disabled_until,
                 deaf: member.deafened,
-                flags: MemberFlags::from_bits_retain(member.flags as u64),
-                joined_at: Timestamp::from_secs(member.joined_at.unix_timestamp())?,
+                flags: member.flags,
+                joined_at: member.joined_at,
                 mute: member.muted,
                 nick: member.nickname.clone(),
                 pending: member.pending,
-                premium_since: match member.boosting_since {
-                    Some(timestamp) => Some(Timestamp::from_secs(timestamp.unix_timestamp())?),
-                    None => None,
-                },
-                roles: vec![],
-                user: luro_user.try_into()?,
+                premium_since: member.boosting_since,
+                roles: member.roles.clone(),
+                user: luro_user.into(),
             }),
             None => Err(anyhow!(
                 "Luro User was not instanced from a type containing member data: '{}'",

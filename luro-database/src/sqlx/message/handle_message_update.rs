@@ -30,6 +30,7 @@ impl LuroDatabase {
                     source = $3
                 WHERE message_id = $1
                 RETURNING
+                author_id,
                     activity as \"activity: Json<MessageActivity>\",
                     application_id,
                     application as \"application: Json<MessageApplication>\",

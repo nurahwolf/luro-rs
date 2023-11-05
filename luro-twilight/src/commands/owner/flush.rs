@@ -21,14 +21,14 @@ impl LuroCommand for Flush {
         for message in ctx.database.get_messages().await.values() {
             if let Entry::Vacant(entry) = users.entry(message.author.id) {
                 entry.insert(());
-                if ctx.fetch_user_only(message.author.id, false).await.is_err() {
+                if ctx.fetch_user_only(message.author.id).await.is_err() {
                     errors += 1
                 }
             }
 
             if let Entry::Vacant(entry) = channels.entry(message.channel_id) {
                 entry.insert(());
-                if ctx.fetch_channel(message.channel_id, false).await.is_err() {
+                if ctx.fetch_channel(message.channel_id).await.is_err() {
                     errors += 1
                 }
             }

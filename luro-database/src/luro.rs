@@ -13,3 +13,6 @@ pub mod luro_user;
 pub mod luro_user_data;
 pub mod luro_user_type;
 pub mod luro_word_count;
+pub mod sexuality;
+pub mod gender;
+pub mod luro_member_data;

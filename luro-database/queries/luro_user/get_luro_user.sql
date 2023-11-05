@@ -25,7 +25,9 @@ SELECT
     users.verified,
     users.warnings,
     users.words_average,
-    users.words_count
+    users.words_count,
+    users.gender "gender: Gender",
+    users.sexuality as "sexuality: Sexuality"
 FROM users
 WHERE
     user_id = $1

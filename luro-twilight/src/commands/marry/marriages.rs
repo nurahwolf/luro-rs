@@ -13,7 +13,7 @@ pub struct Marriages {
 impl LuroCommand for Marriages {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let accent_colour = ctx.accent_colour();
-        let author = ctx.get_specified_user_or_author(self.user.as_ref(), false).await?;
+        let author = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
         let marriages = author.fetch_marriages(ctx.database.clone()).await?;
 
         let mut marriages_detailed = vec![];
@@ -31,8 +31,8 @@ impl LuroCommand for Marriages {
                 continue;
             }
 
-            let proposer = ctx.fetch_user(Id::new(marriage.proposer_id as u64), false).await?;
-            let proposee = ctx.fetch_user(Id::new(marriage.proposee_id as u64), false).await?;
+            let proposer = ctx.fetch_user(Id::new(marriage.proposer_id as u64)).await?;
+            let proposee = ctx.fetch_user(Id::new(marriage.proposee_id as u64)).await?;
             let approvers = ctx
                 .database
                 .count_marriage_approvers(marriage.proposer_id, marriage.proposee_id)

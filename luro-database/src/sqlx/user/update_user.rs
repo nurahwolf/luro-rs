@@ -6,14 +6,14 @@ use twilight_model::{
     user::User,
 };
 
-use crate::{DatabaseUserType, LuroDatabase};
+use crate::{LuroDatabase, sync::UserSync};
 
 impl LuroDatabase {
-    pub async fn update_user(&self, user: impl Into<DatabaseUserType>) -> anyhow::Result<u64> {
+    pub async fn update_user(&self, user: impl Into<UserSync>) -> anyhow::Result<u64> {
         let rows_modified = match user.into() {
-            DatabaseUserType::User(user) => handle_user(self, user).await?.rows_affected(),
-            DatabaseUserType::UserID(user) => handle_user_id(self, user).await?.rows_affected(),
-            DatabaseUserType::UserUpdate(user) => handle_user_update(self, user).await?.rows_affected(),
+            UserSync::User(user) => handle_user(self, user).await?.rows_affected(),
+            UserSync::UserID(user) => handle_user_id(self, user).await?.rows_affected(),
+            UserSync::UserUpdate(user) => handle_user_update(self, user).await?.rows_affected(),
         };
 
         debug!("DB Member: Updated `{rows_modified}` rows!");

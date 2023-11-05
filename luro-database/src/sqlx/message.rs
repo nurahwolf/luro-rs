@@ -33,6 +33,7 @@ mod handle_message_delete;
 mod handle_message_delete_bulk;
 mod handle_message_update;
 mod update_message;
+mod fetch_user_messages;
 
 #[derive(Default, Debug, ::sqlx::Type)]
 #[sqlx(type_name = "message_source", rename_all = "SCREAMING_SNAKE_CASE")]
@@ -79,6 +80,7 @@ pub struct DatabaseMessage {
     pub application: Option<Json<MessageApplication>>,
     pub attachments: Option<Json<Vec<Attachment>>>,
     pub author: Json<User>,
+    pub author_id: i64,
     pub channel_id: i64,
     pub components: Option<Json<Vec<Component>>>,
     pub content: Option<String>,
@@ -119,6 +121,7 @@ pub struct DbWordcount {
 impl From<LuroMessage> for DatabaseMessage {
     fn from(message: LuroMessage) -> Self {
         Self {
+            author_id: message.author.id.get() as i64,
             member: message.member.map(Json),
             activity: message.activity.map(|x| x.into()),
             application_id: message.application_id.map(|x| x.get() as i64),

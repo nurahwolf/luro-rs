@@ -31,7 +31,7 @@ impl LuroCommand for Add {
             })
             .await?;
 
-        let image_owner = ctx.fetch_user(Id::new(img.owner_id as u64), false).await?;
+        let image_owner = ctx.fetch_user(Id::new(img.owner_id as u64)).await?;
 
         ctx.respond(|r| {
             r.embed(|e| {

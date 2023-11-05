@@ -10,20 +10,19 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id},
 };
 
-use crate::{sqlx::channel::DbChannel, DbChannelType, LuroDatabase};
+use crate::{sqlx::channel::DbChannel, LuroDatabase, sync::ChannelSync};
 
 impl LuroDatabase {
-    pub async fn update_channel(&self, channel: impl Into<DbChannelType>) -> Result<u64, sqlx::Error> {
-        let channel: DbChannelType = channel.into();
+    pub async fn update_channel(&self, channel: impl Into<ChannelSync>) -> Result<u64, sqlx::Error> {
+        let channel: ChannelSync = channel.into();
 
         match channel {
-            DbChannelType::ChannelID(channel) => handle_channel_id(self, channel).await.map(|x| x.rows_affected()),
-            DbChannelType::DbChannel(_) => todo!(),
-            DbChannelType::Channel(channel) => handle_channel(self, channel).await.map(|_| 0),
-            DbChannelType::ChannelCreate(channel) => handle_channel_create(self, channel).await.map(|_| 0),
-            DbChannelType::ChannelDelete(channel) => handle_channel_delete(self, channel).await.map(|_| 0),
-            DbChannelType::ChannelUpdate(channel) => handle_channel_update(self, channel).await.map(|_| 0),
-            DbChannelType::ChannelPinsUpdate(_) => todo!(),
+            ChannelSync::ChannelID(channel) => handle_channel_id(self, channel).await.map(|x| x.rows_affected()),
+            ChannelSync::Channel(channel) => handle_channel(self, channel).await.map(|_| 0),
+            ChannelSync::ChannelCreate(channel) => handle_channel_create(self, channel).await.map(|_| 0),
+            ChannelSync::ChannelDelete(channel) => handle_channel_delete(self, channel).await.map(|_| 0),
+            ChannelSync::ChannelUpdate(channel) => handle_channel_update(self, channel).await.map(|_| 0),
+            ChannelSync::ChannelPinsUpdate(_) => todo!(),
         }
     }
 }

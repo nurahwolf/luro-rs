@@ -1,9 +1,9 @@
-use crate::{DbApplication, DbApplicationType, LuroDatabase};
+use crate::{DbApplication, LuroDatabase, sync::ApplicationSync};
 
 impl LuroDatabase {
-    pub async fn update_application(&self, data: impl Into<DbApplicationType>) -> Result<DbApplication, sqlx::Error> {
+    pub async fn update_application(&self, data: impl Into<ApplicationSync>) -> Result<DbApplication, sqlx::Error> {
         match data.into() {
-            DbApplicationType::PartialApplication(app) => {
+            ApplicationSync::PartialApplication(app) => {
                 sqlx::query_as!(
                     DbApplication,
                     "INSERT INTO applications (

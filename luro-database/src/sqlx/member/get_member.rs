@@ -3,17 +3,17 @@ use std::collections::HashMap;
 use futures_util::TryStreamExt;
 use sqlx::types::Json;
 use tracing::{error, warn};
-use twilight_model::guild::RoleTags;
+use twilight_model::guild::{RoleTags, MemberFlags};
 use twilight_model::id::marker::{GuildMarker, UserMarker};
 
-use twilight_model::util::ImageHash;
+use twilight_model::util::{ImageHash, Timestamp};
 use twilight_model::{
     guild::{Permissions, RoleFlags},
     id::Id,
 };
 
 use crate::luro::luro_role_data::LuroRoleData;
-use crate::{LuroDatabase, LuroMember, LuroRole, LuroUser, LuroUserPermissions, LuroUserType};
+use crate::{LuroDatabase, LuroMember, LuroRole, LuroUser, LuroUserPermissions, LuroUserType, LuroMemberData};
 
 impl LuroDatabase {
     pub async fn get_member(&self, user_id: Id<UserMarker>, guild_id: Id<GuildMarker>) -> anyhow::Result<LuroUser> {
@@ -24,44 +24,8 @@ impl LuroDatabase {
         while let Ok(Some(db_user)) = result.try_next().await {
             match luro_user.member {
                 Some(ref mut member) => {
-                    member.roles.insert(
-                        Id::new(db_user.role_id as u64),
-                        LuroRole {
-                            data: Some(LuroRoleData { deleted: db_user.deleted }),
-                            colour: db_user.colour as u32,
-                            hoist: db_user.hoist,
-                            icon: match db_user.icon {
-                                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
-                                None => None,
-                            },
-                            role_id: Id::new(db_user.role_id as u64),
-                            guild_id: Id::new(db_user.guild_id as u64),
-                            managed: db_user.managed,
-                            mentionable: db_user.mentionable,
-                            name: db_user.role_name,
-                            permissions: Permissions::from_bits_retain(db_user.permissions as u64),
-                            position: db_user.position,
-                            flags: RoleFlags::from_bits_retain(db_user.role_flags as u64),
-                            tags: db_user.tags.map(|x| x.0),
-                            unicode_emoji: db_user.unicode_emoji,
-                        },
-                    );
-                }
-                None => {
-                    luro_user.instance = LuroUserType::DbMember;
-                    luro_user.member = Some(LuroMember {
-                        left_at: db_user.left_at,
-                        avatar: db_user.member_avatar,
-                        boosting_since: db_user.boosting_since,
-                        communication_disabled_until: db_user.communication_disabled_until,
-                        joined_at: db_user.joined_at,
-                        deafened: db_user.deafened,
-                        flags: db_user.member_flags,
-                        guild_id: db_user.guild_id,
-                        muted: db_user.muted,
-                        nickname: db_user.nickname,
-                        pending: db_user.pending,
-                        roles: HashMap::from([(
+                    if let Some(ref mut data) = member.data {
+                        data.roles.insert(
                             Id::new(db_user.role_id as u64),
                             LuroRole {
                                 data: Some(LuroRoleData { deleted: db_user.deleted }),
@@ -82,8 +46,61 @@ impl LuroDatabase {
                                 tags: db_user.tags.map(|x| x.0),
                                 unicode_emoji: db_user.unicode_emoji,
                             },
-                        )]),
-                        user_id: db_user.user_id,
+                        );
+                    }
+                }
+                None => {
+                    luro_user.instance = LuroUserType::DbMember;
+                    luro_user.member = Some(LuroMember {
+                        data: Some(LuroMemberData {
+                            guild_owner: db_user.guild_owner,
+                            left_at: db_user.left_at,
+                            roles: HashMap::from([(
+                                Id::new(db_user.role_id as u64),
+                                LuroRole {
+                                    data: Some(LuroRoleData { deleted: db_user.deleted }),
+                                    colour: db_user.colour as u32,
+                                    hoist: db_user.hoist,
+                                    icon: match db_user.icon {
+                                        Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                                        None => None,
+                                    },
+                                    role_id: Id::new(db_user.role_id as u64),
+                                    guild_id: Id::new(db_user.guild_id as u64),
+                                    managed: db_user.managed,
+                                    mentionable: db_user.mentionable,
+                                    name: db_user.role_name,
+                                    permissions: Permissions::from_bits_retain(db_user.permissions as u64),
+                                    position: db_user.position,
+                                    flags: RoleFlags::from_bits_retain(db_user.role_flags as u64),
+                                    tags: db_user.tags.map(|x| x.0),
+                                    unicode_emoji: db_user.unicode_emoji,
+                                },
+                            )]),
+                            guild_id,
+                            user_id,
+                        }),
+                        avatar: match db_user.member_avatar {
+                            Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                            None => None,
+                        },
+                        boosting_since: match db_user.boosting_since {
+                            Some(timestamp) => Some(Timestamp::from_secs(timestamp.unix_timestamp())?),
+                            None => None,
+                        },
+                        communication_disabled_until: match db_user.communication_disabled_until {
+                            Some(timestamp) => Some(Timestamp::from_secs(timestamp.unix_timestamp())?),
+                            None => None,
+                        },
+                        joined_at: Timestamp::from_secs(db_user.joined_at.unix_timestamp())?,
+                        deafened: db_user.deafened,
+                        flags: MemberFlags::from_bits_retain(db_user.member_flags as u64),
+                        guild_id,
+                        muted: db_user.muted,
+                        nickname: db_user.nickname,
+                        pending: db_user.pending,
+                        user_id,
+                        roles: vec![Id::new(db_user.role_id as u64)],
                     });
                 }
             };
@@ -113,19 +130,34 @@ async fn get_member_no_roles(db: &LuroDatabase, user_id: Id<UserMarker>, guild_i
     if let Ok(Some(db_user)) = result {
         luro_user.instance = LuroUserType::DbMemberNoRoles;
         luro_user.member = Some(LuroMember {
-            left_at: db_user.left_at,
-            avatar: db_user.member_avatar,
-            boosting_since: db_user.boosting_since,
-            communication_disabled_until: db_user.communication_disabled_until,
-            joined_at: db_user.joined_at,
+            data: Some(LuroMemberData {
+                left_at: db_user.left_at,
+                roles: HashMap::new(),
+                guild_id,
+                user_id,
+                guild_owner: db_user.guild_owner,
+            }),
+            avatar: match db_user.member_avatar {
+                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                None => None,
+            },
+            boosting_since: match db_user.boosting_since {
+                Some(timestamp) => Some(Timestamp::from_secs(timestamp.unix_timestamp())?),
+                None => None,
+            },
+            communication_disabled_until: match db_user.communication_disabled_until {
+                Some(timestamp) => Some(Timestamp::from_secs(timestamp.unix_timestamp())?),
+                None => None,
+            },
+            joined_at: Timestamp::from_secs(db_user.joined_at.unix_timestamp())?,
             deafened: db_user.deafened,
-            flags: db_user.member_flags,
-            guild_id: db_user.guild_id,
+            flags: MemberFlags::from_bits_retain(db_user.member_flags as u64),
+            guild_id,
             muted: db_user.muted,
             nickname: db_user.nickname,
             pending: db_user.pending,
-            roles: HashMap::new(),
-            user_id: db_user.user_id,
+            roles: vec![],
+            user_id,
         });
         return Ok(luro_user);
     }

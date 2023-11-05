@@ -38,7 +38,7 @@ pub enum TimeToBan {
 impl LuroCommand for FakeBan {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let guild = ctx.guild.as_ref().context("Expected guild")?;
-        let punished_user = ctx.fetch_user(self.user.resolved.id, false).await?;
+        let punished_user = ctx.fetch_user(self.user.resolved.id).await?;
         let reason = reason(self.reason, self.details);
         let period_string = match self.purge {
             TimeToBan::None => "Don't Delete Any".to_string(),

@@ -1,15 +1,10 @@
 use sqlx::types::Json;
 use time::OffsetDateTime;
-use twilight_model::{
-    channel::{
+use twilight_model::channel::{
         forum::{DefaultReaction, ForumTag},
         permission_overwrite::PermissionOverwrite,
         thread::{ThreadMember, ThreadMetadata},
-        Channel,
-    },
-    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate},
-    id::{marker::ChannelMarker, Id},
-};
+    };
 
 mod count_channels;
 mod get_channel;
@@ -52,20 +47,4 @@ pub struct DbChannel {
     pub topic: Option<String>,
     pub user_limit: Option<i32>,
     pub video_quality_mode: Option<i16>,
-}
-
-pub enum DbChannelType {
-    ChannelID(Id<ChannelMarker>),
-    DbChannel(DbChannel),
-    Channel(Channel),
-    ChannelCreate(Box<ChannelCreate>),
-    ChannelDelete(Box<ChannelDelete>),
-    ChannelUpdate(Box<ChannelUpdate>),
-    ChannelPinsUpdate(ChannelPinsUpdate),
-}
-
-impl From<Id<ChannelMarker>> for DbChannelType {
-    fn from(value: Id<ChannelMarker>) -> Self {
-        Self::ChannelID(value)
-    }
 }

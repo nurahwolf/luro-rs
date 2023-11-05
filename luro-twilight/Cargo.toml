@@ -83,6 +83,7 @@ commands = [
     "command-say",
     "command-story",
     "command-uwu",
+    "command-user"
     # "command-wordcount", # TODO: New database
 ]
 
@@ -107,6 +108,7 @@ command-ping = []
 command-quote = []
 command-roles = []
 command-say = []
+command-user = []
 command-story = ["dep:rand"]
 command-uwu = ["dep:uwuify"]
 command-wordcount = []

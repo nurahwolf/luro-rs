@@ -10,6 +10,7 @@ SELECT
     guild_members.muted,
     guild_members.nickname,
     guild_members.pending,
+    guild_members.guild_owner,
     users.accent_colour,
     users.avatar_decoration,
     users.averagesize,

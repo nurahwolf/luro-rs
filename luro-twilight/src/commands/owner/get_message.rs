@@ -41,7 +41,7 @@ impl LuroCommand for Message {
 
         match luro_message {
             Some(message) => {
-                let user = ctx.fetch_user(message.author.id, false).await?;
+                let user = ctx.fetch_user(message.author.id).await?;
 
                 let toml = toml::to_string_pretty(&message)?;
                 embed

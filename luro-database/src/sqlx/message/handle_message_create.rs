@@ -104,6 +104,7 @@ impl LuroDatabase {
                     application as \"application: Json<MessageApplication>\",
                     attachments as \"attachments: Json<Vec<Attachment>>\",
                     author as \"author: Json<User>\",
+                    author_id,
                     channel_id,
                     components as \"components: Json<Vec<Component>>\",
                     content,

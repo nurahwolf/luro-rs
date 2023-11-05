@@ -20,5 +20,11 @@ pub struct TimestampBuilder(twilight_model::util::Timestamp);
 #[derive(Clone)]
 pub struct EmbedBuilder(pub twilight_model::channel::message::Embed);
 
+impl From<twilight_model::channel::message::Embed> for EmbedBuilder {
+    fn from(embed: twilight_model::channel::message::Embed) -> Self {
+        EmbedBuilder(embed)
+    }
+}
+
 #[derive(Default)]
 pub struct ComponentBuilder(Vec<twilight_model::channel::message::Component>);

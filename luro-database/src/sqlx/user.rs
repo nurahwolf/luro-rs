@@ -1,9 +1,4 @@
 use serde::{Deserialize, Serialize};
-use twilight_model::gateway::payload::incoming::UserUpdate;
-
-use twilight_model::id::marker::UserMarker;
-use twilight_model::id::Id;
-use twilight_model::user::User;
 
 mod count_characters;
 mod count_moderation_actions;
@@ -15,6 +10,7 @@ mod get_users;
 mod update_user;
 mod update_user_data;
 mod update_user_permissions;
+mod get_user_data;
 
 #[derive(Debug, Default, Clone, ::sqlx::Type, Serialize, Deserialize)]
 #[sqlx(type_name = "user_permissions", rename_all = "SCREAMING_SNAKE_CASE")]
@@ -33,11 +29,6 @@ impl std::fmt::Display for LuroUserPermissions {
             LuroUserPermissions::User => write!(f, "USER"),
         }
     }
-}
-pub enum DatabaseUserType {
-    User(User),
-    UserID(Id<UserMarker>),
-    UserUpdate(UserUpdate),
 }
 
 #[derive(Clone, Debug)]

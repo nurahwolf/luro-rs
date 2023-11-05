@@ -52,6 +52,8 @@ mod say;
 mod uwu;
 #[cfg(feature = "command-wordcount")]
 mod wordcount;
+#[cfg(feature = "command-user")]
+mod user;
 
 pub fn default_commands() -> Vec<Command> {
     vec![
@@ -85,6 +87,8 @@ pub fn default_commands() -> Vec<Command> {
         images::Images::setup_command(),
         #[cfg(feature = "command-say")]
         say::Say::setup_command(),
+        #[cfg(feature = "command-user")]
+        user::User::setup_command(),
         // #[cfg(feature = "command-story")]
         // story::Story::setup_command(),
         #[cfg(feature = "command-wordcount")]
@@ -108,7 +112,8 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "dice" => dice::Dice::handle_interaction(ctx).await,
         "hello" => hello::Hello::handle_interaction(ctx).await,
         "images" => images::Images::handle_interaction(ctx).await,
-        "info" => info::Info::handle_interaction(ctx).await,
+        "user" => user::User::handle_interaction(ctx).await,
+        "info" | "info-button-messages" | "info-button-guild-permissions" | "info-button-guild" | "info-button-timestamps" | "info-button-luro" | "info-button-clear" => info::Info::handle_interaction(ctx).await,
         "marry" | "marry-accept" | "marry-deny" => marry::Marry::handle_interaction(ctx).await,
         #[cfg(feature = "command-music")]
         "music" => music::Music::handle_interaction(ctx).await,

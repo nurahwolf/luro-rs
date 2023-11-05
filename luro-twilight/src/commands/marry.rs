@@ -107,10 +107,10 @@ impl CreateLuroCommand for Marry {
     }
 
     async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
-        let proposer = ctx.fetch_user(Id::new(invoking_interaction.user_id as u64), false).await?;
+        let proposer = ctx.fetch_user(Id::new(invoking_interaction.user_id as u64)).await?;
         let (proposee, divorce_wanted) = match self {
-            Self::Someone(command) => (ctx.fetch_user(command.marry.resolved.id, false).await?, false),
-            Self::Divorce(command) => (ctx.fetch_user(command.user.resolved.id, false).await?, true),
+            Self::Someone(command) => (ctx.fetch_user(command.marry.resolved.id).await?, false),
+            Self::Divorce(command) => (ctx.fetch_user(command.user.resolved.id).await?, true),
             _ => {
                 return ctx
                     .response_simple(Response::InternalError(anyhow!("Can't find the request to marry, sorry!")))

@@ -1,9 +1,4 @@
 use sqlx::FromRow;
-use twilight_model::{
-    gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate},
-    guild::{Member, PartialMember},
-    id::{marker::GuildMarker, Id},
-};
 
 use crate::LuroUserPermissions;
 
@@ -11,16 +6,7 @@ mod clear_roles;
 mod get_member;
 mod get_members;
 mod update_member;
-
-pub enum DbMemberType {
-    Member(Id<GuildMarker>, Member),
-    MemberAdd(Box<MemberAdd>),
-    MemberChunk(MemberChunk),
-    MemberRemove(MemberRemove),
-    MemberUpdate(Box<MemberUpdate>),
-    PartialMember(Id<GuildMarker>, PartialMember),
-    // LuroMember(LuroMember)
-}
+mod update_member_data;
 
 #[derive(Clone, Debug, FromRow)]
 pub struct DbMember {

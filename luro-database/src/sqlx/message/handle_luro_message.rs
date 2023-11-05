@@ -95,6 +95,7 @@ impl LuroDatabase {
                 webhook_id = $31,
                 member = $32
             RETURNING
+            author_id,
                 activity as \"activity: Json<MessageActivity>\",
                 application_id,
                 application as \"application: Json<MessageApplication>\",

@@ -1,6 +1,6 @@
 use sqlx::postgres::PgQueryResult;
 use time::OffsetDateTime;
-use tracing::debug;
+use tracing::{debug, warn};
 use twilight_model::{
     gateway::payload::incoming::{MemberAdd, MemberChunk, MemberRemove, MemberUpdate},
     guild::{Member, PartialMember},
@@ -10,18 +10,18 @@ use twilight_model::{
     },
 };
 
-use crate::{DbMemberType, LuroDatabase};
+use crate::{LuroDatabase, sync::MemberSync};
 
 impl LuroDatabase {
     /// Updates a supported member type. Returns the total number of rows modified in the database.
-    pub async fn update_member(&self, member: impl Into<DbMemberType>) -> anyhow::Result<u64> {
+    pub async fn update_member(&self, member: impl Into<MemberSync>) -> anyhow::Result<u64> {
         let rows_modified = match member.into() {
-            DbMemberType::Member(guild_id, member) => handle_member(self, guild_id, member).await?,
-            DbMemberType::MemberAdd(member) => handle_member_add(self, member).await?,
-            DbMemberType::MemberChunk(member) => handle_member_chunk(self, member).await?,
-            DbMemberType::MemberRemove(member) => handle_member_remove(self, member).await?,
-            DbMemberType::MemberUpdate(member) => handle_member_update(self, member).await?,
-            DbMemberType::PartialMember(guild_id, member) => handle_partial_member(self, guild_id, member).await?,
+            MemberSync::Member(guild_id, member) => handle_member(self, guild_id, member).await?,
+            MemberSync::MemberAdd(member) => handle_member_add(self, member).await?,
+            MemberSync::MemberChunk(member) => handle_member_chunk(self, member).await?,
+            MemberSync::MemberRemove(member) => handle_member_remove(self, member).await?,
+            MemberSync::MemberUpdate(member) => handle_member_update(self, member).await?,
+            MemberSync::PartialMember(guild_id, member) => handle_partial_member(self, guild_id, member).await?,
         };
 
         debug!("DB Member: Updated `{rows_modified}` rows!");
@@ -50,6 +50,17 @@ async fn handle_member_chunk(db: &LuroDatabase, event: MemberChunk) -> anyhow::R
     let mut rows_modified = 0;
     for member in event.members {
         rows_modified += db.update_user(member.user.clone()).await?;
+        for role in &member.roles {
+            match db.update_role((event.guild_id, *role)).await {
+                Ok(ok) => rows_modified += ok.rows_affected(),
+                Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
+            }
+            match db.update_guild_member_roles(event.guild_id, *role, member.user.id).await {
+                Ok(ok) => rows_modified += ok.rows_affected(),
+                Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
+            }
+        }
+
         rows_modified += sqlx::query_file!(
             "queries/guild_members/update_twilight_member.sql",
             match member.premium_since {
@@ -95,6 +106,17 @@ async fn handle_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, member: Mem
     debug!("handle_member - Trying to handle updating roles");
     let mut rows_modified = db.update_user(member.user.clone()).await?;
 
+    for role in &member.roles {
+        match db.update_role((guild_id, *role)).await {
+            Ok(ok) => rows_modified += ok.rows_affected(),
+            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
+        }
+        match db.update_guild_member_roles(guild_id, *role, member.user.id).await {
+            Ok(ok) => rows_modified += ok.rows_affected(),
+            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
+        }
+    }
+
     debug!("handle_member - Trying to handle updating member");
     rows_modified += sqlx::query_file!(
         "queries/guild_members/update_twilight_member.sql",
@@ -136,7 +158,19 @@ async fn handle_partial_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, mem
 
     if let Some(ref user) = member.user {
         rows_modified += db.update_user(user.clone()).await?;
+        for role in &member.roles {
+            match db.update_role((guild_id, *role)).await {
+                Ok(ok) => rows_modified += ok.rows_affected(),
+                Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
+            }
+            match db.update_guild_member_roles(guild_id, *role, user.id).await {
+                Ok(ok) => rows_modified += ok.rows_affected(),
+                Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
+            }
+        }
     }
+
+
 
     rows_modified += sqlx::query_file!(
         "queries/guild_members/update_twilight_partial_member.sql",
@@ -190,11 +224,23 @@ async fn handle_member_add(db: &LuroDatabase, member: Box<MemberAdd>) -> anyhow:
     .await?
     .rows_affected();
 
+    for role in &member.roles {
+        match db.update_role((member.guild_id, *role)).await {
+            Ok(ok) => rows_modified += ok.rows_affected(),
+            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
+        }
+        match db.update_guild_member_roles(member.guild_id, *role, member.user.id).await {
+            Ok(ok) => rows_modified += ok.rows_affected(),
+            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
+        }
+    }
+
     Ok(rows_modified)
 }
 
 async fn handle_member_update(db: &LuroDatabase, member: Box<MemberUpdate>) -> anyhow::Result<u64> {
     let mut rows_modified = db.update_user(member.user.clone()).await?;
+
     rows_modified += sqlx::query_file!(
         "queries/guild_members/update_twilight_member_update.sql",
         match member.premium_since {
@@ -215,6 +261,17 @@ async fn handle_member_update(db: &LuroDatabase, member: Box<MemberUpdate>) -> a
     .execute(&db.pool)
     .await?
     .rows_affected();
+
+    for role in &member.roles {
+        match db.update_role((member.guild_id, *role)).await {
+            Ok(ok) => rows_modified += ok.rows_affected(),
+            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
+        }
+        match db.update_guild_member_roles(member.guild_id, *role, member.user.id).await {
+            Ok(ok) => rows_modified += ok.rows_affected(),
+            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
+        }
+    }
 
     Ok(rows_modified)
 }

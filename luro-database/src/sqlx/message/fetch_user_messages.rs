@@ -1,44 +1,41 @@
+use std::collections::BTreeMap;
+
+use futures_util::TryStreamExt;
 use luro_model::message::LuroMessage;
 use sqlx::types::Json;
-use sqlx::Error;
-use tracing::debug;
+
 use twilight_model::channel::message::sticker::MessageSticker;
 use twilight_model::channel::message::Mention;
 use twilight_model::channel::Channel;
-use twilight_model::channel::{
-    message::{
-        Component, Embed, MessageActivity, MessageApplication, MessageFlags, MessageInteraction, MessageReference, MessageType, Reaction,
-        RoleSubscriptionData,
-    },
-    Attachment, ChannelMention, Message,
-};
-use twilight_model::gateway::payload::incoming::{MessageDelete, MessageUpdate};
+use twilight_model::gateway::payload::incoming::MessageUpdate;
 use twilight_model::guild::PartialMember;
+use twilight_model::id::marker::UserMarker;
 use twilight_model::user::User;
+use twilight_model::{
+    channel::{
+        message::{
+            Component, Embed, MessageActivity, MessageApplication, MessageFlags, MessageInteraction, MessageReference, MessageType,
+            Reaction, RoleSubscriptionData,
+        },
+        Attachment, ChannelMention, Message,
+    },
+    id::Id,
+};
 
 use crate::{DatabaseMessage, DatabaseMessageSource, LuroDatabase};
 
 impl LuroDatabase {
-    pub async fn handle_message_delete(&self, message: MessageDelete) -> Result<Option<LuroMessage>, Error> {
-        debug!("Handling message_delete {:#?}", message);
-
-        let query = sqlx::query_as!(
+    pub async fn fetch_user_messages(&self, user_id: Id<UserMarker>) -> BTreeMap<i64, LuroMessage> {
+        let mut messages = BTreeMap::new();
+        let mut query = sqlx::query_as!(
             DatabaseMessage,
-            "UPDATE messages
-            SET
-                channel_id = $1,
-                guild_id = $2,
-                message_id = $3,
-                source = $4,
-                deleted = true
-            WHERE message_id = $3
-            RETURNING
-            author_id,
+            "SELECT 
                 activity as \"activity: Json<MessageActivity>\",
                 application_id,
                 application as \"application: Json<MessageApplication>\",
                 attachments as \"attachments: Json<Vec<Attachment>>\",
                 author as \"author: Json<User>\",
+                author_id,
                 channel_id,
                 components as \"components: Json<Vec<Component>>\",
                 content,
@@ -61,20 +58,26 @@ impl LuroDatabase {
                 role_subscription_data as \"role_subscription_data: Json<RoleSubscriptionData>\",
                 source as \"source: DatabaseMessageSource\",
                 sticker_items as \"sticker_items: Json<Vec<MessageSticker>>\",
-                member as \"member: Json<PartialMember>\",
-
                 thread as \"thread: Json<Channel>\",
                 timestamp,
+                member as \"member: Json<PartialMember>\",
                 tts,
                 webhook_id,
                 message_updates as \"message_updates: Json<Vec<MessageUpdate>>\"
-            ",
-            message.channel_id.get() as i64,
-            message.guild_id.map(|x| x.get() as i64),
-            message.id.get() as i64,
-            DatabaseMessageSource::MessageDelete as _,
-        );
+            FROM messages
+            WHERE author_id = $1
+            ORDER BY message_id DESC
+            LIMIT 25
+        ",
+        user_id.get() as i64
+        )
+        .fetch(&self.pool);
 
-        query.fetch_optional(&self.pool).await.map(|x| x.map(|x| x.into()))
+        while let Ok(Some(message)) = query.try_next().await {
+            messages.insert(message.message_id, message.into());
+        }
+
+        tracing::info!("Returning {} messages!", messages.len());
+        messages
     }
 }

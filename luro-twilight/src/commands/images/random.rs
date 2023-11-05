@@ -16,7 +16,7 @@ impl LuroCommand for Random {
 
         let images = ctx.database.fetch_images_nsfw(self.nsfw).await?;
         let image = images.choose(&mut thread_rng()).context("There are no images in the database.")?;
-        let image_owner = ctx.fetch_user(twilight_model::id::Id::new(image.owner_id as u64), false).await?;
+        let image_owner = ctx.fetch_user(twilight_model::id::Id::new(image.owner_id as u64)).await?;
 
         ctx.respond(|r| {
             r.embed(|e| {

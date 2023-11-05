@@ -19,7 +19,7 @@ pub struct Assign {
 
 impl LuroCommand for Assign {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user = ctx.get_specified_user_or_author(self.user.as_ref(), true).await?;
+        let user = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
         let guild = match &ctx.guild {
             Some(guild) => guild,
             None => return ctx.response_simple(luro_framework::Response::NotGuild).await,

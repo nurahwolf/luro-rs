@@ -1,7 +1,8 @@
 [workspace]
 members = [
+    "database-sqlx",                # SQLx database driver, currently configured just for Postgres
+    "luro-database",                # Core database driver, where shared functionality lives. Can be configured with several options, such as what drivers to use, caching and more.
     "luro-dice",
-    "luro-database",
     "luro-framework",
     "luro-model",
     "luro-twilight",

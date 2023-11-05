@@ -5,6 +5,7 @@ SELECT
     guild_members.guild_id,
     guild_members.joined_at,
     guild_members.left_at,
+    guild_members.guild_owner,
     guild_members.member_avatar,
     guild_members.member_flags,
     guild_members.muted,

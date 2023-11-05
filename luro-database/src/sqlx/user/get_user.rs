@@ -5,7 +5,7 @@ use twilight_model::{
     util::ImageHash,
 };
 
-use crate::{LuroDatabase, LuroUser, LuroUserData, LuroUserPermissions, LuroUserType};
+use crate::{LuroDatabase, LuroUser, LuroUserData, LuroUserPermissions, LuroUserType, Gender, Sexuality};
 
 impl LuroDatabase {
     pub async fn get_user(&self, user_id: Id<UserMarker>) -> anyhow::Result<LuroUser> {
@@ -17,6 +17,8 @@ impl LuroDatabase {
             return Ok(LuroUser {
                 data: Some(LuroUserData {
                     permissions: user.user_permissions,
+                    gender: user.gender,
+                    sexuality: user.sexuality,
                 }),
                 member: None,
                 instance: LuroUserType::DbUser,

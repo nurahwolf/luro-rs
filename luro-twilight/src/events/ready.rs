@@ -36,7 +36,7 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
 
         // Register staff
         for staff in BOT_OWNERS {
-            let mut user = framework.fetch_user(staff, true).await?;
+            let mut user = framework.fetch_user(staff).await?;
             if let Some(ref mut user_data) = user.data {
                 user_data.permissions = LuroUserPermissions::Administrator;
                 user.update_permissions(framework.database.clone()).await?;
@@ -44,7 +44,7 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
         }
 
         // Register primary owner
-        let mut owner = framework.fetch_user(PRIMARY_BOT_OWNER, true).await?;
+        let mut owner = framework.fetch_user(PRIMARY_BOT_OWNER).await?;
         if let Some(ref mut user_data) = owner.data {
             user_data.permissions = LuroUserPermissions::Owner;
             owner.update_permissions(framework.database.clone()).await?;
