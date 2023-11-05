@@ -38,6 +38,15 @@ impl InteractionContext {
         }
     }
 
+    pub fn author_name(&self) -> String {
+        match self {
+            Self::CommandAutocomplete(ctx) => ctx.author.name(),
+            Self::Command(ctx) => ctx.author.name(),
+            Self::Component(ctx) => ctx.author.name(),
+            Self::Modal(ctx) => ctx.author.name(),
+        }
+    }
+
     pub async fn respond<F>(&self, response: F) -> anyhow::Result<()>
     where
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse,

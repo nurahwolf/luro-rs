@@ -17,14 +17,20 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
                 InteractionContext::Command(ctx) => Self::new(ctx.data.clone())?.interaction_command(ctx).await,
                 InteractionContext::CommandAutocomplete(ctx) => Self::interaction_autocomplete(ctx).await,
                 InteractionContext::Component(ctx) => {
-                    let raw_interaction = ctx
-                        .message
-                        .interaction
-                        .as_ref()
-                        .context("Expected message to have interaction data")?;
+                    let interaction_id = match ctx.message.interaction.as_ref() {
+                        Some(interaction) => interaction.id.get() as i64,
+                        None => match ctx.message.referenced_message.as_ref() {
+                            Some(message) => match message.interaction.as_ref() {
+                                Some(interaction) => interaction.id.get() as i64,
+                                None => return Err(anyhow!("No interaction data on nested message reference :c")),
+                            },
+                            None => return Err(anyhow!("No interaction data :c")),
+                        },
+                    };
+
                     let interaction = ctx
                         .database
-                        .get_interaction(raw_interaction.id.get() as i64)
+                        .get_interaction(interaction_id)
                         .await?
                         .context("Database does not contain this interaction")?;
                     let data = interaction

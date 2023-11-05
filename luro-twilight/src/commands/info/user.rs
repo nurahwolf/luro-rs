@@ -70,12 +70,11 @@ impl LuroCommand for InfoUser {
         if !self.simple {
             timestamps(&ctx.author, &user, &mut embed);
             luro_information(&ctx.author, &user, ctx.database.clone(), &mut embed).await;
-            user_information(&ctx.author, &user, &mut embed);
             if let Some(ref member) = user.member {
                 guild_information(&ctx.author, member, &mut embed);
             }
-
         }
+        user_information(&ctx.author, &user, &mut embed);
 
         ctx.respond(|response| {
             // Handle attempts at stealing data
@@ -95,7 +94,7 @@ impl LuroCommand for InfoUser {
                 }
             }
             response.add_embed(embed).components(|c| {
-                *c = buttons(ctx.guild_id());
+                *c = buttons(ctx.guild_id(), self.simple);
                 c
             })
         })

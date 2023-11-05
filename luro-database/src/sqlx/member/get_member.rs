@@ -24,6 +24,7 @@ impl LuroDatabase {
         while let Ok(Some(db_user)) = result.try_next().await {
             match luro_user.member {
                 Some(ref mut member) => {
+                    member.roles.push(Id::new(db_user.role_id as u64));
                     if let Some(ref mut data) = member.data {
                         data.roles.insert(
                             Id::new(db_user.role_id as u64),

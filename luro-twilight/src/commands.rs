@@ -48,12 +48,12 @@ mod owner;
 mod say;
 // #[cfg(feature = "command-story")]
 // mod story;
+#[cfg(feature = "command-user")]
+mod user;
 #[cfg(feature = "command-uwu")]
 mod uwu;
 #[cfg(feature = "command-wordcount")]
 mod wordcount;
-#[cfg(feature = "command-user")]
-mod user;
 
 pub fn default_commands() -> Vec<Command> {
     vec![
@@ -98,7 +98,11 @@ pub fn default_commands() -> Vec<Command> {
 
 /// Handle incoming interaction
 pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
-    info!("{ctx}: Handling interaction '{}'", ctx.command_name());
+    info!(
+        "{ctx}: Handling interaction '{}' for user `{}`",
+        ctx.command_name(),
+        ctx.author_name()
+    );
 
     let response_handler = ctx.clone();
     let response = match ctx.command_name() {
@@ -113,7 +117,15 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "hello" => hello::Hello::handle_interaction(ctx).await,
         "images" => images::Images::handle_interaction(ctx).await,
         "user" => user::User::handle_interaction(ctx).await,
-        "info" | "info-button-messages" | "info-button-guild-permissions" | "info-button-guild" | "info-button-timestamps" | "info-button-luro" | "info-button-clear" => info::Info::handle_interaction(ctx).await,
+        "info"
+        | "info-button-messages"
+        | "info-button-guild-permissions"
+        | "info-button-guild"
+        | "info-button-timestamps"
+        | "info-button-luro"
+        | "info-button-user"
+        | "info-button-clear"
+        | "info-button-sync" => info::Info::handle_interaction(ctx).await,
         "marry" | "marry-accept" | "marry-deny" => marry::Marry::handle_interaction(ctx).await,
         #[cfg(feature = "command-music")]
         "music" => music::Music::handle_interaction(ctx).await,

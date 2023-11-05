@@ -28,9 +28,8 @@ pub async fn interaction_create_listener(ctx: LuroContext, event: Box<Interactio
         warn!("interaction_handler - Failed to update interaction: {why}")
     }
 
-    // TODO: Really shitty event handler, please change this
     if let Err(why) = handle_interaction(InteractionContext::new(ctx, event.0).await?).await {
-        error!(why = ?why, "error while handling event");
+        error!(why = ?why, "UNHANDLED EXCEPTION, PLEASE CREATE A HANDLER!");
     }
 
     Ok(())
