@@ -140,9 +140,7 @@ pub trait Luro {
     where
         Self: Sync,
     {
-        async move {
-            self.database().get_user(user_id).await
-        }
+        async move { self.database().get_user(user_id).await }
     }
 
     /// Fetch and return a [LuroUser], updating the database if not present. This version gets a member if a guild is present.
@@ -165,10 +163,7 @@ pub trait Luro {
     /// Luro Database -> Twilight Client
     ///
     /// TODO: Finish this implementation
-    fn fetch_channel(
-        &self,
-        channel_id: Id<ChannelMarker>,
-    ) -> impl std::future::Future<Output = anyhow::Result<LuroChannel>> + Send
+    fn fetch_channel(&self, channel_id: Id<ChannelMarker>) -> impl std::future::Future<Output = anyhow::Result<LuroChannel>> + Send
     where
         Self: Sync,
     {

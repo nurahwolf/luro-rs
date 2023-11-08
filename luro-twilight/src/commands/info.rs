@@ -75,11 +75,15 @@ impl CreateLuroCommand for Info {
             name => return ctx.response_simple(luro_framework::Response::UnknownCommand(name)).await,
         };
 
-        ctx.respond(|r| r.response_type(InteractionResponseType::UpdateMessage).set_embed(embed.0.clone()).components(|c| {
-            *c = buttons(ctx.guild_id(), true);
-            c
-        }))
-            .await
+        ctx.respond(|r| {
+            r.response_type(InteractionResponseType::UpdateMessage)
+                .set_embed(embed.0.clone())
+                .components(|c| {
+                    *c = buttons(ctx.guild_id(), true);
+                    c
+                })
+        })
+        .await
     }
 }
 
@@ -137,8 +141,16 @@ pub async fn sync<'a>(
             }
 
             if let Ok(marriages) = user.fetch_marriages(ctx.database.clone()).await {
-                if !marriages.is_empty() {
-                    luro_information.push_str(&format!("- Has `{}` marriages\n", marriages.len()));
+                let mut active_marriages = 0;
+
+                for marriage in marriages {
+                    if !marriage.divorced && !marriage.rejected {
+                        active_marriages += 1;
+                    }
+                }
+
+                if active_marriages != 0 {
+                    luro_information.push_str(&format!("- Has `{active_marriages}` marriages\n"));
                 }
             }
 
@@ -172,26 +184,42 @@ pub async fn sync<'a>(
         if field.name.contains("User Information") {
             let mut user_information = String::new();
             if let Some(flags) = &user.flags && !flags.is_empty() {
+                tracing::info!("flags - {}", flags.bits());
+                if flags.bits() == 1 << 20 {
+                    user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
+                }
+
                 let mut flags_sorted = vec![];
                 for (flag,_) in flags.iter_names() {
                     flags_sorted.push(flag)
                 }
                 flags_sorted.sort();
-                user_information.push_str(&format!("- User Flags: \n```\n{}```", flags_sorted.join(" | ")));
+                user_information.push_str(&format!("- User Flags: \n```\n{}```\n", flags_sorted.join(" | ")));
             }
-    
+
             if let Some(flags) = &user.public_flags && !flags.is_empty() {
+                tracing::info!("Public flags - {}", flags.bits());
+
+                if flags.bits() == 1 << 20 {
+                    user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
+                }
+
                 let mut flags_sorted = vec![];
                 for (flag,_) in flags.iter_names() {
                     flags_sorted.push(flag)
                 }
                 flags_sorted.sort();
-                user_information.push_str(&format!("- Public Flags: \n```\n{}```", flags_sorted.join(" | ")));
-    
+                user_information.push_str(&format!("- Public Flags: \n```\n{}```\n", flags_sorted.join(" | ")))
             }
-    
-            if let Some(accent_color) = user.accent_colour {
-                user_information.push_str(&format!("- Accent Colour: `{accent_color:X}`\n"));
+
+            if let Some(accent_colour) = user.accent_colour {
+                user_information.push_str(&format!("- Accent Colour: `{accent_colour:X}`\n"));
+            } else if let Some(member) = &user.member {
+                if let Some(data) = &member.data {
+                    if let Some(role) = data.highest_role_colour() {
+                        user_information.push_str(&format!("- Accent Colour: `{:X}` (based off role `{}`)\n", role.colour, role.name));
+                    }
+                }
             }
             if let Some(email) = &user.email {
                 user_information.push_str(&format!("- Email: `{}`\n", email));
@@ -217,61 +245,68 @@ pub async fn sync<'a>(
 
         if field.name.contains("Guild Information") {
             if let Some(member) = user.member.clone() {
+                tracing::info!("Member flags - {}", member.flags.bits());
 
-            let mut guild_information = String::new();
-            let mut role_list = String::new();
-    
-            if let Some(nickname) = &member.nickname {
-                guild_information.push_str(&format!("- Nickname: `{nickname}`\n"));
-            }
-            if member.deafened {
-                guild_information.push_str("- Deafened: `true`\n");
-            }
-            if member.muted {
-                guild_information.push_str("- Muted: `true`\n");
-            }
-            if member.pending {
-                guild_information.push_str("- Pending: `true`\n");
-            }
-    
-            let mut flags_sorted = vec![];
-            for (flag, _) in member.flags.iter_names() {
-                flags_sorted.push(flag)
-            }
-            flags_sorted.sort();
-            if !flags_sorted.is_empty() {
-                guild_information.push_str(&format!("- Member Flags: \n```\n{}```", flags_sorted.join(" | ")));
-            }
-    
-            // TODO: Once member_banner is a thing in [Member]
-            // if let Some(banner) = get_member_banner(&member, guild_id, user) {
-            //     embed = embed.image(ImageSource::url(banner)?)
-            // }
-    
-            if let Some(ref data) = member.data {
-                if data.guild_owner {
-                    guild_information.push_str("- Is the owner of this guild!\n");
+                let mut guild_information = String::new();
+                let mut role_list = String::new();
+
+                if let Some(nickname) = &member.nickname {
+                    guild_information.push_str(&format!("- Nickname: `{nickname}`\n"));
                 }
-    
-                for role_id in data.sorted_roles() {
-                    if role_list.is_empty() {
-                        role_list.push_str(&format!("<@&{role_id}>"));
-                        continue;
-                    };
-                    role_list.push_str(&format!(", <@&{role_id}>"));
+                if member.deafened {
+                    guild_information.push_str("- Deafened: `true`\n");
                 }
-    
-                if !role_list.is_empty() {
-                    guild_information.push_str(&format!("- Roles ({}): {role_list}", data.roles.len()));
+                if member.muted {
+                    guild_information.push_str("- Muted: `true`\n");
                 }
+                if member.pending {
+                    guild_information.push_str("- Pending: `true`\n");
+                }
+
+                let mut flags_sorted = vec![];
+                for (flag, _) in member.flags.iter_names() {
+                    flags_sorted.push(flag)
+                }
+                flags_sorted.sort();
+                if !flags_sorted.is_empty() {
+                    guild_information.push_str(&format!("- Member Flags: \n```\n{}```", flags_sorted.join(" | ")));
+                }
+
+                // TODO: Once member_banner is a thing in [Member]
+                // if let Some(banner) = get_member_banner(&member, guild_id, user) {
+                //     embed = embed.image(ImageSource::url(banner)?)
+                // }
+
+                if let Some(ref data) = member.data {
+                    if data.guild_owner {
+                        guild_information.push_str("- Is the owner of this guild!\n");
+                    }
+
+                    for role_id in data.sorted_roles() {
+                        if role_list.is_empty() {
+                            role_list.push_str(&format!("<@&{role_id}>"));
+                            continue;
+                        };
+                        role_list.push_str(&format!(", <@&{role_id}>"));
+                    }
+
+                    if !role_list.is_empty() {
+                        guild_information.push_str(&format!("- Roles ({}): {role_list}", data.roles.len()));
+                    }
+                }
+                field.value = guild_information;
             }
-            field.value = guild_information;
-        }
         }
     }
 
-    if let Some(accent_color) = user.accent_colour {
-        embed.colour(accent_color);
+    if let Some(accent_colour) = user.accent_colour {
+        embed.colour(accent_colour);
+    } else if let Some(member) = &user.member {
+        if let Some(data) = &member.data {
+            if let Some(role) = data.highest_role_colour() {
+                embed.colour(role.colour);
+            }
+        }
     }
 
     if let Some(ref banner) = user.banner_url() {
@@ -418,8 +453,16 @@ pub async fn luro_information<'a>(
         }
 
         if let Ok(marriages) = user.fetch_marriages(db.clone()).await {
-            if !marriages.is_empty() {
-                luro_information.push_str(&format!("- Has `{}` marriages\n", marriages.len()));
+            let mut active_marriages = 0;
+
+            for marriage in marriages {
+                if !marriage.divorced && !marriage.rejected {
+                    active_marriages += 1;
+                }
+            }
+
+            if active_marriages != 0 {
+                luro_information.push_str(&format!("- Has `{active_marriages}` marriages\n"));
             }
         }
 
@@ -474,27 +517,44 @@ pub fn user_information<'a>(author: &LuroUser, user: &LuroUser, embed: &'a mut E
     if !present {
         let mut user_information = String::new();
         if let Some(flags) = &user.flags && !flags.is_empty() {
+            tracing::info!("flags - {}", flags.bits());
+            if flags.bits() == 1 << 20 {
+                user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
+            }
+
             let mut flags_sorted = vec![];
             for (flag,_) in flags.iter_names() {
                 flags_sorted.push(flag)
             }
             flags_sorted.sort();
-            user_information.push_str(&format!("- User Flags: \n```\n{}```", flags_sorted.join(" | ")));
+            user_information.push_str(&format!("- User Flags: \n```\n{}```\n", flags_sorted.join(" | ")));
         }
 
         if let Some(flags) = &user.public_flags && !flags.is_empty() {
+            tracing::info!("Public flags - {}", flags.bits());
+
+            if flags.bits() == 1 << 20 {
+                user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
+            }
+
             let mut flags_sorted = vec![];
             for (flag,_) in flags.iter_names() {
                 flags_sorted.push(flag)
             }
             flags_sorted.sort();
-            user_information.push_str(&format!("- Public Flags: \n```\n{}```", flags_sorted.join(" | ")));
-
+            user_information.push_str(&format!("- Public Flags: \n```\n{}```\n", flags_sorted.join(" | ")))
         }
 
         if let Some(accent_color) = user.accent_colour {
             embed.colour(accent_color);
             user_information.push_str(&format!("- Accent Colour: `{accent_color:X}`\n"));
+        } else if let Some(member) = &user.member {
+            if let Some(data) = &member.data {
+                if let Some(role) = data.highest_role_colour() {
+                    embed.colour(role.colour);
+                    user_information.push_str(&format!("- Accent Colour: `{:X}` (based off role `{}`)\n", role.colour, role.name));
+                }
+            }
         }
         if let Some(email) = &user.email {
             user_information.push_str(&format!("- Email: `{}`\n", email));
@@ -553,12 +613,14 @@ pub fn guild_information<'a>(author: &LuroUser, member: &LuroMember, embed: &'a 
         }
 
         let mut flags_sorted = vec![];
+        tracing::info!("Member flags - {}", member.flags.bits());
+
         for (flag, _) in member.flags.iter_names() {
             flags_sorted.push(flag)
         }
         flags_sorted.sort();
         if !flags_sorted.is_empty() {
-            guild_information.push_str(&format!("- Member Flags: \n```\n{}```", flags_sorted.join(" | ")));
+            guild_information.push_str(&format!("- Member Flags: \n```\n{}```\n", flags_sorted.join(" | ")));
         }
 
         // TODO: Once member_banner is a thing in [Member]

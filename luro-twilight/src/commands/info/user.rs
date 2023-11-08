@@ -3,15 +3,13 @@ use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{http::attachment::Attachment, id::Id};
 
-use super::{buttons, timestamps, luro_information, user_information, guild_information};
+use super::{buttons, guild_information, user_information};
 
 const REMARK: [&str; 3] = ["Hey <user>!", "Great to see ya, <user>!", "Whoa, it's <user>!"];
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "user", desc = "Information about a user")]
 pub struct InfoUser {
-    /// Set to true to show some basic information, with buttons to fetch more.
-    simple: bool,
     /// The user to get, gets yourself if not specified
     pub user: Option<ResolvedUser>,
     /// Optionally try to get a user from a different guild
@@ -67,14 +65,20 @@ impl LuroCommand for InfoUser {
             embed.image(|i| i.url(banner));
         }
 
-        if !self.simple {
-            timestamps(&ctx.author, &user, &mut embed);
-            luro_information(&ctx.author, &user, ctx.database.clone(), &mut embed).await;
-            if let Some(ref member) = user.member {
-                guild_information(&ctx.author, member, &mut embed);
+        if let Some(accent_colour) = user.accent_colour {
+            embed.colour(accent_colour);
+        } else if let Some(member) = &user.member {
+            if let Some(data) = &member.data {
+                if let Some(role) = data.highest_role_colour() {
+                    embed.colour(role.colour);
+                }
             }
         }
+
         user_information(&ctx.author, &user, &mut embed);
+        if let Some(ref member) = user.member {
+            guild_information(&ctx.author, member, &mut embed);
+        }
 
         ctx.respond(|response| {
             // Handle attempts at stealing data
@@ -94,7 +98,7 @@ impl LuroCommand for InfoUser {
                 }
             }
             response.add_embed(embed).components(|c| {
-                *c = buttons(ctx.guild_id(), self.simple);
+                *c = buttons(ctx.guild_id(), true);
                 c
             })
         })

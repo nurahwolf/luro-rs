@@ -1,6 +1,7 @@
 use twilight_model::{
     channel::Channel,
-    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate}, id::{marker::ChannelMarker, Id},
+    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate},
+    id::{marker::ChannelMarker, Id},
 };
 
 pub enum ChannelSync {

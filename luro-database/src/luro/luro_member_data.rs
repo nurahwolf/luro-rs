@@ -1,10 +1,16 @@
 use std::{collections::HashMap, sync::Arc};
 
 use serde::{Deserialize, Serialize};
-use twilight_model::{id::{marker::{RoleMarker, GuildMarker, UserMarker}, Id}, guild::Permissions};
+use twilight_model::{
+    guild::Permissions,
+    id::{
+        marker::{GuildMarker, RoleMarker, UserMarker},
+        Id,
+    },
+};
 use twilight_util::permission_calculator::PermissionCalculator;
 
-use crate::{LuroRole, LuroDatabase, LuroGuild};
+use crate::{LuroDatabase, LuroGuild, LuroRole};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LuroMemberData {
@@ -22,6 +28,17 @@ impl LuroMemberData {
         let mut roles = self.roles.values().collect::<Vec<_>>();
         roles.sort();
         roles
+    }
+
+    /// Returns the user's highest role that has a colour set. Returns none if there are no roles / no colours
+    pub fn highest_role_colour(&self) -> Option<&LuroRole> {
+        for role in self.sorted_roles() {
+            if role.colour != 0 {
+                return Some(role);
+            }
+        }
+
+        None
     }
 
     /// Fetches the member's permission calculator

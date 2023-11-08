@@ -10,7 +10,7 @@ use twilight_model::{
     },
 };
 
-use crate::{LuroDatabase, sync::MemberSync};
+use crate::{sync::MemberSync, LuroDatabase};
 
 impl LuroDatabase {
     /// Updates a supported member type. Returns the total number of rows modified in the database.
@@ -169,8 +169,6 @@ async fn handle_partial_member(db: &LuroDatabase, guild_id: Id<GuildMarker>, mem
             }
         }
     }
-
-
 
     rows_modified += sqlx::query_file!(
         "queries/guild_members/update_twilight_partial_member.sql",

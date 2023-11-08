@@ -69,7 +69,7 @@ impl LuroDatabase {
             ORDER BY message_id DESC
             LIMIT 25
         ",
-        user_id.get() as i64
+            user_id.get() as i64
         )
         .fetch(&self.pool);
 

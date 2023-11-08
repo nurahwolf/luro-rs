@@ -22,6 +22,7 @@ mod count_messages;
 mod count_messages_by_user;
 mod count_total_words;
 mod count_user_words;
+mod fetch_user_messages;
 mod get_message;
 mod get_messages;
 #[cfg(feature = "cache")]
@@ -33,7 +34,6 @@ mod handle_message_delete;
 mod handle_message_delete_bulk;
 mod handle_message_update;
 mod update_message;
-mod fetch_user_messages;
 
 #[derive(Default, Debug, ::sqlx::Type)]
 #[sqlx(type_name = "message_source", rename_all = "SCREAMING_SNAKE_CASE")]

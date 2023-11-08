@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use futures_util::TryStreamExt;
 use sqlx::types::Json;
 use tracing::{error, warn};
-use twilight_model::guild::{RoleTags, MemberFlags};
+use twilight_model::guild::{MemberFlags, RoleTags};
 use twilight_model::id::marker::{GuildMarker, UserMarker};
 
 use twilight_model::util::{ImageHash, Timestamp};
@@ -13,7 +13,7 @@ use twilight_model::{
 };
 
 use crate::luro::luro_role_data::LuroRoleData;
-use crate::{LuroDatabase, LuroMember, LuroRole, LuroUser, LuroUserPermissions, LuroUserType, LuroMemberData};
+use crate::{LuroDatabase, LuroMember, LuroMemberData, LuroRole, LuroUser, LuroUserPermissions, LuroUserType};
 
 impl LuroDatabase {
     pub async fn get_member(&self, user_id: Id<UserMarker>, guild_id: Id<GuildMarker>) -> anyhow::Result<LuroUser> {

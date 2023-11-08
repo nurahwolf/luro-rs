@@ -19,9 +19,7 @@ pub struct Kick {
 impl LuroCommand for Kick {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let guild = ctx.guild.as_ref().context("Expected this to be a guild")?;
-        let mut luro = ctx
-            .fetch_user(ctx.twilight_client.current_user().await?.model().await?.id)
-            .await?;
+        let mut luro = ctx.fetch_user(ctx.twilight_client.current_user().await?.model().await?.id).await?;
         luro.sync(&ctx.database).await;
 
         let mut punished_user = ctx.fetch_user(self.user.resolved.id).await?;

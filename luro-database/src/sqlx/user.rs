@@ -6,11 +6,11 @@ mod count_users;
 mod count_warnings;
 mod get_staff;
 mod get_user;
+mod get_user_data;
 mod get_users;
 mod update_user;
 mod update_user_data;
 mod update_user_permissions;
-mod get_user_data;
 
 #[derive(Debug, Default, Clone, ::sqlx::Type, Serialize, Deserialize)]
 #[sqlx(type_name = "user_permissions", rename_all = "SCREAMING_SNAKE_CASE")]

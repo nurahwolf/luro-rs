@@ -1,10 +1,10 @@
 use sqlx::types::Json;
 use time::OffsetDateTime;
 use twilight_model::channel::{
-        forum::{DefaultReaction, ForumTag},
-        permission_overwrite::PermissionOverwrite,
-        thread::{ThreadMember, ThreadMetadata},
-    };
+    forum::{DefaultReaction, ForumTag},
+    permission_overwrite::PermissionOverwrite,
+    thread::{ThreadMember, ThreadMetadata},
+};
 
 mod count_channels;
 mod get_channel;

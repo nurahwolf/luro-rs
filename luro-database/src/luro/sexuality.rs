@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, ::sqlx::Type, Serialize, Deserialize)]
 #[sqlx(type_name = "sexuality", rename_all = "SCREAMING_SNAKE_CASE")]

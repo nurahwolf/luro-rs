@@ -1,5 +1,5 @@
 use luro_framework::{CommandInteraction, LuroCommand};
-use twilight_interactions::command::{CommandModel, CreateCommand, CommandOption, CreateOption};
+use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
 #[derive(CommandModel, CreateCommand, Debug)]
 #[command(name = "identity", desc = "Set how you identify!")]
@@ -21,7 +21,7 @@ pub enum Gender {
     #[option(name = "Male (Trans)", value = "trans_male")]
     TransMale,
     #[option(name = "It's Complicated", value = "its_complicated")]
-    ItsComplicated
+    ItsComplicated,
 }
 
 #[derive(CommandOption, CreateOption, Debug)]
@@ -35,13 +35,16 @@ pub enum Sexuality {
     #[option(name = "Lesbian", value = "lesbian")]
     Lesbian,
     #[option(name = "Gay", value = "gay")]
-    Gay
+    Gay,
 }
-
 
 impl LuroCommand for Identity {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let mut user_data = ctx.author.data.clone().unwrap_or(ctx.database.get_user_data(ctx.author.user_id).await?.unwrap_or_default());
+        let mut user_data = ctx
+            .author
+            .data
+            .clone()
+            .unwrap_or(ctx.database.get_user_data(ctx.author.user_id).await?.unwrap_or_default());
         user_data.gender = Some(match self.gender {
             Gender::Male => luro_database::Gender::Male,
             Gender::Female => luro_database::Gender::Female,
@@ -60,6 +63,6 @@ impl LuroCommand for Identity {
 
         ctx.database.update_user_data(ctx.author.user_id, &user_data).await?;
 
-        ctx.respond(|r|r.content("Updated!").ephemeral()).await
+        ctx.respond(|r| r.content("Updated!").ephemeral()).await
     }
 }

@@ -11,8 +11,7 @@ use twilight_model::{
 };
 use twilight_util::permission_calculator::PermissionCalculator;
 
-
-use crate::{LuroMemberData, LuroGuild, LuroDatabase};
+use crate::{LuroDatabase, LuroGuild, LuroMemberData};
 
 /// A warpper around [User], with [Member] details if [Id<GuildMarker>] was present on type creation.
 /// Details are primarily fetched from the database, but this type can be instanced from a [User] / [Member] if that fails.
@@ -47,9 +46,9 @@ impl LuroMember {
         member_roles: &'a [(Id<RoleMarker>, Permissions)],
     ) -> anyhow::Result<PermissionCalculator> {
         if let Some(ref data) = self.data {
-            return data.permission_calculator(db, member_roles).await
+            return data.permission_calculator(db, member_roles).await;
         }
-        
+
         let guild = LuroGuild::new(db.clone(), self.guild_id).await?;
         let everyone_role = guild.get_everyone_role(db).await?;
 
@@ -59,7 +58,7 @@ impl LuroMember {
     /// Gets all roles and their permissions, excluding the everyone role
     pub fn role_permissions(&self) -> Vec<(Id<RoleMarker>, Permissions)> {
         if let Some(ref data) = self.data {
-            return data.role_permissions()
+            return data.role_permissions();
         }
 
         todo!()

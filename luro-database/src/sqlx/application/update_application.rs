@@ -1,4 +1,4 @@
-use crate::{DbApplication, LuroDatabase, sync::ApplicationSync};
+use crate::{sync::ApplicationSync, DbApplication, LuroDatabase};
 
 impl LuroDatabase {
     pub async fn update_application(&self, data: impl Into<ApplicationSync>) -> Result<DbApplication, sqlx::Error> {

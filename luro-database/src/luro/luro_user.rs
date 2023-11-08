@@ -16,11 +16,11 @@ mod fetch_character;
 mod fetch_characters;
 mod fetch_marriages;
 mod fetch_message_count;
+mod sync;
 mod update_character;
 mod update_character_prefix;
 mod update_character_text;
 mod update_permissions;
-mod sync;
 
 /// A warpper around [User], with [Member] details if [Id<GuildMarker>] was present on type creation.
 /// Details are primarily fetched from the database, but this type can be instanced from a [User] / [Member] if that fails.

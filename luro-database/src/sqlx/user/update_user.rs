@@ -6,7 +6,7 @@ use twilight_model::{
     user::User,
 };
 
-use crate::{LuroDatabase, sync::UserSync};
+use crate::{sync::UserSync, LuroDatabase};
 
 impl LuroDatabase {
     pub async fn update_user(&self, user: impl Into<UserSync>) -> anyhow::Result<u64> {

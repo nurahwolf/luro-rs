@@ -10,7 +10,7 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id},
 };
 
-use crate::{sqlx::channel::DbChannel, LuroDatabase, sync::ChannelSync};
+use crate::{sqlx::channel::DbChannel, sync::ChannelSync, LuroDatabase};
 
 impl LuroDatabase {
     pub async fn update_channel(&self, channel: impl Into<ChannelSync>) -> Result<u64, sqlx::Error> {
