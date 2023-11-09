@@ -8,7 +8,7 @@ use twilight_model::{
 use crate::SQLxDriver;
 
 impl SQLxDriver {
-    pub async fn update_channel(&self, channel: impl Into<ChannelSync>) -> Result<u64, sqlx::Error> {
+    pub async fn update_channel(&self, channel: impl Into<ChannelSync<'_>>) -> Result<u64, sqlx::Error> {
         let channel: ChannelSync = channel.into();
 
         match channel {
@@ -29,7 +29,7 @@ async fn handle_channel_id(db: &SQLxDriver, channel: Id<ChannelMarker>) -> Resul
         .map(|x| x.rows_affected())
 }
 
-async fn handle_channel(db: &SQLxDriver, channel: Channel) -> Result<u64, sqlx::Error> {
+async fn handle_channel(db: &SQLxDriver, channel: &Channel) -> Result<u64, sqlx::Error> {
     sqlx::query_file!(
         "queries/channel_update_twilight_channel.sql",
         channel.id.get() as i64,
@@ -40,7 +40,7 @@ async fn handle_channel(db: &SQLxDriver, channel: Channel) -> Result<u64, sqlx::
     .map(|x| x.rows_affected())
 }
 
-async fn handle_channel_create(db: &SQLxDriver, channel: Box<ChannelCreate>) -> Result<u64, sqlx::Error> {
+async fn handle_channel_create(db: &SQLxDriver, channel: &ChannelCreate) -> Result<u64, sqlx::Error> {
     sqlx::query_file!(
         "queries/channel_update_twilight_channel.sql",
         channel.id.get() as i64,
@@ -51,7 +51,7 @@ async fn handle_channel_create(db: &SQLxDriver, channel: Box<ChannelCreate>) -> 
     .map(|x| x.rows_affected())
 }
 
-async fn handle_channel_update(db: &SQLxDriver, channel: Box<ChannelUpdate>) -> Result<u64, sqlx::Error> {
+async fn handle_channel_update(db: &SQLxDriver, channel: &ChannelUpdate) -> Result<u64, sqlx::Error> {
     sqlx::query_file!(
         "queries/channel_update_twilight_channel.sql",
         channel.id.get() as i64,
@@ -62,7 +62,7 @@ async fn handle_channel_update(db: &SQLxDriver, channel: Box<ChannelUpdate>) -> 
     .map(|x| x.rows_affected())
 }
 
-async fn handle_channel_delete(db: &SQLxDriver, channel: Box<ChannelDelete>) -> Result<u64, sqlx::Error> {
+async fn handle_channel_delete(db: &SQLxDriver, channel: &ChannelDelete) -> Result<u64, sqlx::Error> {
     sqlx::query_file!(
         "queries/channel_update_twilight_channel.sql",
         channel.id.get() as i64,

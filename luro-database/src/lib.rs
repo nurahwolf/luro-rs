@@ -1,4 +1,5 @@
-mod database;
+mod database; // Functions for accessing data from the database
+mod sync; // Functions for syncronising data from an event loop
 
 /// Luro's Database. This struct takes driver modules to be able to generically store data on several types of backends.
 /// Additionally, optional features for this crate can enable additional functionality, such as the twilight cache and twilight client.

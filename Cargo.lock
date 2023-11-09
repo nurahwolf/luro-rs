@@ -1006,6 +1006,7 @@ dependencies = [
  "toml",
  "tracing",
  "twilight-cache-inmemory",
+ "twilight-gateway",
  "twilight-http",
  "twilight-model",
  "twilight-util",

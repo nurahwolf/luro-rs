@@ -11,7 +11,7 @@ impl crate::Database {
         tracing::warn!("Failed to find channel `{channel_id}` in the database, falling back to Twilight");
         let twilight_channel = self.api_client.channel(channel_id).await?.model().await?;
 
-        if let Err(why) = self.driver.update_channel(twilight_channel.clone()).await {
+        if let Err(why) = self.driver.update_channel(&twilight_channel).await {
             tracing::error!(why = ?why, "failed to sync channel `{channel_id}` to the database");
         }
 

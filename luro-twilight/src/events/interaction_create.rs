@@ -7,7 +7,7 @@ use crate::commands::handle_interaction;
 
 pub async fn interaction_create_listener(ctx: LuroContext, event: Box<InteractionCreate>) -> anyhow::Result<()> {
     if let Some(channel) = &event.channel {
-        if let Err(why) = ctx.database.channel_update(channel.clone()).await {
+        if let Err(why) = ctx.database.channel_update(channel).await {
             warn!("interaction_handler - Failed to update channel: {why}")
         }
     }

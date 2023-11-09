@@ -12,8 +12,9 @@ version.workspace = true
 
 
 [dependencies]
-twilight-http = { workspace = true } # Used for fetching data if not present in the selected database driver
-twilight-util = { workspace = true } # Used for fetching data if not present in the selected database driver
+twilight-http.workspace = true # Used for fetching data if not present in the selected database driver
+twilight-util.workspace = true # Used for fetching data if not present in the selected database driver
+twilight-gateway.workspace = true                       # Used for syncronising state with an event stream from a Twilight gateway
 
 # Core
 anyhow = { workspace = true }

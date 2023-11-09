@@ -9,10 +9,12 @@ use twilight_model::{
 use crate::types::{DbUserPermissions, DbGender, DbSexuality};
 
 impl crate::SQLxDriver {
-    pub async fn get_staff(&self) -> anyhow::Result<Vec<User>> {
+    pub async fn user_fetch_staff(&self) -> anyhow::Result<Vec<User>> {
+        let mut query = sqlx::query_file!("queries/user_fetch_staff.sql").fetch(&self.pool);
         let mut users = vec![];
 
-        while let Ok(Some(user)) = sqlx::query_file!("queries/user_fetch_staff.sql").fetch(&self.pool).try_next().await {
+        while let Ok(Some(user)) = query.try_next().await {
+            tracing::debug!("RAW USER: {user:#?}");
             users.push(User {
                 data: Some(UserData {
                     user_id: Id::new(user.user_id as u64),

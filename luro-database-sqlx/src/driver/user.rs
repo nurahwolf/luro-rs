@@ -2,7 +2,7 @@ mod count_characters;
 mod count_moderation_actions;
 mod count_users;
 mod count_warnings;
-mod get_staff;
+mod fetch_staff;
 mod get_user;
 mod get_user_data;
 mod get_users;

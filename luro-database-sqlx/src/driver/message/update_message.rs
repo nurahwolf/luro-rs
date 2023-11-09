@@ -270,7 +270,7 @@ async fn handle_message_delete_bulk(db: &SQLxDriver, messages: MessageDeleteBulk
     let mut rows_updated = 0;
     for message in messages.ids {
         rows_updated += handle_message_delete(
-            &db,
+            db,
             MessageDelete {
                 channel_id: messages.channel_id,
                 guild_id: messages.guild_id,

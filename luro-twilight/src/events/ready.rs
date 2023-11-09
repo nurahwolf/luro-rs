@@ -31,27 +31,29 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
 
     let mut staff = framework.database.user_fetch_staff().await?;
 
-    if staff.is_empty() {
-        info!("-- Registering Staff in DB --");
+    // let staff = vec![];
 
-        // Register staff
-        for staff in BOT_OWNERS {
-            let mut user = framework.fetch_user(staff).await?;
-            if let Some(ref mut user_data) = user.data {
-                user_data.permissions = UserPermissions::Administrator;
-                framework.database.user_update_permissions(user_data).await?;
-            }
-        }
+    // if staff.is_empty() {
+    //     info!("-- Registering Staff in DB --");
 
-        // Register primary owner
-        let mut owner = framework.fetch_user(PRIMARY_BOT_OWNER).await?;
-        if let Some(ref mut user_data) = owner.data {
-            user_data.permissions = UserPermissions::Owner;
-            framework.database.user_update_permissions(user_data).await?;
-        }
+    //     // Register staff
+    //     for staff in BOT_OWNERS {
+    //         let mut user = framework.fetch_user(staff).await?;
+    //         if let Some(ref mut user_data) = user.data {
+    //             user_data.permissions = UserPermissions::Administrator;
+    //             framework.database.user_update_permissions(user_data).await?;
+    //         }
+    //     }
 
-        staff = framework.database.user_fetch_staff().await?;
-    }
+    //     // Register primary owner
+    //     let mut owner = framework.fetch_user(PRIMARY_BOT_OWNER).await?;
+    //     if let Some(ref mut user_data) = owner.data {
+    //         user_data.permissions = UserPermissions::Owner;
+    //         framework.database.user_update_permissions(user_data).await?;
+    //     }
+
+    //     staff = framework.database.user_fetch_staff().await?;
+    // }
 
     if let Err(why) = framework.database.application_update(event.application.clone()).await {
         warn!("Heads up, failed to write application data to the database: {why}")

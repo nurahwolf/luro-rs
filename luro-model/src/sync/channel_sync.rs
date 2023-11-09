@@ -4,47 +4,47 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id},
 };
 
-pub enum ChannelSync {
+pub enum ChannelSync<'a> {
     ChannelID(Id<ChannelMarker>),
-    Channel(Channel),
-    ChannelCreate(Box<ChannelCreate>),
-    ChannelDelete(Box<ChannelDelete>),
-    ChannelUpdate(Box<ChannelUpdate>),
-    ChannelPinsUpdate(ChannelPinsUpdate),
+    Channel(&'a Channel),
+    ChannelCreate(&'a ChannelCreate),
+    ChannelDelete(&'a ChannelDelete),
+    ChannelUpdate(&'a ChannelUpdate),
+    ChannelPinsUpdate(&'a ChannelPinsUpdate),
 }
 
-impl From<Id<ChannelMarker>> for ChannelSync {
+impl<'a> From<Id<ChannelMarker>> for ChannelSync<'a> {
     fn from(value: Id<ChannelMarker>) -> Self {
         Self::ChannelID(value)
     }
 }
 
-impl From<Box<ChannelCreate>> for ChannelSync {
-    fn from(channel: Box<ChannelCreate>) -> Self {
+impl<'a> From<&'a ChannelCreate> for ChannelSync<'a> {
+    fn from(channel: &'a ChannelCreate) -> Self {
         Self::ChannelCreate(channel)
     }
 }
 
-impl From<Box<ChannelDelete>> for ChannelSync {
-    fn from(channel: Box<ChannelDelete>) -> Self {
+impl<'a> From<&'a ChannelDelete> for ChannelSync<'a> {
+    fn from(channel: &'a ChannelDelete) -> Self {
         Self::ChannelDelete(channel)
     }
 }
 
-impl From<Box<ChannelUpdate>> for ChannelSync {
-    fn from(channel: Box<ChannelUpdate>) -> Self {
+impl<'a> From<&'a ChannelUpdate> for ChannelSync<'a> {
+    fn from(channel: &'a ChannelUpdate) -> Self {
         Self::ChannelUpdate(channel)
     }
 }
 
-impl From<ChannelPinsUpdate> for ChannelSync {
-    fn from(channel: ChannelPinsUpdate) -> Self {
+impl<'a> From<&'a ChannelPinsUpdate> for ChannelSync<'a> {
+    fn from(channel: &'a ChannelPinsUpdate) -> Self {
         Self::ChannelPinsUpdate(channel)
     }
 }
 
-impl From<Channel> for ChannelSync {
-    fn from(channel: Channel) -> Self {
+impl<'a> From<&'a Channel> for ChannelSync<'a> {
+    fn from(channel: &'a Channel) -> Self {
         Self::Channel(channel)
     }
 }
