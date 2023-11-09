@@ -69,7 +69,7 @@ commands = [
     "command-boop",
     # "command-character",
     "command-dice",
-    # "command-info",
+    "command-info",
     # "command-marry",
     # "command-moderator",
     # "command-music", # Broken on twilight-lavalink

@@ -27,6 +27,7 @@ impl crate::SQLxDriver {
                 data: Some(GuildData {
                     accent_colour: guild.accent_colour.map(|x| x as u32),
                     accent_colour_custom: guild.custom_accent_colour.map(|x| x as u32),
+                    guild_id: Id::new(guild.guild_id as u64),
                 }),
                 afk_channel_id: guild.afk_channel_id.map(|x| Id::new(x as u64)),
                 afk_timeout: AfkTimeout::from(guild.afk_timeout as u16),
@@ -102,6 +103,7 @@ impl crate::SQLxDriver {
                 data: Some(GuildData {
                     accent_colour: guild.accent_colour.map(|x| x as u32),
                     accent_colour_custom: guild.custom_accent_colour.map(|x| x as u32),
+                    guild_id: Id::new(guild.guild_id as u64),
                 }),
                 afk_channel_id: guild.afk_channel_id.map(|x| Id::new(x as u64)),
                 afk_timeout: AfkTimeout::from(guild.afk_timeout as u16),

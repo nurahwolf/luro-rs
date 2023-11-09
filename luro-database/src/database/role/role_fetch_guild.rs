@@ -12,7 +12,7 @@ impl Database {
         }
 
         let twilight_roles = self.api_client.roles(guild_id).await?.model().await?;
-        for role in twilight_roles.clone() {
+        for role in &twilight_roles {
             if let Err(why) = self.driver.update_role((guild_id, role)).await {
                 tracing::error!(why = ?why, "Failed to sync role to database")
             }

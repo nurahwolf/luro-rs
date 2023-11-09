@@ -10,7 +10,7 @@ impl crate::Database {
         tracing::warn!("Failed to find guild `{guild_id}` in the database, falling back to Twilight");
         let twilight_guild = self.api_client.guild(guild_id).await?.model().await?;
 
-        if let Err(why) = self.driver.update_guild(twilight_guild.clone()).await {
+        if let Err(why) = self.driver.update_guild(&twilight_guild).await {
             tracing::error!(why = ?why, "failed to sync guild `{guild_id}` to the database");
         }
 

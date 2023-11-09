@@ -8,7 +8,7 @@ use twilight_model::id::{
 impl crate::SQLxDriver {
     pub async fn update_role_data(
         &self,
-        data: RoleData,
+        data: &RoleData,
         guild_id: Id<GuildMarker>,
         role_id: Id<RoleMarker>,
     ) -> Result<PgQueryResult, sqlx::Error> {

@@ -33,7 +33,7 @@ impl LuroCommand for InfoUser {
         }
 
         if self.sync.unwrap_or_default() {
-            user.sync(&ctx.database).await;
+            ctx.database.user_sync(&mut user).await;
         }
 
         embed
@@ -44,16 +44,14 @@ impl LuroCommand for InfoUser {
             })
             .description(description.replace("<user>", &format!("<@{}>", user.user_id)))
             .footer(|f| {
-                f.text(match user.instance {
-                    luro_model::types::UserType::User => "Twilight User - Data fetched using the Discord API",
-                    luro_model::types::UserType::Member => "Twilight Member - Data fetched using the Discord API, including guild data",
-                    luro_model::types::UserType::DbUser => {
-                        "Luro User - Data fetched from my database only, with includes your custom stuff!"
-                    }
-                    luro_model::types::UserType::DbMember => "Luro Member - Data fetched from my database, including guild information!",
-                    luro_model::types::UserType::DbMemberNoRoles => {
-                        "Luro Member without roles - User and member information fetched from my database, but no roles were present"
-                    }
+                f.text(if user.member.is_some() && user.data.is_some() {
+                    "Luro Member - Data fetched from my database, including guild information!"
+                } else if user.member.is_some() {
+                    "Twilight Member - Data fetched using the Discord API, including guild data"
+                } else if user.data.is_some() {
+                    "Luro User - Data fetched from my database only, with includes your custom stuff!"
+                } else {
+                    "Twilight User - Data fetched using the Discord API"
                 })
             });
 

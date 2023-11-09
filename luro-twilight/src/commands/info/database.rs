@@ -45,34 +45,36 @@ impl LuroCommand for Database {
         // Information from the Database
         let mut administrators = String::new();
         let mut owners = String::new();
-        for staff in ctx.database.get_staff().await? {
-            match staff.user_permissions {
-                LuroUserPermissions::Owner => match owners.is_empty() {
-                    true => owners.push_str(&staff.user_name),
-                    false => owners.push_str(format!(", {}", &staff.user_name).as_str()),
-                },
-                LuroUserPermissions::Administrator => match administrators.is_empty() {
-                    true => administrators.push_str(&staff.user_name),
-                    false => administrators.push_str(format!(", {}", &staff.user_name).as_str()),
-                },
-                _ => warn!("User {:#?} is tagged as a regular user in the database!", &staff),
+        for staff in ctx.database.user_fetch_staff().await? {
+            if let Some(ref data) = staff.data {
+                match data.permissions {
+                    UserPermissions::Owner => match owners.is_empty() {
+                        true => owners.push_str(&staff.name()),
+                        false => owners.push_str(format!(", {}", &staff.name()).as_str()),
+                    },
+                    UserPermissions::Administrator => match administrators.is_empty() {
+                        true => administrators.push_str(&staff.name()),
+                        false => administrators.push_str(format!(", {}", &staff.name()).as_str()),
+                    },
+                    _ => warn!("User {:#?} is tagged as a regular user in the database!", &staff),
+                }
             }
         }
 
         builder = tabled::builder::Builder::new();
         builder.push_record(["Users with Owner Permission", &owners]);
         builder.push_record(["Users with Administrator Permission", &administrators]);
-        if let Ok(data) = ctx.database.count_applications().await {
+        if let Ok(data) = ctx.database.driver.count_applications().await {
             builder.push_record(["Total Applications", &format_number(data)]);
         }
-        if let Ok(data) = ctx.database.count_channels().await {
+        if let Ok(data) = ctx.database.driver.count_channels().await {
             builder.push_record(["Total Channels", &format_number(data)]);
         }
-        if let Ok(data) = ctx.database.count_interactions().await {
+        if let Ok(data) = ctx.database.driver.count_interactions().await {
             builder.push_record(["Total Interactions", &format_number(data)]);
         }
 
-        if let Ok(word_count) = ctx.database.count_messages().await && word_count.total_messages.unwrap_or_default() != 0 {
+        if let Ok(word_count) = ctx.database.driver.count_messages().await && word_count.total_messages.unwrap_or_default() != 0 {
             let mut word_count_description = String::new();
             if let Some(count) = word_count.total_messages && count != 0 { writeln!(word_count_description, "- Has sent `{}` messages!", format_number(count))? };
             if let Some(count) = word_count.total_words && count != 0 { writeln!(word_count_description, "  - `{}` words said!", format_number(count))? };
@@ -86,7 +88,7 @@ impl LuroCommand for Database {
             embed.create_field("-- Message Information --", &word_count_description, false);
         }
 
-        if let Ok(data) = ctx.database.count_total_words().await {
+        if let Ok(data) = ctx.database.driver.count_total_words().await {
             builder.push_record([
                 "Total Words Said - Unique",
                 &format!("{} - {}", format_number(data.0), format_number(data.1)),
@@ -100,13 +102,13 @@ impl LuroCommand for Database {
         builder = tabled::builder::Builder::new();
 
         // Guild Data
-        if let Ok(data) = ctx.database.count_guilds().await {
+        if let Ok(data) = ctx.database.driver.count_guilds().await {
             builder.push_record(["Total Guilds", &format_number(data)]);
         }
-        if let Ok(data) = ctx.database.count_guild_members().await {
+        if let Ok(data) = ctx.database.driver.count_guild_members().await {
             builder.push_record(["Total Guild Members", &format_number(data)]);
         }
-        if let Ok(data) = ctx.database.count_guild_roles().await {
+        if let Ok(data) = ctx.database.driver.count_guild_roles().await {
             builder.push_record(["Total Guild Roles", &format_number(data)]);
         }
         embed.field(|f: &mut luro_model::builders::embed::embed_field::EmbedFieldBuilder| {
@@ -119,16 +121,16 @@ impl LuroCommand for Database {
         builder = tabled::builder::Builder::new();
 
         // User Data
-        if let Ok(data) = ctx.database.count_users().await {
+        if let Ok(data) = ctx.database.driver.count_users().await {
             builder.push_record(["Total Users", &format_number(data)]);
         }
-        if let Ok(data) = ctx.database.count_user_characters().await {
+        if let Ok(data) = ctx.database.driver.count_user_characters().await {
             builder.push_record(["Total User Characters", &format_number(data)]);
         }
-        if let Ok(data) = ctx.database.count_user_moderation_actions().await {
+        if let Ok(data) = ctx.database.driver.count_user_moderation_actions().await {
             builder.push_record(["Total User Moderation Actions", &format_number(data)]);
         }
-        if let Ok(data) = ctx.database.count_user_warnings().await {
+        if let Ok(data) = ctx.database.driver.count_user_warnings().await {
             builder.push_record(["Total User Warnings", &format_number(data)]);
         }
         embed.create_field(

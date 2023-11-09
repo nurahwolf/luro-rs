@@ -1,48 +1,54 @@
-use twilight_model::{id::{Id, marker::{GuildMarker, RoleMarker}}, gateway::payload::incoming::{RoleCreate, RoleDelete, RoleUpdate}};
+use twilight_model::{
+    gateway::payload::incoming::{RoleCreate, RoleDelete, RoleUpdate},
+    id::{
+        marker::{GuildMarker, RoleMarker},
+        Id,
+    },
+};
 
 use crate::types::Role;
 
-pub enum RoleSync {
-    Role(Role),
-    RoleCreate(RoleCreate),
-    RoleDelete(RoleDelete),
+pub enum RoleSync<'a> {
+    Role(&'a Role),
+    RoleCreate(&'a RoleCreate),
+    RoleDelete(&'a RoleDelete),
     RoleId(Id<GuildMarker>, Id<RoleMarker>),
-    RoleUpdate(RoleUpdate),
-    TwilightRole(Id<GuildMarker>, twilight_model::guild::Role),
+    RoleUpdate(&'a RoleUpdate),
+    TwilightRole(Id<GuildMarker>, &'a twilight_model::guild::Role),
 }
 
-impl From<(Id<GuildMarker>, Id<RoleMarker>)> for RoleSync {
+impl<'a> From<(Id<GuildMarker>, Id<RoleMarker>)> for RoleSync<'a> {
     fn from((guild_id, role_id): (Id<GuildMarker>, Id<RoleMarker>)) -> Self {
         Self::RoleId(guild_id, role_id)
     }
 }
 
-impl From<Role> for RoleSync {
-    fn from(role: Role) -> Self {
+impl<'a> From<&'a Role> for RoleSync<'a> {
+    fn from(role: &'a Role) -> Self {
         Self::Role(role)
     }
 }
 
-impl From<RoleCreate> for RoleSync {
-    fn from(role: RoleCreate) -> Self {
+impl<'a> From<&'a RoleCreate> for RoleSync<'a> {
+    fn from(role: &'a RoleCreate) -> Self {
         Self::RoleCreate(role)
     }
 }
 
-impl From<RoleUpdate> for RoleSync {
-    fn from(role: RoleUpdate) -> Self {
+impl<'a> From<&'a RoleUpdate> for RoleSync<'a> {
+    fn from(role: &'a RoleUpdate) -> Self {
         Self::RoleUpdate(role)
     }
 }
 
-impl From<RoleDelete> for RoleSync {
-    fn from(role: RoleDelete) -> Self {
+impl<'a> From<&'a RoleDelete> for RoleSync<'a> {
+    fn from(role: &'a RoleDelete) -> Self {
         Self::RoleDelete(role)
     }
 }
 
-impl From<(Id<GuildMarker>, twilight_model::guild::Role)> for RoleSync {
-    fn from(role: (Id<GuildMarker>, twilight_model::guild::Role)) -> Self {
-        Self::TwilightRole(role.0, role.1)
+impl<'a> From<(Id<GuildMarker>, &'a twilight_model::guild::Role)> for RoleSync<'a> {
+    fn from((role_id, role): (Id<GuildMarker>, &'a twilight_model::guild::Role)) -> Self {
+        Self::TwilightRole(role_id, role)
     }
 }

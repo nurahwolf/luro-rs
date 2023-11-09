@@ -1,10 +1,14 @@
 use std::{sync::Arc, time::Duration};
 
 use anyhow::Context;
+use luro_database::Database;
 use luro_framework::{
     CommandInteraction, ComponentInteraction, Luro, {CreateLuroCommand, LuroCommand},
 };
-use luro_model::builders::{ComponentBuilder, EmbedBuilder};
+use luro_model::{
+    builders::{ComponentBuilder, EmbedBuilder},
+    types::{Member, User},
+};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     channel::message::component::ButtonStyle,
@@ -46,13 +50,17 @@ impl CreateLuroCommand for Info {
         }
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, original_interaction: DatabaseInteraction) -> anyhow::Result<()> {
-        let user = match &self {
+    async fn interaction_component(
+        self,
+        ctx: ComponentInteraction,
+        original_interaction: twilight_model::application::interaction::Interaction,
+    ) -> anyhow::Result<()> {
+        let mut user = match &self {
             Info::User(user_command) => match &user_command.user {
                 Some(user) => ctx.fetch_user(user.resolved.id).await?,
-                None => ctx.fetch_user(Id::new(original_interaction.user_id as u64)).await?,
+                None => ctx.fetch_user(original_interaction.author_id().context("Expected user")?).await?,
             },
-            _ => ctx.fetch_user(Id::new(original_interaction.user_id as u64)).await?,
+            _ => ctx.fetch_user(original_interaction.author_id().context("Expected user")?).await?,
         };
         let mut embed: EmbedBuilder = ctx
             .message
@@ -70,7 +78,7 @@ impl CreateLuroCommand for Info {
             "info-button-user" => user_information(&ctx.author, &user, &mut embed),
             "info-button-guild" => guild_information(&ctx.author, &user.member.context("Expected to get member data")?, &mut embed),
             "info-button-clear" => embed.set_fields(vec![]),
-            "info-button-sync" => sync(&ctx, user, &mut embed).await?,
+            "info-button-sync" => sync(&ctx, &mut user, &mut embed).await?,
             name => return ctx.response_simple(luro_framework::Response::UnknownCommand(name)).await,
         };
 
@@ -86,12 +94,8 @@ impl CreateLuroCommand for Info {
     }
 }
 
-pub async fn sync<'a>(
-    ctx: &ComponentInteraction,
-    mut user: LuroUser,
-    embed: &'a mut EmbedBuilder,
-) -> anyhow::Result<&'a mut EmbedBuilder> {
-    user.sync(&ctx.database).await;
+pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mut EmbedBuilder) -> anyhow::Result<&'a mut EmbedBuilder> {
+    ctx.database.user_sync(user).await;
 
     for field in embed.0.fields.iter_mut() {
         if field.name.contains("Timestamps") {
@@ -117,8 +121,10 @@ pub async fn sync<'a>(
         }
 
         if field.name.contains("Guild-Level Permissions") {
-            if let Some(member) = user.member.clone() {
-                if let Ok(member_permissions) = member.permission_calculator(ctx.database.clone(), &member.role_permissions()).await {
+            if let Some(ref member) = user.member {
+                if let Some(ref data) = member.data {
+                    let permissions = data.role_permissions();
+                    let member_permissions = data.permission_calculator(&permissions);
                     let mut permissions = vec![];
                     for (permission, _) in member_permissions.root().iter_names() {
                         permissions.push(permission)
@@ -133,13 +139,13 @@ pub async fn sync<'a>(
         if field.name.contains("Luro Information") {
             let mut luro_information = String::new();
 
-            if let Ok(user_characters) = user.fetch_characters(ctx.database.clone()).await {
+            if let Ok(user_characters) = ctx.database.user_fetch_characters(user.user_id).await {
                 if !user_characters.is_empty() {
                     luro_information.push_str(&format!("- Has `{}` character profiles\n", user_characters.len()));
                 }
             }
 
-            if let Ok(marriages) = user.fetch_marriages(ctx.database.clone()).await {
+            if let Ok(marriages) = ctx.database.user_fetch_marriages(user.user_id).await {
                 let mut active_marriages = 0;
 
                 for marriage in marriages {
@@ -157,24 +163,23 @@ pub async fn sync<'a>(
                 luro_information.push_str(&format!("- Is marked as `{}` in my database!\n", user_data.permissions));
 
                 if let Some(gender) = &user_data.gender && let Some(sexuality) = &user_data.sexuality {
-                luro_information.push_str(&format!("- Has a sexuality of `{sexuality}` and identifies as `{gender}`\n"));
-            } else if let Some(gender) = &user_data.gender {
-                luro_information.push_str(&format!("- Identifies as `{gender}`\n"));
-            } else if let Some(sexuality) = &user_data.sexuality {
-                luro_information.push_str(&format!("- Has a sexuality of `{sexuality}`\n"));
+                    luro_information.push_str(&format!("- Has a sexuality of `{sexuality}` and identifies as `{gender}`\n"));
+                } else if let Some(gender) = &user_data.gender {
+                    luro_information.push_str(&format!("- Identifies as `{gender}`\n"));
+                } else if let Some(sexuality) = &user_data.sexuality {
+                    luro_information.push_str(&format!("- Has a sexuality of `{sexuality}`\n"));
+                }
             }
-            }
-
-            if let Ok(word_count) = user.fetch_message_count(ctx.database.clone()).await && word_count.total_messages.unwrap_or_default() != 0 {
-            if let Some(count) = word_count.total_messages && count != 0 { luro_information.push_str(&format!("- Has sent `{count}` messages!\n")) };
-            if let Some(count) = word_count.total_words && count != 0 { luro_information.push_str(&format!("  - `{count}` words said!\n")) };
-            if let Some(count) = word_count.total_unique_words && count != 0 { luro_information.push_str(&format!("  - `{count}` unique words said!\n")) };
-            if let Some(count) = word_count.total_custom_messages && count != 0 { luro_information.push_str(&format!("  - `{count}` custom messages\n")) };
-            if let Some(count) = word_count.total_message_creates && count != 0 { luro_information.push_str(&format!("  - `{count}` messages created\n")) };
-            if let Some(count) = word_count.total_message_cached && count != 0 { luro_information.push_str(&format!("  - `{count}` messages cached\n")) };
-            if let Some(count) = word_count.total_message_deletes && count != 0 { luro_information.push_str(&format!("  - `{count}` messages deleted\n")) };
-            if let Some(count) = word_count.total_message_updates && count != 0 { luro_information.push_str(&format!("  - `{count}` messages updated\n")) };
-            if let Some(count) = word_count.total_message_message && count != 0 { luro_information.push_str(&format!("  - `{count}` messages stored\n")) };
+            if let Ok(word_count) = ctx.database.user_count_messages(user.user_id).await && word_count.total_messages.unwrap_or_default() != 0  {
+                if let Some(count) = word_count.total_messages && count != 0 { luro_information.push_str(&format!("- Has sent `{count}` messages!\n")) };
+                if let Some(count) = word_count.total_words && count != 0 { luro_information.push_str(&format!("  - `{count}` words said!\n")) };
+                if let Some(count) = word_count.total_unique_words && count != 0 { luro_information.push_str(&format!("  - `{count}` unique words said!\n")) };
+                if let Some(count) = word_count.total_custom_messages && count != 0 { luro_information.push_str(&format!("  - `{count}` custom messages\n")) };
+                if let Some(count) = word_count.total_message_creates && count != 0 { luro_information.push_str(&format!("  - `{count}` messages created\n")) };
+                if let Some(count) = word_count.total_message_cached && count != 0 { luro_information.push_str(&format!("  - `{count}` messages cached\n")) };
+                if let Some(count) = word_count.total_message_deletes && count != 0 { luro_information.push_str(&format!("  - `{count}` messages deleted\n")) };
+                if let Some(count) = word_count.total_message_updates && count != 0 { luro_information.push_str(&format!("  - `{count}` messages updated\n")) };
+                if let Some(count) = word_count.total_message_message && count != 0 { luro_information.push_str(&format!("  - `{count}` messages stored\n")) };
         }
 
             field.value = luro_information;
@@ -193,12 +198,10 @@ pub async fn sync<'a>(
                     flags_sorted.push(flag)
                 }
                 flags_sorted.sort();
-                user_information.push_str(&format!("- User Flags: \n```\n{}```\n", flags_sorted.join(" | ")));
+                user_information.push_str(&format!("\n- User Flags ({}): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")));
             }
 
             if let Some(flags) = &user.public_flags && !flags.is_empty() {
-                tracing::info!("Public flags - {}", flags.bits());
-
                 if flags.bits() == 1 << 20 {
                     user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
                 }
@@ -208,35 +211,35 @@ pub async fn sync<'a>(
                     flags_sorted.push(flag)
                 }
                 flags_sorted.sort();
-                user_information.push_str(&format!("- Public Flags: \n```\n{}```\n", flags_sorted.join(" | ")))
+                user_information.push_str(&format!("\n- Public Flags ({}): \n```\n{}```",flags.bits(), flags_sorted.join(" | ")))
             }
 
             if let Some(accent_colour) = user.accent_colour {
-                user_information.push_str(&format!("- Accent Colour: `{accent_colour:X}`\n"));
+                user_information.push_str(&format!("\n- Accent Colour: `{accent_colour:X}`"));
             } else if let Some(member) = &user.member {
                 if let Some(data) = &member.data {
                     if let Some(role) = data.highest_role_colour() {
-                        user_information.push_str(&format!("- Accent Colour: `{:X}` (based off role `{}`)\n", role.colour, role.name));
+                        user_information.push_str(&format!("\n- Accent Colour: `{:X}` (<@&{}>)", role.colour, role));
                     }
                 }
             }
             if let Some(email) = &user.email {
-                user_information.push_str(&format!("- Email: `{}`\n", email));
+                user_information.push_str(&format!("\n- Email: `{}`", email));
             }
             if let Some(locale) = &user.locale {
-                user_information.push_str(&format!("- Locale: `{}`\n", locale));
+                user_information.push_str(&format!("\n- Locale: `{}`", locale));
             }
             if user.mfa_enabled.unwrap_or_default() {
-                user_information.push_str("- MFA Enabled: `true`\n");
+                user_information.push_str("\n- MFA Enabled: `true`");
             }
             if user.system.unwrap_or_default() {
-                user_information.push_str("- System Account: `true`\n");
+                user_information.push_str("\n- System Account: `true`");
             }
             if user.verified.unwrap_or_default() {
-                user_information.push_str(" - Verified Account: `true`\n");
+                user_information.push_str("\n- Verified Account: `true`");
             }
             if user.bot {
-                user_information.push_str(" - Bot: `true`\n");
+                user_information.push_str("\n- Bot: `true`");
             }
 
             field.value = user_information;
@@ -244,22 +247,20 @@ pub async fn sync<'a>(
 
         if field.name.contains("Guild Information") {
             if let Some(member) = user.member.clone() {
-                tracing::info!("Member flags - {}", member.flags.bits());
-
                 let mut guild_information = String::new();
                 let mut role_list = String::new();
 
                 if let Some(nickname) = &member.nickname {
-                    guild_information.push_str(&format!("- Nickname: `{nickname}`\n"));
+                    guild_information.push_str(&format!("\n- Nickname: `{nickname}`"));
                 }
                 if member.deafened {
-                    guild_information.push_str("- Deafened: `true`\n");
+                    guild_information.push_str("\n- Deafened: `true`");
                 }
                 if member.muted {
-                    guild_information.push_str("- Muted: `true`\n");
+                    guild_information.push_str("\n- Muted: `true`");
                 }
                 if member.pending {
-                    guild_information.push_str("- Pending: `true`\n");
+                    guild_information.push_str("\n- Pending: `true`");
                 }
 
                 let mut flags_sorted = vec![];
@@ -268,7 +269,7 @@ pub async fn sync<'a>(
                 }
                 flags_sorted.sort();
                 if !flags_sorted.is_empty() {
-                    guild_information.push_str(&format!("- Member Flags: \n```\n{}```", flags_sorted.join(" | ")));
+                    guild_information.push_str(&format!("\n- Member Flags ({}): \n```\n{}```",member.flags.bits(), flags_sorted.join(" | ")));
                 }
 
                 // TODO: Once member_banner is a thing in [Member]
@@ -278,7 +279,7 @@ pub async fn sync<'a>(
 
                 if let Some(ref data) = member.data {
                     if data.guild_owner {
-                        guild_information.push_str("- Is the owner of this guild!\n");
+                        guild_information.push_str("\n- Is the owner of this guild!");
                     }
 
                     for role_id in data.sorted_roles() {
@@ -290,7 +291,7 @@ pub async fn sync<'a>(
                     }
 
                     if !role_list.is_empty() {
-                        guild_information.push_str(&format!("- Roles ({}): {role_list}", data.roles.len()));
+                        guild_information.push_str(&format!("\n- Roles ({}): {role_list}", data.roles.len()));
                     }
                 }
                 field.value = guild_information;
@@ -319,11 +320,13 @@ pub async fn sync<'a>(
 
 pub async fn info_button_guild_permissions<'a>(
     ctx: &ComponentInteraction,
-    user: LuroUser,
+    user: User,
     embed: &'a mut EmbedBuilder,
 ) -> anyhow::Result<&'a mut EmbedBuilder> {
     if let Some(ref member) = user.member {
-        if let Ok(member_permissions) = member.permission_calculator(ctx.database.clone(), &member.role_permissions()).await {
+        if let Some(ref data) = member.data {
+            let permissions = data.role_permissions();
+            let member_permissions = data.permission_calculator(&permissions);
             let mut present = false;
 
             for field in &embed.0.fields {
@@ -355,8 +358,8 @@ pub async fn info_button_guild_permissions<'a>(
     Ok(embed)
 }
 
-pub async fn info_recent_messages(ctx: &ComponentInteraction, user: LuroUser) -> anyhow::Result<()> {
-    let user_messages = ctx.database.fetch_user_messages(user.user_id).await;
+pub async fn info_recent_messages(ctx: &ComponentInteraction, user: User) -> anyhow::Result<()> {
+    let user_messages = ctx.database.driver.fetch_user_messages(user.user_id).await;
 
     ctx.respond(|r| {
         r.embed(|e| {
@@ -391,7 +394,7 @@ pub async fn info_recent_messages(ctx: &ComponentInteraction, user: LuroUser) ->
     .await
 }
 
-pub fn timestamps<'a>(author: &LuroUser, user: &LuroUser, embed: &'a mut EmbedBuilder) -> &'a mut EmbedBuilder {
+pub fn timestamps<'a>(author: &User, user: &User, embed: &'a mut EmbedBuilder) -> &'a mut EmbedBuilder {
     let mut present = false;
 
     for field in &embed.0.fields {
@@ -428,12 +431,7 @@ pub fn timestamps<'a>(author: &LuroUser, user: &LuroUser, embed: &'a mut EmbedBu
     embed
 }
 
-pub async fn luro_information<'a>(
-    author: &LuroUser,
-    user: &LuroUser,
-    db: Arc<LuroDatabase>,
-    embed: &'a mut EmbedBuilder,
-) -> &'a mut EmbedBuilder {
+pub async fn luro_information<'a>(author: &User, user: &User, db: Arc<Database>, embed: &'a mut EmbedBuilder) -> &'a mut EmbedBuilder {
     let mut present = false;
 
     for field in &embed.0.fields {
@@ -445,13 +443,13 @@ pub async fn luro_information<'a>(
     if !present {
         let mut luro_information = String::new();
 
-        if let Ok(user_characters) = user.fetch_characters(db.clone()).await {
+        if let Ok(user_characters) = db.user_fetch_characters(user.user_id).await {
             if !user_characters.is_empty() {
                 luro_information.push_str(&format!("- Has `{}` character profiles\n", user_characters.len()));
             }
         }
 
-        if let Ok(marriages) = user.fetch_marriages(db.clone()).await {
+        if let Ok(marriages) = db.user_fetch_marriages(user.user_id).await {
             let mut active_marriages = 0;
 
             for marriage in marriages {
@@ -477,7 +475,7 @@ pub async fn luro_information<'a>(
             }
         }
 
-        if let Ok(word_count) = user.fetch_message_count(db).await && word_count.total_messages.unwrap_or_default() != 0 {
+        if let Ok(word_count) = db.user_count_messages(user.user_id).await && word_count.total_messages.unwrap_or_default() != 0  {
             if let Some(count) = word_count.total_messages && count != 0 { luro_information.push_str(&format!("- Has sent `{count}` messages!\n")) };
             if let Some(count) = word_count.total_words && count != 0 { luro_information.push_str(&format!("  - `{count}` words said!\n")) };
             if let Some(count) = word_count.total_unique_words && count != 0 { luro_information.push_str(&format!("  - `{count}` unique words said!\n")) };
@@ -500,7 +498,7 @@ pub async fn luro_information<'a>(
     embed
 }
 
-pub fn user_information<'a>(author: &LuroUser, user: &LuroUser, embed: &'a mut EmbedBuilder) -> &'a mut EmbedBuilder {
+pub fn user_information<'a>(author: &User, user: &User, embed: &'a mut EmbedBuilder) -> &'a mut EmbedBuilder {
     let mut present = false;
 
     for field in &embed.0.fields {
@@ -516,7 +514,6 @@ pub fn user_information<'a>(author: &LuroUser, user: &LuroUser, embed: &'a mut E
     if !present {
         let mut user_information = String::new();
         if let Some(flags) = &user.flags && !flags.is_empty() {
-            tracing::info!("flags - {}", flags.bits());
             if flags.bits() == 1 << 20 {
                 user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
             }
@@ -526,12 +523,10 @@ pub fn user_information<'a>(author: &LuroUser, user: &LuroUser, embed: &'a mut E
                 flags_sorted.push(flag)
             }
             flags_sorted.sort();
-            user_information.push_str(&format!("- User Flags: \n```\n{}```\n", flags_sorted.join(" | ")));
+            user_information.push_str(&format!("\n- User Flags ({}): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")));
         }
 
         if let Some(flags) = &user.public_flags && !flags.is_empty() {
-            tracing::info!("Public flags - {}", flags.bits());
-
             if flags.bits() == 1 << 20 {
                 user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
             }
@@ -541,7 +536,7 @@ pub fn user_information<'a>(author: &LuroUser, user: &LuroUser, embed: &'a mut E
                 flags_sorted.push(flag)
             }
             flags_sorted.sort();
-            user_information.push_str(&format!("- Public Flags: \n```\n{}```\n", flags_sorted.join(" | ")))
+            user_information.push_str(&format!("\n- Public Flags ({}): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")))
         }
 
         if let Some(accent_color) = user.accent_colour {
@@ -551,7 +546,7 @@ pub fn user_information<'a>(author: &LuroUser, user: &LuroUser, embed: &'a mut E
             if let Some(data) = &member.data {
                 if let Some(role) = data.highest_role_colour() {
                     embed.colour(role.colour);
-                    user_information.push_str(&format!("- Accent Colour: `{:X}` (based off role `{}`)\n", role.colour, role.name));
+                    user_information.push_str(&format!("- Accent Colour: `{:X}` (<@&{}>)\n", role.colour, role));
                 }
             }
         }
@@ -585,7 +580,7 @@ pub fn user_information<'a>(author: &LuroUser, user: &LuroUser, embed: &'a mut E
     embed
 }
 
-pub fn guild_information<'a>(author: &LuroUser, member: &LuroMember, embed: &'a mut EmbedBuilder) -> &'a mut EmbedBuilder {
+pub fn guild_information<'a>(author: &User, member: &Member, embed: &'a mut EmbedBuilder) -> &'a mut EmbedBuilder {
     let mut present = false;
 
     for field in &embed.0.fields {
@@ -599,27 +594,26 @@ pub fn guild_information<'a>(author: &LuroUser, member: &LuroMember, embed: &'a 
         let mut role_list = String::new();
 
         if let Some(nickname) = &member.nickname {
-            guild_information.push_str(&format!("- Nickname: `{nickname}`\n"));
+            guild_information.push_str(&format!("\n- Nickname: `{nickname}`"));
         }
         if member.deafened {
-            guild_information.push_str("- Deafened: `true`\n");
+            guild_information.push_str("\n- Deafened: `true`");
         }
         if member.muted {
-            guild_information.push_str("- Muted: `true`\n");
+            guild_information.push_str("\n- Muted: `true`");
         }
         if member.pending {
-            guild_information.push_str("- Pending: `true`\n");
+            guild_information.push_str("\n- Pending: `true`");
         }
 
         let mut flags_sorted = vec![];
-        tracing::info!("Member flags - {}", member.flags.bits());
 
         for (flag, _) in member.flags.iter_names() {
             flags_sorted.push(flag)
         }
         flags_sorted.sort();
         if !flags_sorted.is_empty() {
-            guild_information.push_str(&format!("- Member Flags: \n```\n{}```\n", flags_sorted.join(" | ")));
+            guild_information.push_str(&format!("\n- Member Flags ({}): \n```\n{}```",member.flags.bits(), flags_sorted.join(" | ")));
         }
 
         // TODO: Once member_banner is a thing in [Member]
@@ -629,7 +623,7 @@ pub fn guild_information<'a>(author: &LuroUser, member: &LuroMember, embed: &'a 
 
         if let Some(ref data) = member.data {
             if data.guild_owner {
-                guild_information.push_str("- Is the owner of this guild!\n");
+                guild_information.push_str("\n- Is the owner of this guild!");
             }
 
             for role_id in data.sorted_roles() {
@@ -641,7 +635,7 @@ pub fn guild_information<'a>(author: &LuroUser, member: &LuroMember, embed: &'a 
             }
 
             if !role_list.is_empty() {
-                guild_information.push_str(&format!("- Roles ({}): {role_list}", data.roles.len()));
+                guild_information.push_str(&format!("\n- Roles ({}): {role_list}", data.roles.len()));
             }
         }
 

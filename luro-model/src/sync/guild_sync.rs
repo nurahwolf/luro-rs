@@ -1,17 +1,17 @@
 use twilight_model::{gateway::payload::incoming::GuildUpdate, guild::Guild};
-pub enum GuildSync {
-    Guild(Guild),
-    GuildUpdate(Box<GuildUpdate>),
+pub enum GuildSync<'a> {
+    Guild(&'a Guild),
+    GuildUpdate(&'a GuildUpdate),
 }
 
-impl From<Box<GuildUpdate>> for GuildSync {
-    fn from(guild: Box<GuildUpdate>) -> Self {
+impl<'a> From<&'a GuildUpdate> for GuildSync<'a> {
+    fn from(guild: &'a GuildUpdate) -> Self {
         Self::GuildUpdate(guild)
     }
 }
 
-impl From<Guild> for GuildSync {
-    fn from(guild: Guild) -> Self {
+impl<'a> From<&'a Guild> for GuildSync<'a> {
+    fn from(guild: &'a Guild) -> Self {
         Self::Guild(guild)
     }
 }

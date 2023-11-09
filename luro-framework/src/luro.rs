@@ -82,18 +82,11 @@ pub trait Luro {
     /// Set fresh to true in order to fetch fresh data using the API
     ///
     /// Luro Database -> Twilight Guild
-    fn get_guild(&self, guild_id: Id<GuildMarker>, fresh: bool) -> impl Future<Output = anyhow::Result<Guild>> + Send
+    fn get_guild(&self, guild_id: Id<GuildMarker>) -> impl Future<Output = anyhow::Result<Guild>> + Send
     where
         Self: Sync,
     {
         async move {
-            if fresh {
-                let twilight_guild = self.twilight_client().guild(guild_id).await?.model().await?;
-                if let Err(why) = self.database().guild_update(twilight_guild).await {
-                    error!(why = ?why, "failed to sync guild `{guild_id}` to the database");
-                }
-            }
-
             self.database().guild_fetch(guild_id).await
         }
     }
@@ -153,7 +146,6 @@ pub trait Luro {
     }
 
     /// Fetch and return a [LuroChannel], updating the database if not present.
-    /// Set fresh to true in order to fetch fresh data using the API
     ///
     /// Luro Database -> Twilight Client
     ///

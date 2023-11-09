@@ -2,6 +2,9 @@ use twilight_gateway::Event;
 
 mod role;
 mod channel;
+mod presence;
+mod member;
+mod guild;
 
 impl crate::Database {
     /// Syncronise data from the passed event into the database context. This automatically updates the cache, and database if the data is new.
@@ -19,6 +22,12 @@ impl crate::Database {
             Event::RoleCreate(event) => role::role_create_listener(self, event).await,
             Event::RoleDelete(event) => role::role_delete_listener(self, event).await,
             Event::RoleUpdate(event) => role::role_update_listener(self, event).await,
+            Event::PresenceUpdate(event) => presence::update(self, event).await,
+            Event::MemberAdd(event) => member::add(self, event).await,
+            Event::MemberChunk(event) => member::chunk(self, event).await,
+            Event::MemberRemove(event) => member::delete(self, event).await,
+            Event::MemberUpdate(event) => member::update(self, event).await,
+            Event::GuildUpdate(event) => guild::update(self, event).await,
             _ => Ok(())
         }
     }

@@ -6,7 +6,7 @@ use twilight_model::{gateway::payload::incoming::GuildUpdate, guild::Guild};
 use crate::SQLxDriver;
 
 impl SQLxDriver {
-    pub async fn update_guild(&self, guild: impl Into<GuildSync>) -> anyhow::Result<u64> {
+    pub async fn update_guild(&self, guild: impl Into<GuildSync<'_>>) -> anyhow::Result<u64> {
         Ok(match guild.into() {
             GuildSync::Guild(guild) => handle_guild(self, guild).await?.rows_affected(),
             GuildSync::GuildUpdate(guild) => handle_guild_update(self, guild).await?.rows_affected(),
@@ -14,7 +14,7 @@ impl SQLxDriver {
     }
 }
 
-async fn handle_guild(db: &SQLxDriver, guild: Guild) -> anyhow::Result<PgQueryResult> {
+async fn handle_guild(db: &SQLxDriver, guild: &Guild) -> anyhow::Result<PgQueryResult> {
     Ok(sqlx::query_file!(
         "queries/guilds/update_guild.sql",
         guild.afk_channel_id.map(|x| x.get() as i64),
@@ -61,7 +61,7 @@ async fn handle_guild(db: &SQLxDriver, guild: Guild) -> anyhow::Result<PgQueryRe
     .await?)
 }
 
-async fn handle_guild_update(db: &SQLxDriver, guild: Box<GuildUpdate>) -> Result<PgQueryResult, sqlx::Error> {
+async fn handle_guild_update(db: &SQLxDriver, guild: &GuildUpdate) -> Result<PgQueryResult, sqlx::Error> {
     sqlx::query_file!(
         "queries/guilds/update_guild_update.sql",
         guild.afk_channel_id.map(|x| x.get() as i64),

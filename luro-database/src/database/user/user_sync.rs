@@ -64,7 +64,7 @@ impl Database {
                             }
                         }
 
-                        if let Err(why) = self.driver.update_member((member.guild_id, twilight_member)).await {
+                        if let Err(why) = self.driver.update_member((member.guild_id, &twilight_member)).await {
                             tracing::warn!(why = ?why, "Failed to sync twilight member with the database")
                         }
                     }
@@ -98,7 +98,7 @@ impl Database {
                     user.verified = twilight_user.verified;
                     user.user_id = twilight_user.id;
 
-                    if let Err(why) = self.driver.update_user(twilight_user).await {
+                    if let Err(why) = self.driver.update_user(&twilight_user).await {
                         tracing::warn!(why = ?why, "Failed to sync twilight user with the database")
                     }
                 }

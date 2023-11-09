@@ -1,15 +1,16 @@
-use std::time::SystemTime;
-
 use serde::{Deserialize, Serialize};
+use twilight_model::id::{marker::UserMarker, Id};
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct UserMarriages {
-    /// When did they get married?
-    pub timestamp: SystemTime,
+pub struct UserMarriage {
     /// The user's optional reason for marrying
-    #[serde(default)]
-    pub reason: Option<String>,
-    /// A randomly generated prposal text that was used to propose to them
-    #[serde(default)]
-    pub proposal: String,
+    pub reason: String,
+    /// Person who initiated the marriage
+    pub proposer_id: Id<UserMarker>,
+    /// Person who accepted the marriage
+    pub proposee_id: Id<UserMarker>,
+    /// Are they divorced
+    pub divorced: bool,
+    /// Was their marriage proposal rejected
+    pub rejected: bool,
 }

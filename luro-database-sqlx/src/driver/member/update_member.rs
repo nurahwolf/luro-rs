@@ -14,7 +14,7 @@ use crate::SQLxDriver;
 
 impl SQLxDriver {
     /// Updates a supported member type. Returns the total number of rows modified in the database.
-    pub async fn update_member(&self, member: impl Into<MemberSync>) -> anyhow::Result<u64> {
+    pub async fn update_member(&self, member: impl Into<MemberSync<'_>>) -> anyhow::Result<u64> {
         let rows_modified = match member.into() {
             MemberSync::Member(guild_id, member) => handle_member(self, guild_id, member).await?,
             MemberSync::MemberAdd(member) => handle_member_add(self, member).await?,
@@ -46,10 +46,10 @@ impl SQLxDriver {
     }
 }
 
-async fn handle_member_chunk(db: &SQLxDriver, event: MemberChunk) -> anyhow::Result<u64> {
+async fn handle_member_chunk(db: &SQLxDriver, event: &MemberChunk) -> anyhow::Result<u64> {
     let mut rows_modified = 0;
-    for member in event.members {
-        rows_modified += db.update_user(member.user.clone()).await?;
+    for member in &event.members {
+        rows_modified += db.update_user(member).await?;
         for role in &member.roles {
             match db.update_role((event.guild_id, *role)).await {
                 Ok(ok) => rows_modified += ok,
@@ -89,8 +89,8 @@ async fn handle_member_chunk(db: &SQLxDriver, event: MemberChunk) -> anyhow::Res
     Ok(rows_modified)
 }
 
-async fn handle_member_remove(db: &SQLxDriver, member: MemberRemove) -> anyhow::Result<u64> {
-    let mut rows_updated = db.update_user(member.user.clone()).await?;
+async fn handle_member_remove(db: &SQLxDriver, member: &MemberRemove) -> anyhow::Result<u64> {
+    let mut rows_updated = db.update_user(&member.user).await?;
     rows_updated += sqlx::query_file!(
         "queries/guild_members/member_removed.sql",
         member.guild_id.get() as i64,
@@ -102,9 +102,9 @@ async fn handle_member_remove(db: &SQLxDriver, member: MemberRemove) -> anyhow::
     Ok(rows_updated)
 }
 
-async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: Member) -> anyhow::Result<u64> {
+async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: &Member) -> anyhow::Result<u64> {
     debug!("handle_member - Trying to handle updating roles");
-    let mut rows_modified = db.update_user(member.user.clone()).await?;
+    let mut rows_modified = db.update_user(&member.user).await?;
 
     for role in &member.roles {
         match db.update_role((guild_id, *role)).await {
@@ -143,21 +143,21 @@ async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: Membe
     .rows_affected();
 
     db.clear_member_roles(guild_id, member.user.id).await?;
-    for role in member.roles {
+    for role in &member.roles {
         debug!("handle_member - Trying to handle updating roles");
-        db.update_role((guild_id, role)).await?;
+        db.update_role((guild_id, *role)).await?;
         debug!("handle_member - Trying to handle updating member roles");
-        db.update_guild_member_roles(guild_id, role, member.user.id).await?;
+        db.update_guild_member_roles(guild_id, *role, member.user.id).await?;
     }
 
     Ok(rows_modified)
 }
 
-async fn handle_partial_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: PartialMember) -> anyhow::Result<u64> {
+async fn handle_partial_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: &PartialMember) -> anyhow::Result<u64> {
     let mut rows_modified = 0;
 
     if let Some(ref user) = member.user {
-        rows_modified += db.update_user(user.clone()).await?;
+        rows_modified += db.update_user(user).await?;
         for role in &member.roles {
             match db.update_role((guild_id, *role)).await {
                 Ok(ok) => rows_modified += ok,
@@ -187,7 +187,7 @@ async fn handle_partial_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, membe
         member.flags.bits() as i64,
         member.mute,
         member.nick,
-        member.user.map(|x| x.id.get() as i64).unwrap()
+        member.user.as_ref().map(|x| x.id.get() as i64).unwrap()
     )
     .execute(&db.pool)
     .await?
@@ -196,8 +196,8 @@ async fn handle_partial_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, membe
     Ok(rows_modified)
 }
 
-async fn handle_member_add(db: &SQLxDriver, member: Box<MemberAdd>) -> anyhow::Result<u64> {
-    let mut rows_modified = db.update_user(member.user.clone()).await?;
+async fn handle_member_add(db: &SQLxDriver, member: &MemberAdd) -> anyhow::Result<u64> {
+    let mut rows_modified = db.update_user(&member.user).await?;
     rows_modified += sqlx::query_file!(
         "queries/guild_members/update_twilight_member.sql",
         match member.premium_since {
@@ -236,8 +236,8 @@ async fn handle_member_add(db: &SQLxDriver, member: Box<MemberAdd>) -> anyhow::R
     Ok(rows_modified)
 }
 
-async fn handle_member_update(db: &SQLxDriver, member: Box<MemberUpdate>) -> anyhow::Result<u64> {
-    let mut rows_modified = db.update_user(member.user.clone()).await?;
+async fn handle_member_update(db: &SQLxDriver, member: &MemberUpdate) -> anyhow::Result<u64> {
+    let mut rows_modified = db.update_user(&member.user).await?;
 
     rows_modified += sqlx::query_file!(
         "queries/guild_members/update_twilight_member_update.sql",

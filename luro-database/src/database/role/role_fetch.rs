@@ -13,7 +13,7 @@ impl Database {
         tracing::warn!("Failed to get role from database, falling back to twlight client");
         let mut requested_role = None;
         for role in self.api_client.roles(guild_id).await?.model().await? {
-            self.driver.update_role((guild_id, role.clone())).await?;
+            self.driver.update_role((guild_id, &role)).await?;
             if role.id == role_id {
                 requested_role = Some((guild_id, role).into());
             }

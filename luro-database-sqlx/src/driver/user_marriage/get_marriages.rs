@@ -1,15 +1,26 @@
+use futures_util::TryStreamExt;
+use luro_model::user::marriages::UserMarriage;
 use twilight_model::id::{marker::UserMarker, Id};
 
-use super::DbUserMarriage;
-
 impl crate::SQLxDriver {
-    pub async fn get_marriages(&self, user_id: Id<UserMarker>) -> Result<Vec<DbUserMarriage>, sqlx::Error> {
-        sqlx::query_as!(
-            DbUserMarriage,
+    pub async fn user_fetch_marriages(&self, user_id: Id<UserMarker>) -> Result<Vec<UserMarriage>, sqlx::Error> {
+        let mut marriages = vec![];
+        let mut query = sqlx::query!(
             "SELECT * FROM user_marriages WHERE proposer_id = $1 or proposee_id = $1",
             user_id.get() as i64
         )
-        .fetch_all(&self.pool)
-        .await
+        .fetch(&self.pool);
+
+        while let Ok(Some(marriage)) = query.try_next().await {
+            marriages.push(UserMarriage {
+                reason: marriage.reason,
+                proposee_id: Id::new(marriage.proposee_id as u64),
+                proposer_id: Id::new(marriage.proposer_id as u64),
+                divorced: marriage.divorced,
+                rejected: marriage.rejected,
+            })
+        }
+
+        Ok(marriages)
     }
 }

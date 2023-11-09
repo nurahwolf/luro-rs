@@ -11,7 +11,7 @@ impl Database {
 
         tracing::warn!("Failed to get user from database, falling back to twlight client");
         let twilight_user = self.api_client.user(user_id).await?.model().await?;
-        if let Err(why) = self.driver.update_user(twilight_user.clone()).await {
+        if let Err(why) = self.driver.update_user(&twilight_user).await {
             tracing::error!(why = ?why, "Failed to sync user to the database");
         }
 

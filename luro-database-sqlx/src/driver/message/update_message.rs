@@ -22,7 +22,7 @@ impl crate::SQLxDriver {
 
 async fn handle_message_create(db: &SQLxDriver, message: MessageCreate) -> anyhow::Result<u64> {
     tracing::debug!("Handling message_create {:#?}", message);
-    let mut rows_updated = db.update_user(message.author.clone()).await?;
+    let mut rows_updated = db.update_user(&message.author).await?;
 
     rows_updated += sqlx::query_file!(
         "queries/message_update_create.sql",
@@ -190,7 +190,7 @@ pub async fn handle_message_update(db: &SQLxDriver, message: MessageUpdate) -> a
 }
 
 async fn handle_twilight_message(db: &SQLxDriver, message: twilight_model::channel::Message) -> anyhow::Result<u64> {
-    let mut rows_updated = db.update_user(message.author.clone()).await?;
+    let mut rows_updated = db.update_user(&message.author).await?;
     rows_updated += sqlx::query_file!(
         "queries/message_update_twilight_message.sql",
         message.activity.clone().map(|x| Json(x)) as _,

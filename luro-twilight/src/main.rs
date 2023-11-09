@@ -11,7 +11,7 @@ use twilight_gateway::{error::ReceiveMessageErrorType, stream::ShardEventStream}
 // These variables are editable by the end user!
 // ===
 /// [tracing_subscriber] filter level
-pub const FILTER: tracing_subscriber::filter::LevelFilter = tracing_subscriber::filter::LevelFilter::DEBUG;
+pub const FILTER: tracing_subscriber::filter::LevelFilter = tracing_subscriber::filter::LevelFilter::INFO;
 // Luro's intents. Can be set to all, but rather spammy.
 pub const INTENTS: twilight_gateway::Intents = twilight_gateway::Intents::all();
 /// The log path. By default this is a sub directory of DATA_PATH

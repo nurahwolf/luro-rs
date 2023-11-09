@@ -19,7 +19,7 @@ use twilight_model::{
 pub type LuroUsers = HashMap<Id<UserMarker>, LuroUser>;
 use crate::message::Message;
 
-use self::{actions::UserActions, character::CharacterProfile, marriages::UserMarriages, member::LuroMember};
+use self::{actions::UserActions, character::CharacterProfile, marriages::UserMarriage, member::LuroMember};
 
 pub mod actions;
 pub mod actions_type;
@@ -101,7 +101,7 @@ pub struct LuroUser {
     pub message_edits: usize,
     /// The user's marriages
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub marriages: BTreeMap<Id<UserMarker>, UserMarriages>,
+    pub marriages: BTreeMap<Id<UserMarker>, UserMarriage>,
     /// A list of member instances across guilds
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub guilds: HashMap<Id<GuildMarker>, LuroMember>,

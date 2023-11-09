@@ -18,6 +18,8 @@ use crate::SQLxDriver;
 
 impl SQLxDriver {
     pub async fn get_member(&self, user_id: Id<UserMarker>, guild_id: Id<GuildMarker>) -> anyhow::Result<Option<User>> {
+        let mut query =
+            sqlx::query_file!("queries/member_fetch_roles.sql", guild_id.get() as i64, user_id.get() as i64).fetch(&self.pool);
         let member = match sqlx::query_file!("queries/member_fetch.sql", guild_id.get() as i64, user_id.get() as i64)
             .fetch_optional(&self.pool)
             .await
@@ -28,11 +30,7 @@ impl SQLxDriver {
         };
 
         let mut roles = HashMap::new();
-        while let Ok(Some(role)) = sqlx::query_file!("queries/member_fetch_roles.sql", guild_id.get() as i64, user_id.get() as i64)
-            .fetch(&self.pool)
-            .try_next()
-            .await
-        {
+        while let Ok(Some(role)) = query.try_next().await {
             roles.insert(
                 Id::new(role.role_id as u64),
                 Role {
@@ -65,7 +63,7 @@ impl SQLxDriver {
                 sexuality: member.sexuality.map(|x| x.into()),
             }),
             member: Some(Member {
-                roles: roles.values().map(|x|x.role_id).collect(),
+                roles: roles.values().map(|x| x.role_id).collect(),
                 data: Some(MemberData {
                     guild_everyone_role_permissions: Permissions::from_bits_retain(member.guild_everyone_role_permissions as u64),
                     guild_owner_id: Id::new(member.guild_owner_id as u64),

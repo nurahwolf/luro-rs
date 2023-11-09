@@ -4,48 +4,48 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
 };
 
-pub enum MemberSync {
-    Member(Id<GuildMarker>, Member),
-    MemberAdd(Box<MemberAdd>),
-    MemberChunk(MemberChunk),
-    MemberRemove(MemberRemove),
-    MemberUpdate(Box<MemberUpdate>),
-    PartialMember(Id<GuildMarker>, PartialMember),
+pub enum MemberSync<'a> {
+    Member(Id<GuildMarker>, &'a Member),
+    MemberAdd(&'a MemberAdd),
+    MemberChunk(&'a MemberChunk),
+    MemberRemove(&'a MemberRemove),
+    MemberUpdate(&'a MemberUpdate),
+    PartialMember(Id<GuildMarker>, &'a PartialMember),
     // LuroMember(LuroMember)
 }
 
-impl From<(Id<GuildMarker>, Member)> for MemberSync {
-    fn from(data: (Id<GuildMarker>, Member)) -> Self {
+impl<'a> From<(Id<GuildMarker>, &'a Member)> for MemberSync<'a> {
+    fn from(data: (Id<GuildMarker>, &'a Member)) -> Self {
         Self::Member(data.0, data.1)
     }
 }
 
-impl From<(Id<GuildMarker>, PartialMember)> for MemberSync {
-    fn from(data: (Id<GuildMarker>, PartialMember)) -> Self {
+impl<'a> From<(Id<GuildMarker>, &'a PartialMember)> for MemberSync<'a> {
+    fn from(data: (Id<GuildMarker>, &'a PartialMember)) -> Self {
         Self::PartialMember(data.0, data.1)
     }
 }
 
-impl From<Box<MemberAdd>> for MemberSync {
-    fn from(data: Box<MemberAdd>) -> Self {
+impl<'a> From<&'a MemberAdd> for MemberSync<'a> {
+    fn from(data: &'a MemberAdd) -> Self {
         Self::MemberAdd(data)
     }
 }
 
-impl From<MemberChunk> for MemberSync {
-    fn from(data: MemberChunk) -> Self {
+impl<'a> From<&'a MemberChunk> for MemberSync<'a> {
+    fn from(data: &'a MemberChunk) -> Self {
         Self::MemberChunk(data)
     }
 }
 
-impl From<MemberRemove> for MemberSync {
-    fn from(data: MemberRemove) -> Self {
+impl<'a> From<&'a MemberRemove> for MemberSync<'a> {
+    fn from(data: &'a MemberRemove) -> Self {
         Self::MemberRemove(data)
     }
 }
 
-impl From<Box<MemberUpdate>> for MemberSync {
-    fn from(data: Box<MemberUpdate>) -> Self {
+impl<'a> From<&'a MemberUpdate> for MemberSync<'a> {
+    fn from(data: &'a MemberUpdate) -> Self {
         Self::MemberUpdate(data)
     }
 }

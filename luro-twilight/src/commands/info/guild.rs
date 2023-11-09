@@ -17,11 +17,8 @@ pub struct Guild {
 
 impl LuroCommand for Guild {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let guild = match self.guild {
-            Some(guild_requested) => {
-                ctx.get_guild(Id::new(guild_requested.parse()?), self.refresh.unwrap_or_default())
-                    .await?
-            }
+        let mut guild = match self.guild {
+            Some(guild_requested) => ctx.get_guild(Id::new(guild_requested.parse()?)).await?,
             None => match &ctx.guild {
                 Some(guild) => guild.clone(),
                 None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
@@ -29,9 +26,11 @@ impl LuroCommand for Guild {
         };
         let mut luro_guild = String::new();
         let mut guild_description = String::new();
-
         let mut embed = ctx.default_embed().await;
-        embed.title(&guild.name);
+
+        if self.refresh.unwrap_or_default() {
+            ctx.database.guild_sync(&mut guild).await;
+        }
 
         writeln!(luro_guild, "- Guild Name: {}", &guild.name)?;
         // if !guild.commands.is_empty() {
@@ -40,8 +39,10 @@ impl LuroCommand for Guild {
 
         writeln!(guild_description, "- Owner: <@{}>", guild.owner_id)?;
         writeln!(guild_description, "- AFK Timeout: {} seconds", guild.afk_timeout.get())?;
-        embed.description(guild_description);
-        embed.create_field("Luro Settings", &luro_guild, false);
+        embed
+            .title(&guild.name)
+            .description(guild_description)
+            .create_field("Luro Settings", &luro_guild, false);
 
         ctx.respond(|response| {
             if self.gdpr_export.unwrap_or_default() {

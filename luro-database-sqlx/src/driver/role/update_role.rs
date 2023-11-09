@@ -11,7 +11,7 @@ use twilight_model::{
 use crate::SQLxDriver;
 
 impl SQLxDriver {
-    pub async fn update_role(&self, role: impl Into<RoleSync>) -> Result<u64, sqlx::Error> {
+    pub async fn update_role(&self, role: impl Into<RoleSync<'_>>) -> Result<u64, sqlx::Error> {
         match role.into() {
             RoleSync::Role(role) => handle_luro_role(self, role).await,
             RoleSync::TwilightRole(guild_id, role) => handle_twilight_role(self, role, guild_id).await,
@@ -34,8 +34,8 @@ async fn handle_role_id(db: &SQLxDriver, guild_id: Id<GuildMarker>, role_id: Id<
     .map(|x| x.rows_affected())
 }
 
-async fn handle_luro_role(db: &SQLxDriver, role: Role) -> Result<u64, sqlx::Error> {
-    if let Some(data) = role.data {
+async fn handle_luro_role(db: &SQLxDriver, role: &Role) -> Result<u64, sqlx::Error> {
+    if let Some(data) = &role.data {
         db.update_role_data(data, role.guild_id, role.role_id).await?;
     }
 
@@ -52,7 +52,7 @@ async fn handle_luro_role(db: &SQLxDriver, role: Role) -> Result<u64, sqlx::Erro
         role.flags.bits() as i32,
         role.role_id.get() as i64,
         role.name,
-        role.tags.map(Json) as _,
+        role.tags.as_ref().map(Json) as _,
         role.unicode_emoji,
     )
     .execute(&db.pool)
@@ -60,7 +60,7 @@ async fn handle_luro_role(db: &SQLxDriver, role: Role) -> Result<u64, sqlx::Erro
     .map(|x| x.rows_affected())
 }
 
-async fn handle_role_create(db: &SQLxDriver, role: RoleCreate) -> Result<u64, sqlx::Error> {
+async fn handle_role_create(db: &SQLxDriver, role: &RoleCreate) -> Result<u64, sqlx::Error> {
     sqlx::query_as!(
         DbRole,
         "INSERT INTO guild_roles (
@@ -106,7 +106,7 @@ async fn handle_role_create(db: &SQLxDriver, role: RoleCreate) -> Result<u64, sq
         role.role.permissions.bits() as i32,
         role.role.position,
         role.role.id.get() as i64,
-        role.role.tags.map(Json) as _,
+        role.role.tags.as_ref().map(Json) as _,
         role.role.unicode_emoji,
     )
     .execute(&db.pool)
@@ -114,7 +114,7 @@ async fn handle_role_create(db: &SQLxDriver, role: RoleCreate) -> Result<u64, sq
     .map(|x| x.rows_affected())
 }
 
-async fn handle_role_update(db: &SQLxDriver, role: RoleUpdate) -> Result<u64, sqlx::Error> {
+async fn handle_role_update(db: &SQLxDriver, role: &RoleUpdate) -> Result<u64, sqlx::Error> {
     sqlx::query_as!(
         DbRole,
         "INSERT INTO guild_roles (
@@ -159,7 +159,7 @@ async fn handle_role_update(db: &SQLxDriver, role: RoleUpdate) -> Result<u64, sq
         role.role.permissions.bits() as i32,
         role.role.position,
         role.role.id.get() as i64,
-        role.role.tags.map(Json) as _,
+        role.role.tags.as_ref().map(Json) as _,
         role.role.unicode_emoji,
     )
     .execute(&db.pool)
@@ -167,7 +167,7 @@ async fn handle_role_update(db: &SQLxDriver, role: RoleUpdate) -> Result<u64, sq
     .map(|x| x.rows_affected())
 }
 
-async fn handle_twilight_role(db: &SQLxDriver, role: twilight_model::guild::Role, guild_id: Id<GuildMarker>) -> Result<u64, sqlx::Error> {
+async fn handle_twilight_role(db: &SQLxDriver, role: &twilight_model::guild::Role, guild_id: Id<GuildMarker>) -> Result<u64, sqlx::Error> {
     sqlx::query_file!(
         "queries/guild_roles/update_role.sql",
         role.color as i32,
@@ -181,7 +181,7 @@ async fn handle_twilight_role(db: &SQLxDriver, role: twilight_model::guild::Role
         role.flags.bits() as i32,
         role.id.get() as i64,
         role.name,
-        role.tags.map(Json) as _,
+        role.tags.as_ref().map(Json) as _,
         role.unicode_emoji,
     )
     .execute(&db.pool)

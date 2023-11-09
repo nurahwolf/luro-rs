@@ -2,9 +2,7 @@ use luro_framework::LuroContext;
 use tracing::error;
 use twilight_gateway::Event;
 
-mod guild_update;
 mod interaction_create;
-mod member;
 mod message_create;
 mod message_delete;
 mod message_delete_bulk;
@@ -18,12 +16,7 @@ pub async fn event_handler(ctx: LuroContext) -> anyhow::Result<()> {
     }
 
     let callback = match ctx.event.clone() {
-        Event::GuildUpdate(event) => guild_update::guild_update_listener(ctx, event).await,
         Event::InteractionCreate(event) => interaction_create::interaction_create_listener(ctx, event).await,
-        Event::MemberAdd(event) => member::add(ctx, event).await,
-        Event::MemberChunk(event) => member::chunk(ctx, event).await,
-        Event::MemberRemove(event) => member::delete(ctx, event).await,
-        Event::MemberUpdate(event) => member::update(ctx, event).await,
         Event::MessageCreate(event) => message_create::message_create_listener(ctx, event).await,
         Event::MessageDelete(event) => message_delete::message_delete_listener(ctx, event).await,
         Event::MessageDeleteBulk(event) => message_delete_bulk::message_delete_bulk_listener(ctx, event).await,
