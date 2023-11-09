@@ -10,7 +10,7 @@ mod respond_create;
 mod respond_update;
 mod response_simple;
 
-use luro_database::LuroDatabase;
+use luro_database::Database;
 use luro_model::{response::LuroResponse, ACCENT_COLOUR};
 
 use twilight_model::{
@@ -27,13 +27,12 @@ pub struct ModalInteraction {
     pub app_permissions: Option<twilight_model::guild::Permissions>,
     pub application_id: Id<twilight_model::id::marker::ApplicationMarker>,
     /// The author of this interaction. Contains member data if this interaction was spawned in a guild.
-    pub author: luro_database::LuroUser,
-    pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
+    pub author: luro_model::types::User,
     pub channel: twilight_model::channel::Channel,
     pub data: ModalInteractionData,
-    pub database: Arc<luro_database::LuroDatabase>,
+    pub database: Arc<luro_database::Database>,
     /// Information on the guild this interaction was spaned in.
-    pub guild: Option<luro_database::LuroGuild>,
+    pub guild: Option<luro_model::types::Guild>,
     pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
     pub id: Id<twilight_model::id::marker::InteractionMarker>,
     pub interaction_token: String,
@@ -91,16 +90,12 @@ impl Luro for ModalInteraction {
         Ok(self.twilight_client.interaction(self.application_id))
     }
 
-    fn database(&self) -> std::sync::Arc<LuroDatabase> {
+    fn database(&self) -> std::sync::Arc<Database> {
         self.database.clone()
     }
 
     fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
         self.twilight_client.clone()
-    }
-
-    fn cache(&self) -> std::sync::Arc<twilight_cache_inmemory::InMemoryCache> {
-        self.cache.clone()
     }
 }
 
@@ -129,23 +124,22 @@ impl ModalInteraction {
             author: match interaction.guild_id {
                 Some(guild_id) => {
                     ctx.database
-                        .get_member(interaction.author_id().context("Expected to get author")?, guild_id)
+                        .member_fetch(interaction.author_id().context("Expected to get author")?, guild_id)
                         .await?
                 }
                 None => {
                     ctx.database
-                        .get_user(interaction.author_id().context("Expected to get author")?)
+                        .user_fetch(interaction.author_id().context("Expected to get author")?)
                         .await?
                 }
             },
             app_permissions: interaction.app_permissions,
             application_id: interaction.application_id,
-            cache: ctx.cache.clone(),
             channel: interaction.channel.clone().unwrap(),
             data,
             database: ctx.database.clone(),
             guild: match interaction.guild_id {
-                Some(guild_id) => Some(ctx.database.get_guild(guild_id).await?),
+                Some(guild_id) => Some(ctx.database.guild_fetch(guild_id).await?),
                 None => None,
             },
             http_client: ctx.http_client,

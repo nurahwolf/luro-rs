@@ -24,7 +24,6 @@ tokio = { workspace = true }
 toml = { version = "*", optional = true}
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
-twilight-cache-inmemory = { workspace = true }
 twilight-gateway = { workspace = true }
 twilight-http = { workspace = true }
 twilight-interactions.path = "../twilight-interactions"
@@ -32,9 +31,15 @@ twilight-lavalink = { workspace = true }
 twilight-model = { workspace = true }
 twilight-util = { workspace = true }
 
+## Sorted Dependencies
+twilight-cache-inmemory = { workspace = true, optional = true } # Additional functionality build around twilight's caching crate
+time.workspace = true # member_data
+
 [features]
 # Default Features
 default = ["dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders", "dotenvy"]
+
+twilight_cache = ["dep:twilight-cache-inmemory"] # Additional functionality build around twilight's caching crate
 
 ## Model Features
 auto-trim = [] # Used to automatically trim message responses that are too big, sending as a file instead

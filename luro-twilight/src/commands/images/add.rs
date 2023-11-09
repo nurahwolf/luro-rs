@@ -1,5 +1,5 @@
-use luro_database::LuroImage;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::types::Image;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::Id;
 
@@ -21,7 +21,7 @@ impl LuroCommand for Add {
         let accent_colour = ctx.accent_colour();
         let img = ctx
             .database
-            .new_image(LuroImage {
+            .image_new(Image {
                 img_id: 0,
                 name: self.name,
                 nsfw: self.nsfw,

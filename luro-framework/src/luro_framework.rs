@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf, sync::Arc};
 
-use luro_database::LuroDatabase;
+use luro_database::Database;
 use luro_model::configuration::Configuration;
 use twilight_gateway::{stream, Shard};
 use twilight_model::id::{marker::GuildMarker, Id};
@@ -20,11 +20,8 @@ mod webhook;
 /// Context classes generally take a reference to this to perform their actions.
 #[derive(Clone)]
 pub struct Framework {
-    /// The caching layer of the framework
-    #[cfg(feature = "cache-memory")]
-    pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     /// Luro's database driver
-    pub database: Arc<LuroDatabase>,
+    pub database: Arc<Database>,
     /// HTTP client used for making outbound API requests
     #[cfg(feature = "http-client-hyper")]
     pub http_client: Arc<hyper::Client<hyper::client::HttpConnector>>,
@@ -66,8 +63,6 @@ impl Framework {
         let http_client = hyper::Client::new().into();
 
         let framework = Self {
-            #[cfg(feature = "cache-memory")]
-            cache: config.cache.clone(),
             #[cfg(feature = "http-client-hyper")]
             http_client,
             database,
@@ -92,7 +87,7 @@ impl Luro for Framework {
             .interaction(self.twilight_client.current_user_application().await?.model().await?.id))
     }
 
-    fn database(&self) -> std::sync::Arc<LuroDatabase> {
+    fn database(&self) -> std::sync::Arc<Database> {
         self.database.clone()
     }
 
@@ -100,15 +95,11 @@ impl Luro for Framework {
         self.twilight_client.clone()
     }
 
-    fn cache(&self) -> std::sync::Arc<twilight_cache_inmemory::InMemoryCache> {
-        self.cache.clone()
-    }
 }
 
 impl From<LuroContext> for Framework {
     fn from(framework: LuroContext) -> Self {
         Self {
-            cache: framework.cache,
             database: framework.database,
             http_client: framework.http_client,
             #[cfg(feature = "lavalink")]
@@ -119,8 +110,8 @@ impl From<LuroContext> for Framework {
     }
 }
 
-async fn initialise_database(config: &Configuration) -> anyhow::Result<LuroDatabase> {
-    Ok(LuroDatabase::new(config).await?)
+async fn initialise_database(config: &Configuration) -> anyhow::Result<Database> {
+    Database::new(config).await
 }
 
 fn ensure_data_directory_exists() {

@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
-use twilight_cache_inmemory::model::CachedMember;
 use twilight_model::{
     gateway::payload::incoming::{MemberAdd, MemberUpdate},
     guild::{Member, MemberFlags, PartialMember, Permissions},
@@ -156,7 +155,7 @@ impl From<&Member> for LuroMember {
         }
     }
 }
-
+#[cfg(feature = "twilight-cache")]
 impl From<&CachedMember> for LuroMember {
     fn from(member: &CachedMember) -> Self {
         Self {

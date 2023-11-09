@@ -35,7 +35,7 @@ uwuify = { version = "0.2.0", optional = true }        # command-uwu
 
 # Tokio
 tokio.workspace = true # main
-futures-util = "0.3"   # main
+futures-util = { workspace = true }   # main
 
 # Luro - Specify the driver using the feature setting below
 luro-model.path = "../luro-model"         # main
@@ -67,16 +67,16 @@ commands = [
     "command-about",
     "command-base64",
     "command-boop",
-    "command-character",
+    # "command-character",
     "command-dice",
-    "command-info",
-    "command-marry",
-    "command-moderator",
+    # "command-info",
+    # "command-marry",
+    # "command-moderator",
     # "command-music", # Broken on twilight-lavalink
     "command-muzzle",
     "command-hello",
     "command-images",
-    "command-owner",
+    # "command-owner",
     "command-ping",
     "command-quote",
     "command-roles",

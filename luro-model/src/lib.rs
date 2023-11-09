@@ -4,7 +4,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use message::LuroMessage;
+use message::Message;
 use story::Story;
 use twilight_model::{
     application::interaction::Interaction,
@@ -49,9 +49,12 @@ pub mod user; // Migrated
 pub mod builders;
 
 /// A simple wrapper around quotes. Primary key is the ID of the story.
-pub type Quotes = BTreeMap<usize, LuroMessage>;
+pub type Quotes = BTreeMap<usize, Message>;
 
 pub type Stories = BTreeMap<usize, Story>;
 
 /// A [HashMap] containing an [Interaction], keyed by a [String]. Generally the message ID, but can be other markers too. This is primarily used for recalling interactions in the future
 pub type CommandManager = HashMap<String, Interaction>;
+
+// New
+pub mod sync; // Types that are similar to multipe types, that can by synced to a single luro type.

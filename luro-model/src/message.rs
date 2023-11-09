@@ -1,14 +1,13 @@
 use serde::{Deserialize, Serialize};
-use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::{
     channel::{
         message::{
             sticker::MessageSticker, Component, Embed, Mention, MessageActivity, MessageApplication, MessageFlags, MessageInteraction,
             MessageReference, MessageType, Reaction, RoleSubscriptionData,
         },
-        Attachment, Channel, ChannelMention, Message,
+        Attachment, Channel, ChannelMention,
     },
-    gateway::payload::incoming::{MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate},
+    gateway::payload::incoming::{MessageCreate, MessageDelete, MessageUpdate},
     guild::PartialMember,
     id::{
         marker::{ApplicationMarker, ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker, WebhookMarker},
@@ -21,7 +20,7 @@ use twilight_model::{
 use crate::{builders::EmbedBuilder, PRIMARY_BOT_OWNER};
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum LuroMessageSource {
+pub enum MessageSource {
     /// Created from an existing message
     Message,
     /// Added / crafted manually
@@ -39,40 +38,19 @@ pub enum LuroMessageSource {
     None,
 }
 
-#[derive(Debug, Default)]
-pub enum LuroMessageType {
-    /// Created from an existing message
-    Message(Message),
-    /// Added / crafted manually
-    Custom(LuroMessage),
-    /// Created from a cached message
-    CachedMessage(CachedMessage),
-    /// Created from a message update event
-    MessageUpdate(MessageUpdate),
-    /// Created from a message delete event
-    MessageDelete(MessageDelete),
-    /// Created from a message delete bulk event
-    MessageDeleteBulk(MessageDeleteBulk),
-    /// Created from a message create event
-    MessageCreate(MessageCreate),
-    /// No message :(
-    #[default]
-    None,
-}
-
 /// Effectively a wrapper around different type of messages, for more streamlined responses
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-pub struct LuroMessage {
+pub struct Message {
     // Enable this if you need to migrate
     // #[serde(default = "default_user", deserialize_with = "deserialize_user_to_id")]
     #[serde(default = "fake_user")]
     pub author: User,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub updated_content: Option<Box<LuroMessage>>,
+    pub updated_content: Option<Box<Message>>,
     #[serde(default)]
     pub deleted: bool,
     #[serde(default)]
-    pub source: LuroMessageSource,
+    pub source: MessageSource,
     pub member: Option<PartialMember>,
     /// Present with Rich Presence-related chat embeds.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -219,8 +197,8 @@ pub struct LuroMessage {
     pub webhook_id: Option<Id<WebhookMarker>>,
 }
 
-impl From<LuroMessage> for Message {
-    fn from(message: LuroMessage) -> Self {
+impl From<Message> for twilight_model::channel::Message {
+    fn from(message: Message) -> Self {
         Self {
             activity: message.activity,
             application: message.application,
@@ -245,7 +223,7 @@ impl From<LuroMessage> for Message {
             pinned: message.pinned,
             reactions: message.reactions,
             reference: message.reference,
-            referenced_message: message.referenced_message,
+            referenced_message: None,
             role_subscription_data: message.role_subscription_data,
             sticker_items: message.sticker_items,
             timestamp: message.timestamp,
@@ -256,7 +234,7 @@ impl From<LuroMessage> for Message {
     }
 }
 
-impl LuroMessage {
+impl Message {
     /// Return a link in the format of `https://discord.com/channels/{guild_id}/{channel_id}/{message_id}`.
     pub fn link(&self) -> String {
         match self.guild_id {
@@ -330,7 +308,7 @@ impl LuroMessage {
         self.reactions = message.reactions;
         self.reference = message.reference;
         self.sticker_items = message.sticker_items;
-        self.source = LuroMessageSource::Message;
+        self.source = MessageSource::Message;
         self.timestamp = message.timestamp;
         self.tts = message.tts;
         self.webhook_id = message.webhook_id;
@@ -355,7 +333,7 @@ impl LuroMessage {
             self.timestamp = timestamp
         }
 
-        self.source = LuroMessageSource::MessageUpdate;
+        self.source = MessageSource::MessageUpdate;
         self.attachments = message.attachments.unwrap_or_default();
         self.channel_id = message.channel_id;
         self.content = message.content.unwrap_or_default();
@@ -375,7 +353,7 @@ impl LuroMessage {
         self.channel_id = message.channel_id;
         self.guild_id = message.guild_id;
         self.deleted = true;
-        self.source = LuroMessageSource::MessageDelete;
+        self.source = MessageSource::MessageDelete;
         self
     }
 
@@ -404,8 +382,9 @@ impl LuroMessage {
         self.pinned = message.0.pinned;
         self.reactions = message.0.reactions;
         self.reference = message.0.reference;
-        self.referenced_message = message.0.referenced_message;
-        self.source = LuroMessageSource::MessageCreate;
+        // TODO: Implement this
+        self.referenced_message = None;
+        self.source = MessageSource::MessageCreate;
         self.sticker_items = message.0.sticker_items;
         self.timestamp = message.0.timestamp;
         self.tts = message.0.tts;
@@ -414,8 +393,9 @@ impl LuroMessage {
     }
 
     /// Update this message from a [Message]
+    #[cfg(feature = "twilight-cache")]
     pub fn from_cached_message(&mut self, message: CachedMessage) -> &mut Self {
-        self.source = LuroMessageSource::Message;
+        self.source = MessageSource::Message;
         self.activity = message.activity().cloned();
         self.application = message.application().cloned();
         self.application_id = message.application_id();
@@ -443,15 +423,7 @@ impl LuroMessage {
     }
 }
 
-impl From<Message> for LuroMessage {
-    fn from(message: Message) -> Self {
-        let mut luro = Self::new(message.id, message.author.clone(), message.channel_id, message.timestamp);
-        luro.from_message(message);
-        luro
-    }
-}
-
-impl From<MessageCreate> for LuroMessage {
+impl From<MessageCreate> for Message {
     fn from(message: MessageCreate) -> Self {
         let mut luro = Self::new(message.id, message.author.clone(), message.channel_id, message.timestamp);
         luro.from_message_create(message);
@@ -459,7 +431,8 @@ impl From<MessageCreate> for LuroMessage {
     }
 }
 
-impl From<CachedMessage> for LuroMessage {
+#[cfg(feature = "twilight-cache")]
+impl From<CachedMessage> for Message {
     fn from(message: CachedMessage) -> Self {
         let mut luro = Self::new(
             message.id(),
@@ -502,7 +475,7 @@ fn default_user(id: Id<UserMarker>) -> User {
     }
 }
 
-impl LuroMessage {
+impl Message {
     /// Create and append an embed. Multiple calls will add multiple embeds.
     ///
     /// NOTE: This WILL fail to send if more than 10 embeds are present!

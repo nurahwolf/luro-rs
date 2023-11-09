@@ -15,7 +15,7 @@ pub async fn update(ctx: LuroContext, event: Box<MemberUpdate>) -> anyhow::Resul
     #[cfg(not(feature = "pretty-tables"))]
     tracing::debug!("Member {} updated", event.user.id);
 
-    ctx.database.update_member(event).await?;
+    ctx.database.member_update(event).await?;
 
     Ok(())
 }
@@ -34,7 +34,7 @@ pub async fn add(ctx: LuroContext, event: Box<MemberAdd>) -> anyhow::Result<()> 
     #[cfg(not(feature = "pretty-tables"))]
     tracing::debug!("Member {} added", event.user.id);
 
-    ctx.database.update_member(event).await?;
+    ctx.database.member_update(event).await?;
 
     Ok(())
 }
@@ -53,7 +53,7 @@ pub async fn delete(ctx: LuroContext, event: MemberRemove) -> anyhow::Result<()>
     #[cfg(not(feature = "pretty-tables"))]
     tracing::debug!("Member {} removed", event.user.id);
 
-    ctx.database.update_member(event).await?;
+    ctx.database.member_update(event).await?;
 
     Ok(())
 }
@@ -69,7 +69,7 @@ pub async fn chunk(ctx: LuroContext, event: MemberChunk) -> anyhow::Result<()> {
         builder.build().with(tabled::settings::Style::ascii_rounded()).to_string()
     );
 
-    ctx.database.update_member(event).await?;
+    ctx.database.member_update(event).await?;
 
     Ok(())
 }

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "database-sqlx",                # SQLx database driver, currently configured just for Postgres
+    "luro-database-sqlx",                # SQLx database driver, currently configured just for Postgres
     "luro-database",                # Core database driver, where shared functionality lives. Can be configured with several options, such as what drivers to use, caching and more.
     "luro-dice",
     "luro-framework",
@@ -23,6 +23,9 @@ repository = "https://github.com/nurahwolf/luro-rs"
 version = "0.0.1"
 
 [workspace.dependencies]
+futures-util = "0.3" # Used for iterating over futures
+time = { version = "0.3" } # Time handling library
+
 # Legacy
 
 anyhow = "1"

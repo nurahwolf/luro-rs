@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use luro_database::LuroDatabase;
+use luro_database::Database;
 use twilight_gateway::{Event, Latency, MessageSender};
 use twilight_model::id::{marker::GuildMarker, Id};
 
@@ -11,11 +11,8 @@ use crate::{Framework, Luro};
 /// Contains [Framework] and houses data containing the [Event], [Latency] and [MessageSender].
 #[derive(Clone)]
 pub struct LuroContext {
-    /// The caching layer of the framework
-    #[cfg(feature = "cache-memory")]
-    pub cache: Arc<twilight_cache_inmemory::InMemoryCache>,
     /// Luro's database, which accepts a driver that implements [LuroDatabaseDriver]
-    pub database: Arc<LuroDatabase>,
+    pub database: Arc<Database>,
     /// The raw event in which this [Context] was created from
     pub event: twilight_gateway::Event,
     /// A HTTP client used for making web requests. Uses Hyper.
@@ -37,7 +34,6 @@ pub struct LuroContext {
 impl LuroContext {
     pub fn new(framework: Framework, event: Event, latency: Latency, shard: MessageSender) -> Self {
         Self {
-            cache: framework.cache,
             database: framework.database,
             event,
             http_client: framework.http_client,
@@ -56,16 +52,12 @@ impl Luro for LuroContext {
         Ok(self.twilight_client.interaction(self.application().await?.id))
     }
 
-    fn database(&self) -> std::sync::Arc<luro_database::LuroDatabase> {
+    fn database(&self) -> std::sync::Arc<luro_database::Database> {
         self.database.clone()
     }
 
     fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
         self.twilight_client.clone()
-    }
-
-    fn cache(&self) -> std::sync::Arc<twilight_cache_inmemory::InMemoryCache> {
-        self.cache.clone()
     }
 
     fn guild_id(&self) -> Option<Id<GuildMarker>> {

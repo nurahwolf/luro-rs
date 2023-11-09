@@ -28,27 +28,27 @@ impl LuroCommand for InfoRole {
                 None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
             },
         };
-        let guild_roles = ctx.get_guild_roles(guild.guild_id, true).await?;
-        let role = guild.fetch_role(ctx.database.clone(), self.role).await?;
+        let guild_roles = ctx.get_guild_roles(guild.guild_id).await?;
+        let role = ctx.database.role_fetch(guild.guild_id, self.role).await?;
 
         embed.title(format!("{}'s roles", guild.name));
         embed.create_field("Role Position", &format!("`{}`", role.position), true);
 
         for role in &guild_roles {
-            if role.id == self.role {
+            if role.role_id == self.role {
                 embed.create_field("Role Name", &format!("`{}`", role.name), true);
-                embed.create_field("Role Colour", &format!("`{}`", role.color), true);
+                embed.create_field("Role Colour", &format!("`{}`", role.colour), true);
             }
         }
 
         if self.show_position {
             let mut description = String::new();
             for role in guild_roles {
-                if role.id == self.role {
-                    writeln!(description, "--> <@&{}> <--", role.id)?;
+                if role.role_id == self.role {
+                    writeln!(description, "--> <@&{}> <--", role.role_id)?;
                     continue;
                 }
-                writeln!(description, "<@&{}>", role.id)?;
+                writeln!(description, "<@&{}>", role.role_id)?;
             }
             embed.description(description);
         }

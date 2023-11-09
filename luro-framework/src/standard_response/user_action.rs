@@ -1,4 +1,4 @@
-use luro_database::LuroUser;
+use luro_model::types::User;
 use luro_model::{COLOUR_DANGER, COLOUR_SUCCESS};
 use twilight_model::id::{marker::GuildMarker, Id};
 
@@ -10,8 +10,8 @@ impl StandardResponse {
         kind: PunishmentType,
         guild_name: &str,
         guild_id: &Id<GuildMarker>,
-        punished_user: &LuroUser,
-        moderator: &LuroUser,
+        punished_user: &User,
+        moderator: &User,
     ) -> Self {
         let mut response = StandardResponse::default();
         response
@@ -69,7 +69,7 @@ impl StandardResponse {
     }
 
     /// Append a reason to why they were actioned
-    pub fn punishment_reason(&mut self, reason: Option<&str>, punished_user: &LuroUser) -> &mut Self {
+    pub fn punishment_reason(&mut self, reason: Option<&str>, punished_user: &User) -> &mut Self {
         match reason {
             Some(reason) => {
                 if reason.starts_with("```") {

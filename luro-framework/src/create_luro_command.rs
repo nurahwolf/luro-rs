@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context};
-use luro_database::DatabaseInteraction;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
+use twilight_model::application::interaction::Interaction;
 use twilight_model::application::interaction::application_command::CommandData;
 
 use crate::standard_response::Response;
@@ -18,10 +18,10 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
                 InteractionContext::CommandAutocomplete(ctx) => Self::interaction_autocomplete(ctx).await,
                 InteractionContext::Component(ctx) => {
                     let interaction_id = match ctx.message.interaction.as_ref() {
-                        Some(interaction) => interaction.id.get() as i64,
+                        Some(interaction) => interaction.id,
                         None => match ctx.message.referenced_message.as_ref() {
                             Some(message) => match message.interaction.as_ref() {
-                                Some(interaction) => interaction.id.get() as i64,
+                                Some(interaction) => interaction.id,
                                 None => return Err(anyhow!("No interaction data on nested message reference :c")),
                             },
                             None => return Err(anyhow!("No interaction data :c")),
@@ -30,13 +30,11 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
 
                     let interaction = ctx
                         .database
-                        .get_interaction(interaction_id)
-                        .await?
-                        .context("Database does not contain this interaction")?;
+                        .interaction_fetch(interaction_id)
+                        .await?;
                     let data = interaction
                         .data
-                        .as_ref()
-                        .map(|x| x.0.clone())
+                        .as_ref().cloned()
                         .context("Expected interaction recorded in database to contain interaction data")?;
                     let command_data = match data {
                         twilight_model::application::interaction::InteractionData::ApplicationCommand(data) => data,
@@ -80,7 +78,7 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
     fn interaction_component(
         self,
         ctx: ComponentInteraction,
-        _: DatabaseInteraction,
+        _: Interaction,
     ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
     where
         Self: Send,
@@ -113,7 +111,7 @@ impl<T: CreateLuroCommand + Send> LuroCommand for T {
         Self::interaction_command(self, ctx).await
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, db: luro_database::DatabaseInteraction) -> anyhow::Result<()>
+    async fn interaction_component(self, ctx: ComponentInteraction, db: Interaction) -> anyhow::Result<()>
     where
         Self: Sized,
     {

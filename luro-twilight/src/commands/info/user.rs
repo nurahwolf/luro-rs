@@ -45,13 +45,13 @@ impl LuroCommand for InfoUser {
             .description(description.replace("<user>", &format!("<@{}>", user.user_id)))
             .footer(|f| {
                 f.text(match user.instance {
-                    luro_database::LuroUserType::User => "Twilight User - Data fetched using the Discord API",
-                    luro_database::LuroUserType::Member => "Twilight Member - Data fetched using the Discord API, including guild data",
-                    luro_database::LuroUserType::DbUser => {
+                    luro_model::types::UserType::User => "Twilight User - Data fetched using the Discord API",
+                    luro_model::types::UserType::Member => "Twilight Member - Data fetched using the Discord API, including guild data",
+                    luro_model::types::UserType::DbUser => {
                         "Luro User - Data fetched from my database only, with includes your custom stuff!"
                     }
-                    luro_database::LuroUserType::DbMember => "Luro Member - Data fetched from my database, including guild information!",
-                    luro_database::LuroUserType::DbMemberNoRoles => {
+                    luro_model::types::UserType::DbMember => "Luro Member - Data fetched from my database, including guild information!",
+                    luro_model::types::UserType::DbMemberNoRoles => {
                         "Luro Member without roles - User and member information fetched from my database, but no roles were present"
                     }
                 })

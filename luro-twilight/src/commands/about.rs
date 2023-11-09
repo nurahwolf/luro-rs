@@ -49,51 +49,52 @@ impl CreateLuroCommand for About {
         }
         embed.description(description);
 
-        if self.cache.unwrap_or_default() {
-            let mut cache = String::new();
-            let mut description_builder = vec![];
-            let stats = ctx.cache.stats();
-            writeln!(cache, "```")?;
+        // TODO: Implement this
+        // if self.cache.unwrap_or_default() {
+        //     let mut cache = String::new();
+        //     let mut description_builder = vec![];
+        //     let stats = ctx.cache.stats();
+        //     writeln!(cache, "```")?;
 
-            if stats.guilds() != 0 {
-                description_builder.push(("- Guilds:", stats.guilds().to_string()));
-            }
-            if stats.channels() != 0 {
-                description_builder.push(("- Channels:", stats.channels().to_string()));
-            }
-            if stats.emojis() != 0 {
-                description_builder.push(("- Emojis:", stats.emojis().to_string()));
-            }
-            if stats.members() != 0 {
-                description_builder.push(("- Members:", stats.members().to_string()));
-            }
-            if stats.presences() != 0 {
-                description_builder.push(("- Presences:", stats.presences().to_string()));
-            }
-            if stats.roles() != 0 {
-                description_builder.push(("- Roles:", stats.roles().to_string()));
-            }
-            if stats.unavailable_guilds() != 0 {
-                description_builder.push(("- Unavailable Guilds:", stats.unavailable_guilds().to_string()));
-            }
-            if stats.guilds() != 0 {
-                description_builder.push(("- Users:", stats.users().to_string()));
-            }
-            if stats.voice_states() != 0 {
-                description_builder.push(("- Voice States:", stats.voice_states().to_string()));
-            }
+        //     if stats.guilds() != 0 {
+        //         description_builder.push(("- Guilds:", stats.guilds().to_string()));
+        //     }
+        //     if stats.channels() != 0 {
+        //         description_builder.push(("- Channels:", stats.channels().to_string()));
+        //     }
+        //     if stats.emojis() != 0 {
+        //         description_builder.push(("- Emojis:", stats.emojis().to_string()));
+        //     }
+        //     if stats.members() != 0 {
+        //         description_builder.push(("- Members:", stats.members().to_string()));
+        //     }
+        //     if stats.presences() != 0 {
+        //         description_builder.push(("- Presences:", stats.presences().to_string()));
+        //     }
+        //     if stats.roles() != 0 {
+        //         description_builder.push(("- Roles:", stats.roles().to_string()));
+        //     }
+        //     if stats.unavailable_guilds() != 0 {
+        //         description_builder.push(("- Unavailable Guilds:", stats.unavailable_guilds().to_string()));
+        //     }
+        //     if stats.guilds() != 0 {
+        //         description_builder.push(("- Users:", stats.users().to_string()));
+        //     }
+        //     if stats.voice_states() != 0 {
+        //         description_builder.push(("- Voice States:", stats.voice_states().to_string()));
+        //     }
 
-            let word_sizes: Vec<(usize, usize)> = description_builder
-                .iter()
-                .map(|(prefix, suffix)| (prefix.len(), suffix.len()))
-                .collect();
-            let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
-            for (prefix, suffix) in description_builder {
-                writeln!(cache, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
-            }
-            writeln!(cache, "```")?;
-            embed.field(|field| field.field("Cache Stats", &cache, false));
-        }
+        //     let word_sizes: Vec<(usize, usize)> = description_builder
+        //         .iter()
+        //         .map(|(prefix, suffix)| (prefix.len(), suffix.len()))
+        //         .collect();
+        //     let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
+        //     for (prefix, suffix) in description_builder {
+        //         writeln!(cache, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
+        //     }
+        //     writeln!(cache, "```")?;
+        //     embed.field(|field| field.field("Cache Stats", &cache, false));
+        // }
 
         if self.memory.unwrap_or_default() && let Some(usage) = memory_stats() {
             let mut memory =  String::new();
@@ -116,9 +117,9 @@ impl CreateLuroCommand for About {
         }
 
         let mut staff_list = String::new();
-        for staff in ctx.database.get_staff().await? {
+        for staff in ctx.database.user_fetch_staff().await? {
             match self.show_username.unwrap_or_default() {
-                true => writeln!(staff_list, "- {}", &staff.user_name)?,
+                true => writeln!(staff_list, "- {}", &staff.name())?,
                 false => writeln!(staff_list, "- <@{}>", staff.user_id)?,
             }
         }

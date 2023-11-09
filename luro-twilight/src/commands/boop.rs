@@ -1,4 +1,3 @@
-use luro_database::DatabaseInteraction;
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle, Component};
@@ -23,7 +22,7 @@ impl CreateLuroCommand for Boop {
         ctx.respond(|r| r.content("Boop Count: 0").add_components(components)).await
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, _: DatabaseInteraction) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction, _: twilight_model::application::interaction::Interaction) -> anyhow::Result<()> {
         // Get message and parse number
         let message = ctx.message.clone();
 

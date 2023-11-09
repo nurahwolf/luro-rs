@@ -14,14 +14,12 @@ version.workspace = true
 [dependencies]
 twilight-http = { workspace = true } # Used for fetching data if not present in the selected database driver
 twilight-util = { workspace = true } # Used for fetching data if not present in the selected database driver
-twilight-cache-inmemory = { workspace = true, optional = true } # Can be enabled and used as a fallback
 
 # Core
 anyhow = { workspace = true }
-futures-util = "0.3"
+futures-util = { workspace = true }
 luro-model.path = "../luro-model"
 twilight-model = { workspace = true }
-time = { version = "0.3" }
 tracing = { workspace = true }
 serde ={ workspace = true }
 
@@ -43,12 +41,19 @@ sqlx = { version = "0.7", features = [
 # Toml
 toml = { version = "0.8", optional = true }
 
+## NEW and sorted
+twilight-cache-inmemory = { workspace = true, optional = true } # Caching layer using Twilight's built in cache
+luro-database-sqlx = { path = "../luro-database-sqlx", optional = true } # SQLx database driver
 
-# Default Features
+
 [features]
-default = ["sqlx-driver", "cache"]
+default = ["sqlx-driver", "cache", "database-cache-twilight", "database-driver-sqlx"]
 
 ## Database Options
+database-cache-twilight = ["dep:twilight-cache-inmemory"]
+database-driver-sqlx = ["dep:luro-database-sqlx"]
+
+## Old Database Options
 diesel-driver = ["dep:diesel", "diesel-derive-enum"]
 sqlx-driver = ["dep:sqlx"]
 toml-driver = ["dep:toml"]

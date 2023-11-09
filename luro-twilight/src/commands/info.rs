@@ -1,7 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
 use anyhow::Context;
-use luro_database::{DatabaseInteraction, LuroDatabase, LuroMember, LuroUser};
 use luro_framework::{
     CommandInteraction, ComponentInteraction, Luro, {CreateLuroCommand, LuroCommand},
 };

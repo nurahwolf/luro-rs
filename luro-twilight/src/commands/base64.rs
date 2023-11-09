@@ -1,6 +1,5 @@
 use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine};
-use luro_database::DatabaseInteraction;
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
 use luro_model::response::LuroResponse;
 use std::str;
@@ -28,7 +27,7 @@ impl CreateLuroCommand for Base64 {
         }
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, _original_interaction: DatabaseInteraction) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction, _original_interaction: twilight_model::application::interaction::Interaction) -> anyhow::Result<()> {
         // Always insure the input is decoded
         let (input, bait) = match self {
             Self::Decode(command) => (decode(&command.string)?, None),

@@ -1,0 +1,24 @@
+[package]
+name = "luro-database-sqlx"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "json", "time", "uuid"] } # Library for interacting with the database
+futures-util = { workspace = true } # Used for iterating over multiple results returned from the database
+time = { version = "0.3" } # Adding time functionality around multiple data structs
+# serde = { workspace = true } # Used for serialising types
+twilight-model = { workspace = true } # Used for some parameters
+luro-model = { path = "../luro-model"} # Used for returning built data constructs
+# luro-database = { path = "../luro-database"} # Used for extending the database context
+anyhow = { workspace = true } # Error context
+tracing = { workspace = true } # Detailed tracing information

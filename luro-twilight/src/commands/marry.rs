@@ -1,10 +1,10 @@
 use anyhow::{anyhow, Context};
-use luro_database::{DatabaseInteraction, DbUserMarriage, DbUserMarriageApprovals};
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
 
 use luro_framework::standard_response::Response;
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::application::interaction::Interaction;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
 use twilight_model::id::Id;
@@ -106,8 +106,15 @@ impl CreateLuroCommand for Marry {
         }
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
-        let proposer = ctx.fetch_user(Id::new(invoking_interaction.user_id as u64)).await?;
+    async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: Interaction) -> anyhow::Result<()> {
+        let proposer = ctx
+            .fetch_user(
+                invoking_interaction
+                    .member
+                    .map(|x| x.user.unwrap().id)
+                    .unwrap_or(invoking_interaction.user.unwrap().id),
+            )
+            .await?;
         let (proposee, divorce_wanted) = match self {
             Self::Someone(command) => (ctx.fetch_user(command.marry.resolved.id).await?, false),
             Self::Divorce(command) => (ctx.fetch_user(command.user.resolved.id).await?, true),

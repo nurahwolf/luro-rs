@@ -1,5 +1,4 @@
 use anyhow::Context;
-use luro_database::{DatabaseInteraction, LuroCharacter, LuroCharacterFetishCategory, LuroUser};
 use luro_framework::{
     CommandInteraction, ComponentInteraction, Luro, ModalInteraction, {CreateLuroCommand, LuroCommand},
 };
@@ -61,7 +60,7 @@ impl CreateLuroCommand for Character {
         let sfw_description = ctx.parse_field_required("character-sfw-description")?;
         let nsfw_description = ctx.parse_field("character-nsfw-description")?;
 
-        let character = ctx.author.fetch_character(ctx.database.clone(), character_name).await?;
+        let character = ctx.database.user_fetch_character(ctx.author.user_id, character_name).await?;
         let mut character = match character {
             Some(mut character) => {
                 character.sfw_description = sfw_description.to_owned();

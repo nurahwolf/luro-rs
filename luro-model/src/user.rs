@@ -4,7 +4,6 @@ use std::{
 };
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use twilight_cache_inmemory::model::CachedMember;
 use twilight_model::{
     gateway::payload::incoming::{MemberAdd, MemberUpdate},
     guild::{Member, PartialMember},
@@ -18,7 +17,7 @@ use twilight_model::{
 
 /// A [HashMap] containing user specific settings ([LuroUser]), keyed by [UserMarker].
 pub type LuroUsers = HashMap<Id<UserMarker>, LuroUser>;
-use crate::message::LuroMessage;
+use crate::message::Message;
 
 use self::{actions::UserActions, character::CharacterProfile, marriages::UserMarriages, member::LuroMember};
 
@@ -92,7 +91,7 @@ pub struct LuroUser {
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub warnings: Vec<(String, Id<UserMarker>)>,
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
-    pub messages: HashMap<Id<MessageMarker>, LuroMessage>,
+    pub messages: HashMap<Id<MessageMarker>, Message>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub moderation_actions: Vec<UserActions>,
     #[serde(default)]
@@ -251,6 +250,7 @@ impl LuroUser {
     }
 
     /// Update this type from a [CachedMember].
+    #[cfg(feature = "twilight-cache")]
     pub fn update_cached_member(&mut self, guild_id: &Id<GuildMarker>, member: &CachedMember) -> &mut Self {
         self.guilds
             .entry(*guild_id)

@@ -4,7 +4,7 @@ use twilight_model::gateway::payload::incoming::UserUpdate;
 pub async fn user_update_listener(ctx: LuroContext, event: UserUpdate) -> anyhow::Result<()> {
     info!("User {} updated", event.id);
 
-    ctx.database.update_user(event).await?;
+    ctx.database.user_update(event).await?;
 
     Ok(())
 }

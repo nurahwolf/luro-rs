@@ -1,38 +1,4 @@
-// Drivers
-#[cfg(feature = "diesel-driver")]
-mod diesel;
-#[cfg(feature = "sqlx-driver")]
-mod sqlx;
-
-mod luro; // Functionality meant to be consumed by users of this crate. Names are prefixed with 'Luro'. // Standard Database functionality
-
-pub mod sync; // Types used by the database drivers in order to sync data to the backend driver
-
-pub use crate::luro::{
-    gender::Gender, luro_channel::LuroChannel, luro_character::LuroCharacter, luro_character::LuroCharacterFetish,
-    luro_character_fetish::LuroCharacterFetishCategory, luro_character_image::LuroCharacterImage, luro_guild::LuroGuild,
-    luro_guild_alert_channels::GuildAlertChannels, luro_guild_data::LuroGuildData, luro_image::LuroImage, luro_member::LuroMember,
-    luro_member_data::LuroMemberData, luro_role::LuroRole, luro_user::LuroUser, luro_user_data::LuroUserData,
-    luro_user_type::LuroUserType, luro_word_count::WordCount, sexuality::Sexuality,
-};
-
-#[cfg(feature = "diesel-driver")]
-pub use crate::diesel::{DatabaseGuild, DatabaseInteraction, DatabaseInteractionKind, DatabaseUser, LuroDatabase};
-#[cfg(feature = "sqlx-driver")]
-pub use crate::sqlx::{
-    application::DbApplication,
-    channel::DbChannel,
-    interaction::{DatabaseInteraction, DatabaseInteractionKind},
-    luro_database::LuroDatabase,
-    member::DbMember,
-    message::{DatabaseMessage, DatabaseMessageSource, DatabaseMessageType},
-    role::{DbRole, DbRoleType},
-    user::{DatabaseUser, LuroUserPermissions},
-    user_marriage::DbUserMarriage,
-    user_marriage_approvers::{DbUserMarriageApprovals, DbUserMarriageApprovalsCount},
-};
-#[cfg(feature = "toml-driver")]
-pub use crate::toml::{DatabaseGuild, DatabaseInteraction, DatabaseInteractionKind, DatabaseUser, LuroDatabase};
+mod database;
 
 /// Luro's Database. This struct takes driver modules to be able to generically store data on several types of backends.
 /// Additionally, optional features for this crate can enable additional functionality, such as the twilight cache and twilight client.
@@ -40,22 +6,37 @@ pub use crate::toml::{DatabaseGuild, DatabaseInteraction, DatabaseInteractionKin
 ///
 /// By default, this uses the Twilight client for updating the database with fresh data, and gracefully falling back to the API if the data does not exist.
 /// If disabled, this will force the database to only query itself for data. Useful for if you can't reach the Discord API, however data will quickly grow stale.
-#[derive(Debug, Clone)]
-pub struct LuroDatabaseV2<CACHE, DB> {
-    /// The primary (caching) layer in which data is attempted to be fetched from first.
-    /// Generally set to a cache in larger bots, or nothing in smaller bots.
-    ///
-    /// Acceptable drivers include:
-    /// NONE
-    pub cache: CACHE,
-    /// The secondary (database) layer in which data is attempted to be fetched from first.
-    /// Generally set to the database driver in all instances.
-    ///
-    /// Acceptable drivers include:
-    /// SQLx (Postgress)
-    pub secondary: DB,
-    /// Twilight's client for interacting with the Discord API. Not available if the feature is disabled.
-    pub twilight_client: std::sync::Arc<twilight_http::Client>,
-    /// Twilight's in-memory cache
-    pub pool: ::sqlx::Pool<::sqlx::Postgres>,
+#[derive(Debug)]
+pub struct Database {
+    /// The API client used to query Discord for information. This is used as a fallback if no driver or cache is configured.
+    /// 
+    /// Acceptable drivers:
+    /// - twilight_http
+    pub api_client: std::sync::Arc<twilight_http::Client>,
+    /// The caching layer. This is always queried first if configured.
+    /// 
+    /// Acceptable drivers:
+    /// - twilight_inmemory_cache
+    /// - none
+    #[cfg(feature = "database-cache-twilight")]
+    pub cache: twilight_cache_inmemory::InMemoryCache,
+    /// The primary driver in which to fetch data. If not configured as a crate feature, this will use the Discord API using twilight.
+    /// 
+    /// Acceptable drivers:
+    /// - database_driver_sqlq
+    /// - none
+    #[cfg(feature = "database-driver-sqlx")]
+    pub driver: luro_database_sqlx::SQLxDriver,
+}
+
+impl Database {
+    pub async fn new(config: &luro_model::configuration::Configuration) -> anyhow::Result<Self> {
+        Ok(Self {
+            api_client: config.twilight_client.clone(),
+            #[cfg(feature = "database-cache-twilight")]
+            cache: twilight_cache_inmemory::InMemoryCache::new(),
+            #[cfg(feature = "database-driver-sqlx")]
+            driver: luro_database_sqlx::SQLxDriver::new().await?,
+        })
+    }
 }

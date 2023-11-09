@@ -12,17 +12,17 @@ pub struct Guilds {
 
 impl LuroCommand for Guilds {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let mut guilds = String::new();
-        for guild in ctx.cache.iter().guilds() {
+        let mut guild_string = String::new();
+        for guild in ctx.database.get_all_guilds().await? {
             if self.show_id.unwrap_or_default() {
-                writeln!(guilds, "{} - <#{1}> - {1}", guild.name(), guild.id())?
+                writeln!(guild_string, "- {} - <#{1}> - {1}", guild.name, guild.guild_id)?
             } else {
-                writeln!(guilds, "{} - <#{}>", guild.name(), guild.id())?
+                writeln!(guild_string, "- {} - <#{}>", guild.name, guild.guild_id)?
             }
         }
 
         let accent_colour = ctx.accent_colour();
-        ctx.respond(|r| r.embed(|embed| embed.title("All the guilds that I am in").description(guilds).colour(accent_colour)))
+        ctx.respond(|r| r.embed(|embed| embed.title("All the guilds that I am in").description(guild_string).colour(accent_colour)))
             .await
     }
 }

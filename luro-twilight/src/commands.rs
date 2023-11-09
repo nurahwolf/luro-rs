@@ -108,8 +108,10 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
     let response = match ctx.command_name() {
         "about" => about::About::handle_interaction(ctx).await,
         "base64" => base64::Base64::handle_interaction(ctx).await,
+        #[cfg(feature = "command-moderator")]
         "moderator" | "moderator-warn" => moderator::Moderator::handle_interaction(ctx).await,
         "boop" => boop::Boop::handle_interaction(ctx).await,
+        #[cfg(feature = "command-character")]
         "character" | "character-fetish" | "character-image" | "character-update" | "character-image-nsfw" => {
             character::Character::handle_interaction(ctx).await
         }
@@ -117,6 +119,7 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "hello" => hello::Hello::handle_interaction(ctx).await,
         "images" => images::Images::handle_interaction(ctx).await,
         "user" => user::User::handle_interaction(ctx).await,
+        #[cfg(feature = "command-info")]
         "info"
         | "info-button-messages"
         | "info-button-guild-permissions"
@@ -126,10 +129,12 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         | "info-button-user"
         | "info-button-clear"
         | "info-button-sync" => info::Info::handle_interaction(ctx).await,
+        #[cfg(feature = "command-marry")]
         "marry" | "marry-accept" | "marry-deny" => marry::Marry::handle_interaction(ctx).await,
         #[cfg(feature = "command-music")]
         "music" => music::Music::handle_interaction(ctx).await,
         "muzzle" => muzzle::Muzzle::handle_interaction(ctx).await,
+        #[cfg(feature = "command-owner")]
         "owner" => owner::Owner::handle_interaction(ctx).await,
         // "quote" => quote::Quote::handle_interaction(ctx).await,
         // "roles" => roles::Roles::handle_interaction(ctx).await,

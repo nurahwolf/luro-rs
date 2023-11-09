@@ -5,7 +5,7 @@ use twilight_model::gateway::payload::incoming::{RoleCreate, RoleDelete, RoleUpd
 pub async fn role_update_listener(ctx: LuroContext, event: RoleUpdate) -> anyhow::Result<()> {
     info!("Role {} updated in guild {}", event.role.id, event.guild_id);
 
-    ctx.database.update_role(event).await?;
+    ctx.database.role_update(event).await?;
 
     Ok(())
 }
@@ -13,7 +13,7 @@ pub async fn role_update_listener(ctx: LuroContext, event: RoleUpdate) -> anyhow
 pub async fn role_create_listener(ctx: LuroContext, event: RoleCreate) -> anyhow::Result<()> {
     info!("Role {} created in guild {}", event.role.id, event.guild_id);
 
-    ctx.database.update_role(event).await?;
+    ctx.database.role_update(event).await?;
 
     Ok(())
 }
@@ -21,7 +21,7 @@ pub async fn role_create_listener(ctx: LuroContext, event: RoleCreate) -> anyhow
 pub async fn role_delete_listener(ctx: LuroContext, event: RoleDelete) -> anyhow::Result<()> {
     info!("Role {} deleted in guild {}", event.role_id, event.guild_id);
 
-    ctx.database.update_role(event).await?;
+    ctx.database.role_update(event).await?;
 
     Ok(())
 }

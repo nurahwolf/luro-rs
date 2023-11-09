@@ -1,4 +1,4 @@
-use luro_database::LuroUserPermissions;
+use luro_model::types::UserPermissions;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use std::fmt::Write;
 

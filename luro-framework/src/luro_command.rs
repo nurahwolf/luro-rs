@@ -1,5 +1,3 @@
-use luro_database::DatabaseInteraction;
-
 use crate::standard_response::Response;
 use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
 
@@ -16,7 +14,7 @@ pub trait LuroCommand {
     fn interaction_component(
         self,
         ctx: ComponentInteraction,
-        _invoking_interaction: DatabaseInteraction,
+        _invoking_interaction: twilight_model::application::interaction::Interaction,
     ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
     where
         Self: Sized,

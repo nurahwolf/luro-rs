@@ -7,24 +7,24 @@ use crate::commands::handle_interaction;
 
 pub async fn interaction_create_listener(ctx: LuroContext, event: Box<InteractionCreate>) -> anyhow::Result<()> {
     if let Some(channel) = &event.channel {
-        if let Err(why) = ctx.database.update_channel(channel.clone()).await {
+        if let Err(why) = ctx.database.channel_update(channel.clone()).await {
             warn!("interaction_handler - Failed to update channel: {why}")
         }
     }
 
     if let Some(user) = &event.user {
-        if let Err(why) = ctx.database.update_user(user.clone()).await {
+        if let Err(why) = ctx.database.user_update(user.clone()).await {
             warn!("interaction_handler - Failed to update user: {why}")
         }
     }
 
     if let Some(guild_id) = event.guild_id && let Some(member) = &event.member {
-        if let Err(why) = ctx.database.update_member((guild_id, member.clone())).await {
+        if let Err(why) = ctx.database.member_update((guild_id, member.clone())).await {
             warn!("interaction_handler - Failed to update partial member: {why}")
         }
     }
 
-    if let Err(why) = ctx.database.update_interaction(event.0.clone().into()).await {
+    if let Err(why) = ctx.database.interaction_update(&event.0).await {
         warn!("interaction_handler - Failed to update interaction: {why}")
     }
 

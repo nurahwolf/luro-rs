@@ -18,7 +18,7 @@ pub async fn create(ctx: LuroContext, event: Box<ChannelCreate>) -> anyhow::Resu
     #[cfg(not(feature = "pretty-tables"))]
     tracing::debug!("Channel {} created", event.id);
 
-    ctx.database.update_channel(event).await?;
+    ctx.database.channel_update(event).await?;
 
     Ok(())
 }
@@ -39,7 +39,7 @@ pub async fn pins_update(ctx: LuroContext, event: ChannelPinsUpdate) -> anyhow::
     #[cfg(not(feature = "pretty-tables"))]
     tracing::debug!("Channel {} pins updated", event.channel_id);
 
-    ctx.database.update_channel(event).await?;
+    ctx.database.channel_update(event).await?;
 
     Ok(())
 }
@@ -61,7 +61,7 @@ pub async fn delete(ctx: LuroContext, event: Box<ChannelDelete>) -> anyhow::Resu
     #[cfg(not(feature = "pretty-tables"))]
     tracing::debug!("Channel {} deleted", event.id);
 
-    ctx.database.update_channel(event).await?;
+    ctx.database.channel_update(event).await?;
 
     Ok(())
 }
@@ -83,7 +83,7 @@ pub async fn update(ctx: LuroContext, event: Box<ChannelUpdate>) -> anyhow::Resu
     #[cfg(not(feature = "pretty-tables"))]
     tracing::debug!("Channel {} updated", event.id);
 
-    ctx.database.update_channel(event).await?;
+    ctx.database.channel_update(event).await?;
 
     Ok(())
 }

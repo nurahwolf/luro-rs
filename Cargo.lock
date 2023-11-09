@@ -338,10 +338,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "database-sqlx"
-version = "0.0.1"
-
-[[package]]
 name = "der"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1003,16 +999,29 @@ dependencies = [
  "diesel",
  "diesel-derive-enum",
  "futures-util",
+ "luro-database-sqlx",
  "luro-model",
  "serde",
  "sqlx",
- "time",
  "toml",
  "tracing",
  "twilight-cache-inmemory",
  "twilight-http",
  "twilight-model",
  "twilight-util",
+]
+
+[[package]]
+name = "luro-database-sqlx"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "futures-util",
+ "luro-model",
+ "sqlx",
+ "time",
+ "tracing",
+ "twilight-model",
 ]
 
 [[package]]
@@ -1057,6 +1066,7 @@ dependencies = [
  "rand",
  "serde",
  "sqlx",
+ "time",
  "tokio",
  "toml",
  "tracing",
