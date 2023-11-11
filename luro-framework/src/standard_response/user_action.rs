@@ -10,14 +10,14 @@ impl StandardResponse {
         kind: PunishmentType,
         guild_name: &str,
         guild_id: &Id<GuildMarker>,
-        punished_user: &User,
+        target: &User,
         moderator: &User,
     ) -> Self {
         let mut response = StandardResponse::default();
         response
             .embed
             .create_field("Guild ID", &guild_id.to_string(), true)
-            .thumbnail(|thumbnail| thumbnail.url(punished_user.avatar_url()));
+            .thumbnail(|thumbnail| thumbnail.url(target.avatar_url()));
         match kind {
             PunishmentType::Kicked => {
                 response

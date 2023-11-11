@@ -53,7 +53,7 @@ mod user;
 #[cfg(feature = "command-uwu")]
 mod uwu;
 #[cfg(feature = "command-wordcount")]
-mod wordcount;
+mod words;
 
 pub fn default_commands() -> Vec<Command> {
     vec![
@@ -92,7 +92,7 @@ pub fn default_commands() -> Vec<Command> {
         // #[cfg(feature = "command-story")]
         // story::Story::setup_command(),
         #[cfg(feature = "command-wordcount")]
-        wordcount::Wordcount::setup_command(),
+        words::Words::setup_command(),
     ]
 }
 
@@ -143,7 +143,7 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         #[cfg(feature = "command-uwu")]
         "uwu" => uwu::UwU::handle_interaction(ctx).await,
         #[cfg(feature = "command-wordcount")]
-        "wordcount" => wordcount::Wordcount::handle_interaction(ctx).await,
+        "words" => words::Words::handle_interaction(ctx).await,
         name => ctx.simple_response(Response::UnknownCommand(name)).await,
     };
 

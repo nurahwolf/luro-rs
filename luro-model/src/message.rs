@@ -10,19 +10,18 @@ use twilight_model::{
     gateway::payload::incoming::{MessageCreate, MessageDelete, MessageUpdate},
     guild::PartialMember,
     id::{
-        marker::{ApplicationMarker, ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker, WebhookMarker},
+        marker::{ApplicationMarker, ChannelMarker, GuildMarker, MessageMarker, RoleMarker, WebhookMarker},
         Id,
     },
-    user::User,
     util::Timestamp,
 };
 
-use crate::{builders::EmbedBuilder, PRIMARY_BOT_OWNER};
+use crate::{builders::EmbedBuilder, types::{MessageData, User}};
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum MessageSource {
     /// Created from an existing message
-    Message,
+    TwilightMessage,
     /// Added / crafted manually
     Custom,
     /// Created from a cached message
@@ -41,16 +40,11 @@ pub enum MessageSource {
 /// Effectively a wrapper around different type of messages, for more streamlined responses
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Message {
+    /// Data that is present if fetched from the database
+    pub data: Option<MessageData>,
     // Enable this if you need to migrate
     // #[serde(default = "default_user", deserialize_with = "deserialize_user_to_id")]
-    #[serde(default = "fake_user")]
     pub author: User,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub updated_content: Option<Box<Message>>,
-    #[serde(default)]
-    pub deleted: bool,
-    #[serde(default)]
-    pub source: MessageSource,
     pub member: Option<PartialMember>,
     /// Present with Rich Presence-related chat embeds.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -140,7 +134,6 @@ pub struct Message {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interaction: Option<MessageInteraction>,
     /// Type of message.
-    #[serde(default = "default_kind")]
     pub kind: MessageType,
     /// [`Channel`]s mentioned in the message.
     ///
@@ -195,6 +188,9 @@ pub struct Message {
     /// ID of the webhook that generated the message.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub webhook_id: Option<Id<WebhookMarker>>,
+    /// How was this message created?
+    #[serde(default)]
+    pub source: MessageSource,
 }
 
 impl From<Message> for twilight_model::channel::Message {
@@ -204,7 +200,46 @@ impl From<Message> for twilight_model::channel::Message {
             application: message.application,
             application_id: message.application_id,
             attachments: message.attachments,
-            author: message.author,
+            author: message.author.into(),
+            channel_id: message.channel_id,
+            components: message.components,
+            content: message.content,
+            edited_timestamp: message.edited_timestamp,
+            embeds: message.embeds,
+            flags: message.flags,
+            guild_id: message.guild_id,
+            id: message.id,
+            interaction: message.interaction,
+            kind: message.kind,
+            member: message.member,
+            mention_channels: message.mention_channels,
+            mention_everyone: message.mention_everyone,
+            mention_roles: message.mention_roles,
+            mentions: message.mentions,
+            pinned: message.pinned,
+            reactions: message.reactions,
+            reference: message.reference,
+            referenced_message: None,
+            role_subscription_data: message.role_subscription_data,
+            sticker_items: message.sticker_items,
+            timestamp: message.timestamp,
+            thread: message.thread,
+            tts: message.tts,
+            webhook_id: message.webhook_id,
+        }
+    }
+}
+
+impl From<twilight_model::channel::Message> for Message {
+    fn from(message: twilight_model::channel::Message) -> Self {
+        Self {
+            data: None,
+            source: MessageSource::TwilightMessage,
+            activity: message.activity,
+            application: message.application,
+            application_id: message.application_id,
+            attachments: message.attachments,
+            author: message.author.into(),
             channel_id: message.channel_id,
             components: message.components,
             content: message.content,
@@ -245,6 +280,8 @@ impl Message {
 
     pub fn new(id: Id<MessageMarker>, author: User, channel_id: Id<ChannelMarker>, timestamp: Timestamp) -> Self {
         Self {
+            source: MessageSource::Custom,
+            data: None,
             activity: Default::default(),
             application_id: Default::default(),
             application: Default::default(),
@@ -253,7 +290,6 @@ impl Message {
             channel_id,
             components: Default::default(),
             content: Default::default(),
-            deleted: Default::default(),
             edited_timestamp: Default::default(),
             embeds: Default::default(),
             flags: Default::default(),
@@ -270,13 +306,11 @@ impl Message {
             reference: Default::default(),
             referenced_message: Default::default(),
             role_subscription_data: Default::default(),
-            source: Default::default(),
             sticker_items: Default::default(),
             thread: Default::default(),
             timestamp,
             member: Default::default(),
             tts: Default::default(),
-            updated_content: Default::default(),
             webhook_id: Default::default(),
         }
     }
@@ -308,7 +342,7 @@ impl Message {
         self.reactions = message.reactions;
         self.reference = message.reference;
         self.sticker_items = message.sticker_items;
-        self.source = MessageSource::Message;
+        self.source = MessageSource::TwilightMessage;
         self.timestamp = message.timestamp;
         self.tts = message.tts;
         self.webhook_id = message.webhook_id;
@@ -318,7 +352,7 @@ impl Message {
     /// Update this message from a [Message]
     pub fn from_message_update(&mut self, message: MessageUpdate) -> &mut Self {
         if let Some(author) = message.author {
-            self.author = author
+            self.author = author.into()
         }
 
         if let Some(kind) = message.kind {
@@ -352,7 +386,7 @@ impl Message {
         self.id = message.id;
         self.channel_id = message.channel_id;
         self.guild_id = message.guild_id;
-        self.deleted = true;
+        // self.deleted = true;
         self.source = MessageSource::MessageDelete;
         self
     }
@@ -364,7 +398,7 @@ impl Message {
         self.application = message.0.application;
         self.application_id = message.0.application_id;
         self.attachments = message.0.attachments;
-        self.author = message.0.author;
+        self.author = message.0.author.into();
         self.channel_id = message.0.channel_id;
         self.components = message.0.components;
         self.content = message.0.content;
@@ -395,7 +429,7 @@ impl Message {
     /// Update this message from a [Message]
     #[cfg(feature = "twilight-cache")]
     pub fn from_cached_message(&mut self, message: CachedMessage) -> &mut Self {
-        self.source = MessageSource::Message;
+        self.source = MessageSource::TwilightMessage;
         self.activity = message.activity().cloned();
         self.application = message.application().cloned();
         self.application_id = message.application_id();
@@ -425,7 +459,7 @@ impl Message {
 
 impl From<MessageCreate> for Message {
     fn from(message: MessageCreate) -> Self {
-        let mut luro = Self::new(message.id, message.author.clone(), message.channel_id, message.timestamp);
+        let mut luro = Self::new(message.id, message.author.clone().into(), message.channel_id, message.timestamp);
         luro.from_message_create(message);
         luro
     }
@@ -445,35 +479,6 @@ impl From<CachedMessage> for Message {
     }
 }
 
-fn default_kind() -> MessageType {
-    MessageType::Regular
-}
-
-fn fake_user() -> User {
-    default_user(PRIMARY_BOT_OWNER)
-}
-
-fn default_user(id: Id<UserMarker>) -> User {
-    User {
-        accent_color: None,
-        avatar: None,
-        avatar_decoration: None,
-        banner: None,
-        bot: false,
-        discriminator: 6969,
-        email: None,
-        flags: None,
-        global_name: None,
-        id,
-        locale: None,
-        mfa_enabled: None,
-        name: "Fake User".to_owned(),
-        premium_type: None,
-        public_flags: None,
-        system: None,
-        verified: None,
-    }
-}
 
 impl Message {
     /// Create and append an embed. Multiple calls will add multiple embeds.

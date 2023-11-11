@@ -16,7 +16,7 @@ use super::MemberData;
 /// Also holds some additional which are relevent to Luro only. These are empty if the type was not instanced from the database.
 ///
 /// Check [LuroUserType] to know how this type was instanced.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Member {
     pub avatar: Option<ImageHash>,
     pub boosting_since: Option<Timestamp>,

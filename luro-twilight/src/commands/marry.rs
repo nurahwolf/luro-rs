@@ -2,12 +2,13 @@ use anyhow::{anyhow, Context};
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
 
 use luro_framework::standard_response::Response;
+use luro_model::types::MarriageApprovals;
+use luro_model::user::marriage::Marriage;
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
 use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle};
 use twilight_model::channel::message::Component;
-use twilight_model::id::Id;
 
 /// An array of reasons someone would like to marry.
 /// TODO: Load this from disk once it's big enough
@@ -116,8 +117,8 @@ impl CreateLuroCommand for Marry {
             )
             .await?;
         let (proposee, divorce_wanted) = match self {
-            Self::Someone(command) => (ctx.fetch_user(command.marry.resolved.id).await?, false),
-            Self::Divorce(command) => (ctx.fetch_user(command.user.resolved.id).await?, true),
+            Self::Someone(command) => (ctx.fetch_user(command.marry).await?, false),
+            Self::Divorce(command) => (ctx.fetch_user(command.user).await?, true),
             _ => {
                 return ctx
                     .response_simple(Response::InternalError(anyhow!("Can't find the request to marry, sorry!")))
@@ -129,6 +130,7 @@ impl CreateLuroCommand for Marry {
         let mut embed = ctx.default_embed().await;
         let marriage = ctx
             .database
+            .driver
             .get_marriage(proposer_id, proposee_id)
             .await?
             .context("Expected to find marriage in database")?;
@@ -138,10 +140,11 @@ impl CreateLuroCommand for Marry {
             match &ctx.data.custom_id == "marry-deny" {
                 true => {
                     ctx.database
-                        .update_marriage_approval(DbUserMarriageApprovals {
-                            user_id: ctx.author.user_id.get() as i64,
-                            proposer_id: proposer_id.get() as i64,
-                            proposee_id: proposee_id.get() as i64,
+                        .driver
+                        .marriage_update_approvals(MarriageApprovals {
+                            user_id: ctx.author.user_id,
+                            proposer_id,
+                            proposee_id,
                             approve: false,
                             disapprove: true,
                         })
@@ -149,10 +152,11 @@ impl CreateLuroCommand for Marry {
                 }
                 false => {
                     ctx.database
-                        .update_marriage_approval(DbUserMarriageApprovals {
-                            user_id: ctx.author.user_id.get() as i64,
-                            proposer_id: proposer_id.get() as i64,
-                            proposee_id: proposee_id.get() as i64,
+                        .driver
+                        .marriage_update_approvals(MarriageApprovals {
+                            user_id: ctx.author.user_id,
+                            proposer_id,
+                            proposee_id,
                             approve: true,
                             disapprove: false,
                         })
@@ -161,7 +165,7 @@ impl CreateLuroCommand for Marry {
             }?;
         }
 
-        let marriage_approvals = ctx.database.get_marriage_approvals(proposer_id, proposee_id).await?;
+        let marriage_approvals = ctx.database.driver.marriage_fetch_approvals(proposer_id, proposee_id).await?;
 
         match divorce_wanted {
             false => embed
@@ -236,9 +240,10 @@ impl CreateLuroCommand for Marry {
             }
 
             ctx.database
-                .update_marriage(DbUserMarriage {
-                    proposer_id: proposer_id.get() as i64,
-                    proposee_id: proposee_id.get() as i64,
+                .driver
+                .marriage_update(Marriage {
+                    proposer_id,
+                    proposee_id,
                     divorced: true,
                     rejected: true,
                     reason: marriage.reason,
@@ -263,9 +268,10 @@ impl CreateLuroCommand for Marry {
         }
 
         ctx.database
-            .update_marriage(DbUserMarriage {
-                proposer_id: proposer_id.get() as i64,
-                proposee_id: proposee_id.get() as i64,
+            .driver
+            .marriage_update(Marriage {
+                proposer_id,
+                proposee_id,
                 divorced: divorce_wanted,
                 rejected: false,
                 reason: marriage.reason,

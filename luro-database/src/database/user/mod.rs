@@ -7,3 +7,4 @@ mod fetch_character;
 mod fetch_characters;
 mod fetch_marriages;
 mod count_messages;
+mod fetch_current_user;

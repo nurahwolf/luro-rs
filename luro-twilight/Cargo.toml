@@ -30,6 +30,7 @@ hyper = { workspace = true, optional = true }  # command-music
 serde_json = { version = "*", optional = true }  # command-music
 twilight-util = { workspace = true, optional = true }  # command-info
 uwuify = { version = "0.2.0", optional = true }        # command-uwu
+regex = { version = "*" } # command-info-message
 
 
 
@@ -59,6 +60,7 @@ dotenvy = "0.15.7"
 
 # Optional Features
 tabled = { version = "0.14", optional = true }
+thousands = "0.2.0"
 
 [features]
 # Main Features
@@ -70,21 +72,21 @@ commands = [
     # "command-character",
     "command-dice",
     "command-info",
-    # "command-marry",
-    # "command-moderator",
+    "command-marry",
+    "command-moderator",
     # "command-music", # Broken on twilight-lavalink
     "command-muzzle",
     "command-hello",
     "command-images",
-    # "command-owner",
+    "command-owner",
     "command-ping",
     "command-quote",
     "command-roles",
     "command-say",
     "command-story",
     "command-uwu",
-    "command-user"
-    # "command-wordcount", # TODO: New database
+    "command-user",
+    "command-wordcount", # TODO: New database
 ]
 
 ## Luro Features

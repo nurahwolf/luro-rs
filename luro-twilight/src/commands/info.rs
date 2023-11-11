@@ -33,6 +33,8 @@ pub enum Info {
     Role(role::InfoRole),
     #[command(name = "guild")]
     Guild(guild::Guild),
+    #[command(name = "message")]
+    Message(message::Message),
     // #[command(name = "punishments")]
     // Punishments(punishments::Punishments),
     #[command(name = "database")]
@@ -45,6 +47,7 @@ impl CreateLuroCommand for Info {
             Self::Guild(command) => command.interaction_command(ctx).await,
             // Self::Punishments(command) => command.interaction_command(ctx).await,
             Self::Role(command) => command.interaction_command(ctx).await,
+            Self::Message(command) => command.interaction_command(ctx).await,
             Self::User(command) => command.interaction_command(ctx).await,
             Self::Database(command) => command.interaction_command(ctx).await,
         }
@@ -57,7 +60,7 @@ impl CreateLuroCommand for Info {
     ) -> anyhow::Result<()> {
         let mut user = match &self {
             Info::User(user_command) => match &user_command.user {
-                Some(user) => ctx.fetch_user(user.resolved.id).await?,
+                Some(user) => ctx.fetch_user(*user).await?,
                 None => ctx.fetch_user(original_interaction.author_id().context("Expected user")?).await?,
             },
             _ => ctx.fetch_user(original_interaction.author_id().context("Expected user")?).await?,

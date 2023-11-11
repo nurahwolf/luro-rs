@@ -5,7 +5,7 @@ use twilight_model::{
         marker::{GuildMarker, UserMarker},
         Id,
     },
-    user::{PremiumType, UserFlags},
+    user::{PremiumType, UserFlags, CurrentUser},
     util::ImageHash,
 };
 
@@ -16,7 +16,7 @@ use super::{Member, UserData};
 /// Also holds some additional which are relevent to Luro only. These are empty if the type was not instanced from the database.
 ///
 /// Check [LuroUserType] to know how this type was instanced.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct User {
     pub accent_colour: Option<u32>,
     pub avatar_decoration: Option<ImageHash>,
@@ -59,6 +59,32 @@ impl From<twilight_model::user::User> for User {
             premium_type: user.premium_type,
             public_flags: user.public_flags,
             system: user.system,
+            user_id: user.id,
+            verified: user.verified,
+        }
+    }
+}
+
+impl From<CurrentUser> for User {
+    fn from(user: CurrentUser) -> Self {
+        Self {
+            accent_colour: user.accent_color,
+            avatar_decoration: None,
+            avatar: user.avatar,
+            banner: user.banner,
+            bot: user.bot,
+            data: None,
+            discriminator: user.discriminator,
+            email: user.email,
+            flags: user.flags,
+            global_name: None,
+            locale: user.locale,
+            member: None,
+            mfa_enabled: None,
+            name: user.name,
+            premium_type: user.premium_type,
+            public_flags: user.public_flags,
+            system: None,
             user_id: user.id,
             verified: user.verified,
         }

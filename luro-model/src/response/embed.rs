@@ -76,6 +76,8 @@ impl LuroResponse {
 
     #[cfg(feature = "auto-trim")]
     fn check_embed(&mut self) -> &mut Self {
+        use super::safe_truncate;
+
         if let Some(embeds) = &mut self.embeds {
             let mut file_id = 0;
             let mut files = vec![];
@@ -91,7 +93,7 @@ impl LuroResponse {
                             file_id,
                         ));
 
-                        description.truncate(4093);
+                        safe_truncate(description, 4093);
                         description.push_str("...");
                     }
                 }
@@ -106,7 +108,7 @@ impl LuroResponse {
                             file_id,
                         ));
 
-                        field.value.truncate(997);
+                        safe_truncate(&mut field.value, 997);
                         field.value.push_str("...");
                     }
                 }

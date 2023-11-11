@@ -1,7 +1,7 @@
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::{http::attachment::Attachment, id::Id};
+use twilight_model::{http::attachment::Attachment, id::{Id, marker::UserMarker}};
 
 use super::{buttons, guild_information, user_information};
 
@@ -11,7 +11,7 @@ const REMARK: [&str; 3] = ["Hey <user>!", "Great to see ya, <user>!", "Whoa, it'
 #[command(name = "user", desc = "Information about a user")]
 pub struct InfoUser {
     /// The user to get, gets yourself if not specified
-    pub user: Option<ResolvedUser>,
+    pub user: Option<Id<UserMarker>>,
     /// Optionally try to get a user from a different guild
     guild: Option<i64>,
     /// Hide the user's avatar thumbnail. Still shows it in the author field!
@@ -26,7 +26,7 @@ impl LuroCommand for InfoUser {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let description = REMARK.choose(&mut thread_rng()).unwrap_or(&REMARK[0]);
         let mut embed = ctx.default_embed().await;
-        let mut user = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
+        let mut user = ctx.get_specified_user_or_author(self.user).await?;
 
         if let Some(guild_id) = self.guild.map(|x| Id::new(x as u64)) {
             user = ctx.fetch_member_only(user.user_id, guild_id).await?

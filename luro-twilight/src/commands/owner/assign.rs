@@ -1,6 +1,6 @@
 use luro_framework::{standard_response::Response, CommandInteraction, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::id::{marker::RoleMarker, Id};
+use twilight_model::id::{marker::{RoleMarker, UserMarker}, Id};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(
@@ -12,14 +12,14 @@ pub struct Assign {
     /// The role that should be assigned. It HAS to be below the bot for this to work.
     role: Id<RoleMarker>,
     /// Optionally the user to apply the role to. Applies to self if not defined.
-    user: Option<ResolvedUser>,
+    user: Option<Id<UserMarker>>,
     /// Set this to instead remove the role
     remove: Option<bool>,
 }
 
 impl LuroCommand for Assign {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let user = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
+        let user = ctx.get_specified_user_or_author(self.user).await?;
         let guild = match &ctx.guild {
             Some(guild) => guild,
             None => return ctx.response_simple(luro_framework::Response::NotGuild).await,

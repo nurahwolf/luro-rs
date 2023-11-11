@@ -1,11 +1,11 @@
 use twilight_model::oauth::PartialApplication;
 
-pub enum ApplicationSync {
-    PartialApplication(PartialApplication),
+pub enum ApplicationSync<'a> {
+    PartialApplication(&'a PartialApplication),
 }
 
-impl From<PartialApplication> for ApplicationSync {
-    fn from(app: PartialApplication) -> Self {
+impl<'a> From<&'a PartialApplication> for ApplicationSync<'a> {
+    fn from(app: &'a PartialApplication) -> Self {
         Self::PartialApplication(app)
     }
 }

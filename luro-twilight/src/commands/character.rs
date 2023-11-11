@@ -2,6 +2,7 @@ use anyhow::Context;
 use luro_framework::{
     CommandInteraction, ComponentInteraction, Luro, ModalInteraction, {CreateLuroCommand, LuroCommand},
 };
+use luro_model::user::character::CharacterProfile;
 use std::fmt::Write;
 use twilight_interactions::command::{AutocompleteValue, CommandModel, CreateCommand};
 use twilight_model::{
@@ -76,7 +77,7 @@ impl CreateLuroCommand for Character {
 
                 character
             }
-            None => LuroCharacter {
+            None => CharacterProfile {
                 name: character_name.to_owned(),
                 nsfw_description: nsfw_description.map(|x| x.to_owned()),
                 nsfw_icons: Default::default(),

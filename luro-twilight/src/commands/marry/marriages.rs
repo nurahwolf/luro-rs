@@ -1,20 +1,20 @@
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use twilight_model::id::{marker::UserMarker, Id};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::id::Id;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "marriages", desc = "Fetches someones marriages")]
 pub struct Marriages {
     /// Set this if you want to see someone elses marriages!
-    user: Option<ResolvedUser>,
+    user: Option<Id<UserMarker>>,
 }
 
 impl LuroCommand for Marriages {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let accent_colour = ctx.accent_colour();
-        let author = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
-        let marriages = author.fetch_marriages(ctx.database.clone()).await?;
+        let author = ctx.get_specified_user_or_author(self.user).await?;
+        let marriages = ctx.database.user_fetch_marriages(author.user_id).await?;
 
         let mut marriages_detailed = vec![];
         let mut rejected_proposals = 0;
@@ -31,14 +31,26 @@ impl LuroCommand for Marriages {
                 continue;
             }
 
-            let proposer = ctx.fetch_user(Id::new(marriage.proposer_id as u64)).await?;
-            let proposee = ctx.fetch_user(Id::new(marriage.proposee_id as u64)).await?;
-            let approvers = ctx
+            let proposer = ctx.fetch_user(marriage.proposer_id).await?;
+            let proposee = ctx.fetch_user(marriage.proposee_id).await?;
+            let all_approvals = ctx
                 .database
-                .count_marriage_approvers(marriage.proposer_id, marriage.proposee_id)
+                .driver
+                .marriage_fetch_approvals(marriage.proposer_id, marriage.proposee_id)
                 .await?;
 
-            marriages_detailed.push((marriage, proposer, proposee, approvers))
+            let mut approvals = 0;
+            let mut disapprovals = 0;
+            for approval in all_approvals {
+                if approval.approve {
+                    approvals += 1;
+                }
+                if approval.disapprove {
+                    disapprovals += 1;
+                }
+            }
+
+            marriages_detailed.push((marriage, proposer, proposee, approvals, disapprovals))
         }
 
         ctx.respond(|response| {
@@ -65,12 +77,12 @@ impl LuroCommand for Marriages {
                         for marriage in marriages_detailed {
                             let mut status = String::new();
 
-                            if let Some(approvers) = marriage.3.approvers && approvers != 0 {
-                                write!(status, " | {approvers} Approvals").unwrap();
+                            if marriage.3 != 0 {
+                                write!(status, " | {} Approvals", marriage.3).unwrap();
                             }
 
-                            if let Some(disapprovers) = marriage.3.disapprovers && disapprovers != 0 {
-                                write!(status, " | {disapprovers} Disapprovals").unwrap();
+                            if marriage.4 != 0 {
+                                write!(status, " | {} Disapprovals", marriage.4).unwrap();
                             }
 
                             if marriage.0.divorced {

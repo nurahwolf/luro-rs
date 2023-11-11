@@ -139,3 +139,12 @@ impl LuroResponse {
         self
     }
 }
+
+/// Safely find and truncate, lowers the number until we are no longer on a char boundary.
+pub fn safe_truncate(string: &mut String, mut new_len: usize) {
+    while !string.is_char_boundary(new_len) {
+        new_len -= 1;
+    }
+    
+    string.truncate(new_len);
+}

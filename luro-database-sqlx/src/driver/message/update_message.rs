@@ -111,7 +111,10 @@ async fn handle_luro_message(db: &SQLxDriver, message: Message) -> anyhow::Resul
             false => Some(Json(message.components.clone())),
         } as _,
         message.content,
-        message.deleted,
+        match message.data {
+            Some(data) => data.deleted,
+            None => false,
+        },
         match message.edited_timestamp {
             Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
             None => None,
@@ -154,7 +157,7 @@ async fn handle_luro_message(db: &SQLxDriver, message: Message) -> anyhow::Resul
         message.referenced_message.clone().map(|x| Json(x)) as _,
         message.role_subscription_data.clone().map(|x| Json(x)) as _,
         match message.source {
-            luro_model::message::MessageSource::Message => DbMessageSource::Message,
+            luro_model::message::MessageSource::TwilightMessage => DbMessageSource::Message,
             luro_model::message::MessageSource::Custom => DbMessageSource::Custom,
             luro_model::message::MessageSource::CachedMessage => DbMessageSource::CachedMessage,
             luro_model::message::MessageSource::MessageUpdate => DbMessageSource::MessageUpdate,

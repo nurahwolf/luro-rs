@@ -12,7 +12,7 @@ use twilight_util::permission_calculator::PermissionCalculator;
 
 use super::Role;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct MemberData {
     #[serde(skip)]
     pub left_at: Option<time::OffsetDateTime>,
@@ -33,25 +33,27 @@ impl MemberData {
     }
 
     /// Returns the user's highest role that has a colour set. Returns none if there are no roles / no colours
+    pub fn highest_role(&self) -> Option<&Role> {
+        self.sorted_roles().first().cloned()
+    }
+
+    /// Returns the user's highest role that has a colour set. Returns none if there are no roles / no colours
     pub fn highest_role_colour(&self) -> Option<&Role> {
         self.sorted_roles().into_iter().find(|&role| role.colour != 0)
     }
 
     /// Fetches the member's permission calculator
     pub fn permission_calculator<'a>(&'a self, member_roles: &'a [(Id<RoleMarker>, Permissions)]) -> PermissionCalculator {
-        PermissionCalculator::new(
-            self.guild_id,
-            self.user_id,
-            self.guild_everyone_role_permissions,
-            member_roles,
-        )
-        .owner_id(self.guild_owner_id)
+        PermissionCalculator::new(self.guild_id, self.user_id, self.guild_everyone_role_permissions, member_roles)
+            .owner_id(self.guild_owner_id)
     }
 
     /// Gets all roles and their permissions, excluding the everyone role
     pub fn role_permissions(&self) -> Vec<(Id<RoleMarker>, Permissions)> {
-        let mut new_roles = self.roles.clone();
-        new_roles.retain(|_, role| role.role_id != self.guild_id.cast());
-        new_roles.values().map(|x| (x.role_id, x.permissions)).collect()
+        self.roles
+            .iter()
+            .filter(|(role_id, _)| role_id != &&self.guild_id.cast())
+            .map(|(_, role)| (role.role_id, role.permissions))
+            .collect()
     }
 }

@@ -1,13 +1,9 @@
-use crate::DbUserMarriageApprovalsCount;
+use luro_model::types::MarriageApprovalsCount;
 
-impl crate::LuroDatabase {
-    pub async fn count_marriage_approvers(
-        &self,
-        proposer_id: i64,
-        proposee_id: i64,
-    ) -> Result<DbUserMarriageApprovalsCount, sqlx::Error> {
+impl crate::SQLxDriver {
+    pub async fn count_marriage_approvers(&self, proposer_id: i64, proposee_id: i64) -> Result<MarriageApprovalsCount, sqlx::Error> {
         sqlx::query_as!(
-            DbUserMarriageApprovalsCount,
+            MarriageApprovalsCount,
             "
             SELECT 
                 COUNT(approve) filter (where approve) as approvers,

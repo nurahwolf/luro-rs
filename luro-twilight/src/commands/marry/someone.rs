@@ -1,8 +1,9 @@
 use anyhow::Context;
-use luro_database::DbUserMarriage;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::user::marriage::Marriage;
 use rand::{seq::SliceRandom, thread_rng};
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::id::{marker::UserMarker, Id};
 
 use super::{buttons, MARRIAGE_REASONS};
 
@@ -10,7 +11,7 @@ use super::{buttons, MARRIAGE_REASONS};
 #[command(name = "someone", desc = "Propose to someone! So lucky, aww~")]
 pub struct Someone {
     /// Set this if you want to marry someone!
-    pub marry: ResolvedUser,
+    pub marry: Id<UserMarker>,
     /// The reason you wish to marry them!
     reason: Option<String>,
 }
@@ -24,14 +25,15 @@ impl LuroCommand for Someone {
             MARRIAGE_REASONS
                 .choose(&mut thread_rng())
                 .context("Expected to be able to choose a random reason")?
-                .replace("<user>", &format!("<@{}>", &self.marry.resolved.id))
+                .replace("<user>", &format!("<@{}>", &self.marry))
                 .replace("<author>", &format!("<@{}>", &proposer.user_id)),
         );
 
         ctx.database
-            .update_marriage(DbUserMarriage {
-                proposer_id: proposer.user_id.get() as i64,
-                proposee_id: self.marry.resolved.id.get() as i64,
+            .driver
+            .marriage_update(Marriage {
+                proposer_id: proposer.user_id,
+                proposee_id: self.marry,
                 divorced: false,
                 rejected: false,
                 reason: reason.clone(),
@@ -49,7 +51,7 @@ impl LuroCommand for Someone {
                         .create_field("Approvers", "None!", false)
                         .create_field("Disapprovers", "None!", false)
                 })
-                .content(format!("<@{}>", &self.marry.resolved.id))
+                .content(format!("<@{}>", &self.marry))
                 .add_components(buttons())
         })
         .await

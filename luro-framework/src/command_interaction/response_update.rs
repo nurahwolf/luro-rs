@@ -6,15 +6,17 @@ use crate::CommandInteraction;
 impl CommandInteraction {
     /// Update an existing response
     pub async fn response_update(&self, response: &LuroResponse) -> anyhow::Result<Message> {
-        Ok(self
-            .interaction_client()
+        let client = self.interaction_client();
+        let request = client
             .update_response(&self.interaction_token)
             .allowed_mentions(response.allowed_mentions.as_ref())
             .components(response.components.as_deref())
             .content(response.content.as_deref())
-            .embeds(response.embeds.as_deref())
-            .await?
-            .model()
-            .await?)
+            .embeds(response.embeds.as_deref());
+
+        Ok(match response.attachments {
+            Some(ref attachments) => request.attachments(attachments).await?.model().await,
+            None => request.await?.model().await,
+        }?)
     }
 }

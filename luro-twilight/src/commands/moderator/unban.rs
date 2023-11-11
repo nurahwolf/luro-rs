@@ -18,33 +18,22 @@ pub struct Unban {
 
 impl LuroCommand for Unban {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        let guild = ctx.guild.clone().context("Expected this to be a guild")?;
-        let mut luro = ctx.fetch_user(ctx.twilight_client.current_user().await?.model().await?.id).await?;
-        luro.sync(&ctx.database).await;
-
-        let punished_user = ctx.fetch_user(self.user).await?;
         let mut response = ctx.acknowledge_interaction(false).await?;
-        let moderator_permissions = ctx
-            .author
-            .member
-            .as_ref()
-            .context("Expected member context")?
-            .permission_calculator(
-                ctx.database(),
-                &ctx.author.member.as_ref().context("Expected member context")?.role_permissions(),
-            )
-            .await?
-            .root();
-        let luro_permissions = luro
-            .member
-            .as_ref()
-            .context("Expected member context")?
-            .permission_calculator(
-                ctx.database(),
-                &luro.member.as_ref().context("Expected member context")?.role_permissions(),
-            )
-            .await?
-            .root();
+        let guild = ctx.guild.as_ref().context("Expected this to be a guild")?;
+        let luro = ctx.database.user_fetch_current_user(ctx.guild_id()).await?;
+        let moderator = &ctx.author;
+        let target = ctx.fetch_user(self.user).await?;
+        let luro_data = match &luro.member.as_ref().context("Expected member context")?.data {
+            Some(data) => data,
+            None => return ctx.respond(|r|r.content("Sorry, could not fetch my permissions to check if I can do this!").ephemeral()).await,
+        };
+        let moderator_data = match &moderator.member.as_ref().context("Expected member context")?.data {
+            Some(data) => data,
+            None => return ctx.respond(|r|r.content("Sorry, could not fetch your permissions to check if you can do this!").ephemeral()).await,
+        };
+
+        let luro_permissions = luro_data.permission_calculator(&luro_data.role_permissions()).root();
+        let moderator_permissions = moderator_data.permission_calculator(&moderator_data.role_permissions()).root();
 
         if !luro_permissions.contains(Permissions::BAN_MEMBERS) {
             return ctx.response_simple(Response::BotMissingPermission(Permissions::BAN_MEMBERS)).await;
@@ -59,11 +48,11 @@ impl LuroCommand for Unban {
             PunishmentType::Unbanned,
             &guild.name,
             &guild.guild_id,
-            &punished_user,
+            &target,
             &ctx.author.clone(),
         );
-        embed.punishment_reason(Some(&self.reason), &punished_user);
-        match ctx.twilight_client.create_private_channel(punished_user.user_id).await {
+        embed.punishment_reason(Some(&self.reason), &target);
+        match ctx.twilight_client.create_private_channel(target.user_id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .twilight_client
@@ -81,7 +70,7 @@ impl LuroCommand for Unban {
 
         let unban = ctx
             .twilight_client
-            .delete_ban(guild.guild_id, punished_user.user_id)
+            .delete_ban(guild.guild_id, target.user_id)
             .reason(&self.reason)
             .await;
         match unban {

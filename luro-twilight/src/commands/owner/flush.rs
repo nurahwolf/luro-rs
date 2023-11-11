@@ -18,10 +18,10 @@ impl LuroCommand for Flush {
         let mut guilds = HashMap::new();
         let mut errors = 0;
 
-        for message in ctx.database.get_messages().await.values() {
-            if let Entry::Vacant(entry) = users.entry(message.author.id) {
+        for message in ctx.database.driver.get_messages().await.values() {
+            if let Entry::Vacant(entry) = users.entry(message.author.user_id) {
                 entry.insert(());
-                if ctx.fetch_user_only(message.author.id).await.is_err() {
+                if ctx.fetch_user_only(message.author.user_id).await.is_err() {
                     errors += 1
                 }
             }
@@ -36,7 +36,7 @@ impl LuroCommand for Flush {
             if let Some(guild_id) = message.guild_id {
                 if let Entry::Vacant(entry) = guilds.entry(guild_id) {
                     entry.insert(());
-                    if ctx.get_guild(guild_id, false).await.is_err() {
+                    if ctx.get_guild(guild_id).await.is_err() {
                         errors += 1
                     }
                 }

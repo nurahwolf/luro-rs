@@ -1,7 +1,7 @@
 use luro_database::Database;
 use luro_model::{builders::EmbedBuilder, response::LuroResponse, ACCENT_COLOUR, types::{Guild, User, Channel, Role}};
 use std::{future::Future, sync::Arc};
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 use twilight_http::{client::InteractionClient, Client};
 
 use twilight_model::{
@@ -95,7 +95,7 @@ pub trait Luro {
     where
         Self: Sync,
     {
-        async { self.database().guild_fetch_all().await }
+        async { self.database().guilds_fetch().await }
     }
 
     /// Fetch and return a [LuroUser], updating the database if not present. This version ensures a [Member] context is applied.

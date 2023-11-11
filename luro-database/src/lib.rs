@@ -1,3 +1,5 @@
+use twilight_model::id::{marker::UserMarker, Id};
+
 mod database; // Functions for accessing data from the database
 mod sync; // Functions for syncronising data from an event loop
 
@@ -9,6 +11,8 @@ mod sync; // Functions for syncronising data from an event loop
 /// If disabled, this will force the database to only query itself for data. Useful for if you can't reach the Discord API, however data will quickly grow stale.
 #[derive(Debug)]
 pub struct Database {
+    /// User ID that represents the current user
+    pub current_user: Id<UserMarker>,
     /// The API client used to query Discord for information. This is used as a fallback if no driver or cache is configured.
     /// 
     /// Acceptable drivers:
@@ -31,8 +35,9 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new(config: &luro_model::configuration::Configuration) -> anyhow::Result<Self> {
+    pub async fn new(config: &luro_model::configuration::Configuration, current_user: Id<UserMarker>) -> anyhow::Result<Self> {
         Ok(Self {
+            current_user,
             api_client: config.twilight_client.clone(),
             #[cfg(feature = "database-cache-twilight")]
             cache: twilight_cache_inmemory::InMemoryCache::new(),

@@ -13,7 +13,7 @@ pub struct Guilds {
 impl LuroCommand for Guilds {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut guild_string = String::new();
-        for guild in ctx.database.get_all_guilds().await? {
+        for guild in ctx.database.guilds_fetch().await? {
             if self.show_id.unwrap_or_default() {
                 writeln!(guild_string, "- {} - <#{1}> - {1}", guild.name, guild.guild_id)?
             } else {

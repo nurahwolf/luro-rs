@@ -1,36 +1,24 @@
-use crate::{DbUserMarriageApprovals, LuroDatabase};
+use luro_model::types::MarriageApprovals;
+use twilight_model::id::Id;
 
-impl LuroDatabase {
-    pub async fn update_marriage_approval(&self, marriage: DbUserMarriageApprovals) -> Result<DbUserMarriageApprovals, sqlx::Error> {
-        sqlx::query_as!(
-            DbUserMarriageApprovals,
-            "INSERT INTO user_marriage_approvals (
-                approve,
-                disapprove,
-                proposee_id,
-                proposer_id,
-                user_id
-            ) VALUES
-                ($1, $2, $3, $4, $5)
-            ON CONFLICT
-                (proposer_id, proposee_id, user_id)
-            DO UPDATE SET
-                approve = $1,
-                disapprove = $2
-            RETURNING
-                approve,
-                disapprove,
-                proposee_id,
-                proposer_id,
-                user_id
-                ",
+impl crate::SQLxDriver {
+    pub async fn marriage_update_approvals(&self, marriage: MarriageApprovals) -> Result<MarriageApprovals, sqlx::Error> {
+        sqlx::query_file!(
+            "queries/marriage_update_approvals.sql",
             marriage.approve,
             marriage.disapprove,
-            marriage.proposee_id,
-            marriage.proposer_id,
-            marriage.user_id,
+            marriage.proposee_id.get() as i64,
+            marriage.proposer_id.get() as i64,
+            marriage.user_id.get() as i64,
         )
         .fetch_one(&self.pool)
         .await
+        .map(|approvers| MarriageApprovals {
+            user_id: Id::new(approvers.user_id as u64),
+            proposer_id: Id::new(approvers.proposer_id as u64),
+            proposee_id: Id::new(approvers.proposee_id as u64),
+            approve: approvers.approve,
+            disapprove: approvers.disapprove,
+        })
     }
 }

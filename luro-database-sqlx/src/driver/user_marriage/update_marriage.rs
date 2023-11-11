@@ -1,23 +1,22 @@
-use super::DbUserMarriage;
+use luro_model::user::marriage::Marriage;
 
 impl crate::SQLxDriver {
-    pub async fn update_marriage(&self, marriage: DbUserMarriage) -> Result<DbUserMarriage, sqlx::Error> {
-        sqlx::query_as!(
-            DbUserMarriage,
+    pub async fn marriage_update(&self, marriage: Marriage) -> anyhow::Result<u64> {
+        Ok(sqlx::query!(
             "
             INSERT INTO user_marriages (divorced, proposee_id, proposer_id, reason, rejected)
             VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (proposer_id, proposee_id)
             DO UPDATE SET divorced = $1, proposer_id = $2, proposee_id = $3, reason = $4, rejected = $5
-            RETURNING *
             ",
             marriage.divorced,
-            marriage.proposee_id,
-            marriage.proposer_id,
+            marriage.proposee_id.get() as i64,
+            marriage.proposer_id.get() as i64,
             marriage.reason,
             marriage.rejected,
         )
-        .fetch_one(&self.pool)
-        .await
+        .execute(&self.pool)
+        .await?
+        .rows_affected())
     }
 }

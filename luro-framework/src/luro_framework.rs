@@ -3,7 +3,7 @@ use std::{fs, path::PathBuf, sync::Arc};
 use luro_database::Database;
 use luro_model::configuration::Configuration;
 use twilight_gateway::{stream, Shard};
-use twilight_model::id::{marker::GuildMarker, Id};
+use twilight_model::id::{marker::{GuildMarker, UserMarker}, Id};
 
 use crate::{Luro, LuroContext};
 
@@ -39,14 +39,14 @@ impl Framework {
         // Ensure data directory exists on disk
         ensure_data_directory_exists();
 
-        let database = initialise_database(config).await?.into();
+        let current_user = config.twilight_client.current_user().await?.model().await?;
+        let database = initialise_database(config, current_user.id).await?.into();
         let shards = stream::create_recommended(&config.twilight_client, config.shard_config.clone(), |_, c| c.build())
             .await?
             .collect::<Vec<_>>();
 
         #[cfg(feature = "lavalink")]
         let lavalink = {
-            let current_user = config.twilight_client.current_user().await?.model().await?;
             let socket = <std::net::SocketAddr as std::str::FromStr>::from_str(&config.lavalink_host)?;
             let lavalink = twilight_lavalink::Lavalink::new(current_user.id, shards.len().try_into()?);
 
@@ -110,8 +110,8 @@ impl From<LuroContext> for Framework {
     }
 }
 
-async fn initialise_database(config: &Configuration) -> anyhow::Result<Database> {
-    Database::new(config).await
+async fn initialise_database(config: &Configuration, current_user: Id<UserMarker>) -> anyhow::Result<Database> {
+    Database::new(config, current_user).await
 }
 
 fn ensure_data_directory_exists() {

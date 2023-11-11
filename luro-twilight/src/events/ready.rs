@@ -53,10 +53,6 @@ pub async fn ready_listener(framework: LuroContext, event: Box<Ready>) -> anyhow
         staff = framework.database.user_fetch_staff().await?;
     }
 
-    if let Err(why) = framework.database.application_update(event.application.clone()).await {
-        warn!("Heads up, failed to write application data to the database: {why}")
-    };
-
     #[cfg(not(feature = "pretty-tables"))]
     standard_output(&framework, &event, staff).await;
 

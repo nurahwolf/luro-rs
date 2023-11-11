@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use futures_util::TryStreamExt;
 use luro_model::message::{Message, MessageSource};
+use luro_model::types::MessageData;
 use sqlx::types::Json;
 
 use twilight_model::channel::message::sticker::MessageSticker;
@@ -33,16 +34,19 @@ impl crate::SQLxDriver {
             messages.insert(
                 Id::new(message.author.id.get()),
                 Message {
+                    data: Some(MessageData {
+                        deleted: message.deleted.unwrap_or_default(),
+                        updated_content: None, // TODO: Implement this
+                    }),
                     member: message.member.map(|x| x.0),
                     activity: message.activity.map(|x| x.0),
                     application_id: message.application_id.map(|x| Id::new(x as u64)),
                     application: message.application.map(|x| x.0),
                     attachments: message.attachments.map(|x| x.0).unwrap_or_default(),
-                    author: message.author.0,
+                    author: message.author.0.into(),
                     channel_id: Id::new(message.channel_id as u64),
                     components: message.components.map(|x| x.0).unwrap_or_default(),
                     content: message.content.unwrap_or_default(),
-                    deleted: message.deleted.unwrap_or_default(),
                     edited_timestamp: message.edited_timestamp.map(|x| Timestamp::from_secs(x.unix_timestamp()).unwrap()),
                     embeds: message.embeds.map(|x| x.0).unwrap_or_default(),
                     flags: message.flags.map(|x| x.0),
@@ -63,7 +67,7 @@ impl crate::SQLxDriver {
                     referenced_message: message.referenced_message.map(|x| x.0),
                     role_subscription_data: message.role_subscription_data.map(|x| x.0),
                     source: match message.source {
-                        DbMessageSource::Message => MessageSource::Message,
+                        DbMessageSource::Message => MessageSource::TwilightMessage,
                         DbMessageSource::Custom => MessageSource::Custom,
                         DbMessageSource::CachedMessage => MessageSource::CachedMessage,
                         DbMessageSource::MessageUpdate => MessageSource::MessageUpdate,
@@ -75,7 +79,6 @@ impl crate::SQLxDriver {
                     thread: message.thread.map(|x| x.0),
                     timestamp: Timestamp::from_secs(message.timestamp.unix_timestamp()).unwrap(),
                     tts: message.tts.unwrap_or_default(),
-                    updated_content: None,
                     webhook_id: message.webhook_id.map(|x| Id::new(x as u64)),
                 },
             );

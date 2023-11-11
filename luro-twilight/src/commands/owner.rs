@@ -1,6 +1,6 @@
-use luro_database::DatabaseInteraction;
 use luro_framework::standard_response::Response;
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand, ModalInteraction};
+use twilight_model::application::interaction::Interaction;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::Id;
@@ -13,7 +13,6 @@ mod abuse;
 mod assign;
 mod clear_marriage;
 mod commands;
-mod get_message;
 mod guilds;
 mod log;
 pub mod mass_assign;
@@ -38,8 +37,6 @@ pub enum Owner {
     MassAssign(mass_assign::MassAssign),
     #[command(name = "modify_role")]
     ModifyRole(modify_role::ModifyRole),
-    #[command(name = "get_message")]
-    GetMessage(get_message::Message),
     #[command(name = "guilds")]
     Guilds(guilds::Guilds),
     #[command(name = "fakeban")]
@@ -67,7 +64,6 @@ impl std::fmt::Display for Owner {
             // Self::Config(_) => "owner_config",
             Self::FakeBan(_) => "owner_fakeban",
             Self::Flush(_) => "owner_flush",
-            Self::GetMessage(_) => "owner_getmessage",
             Self::Guilds(_) => "owner_guilds",
             // Self::LoadUsers(_) => "owner_loadusers",
             Self::Log(_) => "owner_log",
@@ -82,7 +78,7 @@ impl std::fmt::Display for Owner {
 impl CreateLuroCommand for Owner {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut authorised = false;
-        for staff in ctx.database.get_staff().await? {
+        for staff in ctx.database.user_fetch_staff().await? {
             if staff.user_id == ctx.author.user_id {
                 authorised = true
             }
@@ -103,7 +99,6 @@ impl CreateLuroCommand for Owner {
             // Self::Config(_) => "owner_config",
             Self::FakeBan(cmd) => cmd.interaction_command(ctx).await,
             Self::Flush(cmd) => cmd.interaction_command(ctx).await,
-            Self::GetMessage(command) => command.interaction_command(ctx).await,
             Self::Guilds(command) => command.interaction_command(ctx).await,
             // Self::LoadUsers(_) => "owner_loadusers",
             Self::Log(cmd) => cmd.interaction_command(ctx).await,
@@ -159,7 +154,7 @@ impl CreateLuroCommand for Owner {
         ctx.respond(|r| r.content("All done!").ephemeral()).await
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: DatabaseInteraction) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: Interaction) -> anyhow::Result<()> {
         match ctx.data.custom_id.as_str() {
             "mass-assign-selector" => component_selector(ctx).await,
             "mass-assign-roles" | "mass-assign-remove" => component_roles(ctx).await,
@@ -173,11 +168,11 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
         Some(guild) => guild,
         None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
     };
-    let guild_roles = ctx.get_guild_roles(guild.guild_id, false).await?;
+    let guild_roles = ctx.get_guild_roles(guild.guild_id).await?;
 
     let mut roles_string = String::new();
     for role in &guild_roles {
-        writeln!(roles_string, "- <@&{}>", role.id)?;
+        writeln!(roles_string, "- <@&{}>", role.role_id)?;
     }
 
     // let roles: Vec<Id<RoleMarker>> = ctx.data.values.iter().map(|role| Id::new(role.parse::<u64>().unwrap())).collect();

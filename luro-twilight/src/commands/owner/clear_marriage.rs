@@ -13,6 +13,7 @@ pub struct ClearMarriage {
 impl LuroCommand for ClearMarriage {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         ctx.database
+            .driver
             .delete_marriage((self.user_1.resolved.id.get() as i64, self.user_2.resolved.id.get() as i64))
             .await?;
 

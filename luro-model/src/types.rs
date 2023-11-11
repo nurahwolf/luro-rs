@@ -13,6 +13,10 @@ mod channel;
 mod guild_alert_channels;
 mod user_word_count;
 mod image;
+mod message_data;
+mod marriage_approvals;
+mod marriage_approvals_count;
+mod message_count;
 
 pub use user::*;
 pub use user_permissions::*;
@@ -29,3 +33,7 @@ pub use channel::Channel;
 pub use guild_alert_channels::GuildAlertChannels;
 pub use user_word_count::UserWordCount;
 pub use image::Image;
+pub use message_data::MessageData;
+pub use marriage_approvals::MarriageApprovals;
+pub use marriage_approvals_count::MarriageApprovalsCount;
+pub use message_count::MessageCount;

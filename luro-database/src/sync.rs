@@ -5,6 +5,7 @@ mod channel;
 mod presence;
 mod member;
 mod guild;
+mod ready;
 
 impl crate::Database {
     /// Syncronise data from the passed event into the database context. This automatically updates the cache, and database if the data is new.
@@ -28,6 +29,7 @@ impl crate::Database {
             Event::MemberRemove(event) => member::delete(self, event).await,
             Event::MemberUpdate(event) => member::update(self, event).await,
             Event::GuildUpdate(event) => guild::update(self, event).await,
+            Event::Ready(event) => ready::ready(self, event).await,
             _ => Ok(())
         }
     }

@@ -1,6 +1,6 @@
 use twilight_model::{
     gateway::payload::incoming::UserUpdate,
-    id::{marker::UserMarker, Id},
+    id::{marker::UserMarker, Id}, user::CurrentUser,
 };
 
 use crate::types::User;
@@ -11,6 +11,13 @@ pub enum UserSync<'a> {
     TwilightUser(&'a twilight_model::user::User),
     UserID(Id<UserMarker>),
     UserUpdate(UserUpdate),
+    CurrentUser(&'a CurrentUser)
+}
+
+impl<'a> From<&'a CurrentUser> for UserSync<'a> {
+    fn from(user: &'a CurrentUser) -> Self {
+        Self::CurrentUser(user)
+    }
 }
 
 impl<'a> From<UserUpdate> for UserSync<'a> {

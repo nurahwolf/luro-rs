@@ -1,5 +1,5 @@
-use luro_model::types::UserPermissions;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::types::UserPermissions;
 use std::fmt::Write;
 
 use tracing::warn;
@@ -88,11 +88,10 @@ impl LuroCommand for Database {
             embed.create_field("-- Message Information --", &word_count_description, false);
         }
 
-        if let Ok(data) = ctx.database.driver.count_total_words().await {
-            builder.push_record([
-                "Total Words Said - Unique",
-                &format!("{} - {}", format_number(data.0), format_number(data.1)),
-            ]);
+        if let Ok(messages) = ctx.database.driver.messages_count_words().await {
+            builder.push_record(["Total Messages Recorded", &format_number(messages.total_messages)]);
+            builder.push_record(["Total Words Said", &format_number(messages.total_words)]);
+            builder.push_record(["Total Unique Words", &format_number(messages.total_unique_words)]);
         }
 
         let content = format!(
