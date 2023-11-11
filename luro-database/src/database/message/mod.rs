@@ -1,2 +1,2 @@
-mod update;
 mod fetch;
+mod update;

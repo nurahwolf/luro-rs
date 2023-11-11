@@ -1,7 +1,10 @@
 use anyhow::Context;
 use luro_framework::{CommandInteraction, Luro, LuroCommand, PunishmentType, Response, StandardResponse};
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::{guild::Permissions, id::{marker::UserMarker, Id}};
+use twilight_model::{
+    guild::Permissions,
+    id::{marker::UserMarker, Id},
+};
 
 use super::{reason, Reason};
 
@@ -26,15 +29,36 @@ impl LuroCommand for Kick {
         let target = ctx.fetch_user(self.user).await?;
         let luro_data = match &luro.member.as_ref().context("Expected member context")?.data {
             Some(data) => data,
-            None => return ctx.respond(|r|r.content("Sorry, could not fetch my permissions to check if I can do this!").ephemeral()).await,
+            None => {
+                return ctx
+                    .respond(|r| {
+                        r.content("Sorry, could not fetch my permissions to check if I can do this!")
+                            .ephemeral()
+                    })
+                    .await
+            }
         };
         let punished_data = match &target.member.as_ref().context("Expected member context")?.data {
             Some(data) => data,
-            None => return ctx.respond(|r|r.content("Sorry, could not fetch the permissions of who you wish to punish!").ephemeral()).await,
+            None => {
+                return ctx
+                    .respond(|r| {
+                        r.content("Sorry, could not fetch the permissions of who you wish to punish!")
+                            .ephemeral()
+                    })
+                    .await
+            }
         };
         let moderator_data = match &moderator.member.as_ref().context("Expected member context")?.data {
             Some(data) => data,
-            None => return ctx.respond(|r|r.content("Sorry, could not fetch your permissions to check if you can do this!").ephemeral()).await,
+            None => {
+                return ctx
+                    .respond(|r| {
+                        r.content("Sorry, could not fetch your permissions to check if you can do this!")
+                            .ephemeral()
+                    })
+                    .await
+            }
         };
 
         let luro_highest_role = luro_data.highest_role();
@@ -90,8 +114,7 @@ impl LuroCommand for Kick {
         }
 
         // Checks passed, now let's action the user
-        let mut embed =
-            StandardResponse::new_punishment(PunishmentType::Kicked, &guild.name, &guild.guild_id, &target, moderator);
+        let mut embed = StandardResponse::new_punishment(PunishmentType::Kicked, &guild.name, &guild.guild_id, &target, moderator);
         embed.punishment_reason(reason.as_deref(), &target);
         match ctx.twilight_client.create_private_channel(target.user_id).await {
             Ok(channel) => {
@@ -112,9 +135,7 @@ impl LuroCommand for Kick {
         response.add_embed(embed.embed().0);
         ctx.response_send(response).await?;
 
-        ctx.twilight_client
-            .remove_guild_member(guild.guild_id, target.user_id)
-            .await?;
+        ctx.twilight_client.remove_guild_member(guild.guild_id, target.user_id).await?;
 
         // moderator.moderation_actions_performed += 1;
         // ctx.database.modify_user(&moderator.id, &moderator).await?;

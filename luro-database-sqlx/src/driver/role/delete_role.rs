@@ -15,6 +15,7 @@ impl crate::SQLxDriver {
             role_id,
         )
         .execute(&self.pool)
-        .await.map(|x|x.rows_affected())
+        .await
+        .map(|x| x.rows_affected())
     }
 }

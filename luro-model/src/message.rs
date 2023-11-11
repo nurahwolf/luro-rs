@@ -16,7 +16,10 @@ use twilight_model::{
     util::Timestamp,
 };
 
-use crate::{builders::EmbedBuilder, types::{MessageData, User}};
+use crate::{
+    builders::EmbedBuilder,
+    types::{MessageData, User},
+};
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum MessageSource {
@@ -478,7 +481,6 @@ impl From<CachedMessage> for Message {
         luro
     }
 }
-
 
 impl Message {
     /// Create and append an embed. Multiple calls will add multiple embeds.

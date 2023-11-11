@@ -17,6 +17,6 @@ pub struct Guild {
 
 impl LuroCommand for Guild {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
-        ctx.respond(|r|r.content("Not yet implemented!").ephemeral()).await
+        ctx.respond(|r| r.content("Not yet implemented!").ephemeral()).await
     }
 }

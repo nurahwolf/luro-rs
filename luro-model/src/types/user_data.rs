@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use twilight_model::id::{marker::UserMarker, Id};
 
-use super::{UserPermissions, Gender, Sexuality};
+use super::{Gender, Sexuality, UserPermissions};
 
 /// A type that is only present if additional details was requested, or the instance of [LuroUser] was received from the database.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]

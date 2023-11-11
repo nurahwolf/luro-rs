@@ -1,6 +1,9 @@
 use luro_framework::{CommandInteraction, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::id::{marker::{RoleMarker, UserMarker}, Id};
+use twilight_model::id::{
+    marker::{RoleMarker, UserMarker},
+    Id,
+};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(

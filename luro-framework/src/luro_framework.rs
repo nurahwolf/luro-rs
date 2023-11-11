@@ -3,7 +3,10 @@ use std::{fs, path::PathBuf, sync::Arc};
 use luro_database::Database;
 use luro_model::configuration::Configuration;
 use twilight_gateway::{stream, Shard};
-use twilight_model::id::{marker::{GuildMarker, UserMarker}, Id};
+use twilight_model::id::{
+    marker::{GuildMarker, UserMarker},
+    Id,
+};
 
 use crate::{Luro, LuroContext};
 
@@ -94,7 +97,6 @@ impl Luro for Framework {
     fn twilight_client(&self) -> std::sync::Arc<twilight_http::Client> {
         self.twilight_client.clone()
     }
-
 }
 
 impl From<LuroContext> for Framework {

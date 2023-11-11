@@ -22,7 +22,11 @@ impl CreateLuroCommand for Boop {
         ctx.respond(|r| r.content("Boop Count: 0").add_components(components)).await
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, _: twilight_model::application::interaction::Interaction) -> anyhow::Result<()> {
+    async fn interaction_component(
+        self,
+        ctx: ComponentInteraction,
+        _: twilight_model::application::interaction::Interaction,
+    ) -> anyhow::Result<()> {
         // Get message and parse number
         let message = ctx.message.clone();
 

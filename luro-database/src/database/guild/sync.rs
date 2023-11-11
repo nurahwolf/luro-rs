@@ -4,7 +4,7 @@ impl crate::Database {
     /// By default, data is returned from the database where possible. Because of this, it might be a little outdated.
     /// Calling Sync will use the passed twilight client to make a call to the Discord API, ensuring we have fresh data.
     /// The result is then written back to the database.
-    /// 
+    ///
     /// You can also use this call to flush [GuildData] to the backend, if present.
     ///
     /// NOTE: This command does NOT fail, errors are raised to the console and data is simply not written to the database if unsuccessful.
@@ -24,12 +24,12 @@ impl crate::Database {
                 Err(why) => {
                     tracing::error!(why = ?why, "Failed to convert received data from API into a Twilight guild");
                     return guild;
-                },
+                }
             },
             Err(why) => {
                 tracing::error!(why = ?why, "Failed to fetch guild using Twilight API");
                 return guild;
-            },
+            }
         };
 
         guild.afk_channel_id = twilight_guild.afk_channel_id;
@@ -66,7 +66,12 @@ impl crate::Database {
         guild.premium_tier = twilight_guild.premium_tier;
         guild.presences = twilight_guild.presences.clone();
         guild.public_updates_channel_id = twilight_guild.public_updates_channel_id;
-        guild.roles = twilight_guild.roles.clone().into_iter().map(|role|(guild.guild_id, role).into()).collect();
+        guild.roles = twilight_guild
+            .roles
+            .clone()
+            .into_iter()
+            .map(|role| (guild.guild_id, role).into())
+            .collect();
         guild.rules_channel_id = twilight_guild.rules_channel_id;
         guild.safety_alerts_channel_id = twilight_guild.safety_alerts_channel_id;
         guild.splash = twilight_guild.splash;

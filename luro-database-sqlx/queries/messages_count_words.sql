@@ -1,15 +1,14 @@
 WITH words AS (
-    SELECT message_id,
-        messages.content,
-        UNNEST (
-            STRING_TO_ARRAY (
-                REGEXP_REPLACE(content, '[^\w\s]', '', 'g'),
-                ' '
-            )
-        ) AS word
+    SELECT cast(SUM(unique_words.count) as bigint) as total_words,
+        COUNT(DISTINCT(unique_words.word)) as total_unique_words
+    FROM unique_words
+),
+messages AS (
+    SELECT COUNT(messages) as total_messages
     FROM messages
 )
-SELECT COUNT(DISTINCT(words.content)) as total_messages,
-    COUNT(words.word) as total_words,
-    COUNT(DISTINCT(words.word)) as total_unique_words
-FROM words
+SELECT messages.total_messages,
+    words.total_unique_words,
+    words.total_words
+FROM messages,
+    words

@@ -1,7 +1,7 @@
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
-use twilight_model::id::{marker::UserMarker, Id};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_model::id::{marker::UserMarker, Id};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "marriages", desc = "Fetches someones marriages")]

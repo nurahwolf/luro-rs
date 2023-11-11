@@ -1,6 +1,6 @@
 use luro_framework::{Luro, LuroContext};
 use luro_model::types::User;
-use luro_model::{BOT_OWNERS, PRIMARY_BOT_OWNER, types::UserPermissions};
+use luro_model::{types::UserPermissions, BOT_OWNERS, PRIMARY_BOT_OWNER};
 use tracing::{info, warn};
 use twilight_model::gateway::{
     payload::{incoming::Ready, outgoing::UpdatePresence},

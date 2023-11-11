@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Context};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
-use twilight_model::application::interaction::Interaction;
 use twilight_model::application::interaction::application_command::CommandData;
+use twilight_model::application::interaction::Interaction;
 
 use crate::standard_response::Response;
 use crate::{CommandInteraction, ComponentInteraction, InteractionContext, LuroCommand, ModalInteraction};
@@ -28,13 +28,11 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
                         },
                     };
 
-                    let interaction = ctx
-                        .database
-                        .interaction_fetch(interaction_id)
-                        .await?;
+                    let interaction = ctx.database.interaction_fetch(interaction_id).await?;
                     let data = interaction
                         .data
-                        .as_ref().cloned()
+                        .as_ref()
+                        .cloned()
                         .context("Expected interaction recorded in database to contain interaction data")?;
                     let command_data = match data {
                         twilight_model::application::interaction::InteractionData::ApplicationCommand(data) => data,

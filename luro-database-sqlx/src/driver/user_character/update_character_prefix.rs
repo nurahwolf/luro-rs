@@ -1,4 +1,4 @@
-use super::{DbUserCharacter};
+use super::DbUserCharacter;
 
 impl crate::SQLxDriver {
     pub async fn update_user_character_prefix(&self, character: DbUserCharacter) -> Result<DbUserCharacter, sqlx::Error> {

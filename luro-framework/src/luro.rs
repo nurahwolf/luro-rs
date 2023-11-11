@@ -1,5 +1,10 @@
 use luro_database::Database;
-use luro_model::{builders::EmbedBuilder, response::LuroResponse, ACCENT_COLOUR, types::{Guild, User, Channel, Role}};
+use luro_model::{
+    builders::EmbedBuilder,
+    response::LuroResponse,
+    types::{Channel, Guild, Role, User},
+    ACCENT_COLOUR,
+};
 use std::{future::Future, sync::Arc};
 use tracing::{info, warn};
 use twilight_http::{client::InteractionClient, Client};
@@ -86,9 +91,7 @@ pub trait Luro {
     where
         Self: Sync,
     {
-        async move {
-            self.database().guild_fetch(guild_id).await
-        }
+        async move { self.database().guild_fetch(guild_id).await }
     }
 
     fn get_guilds(&self) -> impl Future<Output = anyhow::Result<Vec<Guild>>> + Send
@@ -154,23 +157,16 @@ pub trait Luro {
     where
         Self: Sync,
     {
-        async move {
-            self.database().channel_fetch(channel_id).await
-        }
+        async move { self.database().channel_fetch(channel_id).await }
     }
 
     /// Fetch all guild roles.
     /// Set bypass to true to force a flush of all roles, if you want to make sure we have the most up to date roles possible, such as for highly privileged commands.
-    fn get_guild_roles(
-        &self,
-        guild_id: Id<GuildMarker>
-    ) -> impl std::future::Future<Output = anyhow::Result<Vec<Role>>> + Send
+    fn get_guild_roles(&self, guild_id: Id<GuildMarker>) -> impl std::future::Future<Output = anyhow::Result<Vec<Role>>> + Send
     where
         Self: Sync,
     {
-        async move {
-            self.database().role_fetch_guild(guild_id).await
-        }
+        async move { self.database().role_fetch_guild(guild_id).await }
     }
 
     // async fn get_guild_member_roles(&self, guild_id: &Id<GuildMarker>, user_id: &Id<UserMarker>, bypass: bool) -> anyhow::Result<Vec<Role>>

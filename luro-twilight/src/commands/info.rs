@@ -272,7 +272,11 @@ pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mu
                 }
                 flags_sorted.sort();
                 if !flags_sorted.is_empty() {
-                    guild_information.push_str(&format!("\n- Member Flags ({}): \n```\n{}```",member.flags.bits(), flags_sorted.join(" | ")));
+                    guild_information.push_str(&format!(
+                        "\n- Member Flags ({}): \n```\n{}```",
+                        member.flags.bits(),
+                        flags_sorted.join(" | ")
+                    ));
                 }
 
                 // TODO: Once member_banner is a thing in [Member]
@@ -616,7 +620,11 @@ pub fn guild_information<'a>(author: &User, member: &Member, embed: &'a mut Embe
         }
         flags_sorted.sort();
         if !flags_sorted.is_empty() {
-            guild_information.push_str(&format!("\n- Member Flags ({}): \n```\n{}```",member.flags.bits(), flags_sorted.join(" | ")));
+            guild_information.push_str(&format!(
+                "\n- Member Flags ({}): \n```\n{}```",
+                member.flags.bits(),
+                flags_sorted.join(" | ")
+            ));
         }
 
         // TODO: Once member_banner is a thing in [Member]

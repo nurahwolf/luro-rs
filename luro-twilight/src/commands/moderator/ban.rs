@@ -3,7 +3,10 @@ use luro_framework::{CommandInteraction, Luro, LuroCommand, PunishmentType, Resp
 use tracing::{debug, warn};
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
-use twilight_model::{guild::Permissions, id::{marker::UserMarker, Id}};
+use twilight_model::{
+    guild::Permissions,
+    id::{marker::UserMarker, Id},
+};
 
 use super::{reason, Reason};
 
@@ -47,15 +50,36 @@ impl LuroCommand for Ban {
         let target = ctx.fetch_user(self.user).await?;
         let luro_data = match &luro.member.as_ref().context("Expected member context")?.data {
             Some(data) => data,
-            None => return ctx.respond(|r|r.content("Sorry, could not fetch my permissions to check if I can do this!").ephemeral()).await,
+            None => {
+                return ctx
+                    .respond(|r| {
+                        r.content("Sorry, could not fetch my permissions to check if I can do this!")
+                            .ephemeral()
+                    })
+                    .await
+            }
         };
         let punished_data = match &target.member.as_ref().context("Expected member context")?.data {
             Some(data) => data,
-            None => return ctx.respond(|r|r.content("Sorry, could not fetch the permissions of who you wish to punish!").ephemeral()).await,
+            None => {
+                return ctx
+                    .respond(|r| {
+                        r.content("Sorry, could not fetch the permissions of who you wish to punish!")
+                            .ephemeral()
+                    })
+                    .await
+            }
         };
         let moderator_data = match &moderator.member.as_ref().context("Expected member context")?.data {
             Some(data) => data,
-            None => return ctx.respond(|r|r.content("Sorry, could not fetch your permissions to check if you can do this!").ephemeral()).await,
+            None => {
+                return ctx
+                    .respond(|r| {
+                        r.content("Sorry, could not fetch your permissions to check if you can do this!")
+                            .ephemeral()
+                    })
+                    .await
+            }
         };
 
         let luro_highest_role = luro_data.highest_role();
@@ -84,9 +108,7 @@ impl LuroCommand for Ban {
         }
 
         if guild.is_owner(&target.user_id) {
-            return ctx
-                .response_simple(Response::PermissionModifyServerOwner(&moderator.user_id))
-                .await;
+            return ctx.response_simple(Response::PermissionModifyServerOwner(&moderator.user_id)).await;
         }
 
         // The lower the number, the higher they are on the heirarchy
@@ -113,8 +135,7 @@ impl LuroCommand for Ban {
         }
 
         // Checks passed, now let's action the user
-        let mut embed =
-            StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.guild_id, &target, moderator);
+        let mut embed = StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.guild_id, &target, moderator);
         embed
             .punishment_reason(reason.as_deref(), &target)
             .punishment_period(&period_string);

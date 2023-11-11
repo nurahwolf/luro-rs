@@ -6,7 +6,7 @@ use crate::Database;
 impl Database {
     pub async fn user_fetch(&self, user_id: Id<UserMarker>) -> anyhow::Result<User> {
         if let Ok(Some(user)) = self.driver.get_user(user_id).await {
-            return Ok(user)
+            return Ok(user);
         }
 
         tracing::warn!("Failed to get user from database, falling back to twlight client");

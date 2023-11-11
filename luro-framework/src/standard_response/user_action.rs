@@ -6,13 +6,7 @@ use super::{PunishmentType, StandardResponse};
 
 impl StandardResponse {
     /// Create a new punishment response
-    pub fn new_punishment(
-        kind: PunishmentType,
-        guild_name: &str,
-        guild_id: &Id<GuildMarker>,
-        target: &User,
-        moderator: &User,
-    ) -> Self {
+    pub fn new_punishment(kind: PunishmentType, guild_name: &str, guild_id: &Id<GuildMarker>, target: &User, moderator: &User) -> Self {
         let mut response = StandardResponse::default();
         response
             .embed

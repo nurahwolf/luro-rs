@@ -8,7 +8,6 @@ use twilight_model::{
     util::{ImageHash, Timestamp},
 };
 
-
 use super::MemberData;
 
 /// A warpper around [User], with [Member] details if [Id<GuildMarker>] was present on type creation.

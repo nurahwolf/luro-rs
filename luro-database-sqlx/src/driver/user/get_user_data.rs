@@ -1,7 +1,7 @@
 use luro_model::types::UserData;
 use twilight_model::id::{marker::UserMarker, Id};
 
-use crate::types::{DbGender, DbUserPermissions, DbSexuality};
+use crate::types::{DbGender, DbSexuality, DbUserPermissions};
 
 impl crate::SQLxDriver {
     pub async fn get_user_data(&self, user_id: Id<UserMarker>) -> anyhow::Result<Option<UserData>> {

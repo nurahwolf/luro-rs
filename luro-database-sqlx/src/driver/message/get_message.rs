@@ -1,6 +1,6 @@
+use luro_model::message::{Message, MessageSource};
 use luro_model::types::MessageData;
 use sqlx::types::Json;
-use luro_model::message::{Message, MessageSource};
 use sqlx::Error;
 use twilight_model::channel::message::sticker::MessageSticker;
 use twilight_model::channel::message::Mention;
@@ -23,12 +23,9 @@ use crate::types::DbMessageSource;
 
 impl crate::SQLxDriver {
     pub async fn get_message(&self, message_id: Id<MessageMarker>) -> Result<Option<Message>, Error> {
-        let message = sqlx::query_file!(
-            "queries/message_fetch.sql",
-            message_id.get() as i64
-        )
-        .fetch_optional(&self.pool)
-        .await?;
+        let message = sqlx::query_file!("queries/message_fetch.sql", message_id.get() as i64)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(match message {
             Some(message) => Some(Message {

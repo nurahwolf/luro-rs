@@ -1,4 +1,3 @@
-
 impl crate::SQLxDriver {
     pub async fn get_user_character_prefix(&self, user_id: i64, name: &str) -> Result<Option<String>, sqlx::Error> {
         sqlx::query!(

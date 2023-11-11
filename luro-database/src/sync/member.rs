@@ -27,7 +27,6 @@ pub async fn delete(db: &crate::Database, event: &MemberRemove) -> anyhow::Resul
 pub async fn chunk(db: &crate::Database, event: &MemberChunk) -> anyhow::Result<()> {
     tracing::debug!("member_chunk - In guild {}", event.guild_id);
 
-
     db.member_update(event).await?;
 
     Ok(())

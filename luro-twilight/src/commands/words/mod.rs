@@ -1,5 +1,5 @@
 use luro_framework::{CommandInteraction, CreateLuroCommand, LuroCommand};
-use tabled::{settings::Style, Table, builder::Builder};
+use tabled::{builder::Builder, settings::Style, Table};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 mod global;

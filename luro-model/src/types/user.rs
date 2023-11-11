@@ -5,7 +5,7 @@ use twilight_model::{
         marker::{GuildMarker, UserMarker},
         Id,
     },
-    user::{PremiumType, UserFlags, CurrentUser},
+    user::{CurrentUser, PremiumType, UserFlags},
     util::ImageHash,
 };
 
@@ -239,9 +239,7 @@ impl TryFrom<User> for twilight_model::guild::Member {
                 roles: member.roles.clone(),
                 user: luro_user.into(),
             }),
-            None => Err(anyhow!(
-                "Luro User was not instanced from a type containing member data"
-            )),
+            None => Err(anyhow!("Luro User was not instanced from a type containing member data")),
         }
     }
 }

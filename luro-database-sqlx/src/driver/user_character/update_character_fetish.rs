@@ -2,7 +2,6 @@ use tracing::info;
 
 use super::{DbCharacterFetish, DbUserFetishCategory};
 
-
 impl crate::SQLxDriver {
     pub async fn update_character_fetish(&self, character: DbCharacterFetish) -> Result<DbCharacterFetish, sqlx::Error> {
         info!("Trying to update character fetish");

@@ -27,7 +27,11 @@ impl CreateLuroCommand for Base64 {
         }
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, _original_interaction: twilight_model::application::interaction::Interaction) -> anyhow::Result<()> {
+    async fn interaction_component(
+        self,
+        ctx: ComponentInteraction,
+        _original_interaction: twilight_model::application::interaction::Interaction,
+    ) -> anyhow::Result<()> {
         // Always insure the input is decoded
         let (input, bait) = match self {
             Self::Decode(command) => (decode(&command.string)?, None),

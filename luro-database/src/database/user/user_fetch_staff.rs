@@ -7,7 +7,7 @@ impl crate::Database {
             Err(why) => {
                 tracing::error!(why = ?why, "Database failed to return any staff members");
                 Ok(vec![])
-            },
+            }
         }
     }
 }

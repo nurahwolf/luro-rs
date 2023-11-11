@@ -25,11 +25,25 @@ impl LuroCommand for Unban {
         let target = ctx.fetch_user(self.user).await?;
         let luro_data = match &luro.member.as_ref().context("Expected member context")?.data {
             Some(data) => data,
-            None => return ctx.respond(|r|r.content("Sorry, could not fetch my permissions to check if I can do this!").ephemeral()).await,
+            None => {
+                return ctx
+                    .respond(|r| {
+                        r.content("Sorry, could not fetch my permissions to check if I can do this!")
+                            .ephemeral()
+                    })
+                    .await
+            }
         };
         let moderator_data = match &moderator.member.as_ref().context("Expected member context")?.data {
             Some(data) => data,
-            None => return ctx.respond(|r|r.content("Sorry, could not fetch your permissions to check if you can do this!").ephemeral()).await,
+            None => {
+                return ctx
+                    .respond(|r| {
+                        r.content("Sorry, could not fetch your permissions to check if you can do this!")
+                            .ephemeral()
+                    })
+                    .await
+            }
         };
 
         let luro_permissions = luro_data.permission_calculator(&luro_data.role_permissions()).root();
@@ -44,13 +58,8 @@ impl LuroCommand for Unban {
         }
 
         // Checks passed, now let's action the user
-        let mut embed = StandardResponse::new_punishment(
-            PunishmentType::Unbanned,
-            &guild.name,
-            &guild.guild_id,
-            &target,
-            &ctx.author.clone(),
-        );
+        let mut embed =
+            StandardResponse::new_punishment(PunishmentType::Unbanned, &guild.name, &guild.guild_id, &target, &ctx.author.clone());
         embed.punishment_reason(Some(&self.reason), &target);
         match ctx.twilight_client.create_private_channel(target.user_id).await {
             Ok(channel) => {

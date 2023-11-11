@@ -9,6 +9,7 @@ impl crate::SQLxDriver {
         "
         )
         .fetch_one(&self.pool)
-        .await.map(|x| x.count.unwrap_or_default())
+        .await
+        .map(|x| x.count.unwrap_or_default())
     }
 }

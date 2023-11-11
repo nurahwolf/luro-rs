@@ -1,7 +1,7 @@
 use anyhow::Context;
+use luro_framework::{CommandInteraction, LuroCommand};
 use luro_model::types::Gender as LuroGender;
 use luro_model::types::Sexuality as LuroSexuality;
-use luro_framework::{CommandInteraction, LuroCommand};
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
 #[derive(CommandModel, CreateCommand, Debug)]
@@ -45,7 +45,12 @@ impl LuroCommand for Identity {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
         let mut user_data = match ctx.author.data {
             Some(ref data) => data.clone(),
-            None => ctx.database.driver.get_user_data(ctx.author.user_id).await?.context("Expected to get user data")?,
+            None => ctx
+                .database
+                .driver
+                .get_user_data(ctx.author.user_id)
+                .await?
+                .context("Expected to get user data")?,
         };
 
         user_data.gender = Some(match self.gender {

@@ -1,4 +1,4 @@
-use twilight_model::gateway::payload::incoming::{MessageUpdate, MessageDelete, MessageDeleteBulk, MessageCreate};
+use twilight_model::gateway::payload::incoming::{MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate};
 
 #[derive(Debug)]
 pub enum MessageSync {
@@ -16,5 +16,5 @@ pub enum MessageSync {
     /// Created from a message delete bulk event
     MessageDeleteBulk(MessageDeleteBulk),
     /// Created from a message create event
-    MessageCreate(MessageCreate)
+    MessageCreate(MessageCreate),
 }

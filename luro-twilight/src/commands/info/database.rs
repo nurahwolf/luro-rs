@@ -88,7 +88,7 @@ impl LuroCommand for Database {
             embed.create_field("-- Message Information --", &word_count_description, false);
         }
 
-        if let Ok(messages) = ctx.database.driver.messages_count_words().await {
+        if let Ok(messages) = ctx.database.driver.messages_count_word_totals().await {
             builder.push_record(["Total Messages Recorded", &format_number(messages.total_messages)]);
             builder.push_record(["Total Words Said", &format_number(messages.total_words)]);
             builder.push_record(["Total Unique Words", &format_number(messages.total_unique_words)]);

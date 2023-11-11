@@ -27,7 +27,7 @@ impl crate::SQLxDriver {
                 )
                 .execute(&self.pool)
                 .await?
-            },
+            }
             UserSync::CurrentUser(user) => {
                 sqlx::query_file!(
                     "queries/user_update_current_user.sql",

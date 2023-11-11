@@ -6,7 +6,7 @@ use twilight_model::{
     util::ImageHash,
 };
 
-use crate::types::{DbUserPermissions, DbGender, DbSexuality};
+use crate::types::{DbGender, DbSexuality, DbUserPermissions};
 
 impl crate::SQLxDriver {
     pub async fn get_users(&self) -> anyhow::Result<Vec<User>> {
@@ -18,8 +18,8 @@ impl crate::SQLxDriver {
                 data: Some(UserData {
                     user_id: Id::new(user.user_id as u64),
                     permissions: user.user_permissions.into(),
-                    gender: user.gender.map(|x|x.into()),
-                    sexuality: user.sexuality.map(|x|x.into()),
+                    gender: user.gender.map(|x| x.into()),
+                    sexuality: user.sexuality.map(|x| x.into()),
                 }),
                 member: None,
                 accent_colour: user.accent_colour.map(|x| x as u32),

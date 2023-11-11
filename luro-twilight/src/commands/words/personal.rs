@@ -4,7 +4,7 @@ use thousands::Separable;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::UserMarker, Id};
 
-use super::{TableStyle, table_style};
+use super::{table_style, TableStyle};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "personal", desc = "Get some stats on the bullshit someone has posted.")]
@@ -14,7 +14,7 @@ pub struct Personal {
     /// A particular word to show stats for
     word: Option<String>,
     /// Customise how the table looks!
-    style: Option<TableStyle>
+    style: Option<TableStyle>,
 }
 
 impl LuroCommand for Personal {
@@ -22,7 +22,7 @@ impl LuroCommand for Personal {
         let user = ctx.get_specified_user_or_author(self.user).await?;
         let mut table = Builder::new();
         let mut response = ctx.acknowledge_interaction(false).await?;
-        let global_messages = ctx.database.driver.messages_count_words().await?;
+        let global_messages = ctx.database.driver.messages_count_word_totals().await?;
         let user_messages = ctx.database.driver.messages_count_words_by_user(user.user_id).await?;
 
         table.set_header(["User", "Total Messages I have seen", "Total Words Said", "Total Unique Words"]);
@@ -38,8 +38,21 @@ impl LuroCommand for Personal {
             &user_messages.total_words.separate_with_commas(),
             &user_messages.total_unique_words.separate_with_commas(),
         ]);
-        let description = format!("```\n{}\n```", table_style(table, self.style.as_ref()));
 
+        if let Some(word) = self.word {
+            let total_times_said = match ctx.database.driver.messages_count_word_said(&word).await? {
+                Some(count) => count,
+                None => {
+                    return ctx
+                        .respond(|r| r.content(format!("Looks like the word `{word}` has never been recorded in my database :(")))
+                        .await
+                }
+            };
+
+            table.push_record([&word, "", &total_times_said.separate_with_commas()]);
+        }
+
+        let description = format!("```\n{}\n```", table_style(table, self.style.as_ref()));
 
         // if let Some(word) = self.word {
         //     writeln!(total_words, "You wanted to see stats for the word `{word}`...")?;

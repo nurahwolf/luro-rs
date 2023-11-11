@@ -2,7 +2,7 @@ use luro_model::types::MessageCount;
 
 impl crate::SQLxDriver {
     /// Returns total words, total unique words for all messages in the database
-    pub async fn messages_count_words(&self) -> anyhow::Result<MessageCount> {
+    pub async fn messages_count_word_totals(&self) -> anyhow::Result<MessageCount> {
         Ok(sqlx::query_file!("queries/messages_count_words.sql")
             .fetch_one(&self.pool)
             .await

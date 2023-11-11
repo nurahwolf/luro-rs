@@ -1,7 +1,10 @@
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-use twilight_model::{http::attachment::Attachment, id::{Id, marker::UserMarker}};
+use twilight_model::{
+    http::attachment::Attachment,
+    id::{marker::UserMarker, Id},
+};
 
 use super::{buttons, guild_information, user_information};
 

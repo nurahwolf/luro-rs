@@ -1,4 +1,4 @@
-use super::{DbUserCharacter, DbCharacterFetish, DbUserFetishCategory};
+use super::{DbCharacterFetish, DbUserCharacter, DbUserFetishCategory};
 
 impl crate::SQLxDriver {
     pub async fn get_character_fetishes(&self, character: &DbUserCharacter) -> Result<Vec<DbCharacterFetish>, sqlx::Error> {

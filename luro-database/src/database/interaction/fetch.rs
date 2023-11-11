@@ -1,4 +1,7 @@
-use twilight_model::{application::interaction::Interaction, id::{marker::InteractionMarker, Id}};
+use twilight_model::{
+    application::interaction::Interaction,
+    id::{marker::InteractionMarker, Id},
+};
 
 use crate::Database;
 

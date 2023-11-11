@@ -14,19 +14,19 @@ pub struct Database {
     /// User ID that represents the current user
     pub current_user: Id<UserMarker>,
     /// The API client used to query Discord for information. This is used as a fallback if no driver or cache is configured.
-    /// 
+    ///
     /// Acceptable drivers:
     /// - twilight_http
     pub api_client: std::sync::Arc<twilight_http::Client>,
     /// The caching layer. This is always queried first if configured.
-    /// 
+    ///
     /// Acceptable drivers:
     /// - twilight_inmemory_cache
     /// - none
     #[cfg(feature = "database-cache-twilight")]
     pub cache: twilight_cache_inmemory::InMemoryCache,
     /// The primary driver in which to fetch data. If not configured as a crate feature, this will use the Discord API using twilight.
-    /// 
+    ///
     /// Acceptable drivers:
     /// - database_driver_sqlq
     /// - none

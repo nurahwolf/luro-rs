@@ -1,13 +1,16 @@
 use anyhow::Context;
 use luro_model::types::Role;
-use twilight_model::id::{Id, marker::{GuildMarker, RoleMarker}};
+use twilight_model::id::{
+    marker::{GuildMarker, RoleMarker},
+    Id,
+};
 
 use crate::Database;
 
 impl Database {
     pub async fn role_fetch(&self, guild_id: Id<GuildMarker>, role_id: Id<RoleMarker>) -> anyhow::Result<Role> {
         if let Ok(Some(role)) = self.driver.role_fetch(guild_id, role_id).await {
-            return Ok(role)
+            return Ok(role);
         }
 
         tracing::warn!("Failed to get role from database, falling back to twlight client");

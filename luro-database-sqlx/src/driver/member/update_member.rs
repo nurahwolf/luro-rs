@@ -42,7 +42,8 @@ impl SQLxDriver {
             user_id.get() as i64,
         )
         .execute(&self.pool)
-        .await.map(|x|x.rows_affected())
+        .await
+        .map(|x| x.rows_affected())
     }
 }
 

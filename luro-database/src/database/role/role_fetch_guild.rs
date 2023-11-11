@@ -1,5 +1,5 @@
 use luro_model::types::Role;
-use twilight_model::id::{Id, marker::GuildMarker};
+use twilight_model::id::{marker::GuildMarker, Id};
 
 use crate::Database;
 
@@ -7,7 +7,7 @@ impl Database {
     pub async fn role_fetch_guild(&self, guild_id: Id<GuildMarker>) -> anyhow::Result<Vec<Role>> {
         if let Ok(roles) = self.driver.get_guild_roles(guild_id).await {
             if !roles.is_empty() {
-                return Ok(roles)
+                return Ok(roles);
             }
         }
 
@@ -18,6 +18,6 @@ impl Database {
             }
         }
 
-        Ok(twilight_roles.into_iter().map(|role|(guild_id, role).into()).collect())
+        Ok(twilight_roles.into_iter().map(|role| (guild_id, role).into()).collect())
     }
 }

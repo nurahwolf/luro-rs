@@ -22,7 +22,14 @@ impl LuroCommand for Guilds {
         }
 
         let accent_colour = ctx.accent_colour();
-        ctx.respond(|r| r.embed(|embed| embed.title("All the guilds that I am in").description(guild_string).colour(accent_colour)))
-            .await
+        ctx.respond(|r| {
+            r.embed(|embed| {
+                embed
+                    .title("All the guilds that I am in")
+                    .description(guild_string)
+                    .colour(accent_colour)
+            })
+        })
+        .await
     }
 }

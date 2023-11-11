@@ -1,10 +1,13 @@
 use luro_model::message::Message;
-use twilight_model::id::{Id, marker::{MessageMarker, ChannelMarker}};
+use twilight_model::id::{
+    marker::{ChannelMarker, MessageMarker},
+    Id,
+};
 
 impl crate::Database {
     pub async fn message_fetch(&self, message_id: Id<MessageMarker>, channel_id: Option<Id<ChannelMarker>>) -> anyhow::Result<Message> {
         if let Ok(Some(message)) = self.driver.get_message(message_id).await {
-            return Ok(message)
+            return Ok(message);
         }
 
         // TODO: Implement this
@@ -16,7 +19,11 @@ impl crate::Database {
 
         let channel_id = match channel_id {
             Some(channel_id) => channel_id,
-            None => return Err(anyhow::anyhow!("Could not fetch message from database or driver, and no channel ID was passed to try fetching via the API")),
+            None => {
+                return Err(anyhow::anyhow!(
+                    "Could not fetch message from database or driver, and no channel ID was passed to try fetching via the API"
+                ))
+            }
         };
 
         match self.api_client.message(channel_id, message_id).await {

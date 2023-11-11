@@ -1,15 +1,15 @@
 use twilight_gateway::Event;
 
-mod role;
 mod channel;
-mod presence;
-mod member;
 mod guild;
+mod member;
+mod presence;
 mod ready;
+mod role;
 
 impl crate::Database {
     /// Syncronise data from the passed event into the database context. This automatically updates the cache, and database if the data is new.
-    /// 
+    ///
     /// This task should be spawned in the event loop of your bot.
     pub async fn sync_gateway(&self, event: &twilight_gateway::Event) -> anyhow::Result<()> {
         #[cfg(feature = "database-cache-twilight")]
@@ -30,7 +30,7 @@ impl crate::Database {
             Event::MemberUpdate(event) => member::update(self, event).await,
             Event::GuildUpdate(event) => guild::update(self, event).await,
             Event::Ready(event) => ready::ready(self, event).await,
-            _ => Ok(())
+            _ => Ok(()),
         }
     }
 }

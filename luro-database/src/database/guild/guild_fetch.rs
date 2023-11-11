@@ -1,10 +1,10 @@
 use luro_model::types::Guild;
-use twilight_model::id::{Id, marker::GuildMarker};
+use twilight_model::id::{marker::GuildMarker, Id};
 
 impl crate::Database {
     pub async fn guild_fetch(&self, guild_id: Id<GuildMarker>) -> anyhow::Result<Guild> {
         if let Ok(Some(guild)) = self.driver.get_guild(guild_id).await {
-            return Ok(guild)
+            return Ok(guild);
         }
 
         tracing::warn!("Failed to find guild `{guild_id}` in the database, falling back to Twilight");

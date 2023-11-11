@@ -167,7 +167,11 @@ async fn handle_role_update(db: &SQLxDriver, role: &RoleUpdate) -> Result<u64, s
     .map(|x| x.rows_affected())
 }
 
-async fn handle_twilight_role(db: &SQLxDriver, role: &twilight_model::guild::Role, guild_id: Id<GuildMarker>) -> Result<u64, sqlx::Error> {
+async fn handle_twilight_role(
+    db: &SQLxDriver,
+    role: &twilight_model::guild::Role,
+    guild_id: Id<GuildMarker>,
+) -> Result<u64, sqlx::Error> {
     sqlx::query_file!(
         "queries/guild_roles/update_role.sql",
         role.color as i32,

@@ -6,5 +6,5 @@ use twilight_model::id::{marker::GuildMarker, Id};
 pub struct GuildData {
     pub accent_colour: Option<u32>,
     pub accent_colour_custom: Option<u32>,
-    pub guild_id: Id<GuildMarker>
+    pub guild_id: Id<GuildMarker>,
 }
