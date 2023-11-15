@@ -13,23 +13,20 @@ version.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow.workspace = true
+anyhow.workspace = true                                         # Error Context
 hyper = { workspace = true, optional = true }                   # framework
-luro-model.path = "../luro-model"                               # framework
 luro-database.path = "../luro-database"                         # framework
-serde.workspace = true                                          # framework
-tracing.workspace = true
+luro-model.path = "../luro-model"                               # framework
+rand = { workspace = true, optional = true }                    # response/permission_not_bot_staff
 tracing-subscriber.workspace = true                             # framework
+tracing.workspace = true                                        # Detailed error information
 twilight-cache-inmemory = { workspace = true, optional = true } # framework
 twilight-gateway.workspace = true                               # framework
 twilight-http.workspace = true                                  # framework
-twilight-util.workspace = true                                  # framework
+twilight-interactions.path = "../twilight-interactions"         # command
 twilight-lavalink = { workspace = true, optional = true }       # framework
 twilight-model.workspace = true                                 # framework
-twilight-interactions.path = "../twilight-interactions"         # command
-
-rand = { workspace = true, optional = true } # response/permission_not_bot_staff
-async-trait = "0.1.73"
+twilight-util.workspace = true                                  # framework
 
 [features]
 # Default Features

@@ -12,52 +12,25 @@ version.workspace = true
 
 
 [dependencies]
-twilight-http.workspace = true # Used for fetching data if not present in the selected database driver
-twilight-util.workspace = true # Used for fetching data if not present in the selected database driver
-twilight-gateway.workspace = true                       # Used for syncronising state with an event stream from a Twilight gateway
-
-# Core
-anyhow = { workspace = true }
-futures-util = { workspace = true }
-luro-model.path = "../luro-model"
-twilight-model = { workspace = true }
-tracing = { workspace = true }
-serde ={ workspace = true }
+twilight-http.workspace = true    # Used for fetching data if not present in the selected database driver
+twilight-util.workspace = true    # Used for fetching data if not present in the selected database driver
+twilight-gateway.workspace = true # Used for syncronising state with an event stream from a Twilight gateway
+anyhow.workspace = true # The error type used by Luro
+futures-util.workspace = true # Used for iterating
+luro-model.path = "../luro-model" # Models returned by the database
+twilight-model.workspace = true # Interim models
+tracing.workspace = true # Extra information for when its fucked
 
 # Cache
-
-# Diesel
-diesel = { version = "2.1.0", features = ["postgres", "serde_json", "64-column-tables"], optional = true }
-diesel-derive-enum = { version = "2.1.0", features = ["postgres"], optional = true }
-
-# SQLx
-sqlx = { version = "0.7", features = [
-    "runtime-tokio",
-    "postgres",
-    "json",
-    "time",
-    "uuid"
-], optional = true }
-
-# Toml
-toml = { version = "0.8", optional = true }
-
-## NEW and sorted
 twilight-cache-inmemory = { workspace = true, optional = true } # Caching layer using Twilight's built in cache
+
+# Database Drivers
 luro-database-sqlx = { path = "../luro-database-sqlx", optional = true } # SQLx database driver
 
 
 [features]
-default = ["sqlx-driver", "cache", "database-cache-twilight", "database-driver-sqlx"]
+default = ["database-cache-twilight", "database-driver-sqlx"]
 
 ## Database Options
 database-cache-twilight = ["dep:twilight-cache-inmemory"]
 database-driver-sqlx = ["dep:luro-database-sqlx"]
-
-## Old Database Options
-diesel-driver = ["dep:diesel", "diesel-derive-enum"]
-sqlx-driver = ["dep:sqlx"]
-toml-driver = ["dep:toml"]
-
-## Misc Features
-cache = ["dep:twilight-cache-inmemory"] # Only used for allowing cached items be converted to database items. If not needed, disable this feature

@@ -76,17 +76,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
-name = "async-trait"
-version = "0.1.74"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a66537f1bb974b254c98ed142ff995236e81b9d0fe4db0575f46612cb15eb0f9"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.38",
-]
-
-[[package]]
 name = "atoi"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -367,53 +356,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "diesel"
-version = "2.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2268a214a6f118fce1838edba3d1561cf0e78d8de785475957a580a7f8c69d33"
-dependencies = [
- "bitflags 2.4.1",
- "byteorder",
- "diesel_derives",
- "itoa",
- "pq-sys",
- "serde_json",
-]
-
-[[package]]
-name = "diesel-derive-enum"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81c5131a2895ef64741dad1d483f358c2a229a3a2d1b256778cdc5e146db64d4"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn 2.0.38",
-]
-
-[[package]]
-name = "diesel_derives"
-version = "2.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef8337737574f55a468005a83499da720f20c65586241ffea339db9ecdfd2b44"
-dependencies = [
- "diesel_table_macro_syntax",
- "proc-macro2",
- "quote",
- "syn 2.0.38",
-]
-
-[[package]]
-name = "diesel_table_macro_syntax"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc5557efc453706fed5e4fa85006fe9817c224c3f480a34c7e5959fd700921c5"
-dependencies = [
- "syn 2.0.38",
-]
-
-[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -424,12 +366,6 @@ dependencies = [
  "crypto-common",
  "subtle",
 ]
-
-[[package]]
-name = "dotenv"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "dotenvy"
@@ -1005,14 +941,9 @@ name = "luro-database"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "diesel",
- "diesel-derive-enum",
  "futures-util",
  "luro-database-sqlx",
  "luro-model",
- "serde",
- "sqlx",
- "toml",
  "tracing",
  "twilight-cache-inmemory",
  "twilight-gateway",
@@ -1046,12 +977,10 @@ name = "luro-framework"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "async-trait",
  "hyper",
  "luro-database",
  "luro-model",
  "rand",
- "serde",
  "tracing",
  "tracing-subscriber",
  "twilight-cache-inmemory",
@@ -1068,24 +997,19 @@ name = "luro-model"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "async-trait",
  "dotenvy",
- "hyper",
  "nom",
  "radix_trie",
  "rand",
  "serde",
- "sqlx",
  "time",
  "tokio",
- "toml",
  "tracing",
  "tracing-subscriber",
  "twilight-cache-inmemory",
  "twilight-gateway",
  "twilight-http",
  "twilight-interactions",
- "twilight-lavalink",
  "twilight-model",
  "twilight-util",
 ]
@@ -1095,9 +1019,7 @@ name = "luro-twilight"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "async-trait",
  "base64",
- "dotenv",
  "dotenvy",
  "futures-util",
  "git2",
@@ -1450,15 +1372,6 @@ name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
-
-[[package]]
-name = "pq-sys"
-version = "0.4.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31c0052426df997c0cbd30789eb44ca097e3541717a7b8fa36b1c464ee7edebd"
-dependencies = [
- "vcpkg",
-]
 
 [[package]]
 name = "proc-macro-error"

@@ -14,7 +14,6 @@ version.workspace = true
 
 [dependencies]
 # Core
-dotenv = "0.15"               # main
 anyhow = { workspace = true } # main
 
 # Dependencies for commands
@@ -55,7 +54,6 @@ twilight-http = { workspace = true }                    # commands
 twilight-model = { workspace = true }                   # event_listener
 twilight-gateway.workspace = true                       # main
 twilight-interactions.path = "../twilight-interactions" # commands
-async-trait = "0.1.73"
 dotenvy = "0.15.7"
 
 # Optional Features
