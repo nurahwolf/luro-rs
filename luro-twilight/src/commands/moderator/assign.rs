@@ -1,5 +1,5 @@
 use luro_framework::{CommandInteraction, LuroCommand};
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{
     marker::{RoleMarker, UserMarker},
     Id,
@@ -19,7 +19,7 @@ pub struct Assign {
 }
 
 impl LuroCommand for Assign {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let user = ctx.get_specified_user_or_author(self.user).await?;
         ctx.twilight_client
             .add_guild_member_role(ctx.guild.as_ref().unwrap().guild_id, user.user_id, self.role)

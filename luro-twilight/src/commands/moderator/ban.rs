@@ -1,5 +1,6 @@
 use anyhow::Context;
 use luro_framework::{CommandInteraction, Luro, LuroCommand, PunishmentType, Response, StandardResponse};
+use luro_model::types::CommandResponse;
 use tracing::{debug, warn};
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
@@ -42,7 +43,7 @@ pub enum TimeToBan {
 }
 
 impl LuroCommand for Ban {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut response = ctx.acknowledge_interaction(false).await?;
         let guild = ctx.guild.as_ref().context("Expected this to be a guild")?;
         let luro = ctx.database.user_fetch_current_user(ctx.guild_id()).await?;
@@ -182,6 +183,6 @@ impl LuroCommand for Ban {
         // ctx.send_log_channel(LuroLogChannel::Moderator, |r| r.add_embed(embed.embed))
         //     .await?;
 
-        Ok(())
+        Ok(CommandResponse::default())
     }
 }

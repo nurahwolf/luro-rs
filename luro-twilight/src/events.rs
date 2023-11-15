@@ -3,12 +3,7 @@ use tracing::error;
 use twilight_gateway::Event;
 
 mod interaction_create;
-mod message_create;
-mod message_delete;
-mod message_delete_bulk;
-mod message_update;
 mod ready;
-mod user_update;
 
 pub async fn event_handler(ctx: LuroContext) -> anyhow::Result<()> {
     if let Err(why) = ctx.database.sync_gateway(&ctx.event).await {
@@ -17,13 +12,7 @@ pub async fn event_handler(ctx: LuroContext) -> anyhow::Result<()> {
 
     let callback = match ctx.event.clone() {
         Event::InteractionCreate(event) => interaction_create::interaction_create_listener(ctx, event).await,
-        Event::MessageCreate(event) => message_create::message_create_listener(ctx, event).await,
-        Event::MessageDelete(event) => message_delete::message_delete_listener(ctx, event).await,
-        Event::MessageDeleteBulk(event) => message_delete_bulk::message_delete_bulk_listener(ctx, event).await,
-        Event::MessageUpdate(event) => message_update::message_update_listener(ctx, event).await,
         Event::Ready(event) => ready::ready_listener(ctx, event).await,
-        Event::UserUpdate(event) => user_update::user_update_listener(ctx, event).await,
-
         _ => Ok(()),
     };
 

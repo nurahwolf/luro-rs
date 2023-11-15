@@ -13,9 +13,8 @@ pub struct Decode {
 }
 
 impl LuroCommand for Decode {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let response = super::decode_response(ctx.accent_colour(), &super::decode(&self.string)?).await?;
-        ctx.response_send(response).await?;
-        Ok(())
+        ctx.response_send(response).await
     }
 }

@@ -15,15 +15,14 @@ impl crate::SQLxDriver {
 
         Ok(match character {
             Some(character) => Some(CharacterProfile {
+                prefix: character.prefix,
                 name: character.character_name,
-                short_description: character.sfw_summary,
-                icon: todo!(),
-                nsfw_icon: todo!(),
-                description: character.sfw_description,
+                sfw_description: character.sfw_description,
+                sfw_summary: character.sfw_summary,
+                sfw_icons: character.sfw_icons.unwrap_or_default(),
                 nsfw_description: character.nsfw_description,
-                nsfw: todo!(),
-                fetishes: todo!(),
-                images: todo!(),
+                nsfw_summary: character.nsfw_summary,
+                nsfw_icons: character.nsfw_icons.unwrap_or_default(),
             }),
             None => None,
         })

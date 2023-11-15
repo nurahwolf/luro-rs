@@ -12,12 +12,12 @@ pub struct Message {
 }
 
 impl LuroCommand for Message {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let link_regex = Regex::new(r"^https.*/(\d+)/(\d+)")?;
         let number_regex = Regex::new(r"\d+")?;
 
         let message = if let Some(captures) = link_regex.captures(&self.message) {
-            tracing::info!("{captures:#?}");
+            tracing::debug!("{captures:#?}");
             let message_id = captures.get(2).context("Expected to get message_id")?.as_str().parse()?;
             let channel_id = captures.get(1).context("Expected to get channel_id")?.as_str().parse()?;
 
@@ -28,7 +28,7 @@ impl LuroCommand for Message {
         } else if let Some(message_id) = number_regex.find(&self.message).map(|mat| mat.as_str().parse()) {
             match ctx
                 .database
-                .message_fetch(Id::new(message_id.context("Expected to get message_id")?), None)
+                .message_fetch(Id::new(message_id.context("Expected to get message_id")?), Some(ctx.channel.id))
                 .await
             {
                 Ok(message) => message,

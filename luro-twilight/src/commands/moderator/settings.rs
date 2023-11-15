@@ -26,7 +26,7 @@ pub struct Settings {
 }
 
 impl LuroCommand for Settings {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let guild = ctx.guild.context("Expected this to be a guild")?;
 
         let mut embed = ctx.default_embed().await;

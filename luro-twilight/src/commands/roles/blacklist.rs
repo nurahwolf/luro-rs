@@ -25,7 +25,7 @@ impl LuroCommandTrait for Blacklist {
     async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let data = Self::new(interaction.data.clone())?;
         match data {
             Self::Add(_command) => add::Add::handle_interaction(ctx, interaction).await,

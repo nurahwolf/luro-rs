@@ -1,12 +1,19 @@
-use twilight_model::{gateway::payload::incoming::GuildUpdate, guild::Guild};
+use twilight_model::{gateway::payload::incoming::{GuildUpdate, GuildCreate}, guild::Guild};
 pub enum GuildSync<'a> {
     Guild(&'a Guild),
     GuildUpdate(&'a GuildUpdate),
+    GuildCreate(&'a GuildCreate),
 }
 
 impl<'a> From<&'a GuildUpdate> for GuildSync<'a> {
     fn from(guild: &'a GuildUpdate) -> Self {
         Self::GuildUpdate(guild)
+    }
+}
+
+impl<'a> From<&'a GuildCreate> for GuildSync<'a> {
+    fn from(guild: &'a GuildCreate) -> Self {
+        Self::GuildCreate(guild)
     }
 }
 

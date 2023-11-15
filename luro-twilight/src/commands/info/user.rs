@@ -1,6 +1,6 @@
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use rand::{seq::SliceRandom, thread_rng};
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     http::attachment::Attachment,
     id::{marker::UserMarker, Id},
@@ -26,7 +26,7 @@ pub struct InfoUser {
 }
 
 impl LuroCommand for InfoUser {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let description = REMARK.choose(&mut thread_rng()).unwrap_or(&REMARK[0]);
         let mut embed = ctx.default_embed().await;
         let mut user = ctx.get_specified_user_or_author(self.user).await?;

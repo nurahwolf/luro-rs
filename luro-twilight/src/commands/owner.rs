@@ -76,7 +76,7 @@ impl std::fmt::Display for Owner {
 }
 
 impl CreateLuroCommand for Owner {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut authorised = false;
         for staff in ctx.database.user_fetch_staff().await? {
             if staff.user_id == ctx.author.user_id {
@@ -107,7 +107,7 @@ impl CreateLuroCommand for Owner {
         }
     }
 
-    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<()> {
+    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut message_id = None;
         let mut channel_id = None;
 
@@ -154,7 +154,7 @@ impl CreateLuroCommand for Owner {
         ctx.respond(|r| r.content("All done!").ephemeral()).await
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: Interaction) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: Interaction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match ctx.data.custom_id.as_str() {
             "mass-assign-selector" => component_selector(ctx).await,
             "mass-assign-roles" | "mass-assign-remove" => component_roles(ctx).await,
@@ -163,7 +163,7 @@ impl CreateLuroCommand for Owner {
     }
 }
 
-async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
+async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
     let guild = match &ctx.guild {
         Some(guild) => guild,
         None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
@@ -237,7 +237,7 @@ async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<()> {
     ctx.respond(|r| r.content("To implement")).await
 }
 
-async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<()> {
+async fn component_roles(ctx: ComponentInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
     // let guild = match &ctx.guild {
     //     Some(guild) => guild,
     //     None => return ctx.response_simple(luro_framework::Response::NotGuild).await,

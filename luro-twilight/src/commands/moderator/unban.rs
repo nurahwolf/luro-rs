@@ -17,7 +17,7 @@ pub struct Unban {
 }
 
 impl LuroCommand for Unban {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut response = ctx.acknowledge_interaction(false).await?;
         let guild = ctx.guild.as_ref().context("Expected this to be a guild")?;
         let luro = ctx.database.user_fetch_current_user(ctx.guild_id()).await?;
@@ -88,7 +88,7 @@ impl LuroCommand for Unban {
         };
 
         response.add_embed(embed.embed().0);
-        ctx.response_send(response).await?;
+        ctx.response_send(response).await
 
         // moderator.moderation_actions_performed += 1;
         // ctx.database.modify_user(&moderator.id, &moderator).await?;
@@ -97,6 +97,5 @@ impl LuroCommand for Unban {
         // ctx.send_log_channel(&guild.guild_id, LuroLogChannel::Moderator, |r| r.add_embed(embed.embed))
         //     .await?;
 
-        Ok(())
     }
 }

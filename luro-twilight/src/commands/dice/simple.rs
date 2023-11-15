@@ -43,7 +43,7 @@ pub struct Simple {
 }
 
 impl LuroCommand for Simple {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut roll = format!("{}d{}", self.dice, self.sides);
 
         if let Some(operation) = self.keep_highest {
@@ -112,7 +112,6 @@ impl LuroCommand for Simple {
             }
             r.content(result_string)
         })
-        .await?;
-        Ok(())
+        .await
     }
 }

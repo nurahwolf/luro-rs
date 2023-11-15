@@ -13,9 +13,8 @@ pub struct Encode {
 }
 
 impl LuroCommand for Encode {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let response = super::encode_response(ctx.accent_colour(), &super::encode(&self.string)).await?;
-        ctx.response_create(&response).await?;
-        Ok(())
+        ctx.response_create(&response).await
     }
 }

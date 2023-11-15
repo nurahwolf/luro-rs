@@ -23,7 +23,7 @@ pub struct Create {
 }
 
 impl LuroCommand for Create {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut embed = ctx.default_embed().await;
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| {

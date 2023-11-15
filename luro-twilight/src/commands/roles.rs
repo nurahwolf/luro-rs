@@ -32,7 +32,7 @@ pub enum RoleCommands {
 impl LuroCommandTrait for RoleCommands {
     async fn handle_interaction(
         ctx: CommandInteraction<Self>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         match ctx.command {
             Self::Menu(_command) => menu::Menu::handle_interaction(ctx).await,
             Self::Blacklist(_command) => blacklist::Blacklist::handle_interaction(ctx).await,
@@ -42,7 +42,7 @@ impl LuroCommandTrait for RoleCommands {
     async fn handle_component(
         ctx: Framework,
         interaction: InteractionComponent,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut message = interaction.message.clone();
         let mut original_interaction = interaction.original.clone();
         let mut new_id = true;

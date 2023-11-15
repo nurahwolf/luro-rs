@@ -11,7 +11,7 @@ pub struct Guilds {
 }
 
 impl LuroCommand for Guilds {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut guild_string = String::new();
         for guild in ctx.database.guilds_fetch().await? {
             if self.show_id.unwrap_or_default() {

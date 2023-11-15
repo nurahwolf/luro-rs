@@ -47,7 +47,7 @@ impl InteractionContext {
         }
     }
 
-    pub async fn respond<F>(&self, response: F) -> anyhow::Result<()>
+    pub async fn respond<F>(&self, response: F) -> anyhow::Result<luro_model::types::CommandResponse>
     where
         F: FnOnce(&mut LuroResponse) -> &mut LuroResponse,
     {
@@ -64,21 +64,21 @@ impl InteractionContext {
         match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
             || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
         {
-            true => interaction_client
+            true => Ok(interaction_client
                 .update_response(interaction_token)
                 .embeds(r.embeds.as_deref())
                 .await?
-                .status(),
-            false => interaction_client
+                .model()
+                .await
+                .map(|x| luro_model::types::CommandResponse { message: Some(x.into()) })?),
+            false => Ok(interaction_client
                 .create_response(interaction_id, interaction_token, &r.interaction_response())
-                .await?
-                .status(),
-        };
-
-        Ok(())
+                .await
+                .map(|_| luro_model::types::CommandResponse::default())?),
+        }
     }
 
-    pub async fn simple_response(&self, response: Response<'_>) -> anyhow::Result<()> {
+    pub async fn simple_response(&self, response: Response<'_>) -> anyhow::Result<luro_model::types::CommandResponse> {
         self.respond(|r| r.add_embed(response.embed())).await
     }
 }

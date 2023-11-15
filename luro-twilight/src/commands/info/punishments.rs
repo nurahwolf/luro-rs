@@ -11,7 +11,7 @@ pub struct Punishments {
 }
 
 impl LuroCommand for Punishments {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let punished_user = ctx.fetch_user(&self.user.resolved.id).await?;
         let mut warnings = String::new();
 

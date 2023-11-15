@@ -1,9 +1,11 @@
+use luro_model::types::CommandResponse as CommandResponse;
+
 use crate::standard_response::Response;
 use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
 
 pub trait LuroCommand {
     /// The function to execute for the command / command group
-    fn interaction_command(self, ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
+    fn interaction_command(self, ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send
     where
         Self: Sized,
     {
@@ -15,7 +17,7 @@ pub trait LuroCommand {
         self,
         ctx: ComponentInteraction,
         _invoking_interaction: twilight_model::application::interaction::Interaction,
-    ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
+    ) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send
     where
         Self: Sized,
     {
@@ -23,12 +25,12 @@ pub trait LuroCommand {
     }
 
     /// Create and respond to a button interaction
-    fn interaction_modal(ctx: ModalInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
+    fn interaction_modal(ctx: ModalInteraction) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send {
         async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
     }
 
     /// Create and respond to a button interaction
-    fn interaction_autocomplete(ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
+    fn interaction_autocomplete(ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send {
         async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
     }
 }

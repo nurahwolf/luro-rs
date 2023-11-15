@@ -6,7 +6,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 pub struct Hello {}
 
 impl CreateLuroCommand for Hello {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let current_user = ctx.twilight_client.current_user().await?.model().await?.name;
         ctx.respond(|r| {
             r.content(format!(

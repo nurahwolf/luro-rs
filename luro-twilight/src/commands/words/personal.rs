@@ -18,7 +18,7 @@ pub struct Personal {
 }
 
 impl LuroCommand for Personal {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let user = ctx.get_specified_user_or_author(self.user).await?;
         let mut table = Builder::new();
         let mut response = ctx.acknowledge_interaction(false).await?;
@@ -43,9 +43,8 @@ impl LuroCommand for Personal {
             let total_times_said = match ctx.database.driver.messages_count_word_said(&word).await? {
                 Some(count) => count,
                 None => {
-                    return ctx
-                        .respond(|r| r.content(format!("Looks like the word `{word}` has never been recorded in my database :(")))
-                        .await
+                    response.content(format!("Looks like the word `{word}` has never been recorded in my database :("));
+                    return ctx.response_send(response).await;
                 }
             };
 
@@ -59,9 +58,8 @@ impl LuroCommand for Personal {
         // }
 
         response.content(description);
-        ctx.response_send(response).await?;
+        ctx.response_send(response).await
 
-        Ok(())
         // let mut response = ctx.acknowledge_interaction(false).await?;
         // let luro_user = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
         // let mut description = String::new();

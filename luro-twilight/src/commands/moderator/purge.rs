@@ -11,7 +11,7 @@ pub struct Purge {
 }
 
 impl LuroCommand for Purge {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let messages = ctx
             .twilight_client
             .channel_messages(ctx.channel.id)

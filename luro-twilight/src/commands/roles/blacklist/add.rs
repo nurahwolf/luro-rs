@@ -16,7 +16,7 @@ impl LuroCommandTrait for Add {
     async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let data = Self::new(interaction.data.clone())?;
         let interaction_author = interaction.author_id();
         let mut owner_match = false;

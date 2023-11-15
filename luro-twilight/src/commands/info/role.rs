@@ -19,7 +19,7 @@ pub struct InfoRole {
 }
 
 impl LuroCommand for InfoRole {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut embed = ctx.default_embed().await;
         let guild = match self.guild {
             Some(guild_requested) => ctx.get_guild(guild_requested.cast()).await?,

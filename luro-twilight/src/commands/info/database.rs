@@ -11,7 +11,7 @@ use twilight_model::http::interaction::InteractionResponseType;
 pub struct Database {}
 
 impl LuroCommand for Database {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         ctx.acknowledge_interaction(false).await?;
         let mut embed = ctx.default_embed().await;
 

@@ -18,7 +18,7 @@ pub enum Words {
 }
 
 impl CreateLuroCommand for Words {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match self {
             Self::Global(command) => command.interaction_command(ctx).await,
             Self::Guild(command) => command.interaction_command(ctx).await,

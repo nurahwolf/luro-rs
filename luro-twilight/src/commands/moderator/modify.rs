@@ -11,7 +11,7 @@ use twilight_model::{channel::message::component::TextInputStyle, http::interact
 pub struct Modify {}
 
 impl LuroCommand for Modify {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         ctx.respond(|r| {
             r.title("Modify an Embed!")
                 .custom_id("modify-embed")

@@ -27,7 +27,7 @@ pub enum LogLevel {
 }
 
 impl LuroCommand for Log {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let (_, level) = match self.level {
             LogLevel::Trace => (
                 ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::TRACE)?,

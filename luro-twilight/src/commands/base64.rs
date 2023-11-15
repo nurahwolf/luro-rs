@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine};
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
-use luro_model::response::LuroResponse;
+use luro_model::{response::LuroResponse, types::CommandResponse};
 use std::str;
 use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -19,7 +19,7 @@ pub enum Base64 {
 }
 
 impl CreateLuroCommand for Base64 {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         // Call the appropriate subcommand.
         match self {
             Self::Decode(command) => command.interaction_command(ctx).await,
@@ -31,7 +31,7 @@ impl CreateLuroCommand for Base64 {
         self,
         ctx: ComponentInteraction,
         _original_interaction: twilight_model::application::interaction::Interaction,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         // Always insure the input is decoded
         let (input, bait) = match self {
             Self::Decode(command) => (decode(&command.string)?, None),
@@ -43,23 +43,22 @@ impl CreateLuroCommand for Base64 {
             "encode" => response(&ctx, &input, false).await?,
             _ => {
                 warn!("No match");
-                return Ok(());
+                return Ok(CommandResponse::default());
             }
         };
 
-        if bait.unwrap_or_default() {
-            ctx.response_update(&response).await?;
-            ctx.respond(|response| {
-                response
-                    .content(format!("<@{}> got baited...", ctx.author.user_id))
-                    .reply(&ctx.message.id)
-            })
-            .await?;
-        } else {
-            ctx.response_update(&response).await?;
+        match bait.unwrap_or_default() {
+            true => {
+                ctx.response_update(&response).await?;
+                ctx.respond(|response| {
+                    response
+                        .content(format!("<@{}> got baited...", ctx.author.user_id))
+                        .reply(&ctx.message.id)
+                })
+                .await
+            }
+            false => ctx.response_update(&response).await,
         }
-
-        Ok(())
     }
 }
 

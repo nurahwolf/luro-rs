@@ -15,7 +15,7 @@ pub struct Proxy {
 }
 
 impl LuroCommand for Proxy {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut character = match ctx.author.fetch_character(ctx.database.clone(), &self.name).await? {
             Some(character) => character,
             None => {

@@ -1,20 +1,20 @@
 use twilight_model::gateway::payload::incoming::{MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate};
 
 #[derive(Debug)]
-pub enum MessageSync {
+pub enum MessageSync<'a> {
     /// Created from an existing message
-    Message(twilight_model::channel::Message),
+    Message(&'a twilight_model::channel::Message),
     /// Added / crafted manually
-    Custom(crate::Message),
+    Custom(&'a crate::Message),
     /// Created from a cached message
     #[cfg(feature = "twilight-cache")]
-    CachedMessage(CachedMessage),
+    CachedMessage(&'a CachedMessage),
     /// Created from a message update event
-    MessageUpdate(MessageUpdate),
+    MessageUpdate(&'a MessageUpdate),
     /// Created from a message delete event
-    MessageDelete(MessageDelete),
+    MessageDelete(&'a MessageDelete),
     /// Created from a message delete bulk event
-    MessageDeleteBulk(MessageDeleteBulk),
+    MessageDeleteBulk(&'a MessageDeleteBulk),
     /// Created from a message create event
-    MessageCreate(MessageCreate),
+    MessageCreate(&'a MessageCreate),
 }

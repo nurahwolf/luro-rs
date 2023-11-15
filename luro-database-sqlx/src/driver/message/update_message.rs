@@ -6,7 +6,7 @@ use twilight_model::gateway::payload::incoming::{MessageCreate, MessageDelete, M
 use crate::{types::DbMessageSource, SQLxDriver};
 
 impl crate::SQLxDriver {
-    pub async fn update_message(&self, message: impl Into<MessageSync>) -> anyhow::Result<u64> {
+    pub async fn update_message(&self, message: impl Into<MessageSync<'_>>) -> anyhow::Result<u64> {
         match message.into() {
             #[cfg(feature = "twilight-cache")]
             MessageSync::CachedMessage(message) => self.handle_cached_message(message).await?,
@@ -20,7 +20,7 @@ impl crate::SQLxDriver {
     }
 }
 
-async fn handle_message_create(db: &SQLxDriver, message: MessageCreate) -> anyhow::Result<u64> {
+async fn handle_message_create(db: &SQLxDriver, message: &MessageCreate) -> anyhow::Result<u64> {
     tracing::debug!("Handling message_create {:#?}", message);
     let mut rows_updated = db.update_user(&message.author).await?;
 
@@ -97,7 +97,7 @@ async fn handle_message_create(db: &SQLxDriver, message: MessageCreate) -> anyho
     Ok(rows_updated)
 }
 
-async fn handle_luro_message(db: &SQLxDriver, message: Message) -> anyhow::Result<u64> {
+async fn handle_luro_message(db: &SQLxDriver, message: &Message) -> anyhow::Result<u64> {
     Ok(sqlx::query_file!(
         "queries/message_update.sql",
         message.activity.clone().map(|x| Json(x)) as _,
@@ -111,7 +111,7 @@ async fn handle_luro_message(db: &SQLxDriver, message: Message) -> anyhow::Resul
             false => Some(Json(message.components.clone())),
         } as _,
         message.content,
-        match message.data {
+        match &message.data {
             Some(data) => data.deleted,
             None => false,
         },
@@ -180,7 +180,7 @@ async fn handle_luro_message(db: &SQLxDriver, message: Message) -> anyhow::Resul
     .map(|x| x.rows_affected())?)
 }
 
-pub async fn handle_message_update(db: &SQLxDriver, message: MessageUpdate) -> anyhow::Result<u64> {
+pub async fn handle_message_update(db: &SQLxDriver, message: &MessageUpdate) -> anyhow::Result<u64> {
     Ok(sqlx::query_file!(
         "queries/message_update_twilight_update.sql",
         message.id.get() as i64,
@@ -192,7 +192,7 @@ pub async fn handle_message_update(db: &SQLxDriver, message: MessageUpdate) -> a
     .map(|x| x.rows_affected())?)
 }
 
-async fn handle_twilight_message(db: &SQLxDriver, message: twilight_model::channel::Message) -> anyhow::Result<u64> {
+async fn handle_twilight_message(db: &SQLxDriver, message: &twilight_model::channel::Message) -> anyhow::Result<u64> {
     let mut rows_updated = db.update_user(&message.author).await?;
     rows_updated += sqlx::query_file!(
         "queries/message_update_twilight_message.sql",
@@ -269,15 +269,15 @@ async fn handle_twilight_message(db: &SQLxDriver, message: twilight_model::chann
     Ok(rows_updated)
 }
 
-async fn handle_message_delete_bulk(db: &SQLxDriver, messages: MessageDeleteBulk) -> anyhow::Result<u64> {
+async fn handle_message_delete_bulk(db: &SQLxDriver, messages: &MessageDeleteBulk) -> anyhow::Result<u64> {
     let mut rows_updated = 0;
-    for message in messages.ids {
+    for message in &messages.ids {
         rows_updated += handle_message_delete(
             db,
-            MessageDelete {
+            &MessageDelete {
                 channel_id: messages.channel_id,
                 guild_id: messages.guild_id,
-                id: message,
+                id: *message,
             },
         )
         .await?
@@ -286,7 +286,7 @@ async fn handle_message_delete_bulk(db: &SQLxDriver, messages: MessageDeleteBulk
     Ok(rows_updated)
 }
 
-async fn handle_message_delete(db: &SQLxDriver, message: MessageDelete) -> anyhow::Result<u64> {
+async fn handle_message_delete(db: &SQLxDriver, message: &MessageDelete) -> anyhow::Result<u64> {
     Ok(sqlx::query_as!(
         DatabaseMessage,
         "

@@ -42,7 +42,7 @@ impl LuroCommand for HeckAddCommand {
         self,
         data: Box<MessageComponentInteractionData>,
         ctx: LuroSlash<D>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let interaction = &ctx.interaction;
         let interaction_author = interaction.author().context("Expected to get interaction author")?;
         let interaction_channel = interaction.channel.clone().unwrap();

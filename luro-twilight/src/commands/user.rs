@@ -13,7 +13,7 @@ pub enum User {
 }
 
 impl CreateLuroCommand for User {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match self {
             Self::Identity(command) => command.interaction_command(ctx).await,
         }

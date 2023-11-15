@@ -10,7 +10,7 @@ pub struct UwU {
 }
 
 impl CreateLuroCommand for UwU {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let uwu = if cfg!(target_feature = "sse4.1") {
             unsafe { sse_uwu(&self.message) }
         } else {

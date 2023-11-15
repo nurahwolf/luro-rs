@@ -16,7 +16,7 @@ pub enum Images {
 }
 
 impl CreateLuroCommand for Images {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match self {
             Self::Add(command) => command.interaction_command(ctx).await,
             Self::Random(command) => command.interaction_command(ctx).await,

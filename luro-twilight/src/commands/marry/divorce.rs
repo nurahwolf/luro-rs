@@ -15,7 +15,7 @@ pub struct Divorce {
 }
 
 impl LuroCommand for Divorce {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let proposer = ctx.author.clone();
         let proposee = ctx.fetch_user(self.user).await?;
 

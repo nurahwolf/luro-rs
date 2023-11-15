@@ -19,7 +19,7 @@ pub struct About {
 }
 
 impl CreateLuroCommand for About {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut description =
             "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n".to_owned();
         let current_user = ctx.twilight_client.current_user().await?.model().await?;

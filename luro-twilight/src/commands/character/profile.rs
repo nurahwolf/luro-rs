@@ -16,7 +16,7 @@ pub struct Profile {
 }
 
 impl LuroCommand for Profile {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let user = ctx.get_specified_user_or_author(self.user.as_ref()).await?;
 
         let nsfw = match self.nsfw {

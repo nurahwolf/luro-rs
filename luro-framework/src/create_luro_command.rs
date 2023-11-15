@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context};
+use luro_model::types::CommandResponse;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
 use twilight_model::application::interaction::application_command::CommandData;
@@ -8,7 +9,7 @@ use crate::standard_response::Response;
 use crate::{CommandInteraction, ComponentInteraction, InteractionContext, LuroCommand, ModalInteraction};
 
 pub trait CreateLuroCommand: CommandModel + CreateCommand {
-    fn handle_interaction(interaction: InteractionContext) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
+    fn handle_interaction(interaction: InteractionContext) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send
     where
         Self: Send,
     {
@@ -65,7 +66,7 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
     }
 
     /// Execute the command / command group
-    fn interaction_command(self, ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
+    fn interaction_command(self, ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send
     where
         Self: Send,
     {
@@ -77,7 +78,7 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
         self,
         ctx: ComponentInteraction,
         _: Interaction,
-    ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
+    ) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send
     where
         Self: Send,
     {
@@ -85,7 +86,7 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
     }
 
     /// Execute a modal interaction
-    fn interaction_modal(ctx: ModalInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
+    fn interaction_modal(ctx: ModalInteraction) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send
     where
         Self: Send,
     {
@@ -93,7 +94,7 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
     }
 
     /// Execute the handler for an autocomplete context
-    fn interaction_autocomplete(ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
+    fn interaction_autocomplete(ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send
     where
         Self: Send,
     {
@@ -102,25 +103,25 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
 }
 
 impl<T: CreateLuroCommand + Send> LuroCommand for T {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()>
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<CommandResponse>
     where
         Self: Sized,
     {
         Self::interaction_command(self, ctx).await
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, db: Interaction) -> anyhow::Result<()>
+    async fn interaction_component(self, ctx: ComponentInteraction, db: Interaction) -> anyhow::Result<CommandResponse>
     where
         Self: Sized,
     {
         Self::interaction_component(self, ctx, db).await
     }
 
-    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<()> {
+    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<CommandResponse> {
         Self::interaction_modal(ctx).await
     }
 
-    async fn interaction_autocomplete(ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_autocomplete(ctx: CommandInteraction) -> anyhow::Result<CommandResponse> {
         Self::interaction_autocomplete(ctx).await
     }
 }

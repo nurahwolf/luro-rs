@@ -1,11 +1,10 @@
-use luro_model::response::LuroResponse;
-use twilight_model::channel::Message;
+use luro_model::{response::LuroResponse, types::CommandResponse};
 
 use crate::CommandInteraction;
 
 impl CommandInteraction {
     /// Update an existing response
-    pub async fn response_update(&self, response: &LuroResponse) -> anyhow::Result<Message> {
+    pub async fn response_update(&self, response: &LuroResponse) -> anyhow::Result<CommandResponse> {
         let client = self.interaction_client();
         let request = client
             .update_response(&self.interaction_token)
@@ -14,9 +13,14 @@ impl CommandInteraction {
             .content(response.content.as_deref())
             .embeds(response.embeds.as_deref());
 
-        Ok(match response.attachments {
-            Some(ref attachments) => request.attachments(attachments).await?.model().await,
-            None => request.await?.model().await,
-        }?)
+        match response.attachments {
+            Some(ref attachments) => Ok(request
+                .attachments(attachments)
+                .await?
+                .model()
+                .await
+                .map(|x| CommandResponse { message: Some(x.into()) })?),
+            None => Ok(request.await?.model().await.map(|x| CommandResponse { message: Some(x.into()) })?),
+        }
     }
 }

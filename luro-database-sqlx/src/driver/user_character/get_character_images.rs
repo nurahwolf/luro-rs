@@ -1,53 +1,29 @@
 use luro_model::user::character::CharacterImage;
-
-use super::DbUserCharacter;
+use twilight_model::id::{marker::UserMarker, Id};
 
 impl crate::SQLxDriver {
-    pub async fn get_character_images(&self, character: &DbUserCharacter) -> Result<Vec<CharacterImage>, sqlx::Error> {
-        sqlx::query_as!(
+    pub async fn get_character_images(&self, user_id: Id<UserMarker>, character_name: &str) -> Result<Vec<CharacterImage>, sqlx::Error> {
+        sqlx::query_file_as!(
             CharacterImage,
-            "
-                SELECT
-                    character_name,
-                    favourite,
-                    images.img_id,
-                    name,
-                    nsfw,
-                    owner_id,
-                    source,
-                    url
-                FROM images
-                JOIN user_character_images ON images.img_id = user_character_images.img_id 
-                WHERE
-                    (user_id = $1 and character_name = $2)
-            ",
-            character.user_id,
-            character.character_name,
+            "queries/character_fetch_images.sql",
+            user_id.get() as i64,
+            character_name,
         )
         .fetch_all(&self.pool)
         .await
     }
 
-    pub async fn get_character_image(&self, character: &DbUserCharacter, img_id: i64) -> Result<Option<CharacterImage>, sqlx::Error> {
-        sqlx::query_as!(
+    pub async fn get_character_image(
+        &self,
+        user_id: Id<UserMarker>,
+        character_name: &str,
+        img_id: i64,
+    ) -> Result<Option<CharacterImage>, sqlx::Error> {
+        sqlx::query_file_as!(
             CharacterImage,
-            "
-                SELECT
-                    character_name,
-                    favourite,
-                    images.img_id,
-                    name,
-                    nsfw,
-                    owner_id,
-                    source,
-                    url
-                FROM images
-                JOIN user_character_images second ON images.img_id = second.img_id 
-                WHERE
-                    (user_id = $1 and character_name = $2 and images.img_id = $3)
-            ",
-            character.user_id,
-            character.character_name,
+            "queries/character_fetch_image.sql",
+            user_id.get() as i64,
+            character_name,
             img_id
         )
         .fetch_optional(&self.pool)

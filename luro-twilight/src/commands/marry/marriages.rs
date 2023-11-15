@@ -1,6 +1,6 @@
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use std::fmt::Write;
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::UserMarker, Id};
 
 #[derive(CommandModel, CreateCommand)]
@@ -11,7 +11,7 @@ pub struct Marriages {
 }
 
 impl LuroCommand for Marriages {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let accent_colour = ctx.accent_colour();
         let author = ctx.get_specified_user_or_author(self.user).await?;
         let marriages = ctx.database.user_fetch_marriages(author.user_id).await?;

@@ -10,7 +10,7 @@ pub enum Fetish {
     Create(create::Create),
 }
 impl LuroCommand for Fetish {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match self {
             Self::Create(command) => command.interaction_command(ctx).await,
         }

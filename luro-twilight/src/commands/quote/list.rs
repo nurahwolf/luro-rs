@@ -12,7 +12,7 @@ impl LuroCommandTrait for List {
     async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let quotes = ctx.database.get_quotes().await?;
         let mut quotes_string = String::new();
 

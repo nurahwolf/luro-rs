@@ -20,7 +20,7 @@ impl LuroCommandTrait for Get {
     async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let data = Self::new(interaction.data.clone())?;
 
         let id = match data.id {

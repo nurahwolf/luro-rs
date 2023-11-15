@@ -1,4 +1,5 @@
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::types::CommandResponse;
 use std::fmt::Write;
 use tabled::builder::Builder;
 use thousands::Separable;
@@ -18,7 +19,7 @@ pub struct Global {
 }
 
 impl LuroCommand for Global {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<CommandResponse> {
         let limit = self.limit.unwrap_or(10) as usize;
         let mut description = String::new();
         let mut table = Builder::new();
@@ -41,9 +42,8 @@ impl LuroCommand for Global {
             let total_times_said = match ctx.database.driver.messages_count_word_said(&word).await? {
                 Some(count) => count,
                 None => {
-                    return ctx
-                        .respond(|r| r.content(format!("Looks like the word `{word}` has never been recorded in my database :(")))
-                        .await
+                    response.content(format!("Looks like the word `{word}` has never been recorded in my database :("));
+                    return ctx.response_send(response).await;
                 }
             };
 
@@ -92,8 +92,6 @@ impl LuroCommand for Global {
         // }
 
         response.content(description);
-        ctx.response_send(response).await?;
-
-        Ok(())
+        ctx.response_send(response).await
     }
 }

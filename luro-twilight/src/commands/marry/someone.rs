@@ -17,7 +17,7 @@ pub struct Someone {
 }
 
 impl LuroCommand for Someone {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let proposer = ctx.author.clone();
         let accent_colour = ctx.accent_colour();
 

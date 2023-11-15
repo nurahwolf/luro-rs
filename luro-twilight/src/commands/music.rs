@@ -41,7 +41,7 @@ pub enum Music {
 impl CreateLuroCommand for Music {}
 
 impl ExecuteLuroCommand for Music {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         // Call the appropriate subcommand.
         match self {
             Self::Play(command) => command.interaction_command(ctx).await,

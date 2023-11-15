@@ -7,7 +7,7 @@ use twilight_model::channel::message::component::{ActionRow, Button, ButtonStyle
 pub struct Boop {}
 
 impl CreateLuroCommand for Boop {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let components = Vec::from([Component::ActionRow(ActionRow {
             components: Vec::from([Component::Button(Button {
                 custom_id: Some(String::from("boop")),
@@ -26,7 +26,7 @@ impl CreateLuroCommand for Boop {
         self,
         ctx: ComponentInteraction,
         _: twilight_model::application::interaction::Interaction,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         // Get message and parse number
         let message = ctx.message.clone();
 

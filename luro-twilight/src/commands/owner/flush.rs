@@ -11,7 +11,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 pub struct Flush {}
 
 impl LuroCommand for Flush {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         ctx.acknowledge_interaction(false).await?;
         let mut users = HashMap::new();
         let mut channels = HashMap::new();

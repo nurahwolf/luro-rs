@@ -14,7 +14,7 @@ pub struct Roll {
 }
 
 impl LuroCommand for Roll {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let result = DiceRoll::roll_inline(&self.dice, false).unwrap_or(RollResult {
             string_result: "I genuinely am a loss for words for whatever fucking format you just tried. Here, have a free `69` since you bewildered me so goddarn much.".to_string(),
             dice_total: RollValue::Int(69)
@@ -49,7 +49,6 @@ impl LuroCommand for Roll {
             }
             r.content(result_string)
         })
-        .await?;
-        Ok(())
+        .await
     }
 }

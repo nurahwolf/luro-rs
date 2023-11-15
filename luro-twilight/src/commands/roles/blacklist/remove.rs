@@ -16,7 +16,7 @@ impl LuroCommandTrait for Remove {
     async fn handle_interaction(
         framework: Framework,
         interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let data = Self::new(interaction.data.clone())?;
 
         let guild_id = interaction.guild_id.unwrap(); // SAFETY: Safe to unwrap as this can only be run in a guild

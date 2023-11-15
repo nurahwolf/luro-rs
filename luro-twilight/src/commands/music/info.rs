@@ -7,7 +7,7 @@ use twilight_interactions::command::{CommandModel, CreateCommand};
 pub struct InfoCommand {}
 
 impl ExecuteLuroCommand for InfoCommand {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let guild_id = match ctx.guild_id {
             Some(guild_id) => guild_id,
             None => return ctx.response_simple(Response::NotGuild).await,

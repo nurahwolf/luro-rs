@@ -10,7 +10,7 @@ pub struct Muzzle {
 }
 
 impl CreateLuroCommand for Muzzle {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         // TODO: Load these from a text file
         let responses = [
             "<user> just got muzzled for a few seconds!!",

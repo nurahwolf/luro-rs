@@ -10,14 +10,13 @@ pub struct Stats {
 }
 
 impl LuroCommand for Stats {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         ctx.respond(|r| {
             if self.ephemeral.unwrap_or_default() {
                 r.ephemeral();
             }
             r.content(format!("**Your stats, as requested:**\n{}", DiceRoll::roll_stats()))
         })
-        .await?;
-        Ok(())
+        .await
     }
 }

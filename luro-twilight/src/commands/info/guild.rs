@@ -16,7 +16,7 @@ pub struct Guild {
 }
 
 impl LuroCommand for Guild {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut guild = match self.guild {
             Some(guild_requested) => ctx.get_guild(Id::new(guild_requested.parse()?)).await?,
             None => match &ctx.guild {

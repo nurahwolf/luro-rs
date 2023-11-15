@@ -11,7 +11,7 @@ pub enum UserSync<'a> {
     User(User),
     TwilightUser(&'a twilight_model::user::User),
     UserID(Id<UserMarker>),
-    UserUpdate(UserUpdate),
+    UserUpdate(&'a UserUpdate),
     CurrentUser(&'a CurrentUser),
 }
 
@@ -21,8 +21,8 @@ impl<'a> From<&'a CurrentUser> for UserSync<'a> {
     }
 }
 
-impl<'a> From<UserUpdate> for UserSync<'a> {
-    fn from(user: UserUpdate) -> Self {
+impl<'a> From<&'a UserUpdate> for UserSync<'a> {
+    fn from(user: &'a UserUpdate) -> Self {
         Self::UserUpdate(user)
     }
 }

@@ -23,7 +23,7 @@ pub struct Add {
 }
 
 impl LuroCommand for Add {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let character = ctx
             .author
             .fetch_character(ctx.database.clone(), &self.character)

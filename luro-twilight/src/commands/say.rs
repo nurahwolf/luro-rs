@@ -11,14 +11,13 @@ pub struct Say {
 }
 
 impl CreateLuroCommand for Say {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let content = if let Some(ref user) = self.user {
             format!("Hey <@{}>!\n{}", user.resolved.id, self.message)
         } else {
             self.message.clone()
         };
 
-        ctx.respond(|response| response.content(content)).await?;
-        Ok(())
+        ctx.respond(|response| response.content(content)).await
     }
 }

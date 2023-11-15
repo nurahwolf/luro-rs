@@ -58,7 +58,7 @@ impl LuroCommandTrait for StoryCommand {
     async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let data = Self::new(interaction.data.clone())?;
         if let Some(add) = data.add && add {
             let components = vec![Component::ActionRow(ActionRow {
@@ -152,7 +152,7 @@ impl LuroCommandTrait for StoryCommand {
     async fn handle_component(
         ctx: Framework,
         interaction: InteractionComponent,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut embed = EmbedBuilder::default();
         embed.colour(COLOUR_DANGER).title("REDACTED").description(format!(
             "There used to be a story here, but <@{}> found it too cursed for their eyes.",

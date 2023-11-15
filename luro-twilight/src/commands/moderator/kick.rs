@@ -20,7 +20,7 @@ pub struct Kick {
 }
 
 impl LuroCommand for Kick {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let reason = reason(self.reason, self.details);
         let mut response = ctx.acknowledge_interaction(false).await?;
         let guild = ctx.guild.as_ref().context("Expected this to be a guild")?;
@@ -153,6 +153,6 @@ impl LuroCommand for Kick {
         // ctx.send_log_channel(&guild_id, LuroLogChannel::Moderator, |r| r.add_embed(embed.embed))
         //     .await?;
 
-        Ok(())
+        Ok(luro_model::types::CommandResponse::default())
     }
 }

@@ -19,7 +19,7 @@ pub struct Ping {}
 impl LuroCommandTrait for Ping {
     async fn handle_interaction(
         ctx: CommandInteraction<Self>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut embed = EmbedBuilder::default();
         embed.colour(ctx.accent_colour()).description("🏓 Pinging!");
         if let Some(average) = ctx.latency.average() {

@@ -11,7 +11,7 @@ pub struct Commands {
 }
 
 impl LuroCommand for Commands {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let application = ctx.twilight_client.current_user_application().await?.model().await?;
         let client = ctx.twilight_client.interaction(application.id);
 

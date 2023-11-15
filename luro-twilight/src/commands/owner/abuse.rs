@@ -14,7 +14,7 @@ pub struct Abuse {
 }
 
 impl LuroCommand for Abuse {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let webhook = ctx.get_webhook(ctx.channel.id).await?;
         let webhook_token = match webhook.token {
             Some(token) => token,

@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 use twilight_model::id::{marker::UserMarker, Id};
 
 mod database; // Functions for accessing data from the database

@@ -1,0 +1,12 @@
+SELECT category as "category: DbCharacterFetishCategory",
+    character_name,
+    character_fetish.fetish_id,
+    user_id,
+    name,
+    description
+FROM user_characters_fetishes character_fetish
+    JOIN fetishes fetish_details ON character_fetish.fetish_id = fetish_details.fetish_id
+WHERE (
+        user_id = $1
+        and character_name = $2
+    )

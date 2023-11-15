@@ -31,7 +31,7 @@ pub enum Moderator {
 }
 
 impl CreateLuroCommand for Moderator {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match self {
             Self::Ban(cmd) => cmd.interaction_command(ctx).await,
             Self::Kick(cmd) => cmd.interaction_command(ctx).await,
@@ -41,7 +41,7 @@ impl CreateLuroCommand for Moderator {
         }
     }
 
-    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<()> {
+    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut embed = ctx.default_embed().await;
         let warning = ctx.parse_field_required("mod-warn-text")?;
         let id = ctx.parse_field_required("mod-warn-id")?;

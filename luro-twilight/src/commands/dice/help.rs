@@ -10,7 +10,7 @@ pub struct Help {
 }
 
 impl LuroCommand for Help {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let description = "Roll some dice with a brief explanation of the output all on one line, such as `1d20 = [13] = 13`.";
 
         let shortmode_help = [
@@ -85,7 +85,6 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
                     .create_field(drop_help[0], drop_help[1], false)
             })
         })
-        .await?;
-        Ok(())
+        .await
     }
 }

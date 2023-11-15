@@ -9,7 +9,6 @@ use crate::database_driver::drivers::toml::serialize_image;
 use core::fmt;
 
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use twilight_interactions::command::{CommandOption, CreateOption};
 /// The different categories of fetishes a user can have
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize, Ord, PartialOrd, Eq, CommandOption, CreateOption)]
@@ -62,40 +61,14 @@ impl fmt::Display for FetishList {
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct CharacterProfile {
-    /// The Character's name
-    #[serde(default)]
+    pub prefix: Option<String>,
     pub name: String,
-    /// A short description for this character
-    #[serde(default)]
-    pub short_description: String,
-    /// A HTTP / HTTPS link to an icon used for their main appearance
-    #[serde(default, skip_serializing_if = "String::is_empty")]
-    pub icon: String,
-    /// A HTTP / HTTPS link to an icon used for their main appearance
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub nsfw_icon: Option<String>,
-    /// A detailed description for this character
-    #[serde(default)]
-    pub description: String,
-    /// A detailed description for this character that is only shown in the NSFW profile
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sfw_description: String,
+    pub sfw_summary: String,
+    pub sfw_icons: Vec<String>,
     pub nsfw_description: Option<String>,
-    /// Set to true if there are NSFW details present
-    #[serde(default)]
-    pub nsfw: bool,
-    /// A list of fetishes the character has. NSFW only!
-    #[cfg_attr(
-        feature = "toml-driver",
-        serde(deserialize_with = "deserialize_fetish", serialize_with = "serialize_fetish")
-    )]
-    #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub fetishes: BTreeMap<usize, Fetish>,
-    #[cfg_attr(
-        feature = "toml-driver",
-        serde(deserialize_with = "deserialize_image", serialize_with = "serialize_image")
-    )]
-    #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
-    pub images: BTreeMap<usize, CharacterImage>,
+    pub nsfw_summary: Option<String>,
+    pub nsfw_icons: Vec<String>,
 }
 
 /// A structure representing an image

@@ -42,7 +42,7 @@ pub enum Info {
 }
 
 impl CreateLuroCommand for Info {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match self {
             Self::Guild(command) => command.interaction_command(ctx).await,
             // Self::Punishments(command) => command.interaction_command(ctx).await,
@@ -57,7 +57,7 @@ impl CreateLuroCommand for Info {
         self,
         ctx: ComponentInteraction,
         original_interaction: twilight_model::application::interaction::Interaction,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut user = match &self {
             Info::User(user_command) => match &user_command.user {
                 Some(user) => ctx.fetch_user(*user).await?,
@@ -201,7 +201,7 @@ pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mu
                     flags_sorted.push(flag)
                 }
                 flags_sorted.sort();
-                user_information.push_str(&format!("\n- User Flags ({}): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")));
+                user_information.push_str(&format!("\n- User Flags (`{}`): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")));
             }
 
             if let Some(flags) = &user.public_flags && !flags.is_empty() {
@@ -214,7 +214,7 @@ pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mu
                     flags_sorted.push(flag)
                 }
                 flags_sorted.sort();
-                user_information.push_str(&format!("\n- Public Flags ({}): \n```\n{}```",flags.bits(), flags_sorted.join(" | ")))
+                user_information.push_str(&format!("\n- Public Flags (`{}`): \n```\n{}```",flags.bits(), flags_sorted.join(" | ")))
             }
 
             if let Some(accent_colour) = user.accent_colour {
@@ -273,7 +273,7 @@ pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mu
                 flags_sorted.sort();
                 if !flags_sorted.is_empty() {
                     guild_information.push_str(&format!(
-                        "\n- Member Flags ({}): \n```\n{}```",
+                        "\n- Member Flags (`{}`): \n```\n{}```",
                         member.flags.bits(),
                         flags_sorted.join(" | ")
                     ));
@@ -320,7 +320,7 @@ pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mu
         embed.image(|i| i.url(banner));
     }
 
-    embed.footer(|f| f.text(format!("SYNCED | Information requested by {}", ctx.author.name())));
+    embed.footer(|f| f.text(format!("SYNCED | Information requested by {}", ctx.author.name())).icon_url(ctx.author.avatar_url()));
 
     Ok(embed)
 }
@@ -365,7 +365,7 @@ pub async fn info_button_guild_permissions<'a>(
     Ok(embed)
 }
 
-pub async fn info_recent_messages(ctx: &ComponentInteraction, user: User) -> anyhow::Result<()> {
+pub async fn info_recent_messages(ctx: &ComponentInteraction, user: User) -> anyhow::Result<luro_model::types::CommandResponse> {
     let user_messages = ctx.database.driver.fetch_user_messages(user.user_id).await;
 
     ctx.respond(|r| {
@@ -530,7 +530,7 @@ pub fn user_information<'a>(author: &User, user: &User, embed: &'a mut EmbedBuil
                 flags_sorted.push(flag)
             }
             flags_sorted.sort();
-            user_information.push_str(&format!("\n- User Flags ({}): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")));
+            user_information.push_str(&format!("\n- User Flags (`{}`): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")));
         }
 
         if let Some(flags) = &user.public_flags && !flags.is_empty() {
@@ -543,7 +543,7 @@ pub fn user_information<'a>(author: &User, user: &User, embed: &'a mut EmbedBuil
                 flags_sorted.push(flag)
             }
             flags_sorted.sort();
-            user_information.push_str(&format!("\n- Public Flags ({}): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")))
+            user_information.push_str(&format!("\n- Public Flags (`{}`): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")))
         }
 
         if let Some(accent_color) = user.accent_colour {
@@ -557,6 +557,7 @@ pub fn user_information<'a>(author: &User, user: &User, embed: &'a mut EmbedBuil
                 }
             }
         }
+
         if let Some(email) = &user.email {
             user_information.push_str(&format!("- Email: `{}`\n", email));
         }
@@ -576,12 +577,14 @@ pub fn user_information<'a>(author: &User, user: &User, embed: &'a mut EmbedBuil
             user_information.push_str(" - Bot: `true`\n");
         }
 
-        if !user_information.is_empty() {
-            embed.create_field("User Information", &user_information, false).footer(|f| {
-                f.text(format!("Information requested by {}", author.name()))
-                    .icon_url(author.avatar_url())
-            });
-        }
+        embed.footer(|f| {
+            f.text(format!("Information requested by {}", author.name()))
+                .icon_url(author.avatar_url())
+        });
+        match user_information.is_empty() {
+            true => embed.create_field("User Information", "- I don't have any user information to report!", false),
+            false => embed.create_field("User Information", &user_information, false),
+        };
     }
 
     embed

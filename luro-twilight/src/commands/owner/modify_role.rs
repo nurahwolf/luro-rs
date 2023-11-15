@@ -31,7 +31,7 @@ struct Position {
 }
 
 impl LuroCommand for ModifyRole {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         // let (mut role_selected, mut role_position) = (None, None);
         // let guild = match &ctx.guild {
         //     Some(guild) => guild,

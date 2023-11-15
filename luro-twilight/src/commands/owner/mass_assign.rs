@@ -8,7 +8,7 @@ use twilight_model::channel::message::component::SelectMenuType;
 pub struct MassAssign {}
 
 impl LuroCommand for MassAssign {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         ctx.respond(|response| {
             {
                 response

@@ -13,7 +13,7 @@ pub enum Image {
     Get(get::Get),
 }
 impl LuroCommand for Image {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match self {
             Self::Add(command) => command.interaction_command(ctx).await,
             Self::Get(command) => command.interaction_command(ctx).await,

@@ -11,14 +11,13 @@ pub struct Direction {
 }
 
 impl LuroCommand for Direction {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         ctx.respond(|r| {
             if self.ephemeral.unwrap_or_default() {
                 r.ephemeral();
             }
             r.content(DiceRoll::roll_direction())
         })
-        .await?;
-        Ok(())
+        .await
     }
 }

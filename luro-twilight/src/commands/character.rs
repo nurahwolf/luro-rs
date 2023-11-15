@@ -2,7 +2,7 @@ use anyhow::Context;
 use luro_framework::{
     CommandInteraction, ComponentInteraction, Luro, ModalInteraction, {CreateLuroCommand, LuroCommand},
 };
-use luro_model::user::character::CharacterProfile;
+use luro_model::{user::character::CharacterProfile, types::CommandResponse};
 use std::fmt::Write;
 use twilight_interactions::command::{AutocompleteValue, CommandModel, CreateCommand};
 use twilight_model::{
@@ -39,7 +39,7 @@ pub enum Character {
 }
 
 impl CreateLuroCommand for Character {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<CommandResponse> {
         match self {
             Self::Create(command) => command.interaction_command(ctx).await,
             Self::Fetish(command) => command.interaction_command(ctx).await,
@@ -51,7 +51,7 @@ impl CreateLuroCommand for Character {
         }
     }
 
-    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<()> {
+    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<CommandResponse> {
         let nsfw: bool = ctx.channel.nsfw.unwrap_or_default();
 
         // Modal

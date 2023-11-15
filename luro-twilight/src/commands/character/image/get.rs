@@ -18,7 +18,7 @@ pub struct Get {
 }
 
 impl LuroCommand for Get {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let nsfw = self.nsfw.unwrap_or(ctx.channel.nsfw.unwrap_or_default());
         let character = ctx
             .author

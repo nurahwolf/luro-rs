@@ -22,7 +22,7 @@ pub struct Warn {
 }
 
 impl LuroCommand for Warn {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let punished_user = ctx.get_user(&self.user.resolved.id, false).await?;
 
         if !self.new {

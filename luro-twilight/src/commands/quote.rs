@@ -28,7 +28,7 @@ pub enum QuoteCommands {
 impl LuroCommandTrait for QuoteCommands {
     async fn handle_interaction(
         ctx: CommandInteraction<Self>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         match ctx.command {
             Self::Get(_) => add::Add::handle_interaction(ctx).await,
             Self::Add(_) => get::Get::handle_interaction(ctx).await,

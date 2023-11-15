@@ -42,7 +42,7 @@ pub enum Sexuality {
 }
 
 impl LuroCommand for Identity {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut user_data = match ctx.author.data {
             Some(ref data) => data.clone(),
             None => ctx

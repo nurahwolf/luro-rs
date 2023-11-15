@@ -12,7 +12,7 @@ impl LuroCommandTrait for Sort {
     async fn handle_interaction(
         ctx: Framework,
         interaction: InteractionCommand,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut quotes = ctx.database.get_quotes().await?;
 
         // Remove duplicates and new IDs

@@ -99,7 +99,7 @@ pub enum Marry {
 }
 
 impl CreateLuroCommand for Marry {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<()> {
+    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match self {
             Self::Someone(command) => command.interaction_command(ctx).await,
             Self::Marriages(command) => command.interaction_command(ctx).await,
@@ -107,7 +107,7 @@ impl CreateLuroCommand for Marry {
         }
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: Interaction) -> anyhow::Result<()> {
+    async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: Interaction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let proposer = ctx
             .fetch_user(
                 invoking_interaction
