@@ -29,7 +29,7 @@ use crate::types::DbMessageSource;
 impl crate::SQLxDriver {
     pub async fn fetch_user_messages(&self, user_id: Id<UserMarker>) -> BTreeMap<i64, Message> {
         let mut messages = BTreeMap::new();
-        let mut query = sqlx::query_file!("queries/user_fetch_messages.sql", user_id.get() as i64).fetch(&self.pool);
+        let mut query = sqlx::query_file!("queries/user/user_fetch_messages.sql", user_id.get() as i64).fetch(&self.pool);
 
         while let Ok(Some(message)) = query.try_next().await {
             messages.insert(

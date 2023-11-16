@@ -17,7 +17,7 @@ impl SQLxDriver {
 
 async fn handle_guild(db: &SQLxDriver, guild: &Guild) -> anyhow::Result<PgQueryResult> {
     Ok(sqlx::query_file!(
-        "queries/guilds/update_guild.sql",
+        "queries/guild/guild_update.sql",
         guild.afk_channel_id.map(|x| x.get() as i64),
         guild.afk_timeout.get() as i16,
         guild.application_id.map(|x| x.get() as i64),
@@ -64,7 +64,7 @@ async fn handle_guild(db: &SQLxDriver, guild: &Guild) -> anyhow::Result<PgQueryR
 
 async fn handle_guild_update(db: &SQLxDriver, guild: &GuildUpdate) -> Result<PgQueryResult, sqlx::Error> {
     sqlx::query_file!(
-        "queries/guilds/update_guild_update.sql",
+        "queries/guild/guild_update_twilight_update.sql",
         guild.afk_channel_id.map(|x| x.get() as i64),
         guild.afk_timeout.get() as i16,
         guild.application_id.map(|x| x.get() as i64),
@@ -102,7 +102,7 @@ async fn handle_guild_update(db: &SQLxDriver, guild: &GuildUpdate) -> Result<PgQ
 
 async fn handle_guild_create(db: &SQLxDriver, guild: &GuildCreate) -> anyhow::Result<PgQueryResult> {
     Ok(sqlx::query_file!(
-        "queries/guilds/update_guild.sql",
+        "queries/guild/guild_update.sql",
         guild.afk_channel_id.map(|x| x.get() as i64),
         guild.afk_timeout.get() as i16,
         guild.application_id.map(|x| x.get() as i64),

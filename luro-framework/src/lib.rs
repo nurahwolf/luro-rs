@@ -1,6 +1,3 @@
-#![feature(async_fn_in_trait)]
-#![feature(return_position_impl_trait_in_trait)]
-
 mod command_interaction;
 mod component_interaction;
 mod create_luro_command;

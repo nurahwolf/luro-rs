@@ -7,7 +7,7 @@ use crate::types::DbInteractionKind;
 impl crate::SQLxDriver {
     pub async fn update_interaction(&self, interaction: &Interaction) -> anyhow::Result<u64> {
         Ok(sqlx::query_file!(
-            "queries/interaction_update.sql",
+            "queries/interaction/interaction_update.sql",
             interaction.app_permissions.map(|x| x.bits() as i64),
             interaction.application_id.get() as i64,
             interaction.channel.as_ref().map(|x| x.id.get() as i64),

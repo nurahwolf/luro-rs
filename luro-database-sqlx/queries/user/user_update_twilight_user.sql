@@ -8,15 +8,13 @@ INSERT INTO users (
     locale,
     mfa_enabled,
     premium_type,
-    public_flags,
     user_avatar,
     user_banner,
-    user_flags,
     user_id,
     user_name,
     user_system,
     verified
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 ON CONFLICT (user_id)
     DO UPDATE SET
         accent_colour = $1,
@@ -28,10 +26,8 @@ ON CONFLICT (user_id)
         locale = $7,
         mfa_enabled = $8,
         premium_type = $9,
-        public_flags = $10,
-        user_avatar = $11,
-        user_banner = $12,
-        user_flags = $13,
-        user_name = $15,
-        user_system = $16,
-        verified = $17
+        user_avatar = $10,
+        user_banner = $11,
+        user_name = $13,
+        user_system = $14,
+        verified = $15

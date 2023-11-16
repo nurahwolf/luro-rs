@@ -7,7 +7,7 @@ use twilight_model::util::ImageHash;
 
 impl crate::SQLxDriver {
     pub async fn role_fetch(&self, guild_id: Id<GuildMarker>, role_id: Id<RoleMarker>) -> anyhow::Result<Option<Role>> {
-        let query = sqlx::query_file!("queries/guild_roles/get_role.sql", guild_id.get() as i64, role_id.get() as i64)
+        let query = sqlx::query_file!("queries/guild/guild_fetch_role.sql", guild_id.get() as i64, role_id.get() as i64)
             .fetch_optional(&self.pool)
             .await?;
 

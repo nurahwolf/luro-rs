@@ -7,7 +7,7 @@ use crate::types::{DbGender, DbSexuality, DbUserPermissions};
 impl crate::SQLxDriver {
     pub async fn get_members_of_guild(&self, guild_id: Id<GuildMarker>) -> Result<Vec<User>, Error> {
         let mut users = vec![];
-        let result = sqlx::query_file!("queries/guild_fetch_members.sql", guild_id.get() as i64)
+        let result = sqlx::query_file!("queries/guild/guild_fetch_members.sql", guild_id.get() as i64)
             .fetch_all(&self.pool)
             .await?;
 

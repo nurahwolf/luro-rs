@@ -10,7 +10,7 @@ use crate::types::{DbGender, DbSexuality, DbUserPermissions};
 
 impl crate::SQLxDriver {
     pub async fn get_users(&self) -> anyhow::Result<Vec<User>> {
-        let mut query = sqlx::query_file!("queries/users_fetch.sql").fetch(&self.pool);
+        let mut query = sqlx::query_file!("queries/user/users_fetch.sql").fetch(&self.pool);
         let mut users = vec![];
 
         while let Ok(Some(user)) = query.try_next().await {

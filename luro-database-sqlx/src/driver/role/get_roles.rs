@@ -9,7 +9,7 @@ use twilight_model::{
 
 impl crate::SQLxDriver {
     pub async fn get_guild_roles(&self, guild_id: Id<GuildMarker>) -> anyhow::Result<Vec<Role>> {
-        let mut query = sqlx::query_file!("queries/guild_roles/get_roles.sql", guild_id.get() as i64).fetch(&self.pool);
+        let mut query = sqlx::query_file!("queries/guild/guild_fetch_roles.sql", guild_id.get() as i64).fetch(&self.pool);
         let mut roles = vec![];
 
         while let Ok(Some(db_role)) = query.try_next().await {

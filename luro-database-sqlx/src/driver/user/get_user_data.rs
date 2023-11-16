@@ -5,7 +5,7 @@ use crate::types::{DbGender, DbSexuality, DbUserPermissions};
 
 impl crate::SQLxDriver {
     pub async fn get_user_data(&self, user_id: Id<UserMarker>) -> anyhow::Result<Option<UserData>> {
-        Ok(sqlx::query_file!("queries/user_fetch_data.sql", user_id.get() as i64)
+        Ok(sqlx::query_file!("queries/user/user_fetch_data.sql", user_id.get() as i64)
             .fetch_optional(&self.pool)
             .await
             .map(|x| {

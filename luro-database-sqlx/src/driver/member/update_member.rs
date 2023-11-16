@@ -29,14 +29,14 @@ impl SQLxDriver {
         Ok(rows_modified)
     }
 
-    pub async fn update_guild_member_roles(
+    pub async fn update_guild_member_role(
         &self,
         guild_id: Id<GuildMarker>,
         role_id: Id<RoleMarker>,
         user_id: Id<UserMarker>,
     ) -> Result<u64, sqlx::Error> {
         sqlx::query_file!(
-            "queries/guild_member_roles/role_update.sql",
+            "queries/member/member_update_role.sql",
             guild_id.get() as i64,
             role_id.get() as i64,
             user_id.get() as i64,
@@ -56,14 +56,14 @@ async fn handle_member_chunk(db: &SQLxDriver, event: &MemberChunk) -> anyhow::Re
                 Ok(ok) => rows_modified += ok,
                 Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
             }
-            match db.update_guild_member_roles(event.guild_id, *role, member.user.id).await {
+            match db.update_guild_member_role(event.guild_id, *role, member.user.id).await {
                 Ok(ok) => rows_modified += ok,
                 Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
             }
         }
 
         rows_modified += sqlx::query_file!(
-            "queries/guild_members/update_twilight_member.sql",
+            "queries/member/member_update_twilight_member.sql",
             match member.premium_since {
                 Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
                 None => None,
@@ -93,7 +93,7 @@ async fn handle_member_chunk(db: &SQLxDriver, event: &MemberChunk) -> anyhow::Re
 async fn handle_member_remove(db: &SQLxDriver, member: &MemberRemove) -> anyhow::Result<u64> {
     let mut rows_updated = db.update_user(&member.user).await?;
     rows_updated += sqlx::query_file!(
-        "queries/guild_members/member_removed.sql",
+        "queries/member/member_remove.sql",
         member.guild_id.get() as i64,
         member.user.id.get() as i64
     )
@@ -112,7 +112,7 @@ async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: &Memb
             Ok(ok) => rows_modified += ok,
             Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
         }
-        match db.update_guild_member_roles(guild_id, *role, member.user.id).await {
+        match db.update_guild_member_role(guild_id, *role, member.user.id).await {
             Ok(ok) => rows_modified += ok,
             Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
         }
@@ -120,7 +120,7 @@ async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: &Memb
 
     debug!("handle_member - Trying to handle updating member");
     rows_modified += sqlx::query_file!(
-        "queries/guild_members/update_twilight_member.sql",
+        "queries/member/member_update_twilight_member.sql",
         match member.premium_since {
             Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
             None => None,
@@ -148,7 +148,7 @@ async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: &Memb
         debug!("handle_member - Trying to handle updating roles");
         db.update_role((guild_id, *role)).await?;
         debug!("handle_member - Trying to handle updating member roles");
-        db.update_guild_member_roles(guild_id, *role, member.user.id).await?;
+        db.update_guild_member_role(guild_id, *role, member.user.id).await?;
     }
 
     Ok(rows_modified)
@@ -164,7 +164,7 @@ async fn handle_partial_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, membe
                 Ok(ok) => rows_modified += ok,
                 Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
             }
-            match db.update_guild_member_roles(guild_id, *role, user.id).await {
+            match db.update_guild_member_role(guild_id, *role, user.id).await {
                 Ok(ok) => rows_modified += ok,
                 Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
             }
@@ -172,7 +172,7 @@ async fn handle_partial_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, membe
     }
 
     rows_modified += sqlx::query_file!(
-        "queries/guild_members/update_twilight_partial_member.sql",
+        "queries/member/member_update_twilight_partial_member.sql",
         match member.premium_since {
             Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
             None => None,
@@ -200,7 +200,7 @@ async fn handle_partial_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, membe
 async fn handle_member_add(db: &SQLxDriver, member: &MemberAdd) -> anyhow::Result<u64> {
     let mut rows_modified = db.update_user(&member.user).await?;
     rows_modified += sqlx::query_file!(
-        "queries/guild_members/update_twilight_member.sql",
+        "queries/member/member_update_twilight_member.sql",
         match member.premium_since {
             Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
             None => None,
@@ -228,7 +228,7 @@ async fn handle_member_add(db: &SQLxDriver, member: &MemberAdd) -> anyhow::Resul
             Ok(ok) => rows_modified += ok,
             Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
         }
-        match db.update_guild_member_roles(member.guild_id, *role, member.user.id).await {
+        match db.update_guild_member_role(member.guild_id, *role, member.user.id).await {
             Ok(ok) => rows_modified += ok,
             Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
         }
@@ -241,7 +241,7 @@ async fn handle_member_update(db: &SQLxDriver, member: &MemberUpdate) -> anyhow:
     let mut rows_modified = db.update_user(&member.user).await?;
 
     rows_modified += sqlx::query_file!(
-        "queries/guild_members/update_twilight_member_update.sql",
+        "queries/member/member_update_twilight_member_update.sql",
         match member.premium_since {
             Some(timestamp) => Some(OffsetDateTime::from_unix_timestamp(timestamp.as_secs())?),
             None => None,
@@ -266,7 +266,7 @@ async fn handle_member_update(db: &SQLxDriver, member: &MemberUpdate) -> anyhow:
             Ok(ok) => rows_modified += ok,
             Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
         }
-        match db.update_guild_member_roles(member.guild_id, *role, member.user.id).await {
+        match db.update_guild_member_role(member.guild_id, *role, member.user.id).await {
             Ok(ok) => rows_modified += ok,
             Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
         }

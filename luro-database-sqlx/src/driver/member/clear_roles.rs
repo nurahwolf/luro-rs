@@ -6,7 +6,7 @@ use twilight_model::id::{
 impl crate::SQLxDriver {
     pub async fn clear_member_roles(&self, guild_id: Id<GuildMarker>, user_id: Id<UserMarker>) -> Result<u64, sqlx::Error> {
         sqlx::query_file!(
-            "queries/guild_member_roles/clear_roles.sql",
+            "queries/member/member_delete_roles.sql",
             guild_id.get() as i64,
             user_id.get() as i64,
         )

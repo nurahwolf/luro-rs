@@ -7,7 +7,7 @@ use twilight_model::{
 impl crate::SQLxDriver {
     pub async fn channel_fetch(&self, channel_id: Id<ChannelMarker>) -> Result<Option<Channel>, sqlx::Error> {
         // TODO: Complete this
-        sqlx::query_file!("queries/channels/get_channel.sql", channel_id.get() as i64)
+        sqlx::query_file!("queries/channel/channel_fetch.sql", channel_id.get() as i64)
             .fetch_optional(&self.pool)
             .await
             .map(|x| {

@@ -12,7 +12,7 @@ use twilight_model::{
 impl crate::SQLxDriver {
     pub async fn get_all_guilds(&self) -> anyhow::Result<Vec<Guild>> {
         let mut guilds = vec![];
-        let mut query = sqlx::query_file!("queries/guilds/get_guilds.sql").fetch(&self.pool);
+        let mut query = sqlx::query_file!("queries/guild/guilds_fetch.sql").fetch(&self.pool);
 
         while let Ok(Some(guild)) = query.try_next().await {
             let mut channels = vec![];
@@ -94,7 +94,7 @@ impl crate::SQLxDriver {
     }
 
     pub async fn get_guild(&self, guild_id: Id<GuildMarker>) -> anyhow::Result<Option<Guild>> {
-        let query = sqlx::query_file!("queries/guilds/get_guild.sql", guild_id.get() as i64)
+        let query = sqlx::query_file!("queries/guild/guild_fetch.sql", guild_id.get() as i64)
             .fetch_optional(&self.pool)
             .await?;
 

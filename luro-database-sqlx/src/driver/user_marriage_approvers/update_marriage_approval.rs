@@ -4,7 +4,7 @@ use twilight_model::id::Id;
 impl crate::SQLxDriver {
     pub async fn marriage_update_approvals(&self, marriage: MarriageApprovals) -> Result<MarriageApprovals, sqlx::Error> {
         sqlx::query_file!(
-            "queries/marriage_update_approvals.sql",
+            "queries/marriage/marriage_update_approvals.sql",
             marriage.approve,
             marriage.disapprove,
             marriage.proposee_id.get() as i64,

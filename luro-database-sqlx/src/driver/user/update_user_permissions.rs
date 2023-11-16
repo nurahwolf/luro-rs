@@ -9,7 +9,7 @@ impl crate::SQLxDriver {
         permissions: impl Into<DbUserPermissions>,
     ) -> Result<PgQueryResult, sqlx::Error> {
         sqlx::query_file!(
-            "queries/users/update_user_permissions.sql",
+            "queries/user/user_update_user_permissions.sql",
             user_id.get() as i64,
             permissions.into() as _,
         )

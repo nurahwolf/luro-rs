@@ -16,7 +16,7 @@ impl Database {
         let member = self.api_client.guild_member(guild_id, user_id).await?.model().await?;
 
         for role_id in member.roles.clone() {
-            if let Err(why) = self.driver.update_guild_member_roles(guild_id, role_id, user_id).await {
+            if let Err(why) = self.driver.update_guild_member_role(guild_id, role_id, user_id).await {
                 tracing::error!(why = ?why, "fetch_member - failed to sync role `{role_id}` of member `{user_id}` of guild `{guild_id}` to the database!");
             }
         }

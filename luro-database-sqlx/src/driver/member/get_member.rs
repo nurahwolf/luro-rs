@@ -19,8 +19,8 @@ use crate::SQLxDriver;
 impl SQLxDriver {
     pub async fn get_member(&self, user_id: Id<UserMarker>, guild_id: Id<GuildMarker>) -> anyhow::Result<Option<User>> {
         let mut query =
-            sqlx::query_file!("queries/member_fetch_roles.sql", guild_id.get() as i64, user_id.get() as i64).fetch(&self.pool);
-        let member = match sqlx::query_file!("queries/member_fetch.sql", guild_id.get() as i64, user_id.get() as i64)
+            sqlx::query_file!("queries/member/member_fetch_roles.sql", guild_id.get() as i64, user_id.get() as i64).fetch(&self.pool);
+        let member = match sqlx::query_file!("queries/member/member_fetch.sql", guild_id.get() as i64, user_id.get() as i64)
             .fetch_optional(&self.pool)
             .await
         {

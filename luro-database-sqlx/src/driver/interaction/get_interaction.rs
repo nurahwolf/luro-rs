@@ -14,10 +14,11 @@ use twilight_model::{
 impl crate::SQLxDriver {
     /// Fetches an interaction by message_id
     pub async fn get_interaction_by_message_id(&self, message_id: Id<MessageMarker>) -> anyhow::Result<Interaction> {
-        let interaction = sqlx::query_file!("queries/interaction_fetch_by_message_id.sql", message_id.get() as i64)
+        let interaction = sqlx::query_file!("queries/interaction/interaction_fetch_by_message_id.sql", message_id.get() as i64)
             .fetch_one(&self.pool)
             .await?;
 
+        #[allow(deprecated)]
         Ok(Interaction {
             app_permissions: interaction.app_permissions.map(|x| Permissions::from_bits_retain(x as u64)),
             application_id: Id::new(interaction.application_id as u64),
@@ -58,10 +59,11 @@ impl crate::SQLxDriver {
 
     /// Fetches an interaction by interaction_id
     pub async fn get_interaction(&self, interaction_id: Id<InteractionMarker>) -> anyhow::Result<Interaction> {
-        let interaction = sqlx::query_file!("queries/interaction_fetch.sql", interaction_id.get() as i64)
+        let interaction = sqlx::query_file!("queries/interaction/interaction_fetch.sql", interaction_id.get() as i64)
             .fetch_one(&self.pool)
             .await?;
 
+        #[allow(deprecated)]
         Ok(Interaction {
             app_permissions: interaction.app_permissions.map(|x| Permissions::from_bits_retain(x as u64)),
             application_id: Id::new(interaction.application_id as u64),
