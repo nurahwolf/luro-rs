@@ -1,0 +1,11 @@
+DO $$ BEGIN CREATE TYPE interaction_kind AS ENUM (
+    'PING',
+    'APPLICATION_COMMAND',
+    'MESSAGE_COMPONENT',
+    'APPLICATION_COMMAND_AUTOCOMPLETE',
+    'MODAL_SUBMIT',
+    'UNKNOWN'
+);
+EXCEPTION
+WHEN duplicate_object THEN null;
+END $$;
