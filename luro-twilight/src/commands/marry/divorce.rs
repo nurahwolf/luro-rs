@@ -1,5 +1,5 @@
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
-use luro_model::{user::marriage::Marriage, COLOUR_DANGER};
+use luro_model::{types::Marriage, COLOUR_DANGER};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::UserMarker, Id};
 

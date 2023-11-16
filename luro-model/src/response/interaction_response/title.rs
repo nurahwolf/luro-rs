@@ -1,6 +1,6 @@
-use super::LuroResponse;
+use super::InteractionResponse;
 
-impl LuroResponse {
+impl InteractionResponse {
     /// Set the title of a model response
     pub fn title(&mut self, title: impl ToString) -> &mut Self {
         self.title = Some(title.to_string());

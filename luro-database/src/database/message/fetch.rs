@@ -1,4 +1,4 @@
-use luro_model::message::Message;
+use luro_model::types::Message;
 use twilight_model::id::{
     marker::{ChannelMarker, MessageMarker},
     Id,

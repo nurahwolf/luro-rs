@@ -2,7 +2,8 @@ use twilight_model::channel::message::Component;
 
 use self::{action_row::ActionRowBuilder, select_menu::SelectMenuBuilder, text_input::TextInputBuilder};
 
-use super::ComponentBuilder;
+#[derive(Default)]
+pub struct ComponentBuilder(Vec<twilight_model::channel::message::Component>);
 
 pub mod action_row;
 pub mod button;

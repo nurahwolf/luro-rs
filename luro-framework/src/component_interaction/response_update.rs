@@ -1,10 +1,10 @@
-use luro_model::{response::LuroResponse, types::CommandResponse};
+use luro_model::{response::InteractionResponse, types::CommandResponse};
 
 use crate::ComponentInteraction;
 
 impl ComponentInteraction {
     /// Update an existing response
-    pub async fn response_update(&self, response: &LuroResponse) -> anyhow::Result<CommandResponse> {
+    pub async fn response_update(&self, response: &InteractionResponse) -> anyhow::Result<CommandResponse> {
         let client = self.interaction_client();
         let request = client
             .update_response(&self.interaction_token)

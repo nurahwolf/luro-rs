@@ -1,4 +1,4 @@
-use luro_model::response::LuroResponse;
+use luro_model::response::InteractionResponse;
 use twilight_http::{Error, Response};
 use twilight_model::{
     channel::Message,
@@ -12,9 +12,9 @@ impl CommandInteraction {
     /// This automatically handles if the interaction had been deferred.
     pub async fn send_message<F>(&self, channel: &Id<ChannelMarker>, response: F) -> Result<Response<Message>, Error>
     where
-        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse,
+        F: FnOnce(&mut InteractionResponse) -> &mut InteractionResponse,
     {
-        let mut r = LuroResponse::default();
+        let mut r = InteractionResponse::default();
         response(&mut r);
 
         let mut create_message = self

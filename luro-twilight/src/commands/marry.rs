@@ -2,8 +2,7 @@ use anyhow::{anyhow, Context};
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
 
 use luro_framework::standard_response::Response;
-use luro_model::types::MarriageApprovals;
-use luro_model::user::marriage::Marriage;
+use luro_model::types::{MarriageApprovals, Marriage};
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;

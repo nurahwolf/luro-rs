@@ -1,5 +1,5 @@
 use futures_util::TryStreamExt;
-use luro_model::user::marriage::Marriage;
+use luro_model::types::Marriage;
 use twilight_model::id::{marker::UserMarker, Id};
 
 impl crate::SQLxDriver {

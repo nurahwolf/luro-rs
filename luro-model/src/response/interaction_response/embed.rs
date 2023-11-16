@@ -2,9 +2,9 @@ use twilight_model::{channel::message::Embed, http::attachment::Attachment};
 
 use crate::builders::EmbedBuilder;
 
-use super::LuroResponse;
+use super::InteractionResponse;
 
-impl LuroResponse {
+impl InteractionResponse {
     /// Create and append an embed. Multiple calls will add multiple embeds.
     ///
     /// NOTE: This WILL fail to send if more than 10 embeds are present!
@@ -76,7 +76,7 @@ impl LuroResponse {
 
     #[cfg(feature = "auto-trim")]
     fn check_embed(&mut self) -> &mut Self {
-        use super::safe_truncate;
+        use crate::response::safe_truncate;
 
         if let Some(embeds) = &mut self.embeds {
             let mut file_id = 0;

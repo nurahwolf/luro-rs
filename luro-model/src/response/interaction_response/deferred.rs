@@ -1,8 +1,8 @@
 use twilight_model::http::interaction::InteractionResponseType;
 
-use super::LuroResponse;
+use super::InteractionResponse;
 
-impl LuroResponse {
+impl InteractionResponse {
     /// Sets the resposne as dererred
     pub fn deferred(&mut self) -> &mut Self {
         self.interaction_response_type = InteractionResponseType::DeferredChannelMessageWithSource;

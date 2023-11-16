@@ -1,5 +1,4 @@
-use luro_model::message::{Message, MessageSource};
-use luro_model::types::MessageData;
+use luro_model::types::{Message, MessageSource, MessageData};
 use sqlx::types::Json;
 use sqlx::Error;
 use twilight_model::channel::message::sticker::MessageSticker;

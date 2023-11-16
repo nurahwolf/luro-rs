@@ -11,8 +11,6 @@ use self::{
     embed_provider::EmbedProviderBuilder, embed_thumbnail::EmbedThumbnailBuilder, embed_video::EmbedVideoBuilder,
 };
 
-use super::EmbedBuilder;
-
 pub mod embed_author;
 pub mod embed_field;
 pub mod embed_footer;
@@ -20,6 +18,28 @@ pub mod embed_image;
 pub mod embed_provider;
 pub mod embed_thumbnail;
 pub mod embed_video;
+
+/// Based on Serenity's builders, but hopefully engineered for more correctness. This uses function builders to make creating embeds a little more erganomic, instead of the typical route of chaining methods together. Handy for short and simple commands. This is simply a wrapper around Twilight's ['Embed'], so you can consume these in exactly the same way without needing to run `.build()` or anything. You can also turn ['EmbedAuthorBuilder'] from `twilight-util` into these types as well!
+///
+/// Example:
+/// ```rust
+/// ctx.respond(|response| {
+///     response.embed(|embed| {
+///         embed.title("Hello World")
+///             .description("I really like you!")
+///             .color(0xDABEEF)
+///         })
+///     }).await;
+/// ```
+
+#[derive(Clone)]
+pub struct EmbedBuilder(pub twilight_model::channel::message::Embed);
+
+impl From<twilight_model::channel::message::Embed> for EmbedBuilder {
+    fn from(embed: twilight_model::channel::message::Embed) -> Self {
+        EmbedBuilder(embed)
+    }
+}
 
 impl Default for EmbedBuilder {
     fn default() -> Self {

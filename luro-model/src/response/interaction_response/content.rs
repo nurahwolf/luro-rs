@@ -1,6 +1,6 @@
-use super::LuroResponse;
+use super::InteractionResponse;
 
-impl LuroResponse {
+impl InteractionResponse {
     /// Set the content that should be sent with the message.
     /// This will overrwrite anything previously set.
     /// Use `check_content()` if you want to append content
@@ -19,7 +19,7 @@ impl LuroResponse {
     pub fn check_content(&mut self) -> &mut Self {
         use twilight_model::http::attachment::Attachment;
 
-        use crate::{builders::EmbedBuilder, response::safe_truncate, ACCENT_COLOUR};
+        use crate::{builders::EmbedBuilder, ACCENT_COLOUR, response::safe_truncate};
 
         if let Some(ref mut content) = self.content {
             // Can we convert this to an embed?

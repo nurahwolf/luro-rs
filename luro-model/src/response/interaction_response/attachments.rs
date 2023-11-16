@@ -1,8 +1,8 @@
 use twilight_model::http::attachment::Attachment;
 
-use super::LuroResponse;
+use super::InteractionResponse;
 
-impl LuroResponse {
+impl InteractionResponse {
     /// Append some attachments
     pub fn attachments<I>(&mut self, attachment: I) -> &mut Self
     where

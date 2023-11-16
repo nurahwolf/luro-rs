@@ -7,7 +7,6 @@ mod luro;
 mod luro_command;
 mod luro_context;
 mod luro_framework;
-mod luro_interaction;
 mod modal_interaction;
 #[cfg(feature = "responses")]
 pub mod standard_response;

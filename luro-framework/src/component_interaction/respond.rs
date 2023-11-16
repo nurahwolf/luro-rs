@@ -1,4 +1,4 @@
-use luro_model::{response::LuroResponse, types::CommandResponse};
+use luro_model::{response::InteractionResponse, types::CommandResponse};
 use twilight_model::http::interaction::InteractionResponseType;
 
 use crate::ComponentInteraction;
@@ -8,9 +8,9 @@ impl ComponentInteraction {
     /// This automatically handles if the interaction had been deferred.
     pub async fn respond<F>(&self, response: F) -> anyhow::Result<CommandResponse>
     where
-        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse,
+        F: FnOnce(&mut InteractionResponse) -> &mut InteractionResponse,
     {
-        let mut r = LuroResponse::default();
+        let mut r = InteractionResponse::default();
         response(&mut r);
 
         match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource

@@ -1,7 +1,5 @@
-use luro_model::user::marriage::Marriage;
-
 impl crate::SQLxDriver {
-    pub async fn marriage_update(&self, marriage: Marriage) -> anyhow::Result<u64> {
+    pub async fn marriage_update(&self, marriage: luro_model::types::Marriage) -> anyhow::Result<u64> {
         Ok(sqlx::query!(
             "
             INSERT INTO user_marriages (divorced, proposee_id, proposer_id, reason, rejected)

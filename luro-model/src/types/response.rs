@@ -1,13 +1,11 @@
-use crate::message::Message;
-
 /// Luro's response type
 #[derive(Debug, Default)]
 pub struct CommandResponse {
-    pub message: Option<Message>,
+    pub message: Option<super::Message>,
 }
 
 impl CommandResponse {
-    pub fn from_message(message: Option<Message>) -> Self {
+    pub fn from_message(message: Option<super::Message>) -> Self {
         Self { message }
     }
 }

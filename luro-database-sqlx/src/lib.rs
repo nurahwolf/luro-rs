@@ -10,7 +10,7 @@ pub struct SQLxDriver {
 
 impl SQLxDriver {
     /// Create a new driver by passing in a configuration context
-    pub async fn new_config(config: &luro_model::configuration::Configuration) -> Result<Self, sqlx::Error> {
+    pub async fn new_config(config: &luro_model::types::Configuration) -> Result<Self, sqlx::Error> {
         Ok(Self {
             pool: sqlx::postgres::PgPoolOptions::new()
                 .max_connections(5)

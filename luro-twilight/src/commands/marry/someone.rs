@@ -1,6 +1,6 @@
 use anyhow::Context;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
-use luro_model::user::marriage::Marriage;
+use luro_model::types::Marriage;
 use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::UserMarker, Id};

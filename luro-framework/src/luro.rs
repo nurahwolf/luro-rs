@@ -1,7 +1,7 @@
 use luro_database::Database;
 use luro_model::{
     builders::EmbedBuilder,
-    response::LuroResponse,
+    response::InteractionResponse,
     types::{Channel, Guild, Role, User},
     ACCENT_COLOUR,
 };
@@ -28,7 +28,7 @@ pub trait Luro {
     /// This automatically handles if the interaction had been deferred.
     fn respond<F>(&self, _: F) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
     where
-        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse + Send,
+        F: FnOnce(&mut InteractionResponse) -> &mut InteractionResponse + Send,
     {
         async { Ok(()) }
     }

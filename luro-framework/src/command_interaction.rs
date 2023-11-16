@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::{anyhow, Context};
-use luro_model::{response::LuroResponse, ACCENT_COLOUR};
+use luro_model::{response::InteractionResponse, ACCENT_COLOUR};
 use twilight_model::{
     application::interaction::{application_command::CommandData, Interaction, InteractionData},
     http::interaction::InteractionResponseType,
@@ -69,9 +69,9 @@ impl Luro for CommandInteraction {
     /// This automatically handles if the interaction had been deferred.
     async fn respond<F>(&self, response: F) -> anyhow::Result<()>
     where
-        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse + Send,
+        F: FnOnce(&mut InteractionResponse) -> &mut InteractionResponse + Send,
     {
-        let mut r = LuroResponse::default();
+        let mut r = InteractionResponse::default();
         response(&mut r);
 
         match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource

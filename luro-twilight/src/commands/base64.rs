@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine};
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
-use luro_model::{response::LuroResponse, types::CommandResponse};
+use luro_model::{response::InteractionResponse, types::CommandResponse};
 use std::str;
 use tracing::{info, warn};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -63,7 +63,7 @@ impl CreateLuroCommand for Base64 {
 }
 
 /// Simply send a response with a few checks.
-async fn response(ctx: &ComponentInteraction, input: &str, decode_operation: bool) -> anyhow::Result<LuroResponse> {
+async fn response(ctx: &ComponentInteraction, input: &str, decode_operation: bool) -> anyhow::Result<InteractionResponse> {
     let mut response = match decode_operation {
         true => decode_response(ctx.accent_colour(), input).await?,
         false => encode_response(ctx.accent_colour(), &encode(input)).await?,
@@ -72,8 +72,8 @@ async fn response(ctx: &ComponentInteraction, input: &str, decode_operation: boo
     Ok(response)
 }
 
-pub async fn decode_response(accent_colour: u32, input: &str) -> anyhow::Result<LuroResponse> {
-    let mut response = LuroResponse::default();
+pub async fn decode_response(accent_colour: u32, input: &str) -> anyhow::Result<InteractionResponse> {
+    let mut response = InteractionResponse::default();
 
     response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("encode").label("Encode"))));
 
@@ -84,8 +84,8 @@ pub async fn decode_response(accent_colour: u32, input: &str) -> anyhow::Result<
     Ok(response)
 }
 
-pub async fn encode_response(accent_colour: u32, input: &str) -> anyhow::Result<LuroResponse> {
-    let mut response = LuroResponse::default();
+pub async fn encode_response(accent_colour: u32, input: &str) -> anyhow::Result<InteractionResponse> {
+    let mut response = InteractionResponse::default();
 
     response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("decode").label("Decode"))));
 

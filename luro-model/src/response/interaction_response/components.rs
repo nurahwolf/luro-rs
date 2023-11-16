@@ -2,9 +2,9 @@ use twilight_model::channel::message::Component;
 
 use crate::builders::ComponentBuilder;
 
-use super::LuroResponse;
+use super::InteractionResponse;
 
-impl LuroResponse {
+impl InteractionResponse {
     pub fn components<F>(&mut self, components: F) -> &mut Self
     where
         F: FnOnce(&mut ComponentBuilder) -> &mut ComponentBuilder,

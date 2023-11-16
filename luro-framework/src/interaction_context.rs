@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use luro_model::response::LuroResponse;
+use luro_model::response::InteractionResponse;
 use twilight_model::{
     application::interaction::{Interaction, InteractionType},
     http::interaction::InteractionResponseType,
@@ -49,9 +49,9 @@ impl InteractionContext {
 
     pub async fn respond<F>(&self, response: F) -> anyhow::Result<luro_model::types::CommandResponse>
     where
-        F: FnOnce(&mut LuroResponse) -> &mut LuroResponse,
+        F: FnOnce(&mut InteractionResponse) -> &mut InteractionResponse,
     {
-        let mut r = LuroResponse::default();
+        let mut r = InteractionResponse::default();
         response(&mut r);
 
         let (interaction_id, interaction_token, interaction_client) = match self {

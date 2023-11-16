@@ -1,8 +1,8 @@
 use twilight_model::application::command::CommandOptionChoice;
 
-use super::LuroResponse;
+use super::InteractionResponse;
 
-impl LuroResponse {
+impl InteractionResponse {
     /// Set the custom ID
     pub fn choices<I>(&mut self, choices: I) -> &mut Self
     where

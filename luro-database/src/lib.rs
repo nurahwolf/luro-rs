@@ -37,7 +37,7 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new(config: &luro_model::configuration::Configuration, current_user: Id<UserMarker>) -> anyhow::Result<Self> {
+    pub async fn new(config: &luro_model::types::Configuration, current_user: Id<UserMarker>) -> anyhow::Result<Self> {
         Ok(Self {
             current_user,
             api_client: config.twilight_client.clone(),

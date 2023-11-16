@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use futures_util::TryStreamExt;
-use luro_model::message::{Message, MessageSource};
+use luro_model::types::{Message, MessageSource};
 use luro_model::types::MessageData;
 use sqlx::types::Json;
 

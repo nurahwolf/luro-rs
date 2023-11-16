@@ -1,4 +1,4 @@
-use luro_model::user::character::CharacterProfile;
+use luro_model::types::CharacterProfile;
 use twilight_model::id::{marker::UserMarker, Id};
 
 impl crate::SQLxDriver {

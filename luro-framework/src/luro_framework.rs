@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf, sync::Arc};
 
 use luro_database::Database;
-use luro_model::configuration::Configuration;
+use luro_model::types::Configuration;
 use twilight_gateway::{stream, Shard};
 use twilight_model::id::{
     marker::{GuildMarker, UserMarker},

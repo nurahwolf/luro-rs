@@ -2,7 +2,7 @@
 
 use futures_util::StreamExt;
 use luro_framework::Framework;
-use luro_model::configuration::Configuration;
+use luro_model::types::Configuration;
 use tracing_subscriber::{fmt, prelude::__tracing_subscriber_SubscriberExt, reload::Layer, Registry};
 use twilight_gateway::{error::ReceiveMessageErrorType, stream::ShardEventStream};
 

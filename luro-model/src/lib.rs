@@ -1,13 +1,19 @@
 #![feature(let_chains)]
 
+#[cfg(feature = "builders")]
+pub mod builders; // Builders can be used to craft other types in this crate in an erganmic fashion
+pub mod response; // Types used for crafting a response to interactions or commands
+pub mod sync; // Types that are similar to multipe types, that can by synced to a single luro type.
+pub mod types; // Types that can be used by other libraries, generally a wrapper around Twilight functions
+
+
 use std::collections::{BTreeMap, HashMap};
 
-use message::Message;
-use story::Story;
 use twilight_model::{
     application::interaction::Interaction,
     id::{marker::UserMarker, Id},
 };
+use types::Message;
 
 /// The primary owner user ID. Used for some defaults, as well as to say who owns the bot. This MUST  be set, even if a group of people own Luro, as its used as a fallback for when data is not tied to a specific user. For example, see [Story].
 pub const PRIMARY_BOT_OWNER: Id<UserMarker> = Id::new(373524896187416576);
@@ -31,28 +37,16 @@ pub const COLOUR_SUCCESS: u32 = 0xA0D995;
 /// The name used for Luro's webhooks
 pub const WEBHOOK_NAME: &str = "LuroHook";
 
-pub mod configuration;
-pub mod functions;
 // pub mod guild;
-pub mod heck;
-pub mod luro_database_driver;
-pub mod message;
-pub mod response;
 // pub mod role;
-pub mod story;
-pub mod types;
-pub mod user; // Migrated
 
-#[cfg(feature = "builders")]
-pub mod builders;
+
 
 /// A simple wrapper around quotes. Primary key is the ID of the story.
 pub type Quotes = BTreeMap<usize, Message>;
 
-pub type Stories = BTreeMap<usize, Story>;
 
 /// A [HashMap] containing an [Interaction], keyed by a [String]. Generally the message ID, but can be other markers too. This is primarily used for recalling interactions in the future
 pub type CommandManager = HashMap<String, Interaction>;
 
 // New
-pub mod sync; // Types that are similar to multipe types, that can by synced to a single luro type.

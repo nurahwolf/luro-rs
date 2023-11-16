@@ -3,7 +3,7 @@ use std::path::Path;
 
 use git2::{ErrorCode, Repository};
 use luro_framework::{CommandInteraction, CreateLuroCommand, Luro};
-use luro_model::{builders::EmbedBuilder, user::LuroUser};
+use luro_model::builders::EmbedBuilder;
 use memory_stats::memory_stats;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -22,14 +22,13 @@ impl CreateLuroCommand for About {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut description =
             "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n".to_owned();
-        let current_user = ctx.twilight_client.current_user().await?.model().await?;
         let mut embed = EmbedBuilder::default();
-        let slash_author = LuroUser::from(&current_user);
+        let slash_author = ctx.database.user_fetch(ctx.database.current_user).await?;
 
         // Configuration
         embed.colour(ctx.accent_colour());
         embed.title(&slash_author.name);
-        embed.thumbnail(|thumbnail| thumbnail.url(slash_author.avatar()));
+        embed.thumbnail(|thumbnail| thumbnail.url(slash_author.avatar_url()));
         embed.footer(|footer| footer.text("Written in twilight.rs!"));
 
         // Build our line processor for calculating padding

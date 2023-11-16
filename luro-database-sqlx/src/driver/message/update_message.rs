@@ -1,4 +1,4 @@
-use luro_model::{message::Message, sync::MessageSync};
+use luro_model::{types::Message, sync::MessageSync};
 use sqlx::types::Json;
 use time::OffsetDateTime;
 use twilight_model::gateway::payload::incoming::{MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate};
@@ -157,13 +157,13 @@ async fn handle_luro_message(db: &SQLxDriver, message: &Message) -> anyhow::Resu
         message.referenced_message.clone().map(|x| Json(x)) as _,
         message.role_subscription_data.clone().map(|x| Json(x)) as _,
         match message.source {
-            luro_model::message::MessageSource::TwilightMessage => DbMessageSource::Message,
-            luro_model::message::MessageSource::Custom => DbMessageSource::Custom,
-            luro_model::message::MessageSource::CachedMessage => DbMessageSource::CachedMessage,
-            luro_model::message::MessageSource::MessageUpdate => DbMessageSource::MessageUpdate,
-            luro_model::message::MessageSource::MessageDelete => DbMessageSource::MessageDelete,
-            luro_model::message::MessageSource::MessageCreate => DbMessageSource::MessageCreate,
-            luro_model::message::MessageSource::None => DbMessageSource::None,
+            luro_model::types::MessageSource::TwilightMessage => DbMessageSource::Message,
+            luro_model::types::MessageSource::Custom => DbMessageSource::Custom,
+            luro_model::types::MessageSource::CachedMessage => DbMessageSource::CachedMessage,
+            luro_model::types::MessageSource::MessageUpdate => DbMessageSource::MessageUpdate,
+            luro_model::types::MessageSource::MessageDelete => DbMessageSource::MessageDelete,
+            luro_model::types::MessageSource::MessageCreate => DbMessageSource::MessageCreate,
+            luro_model::types::MessageSource::None => DbMessageSource::None,
         } as _,
         match message.sticker_items.is_empty() {
             true => None,
