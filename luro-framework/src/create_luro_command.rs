@@ -1,11 +1,10 @@
 use anyhow::{anyhow, Context};
-use luro_model::types::CommandResponse;
+use luro_model::{types::CommandResponse, response::SimpleResponse};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
 use twilight_model::application::interaction::application_command::CommandData;
 use twilight_model::application::interaction::Interaction;
 
-use crate::standard_response::Response;
 use crate::{CommandInteraction, ComponentInteraction, InteractionContext, LuroCommand, ModalInteraction};
 
 pub trait CreateLuroCommand: CommandModel + CreateCommand {
@@ -70,7 +69,7 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
     where
         Self: Send,
     {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
+        async move { ctx.simple_response(SimpleResponse::UnknownCommand(ctx.command_name())).await }
     }
 
     /// Execute a component interaction. This could be a button or other form of interaciton
@@ -82,7 +81,7 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
     where
         Self: Send,
     {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
+        async move { ctx.simple_response(SimpleResponse::UnknownCommand(ctx.command_name())).await }
     }
 
     /// Execute a modal interaction
@@ -90,7 +89,7 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
     where
         Self: Send,
     {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
+        async move { ctx.simple_respponse(SimpleResponse::UnknownCommand(ctx.command_name())).await }
     }
 
     /// Execute the handler for an autocomplete context
@@ -98,7 +97,7 @@ pub trait CreateLuroCommand: CommandModel + CreateCommand {
     where
         Self: Send,
     {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
+        async move { ctx.simple_response(SimpleResponse::UnknownCommand(ctx.command_name())).await }
     }
 }
 

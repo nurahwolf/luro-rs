@@ -34,7 +34,6 @@ default = [
     "cache-memory",
     "http-client-hyper",
     # "lavalink", # Broken on twilight-lavalink
-    "responses",
     "random-responses", # Disable this feature to get a fixed response,
 ]
 
@@ -43,5 +42,4 @@ cache-memory = ["dep:twilight-cache-inmemory"]
 http-client-hyper = ["dep:hyper"]
 lavalink = ["dep:twilight-lavalink"]
 luro-builder = []
-responses = []
 random-responses = ["dep:rand"]

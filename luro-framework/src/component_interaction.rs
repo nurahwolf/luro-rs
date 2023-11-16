@@ -16,8 +16,8 @@ mod get_specific_user_or_author;
 mod interaction_client;
 mod respond;
 mod respond_create;
-mod response_simple;
 mod response_update;
+mod simple_response;
 
 #[derive(Debug, Clone)]
 pub struct ComponentInteraction {

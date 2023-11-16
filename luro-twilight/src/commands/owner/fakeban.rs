@@ -1,5 +1,6 @@
 use anyhow::Context;
-use luro_framework::{CommandInteraction, Luro, LuroCommand, PunishmentType, StandardResponse};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::{response::SimpleResponse, types::PunishmentType};
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 
 use crate::commands::moderator::{reason, Reason};
@@ -40,22 +41,10 @@ impl LuroCommand for FakeBan {
         let guild = ctx.guild.as_ref().context("Expected guild")?;
         let punished_user = ctx.fetch_user(self.user.resolved.id).await?;
         let reason = reason(self.reason, self.details);
-        let period_string = match self.purge {
-            TimeToBan::None => "Don't Delete Any".to_string(),
-            TimeToBan::Hour => "Previous Hour".to_string(),
-            TimeToBan::SixHours => "Previous 6 Hours".to_string(),
-            TimeToBan::TwelveHours => "Previous 12 Hours".to_string(),
-            TimeToBan::TwentyFourHours => "Previous 24 Hours".to_string(),
-            TimeToBan::ThreeDays => "Previous 3 Days".to_string(),
-            TimeToBan::SevenDays => "Previous 7 Days".to_string(),
-        };
 
         // Checks passed, now let's action the user
-        let mut embed =
-            StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.guild_id, &punished_user, &ctx.author);
-        embed
-            .punishment_reason(reason.as_deref(), &punished_user)
-            .punishment_period(&period_string);
+        let embed = SimpleResponse::Punishment(guild, PunishmentType::Banned(reason, self.purge.value()), &ctx.author, &punished_user);
+
         let punished_user_dm = match ctx.twilight_client.create_private_channel(punished_user.user_id).await {
             Ok(channel) => channel.model().await?,
             Err(_) => return ctx.respond(|r| r.content("Could not create DM with the user!")).await,
@@ -67,11 +56,11 @@ impl LuroCommand for FakeBan {
             .embeds(&[embed.embed().0])
             .await;
 
-        match victim_dm {
-            Ok(_) => embed.create_field("DM Sent", "Successful", true),
-            Err(_) => embed.create_field("DM Sent", "Failed", true),
+        let embed = match victim_dm {
+            Ok(_) => embed.dm_sent(true),
+            Err(_) => embed.dm_sent(false),
         };
 
-        ctx.respond(|r| r.add_embed(embed.embed)).await
+        ctx.respond(|r| r.add_embed(embed)).await
     }
 }

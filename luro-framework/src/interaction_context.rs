@@ -5,7 +5,7 @@ use twilight_model::{
     http::interaction::InteractionResponseType,
 };
 
-use crate::{standard_response::Response, CommandInteraction, ComponentInteraction, LuroContext, ModalInteraction};
+use crate::{CommandInteraction, ComponentInteraction, LuroContext, ModalInteraction};
 
 #[derive(Clone)]
 pub enum InteractionContext {
@@ -78,7 +78,7 @@ impl InteractionContext {
         }
     }
 
-    pub async fn simple_response(&self, response: Response<'_>) -> anyhow::Result<luro_model::types::CommandResponse> {
+    pub async fn simple_response(&self, response: luro_model::response::SimpleResponse<'_>) -> anyhow::Result<luro_model::types::CommandResponse> {
         self.respond(|r| r.add_embed(response.embed())).await
     }
 }

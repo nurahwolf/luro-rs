@@ -1,5 +1,6 @@
 use anyhow::Context;
-use luro_framework::{CommandInteraction, Luro, LuroCommand, PunishmentType, Response, StandardResponse};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::{response::SimpleResponse, types::PunishmentType};
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -50,17 +51,16 @@ impl LuroCommand for Unban {
         let moderator_permissions = moderator_data.permission_calculator(&moderator_data.role_permissions()).root();
 
         if !luro_permissions.contains(Permissions::BAN_MEMBERS) {
-            return ctx.response_simple(Response::BotMissingPermission(Permissions::BAN_MEMBERS)).await;
+            return ctx.simple_response(SimpleResponse::BotMissingPermission(&Permissions::BAN_MEMBERS)).await;
         }
 
         if !moderator_permissions.contains(Permissions::BAN_MEMBERS) {
-            return ctx.response_simple(Response::MissingPermission(Permissions::BAN_MEMBERS)).await;
+            return ctx.simple_response(SimpleResponse::MissingPermission(&Permissions::BAN_MEMBERS)).await;
         }
 
         // Checks passed, now let's action the user
-        let mut embed =
-            StandardResponse::new_punishment(PunishmentType::Unbanned, &guild.name, &guild.guild_id, &target, &ctx.author.clone());
-        embed.punishment_reason(Some(&self.reason), &target);
+        let embed = SimpleResponse::Punishment(guild, PunishmentType::Unbanned(Some(self.reason.clone())), &ctx.author, &target);
+
         match ctx.twilight_client.create_private_channel(target.user_id).await {
             Ok(channel) => {
                 let victim_dm = ctx
@@ -83,8 +83,8 @@ impl LuroCommand for Unban {
             .reason(&self.reason)
             .await;
         match unban {
-            Ok(_) => embed.create_field("Unban", "Successful", true),
-            Err(_) => embed.create_field("Unban", "Failed", true),
+            Ok(_) => embed.dm_sent(true),
+            Err(_) => embed.dm_sent(false),
         };
 
         response.add_embed(embed.embed().0);

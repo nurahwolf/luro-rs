@@ -15,15 +15,15 @@ mod user_action;
 mod user_heirarchy;
 
 pub enum SimpleResponse<'a> {
-    InternalError(anyhow::Error),
-    PermissionNotBotStaff(),
+    InternalError(&'a anyhow::Error),
+    PermissionNotBotStaff,
     PermissionModifyServerOwner(&'a Id<UserMarker>),
     UnknownCommand(&'a str),
     NotGuild,
-    BotMissingPermission(Permissions),
+    BotMissingPermission(&'a Permissions),
     UserHeirarchy(&'a str),
     BotHeirarchy(&'a str),
-    MissingPermission(Permissions),
+    MissingPermission(&'a Permissions),
     NotOwner(&'a Id<UserMarker>, &'a str),
     /// A punishment applied to a user, such as a ban or kick. First user paramater is the moderator, second is the target
     Punishment(
@@ -36,10 +36,10 @@ pub enum SimpleResponse<'a> {
 
 impl<'a> SimpleResponse<'a> {
     /// Convert the response to an embed
-    pub fn embed(self) -> EmbedBuilder {
+    pub fn embed(&self) -> EmbedBuilder {
         match self {
             Self::InternalError(error) => internal_error::internal_error(error),
-            Self::PermissionNotBotStaff() => permission_not_bot_staff::permission_not_bot_staff(),
+            Self::PermissionNotBotStaff => permission_not_bot_staff::permission_not_bot_staff(),
             Self::PermissionModifyServerOwner(user_id) => permission_modify_server_owner::permission_server_owner(user_id),
             Self::UnknownCommand(name) => unknown_command::unknown_command(name),
             Self::NotGuild => not_guild::not_guild(),
@@ -53,7 +53,8 @@ impl<'a> SimpleResponse<'a> {
     }
 
     /// Append a field to state if the response was successfully sent in a DM
-    pub fn dm_sent(embed: &mut EmbedBuilder, success: bool) -> &mut EmbedBuilder {
+    pub fn dm_sent(&self, success: bool) -> EmbedBuilder {
+        let mut embed = self.embed();
         match success {
             true => embed.create_field("DM Sent", "Successful", true),
             false => embed.create_field("DM Sent", "Failed", true),

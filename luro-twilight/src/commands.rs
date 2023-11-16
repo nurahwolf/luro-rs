@@ -1,6 +1,6 @@
-use luro_framework::standard_response::Response;
 use luro_framework::CreateLuroCommand;
 use luro_framework::InteractionContext;
+use luro_model::response::SimpleResponse;
 use tracing::info;
 use twilight_model::application::command::Command;
 
@@ -144,11 +144,11 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "uwu" => uwu::UwU::handle_interaction(ctx).await,
         #[cfg(feature = "command-wordcount")]
         "words" => words::Words::handle_interaction(ctx).await,
-        name => ctx.simple_response(Response::UnknownCommand(name)).await,
+        name => ctx.simple_response(SimpleResponse::UnknownCommand(name)).await,
     };
 
     if let Err(why) = response {
-        response_handler.simple_response(Response::InternalError(why)).await?;
+        response_handler.simple_response(SimpleResponse::InternalError(&why)).await?;
     }
 
     Ok(())

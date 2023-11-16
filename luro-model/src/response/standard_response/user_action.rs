@@ -2,7 +2,7 @@ use crate::types::{PunishmentType, User, Guild};
 
 pub fn new_punishment_embed(
     guild: &Guild,
-    kind: PunishmentType,
+    kind: &PunishmentType,
     moderator: &User,
     target: &User,
 ) -> crate::builders::EmbedBuilder {
@@ -26,7 +26,7 @@ pub fn new_punishment_embed(
         }
         PunishmentType::Banned(punishment_reason, purged_message_seconds) => {
             reason(&mut embed, punishment_reason.as_deref(), target);
-            purged_messages(&mut embed, purged_message_seconds);
+            purged_messages(&mut embed, *purged_message_seconds);
             embed
                 .title(format!("🔨 Banned from {}", guild.name))
                 .colour(crate::COLOUR_DANGER)

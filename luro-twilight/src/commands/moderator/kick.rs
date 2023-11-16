@@ -1,5 +1,6 @@
 use anyhow::Context;
-use luro_framework::{CommandInteraction, Luro, LuroCommand, PunishmentType, Response, StandardResponse};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::{response::SimpleResponse, types::PunishmentType};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     guild::Permissions,
@@ -68,16 +69,16 @@ impl LuroCommand for Kick {
         let target_highest_role = punished_data.highest_role();
 
         if !luro_permissions.contains(Permissions::KICK_MEMBERS) {
-            return ctx.response_simple(Response::BotMissingPermission(Permissions::KICK_MEMBERS)).await;
+            return ctx.simple_response(SimpleResponse::BotMissingPermission(&Permissions::KICK_MEMBERS)).await;
         }
 
         if !moderator_permissions.contains(Permissions::KICK_MEMBERS) {
-            return ctx.response_simple(Response::MissingPermission(Permissions::KICK_MEMBERS)).await;
+            return ctx.simple_response(SimpleResponse::MissingPermission(&Permissions::KICK_MEMBERS)).await;
         }
 
         if guild.is_owner(&target.user_id) {
             return ctx
-                .response_simple(Response::PermissionModifyServerOwner(&ctx.author.user_id))
+                .simple_response(SimpleResponse::PermissionModifyServerOwner(&ctx.author.user_id))
                 .await;
         }
 
@@ -91,7 +92,7 @@ impl LuroCommand for Kick {
                     punished_user_highest_role.cmp(moderator_highest_role)
                 );
                 if punished_user_highest_role <= moderator_highest_role {
-                    return ctx.response_simple(Response::UserHeirarchy(&target.name())).await;
+                    return ctx.simple_response(SimpleResponse::UserHeirarchy(&target.name())).await;
                 }
             }
 
@@ -103,7 +104,7 @@ impl LuroCommand for Kick {
                     punished_user_highest_role.cmp(luro_highest_role)
                 );
                 if punished_user_highest_role <= luro_highest_role {
-                    return ctx.response_simple(Response::BotHeirarchy(&luro.name())).await;
+                    return ctx.simple_response(SimpleResponse::BotHeirarchy(&luro.name())).await;
                 }
             }
         } else {
@@ -114,8 +115,7 @@ impl LuroCommand for Kick {
         }
 
         // Checks passed, now let's action the user
-        let mut embed = StandardResponse::new_punishment(PunishmentType::Kicked, &guild.name, &guild.guild_id, &target, moderator);
-        embed.punishment_reason(reason.as_deref(), &target);
+        let embed = SimpleResponse::Punishment(guild, PunishmentType::Kicked(reason), &ctx.author, &target);
         match ctx.twilight_client.create_private_channel(target.user_id).await {
             Ok(channel) => {
                 let victim_dm = ctx

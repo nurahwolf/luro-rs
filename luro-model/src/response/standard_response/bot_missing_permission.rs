@@ -1,5 +1,5 @@
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-pub fn bot_missing_permission_embed(permission: twilight_model::guild::Permissions) -> crate::builders::EmbedBuilder {
+pub fn bot_missing_permission_embed(permission: &twilight_model::guild::Permissions) -> crate::builders::EmbedBuilder {
     tracing::error!("Luro was missing permissions to run a command");
     let mut embed = crate::builders::EmbedBuilder::default();
     embed.colour(crate::COLOUR_DANGER)

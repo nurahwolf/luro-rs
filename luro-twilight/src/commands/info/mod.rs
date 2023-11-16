@@ -7,7 +7,7 @@ use luro_framework::{
 };
 use luro_model::{
     builders::{ComponentBuilder, EmbedBuilder},
-    types::{Member, User},
+    types::{Member, User}, response::SimpleResponse,
 };
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -82,7 +82,7 @@ impl CreateLuroCommand for Info {
             "info-button-guild" => guild_information(&ctx.author, &user.member.context("Expected to get member data")?, &mut embed),
             "info-button-clear" => embed.set_fields(vec![]),
             "info-button-sync" => sync(&ctx, &mut user, &mut embed).await?,
-            name => return ctx.response_simple(luro_framework::Response::UnknownCommand(name)).await,
+            name => return ctx.simple_response(SimpleResponse::UnknownCommand(name)).await,
         };
 
         ctx.respond(|r| {

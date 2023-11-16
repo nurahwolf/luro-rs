@@ -1,6 +1,7 @@
 use std::fmt::Write;
 
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::response::SimpleResponse;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{
     marker::{GenericMarker, RoleMarker},
@@ -25,7 +26,7 @@ impl LuroCommand for InfoRole {
             Some(guild_requested) => ctx.get_guild(guild_requested.cast()).await?,
             None => match &ctx.guild {
                 Some(guild) => guild.clone(),
-                None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+                None => return ctx.simple_response(SimpleResponse::NotGuild).await,
             },
         };
         let guild_roles = ctx.get_guild_roles(guild.guild_id).await?;

@@ -21,7 +21,7 @@ impl LuroCommand for Guild {
             Some(guild_requested) => ctx.get_guild(Id::new(guild_requested.parse()?)).await?,
             None => match &ctx.guild {
                 Some(guild) => guild.clone(),
-                None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+                None => return ctx.simple_response(luro_model::response::SimpleResponse::NotGuild).await,
             },
         };
         let mut luro_guild = String::new();

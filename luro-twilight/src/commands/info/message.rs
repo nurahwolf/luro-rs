@@ -1,5 +1,6 @@
 use anyhow::Context;
-use luro_framework::{CommandInteraction, Luro, LuroCommand, Response};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::response::SimpleResponse;
 use regex::Regex;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::Id;
@@ -23,7 +24,7 @@ impl LuroCommand for Message {
 
             match ctx.database.message_fetch(Id::new(message_id), Some(Id::new(channel_id))).await {
                 Ok(message) => message,
-                Err(why) => return ctx.response_simple(Response::InternalError(why)).await,
+                Err(why) => return ctx.simple_response(SimpleResponse::InternalError(&why)).await,
             }
         } else if let Some(message_id) = number_regex.find(&self.message).map(|mat| mat.as_str().parse()) {
             match ctx
@@ -32,7 +33,7 @@ impl LuroCommand for Message {
                 .await
             {
                 Ok(message) => message,
-                Err(why) => return ctx.response_simple(Response::InternalError(why)).await,
+                Err(why) => return ctx.simple_response(SimpleResponse::InternalError(&why)).await,
             }
         } else {
             return ctx

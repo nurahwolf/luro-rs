@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context};
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
 
-use luro_framework::standard_response::Response;
+use luro_model::response::SimpleResponse;
 use luro_model::types::{MarriageApprovals, Marriage};
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -120,7 +120,7 @@ impl CreateLuroCommand for Marry {
             Self::Divorce(command) => (ctx.fetch_user(command.user).await?, true),
             _ => {
                 return ctx
-                    .response_simple(Response::InternalError(anyhow!("Can't find the request to marry, sorry!")))
+                    .simple_response(SimpleResponse::InternalError(&anyhow!("Can't find the request to marry, sorry!")))
                     .await
             }
         };

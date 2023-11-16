@@ -1,5 +1,5 @@
-use luro_framework::standard_response::Response;
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand, ModalInteraction};
+use luro_model::response::SimpleResponse;
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
@@ -86,7 +86,7 @@ impl CreateLuroCommand for Owner {
 
         if !authorised {
             return ctx
-                .response_simple(Response::NotOwner(&ctx.author.user_id, &self.to_string()))
+                .simple_response(SimpleResponse::NotOwner(&ctx.author.user_id, &self.to_string()))
                 .await;
         }
 
@@ -166,7 +166,7 @@ impl CreateLuroCommand for Owner {
 async fn component_selector(ctx: ComponentInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
     let guild = match &ctx.guild {
         Some(guild) => guild,
-        None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+        None => return ctx.simple_response(SimpleResponse::NotGuild).await,
     };
     let guild_roles = ctx.get_guild_roles(guild.guild_id).await?;
 

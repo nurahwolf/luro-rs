@@ -1,4 +1,5 @@
-use luro_framework::{standard_response::Response, CommandInteraction, LuroCommand};
+use luro_framework::{CommandInteraction, LuroCommand};
+use luro_model::response::SimpleResponse;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{
     marker::{RoleMarker, UserMarker},
@@ -25,7 +26,7 @@ impl LuroCommand for Assign {
         let user = ctx.get_specified_user_or_author(self.user).await?;
         let guild = match &ctx.guild {
             Some(guild) => guild,
-            None => return ctx.response_simple(luro_framework::Response::NotGuild).await,
+            None => return ctx.simple_response(SimpleResponse::NotGuild).await,
         };
 
         // If the user wants' to remove a role
@@ -35,7 +36,7 @@ impl LuroCommand for Assign {
             .remove_guild_member_role(guild.guild_id, user.user_id, self.role)
             .await {
                 Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.user_id)).ephemeral()).await,
-                Err(why) => ctx.response_simple(Response::InternalError(why.into())).await
+                Err(why) => ctx.simple_response(SimpleResponse::InternalError(&why.into())).await
             }
         } else {
         // Otherwise we just assign a role as expected
@@ -44,7 +45,7 @@ impl LuroCommand for Assign {
             .add_guild_member_role(guild.guild_id, user.user_id, self.role)
             .await {
                 Ok(_) => ctx.respond(|r|r.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.user_id)).ephemeral()).await,
-                Err(why) => ctx.response_simple(Response::InternalError(why.into())).await
+                Err(why) => ctx.simple_response(SimpleResponse::InternalError(&why.into())).await
             }
         }
     }

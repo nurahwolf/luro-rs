@@ -1,6 +1,5 @@
-use luro_model::types::CommandResponse as CommandResponse;
+use luro_model::{types::CommandResponse as CommandResponse, response::SimpleResponse};
 
-use crate::standard_response::Response;
 use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
 
 pub trait LuroCommand {
@@ -9,7 +8,7 @@ pub trait LuroCommand {
     where
         Self: Sized,
     {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
+        async move { ctx.simple_response(SimpleResponse::UnknownCommand(ctx.command_name())).await }
     }
 
     /// Handle a component interaction. This could be a button or other form of interaciton
@@ -21,16 +20,16 @@ pub trait LuroCommand {
     where
         Self: Sized,
     {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
+        async move { ctx.simple_response(SimpleResponse::UnknownCommand(ctx.command_name())).await }
     }
 
     /// Create and respond to a button interaction
     fn interaction_modal(ctx: ModalInteraction) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
+        async move { ctx.simple_respponse(SimpleResponse::UnknownCommand(ctx.command_name())).await }
     }
 
     /// Create and respond to a button interaction
     fn interaction_autocomplete(ctx: CommandInteraction) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send {
-        async move { ctx.response_simple(Response::UnknownCommand(ctx.command_name())).await }
+        async move { ctx.simple_response(SimpleResponse::UnknownCommand(ctx.command_name())).await }
     }
 }

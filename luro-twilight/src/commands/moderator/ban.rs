@@ -1,6 +1,6 @@
 use anyhow::Context;
-use luro_framework::{CommandInteraction, Luro, LuroCommand, PunishmentType, Response, StandardResponse};
-use luro_model::types::CommandResponse;
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::{types::{CommandResponse, PunishmentType}, response::SimpleResponse};
 use tracing::{debug, warn};
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
@@ -90,26 +90,17 @@ impl LuroCommand for Ban {
         let target_highest_role = punished_data.highest_role();
 
         let reason = reason(self.reason, self.details);
-        let period_string = match self.purge {
-            TimeToBan::None => "Don't Delete Any".to_string(),
-            TimeToBan::Hour => "Previous Hour".to_string(),
-            TimeToBan::SixHours => "Previous 6 Hours".to_string(),
-            TimeToBan::TwelveHours => "Previous 12 Hours".to_string(),
-            TimeToBan::TwentyFourHours => "Previous 24 Hours".to_string(),
-            TimeToBan::ThreeDays => "Previous 3 Days".to_string(),
-            TimeToBan::SevenDays => "Previous 7 Days".to_string(),
-        };
 
         if !luro_permissions.contains(Permissions::BAN_MEMBERS) {
-            return ctx.response_simple(Response::BotMissingPermission(Permissions::BAN_MEMBERS)).await;
+            return ctx.simple_response(SimpleResponse::BotMissingPermission(&Permissions::BAN_MEMBERS)).await;
         }
 
         if !moderator_permissions.contains(Permissions::BAN_MEMBERS) {
-            return ctx.response_simple(Response::MissingPermission(Permissions::BAN_MEMBERS)).await;
+            return ctx.simple_response(SimpleResponse::MissingPermission(&Permissions::BAN_MEMBERS)).await;
         }
 
         if guild.is_owner(&target.user_id) {
-            return ctx.response_simple(Response::PermissionModifyServerOwner(&moderator.user_id)).await;
+            return ctx.simple_response(SimpleResponse::PermissionModifyServerOwner(&moderator.user_id)).await;
         }
 
         // The lower the number, the higher they are on the heirarchy
@@ -118,14 +109,14 @@ impl LuroCommand for Ban {
             if let Some(moderator_highest_role) = moderator_highest_role {
                 debug!("Moderator user position: {}", moderator_highest_role.position);
                 if punished_user_highest_role.position <= moderator_highest_role.position {
-                    return ctx.response_simple(Response::UserHeirarchy(&target.name())).await;
+                    return ctx.simple_response(SimpleResponse::UserHeirarchy(&target.name())).await;
                 }
             }
 
             if let Some(luro_highest_role) = luro_highest_role {
                 debug!("Luro user position: {}", luro_highest_role.position);
                 if punished_user_highest_role.position <= luro_highest_role.position {
-                    return ctx.response_simple(Response::BotHeirarchy(&luro.name())).await;
+                    return ctx.simple_response(SimpleResponse::BotHeirarchy(&luro.name())).await;
                 }
             }
         } else {
@@ -136,10 +127,9 @@ impl LuroCommand for Ban {
         }
 
         // Checks passed, now let's action the user
-        let mut embed = StandardResponse::new_punishment(PunishmentType::Banned, &guild.name, &guild.guild_id, &target, moderator);
-        embed
-            .punishment_reason(reason.as_deref(), &target)
-            .punishment_period(&period_string);
+        
+        let embed = SimpleResponse::Punishment(guild, PunishmentType::Banned(reason.clone(), self.purge.value()), &ctx.author, &target);
+
         match ctx.twilight_client.create_private_channel(target.user_id).await {
             Ok(channel) => {
                 let victim_dm = ctx
