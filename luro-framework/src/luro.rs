@@ -2,7 +2,7 @@ use luro_database::Database;
 use luro_model::{
     builders::EmbedBuilder,
     response::InteractionResponse,
-    types::{Channel, Guild, Role, User},
+    types::{Channel, CommandResponse, Guild, Role, User},
     ACCENT_COLOUR,
 };
 use std::{future::Future, sync::Arc};
@@ -11,6 +11,7 @@ use twilight_http::{client::InteractionClient, Client};
 
 use twilight_model::{
     application::command::Command,
+    channel::Webhook,
     id::{
         marker::{ChannelMarker, GuildMarker, UserMarker},
         Id,
@@ -26,11 +27,11 @@ pub trait Luro {
 
     /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
-    fn respond<F>(&self, _: F) -> impl std::future::Future<Output = anyhow::Result<()>> + Send
+    fn respond<F>(&self, _: F) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send
     where
         F: FnOnce(&mut InteractionResponse) -> &mut InteractionResponse + Send,
     {
-        async { Ok(()) }
+        async { Ok(CommandResponse::default()) }
     }
 
     /// Create a default embed which has the guild's accent colour if available, otherwise falls back to Luro's accent colour
@@ -112,7 +113,7 @@ pub trait Luro {
         Self: Sync,
     {
         async move {
-            match self.database().member_fetch(user_id, guild_id).await {
+            match self.database().member_fetch(guild_id, user_id).await {
                 Ok(member) => Ok(member),
                 Err(why) => {
                     warn!(
@@ -167,6 +168,45 @@ pub trait Luro {
         Self: Sync,
     {
         async move { self.database().role_fetch_guild(guild_id).await }
+    }
+
+    // Get a webhook for a channel, or create it if it does not exist
+    fn get_webhook(&self, channel_id: Id<ChannelMarker>) -> impl std::future::Future<Output = anyhow::Result<Webhook>> + Send
+    where
+        Self: Sync,
+    {
+        async move {
+            let webhooks = self.twilight_client().channel_webhooks(channel_id).await?.model().await?;
+            let mut webhook = None;
+
+            for wh in webhooks {
+                if let Some(ref webhook_name) = wh.name {
+                    if webhook_name == &self.database().current_user.to_string() {
+                        webhook = Some(wh);
+                        break;
+                    }
+                }
+            }
+
+            match webhook {
+                Some(webhook) => Ok(webhook),
+                None => self.create_webhook(channel_id).await,
+            }
+        }
+    }
+
+    fn create_webhook(&self, channel_id: Id<ChannelMarker>) -> impl std::future::Future<Output = anyhow::Result<Webhook>> + Send
+    where
+        Self: Sync,
+    {
+        async move {
+            Ok(self
+                .twilight_client()
+                .create_webhook(channel_id, &self.database().current_user.to_string())
+                .await?
+                .model()
+                .await?)
+        }
     }
 
     // async fn get_guild_member_roles(&self, guild_id: &Id<GuildMarker>, user_id: &Id<UserMarker>, bypass: bool) -> anyhow::Result<Vec<Role>>

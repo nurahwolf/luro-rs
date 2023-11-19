@@ -7,8 +7,8 @@ use twilight_model::id::{
 use crate::Database;
 
 impl Database {
-    pub async fn member_fetch(&self, user_id: Id<UserMarker>, guild_id: Id<GuildMarker>) -> anyhow::Result<User> {
-        if let Ok(Some(member)) = self.driver.get_member(user_id, guild_id).await {
+    pub async fn member_fetch(&self, guild_id: Id<GuildMarker>, user_id: Id<UserMarker>) -> anyhow::Result<User> {
+        if let Ok(Some(member)) = self.driver.get_member(guild_id, user_id).await {
             return Ok(member);
         }
 

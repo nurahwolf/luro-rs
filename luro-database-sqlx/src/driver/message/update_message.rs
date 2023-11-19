@@ -1,4 +1,4 @@
-use luro_model::{types::Message, sync::MessageSync};
+use luro_model::{sync::MessageSync, types::Message};
 use sqlx::types::Json;
 use time::OffsetDateTime;
 use twilight_model::gateway::payload::incoming::{MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate};

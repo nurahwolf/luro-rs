@@ -1,5 +1,5 @@
 use luro_model::sync::MessageSync;
-use twilight_model::gateway::payload::incoming::{MessageDeleteBulk, MessageCreate, MessageDelete, MessageUpdate};
+use twilight_model::gateway::payload::incoming::{MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate};
 
 use crate::Database;
 

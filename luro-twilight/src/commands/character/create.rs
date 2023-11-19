@@ -11,13 +11,21 @@ pub struct Create {
 
 impl LuroCommand for Create {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let character = ctx.author.fetch_character(ctx.database.clone(), &self.name).await?;
+        let character = ctx.database.user_fetch_character(ctx.author.user_id, &self.name).await?;
 
         // Create a model
         ctx.respond(|r| {
             r.title("Create or modify a Character!")
                 .components(|components| {
                     components
+                        .action_row(|row| {
+                            row.text_input(|text| {
+                                text.custom_id("character-icon")
+                                    .label("Character Icon")
+                                    .placeholder("https://imgur.com/notavirus.gif")
+                                    .style(TextInputStyle::Short)
+                            })
+                        })
                         .action_row(|row| {
                             row.text_input(|text| {
                                 text.custom_id("character-name")
@@ -42,12 +50,15 @@ impl LuroCommand for Create {
                         .action_row(|row| {
                             row.text_input(|text| {
                                 if let Some(character) = &character {
-                                    text.value(character.sfw_summary.clone());
+                                    if let Some(nsfw_summary) = &character.nsfw_summary {
+                                        text.value(nsfw_summary);
+                                    }
                                 }
                                 text.custom_id("character-nsfw-summary")
                                     .label("NSFW Summary")
                                     .max_length(250)
                                     .placeholder("Always horny. Going to plow you.")
+                                    .required(false)
                             })
                         })
                         .action_row(|row| {

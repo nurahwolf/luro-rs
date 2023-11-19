@@ -67,7 +67,7 @@ commands = [
     "command-about",
     "command-base64",
     "command-boop",
-    # "command-character",
+    "command-character",
     "command-dice",
     "command-info",
     "command-marry",

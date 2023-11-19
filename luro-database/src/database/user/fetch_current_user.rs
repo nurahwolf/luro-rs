@@ -6,7 +6,7 @@ impl crate::Database {
     pub async fn user_fetch_current_user(&self, guild_id: Option<Id<GuildMarker>>) -> anyhow::Result<User> {
         match guild_id {
             Some(guild_id) => {
-                if let Ok(current_user) = self.member_fetch(self.current_user, guild_id).await {
+                if let Ok(current_user) = self.member_fetch(guild_id, self.current_user).await {
                     return Ok(current_user);
                 }
             }

@@ -112,9 +112,21 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "moderator" | "moderator-warn" => moderator::Moderator::handle_interaction(ctx).await,
         "boop" => boop::Boop::handle_interaction(ctx).await,
         #[cfg(feature = "command-character")]
-        "character" | "character-fetish" | "character-image" | "character-update" | "character-image-nsfw" => {
-            character::Character::handle_interaction(ctx).await
-        }
+        "character"
+        | "character-add-fetish"
+        | "character-add-icon"
+        | "character-add-image"
+        | "character-add-prefix"
+        | "character-delete"
+        | "character-description"
+        | "character-refresh"
+        | "character-edit"
+        | "character-fetish"
+        | "character-image-nsfw"
+        | "character-image"
+        | "character-menu-close"
+        | "character-menu-open"
+        | "character-update" => character::Character::handle_interaction(ctx).await,
         "dice" => dice::Dice::handle_interaction(ctx).await,
         "hello" => hello::Hello::handle_interaction(ctx).await,
         "images" => images::Images::handle_interaction(ctx).await,

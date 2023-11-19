@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context};
-use luro_model::{types::CommandResponse, response::SimpleResponse};
+use luro_model::{response::SimpleResponse, types::CommandResponse};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::command::Command;
 use twilight_model::application::interaction::application_command::CommandData;

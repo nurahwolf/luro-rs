@@ -38,7 +38,7 @@ impl crate::Database {
         guild.approximate_member_count = twilight_guild.approximate_member_count;
         guild.approximate_presence_count = twilight_guild.approximate_presence_count;
         guild.banner = twilight_guild.banner;
-        guild.channels = twilight_guild.channels.clone();
+        guild.channels = twilight_guild.channels.clone().into_iter().map(|x| x.into()).collect();
         guild.default_message_notifications = twilight_guild.default_message_notifications;
         guild.description = twilight_guild.description.clone();
         guild.discovery_splash = twilight_guild.discovery_splash;
@@ -79,7 +79,7 @@ impl crate::Database {
         guild.stickers = twilight_guild.stickers.clone();
         guild.system_channel_flags = twilight_guild.system_channel_flags;
         guild.system_channel_id = twilight_guild.system_channel_id;
-        guild.threads = twilight_guild.threads.clone();
+        guild.threads = twilight_guild.threads.clone().into_iter().map(|x| x.into()).collect();
         guild.unavailable = twilight_guild.unavailable;
         guild.vanity_url_code = twilight_guild.vanity_url_code.clone();
         guild.verification_level = twilight_guild.verification_level;

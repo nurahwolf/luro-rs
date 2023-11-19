@@ -113,10 +113,14 @@ impl CreateLuroCommand for Owner {
 
         for row in &ctx.data.components {
             for component in &row.components {
-                if let Some(ref value) = component.value && component.custom_id.as_str() == "message-id" {
+                if let Some(ref value) = component.value
+                    && component.custom_id.as_str() == "message-id"
+                {
                     message_id = Some(value.clone());
                 }
-                if let Some(ref value) = component.value && component.custom_id.as_str() == "channel-id" {
+                if let Some(ref value) = component.value
+                    && component.custom_id.as_str() == "channel-id"
+                {
                     channel_id = Some(value.clone());
                 }
             }
@@ -137,10 +141,14 @@ impl CreateLuroCommand for Owner {
 
         for row in &ctx.data.components {
             for component in &row.components {
-                if let Some(ref value) = component.value && component.custom_id.as_str() == "embed-title" {
+                if let Some(ref value) = component.value
+                    && component.custom_id.as_str() == "embed-title"
+                {
                     embed.title = Some(value.clone());
                 }
-                if let Some(ref value) = component.value && component.custom_id.as_str() == "embed-description" {
+                if let Some(ref value) = component.value
+                    && component.custom_id.as_str() == "embed-description"
+                {
                     embed.description = Some(value.clone());
                 }
             }
@@ -154,7 +162,11 @@ impl CreateLuroCommand for Owner {
         ctx.respond(|r| r.content("All done!").ephemeral()).await
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, _invoking_interaction: Interaction) -> anyhow::Result<luro_model::types::CommandResponse> {
+    async fn interaction_component(
+        self,
+        ctx: ComponentInteraction,
+        _invoking_interaction: Interaction,
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
         match ctx.data.custom_id.as_str() {
             "mass-assign-selector" => component_selector(ctx).await,
             "mass-assign-roles" | "mass-assign-remove" => component_roles(ctx).await,

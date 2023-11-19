@@ -15,7 +15,9 @@ pub async fn create(db: &Database, event: &InteractionCreate) -> anyhow::Result<
         }
     }
 
-    if let Some(guild_id) = event.guild_id && let Some(member) = &event.member {
+    if let Some(guild_id) = event.guild_id
+        && let Some(member) = &event.member
+    {
         if let Err(why) = db.member_update((guild_id, member)).await {
             tracing::warn!("interaction_handler - Failed to update partial member: {why}")
         }

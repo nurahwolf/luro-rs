@@ -7,7 +7,8 @@ use luro_framework::{
 };
 use luro_model::{
     builders::{ComponentBuilder, EmbedBuilder},
-    types::{Member, User}, response::SimpleResponse,
+    response::SimpleResponse,
+    types::{Member, User},
 };
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
@@ -165,7 +166,9 @@ pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mu
             if let Some(ref user_data) = user.data {
                 luro_information.push_str(&format!("- Is marked as `{}` in my database!\n", user_data.permissions));
 
-                if let Some(gender) = &user_data.gender && let Some(sexuality) = &user_data.sexuality {
+                if let Some(gender) = &user_data.gender
+                    && let Some(sexuality) = &user_data.sexuality
+                {
                     luro_information.push_str(&format!("- Has a sexuality of `{sexuality}` and identifies as `{gender}`\n"));
                 } else if let Some(gender) = &user_data.gender {
                     luro_information.push_str(&format!("- Identifies as `{gender}`\n"));
@@ -173,48 +176,98 @@ pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mu
                     luro_information.push_str(&format!("- Has a sexuality of `{sexuality}`\n"));
                 }
             }
-            if let Ok(word_count) = ctx.database.user_count_messages(user.user_id).await && word_count.total_messages.unwrap_or_default() != 0  {
-                if let Some(count) = word_count.total_messages && count != 0 { luro_information.push_str(&format!("- Has sent `{count}` messages!\n")) };
-                if let Some(count) = word_count.total_words && count != 0 { luro_information.push_str(&format!("  - `{count}` words said!\n")) };
-                if let Some(count) = word_count.total_unique_words && count != 0 { luro_information.push_str(&format!("  - `{count}` unique words said!\n")) };
-                if let Some(count) = word_count.total_custom_messages && count != 0 { luro_information.push_str(&format!("  - `{count}` custom messages\n")) };
-                if let Some(count) = word_count.total_message_creates && count != 0 { luro_information.push_str(&format!("  - `{count}` messages created\n")) };
-                if let Some(count) = word_count.total_message_cached && count != 0 { luro_information.push_str(&format!("  - `{count}` messages cached\n")) };
-                if let Some(count) = word_count.total_message_deletes && count != 0 { luro_information.push_str(&format!("  - `{count}` messages deleted\n")) };
-                if let Some(count) = word_count.total_message_updates && count != 0 { luro_information.push_str(&format!("  - `{count}` messages updated\n")) };
-                if let Some(count) = word_count.total_message_message && count != 0 { luro_information.push_str(&format!("  - `{count}` messages stored\n")) };
-        }
+            if let Ok(word_count) = ctx.database.user_count_messages(user.user_id).await
+                && word_count.total_messages.unwrap_or_default() != 0
+            {
+                if let Some(count) = word_count.total_messages
+                    && count != 0
+                {
+                    luro_information.push_str(&format!("- Has sent `{count}` messages!\n"))
+                };
+                if let Some(count) = word_count.total_words
+                    && count != 0
+                {
+                    luro_information.push_str(&format!("  - `{count}` words said!\n"))
+                };
+                if let Some(count) = word_count.total_unique_words
+                    && count != 0
+                {
+                    luro_information.push_str(&format!("  - `{count}` unique words said!\n"))
+                };
+                if let Some(count) = word_count.total_custom_messages
+                    && count != 0
+                {
+                    luro_information.push_str(&format!("  - `{count}` custom messages\n"))
+                };
+                if let Some(count) = word_count.total_message_creates
+                    && count != 0
+                {
+                    luro_information.push_str(&format!("  - `{count}` messages created\n"))
+                };
+                if let Some(count) = word_count.total_message_cached
+                    && count != 0
+                {
+                    luro_information.push_str(&format!("  - `{count}` messages cached\n"))
+                };
+                if let Some(count) = word_count.total_message_deletes
+                    && count != 0
+                {
+                    luro_information.push_str(&format!("  - `{count}` messages deleted\n"))
+                };
+                if let Some(count) = word_count.total_message_updates
+                    && count != 0
+                {
+                    luro_information.push_str(&format!("  - `{count}` messages updated\n"))
+                };
+                if let Some(count) = word_count.total_message_message
+                    && count != 0
+                {
+                    luro_information.push_str(&format!("  - `{count}` messages stored\n"))
+                };
+            }
 
             field.value = luro_information;
         }
 
         if field.name.contains("User Information") {
             let mut user_information = String::new();
-            if let Some(flags) = &user.flags && !flags.is_empty() {
+            if let Some(flags) = &user.flags
+                && !flags.is_empty()
+            {
                 tracing::info!("flags - {}", flags.bits());
                 if flags.bits() == 1 << 20 {
                     user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
                 }
 
                 let mut flags_sorted = vec![];
-                for (flag,_) in flags.iter_names() {
+                for (flag, _) in flags.iter_names() {
                     flags_sorted.push(flag)
                 }
                 flags_sorted.sort();
-                user_information.push_str(&format!("\n- User Flags (`{}`): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")));
+                user_information.push_str(&format!(
+                    "\n- User Flags (`{}`): \n```\n{}```",
+                    flags.bits(),
+                    flags_sorted.join(" | ")
+                ));
             }
 
-            if let Some(flags) = &user.public_flags && !flags.is_empty() {
+            if let Some(flags) = &user.public_flags
+                && !flags.is_empty()
+            {
                 if flags.bits() == 1 << 20 {
                     user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
                 }
 
                 let mut flags_sorted = vec![];
-                for (flag,_) in flags.iter_names() {
+                for (flag, _) in flags.iter_names() {
                     flags_sorted.push(flag)
                 }
                 flags_sorted.sort();
-                user_information.push_str(&format!("\n- Public Flags (`{}`): \n```\n{}```",flags.bits(), flags_sorted.join(" | ")))
+                user_information.push_str(&format!(
+                    "\n- Public Flags (`{}`): \n```\n{}```",
+                    flags.bits(),
+                    flags_sorted.join(" | ")
+                ))
             }
 
             if let Some(accent_colour) = user.accent_colour {
@@ -245,7 +298,10 @@ pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mu
                 user_information.push_str("\n- Bot: `true`");
             }
 
-            field.value = user_information;
+            match user_information.is_empty() {
+                true => field.value = "- I don't have any user information to report!".to_owned(),
+                false => field.value = user_information,
+            };
         }
 
         if field.name.contains("Guild Information") {
@@ -320,7 +376,10 @@ pub async fn sync<'a>(ctx: &ComponentInteraction, user: &mut User, embed: &'a mu
         embed.image(|i| i.url(banner));
     }
 
-    embed.footer(|f| f.text(format!("SYNCED | Information requested by {}", ctx.author.name())).icon_url(ctx.author.avatar_url()));
+    embed.footer(|f| {
+        f.text(format!("SYNCED | Information requested by {}", ctx.author.name()))
+            .icon_url(ctx.author.avatar_url())
+    });
 
     Ok(embed)
 }
@@ -473,7 +532,9 @@ pub async fn luro_information<'a>(author: &User, user: &User, db: Arc<Database>,
         if let Some(ref user_data) = user.data {
             luro_information.push_str(&format!("- Is marked as `{}` in my database!\n", user_data.permissions));
 
-            if let Some(gender) = &user_data.gender && let Some(sexuality) = &user_data.sexuality {
+            if let Some(gender) = &user_data.gender
+                && let Some(sexuality) = &user_data.sexuality
+            {
                 luro_information.push_str(&format!("- Has a sexuality of `{sexuality}` and identifies as `{gender}`\n"));
             } else if let Some(gender) = &user_data.gender {
                 luro_information.push_str(&format!("- Identifies as `{gender}`\n"));
@@ -482,16 +543,54 @@ pub async fn luro_information<'a>(author: &User, user: &User, db: Arc<Database>,
             }
         }
 
-        if let Ok(word_count) = db.user_count_messages(user.user_id).await && word_count.total_messages.unwrap_or_default() != 0  {
-            if let Some(count) = word_count.total_messages && count != 0 { luro_information.push_str(&format!("- Has sent `{count}` messages!\n")) };
-            if let Some(count) = word_count.total_words && count != 0 { luro_information.push_str(&format!("  - `{count}` words said!\n")) };
-            if let Some(count) = word_count.total_unique_words && count != 0 { luro_information.push_str(&format!("  - `{count}` unique words said!\n")) };
-            if let Some(count) = word_count.total_custom_messages && count != 0 { luro_information.push_str(&format!("  - `{count}` custom messages\n")) };
-            if let Some(count) = word_count.total_message_creates && count != 0 { luro_information.push_str(&format!("  - `{count}` messages created\n")) };
-            if let Some(count) = word_count.total_message_cached && count != 0 { luro_information.push_str(&format!("  - `{count}` messages cached\n")) };
-            if let Some(count) = word_count.total_message_deletes && count != 0 { luro_information.push_str(&format!("  - `{count}` messages deleted\n")) };
-            if let Some(count) = word_count.total_message_updates && count != 0 { luro_information.push_str(&format!("  - `{count}` messages updated\n")) };
-            if let Some(count) = word_count.total_message_message && count != 0 { luro_information.push_str(&format!("  - `{count}` messages stored\n")) };
+        if let Ok(word_count) = db.user_count_messages(user.user_id).await
+            && word_count.total_messages.unwrap_or_default() != 0
+        {
+            if let Some(count) = word_count.total_messages
+                && count != 0
+            {
+                luro_information.push_str(&format!("- Has sent `{count}` messages!\n"))
+            };
+            if let Some(count) = word_count.total_words
+                && count != 0
+            {
+                luro_information.push_str(&format!("  - `{count}` words said!\n"))
+            };
+            if let Some(count) = word_count.total_unique_words
+                && count != 0
+            {
+                luro_information.push_str(&format!("  - `{count}` unique words said!\n"))
+            };
+            if let Some(count) = word_count.total_custom_messages
+                && count != 0
+            {
+                luro_information.push_str(&format!("  - `{count}` custom messages\n"))
+            };
+            if let Some(count) = word_count.total_message_creates
+                && count != 0
+            {
+                luro_information.push_str(&format!("  - `{count}` messages created\n"))
+            };
+            if let Some(count) = word_count.total_message_cached
+                && count != 0
+            {
+                luro_information.push_str(&format!("  - `{count}` messages cached\n"))
+            };
+            if let Some(count) = word_count.total_message_deletes
+                && count != 0
+            {
+                luro_information.push_str(&format!("  - `{count}` messages deleted\n"))
+            };
+            if let Some(count) = word_count.total_message_updates
+                && count != 0
+            {
+                luro_information.push_str(&format!("  - `{count}` messages updated\n"))
+            };
+            if let Some(count) = word_count.total_message_message
+                && count != 0
+            {
+                luro_information.push_str(&format!("  - `{count}` messages stored\n"))
+            };
         }
 
         if !luro_information.is_empty() {
@@ -520,61 +619,73 @@ pub fn user_information<'a>(author: &User, user: &User, embed: &'a mut EmbedBuil
 
     if !present {
         let mut user_information = String::new();
-        if let Some(flags) = &user.flags && !flags.is_empty() {
+        if let Some(flags) = &user.flags
+            && !flags.is_empty()
+        {
             if flags.bits() == 1 << 20 {
                 user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
             }
 
             let mut flags_sorted = vec![];
-            for (flag,_) in flags.iter_names() {
+            for (flag, _) in flags.iter_names() {
                 flags_sorted.push(flag)
             }
             flags_sorted.sort();
-            user_information.push_str(&format!("\n- User Flags (`{}`): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")));
+            user_information.push_str(&format!(
+                "\n- User Flags (`{}`): \n```\n{}```",
+                flags.bits(),
+                flags_sorted.join(" | ")
+            ));
         }
 
-        if let Some(flags) = &user.public_flags && !flags.is_empty() {
+        if let Some(flags) = &user.public_flags
+            && !flags.is_empty()
+        {
             if flags.bits() == 1 << 20 {
                 user_information.push_str("**USER IS MARKED FOR UNUSUAL AMOUNTS OF DMS**")
             }
 
             let mut flags_sorted = vec![];
-            for (flag,_) in flags.iter_names() {
+            for (flag, _) in flags.iter_names() {
                 flags_sorted.push(flag)
             }
             flags_sorted.sort();
-            user_information.push_str(&format!("\n- Public Flags (`{}`): \n```\n{}```", flags.bits(), flags_sorted.join(" | ")))
+            user_information.push_str(&format!(
+                "\n- Public Flags (`{}`): \n```\n{}```",
+                flags.bits(),
+                flags_sorted.join(" | ")
+            ))
         }
 
         if let Some(accent_color) = user.accent_colour {
             embed.colour(accent_color);
-            user_information.push_str(&format!("- Accent Colour: `{accent_color:X}`\n"));
+            user_information.push_str(&format!("\n- Accent Colour: `{accent_color:X}`"));
         } else if let Some(member) = &user.member {
             if let Some(data) = &member.data {
                 if let Some(role) = data.highest_role_colour() {
                     embed.colour(role.colour);
-                    user_information.push_str(&format!("- Accent Colour: `{:X}` (<@&{}>)\n", role.colour, role));
+                    user_information.push_str(&format!("\n- Accent Colour: `{:X}` (<@&{}>)", role.colour, role));
                 }
             }
         }
 
         if let Some(email) = &user.email {
-            user_information.push_str(&format!("- Email: `{}`\n", email));
+            user_information.push_str(&format!("\n- Email: `{}`", email));
         }
         if let Some(locale) = &user.locale {
-            user_information.push_str(&format!("- Locale: `{}`\n", locale));
+            user_information.push_str(&format!("\n- Locale: `{}`", locale));
         }
         if user.mfa_enabled.unwrap_or_default() {
-            user_information.push_str("- MFA Enabled: `true`\n");
+            user_information.push_str("\n- MFA Enabled: `true`");
         }
         if user.system.unwrap_or_default() {
-            user_information.push_str("- System Account: `true`\n");
+            user_information.push_str("\n- System Account: `true`");
         }
         if user.verified.unwrap_or_default() {
-            user_information.push_str(" - Verified Account: `true`\n");
+            user_information.push_str("\n- Verified Account: `true`");
         }
         if user.bot {
-            user_information.push_str(" - Bot: `true`\n");
+            user_information.push_str("\n- Bot: `true`");
         }
 
         embed.footer(|f| {

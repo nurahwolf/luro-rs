@@ -1,4 +1,7 @@
-use twilight_model::{gateway::payload::incoming::{GuildUpdate, GuildCreate}, guild::Guild};
+use twilight_model::{
+    gateway::payload::incoming::{GuildCreate, GuildUpdate},
+    guild::Guild,
+};
 pub enum GuildSync<'a> {
     Guild(&'a Guild),
     GuildUpdate(&'a GuildUpdate),

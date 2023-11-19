@@ -10,6 +10,8 @@ impl crate::Database {
             return Ok(message);
         }
 
+        tracing::info!("message_fetch - Failed to find the message in the database, falling back to Twilight!");
+
         // TODO: Implement this
         // #[cfg(feature = "database-cache-twilight")]
         // if let Some(message) = self.cache.message(message_id) {

@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context};
 use luro_framework::{CommandInteraction, ComponentInteraction, CreateLuroCommand, Luro, LuroCommand};
 
 use luro_model::response::SimpleResponse;
-use luro_model::types::{MarriageApprovals, Marriage};
+use luro_model::types::{Marriage, MarriageApprovals};
 use luro_model::COLOUR_DANGER;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::application::interaction::Interaction;
@@ -106,7 +106,12 @@ impl CreateLuroCommand for Marry {
         }
     }
 
-    async fn interaction_component(self, ctx: ComponentInteraction, invoking_interaction: Interaction) -> anyhow::Result<luro_model::types::CommandResponse> {
+    async fn interaction_component(
+        self,
+        ctx: ComponentInteraction,
+        invoking_interaction: Interaction,
+    ) -> anyhow::Result<luro_model::types::CommandResponse> {
+        // TODO: Divorce reason gets updated incorrectly when someone else clicks a button
         let proposer = ctx
             .fetch_user(
                 invoking_interaction

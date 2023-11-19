@@ -1,5 +1,7 @@
 /// A response for if someone tried to screw with a server owner
-pub fn permission_server_owner(user_id: &twilight_model::id::Id<twilight_model::id::marker::UserMarker>) -> crate::builders::EmbedBuilder {
+pub fn permission_server_owner(
+    user_id: &twilight_model::id::Id<twilight_model::id::marker::UserMarker>,
+) -> crate::builders::EmbedBuilder {
     tracing::warn!("User {user_id} attempted to abuse a server owner");
     let mut embed = crate::builders::EmbedBuilder::default();
     embed

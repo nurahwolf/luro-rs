@@ -2,10 +2,10 @@
 
 #[cfg(feature = "builders")]
 pub mod builders; // Builders can be used to craft other types in this crate in an erganmic fashion
+pub mod extras;
 pub mod response; // Types used for crafting a response to interactions or commands
 pub mod sync; // Types that are similar to multipe types, that can by synced to a single luro type.
-pub mod types; // Types that can be used by other libraries, generally a wrapper around Twilight functions
-
+pub mod types; // Types that can be used by other libraries, generally a wrapper around Twilight functions // Extra types that are locked behind features
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -40,11 +40,8 @@ pub const WEBHOOK_NAME: &str = "LuroHook";
 // pub mod guild;
 // pub mod role;
 
-
-
 /// A simple wrapper around quotes. Primary key is the ID of the story.
 pub type Quotes = BTreeMap<usize, Message>;
-
 
 /// A [HashMap] containing an [Interaction], keyed by a [String]. Generally the message ID, but can be other markers too. This is primarily used for recalling interactions in the future
 pub type CommandManager = HashMap<String, Interaction>;

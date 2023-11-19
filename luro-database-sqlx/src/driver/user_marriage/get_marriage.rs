@@ -8,6 +8,8 @@ impl crate::SQLxDriver {
         proposer_id: Id<UserMarker>,
         proposee_id: Id<UserMarker>,
     ) -> Result<Option<DbUserMarriage>, sqlx::Error> {
+        let proposee = proposee_id.min(proposer_id).get() as i64;
+        let proposer = proposee_id.max(proposer_id).get() as i64;
         sqlx::query_as!(
             DbUserMarriage,
             "
@@ -16,8 +18,8 @@ impl crate::SQLxDriver {
                     OR
                 (proposer_id = $2 AND proposee_id = $1)
             ",
-            proposer_id.get() as i64,
-            proposee_id.get() as i64,
+            proposer,
+            proposee,
         )
         .fetch_optional(&self.pool)
         .await

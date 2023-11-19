@@ -75,48 +75,45 @@ async fn standard_output(framework: &LuroContext, event: &Box<Ready>, staff: Has
 
 #[cfg(feature = "pretty-tables")]
 async fn pretty_output(framework: &LuroContext, event: &Ready, staff: Vec<User>) {
+    use tabled::settings::Style;
+    use thousands::Separable;
+
     let mut builder = tabled::builder::Builder::new();
-    if let Some(latency) = framework.latency.average() {
-        builder.push_record(["API Latency", &latency.as_millis().to_string()]);
-    }
-    builder.push_record(["API Version", &event.version.to_string()]);
-    builder.push_record(["Bot ID", &event.user.id.to_string()]);
-    builder.push_record(["Bot Username", &event.user.name]);
-    builder.push_record(["Total Guilds", &event.guilds.len().to_string()]);
+    builder.set_header([
+        "API Latency",
+        "API Version",
+        "Bot ID",
+        "Bot Username",
+        "Total Guilds",
+        "Total Shards",
+    ]);
+    builder.push_record([
+        match framework.latency.average() {
+            Some(latency) => latency.as_millis().to_string(),
+            None => "None".to_owned(),
+        },
+        event.version.to_string(),
+        event.user.id.to_string(),
+        event.user.name.clone(),
+        event.guilds.len().to_string(),
+        match event.shard {
+            Some(shard) => shard.total().to_string(),
+            None => "Unknown".to_owned(),
+        },
+    ]);
 
     match event.shard {
         Some(shard) => {
-            builder.push_record(["Total Shards", &shard.total().to_string()]);
-
             info!(
                 "-- Bot Information | Shard {} -- \n{}",
                 shard.number(),
-                builder.build().with(tabled::settings::Style::ascii_rounded()).to_string()
+                builder.build().with(Style::sharp()).to_string()
             )
         }
         None => info!(
             "-- Bot Information -- \n{}",
-            builder.build().with(tabled::settings::Style::ascii_rounded()).to_string()
+            builder.build().with(tabled::settings::Style::sharp()).to_string()
         ),
-    }
-
-    // Information from Discord's API
-    if let Ok(application) = framework.twilight_client.current_user_application().await {
-        if let Ok(application) = application.model().await {
-            builder = tabled::builder::Builder::new();
-
-            if let Some(owner) = application.owner {
-                builder.push_record([
-                    "Application Owner",
-                    &format!("{} - {}", owner.global_name.unwrap_or(owner.name), owner.id),
-                ]);
-            }
-
-            info!(
-                "-- Application Information -- \n{}",
-                builder.build().with(tabled::settings::Style::ascii_rounded()).to_string()
-            )
-        }
     }
 
     // Information from the Database
@@ -140,68 +137,64 @@ async fn pretty_output(framework: &LuroContext, event: &Ready, staff: Vec<User>)
     }
 
     builder = tabled::builder::Builder::new();
-    builder.push_record(["Users with Owner Permission", &owners]);
-    builder.push_record(["Users with Administrator Permission", &administrators]);
-    if let Ok(data) = framework.database.driver.count_applications().await {
-        builder.push_record(["Total Applications", &format_number(data)]);
-    }
-    if let Ok(data) = framework.database.driver.count_channels().await {
-        builder.push_record(["Total Channels", &format_number(data)]);
-    }
-    if let Ok(data) = framework.database.driver.count_interactions().await {
-        builder.push_record(["Total Interactions", &format_number(data)]);
-    }
-    if let Ok(data) = framework.database.driver.count_messages().await {
-        builder.push_record(["Total Messages", &format_number(data.total_messages.unwrap_or_default())]);
-    }
-    database_information.push_str("-- General --\n");
-    database_information.push_str(&builder.build().with(tabled::settings::Style::ascii_rounded()).to_string());
-    builder = tabled::builder::Builder::new();
-
-    // Guild Data
-    if let Ok(data) = framework.database.driver.count_guilds().await {
-        builder.push_record(["Total Guilds", &format_number(data)]);
-    }
-    if let Ok(data) = framework.database.driver.count_guild_members().await {
-        builder.push_record(["Total Guild Members", &format_number(data)]);
-    }
-    if let Ok(data) = framework.database.driver.count_guild_roles().await {
-        builder.push_record(["Total Guild Roles", &format_number(data)]);
-    }
-    database_information.push_str("\n-- Guild --\n");
-    database_information.push_str(&builder.build().with(tabled::settings::Style::ascii_rounded()).to_string());
-    builder = tabled::builder::Builder::new();
-
-    // User Data
-    if let Ok(data) = framework.database.driver.count_users().await {
-        builder.push_record(["Total Users", &format_number(data)]);
-    }
-    if let Ok(data) = framework.database.driver.count_user_characters().await {
-        builder.push_record(["Total User Characters", &format_number(data)]);
-    }
-    if let Ok(data) = framework.database.driver.count_user_marriages().await {
-        builder.push_record(["Total User Marriages", &format_number(data)]);
-    }
-    if let Ok(data) = framework.database.driver.count_user_moderation_actions().await {
-        builder.push_record(["Total User Moderation Actions", &format_number(data)]);
-    }
-    if let Ok(data) = framework.database.driver.count_user_warnings().await {
-        builder.push_record(["Total User Warnings", &format_number(data)]);
-    }
-    database_information.push_str("\n-- User --\n");
-    database_information.push_str(&builder.build().with(tabled::settings::Style::ascii_rounded()).to_string());
-
+    builder.set_header([
+        "Administrators",
+        "Owners",
+        "Applications",
+        "Channels",
+        "Interactions",
+        "Messages",
+        "Guilds",
+        "Members",
+        "Roles",
+        "Users",
+        "Characters",
+        "Marriages",
+    ]);
+    builder.push_record([
+        administrators,
+        owners,
+        match framework.database.driver.count_applications().await {
+            Ok(data) => data.separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+        match framework.database.driver.count_channels().await {
+            Ok(data) => data.separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+        match framework.database.driver.count_interactions().await {
+            Ok(data) => data.separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+        match framework.database.driver.count_messages().await {
+            Ok(data) => data.total_messages.unwrap_or_default().separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+        match framework.database.driver.count_guilds().await {
+            Ok(data) => data.separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+        match framework.database.driver.count_guild_members().await {
+            Ok(data) => data.separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+        match framework.database.driver.count_guild_roles().await {
+            Ok(data) => data.separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+        match framework.database.driver.count_users().await {
+            Ok(data) => data.separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+        match framework.database.driver.count_user_characters().await {
+            Ok(data) => data.separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+        match framework.database.driver.count_user_marriages().await {
+            Ok(data) => data.separate_with_commas(),
+            Err(_) => "Unknown".to_owned(),
+        },
+    ]);
+    database_information.push_str(&builder.build().with(tabled::settings::Style::sharp()).to_string());
     info!("-- Database Information -- \n{}", database_information)
-}
-
-fn format_number(input: i64) -> String {
-    input
-        .to_string()
-        .as_bytes()
-        .rchunks(3)
-        .rev()
-        .map(std::str::from_utf8)
-        .collect::<Result<Vec<&str>, _>>()
-        .unwrap()
-        .join(",")
 }

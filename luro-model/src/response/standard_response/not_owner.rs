@@ -54,7 +54,10 @@ const INSULTS: [&str; 50] = [
 ];
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-pub fn not_owner_embed(user_id: &twilight_model::id::Id<twilight_model::id::marker::UserMarker>, command_name: &str) -> crate::builders::EmbedBuilder {
+pub fn not_owner_embed(
+    user_id: &twilight_model::id::Id<twilight_model::id::marker::UserMarker>,
+    command_name: &str,
+) -> crate::builders::EmbedBuilder {
     tracing::warn!("User {user_id} attempted to run the command {command_name} without being in my list of authorised users...");
     let mut embed = crate::builders::EmbedBuilder::default();
     let mut rng = rand::thread_rng();

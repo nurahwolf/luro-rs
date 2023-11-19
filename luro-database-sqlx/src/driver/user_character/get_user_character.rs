@@ -17,12 +17,14 @@ impl crate::SQLxDriver {
             Some(character) => Some(CharacterProfile {
                 prefix: character.prefix,
                 name: character.character_name,
+                nickname: character.nickname,
+                colour: character.colour.map(|x| x as u32),
                 sfw_description: character.sfw_description,
                 sfw_summary: character.sfw_summary,
-                sfw_icons: character.sfw_icons.unwrap_or_default(),
+                sfw_icon: character.sfw_icon,
                 nsfw_description: character.nsfw_description,
                 nsfw_summary: character.nsfw_summary,
-                nsfw_icons: character.nsfw_icons.unwrap_or_default(),
+                nsfw_icon: character.nsfw_icon,
             }),
             None => None,
         })

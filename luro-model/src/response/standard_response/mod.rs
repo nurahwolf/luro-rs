@@ -1,6 +1,12 @@
-use twilight_model::{id::{Id, marker::UserMarker}, guild::Permissions};
+use twilight_model::{
+    guild::Permissions,
+    id::{marker::UserMarker, Id},
+};
 
-use crate::{builders::EmbedBuilder, types::{PunishmentType, Guild, User}};
+use crate::{
+    builders::EmbedBuilder,
+    types::{Guild, PunishmentType, User},
+};
 
 mod bot_heirarchy;
 mod bot_missing_permission;
@@ -26,12 +32,7 @@ pub enum SimpleResponse<'a> {
     MissingPermission(&'a Permissions),
     NotOwner(&'a Id<UserMarker>, &'a str),
     /// A punishment applied to a user, such as a ban or kick. First user paramater is the moderator, second is the target
-    Punishment(
-        &'a Guild,
-        PunishmentType,
-        &'a User,
-        &'a User,
-    )
+    Punishment(&'a Guild, PunishmentType<'a>, &'a User, &'a User),
 }
 
 impl<'a> SimpleResponse<'a> {
@@ -48,16 +49,23 @@ impl<'a> SimpleResponse<'a> {
             Self::BotHeirarchy(username) => bot_heirarchy::bot_hierarchy_embed(username),
             Self::MissingPermission(permission) => missing_permissions::missing_permission_embed(permission),
             Self::NotOwner(user_id, command_name) => not_owner::not_owner_embed(user_id, command_name),
-            Self::Punishment(guild, kind, moderator, target) => user_action::new_punishment_embed(guild, kind, moderator, target)
+            Self::Punishment(guild, kind, moderator, target) => {
+                user_action::new_punishment_embed(guild, kind, moderator, target).unwrap()
+            }
         }
     }
 
     /// Append a field to state if the response was successfully sent in a DM
     pub fn dm_sent(&self, success: bool) -> EmbedBuilder {
         let mut embed = self.embed();
-        match success {
-            true => embed.create_field("DM Sent", "Successful", true),
-            false => embed.create_field("DM Sent", "Failed", true),
+        let success = match success {
+            true => "<:mail:1175136204648349756> **Direct Message:** `Success!` <:join:1175114514216259615>",
+            false => "<:mail:1175136204648349756> **Direct Message:** `Failed!` <:leave:1175114521652756641>",
+        };
+
+        match embed.0.description {
+            Some(ref mut description) => description.push_str(success),
+            None => embed.0.description = Some(success.to_owned()),
         };
 
         embed

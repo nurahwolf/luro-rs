@@ -43,7 +43,12 @@ impl LuroCommand for FakeBan {
         let reason = reason(self.reason, self.details);
 
         // Checks passed, now let's action the user
-        let embed = SimpleResponse::Punishment(guild, PunishmentType::Banned(reason, self.purge.value()), &ctx.author, &punished_user);
+        let embed = SimpleResponse::Punishment(
+            guild,
+            PunishmentType::Banned(reason.as_deref(), self.purge.value()),
+            &ctx.author,
+            &punished_user,
+        );
 
         let punished_user_dm = match ctx.twilight_client.create_private_channel(punished_user.user_id).await {
             Ok(channel) => channel.model().await?,

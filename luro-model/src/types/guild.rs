@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use twilight_model::{
-    channel::{message::Sticker, Channel, StageInstance},
+    channel::{message::Sticker, StageInstance},
     gateway::presence::Presence,
     guild::{
         AfkTimeout, DefaultMessageNotificationLevel, Emoji, ExplicitContentFilter, GuildFeature, Member, MfaLevel, NSFWLevel,
@@ -14,7 +14,7 @@ use twilight_model::{
     voice::VoiceState,
 };
 
-use super::{GuildData, Role};
+use super::{Channel, GuildData, Role};
 
 mod is_owner;
 
@@ -82,7 +82,7 @@ impl From<Guild> for twilight_model::guild::Guild {
             approximate_member_count: guild.approximate_member_count,
             approximate_presence_count: guild.approximate_presence_count,
             banner: guild.banner,
-            channels: guild.channels.clone(),
+            channels: guild.channels.clone().into_iter().map(|x| x.into()).collect(),
             default_message_notifications: guild.default_message_notifications,
             description: guild.description,
             discovery_splash: guild.discovery_splash,
@@ -118,7 +118,7 @@ impl From<Guild> for twilight_model::guild::Guild {
             stickers: guild.stickers,
             system_channel_flags: guild.system_channel_flags,
             system_channel_id: guild.system_channel_id,
-            threads: guild.threads,
+            threads: guild.threads.into_iter().map(|x| x.into()).collect(),
             unavailable: guild.unavailable,
             vanity_url_code: guild.vanity_url_code,
             verification_level: guild.verification_level,
@@ -139,7 +139,7 @@ impl From<twilight_model::guild::Guild> for Guild {
             approximate_member_count: guild.approximate_member_count,
             approximate_presence_count: guild.approximate_presence_count,
             banner: guild.banner,
-            channels: guild.channels.clone(),
+            channels: guild.channels.clone().into_iter().map(|x| x.into()).collect(),
             default_message_notifications: guild.default_message_notifications,
             description: guild.description,
             discovery_splash: guild.discovery_splash,
@@ -175,7 +175,7 @@ impl From<twilight_model::guild::Guild> for Guild {
             stickers: guild.stickers,
             system_channel_flags: guild.system_channel_flags,
             system_channel_id: guild.system_channel_id,
-            threads: guild.threads,
+            threads: guild.threads.into_iter().map(|x| x.into()).collect(),
             unavailable: guild.unavailable,
             vanity_url_code: guild.vanity_url_code,
             verification_level: guild.verification_level,

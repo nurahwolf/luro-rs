@@ -1,10 +1,8 @@
 use anyhow::Context;
-use luro_database::LuroCharacterFetish;
-use luro_database::LuroCharacterFetishCategory;
 use luro_framework::CommandInteraction;
 
 use luro_framework::{Luro, LuroCommand};
-use luro_model::user::character::FetishCategory;
+use luro_model::types::{FetishCategory, CharacterFetish, CharacterFetishCategory};
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -31,26 +29,34 @@ impl LuroCommand for Create {
                 .name(format!("Profile by {}", ctx.author.name()))
         });
 
-        let character = ctx
-            .author
-            .fetch_character(ctx.database.clone(), &self.character)
-            .await?
-            .context("Could not find that character! Was it deleted?")?;
-        let fetish_total = ctx.database.get_fetishes().await?.len();
+        let character = match ctx.database.user_fetch_character(ctx.author.user_id, &self.name).await? {
+            Some(character) => character,
+            None => {
+                let mut characters = String::new();
+
+                for character in ctx.database.user_fetch_characters(ctx.author.user_id).await? {
+                    writeln!(characters, "- {}: {}", character.name, character.sfw_summary)?
+                }
+
+                let response = format!("I'm afraid that user <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",ctx.author.user_id, self.name, characters);
+                return ctx.respond(|r| r.content(response).ephemeral()).await;
+            }
+        };
+        let fetish_total = ctx.database.driver.fetish.await?.len();
 
         character
-            .update_fetish(LuroCharacterFetish {
+            .update_fetish(CharacterFetish {
                 character_name: self.character,
-                user_id: ctx.author.user_id.get() as i64,
+                user_id: ctx.author.user_id,
                 fetish_id: fetish_total as i64,
                 category: match self.category {
-                    FetishCategory::Favourite => LuroCharacterFetishCategory::Favourite,
-                    FetishCategory::Love => LuroCharacterFetishCategory::Love,
-                    FetishCategory::Like => LuroCharacterFetishCategory::Like,
-                    FetishCategory::Neutral => LuroCharacterFetishCategory::Neutral,
-                    FetishCategory::Dislike => LuroCharacterFetishCategory::Dislike,
-                    FetishCategory::Hate => LuroCharacterFetishCategory::Hate,
-                    FetishCategory::Limit => LuroCharacterFetishCategory::Limit,
+                    FetishCategory::Favourite => CharacterFetishCategory::Fav,
+                    FetishCategory::Love => CharacterFetishCategory::Love,
+                    FetishCategory::Like => CharacterFetishCategory::Like,
+                    FetishCategory::Neutral => CharacterFetishCategory::Neutral,
+                    FetishCategory::Dislike => CharacterFetishCategory::Dislike,
+                    FetishCategory::Hate => CharacterFetishCategory::Hate,
+                    FetishCategory::Limit => CharacterFetishCategory::Limit,
                 },
                 name: self.name,
                 description: self.description,

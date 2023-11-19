@@ -1,3 +1,4 @@
+mod character_proxy;
 mod command_interaction;
 mod component_interaction;
 mod create_luro_command;
@@ -7,17 +8,10 @@ mod luro;
 mod luro_command;
 mod luro_context;
 mod luro_framework;
-mod modal_interaction;
+mod modal_interaction; // Utilities for proxying messages
 
 pub use crate::{
-    command_interaction::CommandInteraction,
-    component_interaction::ComponentInteraction,
-    create_luro_command::CreateLuroCommand,
-    interaction::InteractionTrait,
-    interaction_context::InteractionContext,
-    luro::Luro,
-    luro_command::LuroCommand,
-    luro_context::LuroContext,
-    luro_framework::Framework,
-    modal_interaction::ModalInteraction,
+    command_interaction::CommandInteraction, component_interaction::ComponentInteraction, create_luro_command::CreateLuroCommand,
+    interaction::InteractionTrait, interaction_context::InteractionContext, luro::Luro, luro_command::LuroCommand,
+    luro_context::LuroContext, luro_framework::Framework, modal_interaction::ModalInteraction,
 };

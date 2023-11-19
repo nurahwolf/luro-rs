@@ -18,7 +18,9 @@ pub async fn interaction_create_listener(ctx: LuroContext, event: Box<Interactio
         }
     }
 
-    if let Some(guild_id) = event.guild_id && let Some(member) = &event.member {
+    if let Some(guild_id) = event.guild_id
+        && let Some(member) = &event.member
+    {
         if let Err(why) = ctx.database.member_update((guild_id, member)).await {
             warn!("interaction_handler - Failed to update partial member: {why}")
         }

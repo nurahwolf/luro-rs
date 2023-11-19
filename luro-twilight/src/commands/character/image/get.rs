@@ -1,4 +1,3 @@
-use anyhow::Context;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -8,7 +7,7 @@ use twilight_model::channel::message::component::ButtonStyle;
 #[command(name = "get", desc = "Get an image relating to a character")]
 pub struct Get {
     #[command(desc = "The character to get", autocomplete = true)]
-    character: String,
+    pub character: String,
     /// The image ID to get
     id: Option<i64>,
     /// Is this a NSFW image?
@@ -20,19 +19,18 @@ pub struct Get {
 impl LuroCommand for Get {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let nsfw = self.nsfw.unwrap_or(ctx.channel.nsfw.unwrap_or_default());
-        let character = ctx
-            .author
-            .fetch_character(ctx.database.clone(), &self.character)
-            .await?
-            .context("Expected to get character")?;
-        let images = character.fetch_images().await?;
+        let character_images = ctx
+            .database
+            .driver
+            .character_fetch_images(&self.character, ctx.author.user_id)
+            .await?;
 
         let mut nsfw_images = vec![];
         let mut sfw_images = vec![];
         let mut nsfw_favs = vec![];
         let mut sfw_favs = vec![];
 
-        for image in images.clone() {
+        for image in character_images {
             match image.nsfw {
                 true => match image.favourite {
                     true => nsfw_favs.push(image),
@@ -46,7 +44,12 @@ impl LuroCommand for Get {
         }
 
         let selected_image = match self.id {
-            Some(img_id) => character.fetch_image(img_id).await?,
+            Some(image_id) => {
+                ctx.database
+                    .driver
+                    .character_fetch_image(&self.character, ctx.author.user_id, image_id)
+                    .await?
+            }
             None => match nsfw {
                 true => match self.fav.unwrap_or_default() {
                     true => nsfw_favs.choose(&mut thread_rng()).cloned(),
@@ -66,7 +69,7 @@ impl LuroCommand for Get {
                     .respond(|r| {
                         r.content(format!(
                             "Sorry, <@{}> has no images configured for this character!",
-                            character.user_id
+                            ctx.author.user_id
                         ))
                         .ephemeral()
                     })
@@ -74,12 +77,11 @@ impl LuroCommand for Get {
             }
         };
 
-        let accent_colour = ctx.accent_colour();
         ctx.respond(|response| {
             response
                 .embed(|embed| {
                     embed
-                        .colour(accent_colour)
+                        .colour(ctx.accent_colour())
                         .footer(|f| {
                             f.text(format!(
                                 "Image ID: {} | Total SFW Images: {} ({}F) | Total NSFW Images: {} ({}F)",

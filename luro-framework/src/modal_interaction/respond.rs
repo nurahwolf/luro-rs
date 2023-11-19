@@ -16,12 +16,8 @@ impl ModalInteraction {
         match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
             || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
         {
-            true => {
-                self.response_update(&r).await
-            }
-            false => {
-                self.response_create(&r).await
-            }
+            true => self.response_update(&r).await,
+            false => self.response_create(&r).await,
         }
     }
 }

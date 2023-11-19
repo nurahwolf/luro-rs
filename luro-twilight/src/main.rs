@@ -14,7 +14,7 @@ pub const FILTER: tracing_subscriber::filter::LevelFilter = tracing_subscriber::
 // Luro's intents. Can be set to all, but rather spammy.
 pub const INTENTS: twilight_gateway::Intents = twilight_gateway::Intents::all();
 /// The log path. By default this is a sub directory of DATA_PATH
-pub const LOG_PATH: &str = "data/log/";
+pub const LOG_PATH: &str = "log/";
 
 mod commands;
 mod events;

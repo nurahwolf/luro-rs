@@ -19,7 +19,7 @@ impl InteractionResponse {
     pub fn check_content(&mut self) -> &mut Self {
         use twilight_model::http::attachment::Attachment;
 
-        use crate::{builders::EmbedBuilder, ACCENT_COLOUR, response::safe_truncate};
+        use crate::{builders::EmbedBuilder, response::safe_truncate, ACCENT_COLOUR};
 
         if let Some(ref mut content) = self.content {
             // Can we convert this to an embed?

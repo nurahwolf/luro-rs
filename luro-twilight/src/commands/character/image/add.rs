@@ -1,13 +1,13 @@
-use anyhow::Context;
-use luro_database::LuroCharacterImage;
+use std::fmt::Write;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use luro_model::types::CharacterImage;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "add", desc = "Set the primary image for this character")]
 pub struct Add {
     #[command(desc = "The character to get", autocomplete = true)]
-    character: String,
+    pub character: String,
     /// The name of the image
     name: String,
     /// The URL the image should be set to
@@ -24,13 +24,21 @@ pub struct Add {
 
 impl LuroCommand for Add {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let character = ctx
-            .author
-            .fetch_character(ctx.database.clone(), &self.character)
-            .await?
-            .context("No character available")?;
+        let character = match ctx.database.user_fetch_character(ctx.author.user_id, &self.name).await? {
+            Some(character) => character,
+            None => {
+                let mut characters = String::new();
 
-        let img = LuroCharacterImage {
+                for character in ctx.database.user_fetch_characters(ctx.author.user_id).await? {
+                    writeln!(characters, "- {}: {}", character.name, character.sfw_summary)?
+                }
+
+                let response = format!("I'm afraid that user <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",ctx.author.user_id, self.name, characters);
+                return ctx.respond(|r| r.content(response).ephemeral()).await;
+            }
+        };
+
+        let img = CharacterImage {
             img_id: self.overwrite.unwrap_or_default(),
             name: self.name,
             nsfw: self.nsfw,
@@ -41,9 +49,10 @@ impl LuroCommand for Add {
             favourite: self.fav,
         };
 
+
         match self.overwrite {
             Some(_) => character.update_image(&img).await?,
-            None => character.new_image(&img).await?,
+            None => ctx.database.driver,
         };
 
         let mut embed = ctx.default_embed().await;

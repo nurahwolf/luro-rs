@@ -1002,6 +1002,7 @@ dependencies = [
  "radix_trie",
  "rand",
  "serde",
+ "serde_json",
  "time",
  "tokio",
  "tracing",

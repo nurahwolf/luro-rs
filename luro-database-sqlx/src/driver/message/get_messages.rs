@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use futures_util::TryStreamExt;
-use luro_model::types::{Message, MessageSource};
 use luro_model::types::MessageData;
+use luro_model::types::{Message, MessageSource};
 use sqlx::types::Json;
 
 use twilight_model::channel::message::sticker::MessageSticker;

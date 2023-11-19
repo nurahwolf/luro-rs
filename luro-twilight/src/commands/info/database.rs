@@ -74,17 +74,55 @@ impl LuroCommand for Database {
             builder.push_record(["Total Interactions", &format_number(data)]);
         }
 
-        if let Ok(word_count) = ctx.database.driver.count_messages().await && word_count.total_messages.unwrap_or_default() != 0 {
+        if let Ok(word_count) = ctx.database.driver.count_messages().await
+            && word_count.total_messages.unwrap_or_default() != 0
+        {
             let mut word_count_description = String::new();
-            if let Some(count) = word_count.total_messages && count != 0 { writeln!(word_count_description, "- Has sent `{}` messages!", format_number(count))? };
-            if let Some(count) = word_count.total_words && count != 0 { writeln!(word_count_description, "  - `{}` words said!", format_number(count))? };
-            if let Some(count) = word_count.total_unique_words && count != 0 { writeln!(word_count_description, "  - `{}` unique words said!", format_number(count))? };
-            if let Some(count) = word_count.total_custom_messages && count != 0 { writeln!(word_count_description, "  - `{}` custom messages", format_number(count))? };
-            if let Some(count) = word_count.total_message_creates && count != 0 { writeln!(word_count_description, "  - `{}` messages created",format_number(count))? };
-            if let Some(count) = word_count.total_message_cached && count != 0 { writeln!(word_count_description, "  - `{}` messages cached", format_number(count))? };
-            if let Some(count) = word_count.total_message_deletes && count != 0 { writeln!(word_count_description, "  - `{}` messages deleted", format_number(count))? };
-            if let Some(count) = word_count.total_message_updates && count != 0 { writeln!(word_count_description, "  - `{}` messages updated", format_number(count))? };
-            if let Some(count) = word_count.total_message_message && count != 0 { writeln!(word_count_description, "  - `{}` messages stored", format_number(count))? };
+            if let Some(count) = word_count.total_messages
+                && count != 0
+            {
+                writeln!(word_count_description, "- Has sent `{}` messages!", format_number(count))?
+            };
+            if let Some(count) = word_count.total_words
+                && count != 0
+            {
+                writeln!(word_count_description, "  - `{}` words said!", format_number(count))?
+            };
+            if let Some(count) = word_count.total_unique_words
+                && count != 0
+            {
+                writeln!(word_count_description, "  - `{}` unique words said!", format_number(count))?
+            };
+            if let Some(count) = word_count.total_custom_messages
+                && count != 0
+            {
+                writeln!(word_count_description, "  - `{}` custom messages", format_number(count))?
+            };
+            if let Some(count) = word_count.total_message_creates
+                && count != 0
+            {
+                writeln!(word_count_description, "  - `{}` messages created", format_number(count))?
+            };
+            if let Some(count) = word_count.total_message_cached
+                && count != 0
+            {
+                writeln!(word_count_description, "  - `{}` messages cached", format_number(count))?
+            };
+            if let Some(count) = word_count.total_message_deletes
+                && count != 0
+            {
+                writeln!(word_count_description, "  - `{}` messages deleted", format_number(count))?
+            };
+            if let Some(count) = word_count.total_message_updates
+                && count != 0
+            {
+                writeln!(word_count_description, "  - `{}` messages updated", format_number(count))?
+            };
+            if let Some(count) = word_count.total_message_message
+                && count != 0
+            {
+                writeln!(word_count_description, "  - `{}` messages stored", format_number(count))?
+            };
             embed.create_field("-- Message Information --", &word_count_description, false);
         }
 

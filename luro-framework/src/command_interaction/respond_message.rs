@@ -1,9 +1,7 @@
 use luro_model::{response::InteractionResponse, types::CommandResponse};
 use twilight_model::http::interaction::InteractionResponseType;
 
-use crate::CommandInteraction;
-
-impl CommandInteraction {
+impl crate::ModalInteraction {
     /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
     /// This method returns an optional message, if the message was updated

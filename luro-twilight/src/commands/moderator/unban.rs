@@ -51,11 +51,15 @@ impl LuroCommand for Unban {
         let moderator_permissions = moderator_data.permission_calculator(&moderator_data.role_permissions()).root();
 
         if !luro_permissions.contains(Permissions::BAN_MEMBERS) {
-            return ctx.simple_response(SimpleResponse::BotMissingPermission(&Permissions::BAN_MEMBERS)).await;
+            return ctx
+                .simple_response(SimpleResponse::BotMissingPermission(&Permissions::BAN_MEMBERS))
+                .await;
         }
 
         if !moderator_permissions.contains(Permissions::BAN_MEMBERS) {
-            return ctx.simple_response(SimpleResponse::MissingPermission(&Permissions::BAN_MEMBERS)).await;
+            return ctx
+                .simple_response(SimpleResponse::MissingPermission(&Permissions::BAN_MEMBERS))
+                .await;
         }
 
         // Checks passed, now let's action the user
@@ -96,6 +100,5 @@ impl LuroCommand for Unban {
         // If an alert channel is defined, send a message there
         // ctx.send_log_channel(&guild.guild_id, LuroLogChannel::Moderator, |r| r.add_embed(embed.embed))
         //     .await?;
-
     }
 }

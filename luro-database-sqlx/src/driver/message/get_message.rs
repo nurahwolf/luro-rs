@@ -1,4 +1,4 @@
-use luro_model::types::{Message, MessageSource, MessageData};
+use luro_model::types::{Message, MessageData, MessageSource};
 use sqlx::types::Json;
 use sqlx::Error;
 use twilight_model::channel::message::sticker::MessageSticker;
@@ -30,7 +30,7 @@ impl crate::SQLxDriver {
             Some(message) => Some(Message {
                 data: Some(MessageData {
                     deleted: message.deleted.unwrap_or_default(),
-                    updated_content: None, // TODO: Implement this
+                    updated_content: message.message_updates.map(|x| x.0),
                 }),
                 member: message.member.map(|x| x.0),
                 activity: message.activity.map(|x| x.0),

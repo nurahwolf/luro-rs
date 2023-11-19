@@ -54,11 +54,11 @@ async fn handle_member_chunk(db: &SQLxDriver, event: &MemberChunk) -> anyhow::Re
         for role in &member.roles {
             match db.update_role((event.guild_id, *role)).await {
                 Ok(ok) => rows_modified += ok,
-                Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
+                Err(why) => warn!(why = ?why, "handle_member_chunk - Failed to sync role"),
             }
             match db.update_guild_member_role(event.guild_id, *role, member.user.id).await {
                 Ok(ok) => rows_modified += ok,
-                Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
+                Err(why) => warn!(why = ?why, "handle_member_chunk - Failed to sync user role"),
             }
         }
 
@@ -110,11 +110,11 @@ async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: &Memb
     for role in &member.roles {
         match db.update_role((guild_id, *role)).await {
             Ok(ok) => rows_modified += ok,
-            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
+            Err(why) => warn!(why = ?why, "handle_member - Failed to sync role"),
         }
         match db.update_guild_member_role(guild_id, *role, member.user.id).await {
             Ok(ok) => rows_modified += ok,
-            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
+            Err(why) => warn!(why = ?why, "handle_member - Failed to sync user role"),
         }
     }
 
@@ -162,11 +162,11 @@ async fn handle_partial_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, membe
         for role in &member.roles {
             match db.update_role((guild_id, *role)).await {
                 Ok(ok) => rows_modified += ok,
-                Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
+                Err(why) => warn!(why = ?why, "handle_partial_member - Failed to sync role"),
             }
             match db.update_guild_member_role(guild_id, *role, user.id).await {
                 Ok(ok) => rows_modified += ok,
-                Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
+                Err(why) => warn!(why = ?why, "handle_partial_member - Failed to sync user role"),
             }
         }
     }
@@ -264,11 +264,11 @@ async fn handle_member_update(db: &SQLxDriver, member: &MemberUpdate) -> anyhow:
     for role in &member.roles {
         match db.update_role((member.guild_id, *role)).await {
             Ok(ok) => rows_modified += ok,
-            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync role"),
+            Err(why) => warn!(why = ?why, "handle_member_update - Failed to sync role"),
         }
         match db.update_guild_member_role(member.guild_id, *role, member.user.id).await {
             Ok(ok) => rows_modified += ok,
-            Err(why) => warn!(why = ?why, "handle_member_add - Failed to sync user role"),
+            Err(why) => warn!(why = ?why, "handle_member_update - Failed to sync user role"),
         }
     }
 

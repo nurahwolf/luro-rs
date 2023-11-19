@@ -1,4 +1,4 @@
-use luro_model::{types::CommandResponse as CommandResponse, response::SimpleResponse};
+use luro_model::{response::SimpleResponse, types::CommandResponse};
 
 use crate::{CommandInteraction, ComponentInteraction, ModalInteraction};
 

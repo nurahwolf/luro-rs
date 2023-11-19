@@ -2,12 +2,12 @@ use twilight_gateway::Event;
 
 mod channel;
 mod guild;
+mod interaction;
 mod member;
+mod message;
 mod presence;
 mod ready;
 mod role;
-mod interaction;
-mod message;
 mod user;
 
 impl crate::Database {

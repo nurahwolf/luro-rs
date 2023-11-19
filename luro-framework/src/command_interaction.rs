@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::{anyhow, Context};
-use luro_model::{response::InteractionResponse, ACCENT_COLOUR};
+use luro_model::{response::InteractionResponse, types::CommandResponse, ACCENT_COLOUR};
 use twilight_model::{
     application::interaction::{application_command::CommandData, Interaction, InteractionData},
     http::interaction::InteractionResponseType,
@@ -22,7 +22,6 @@ mod response_simple;
 mod response_update;
 mod send_log_channel;
 mod send_message;
-mod webhook;
 
 /// A context spawned from a command interaction
 #[derive(Clone)]
@@ -67,7 +66,7 @@ impl Luro for CommandInteraction {
 
     /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
-    async fn respond<F>(&self, response: F) -> anyhow::Result<()>
+    async fn respond<F>(&self, response: F) -> anyhow::Result<CommandResponse>
     where
         F: FnOnce(&mut InteractionResponse) -> &mut InteractionResponse + Send,
     {
@@ -77,15 +76,9 @@ impl Luro for CommandInteraction {
         match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
             || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
         {
-            true => {
-                self.response_update(&r).await?;
-            }
-            false => {
-                self.response_create(&r).await?;
-            }
+            true => self.response_update(&r).await,
+            false => self.response_create(&r).await,
         }
-
-        Ok(())
     }
 
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
@@ -126,7 +119,7 @@ impl CommandInteraction {
             author: match interaction.guild_id {
                 Some(guild_id) => {
                     ctx.database
-                        .member_fetch(interaction.author_id().context("Expected to get author")?, guild_id)
+                        .member_fetch(guild_id, interaction.author_id().context("Expected to get author")?)
                         .await?
                 }
                 None => {

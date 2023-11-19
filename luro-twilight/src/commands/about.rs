@@ -95,17 +95,22 @@ impl CreateLuroCommand for About {
         //     embed.field(|field| field.field("Cache Stats", &cache, false));
         // }
 
-        if self.memory.unwrap_or_default() && let Some(usage) = memory_stats() {
-            let mut memory =  String::new();
+        if self.memory.unwrap_or_default()
+            && let Some(usage) = memory_stats()
+        {
+            let mut memory = String::new();
             let mut description_builder = vec![];
             description_builder.push(("- Physical memory usage:", format!("`{} MB`", usage.physical_mem / 1024 / 1024)));
             description_builder.push(("- Virtual memory usage:", format!("`{} MB`", usage.virtual_mem / 1024 / 1024)));
-            let word_sizes: Vec<(usize, usize)> = description_builder.iter().map(|(prefix, suffix)| (prefix.len(), suffix.len())).collect();
+            let word_sizes: Vec<(usize, usize)> = description_builder
+                .iter()
+                .map(|(prefix, suffix)| (prefix.len(), suffix.len()))
+                .collect();
             let (prefix_len, suffix_len, _) = padding_calculator(word_sizes);
             for (prefix, suffix) in description_builder {
                 writeln!(memory, "{prefix:<prefix_len$} {suffix:>suffix_len$}")?;
             }
-            embed.field(|field|field.field("Memory Stats", &memory, true));
+            embed.field(|field| field.field("Memory Stats", &memory, true));
         }
 
         if let Some(application_owner) = &ctx.twilight_client.current_user_application().await?.model().await?.owner {

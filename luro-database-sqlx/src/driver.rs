@@ -4,6 +4,7 @@ pub mod guild;
 pub mod image;
 pub mod interaction;
 // pub mod luro_database;
+mod character;
 pub mod member;
 pub mod message;
 pub mod role;

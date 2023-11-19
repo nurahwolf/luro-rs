@@ -1,7 +1,10 @@
 use luro_model::sync::GuildSync;
 use sqlx::postgres::PgQueryResult;
 use time::OffsetDateTime;
-use twilight_model::{gateway::payload::incoming::{GuildUpdate, GuildCreate}, guild::Guild};
+use twilight_model::{
+    gateway::payload::incoming::{GuildCreate, GuildUpdate},
+    guild::Guild,
+};
 
 use crate::SQLxDriver;
 

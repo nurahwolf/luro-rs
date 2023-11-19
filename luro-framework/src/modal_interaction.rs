@@ -7,11 +7,13 @@ mod interaction_client;
 mod parse_field;
 mod respond;
 mod respond_create;
+mod respond_message;
 mod respond_update;
+mod response_send;
 mod response_simple;
 
 use luro_database::Database;
-use luro_model::{response::InteractionResponse, ACCENT_COLOUR};
+use luro_model::{response::InteractionResponse, types::CommandResponse, ACCENT_COLOUR};
 
 use twilight_model::{
     application::interaction::{modal::ModalInteractionData, Interaction, InteractionData},
@@ -65,7 +67,7 @@ impl Luro for ModalInteraction {
 
     /// Create a response to an interaction.
     /// This automatically handles if the interaction had been deferred.
-    async fn respond<F>(&self, response: F) -> anyhow::Result<()>
+    async fn respond<F>(&self, response: F) -> anyhow::Result<CommandResponse>
     where
         F: FnOnce(&mut InteractionResponse) -> &mut InteractionResponse + Send,
     {
@@ -75,15 +77,9 @@ impl Luro for ModalInteraction {
         match r.interaction_response_type == InteractionResponseType::DeferredChannelMessageWithSource
             || r.interaction_response_type == InteractionResponseType::DeferredUpdateMessage
         {
-            true => {
-                self.response_update(&r).await?;
-            }
-            false => {
-                self.response_create(&r).await?;
-            }
+            true => self.response_update(&r).await,
+            false => self.response_create(&r).await,
         }
-
-        Ok(())
     }
 
     async fn interaction_client(&self) -> anyhow::Result<twilight_http::client::InteractionClient> {
@@ -124,7 +120,7 @@ impl ModalInteraction {
             author: match interaction.guild_id {
                 Some(guild_id) => {
                     ctx.database
-                        .member_fetch(interaction.author_id().context("Expected to get author")?, guild_id)
+                        .member_fetch(guild_id, interaction.author_id().context("Expected to get author")?)
                         .await?
                 }
                 None => {

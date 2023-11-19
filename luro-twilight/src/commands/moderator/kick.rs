@@ -69,11 +69,15 @@ impl LuroCommand for Kick {
         let target_highest_role = punished_data.highest_role();
 
         if !luro_permissions.contains(Permissions::KICK_MEMBERS) {
-            return ctx.simple_response(SimpleResponse::BotMissingPermission(&Permissions::KICK_MEMBERS)).await;
+            return ctx
+                .simple_response(SimpleResponse::BotMissingPermission(&Permissions::KICK_MEMBERS))
+                .await;
         }
 
         if !moderator_permissions.contains(Permissions::KICK_MEMBERS) {
-            return ctx.simple_response(SimpleResponse::MissingPermission(&Permissions::KICK_MEMBERS)).await;
+            return ctx
+                .simple_response(SimpleResponse::MissingPermission(&Permissions::KICK_MEMBERS))
+                .await;
         }
 
         if guild.is_owner(&target.user_id) {

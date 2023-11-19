@@ -31,10 +31,11 @@ twilight-util.workspace = true
 ## Sorted Dependencies
 twilight-cache-inmemory = { workspace = true, optional = true } # Additional functionality build around twilight's caching crate
 time.workspace = true # member_data
+serde_json = { version = "*", optional = true } # Character Import - TupperBot
 
 [features]
 # Default Features
-default = ["dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders", "dotenvy"]
+default = ["dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders", "dotenvy", "extra"]
 
 twilight_cache = ["dep:twilight-cache-inmemory"] # Additional functionality build around twilight's caching crate
 
@@ -51,3 +52,4 @@ dice-roller = ["dep:rand"]
 lavalink = [] # Enable this feature to have Luro respond to lavalink events
 luro-command = ["dep:radix_trie", "dep:nom"]
 
+extra = ["dep:serde_json"]

@@ -17,9 +17,10 @@ use crate::types::{DbGender, DbSexuality, DbUserPermissions};
 use crate::SQLxDriver;
 
 impl SQLxDriver {
-    pub async fn get_member(&self, user_id: Id<UserMarker>, guild_id: Id<GuildMarker>) -> anyhow::Result<Option<User>> {
-        let mut query =
+    pub async fn get_member(&self, guild_id: Id<GuildMarker>, user_id: Id<UserMarker>) -> anyhow::Result<Option<User>> {
+        let mut roles_query =
             sqlx::query_file!("queries/member/member_fetch_roles.sql", guild_id.get() as i64, user_id.get() as i64).fetch(&self.pool);
+
         let member = match sqlx::query_file!("queries/member/member_fetch.sql", guild_id.get() as i64, user_id.get() as i64)
             .fetch_optional(&self.pool)
             .await
@@ -29,8 +30,12 @@ impl SQLxDriver {
             Err(why) => return Err(why.into()),
         };
 
+        tracing::debug!("User: {member:#?}");
+
         let mut roles = HashMap::new();
-        while let Ok(Some(role)) = query.try_next().await {
+        while let Ok(Some(role)) = roles_query.try_next().await {
+            tracing::debug!("Role: {role:#?}");
+
             roles.insert(
                 Id::new(role.role_id as u64),
                 Role {
@@ -38,7 +43,13 @@ impl SQLxDriver {
                     colour: role.colour as u32,
                     hoist: role.hoist,
                     icon: match role.icon {
-                        Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                        Some(img) => match ImageHash::parse(img.as_bytes()) {
+                            Ok(hash) => Some(hash),
+                            Err(why) => {
+                                tracing::warn!("role_icon - Failed to parse image: {why}");
+                                None
+                            }
+                        },
                         None => None,
                     },
                     role_id: Id::new(role.role_id as u64),
@@ -100,11 +111,23 @@ impl SQLxDriver {
                 None => None,
             },
             avatar: match member.user_avatar {
-                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                Some(img) => match ImageHash::parse(img.as_bytes()) {
+                    Ok(hash) => Some(hash),
+                    Err(why) => {
+                        tracing::warn!("user_avatar - Failed to parse image: {why}");
+                        None
+                    }
+                },
                 None => None,
             },
             banner: match member.user_banner {
-                Some(img) => Some(ImageHash::parse(img.as_bytes())?),
+                Some(img) => match ImageHash::parse(img.as_bytes()) {
+                    Ok(hash) => Some(hash),
+                    Err(why) => {
+                        tracing::warn!("user_banner - Failed to parse image: {why}");
+                        None
+                    }
+                },
                 None => None,
             },
             bot: member.bot,
@@ -121,6 +144,8 @@ impl SQLxDriver {
             user_id: Id::new(member.user_id as u64),
             verified: member.verified,
         };
+
+        tracing::debug!("Returning member: {user:#?}");
 
         Ok(Some(user))
     }

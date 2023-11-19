@@ -2,6 +2,8 @@ use super::DbUserMarriage;
 
 impl crate::SQLxDriver {
     pub async fn delete_marriage(&self, user_id: (i64, i64)) -> Result<Option<DbUserMarriage>, sqlx::Error> {
+        let proposee_id = user_id.0.min(user_id.1);
+        let proposer_id = user_id.0.max(user_id.1);
         sqlx::query_as!(
             DbUserMarriage,
             "
@@ -13,8 +15,8 @@ impl crate::SQLxDriver {
             )
             RETURNING *
             ",
-            user_id.0,
-            user_id.1
+            proposee_id,
+            proposer_id
         )
         .fetch_optional(&self.pool)
         .await

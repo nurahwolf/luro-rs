@@ -12,24 +12,21 @@ pub struct Guilds {
 
 impl LuroCommand for Guilds {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+        let mut response = ctx.acknowledge_interaction(false).await?;
         let mut guild_string = String::new();
         for guild in ctx.database.guilds_fetch().await? {
-            if self.show_id.unwrap_or_default() {
-                writeln!(guild_string, "- {} - <#{1}> - {1}", guild.name, guild.guild_id)?
-            } else {
-                writeln!(guild_string, "- {} - <#{}>", guild.name, guild.guild_id)?
+            match self.show_id.unwrap_or_default() {
+                true => writeln!(guild_string, "- {} - <#{1}> - {1}", guild.name, guild.guild_id)?,
+                false => writeln!(guild_string, "- {} - <#{}>", guild.name, guild.guild_id)?,
             }
         }
 
-        let accent_colour = ctx.accent_colour();
-        ctx.respond(|r| {
-            r.embed(|embed| {
-                embed
-                    .title("All the guilds that I am in")
-                    .description(guild_string)
-                    .colour(accent_colour)
-            })
-        })
-        .await
+        response.embed(|embed| {
+            embed
+                .title("All the guilds that I am in")
+                .description(guild_string)
+                .colour(ctx.accent_colour())
+        });
+        ctx.response_send(response).await
     }
 }

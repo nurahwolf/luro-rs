@@ -1,98 +1,118 @@
-use crate::types::{PunishmentType, User, Guild};
+use crate::types::{Guild, PunishmentType, User};
+use std::fmt::Write;
 
 pub fn new_punishment_embed(
     guild: &Guild,
     kind: &PunishmentType,
     moderator: &User,
     target: &User,
-) -> crate::builders::EmbedBuilder {
+) -> anyhow::Result<crate::builders::EmbedBuilder> {
+    let mut description = String::new();
     let mut embed = crate::builders::EmbedBuilder::default();
-
-    embed
-        .create_field("Guild ID", &guild.guild_id.to_string(), true)
-        .thumbnail(|thumbnail| thumbnail.url(target.avatar_url()));
+    embed.thumbnail(|thumbnail| thumbnail.url(target.avatar_url()));
 
     match kind {
         PunishmentType::Kicked(punishment_reason) => {
-            reason(&mut embed, punishment_reason.as_deref(), target);
-            embed
-                .title(format!("👢 Kicked from {}", guild.name))
-                .colour(crate::COLOUR_DANGER)
-                .author(|author| {
-                    author
-                        .icon_url(moderator.avatar_url())
-                        .name(format!("Kicked by {} - {}", moderator.username(), moderator.user_id))
-                });
+            writeln!(
+                description,
+                "<:member:1175114506465198171> <@{1}> - {} `{1}`",
+                target.username(),
+                target.user_id
+            )?;
+            writeln!(
+                description,
+                "<:guide:1175114529701625977> **Guild:** {} `{}`",
+                guild.name, guild.guild_id
+            )?;
+            writeln!(
+                description,
+                "<:ticket:1175114633506455704> **Reason:** {}",
+                reason_formatter(punishment_reason.as_deref())
+            )?;
+
+            embed.colour(crate::COLOUR_DANGER).description(description).author(|author| {
+                author
+                    .icon_url(moderator.avatar_url())
+                    .name(format!("KICKED by {}!", moderator.username()))
+            });
         }
         PunishmentType::Banned(punishment_reason, purged_message_seconds) => {
-            reason(&mut embed, punishment_reason.as_deref(), target);
-            purged_messages(&mut embed, *purged_message_seconds);
-            embed
-                .title(format!("🔨 Banned from {}", guild.name))
-                .colour(crate::COLOUR_DANGER)
-                .author(|author| {
-                    author
-                        .icon_url(moderator.avatar_url())
-                        .name(format!("Banned by {} - {}", moderator.username(), moderator.user_id))
-                });
+            writeln!(
+                description,
+                "<:member:1175114506465198171> <@{1}> - {} `{1}`",
+                target.username(),
+                target.user_id
+            )?;
+            writeln!(
+                description,
+                "<:guide:1175114529701625977> **Guild:** {} `{}`",
+                guild.name, guild.guild_id
+            )?;
+            writeln!(
+                description,
+                "<:private:1175114613172473987> **Messages Deleted:** {}",
+                match purged_message_seconds {
+                    0 => "`No messages deleted`".to_owned(),
+                    3_600 => "`Previous Hour`".to_owned(),
+                    21_600 => "`Previous 6 Hours`".to_owned(),
+                    43_200 => "`Previous 12 Hours`".to_owned(),
+                    86_400 => "`Previous 24 Hours`".to_owned(),
+                    259_200 => "`Previous 3 Days`".to_owned(),
+                    604_800 => "`Previous 7 Days`".to_owned(),
+                    num => format!("Deleted `{num}` seconds worth of messages"),
+                }
+            )?;
+            writeln!(
+                description,
+                "<:ticket:1175114633506455704> **Reason:** {}",
+                reason_formatter(*punishment_reason)
+            )?;
+
+            embed.colour(crate::COLOUR_DANGER).description(description).author(|author| {
+                author
+                    .icon_url(moderator.avatar_url())
+                    .name(format!("BANNED by {}!", moderator.username()))
+            });
         }
         PunishmentType::Unbanned(punishment_reason) => {
-            reason(&mut embed, punishment_reason.as_deref(), target);
-            embed
-                .title(format!("🔓 Unbanned from {}", guild.name))
-                .colour(crate::COLOUR_SUCCESS)
-                .author(|author| {
-                    author
-                        .icon_url(moderator.avatar_url())
-                        .name(format!("Unbanned by {} - {}", moderator.username(), moderator.user_id))
-                });
+            writeln!(
+                description,
+                "<:member:1175114506465198171> <@{1}> - {} `{1}`",
+                target.username(),
+                target.user_id
+            )?;
+            writeln!(
+                description,
+                "<:guide:1175114529701625977> **Guild:** {} `{}`",
+                guild.name, guild.guild_id
+            )?;
+            writeln!(
+                description,
+                "<:ticket:1175114633506455704> **Reason:** {}",
+                reason_formatter(punishment_reason.as_deref())
+            )?;
+
+            embed.colour(crate::COLOUR_SUCCESS).description(description).author(|author| {
+                author
+                    .icon_url(moderator.avatar_url())
+                    .name(format!("UNBANNED by {}!", moderator.username()))
+            });
         }
     };
-    embed
+
+    Ok(embed)
 }
 
-
-/// Append a period of purged messages
-pub fn purged_messages(embed: &mut crate::builders::EmbedBuilder, purged_message_seconds: i64) -> &mut crate::builders::EmbedBuilder {
-    let period = match purged_message_seconds {
-        0 => "No messages deleted".to_owned(),
-        3_600 => "Previous Hour".to_owned(),
-        21_600 => "Previous 6 Hours".to_owned(),
-        43_200 => "Previous 12 Hours".to_owned(),
-        86_400 => "Previous 24 Hours".to_owned(),
-        259_200 => "Previous 3 Days".to_owned(),
-        604_800 =>  "Previous 7 Days".to_owned(),
-        num => format!("Deleted `{num}` seconds worth of messages")
-    };
-
-    embed.create_field("Purged Messages", &period, true);
-    embed
-}
-
-/// Append a reason to why they were actioned
-fn reason<'a>(
-    embed: &'a mut crate::builders::EmbedBuilder,
-    reason: Option<&str>,
-    punished_user: &User,
-) -> &'a mut crate::builders::EmbedBuilder {
+/// Format a reason, handling if there is a code block and escaped characters
+fn reason_formatter(reason: Option<&str>) -> String {
     match reason {
         Some(reason) => {
-            if reason.starts_with("```") {
-                embed.description(format!(
-                    "**User:** <@{0}> - {1}\n**User ID:** {0}\n{reason}",
-                    punished_user.user_id, punished_user.name
-                ))
-            } else {
-                embed.description(format!(
-                    "**User:** <@{0}> - {1}\n**User ID:** {0}\n```{reason}```",
-                    punished_user.user_id, punished_user.name
-                ))
+            if reason.contains('`') || reason.starts_with("```") {
+                return reason.to_owned();
             }
+
+            format!("`{reason}`")
         }
-        None => embed.description(format!(
-            "**User:** <@{0}> - {1}\n**User ID:** {0}",
-            punished_user.user_id, punished_user.name
-        )),
-    };
-    embed
+        None => "`No reason specified.`".to_owned(),
+    }
 }

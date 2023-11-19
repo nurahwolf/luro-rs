@@ -55,12 +55,14 @@ impl fmt::Display for FetishList {
 pub struct CharacterProfile {
     pub prefix: Option<String>,
     pub name: String,
+    pub colour: Option<u32>,
+    pub nickname: Option<String>,
     pub sfw_description: String,
     pub sfw_summary: String,
-    pub sfw_icons: Vec<String>,
+    pub sfw_icon: String,
     pub nsfw_description: Option<String>,
     pub nsfw_summary: Option<String>,
-    pub nsfw_icons: Vec<String>,
+    pub nsfw_icon: Option<String>,
 }
 
 /// A structure representing an image
