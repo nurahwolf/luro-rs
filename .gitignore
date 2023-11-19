@@ -1,17 +1,13 @@
-
-# Secret
+# Secrets
 .env
 
 # Build Artifacts
 /target
 
 # Luro Specific
-/data*
+/log*
 
 # Lavalink
 !/lavalink/application.yml
 !/lavalink/Lavalink.jar
 /lavalink/*
-
-# Random testing trash
-/lurov1
