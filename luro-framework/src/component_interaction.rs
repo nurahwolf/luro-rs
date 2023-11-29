@@ -20,6 +20,7 @@ mod respond_message;
 mod response_send;
 mod response_update;
 mod simple_response;
+mod send_message;
 
 #[derive(Debug, Clone)]
 pub struct ComponentInteraction {
@@ -43,7 +44,7 @@ pub struct ComponentInteraction {
     pub locale: String,
     pub message: Message,
     pub shard: twilight_gateway::MessageSender,
-    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub logging: Arc<luro_logging::Logging>,
     pub twilight_client: Arc<twilight_http::Client>,
     pub user: Option<twilight_model::user::User>,
 }
@@ -146,7 +147,7 @@ impl ComponentInteraction {
             shard: ctx.shard,
             message: interaction.message.context("Expected to fetch message on component interaction")?,
             interaction_token: interaction.token.clone(),
-            tracing_subscriber: ctx.tracing_subscriber,
+            logging: ctx.logging,
             twilight_client: ctx.twilight_client,
             user: interaction.user.clone(),
         })

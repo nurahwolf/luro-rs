@@ -26,7 +26,7 @@ pub struct LuroContext {
     /// A [MessageSender] for interacting with the shard
     pub shard: twilight_gateway::MessageSender,
     /// Tracing subscriber information
-    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub logging: Arc<luro_logging::Logging>,
     /// Twilight client for interacting with the Discord API
     pub twilight_client: Arc<twilight_http::Client>,
 }
@@ -41,7 +41,7 @@ impl LuroContext {
             #[cfg(feature = "lavalink")]
             lavalink: framework.lavalink,
             shard,
-            tracing_subscriber: framework.tracing_subscriber,
+            logging: framework.logging,
             twilight_client: framework.twilight_client,
         }
     }

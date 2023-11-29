@@ -74,7 +74,7 @@ async fn handle_member_chunk(db: &SQLxDriver, event: &MemberChunk) -> anyhow::Re
             },
             member.deaf,
             event.guild_id.get() as i64,
-            OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+            OffsetDateTime::from_unix_timestamp(member.joined_at.unwrap().as_secs())?,
             member.avatar.map(|x| x.to_string()),
             member.flags.bits() as i64,
             member.mute,
@@ -107,17 +107,6 @@ async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: &Memb
     debug!("handle_member - Trying to handle updating roles");
     let mut rows_modified = db.update_user(&member.user).await?;
 
-    for role in &member.roles {
-        match db.update_role((guild_id, *role)).await {
-            Ok(ok) => rows_modified += ok,
-            Err(why) => warn!(why = ?why, "handle_member - Failed to sync role"),
-        }
-        match db.update_guild_member_role(guild_id, *role, member.user.id).await {
-            Ok(ok) => rows_modified += ok,
-            Err(why) => warn!(why = ?why, "handle_member - Failed to sync user role"),
-        }
-    }
-
     debug!("handle_member - Trying to handle updating member");
     rows_modified += sqlx::query_file!(
         "queries/member/member_update_twilight_member.sql",
@@ -131,7 +120,7 @@ async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: &Memb
         },
         member.deaf,
         guild_id.get() as i64,
-        OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+        OffsetDateTime::from_unix_timestamp(member.joined_at.unwrap().as_secs())?,
         member.avatar.map(|x| x.to_string()),
         member.flags.bits() as i64,
         member.mute,
@@ -144,12 +133,19 @@ async fn handle_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, member: &Memb
     .rows_affected();
 
     db.clear_member_roles(guild_id, member.user.id).await?;
+
     for role in &member.roles {
-        debug!("handle_member - Trying to handle updating roles");
-        db.update_role((guild_id, *role)).await?;
-        debug!("handle_member - Trying to handle updating member roles");
-        db.update_guild_member_role(guild_id, *role, member.user.id).await?;
+        match db.update_role((guild_id, *role)).await {
+            Ok(ok) => rows_modified += ok,
+            Err(why) => warn!(why = ?why, "handle_member - Failed to sync role"),
+        }
+        match db.update_guild_member_role(guild_id, *role, member.user.id).await {
+            Ok(ok) => rows_modified += ok,
+            Err(why) => warn!(why = ?why, "handle_member - Failed to sync user role"),
+        }
     }
+
+    rows_modified += db.update_user(&member.user).await?;
 
     Ok(rows_modified)
 }
@@ -183,7 +179,7 @@ async fn handle_partial_member(db: &SQLxDriver, guild_id: Id<GuildMarker>, membe
         },
         member.deaf,
         guild_id.get() as i64,
-        OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+        OffsetDateTime::from_unix_timestamp(member.joined_at.unwrap().as_secs())?,
         member.avatar.map(|x| x.to_string()),
         member.flags.bits() as i64,
         member.mute,
@@ -211,7 +207,7 @@ async fn handle_member_add(db: &SQLxDriver, member: &MemberAdd) -> anyhow::Resul
         },
         member.deaf,
         member.guild_id.get() as i64,
-        OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+        OffsetDateTime::from_unix_timestamp(member.joined_at.unwrap().as_secs())?,
         member.avatar.map(|x| x.to_string()),
         member.flags.bits() as i64,
         member.mute,
@@ -251,7 +247,7 @@ async fn handle_member_update(db: &SQLxDriver, member: &MemberUpdate) -> anyhow:
             None => None,
         },
         member.guild_id.get() as i64,
-        OffsetDateTime::from_unix_timestamp(member.joined_at.as_secs())?,
+        OffsetDateTime::from_unix_timestamp(member.joined_at.unwrap().as_secs())?,
         member.avatar.map(|x| x.to_string()),
         member.nick,
         member.pending,

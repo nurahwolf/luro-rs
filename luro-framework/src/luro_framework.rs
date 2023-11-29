@@ -34,7 +34,7 @@ pub struct Framework {
     /// Twilight's client for interacting with the Discord API
     pub twilight_client: Arc<twilight_http::Client>,
     /// The global tracing subscriber, for allowing manipulation within commands
-    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub logging: Arc<luro_logging::Logging>,
 }
 
 impl Framework {
@@ -71,7 +71,7 @@ impl Framework {
             database,
             #[cfg(feature = "lavalink")]
             lavalink,
-            tracing_subscriber: config.tracing_subscriber.clone(),
+            logging: config.logging.clone(),
             twilight_client: config.twilight_client.clone(),
         };
 
@@ -106,7 +106,7 @@ impl From<LuroContext> for Framework {
             http_client: framework.http_client,
             #[cfg(feature = "lavalink")]
             lavalink: framework.lavalink,
-            tracing_subscriber: framework.tracing_subscriber,
+            logging: framework.logging,
             twilight_client: framework.twilight_client,
         }
     }

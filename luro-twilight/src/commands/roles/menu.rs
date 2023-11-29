@@ -1,5 +1,5 @@
-use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
+use luro_framework::Luro;
+use luro_model::builders::components::action_row::ActionRowBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     channel::message::component::{ButtonStyle, SelectMenuType},
@@ -25,103 +25,97 @@ pub struct Menu {
     pub bait: Option<Id<RoleMarker>>,
     /// The button's label. Defaults to the role name
     bait_label: Option<String>,
+    /// Set a banner to show below the embed
+    banner: Option<String>
 }
-#[async_trait::async_trait]
 
-impl LuroCommandTrait for Menu {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let data = Self::new(interaction.data.clone())?;
-        let interaction_author = interaction.author_id();
-        let luro_user = ctx.database.get_user(&interaction_author).await?;
-
+impl luro_framework::LuroCommand for Menu {
+    async fn interaction_command(self, ctx: luro_framework::CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+        let guild_id = ctx.guild_id().unwrap(); // SAFETY: Safe to unwrap as this can only be run in a guild
         let mut owner_match = false;
 
-        // We are using global data for this one in case an owner was removed from the application live
-
-        for (id, _) in ctx.database.get_staff().await? {
-            if interaction_author == id {
+        for staff in ctx.database.user_fetch_staff().await? {
+            if ctx.author.user_id == staff.user_id {
                 owner_match = true
             }
         }
 
         if !owner_match {
-            return Response::PermissionNotBotStaff().respond(&ctx, &interaction).await;
+            return ctx
+                .simple_response(luro_model::response::SimpleResponse::PermissionNotBotStaff)
+                .await;
         }
 
         // SAFETY: This command can only be used in guilds
-        let add_buttons = data.rules.is_some() || data.adult.is_some() || data.bait.is_some();
+        let add_buttons = self.rules.is_some() || self.adult.is_some() || self.bait.is_some();
+        let mut action_row = ActionRowBuilder::default();
+        if let Some(role) = self.rules {
+            let role = ctx.database.role_fetch(guild_id, role).await?;
+            action_row.button(|button| {
+                button.custom_id("roles-button-rules").style(ButtonStyle::Primary);
+                match self.rules_label {
+                    Some(label) => button.label(label),
+                    None => button.label(role.name.clone()),
+                };
+                button
+            });
+        }
+        if let Some(role) = self.adult {
+            let role = ctx.database.role_fetch(guild_id, role).await?;
+            action_row.button(|button| {
+                button.custom_id("roles-button-adult").style(ButtonStyle::Primary);
+                match self.adult_label {
+                    Some(label) => button.label(label),
+                    None => button.label(role.name.clone()),
+                };
+                button
+            });
+        }
+        if let Some(role) = self.bait {
+            let role = ctx.database.role_fetch(guild_id, role).await?;
+            action_row.button(|button| {
+                button.custom_id("roles-button-bait").style(ButtonStyle::Danger);
+                match self.bait_label {
+                    Some(label) => button.label(label),
+                    None => button.label(role.name.clone()),
+                };
+                button
+            });
+        }
 
-        let accent_colour = interaction.accent_colour(&ctx).await;
-        interaction
-            .respond(&ctx, |response| {
-                response
-                    .embed(|embed| {
-                        embed
-                            .colour(accent_colour)
-                            .author(|author| author.name(luro_user.name()).icon_url(luro_user.avatar()));
-                        match data.description {
-                            Some(description) => embed.description(description),
-                            None => embed.description("Select the roles you want"),
-                        };
-                        if let Some(title) = data.title {
-                            embed.title(title);
-                        }
-                        embed
+        ctx.respond(|response| {
+            response
+                .embed(|embed| {
+                    if let Some(banner) = self.banner {
+                        embed.image(|i|i.url(banner));
+                    }
+                    match self.description {
+                        Some(description) => embed.description(description),
+                        None => embed.description("Select the roles you want"),
+                    };
+                    if let Some(title) = self.title {
+                        embed.title(title);
+                    }
+                    embed.colour(ctx.accent_colour())
+                })
+                .components(|components| {
+                    components.action_row(|row| {
+                        row.component(|component| {
+                            component.select_menu(|menu| menu.custom_id("role-menu").kind(SelectMenuType::Role).max_values(25))
+                        })
                     })
-                    .components(|components| {
-                        components.action_row(|row| {
-                            row.component(|component| {
-                                component
-                                    .select_menu(|menu| menu.custom_id("role-menu").kind(SelectMenuType::Role).max_values(25))
-                            })
-                        })
-                    });
+                });
 
-                if add_buttons {
-                    response.components(|components| {
-                        components.action_row(|row| {
-                            if let Some(role) = data.rules {
-                                let role = ctx.cache.role(role).unwrap().clone();
-                                row.button(|button| {
-                                    button.custom_id("rules-button").style(ButtonStyle::Primary);
-                                    match data.rules_label {
-                                        Some(label) => button.label(label),
-                                        None => button.label(role.name.clone()),
-                                    };
-                                    button
-                                });
-                            }
-                            if let Some(role) = data.adult {
-                                let role = ctx.cache.role(role).unwrap().clone();
-                                row.button(|button| {
-                                    button.custom_id("adult-button").style(ButtonStyle::Primary);
-                                    match data.adult_label {
-                                        Some(label) => button.label(label),
-                                        None => button.label(role.name.clone()),
-                                    };
-                                    button
-                                });
-                            }
-                            if let Some(role) = data.bait {
-                                let role = ctx.cache.role(role).unwrap().clone();
-                                row.button(|button| {
-                                    button.custom_id("bait-button").style(ButtonStyle::Danger);
-                                    match data.bait_label {
-                                        Some(label) => button.label(label),
-                                        None => button.label(role.name.clone()),
-                                    };
-                                    button
-                                });
-                            }
-                            row
-                        })
-                    });
-                }
-                response
-            })
-            .await
+            if add_buttons {
+                response.components(|components| {
+                    components.action_row(|a_r| {
+                        *a_r = action_row;
+                        a_r
+                    })
+                });
+            }
+            response
+        })
+        .await
     }
 }

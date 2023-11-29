@@ -3,11 +3,12 @@ members = [
     "luro-database-sqlx",           # SQLx database driver, currently configured just for Postgres
     "luro-database",                # Core database driver, where shared functionality lives. Can be configured with several options, such as what drivers to use, caching and more.
     "luro-dice",
+    "luro-logging",
     "luro-framework",
     "luro-model",
     "luro-twilight",
     "twilight-interactions-derive",
-    "twilight-interactions",
+    "twilight-interactions", "luro-logging",
 ]
 resolver = "2"
 

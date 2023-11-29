@@ -60,7 +60,10 @@ fn test_command_model() {
     ];
 
     let member = InteractionMember {
-        joined_at: Timestamp::from_secs(1609455600).unwrap(),
+        joined_at: match Timestamp::from_secs(1609455600) {
+            Ok(timestamp) => Some(timestamp),
+            Err(_) => None,
+        },
         nick: None,
         premium_since: None,
         roles: vec![],

@@ -1,5 +1,4 @@
 use luro_framework::{CommandInteraction, LuroCommand};
-use tracing_subscriber::filter;
 
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
@@ -28,25 +27,27 @@ pub enum LogLevel {
 
 impl LuroCommand for Log {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let (_, level) = match self.level {
-            LogLevel::Trace => (
-                ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::TRACE)?,
-                "TRACE",
-            ),
-            LogLevel::Debug => (
-                ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::DEBUG)?,
-                "DEBUG",
-            ),
-            LogLevel::Info => (ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::INFO)?, "INFO"),
-            LogLevel::Warn => (ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::WARN)?, "WARN"),
-            LogLevel::Error => (
-                ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::ERROR)?,
-                "ERROR",
-            ),
-            LogLevel::Off => (ctx.tracing_subscriber.modify(|filter| *filter = filter::LevelFilter::OFF)?, "OFF"),
+        // let logger = ctx.logging.console_handler.clone();
+        // TODO: Implement this
+        // let (_, level) = match self.level {
+        //     LogLevel::Trace => (logger.modify(|filter| { filter.with_filter(LevelFilter::TRACE); })?, "TRACE"),
+        //     LogLevel::Debug => (logger.modify(|filter| { filter.with_filter(LevelFilter::DEBUG); })?, "DEBUG"),
+        //     LogLevel::Info => (logger.modify(|filter| { filter.with_filter(LevelFilter::INFO); })?, "INFO"),
+        //     LogLevel::Warn => (logger.modify(|filter| { filter.with_filter(LevelFilter::WARN); })?, "WARN"),
+        //     LogLevel::Error => (logger.modify(|filter| { filter.with_filter(LevelFilter::ERROR); })?, "ERROR"),
+        //     LogLevel::Off => (logger.modify(|filter| { filter.with_filter(LevelFilter::OFF); })?, "OFF"),
+        // };
+
+        let level = match self.level {
+            LogLevel::Trace => "TRACE",
+            LogLevel::Debug => "DEBUG",
+            LogLevel::Info => "INFO",
+            LogLevel::Warn => "WARN",
+            LogLevel::Error => "ERROR",
+            LogLevel::Off => "OFF",
         };
 
-        ctx.respond(|r| r.content(format!("Luro's log level is now set to {}!", level)).ephemeral())
+        ctx.respond(|r| r.content(format!("Luro's log level is now set to {level}!")).ephemeral())
             .await
     }
 }

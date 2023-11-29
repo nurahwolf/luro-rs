@@ -25,6 +25,7 @@ mod user;
 mod user_data;
 mod user_permissions;
 mod user_word_count;
+mod quote;
 
 pub use channel::Channel;
 pub use character::*;
@@ -53,3 +54,4 @@ pub use user::*;
 pub use user_data::*;
 pub use user_permissions::*;
 pub use user_word_count::UserWordCount;
+pub use quote::Quote;

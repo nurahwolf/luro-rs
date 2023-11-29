@@ -9,6 +9,8 @@ use twilight_model::{
     util::ImageHash,
 };
 
+use crate::builders::TimestampBuilder;
+
 use super::{Member, UserData};
 
 /// A warpper around [User], with [Member] details if [Id<GuildMarker>] was present on type creation.
@@ -100,7 +102,10 @@ impl From<(twilight_model::guild::Member, Id<GuildMarker>)> for User {
                 avatar: member.avatar,
                 boosting_since: member.premium_since,
                 communication_disabled_until: member.communication_disabled_until,
-                joined_at: member.joined_at,
+                joined_at: match member.joined_at {
+                    Some(timestamp) => timestamp,
+                    None => TimestampBuilder::default().into(),
+                },
                 deafened: member.deaf,
                 flags: member.flags,
                 guild_id,
@@ -231,7 +236,7 @@ impl TryFrom<User> for twilight_model::guild::Member {
                 communication_disabled_until: member.communication_disabled_until,
                 deaf: member.deafened,
                 flags: member.flags,
-                joined_at: member.joined_at,
+                joined_at: Some(member.joined_at),
                 mute: member.muted,
                 nick: member.nickname.clone(),
                 pending: member.pending,

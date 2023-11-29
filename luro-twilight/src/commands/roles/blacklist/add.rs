@@ -1,8 +1,7 @@
-use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
+use luro_framework::Luro;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
 
-use luro_model::database_driver::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "add", desc = "Add a role to the blacklist")]
@@ -10,38 +9,29 @@ pub struct Add {
     /// The role to add
     role: Id<RoleMarker>,
 }
-#[async_trait::async_trait]
 
-impl LuroCommandTrait for Add {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let data = Self::new(interaction.data.clone())?;
-        let interaction_author = interaction.author_id();
+impl luro_framework::LuroCommand for Add {
+    async fn interaction_command(self, ctx: luro_framework::CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut owner_match = false;
 
-        // We are using global data for this one in case an owner was removed from the application live
-
-        for (id, _) in ctx.database.get_staff().await? {
-            if interaction_author == id {
+        for staff in ctx.database.user_fetch_staff().await? {
+            if ctx.author.user_id == staff.user_id {
                 owner_match = true
             }
         }
 
         if !owner_match {
-            return Response::PermissionNotBotStaff().respond(&ctx, &interaction).await;
+            return ctx
+                .simple_response(luro_model::response::SimpleResponse::PermissionNotBotStaff)
+                .await;
         }
 
-        let mut guild_settings = ctx.database.get_guild(&interaction.guild_id.unwrap()).await?;
-        guild_settings.assignable_role_blacklist.push(data.role);
-        ctx.database
-            .modify_guild(&interaction.guild_id.unwrap(), &guild_settings)
-            .await?;
+        // Safe to unwrap as this command can only be executed in a guild
+        ctx.database.driver.guild_new_blacklisted_role(ctx.guild_id().unwrap(), self.role).await?;
 
-        interaction
-            .respond(&ctx, |r| {
-                r.content(format!("Added role <@&{}> to the guild blacklist!", data.role))
+        ctx
+            .respond(|r| {
+                r.content(format!("Added role <@&{}> to the guild blacklist!", self.role))
                     .ephemeral()
             })
             .await

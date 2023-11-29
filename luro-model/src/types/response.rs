@@ -16,6 +16,14 @@ impl From<()> for CommandResponse {
     }
 }
 
+impl From<twilight_model::channel::Message> for CommandResponse {
+    fn from(message: twilight_model::channel::Message) -> Self {
+        Self {
+            message: Some(message.into()),
+        }
+    }
+}
+
 impl From<CommandResponse> for () {
     fn from(_: CommandResponse) -> Self {}
 }

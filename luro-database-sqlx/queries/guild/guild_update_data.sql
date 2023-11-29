@@ -1,9 +1,11 @@
-INSERT INTO guilds (
+INSERT INTO guild_data (
         accent_colour,
-        custom_accent_colour,
-        guild_id
+        accent_colour_custom,
+        guild_id,
+        moderator_actions_log_channel
     )
-VALUES ($1, $2, $3) ON CONFLICT (guild_id) DO
+VALUES ($1, $2, $3, $4) ON CONFLICT (guild_id) DO
 UPDATE
 SET accent_colour = $1,
-    custom_accent_colour = $2
+    accent_colour_custom = $2,
+    moderator_actions_log_channel = $4

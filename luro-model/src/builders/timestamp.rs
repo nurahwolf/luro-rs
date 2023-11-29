@@ -5,6 +5,12 @@ use twilight_model::util::Timestamp;
 
 pub struct TimestampBuilder(twilight_model::util::Timestamp);
 
+impl Default for TimestampBuilder {
+    fn default() -> Self {
+        Self(Timestamp::from_secs(0).unwrap())
+    }
+}
+
 impl TimestampBuilder {
     pub fn from_systemtime(&mut self, systemtime: SystemTime) -> anyhow::Result<&mut Self> {
         let seconds = systemtime.duration_since(UNIX_EPOCH)?.as_secs();

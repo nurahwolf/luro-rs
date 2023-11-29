@@ -2,15 +2,13 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use tracing::debug;
-use tracing_subscriber::{
-    filter::LevelFilter,
-    reload::{Handle, Layer},
-    Registry,
-};
 use twilight_gateway::{Config, ConfigBuilder, Intents};
-use twilight_model::gateway::{
-    payload::outgoing::update_presence::{UpdatePresenceError, UpdatePresencePayload},
-    presence::{ActivityType, MinimalActivity, Status},
+use twilight_model::{
+    gateway::{
+        payload::outgoing::update_presence::{UpdatePresenceError, UpdatePresencePayload},
+        presence::{ActivityType, MinimalActivity, Status},
+    },
+    user::CurrentUser,
 };
 
 #[derive(Debug)]
@@ -29,20 +27,21 @@ pub struct Configuration {
     pub twilight_client: Arc<twilight_http::Client>,
     pub shard_config: Config,
     pub connection_string: String,
-    pub filter: Layer<tracing_subscriber::filter::LevelFilter, Registry>,
-    pub tracing_subscriber: Handle<LevelFilter, Registry>,
+    pub logging: Arc<luro_logging::Logging>,
+    pub current_user: CurrentUser,
 }
 
 impl Configuration {
     /// Create a new configuration, fetching most information from environment variables
-    pub fn new(intents: Intents, filter: LevelFilter) -> anyhow::Result<Self> {
+    pub async fn new(intents: Intents) -> anyhow::Result<Self> {
         #[cfg(feature = "dotenvy")]
         dotenvy::dotenv()?;
 
         let token = std::env::var("DISCORD_TOKEN").context("Failed to get the variable DISCORD_TOKEN")?;
-        let twilight_client = twilight_http::Client::new(token.clone()).into();
+        let twilight_client = twilight_http::Client::new(token.clone());
+        let current_user = twilight_client.current_user().await?.model().await?;
+        let logging = luro_logging::init(&current_user.name);
         let shard_config = shard_config_builder(intents, token.clone())?;
-        let (filter, tracing_subscriber) = tracing_subscriber::reload::Layer::new(filter);
 
         #[cfg(feature = "cache-memory")]
         let connection_string = std::env::var("DATABASE_URL").unwrap_or("".to_owned());
@@ -59,12 +58,11 @@ impl Configuration {
             lavalink_host,
             #[cfg(feature = "lavalink")]
             lavalink_auth,
-            #[cfg(feature = "cache-memory")]
-            twilight_client,
+            twilight_client: twilight_client.into(),
             shard_config,
             connection_string,
-            filter,
-            tracing_subscriber,
+            logging: logging.into(),
+            current_user,
         };
 
         debug!("New config created: {:#?}", config);

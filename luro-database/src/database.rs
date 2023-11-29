@@ -7,3 +7,4 @@ mod member;
 mod message;
 mod role;
 mod user;
+mod quote;

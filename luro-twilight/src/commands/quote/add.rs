@@ -1,86 +1,64 @@
-use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::{database_driver::LuroDatabaseDriver, message::LuroMessage, user::LuroUser};
-use tracing::debug;
+use anyhow::Context;
+use luro_framework::Luro;
+use luro_model::response::SimpleResponse;
+use regex::Regex;
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::id::{marker::ChannelMarker, Id};
+use twilight_model::id::Id;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "add", desc = "Save what someone said!")]
 pub struct Add {
-    /// The message ID to save
-    id: String,
-    /// Only set this if Luro can't find the message in the cache.
-    channel: Option<Id<ChannelMarker>>,
+    /// Either give the message ID, or a link to the message!
+    message: String,
 }
 
-#[async_trait]
-impl LuroCommandTrait for Add {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let data = Self::new(interaction.data.clone())?;
+impl luro_framework::LuroCommand for Add {
+    async fn interaction_command(self, ctx: luro_framework::CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+        let link_regex = Regex::new(r"^https.*/(\d+)/(\d+)")?;
+        let number_regex = Regex::new(r"\d+")?;
 
-        let channel_id = data.channel.unwrap_or(interaction.channel.id);
-        let accent_colour = interaction.accent_colour(&ctx).await;
-        let id = Id::new(data.id.parse()?);
-        let quoted_user;
+        let message = if let Some(captures) = link_regex.captures(&self.message) {
+            tracing::debug!("{captures:#?}");
+            let message_id = captures.get(2).context("Expected to get message_id")?.as_str().parse()?;
+            let channel_id = captures.get(1).context("Expected to get channel_id")?.as_str().parse()?;
 
-        let quote = match ctx.twilight_client.message(channel_id, id).await {
-            Ok(message) => {
-                let message = message.model().await?;
-                quoted_user = message.author.clone();
-                LuroMessage::from(message)
+            match ctx.database.message_fetch(Id::new(message_id), Some(Id::new(channel_id))).await {
+                Ok(message) => message,
+                Err(why) => return ctx.simple_response(SimpleResponse::InternalError(&why)).await,
             }
-            Err(_) => {
-                debug!("Failed to get message via twilight, so lookign in the cache");
-                match ctx.cache.message(id) {
-                    Some(message) => {
-                        let quote = LuroMessage::from(message.clone());
-                        // Add some more stuff that is not in the cache
-                        if let Some(user) = ctx.cache.user(message.author()) {
-                            quoted_user = user.clone();
-                        } else {
-                            let user = ctx.twilight_client.user(message.author()).await?.model().await?;
-                            quoted_user = user.clone();
-                        }
-                        quote
-                    },
-                    None => return interaction
-                    .respond(&ctx, |r| {
-                        r.content("Sorry! Could not find that message. You sure you gave me the right ID?\nTry specifying the exact channel with the optional parameter if I'm struggling. If I still can't, it's probably because I don't have access to the channel.")
-                            .ephemeral()
-                    })
-                    .await,
-                }
+        } else if let Some(message_id) = number_regex.find(&self.message).map(|mat| mat.as_str().parse()) {
+            match ctx
+                .database
+                .message_fetch(Id::new(message_id.context("Expected to get message_id")?), Some(ctx.channel.id))
+                .await
+            {
+                Ok(message) => message,
+                Err(why) => return ctx.simple_response(SimpleResponse::InternalError(&why)).await,
             }
+        } else {
+            return ctx
+                .respond(|r| r.content("No message ID or message link passed!").ephemeral())
+                .await;
         };
 
-        let slash_user = LuroUser::from(&quoted_user);
+        let quote_id = ctx.database.driver.quote_add(ctx.author.user_id, &message, ctx.channel.nsfw.unwrap_or_default()).await?;
 
-        let local_quotes = ctx.database.get_quotes().await?;
-        let local_quote_id = local_quotes.len();
-
-        ctx.database.save_quote(local_quote_id, quote.clone()).await?;
-
-        interaction
-            .respond(&ctx, |response| {
-                response.embed(|embed| {
-                    embed.colour(accent_colour).description(quote.content).author(|author| {
-                        author
-                            .name(format!("{} - Quote {local_quote_id}", slash_user.name))
-                            .icon_url(slash_user.avatar());
-                        match quote.guild_id {
-                            Some(guild_id) => author.url(format!(
-                                "https://discord.com/channels/{guild_id}/{}/{}",
-                                quote.channel_id, quote.id
-                            )),
-                            None => author.url(format!("https://discord.com/channels/{}/{}", quote.channel_id, quote.id)),
-                        }
-                    })
+        ctx.respond(|response| {
+            response.embed(|embed| {
+                embed.colour(ctx.accent_colour()).description(message.content).author(|author| {
+                    author
+                        .name(format!("{} - Quote {quote_id}", message.author.name()))
+                        .icon_url(message.author.avatar_url());
+                    match message.guild_id {
+                        Some(guild_id) => author.url(format!(
+                            "https://discord.com/channels/{guild_id}/{}/{}",
+                            message.channel_id, message.id
+                        )),
+                        None => author.url(format!("https://discord.com/channels/{}/{}", message.channel_id, message.id)),
+                    }
                 })
             })
-            .await
+        })
+        .await
     }
 }

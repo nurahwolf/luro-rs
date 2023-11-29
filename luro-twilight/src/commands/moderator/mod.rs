@@ -7,7 +7,7 @@ mod ban;
 mod kick;
 mod modify;
 mod purge;
-// mod settings;
+mod settings;
 mod unban;
 // mod warn;
 
@@ -20,8 +20,8 @@ pub enum Moderator {
     Kick(kick::Kick),
     #[command(name = "purge")]
     Purge(purge::Purge),
-    // #[command(name = "settings")]
-    // Setting(settings::Settings),
+    #[command(name = "settings")]
+    Setting(settings::Settings),
     // #[command(name = "warn")]
     // Warn(warn::Warn),
     #[command(name = "unban")]
@@ -34,6 +34,7 @@ impl CreateLuroCommand for Moderator {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         match self {
             Self::Ban(cmd) => cmd.interaction_command(ctx).await,
+            Self::Setting(cmd) => cmd.interaction_command(ctx).await,
             Self::Kick(cmd) => cmd.interaction_command(ctx).await,
             Self::Purge(cmd) => cmd.interaction_command(ctx).await,
             Self::Unban(cmd) => cmd.interaction_command(ctx).await,

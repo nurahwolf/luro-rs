@@ -45,7 +45,7 @@ pub struct CommandInteraction {
     /// The locale of this interaction
     pub locale: String,
     pub shard: twilight_gateway::MessageSender,
-    pub tracing_subscriber: tracing_subscriber::reload::Handle<tracing_subscriber::filter::LevelFilter, tracing_subscriber::Registry>,
+    pub logging: Arc<luro_logging::Logging>,
     pub twilight_client: Arc<twilight_http::Client>,
 }
 
@@ -146,7 +146,7 @@ impl CommandInteraction {
             locale: interaction.locale.clone().context("Expected to get interaction locale")?,
             shard: ctx.shard,
             interaction_token: interaction.token.clone(),
-            tracing_subscriber: ctx.tracing_subscriber,
+            logging: ctx.logging,
             twilight_client: ctx.twilight_client,
         })
     }

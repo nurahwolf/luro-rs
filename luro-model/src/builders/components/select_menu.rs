@@ -79,6 +79,7 @@ impl Default for SelectMenuBuilder {
             channel_types: Default::default(),
             custom_id: Default::default(),
             disabled: Default::default(),
+            default_values: Default::default(),
             kind: SelectMenuType::Mentionable,
             max_values: Default::default(),
             min_values: Default::default(),

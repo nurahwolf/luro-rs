@@ -40,10 +40,10 @@ mod muzzle;
 mod owner;
 // #[cfg(feature = "command-ping")]
 // mod ping;
-// #[cfg(feature = "command-quote")]
-// mod quote;
-// #[cfg(feature = "command-roles")]
-// mod roles;
+#[cfg(feature = "command-quote")]
+mod quote;
+#[cfg(feature = "command-roles")]
+mod roles;
 #[cfg(feature = "command-say")]
 mod say;
 // #[cfg(feature = "command-story")]
@@ -89,8 +89,12 @@ pub fn default_commands() -> Vec<Command> {
         say::Say::setup_command(),
         #[cfg(feature = "command-user")]
         user::User::setup_command(),
+        #[cfg(feature = "command-roles")]
+        roles::RoleCommands::setup_command(),
         // #[cfg(feature = "command-story")]
         // story::Story::setup_command(),
+        #[cfg(feature = "command-quote")]
+        quote::Quote::setup_command(),
         #[cfg(feature = "command-wordcount")]
         words::Words::setup_command(),
     ]
@@ -109,8 +113,9 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "about" => about::About::handle_interaction(ctx).await,
         "base64" => base64::Base64::handle_interaction(ctx).await,
         #[cfg(feature = "command-moderator")]
-        "moderator" | "moderator-warn" => moderator::Moderator::handle_interaction(ctx).await,
+        "moderator" | "moderator-warn" | "modify-embed"=> moderator::Moderator::handle_interaction(ctx).await,
         "boop" => boop::Boop::handle_interaction(ctx).await,
+        "roles" | "roles-button-rules" | "roles-button-adult" | "roles-button-bait" | "role-menu" => roles::RoleCommands::handle_interaction(ctx).await,
         #[cfg(feature = "command-character")]
         "character"
         | "character-add-fetish"
@@ -119,17 +124,19 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         | "character-add-prefix"
         | "character-delete"
         | "character-description"
-        | "character-refresh"
         | "character-edit"
         | "character-fetish"
         | "character-image-nsfw"
+        | "character-image-sfw"
         | "character-image"
         | "character-menu-close"
         | "character-menu-open"
+        | "character-refresh"
         | "character-update" => character::Character::handle_interaction(ctx).await,
         "dice" => dice::Dice::handle_interaction(ctx).await,
         "hello" => hello::Hello::handle_interaction(ctx).await,
         "images" => images::Images::handle_interaction(ctx).await,
+        "quote" => quote::Quote::handle_interaction(ctx).await,
         "user" => user::User::handle_interaction(ctx).await,
         #[cfg(feature = "command-info")]
         "info"

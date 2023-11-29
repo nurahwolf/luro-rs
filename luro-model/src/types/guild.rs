@@ -17,6 +17,7 @@ use twilight_model::{
 use super::{Channel, GuildData, Role};
 
 mod is_owner;
+mod accent_colour;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Guild {

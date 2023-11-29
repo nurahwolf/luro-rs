@@ -26,13 +26,15 @@ impl crate::SQLxDriver {
             guilds.push(Guild {
                 data: Some(GuildData {
                     accent_colour: guild.accent_colour.map(|x| x as u32),
-                    accent_colour_custom: guild.custom_accent_colour.map(|x| x as u32),
+                    accent_colour_custom: guild.accent_colour_custom.map(|x| x as u32),
                     guild_id: Id::new(guild.guild_id as u64),
+                    role_blacklist: guild.role_blacklist.unwrap_or_default().into_iter().map(|x|Id::new(x as u64)).collect(),
+                    moderator_actions_log_channel: guild.moderator_actions_log_channel.map(|x| Id::new(x as u64)),
                 }),
                 afk_channel_id: guild.afk_channel_id.map(|x| Id::new(x as u64)),
                 afk_timeout: AfkTimeout::from(guild.afk_timeout as u16),
                 application_id: guild.application_id.map(|x| Id::new(x as u64)),
-                approximate_member_count: guild.members.map(|x| x as u64),
+                approximate_member_count: guild.total_members.map(|x| x as u64),
                 approximate_presence_count: Default::default(), // TODO: Complete this
                 banner: match guild.banner {
                     Some(img) => Some(ImageHash::parse(img.as_bytes())?),
@@ -64,7 +66,7 @@ impl crate::SQLxDriver {
                 name: guild.name,
                 nsfw_level: NSFWLevel::from(guild.nsfw_level as u8),
                 owner_id: Id::new(guild.owner_id as u64),
-                roles: Default::default(),
+                roles: self.get_guild_roles(Id::new(guild.guild_id as u64)).await?,
                 owner: Default::default(),
                 permissions: Default::default(),
                 preferred_locale: Default::default(),
@@ -102,8 +104,10 @@ impl crate::SQLxDriver {
             Some(guild) => Some(Guild {
                 data: Some(GuildData {
                     accent_colour: guild.accent_colour.map(|x| x as u32),
-                    accent_colour_custom: guild.custom_accent_colour.map(|x| x as u32),
+                    accent_colour_custom: guild.accent_colour_custom.map(|x| x as u32),
                     guild_id: Id::new(guild.guild_id as u64),
+                    role_blacklist: guild.role_blacklist.unwrap_or_default().into_iter().map(|x|Id::new(x as u64)).collect(),
+                    moderator_actions_log_channel: guild.moderator_actions_log_channel.map(|x| Id::new(x as u64)),
                 }),
                 afk_channel_id: guild.afk_channel_id.map(|x| Id::new(x as u64)),
                 afk_timeout: AfkTimeout::from(guild.afk_timeout as u16),
@@ -140,7 +144,7 @@ impl crate::SQLxDriver {
                 name: guild.name,
                 nsfw_level: NSFWLevel::from(guild.nsfw_level as u8),
                 owner_id: Id::new(guild.owner_id as u64),
-                roles: Default::default(),
+                roles: self.get_guild_roles(Id::new(guild.guild_id as u64)).await?,
                 owner: Default::default(),
                 permissions: Default::default(),
                 preferred_locale: Default::default(),

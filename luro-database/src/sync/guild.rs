@@ -23,5 +23,11 @@ pub async fn create(db: &crate::Database, event: &GuildCreate) -> anyhow::Result
         db.role_update((event.id, role)).await?;
     }
 
+    for member in &event.members {
+        if let Err(why) = db.member_update((event.id, member)).await {
+            tracing::warn!(why = ?why, "guild_create - Failed to sync member {}", member.user.id)
+        }
+    }
+
     Ok(())
 }

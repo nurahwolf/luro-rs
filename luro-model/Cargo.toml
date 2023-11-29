@@ -12,6 +12,7 @@ version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+luro-logging.path = "../luro-logging"
 
 
 dotenvy = { version = "0.15", optional = true }

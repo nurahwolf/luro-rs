@@ -1,6 +1,3 @@
-use async_trait::async_trait;
-use luro_framework::{command::LuroCommandTrait, Framework, InteractionCommand, LuroInteraction};
-use luro_model::database_driver::LuroDatabaseDriver;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
@@ -10,14 +7,8 @@ pub struct Remove {
     id: i64,
 }
 
-#[async_trait]
-impl LuroCommandTrait for Remove {
-    async fn handle_interaction(
-        ctx: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let data = Self::new(interaction.data.clone())?;
-
+impl luro_framework::LuroCommand for Remove {
+    async fn interaction_command(self, ctx: luro_framework::CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut quotes = ctx.database.get_quotes().await?;
         let id = usize::try_from(data.id).unwrap();
 

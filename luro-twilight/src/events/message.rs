@@ -1,6 +1,6 @@
 use luro_framework::{Luro, LuroContext};
 use luro_model::{builders::EmbedBuilder, response::safe_truncate};
-use twilight_model::{channel::ChannelType, gateway::payload::incoming::MessageCreate};
+use twilight_model::gateway::payload::incoming::MessageCreate;
 
 pub async fn create(framework: LuroContext, event: Box<MessageCreate>) -> anyhow::Result<()> {
     let characters = framework.database.user_fetch_characters(event.author.id).await?;

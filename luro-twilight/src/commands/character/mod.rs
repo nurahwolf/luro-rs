@@ -118,7 +118,7 @@ impl CreateLuroCommand for Character {
             "character-edit" => self.character_edit_button(ctx, invoking_interaction).await,
             "character-image" => self.character_cycle_image_button(ctx, invoking_interaction).await,
             "character-image-nsfw" => self.character_image_button(ctx, invoking_interaction, true).await,
-            "character-image-sfw" => self.character_image_button(ctx, invoking_interaction, true).await,
+            "character-image-sfw" => self.character_image_button(ctx, invoking_interaction, false).await,
             "character-fetish" => self.character_fetish_button(ctx, invoking_interaction).await,
             name => ctx.simple_response(SimpleResponse::UnknownCommand(name)).await,
         }

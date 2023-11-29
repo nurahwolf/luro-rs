@@ -1,7 +1,7 @@
 use luro_model::sync::ChannelSync;
 use twilight_model::{
     channel::Channel,
-    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelUpdate},
+    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelUpdate, ChannelPinsUpdate},
     id::{marker::ChannelMarker, Id},
 };
 
@@ -17,9 +17,20 @@ impl SQLxDriver {
             ChannelSync::ChannelCreate(channel) => handle_channel_create(self, channel).await,
             ChannelSync::ChannelDelete(channel) => handle_channel_delete(self, channel).await,
             ChannelSync::ChannelUpdate(channel) => handle_channel_update(self, channel).await,
-            ChannelSync::ChannelPinsUpdate(_) => todo!(),
+            ChannelSync::ChannelPinsUpdate(channel) => handle_channel_pins(self, channel).await,
         }
     }
+}
+
+async fn handle_channel_pins(db: &SQLxDriver, channel: &ChannelPinsUpdate) -> Result<u64, sqlx::Error> {
+    sqlx::query_file!(
+        "queries/channel/channel_update_twilight_channel.sql",
+        channel.channel_id.get() as i64,
+        channel.guild_id.map(|x| x.get() as i64)
+    )
+    .execute(&db.pool)
+    .await
+    .map(|x| x.rows_affected())
 }
 
 async fn handle_channel_id(db: &SQLxDriver, channel: Id<ChannelMarker>) -> Result<u64, sqlx::Error> {

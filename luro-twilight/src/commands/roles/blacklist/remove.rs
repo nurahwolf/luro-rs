@@ -1,8 +1,5 @@
-use luro_framework::{command::LuroCommandTrait, responses::Response, Framework, InteractionCommand, LuroInteraction};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::RoleMarker, Id};
-
-use luro_model::database_driver::LuroDatabaseDriver;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "remove", desc = "Remove a role to the blacklist", dm_permission = false)]
@@ -10,30 +7,23 @@ pub struct Remove {
     /// The role to remove
     role: Id<RoleMarker>,
 }
-#[async_trait::async_trait]
 
-impl LuroCommandTrait for Remove {
-    async fn handle_interaction(
-        framework: Framework,
-        interaction: InteractionCommand,
-    ) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let data = Self::new(interaction.data.clone())?;
-
-        let guild_id = interaction.guild_id.unwrap(); // SAFETY: Safe to unwrap as this can only be run in a guild
-        let interaction_author = interaction.author_id();
+impl luro_framework::LuroCommand for Remove {
+    async fn interaction_command(self, ctx: luro_framework::CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+        let guild_id = ctx.guild_id().unwrap(); // SAFETY: Safe to unwrap as this can only be run in a guild
         let mut owner_match = false;
 
         // We are using global data for this one in case an owner was removed from the application live
 
-        for (id, _) in framework.database.get_staff().await? {
-            if interaction_author == id {
+        for staff in ctx.database.user_fetch_staff().await? {
+            if ctx.author.user_id == staff.user_id {
                 owner_match = true
             }
         }
 
         if !owner_match {
-            return Response::PermissionNotBotStaff()
-                .respond(&framework, &interaction)
+            return ctx
+                .simple_response(luro_model::response::SimpleResponse::PermissionNotBotStaff)
                 .await;
         }
 
@@ -41,9 +31,9 @@ impl LuroCommandTrait for Remove {
         guild_settings.assignable_role_blacklist.retain(|&x| x != data.role);
         framework.database.modify_guild(&guild_id, &guild_settings).await?;
 
-        interaction
-            .respond(&framework, |r| {
-                r.content(format!("Added role <@&{}> to the guild blacklist!", data.role))
+        ctx
+            .respond(|r| {
+                r.content(format!("Added role <@&{}> to the guild blacklist!", self.role))
                     .ephemeral()
             })
             .await

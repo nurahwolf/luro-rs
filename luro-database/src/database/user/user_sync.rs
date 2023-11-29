@@ -33,7 +33,7 @@ impl Database {
                         member.communication_disabled_until = twilight_member.communication_disabled_until;
                         member.deafened = twilight_member.deaf;
                         member.flags = twilight_member.flags;
-                        member.joined_at = twilight_member.joined_at;
+                        member.joined_at = twilight_member.joined_at.unwrap();
                         member.muted = twilight_member.mute;
                         member.nickname = twilight_member.nick.clone();
                         member.pending = twilight_member.pending;

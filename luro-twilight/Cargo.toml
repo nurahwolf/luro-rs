@@ -41,7 +41,7 @@ futures-util = { workspace = true }   # main
 luro-model.path = "../luro-model"         # main
 luro-framework.path = "../luro-framework"
 luro-database.path = "../luro-database"
-
+luro-logging.path = "../luro-logging"
 
 
 # Tracing

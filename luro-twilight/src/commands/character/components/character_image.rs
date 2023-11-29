@@ -50,30 +50,39 @@ impl crate::commands::character::Character {
             }
         };
 
+        let description = match nsfw {
+            true => format!(
+                "<:plus:1175893813261250570> Total NSFW Images: `{}` | Total SFW Images: `{}`\n<:plus:1175893813261250570> Character by <@{original_author_id}>",
+                nsfw_images.len(),
+                sfw_images.len()
+            ),
+            false => format!("<:plus:1175893813261250570> Total SFW Images: `{}`\n<:plus:1175893813261250570> Character by <@{original_author_id}>", sfw_images.len()),
+        };
         ctx.respond(|r| {
             r.embed(|e| {
                 if let Some(source) = &character_image.source {
                     e.url(source);
                 }
                 e.colour(character.colour.unwrap_or(ctx.accent_colour()))
-                    .author(|a| {
-                        a.name(format!("{} [Character by {}]", character.name, original_author.name()))
-                            .icon_url(match nsfw {
-                                true => character.nsfw_icon.as_ref().unwrap_or(&character.sfw_icon),
-                                false => &character.sfw_icon,
-                            })
-                    })
+                    .author(|a| a.name(character.name).icon_url(original_author.avatar_url()))
                     .title(character_image.name.clone())
+                    .description(description)
                     .image(|i| i.url(character_image.url.clone()))
+                    .thumbnail(|t| {
+                        t.url(match nsfw {
+                            true => character.nsfw_icon.as_ref().unwrap_or(&character.sfw_icon),
+                            false => &character.sfw_icon,
+                        })
+                    })
                     .footer(|f| {
                         f.text(match nsfw {
                             true => match character_image.favourite {
-                                true => format!("[FAV | NSFW | ID: {}]", character_image.img_id),
-                                false => format!("[NSFW | ID: {}]", character_image.img_id),
+                                true => format!("[FAV | NSFW | Image ID: {}]", character_image.img_id,),
+                                false => format!("[NSFW | Image ID: {}]", character_image.img_id,),
                             },
                             false => match character_image.favourite {
-                                true => format!("[FAV | ID: {}]", character_image.img_id),
-                                false => format!("[ID: {}]", character_image.img_id),
+                                true => format!("[FAV | Image ID: {}]", character_image.img_id),
+                                false => format!("[Image ID: {}]", character_image.img_id),
                             },
                         })
                     })
