@@ -105,6 +105,7 @@ async fn handle_luro_message(db: &SQLxDriver, message: &Message) -> anyhow::Resu
         message.application.clone().map(|x| Json(x)) as _,
         Json(message.attachments.clone()) as _,
         Json(message.author.clone()) as _,
+        message.author.user_id.get() as i64,
         message.channel_id.get() as i64,
         match message.components.is_empty() {
             true => None,

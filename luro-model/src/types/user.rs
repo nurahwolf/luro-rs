@@ -1,6 +1,7 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use serde::{Deserialize, Serialize};
 use twilight_model::{
+    guild::PartialMember,
     id::{
         marker::{GuildMarker, UserMarker},
         Id,
@@ -39,6 +40,95 @@ pub struct User {
     pub system: Option<bool>,
     pub user_id: Id<UserMarker>,
     pub verified: Option<bool>,
+}
+
+impl TryFrom<(Option<Id<GuildMarker>>, PartialMember)> for User {
+    type Error = anyhow::Error;
+
+    fn try_from((guild_id, member): (Option<Id<GuildMarker>>, PartialMember)) -> Result<Self, Self::Error> {
+        let user = member.user.context("Partial member does not contain a user object")?;
+        Ok(Self {
+            data: None,
+            member: Some(Member {
+                data: None,
+                avatar: member.avatar,
+                boosting_since: member.premium_since,
+                communication_disabled_until: member.communication_disabled_until,
+                joined_at: match member.joined_at {
+                    Some(timestamp) => timestamp,
+                    None => TimestampBuilder::default().into(),
+                },
+                deafened: member.deaf,
+                flags: member.flags,
+                guild_id: guild_id.context("Could not convert as there is no guild ID to map the member to")?,
+                muted: member.mute,
+                nickname: member.nick,
+                pending: false,
+                roles: member.roles,
+                user_id: user.id,
+            }),
+            accent_colour: user.accent_color,
+            avatar_decoration: user.avatar_decoration,
+            avatar: user.avatar,
+            banner: user.banner,
+            bot: user.bot,
+            discriminator: user.discriminator,
+            email: user.email,
+            flags: user.flags,
+            global_name: user.global_name,
+            locale: user.locale,
+            mfa_enabled: user.mfa_enabled,
+            name: user.name.clone(),
+            premium_type: user.premium_type,
+            public_flags: user.public_flags,
+            system: user.system,
+            verified: user.verified,
+            user_id: user.id,
+        })
+    }
+}
+
+impl From<(twilight_model::user::User, PartialMember, Id<GuildMarker>)> for User {
+    fn from((user, member, guild_id): (twilight_model::user::User, PartialMember, Id<GuildMarker>)) -> Self {
+        Self {
+            data: None,
+            member: Some(Member {
+                data: None,
+                avatar: member.avatar,
+                boosting_since: member.premium_since,
+                communication_disabled_until: member.communication_disabled_until,
+                joined_at: match member.joined_at {
+                    Some(timestamp) => timestamp,
+                    None => TimestampBuilder::default().into(),
+                },
+                deafened: member.deaf,
+                flags: member.flags,
+                guild_id,
+                muted: member.mute,
+                nickname: member.nick,
+                pending: false,
+                roles: member.roles,
+                user_id: user.id,
+            }),
+            accent_colour: user.accent_color,
+            avatar_decoration: user.avatar_decoration,
+            avatar: user.avatar,
+            banner: user.banner,
+            bot: user.bot,
+            discriminator: user.discriminator,
+            email: user.email,
+            flags: user.flags,
+            global_name: user.global_name,
+            locale: user.locale,
+            mfa_enabled: user.mfa_enabled,
+            name: user.name.clone(),
+            premium_type: user.premium_type,
+            public_flags: user.public_flags,
+            system: user.system,
+            verified: user.verified,
+            user_id: user.id,
+        }
+    }
 }
 
 impl From<twilight_model::user::User> for User {

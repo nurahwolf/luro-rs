@@ -40,6 +40,22 @@ pub enum MessageSource {
     None,
 }
 
+impl std::fmt::Display for MessageSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            MessageSource::TwilightMessage => "Twilight Message (Direct from the API)",
+            MessageSource::Custom => "Custom Message (Message with custom data)",
+            MessageSource::CachedMessage => "Cached Message (Twilight Cache)",
+            MessageSource::MessageUpdate => "Message Update",
+            MessageSource::MessageDelete => "Message Delete",
+            MessageSource::MessageCreate => "Message Create",
+            MessageSource::None => "No source present",
+        };
+
+        write!(f, "{}", name)
+    }
+}
+
 /// Effectively a wrapper around different type of messages, for more streamlined responses
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Message {

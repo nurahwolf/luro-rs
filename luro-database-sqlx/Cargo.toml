@@ -20,3 +20,4 @@ twilight-model = { workspace = true } # Used for some parameters
 luro-model = { path = "../luro-model"} # Used for returning built data constructs
 anyhow = { workspace = true } # Error context
 tracing = { workspace = true } # Detailed tracing information
+tokio.workspace = true

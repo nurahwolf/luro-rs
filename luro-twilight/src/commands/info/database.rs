@@ -50,11 +50,11 @@ impl LuroCommand for Database {
                 match data.permissions {
                     UserPermissions::Owner => match owners.is_empty() {
                         true => owners.push_str(&staff.name()),
-                        false => owners.push_str(format!(", {}", &staff.name()).as_str()),
+                        false => owners.push_str(format!("\n{}", &staff.name()).as_str()),
                     },
                     UserPermissions::Administrator => match administrators.is_empty() {
                         true => administrators.push_str(&staff.name()),
-                        false => administrators.push_str(format!(", {}", &staff.name()).as_str()),
+                        false => administrators.push_str(format!("\n{}", &staff.name()).as_str()),
                     },
                     _ => warn!("User {:#?} is tagged as a regular user in the database!", &staff),
                 }

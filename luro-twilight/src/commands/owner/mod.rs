@@ -17,6 +17,7 @@ mod guilds;
 mod log;
 pub mod mass_assign;
 mod modify_role;
+mod message;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges!")]
@@ -39,6 +40,8 @@ pub enum Owner {
     ModifyRole(modify_role::ModifyRole),
     #[command(name = "guilds")]
     Guilds(guilds::Guilds),
+    #[command(name = "message")]
+    Message(message::Message),
     #[command(name = "fakeban")]
     FakeBan(fakeban::FakeBan),
     #[command(name = "log")]
@@ -69,6 +72,7 @@ impl std::fmt::Display for Owner {
             Self::Log(_) => "owner_log",
             Self::MassAssign(_) => "mass_assign",
             Self::ModifyRole(_) => "owner_modify",
+            Self::Message(_) => "message"
         };
 
         write!(f, "{}", name)
@@ -104,6 +108,7 @@ impl CreateLuroCommand for Owner {
             Self::Log(cmd) => cmd.interaction_command(ctx).await,
             Self::MassAssign(command) => command.interaction_command(ctx).await,
             Self::ModifyRole(command) => command.interaction_command(ctx).await,
+            Self::Message(cmd) => cmd.interaction_command(ctx).await,
         }
     }
 

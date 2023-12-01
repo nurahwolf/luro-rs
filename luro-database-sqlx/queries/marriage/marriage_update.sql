@@ -11,4 +11,4 @@ SET divorced = $1,
     proposer_id = $2,
     proposee_id = $3,
     reason = $4,
-    rejected = $5
+    rejected = $5;

@@ -34,6 +34,10 @@ pub struct Database {
     /// - none
     #[cfg(feature = "database-driver-sqlx")]
     pub driver: luro_database_sqlx::SQLxDriver,
+
+    /// The cornucopia driver, which uses Postgres on the backend.
+    #[cfg(feature = "database-driver-cornucopia")]
+    cornucopia: luro_database_cornucopia::Driver,
 }
 
 impl Database {
@@ -44,7 +48,9 @@ impl Database {
             #[cfg(feature = "database-cache-twilight")]
             cache: twilight_cache_inmemory::InMemoryCache::new(),
             #[cfg(feature = "database-driver-sqlx")]
-            driver: luro_database_sqlx::SQLxDriver::new().await?,
+            driver: luro_database_sqlx::SQLxDriver::new(&config.connection_string).await?,
+            #[cfg(feature = "database-driver-cornucopia")]
+            cornucopia: luro_database_cornucopia::Driver::new().await?,
         })
     }
 }

@@ -1,4 +1,4 @@
-SELECT
+SELECT 
     activity as "activity: Json<MessageActivity>",
     application_id,
     application as "application: Json<MessageApplication>",
@@ -33,7 +33,8 @@ SELECT
     tts,
     webhook_id,
     message_updates as "message_updates: Json<Vec<MessageUpdate>>",
-    quotes.id,
-    quotes.nsfw
+    id,
+    nsfw
 FROM quotes
     INNER JOIN messages ON messages.message_id = quotes.message_id
+WHERE id = $1

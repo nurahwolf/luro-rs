@@ -1,4 +1,3 @@
-mod character_proxy;
 mod command_interaction;
 mod component_interaction;
 mod create_luro_command;

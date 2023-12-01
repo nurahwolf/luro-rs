@@ -16,3 +16,18 @@ pub fn safe_truncate(string: &mut String, mut new_len: usize) {
 
     string.truncate(new_len);
 }
+
+/// Safely find and split a string, lowers the number until we are no longer on a char boundary.
+///
+/// Used to ensure we don't send too much data to Discord.
+pub fn safe_split(string: &str, mut split_at: usize) -> (&str, &str) {
+    while !string.is_char_boundary(split_at) {
+        split_at -= 1;
+    }
+
+    if split_at > string.len() {
+        split_at = string.len()
+    }
+
+    string.split_at(split_at)
+}

@@ -9,7 +9,7 @@ use crate::{Framework, Luro};
 /// Luro's primary context, which is instanced per event.
 ///
 /// Contains [Framework] and houses data containing the [Event], [Latency] and [MessageSender].
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct LuroContext {
     /// Luro's database, which accepts a driver that implements [LuroDatabaseDriver]
     pub database: Arc<Database>,

@@ -5,7 +5,7 @@ pub async fn update(db: &crate::Database, event: &PresenceUpdate) -> anyhow::Res
 
     if let twilight_model::gateway::presence::UserOrId::User(user) = &event.user {
         if let Err(why) = db.user_update(user).await {
-            tracing::warn!(why = ?why, "presence_update- Failed to sync user to database ")
+            tracing::warn!(why = ?why, "presence_update - Failed to sync user to database ")
         }
     }
 

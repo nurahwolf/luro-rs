@@ -6,8 +6,10 @@ use twilight_model::id::{
 
 impl crate::Database {
     pub async fn message_fetch(&self, message_id: Id<MessageMarker>, channel_id: Option<Id<ChannelMarker>>) -> anyhow::Result<Message> {
-        if let Ok(Some(message)) = self.driver.get_message(message_id).await {
-            return Ok(message);
+        match self.driver.get_message(message_id).await {
+            Ok(Some(message)) => return Ok(message),
+            Ok(None) => (),
+            Err(why) => tracing::error!("Failed to fetch message {message_id} - channel {channel_id:?} from database: {why:?}"),
         }
 
         tracing::info!("message_fetch - Failed to find the message in the database, falling back to Twilight!");
@@ -28,9 +30,16 @@ impl crate::Database {
             }
         };
 
-        match self.api_client.message(channel_id, message_id).await {
-            Ok(response) => Ok(response.model().await?.into()),
-            Err(why) => Err(anyhow::anyhow!("Failed to find the message: {why}")),
+       let message =  match self.api_client.message(channel_id, message_id).await {
+            Ok(response) => response.model().await?,
+            Err(why) => return Err(anyhow::anyhow!("Failed to find the message: {why}")),
+        };
+
+        match self.driver.update_message(&message).await {
+            Ok(update) => tracing::info!("Messaged was flushed back to database with '{update}' updates"),
+            Err(why) => tracing::error!("Failed to flush message back to database: {why:?}"),
         }
+
+        Ok(message.into())
     }
 }

@@ -18,3 +18,15 @@ pub enum MessageSync<'a> {
     /// Created from a message create event
     MessageCreate(&'a MessageCreate),
 }
+
+impl<'a> From<&'a crate::Message> for MessageSync<'a> {
+    fn from(luro_message: &'a crate::Message) -> Self {
+        Self::Custom(luro_message)
+    }
+}
+
+impl<'a> From<&'a twilight_model::channel::Message> for MessageSync<'a> {
+    fn from(twilight_message: &'a twilight_model::channel::Message) -> Self {
+        Self::Message(twilight_message)
+    }
+}

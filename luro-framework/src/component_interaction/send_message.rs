@@ -1,15 +1,13 @@
-use luro_model::{response::InteractionResponse, types::CommandResponse};
-
 impl crate::ComponentInteraction {
         /// Sends a message to the specified channel
     ///
     /// NOTE: Make sure to create a private DM channel if you want to DM someone!
-    pub async fn send_message<F: FnOnce(&mut InteractionResponse) -> &mut InteractionResponse>(
+    pub async fn send_message<F: FnOnce(&mut luro_model::response::InteractionResponse) -> &mut luro_model::response::InteractionResponse>(
         &self,
         channel_id: &twilight_model::id::Id<twilight_model::id::marker::ChannelMarker>,
         response: F,
     ) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let mut r = InteractionResponse::default();
+        let mut r = luro_model::response::InteractionResponse::default();
         response(&mut r);
 
         let mut sender = self

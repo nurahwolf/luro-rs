@@ -1,8 +1,4 @@
-use twilight_model::gateway::payload::incoming::InteractionCreate;
-
-use crate::Database;
-
-pub async fn create(db: &Database, event: &InteractionCreate) -> anyhow::Result<()> {
+pub async fn create(db: &crate::Database, event: &twilight_model::gateway::payload::incoming::InteractionCreate) -> anyhow::Result<()> {
     if let Some(channel) = &event.channel {
         if let Err(why) = db.channel_update(channel).await {
             tracing::warn!("interaction_handler - Failed to update channel: {why}")

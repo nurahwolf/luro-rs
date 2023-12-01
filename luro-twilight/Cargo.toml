@@ -59,6 +59,7 @@ dotenvy = "0.15.7"
 # Optional Features
 tabled = { version = "0.14", optional = true }
 thousands = "0.2.0"
+console-subscriber = "0.2.0"
 
 [features]
 # Main Features

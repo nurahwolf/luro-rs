@@ -9,22 +9,12 @@ pub struct SQLxDriver {
 }
 
 impl SQLxDriver {
-    /// Create a new driver by passing in a configuration context
-    pub async fn new_config(config: &luro_model::types::Configuration) -> Result<Self, sqlx::Error> {
-        Ok(Self {
-            pool: sqlx::postgres::PgPoolOptions::new()
-                .max_connections(5)
-                .connect(&config.connection_string)
-                .await?,
-        })
-    }
-
     /// Create a new driver by fetching 'DATABASE_URL' from an environment variable
-    pub async fn new() -> anyhow::Result<Self> {
+    pub async fn new(connection_string: &str) -> anyhow::Result<Self> {
         Ok(Self {
             pool: sqlx::postgres::PgPoolOptions::new()
                 .max_connections(5)
-                .connect(&std::env::var("DATABASE_URL")?)
+                .connect(connection_string)
                 .await?,
         })
     }

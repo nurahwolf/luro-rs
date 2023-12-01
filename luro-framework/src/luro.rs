@@ -1,7 +1,7 @@
 use luro_database::Database;
 use luro_model::{
     builders::EmbedBuilder,
-    response::InteractionResponse,
+    response::{InteractionResponse, safe_split},
     types::{Channel, CommandResponse, Guild, Role, User},
     ACCENT_COLOUR,
 };
@@ -11,9 +11,9 @@ use twilight_http::{client::InteractionClient, Client};
 
 use twilight_model::{
     application::command::Command,
-    channel::Webhook,
+    channel::{message::MessageReference, Webhook},
     id::{
-        marker::{ChannelMarker, GuildMarker, UserMarker},
+        marker::{ChannelMarker, GuildMarker, MessageMarker, UserMarker},
         Id,
     },
     oauth::Application,
@@ -216,4 +216,108 @@ pub trait Luro {
     //     let guild_roles = self.get_guild_roles(guild_id, true).await?;
 
     // }
+
+    fn proxy_character(
+        &self,
+        author: &User,
+        channel_id: Id<ChannelMarker>,
+        character: luro_model::types::CharacterProfile,
+        proxy_message: String,
+        message_reference: Option<&MessageReference>,
+        reply_id: Id<MessageMarker>,
+    ) -> impl std::future::Future<Output = anyhow::Result<CommandResponse>> + Send
+    where
+        Self: Sync,
+    {
+        async move {
+            let character_icon = match self.database().channel_fetch(channel_id).await {
+                Ok(channel) => match channel.nsfw.unwrap_or_default() {
+                    true => character.nsfw_icon.unwrap_or(character.sfw_icon),
+                    false => character.sfw_icon,
+                },
+                Err(why) => {
+                    tracing::warn!(why = ?why, "Failed to fetch channel");
+                    character.sfw_icon
+                }
+            };
+
+            let proxy_message_chunked = safe_split(&proxy_message, 2000);
+
+            // Attempt to first send as a webhook
+            if let Ok(webhook) = self.get_webhook(channel_id).await {
+                if let Some(token) = webhook.token {
+                    if let Some(data) = message_reference {
+                        if let Some(message_id) = data.message_id {
+                            if let Ok(mut message) = self.database().message_fetch(message_id, data.channel_id).await {
+                                luro_model::response::safe_truncate(&mut message.content, 150);
+                                let mut embed = self.default_embed().await;
+                                let description = format!("[Replying to:]({}) {}", message.link(), message.content);
+
+                                embed
+                                    .author(|a| a.name(message.author.name()).icon_url(message.author.avatar_url()))
+                                    .description(description);
+
+                                let response = self
+                                    .twilight_client()
+                                    .execute_webhook(webhook.id, &token)
+                                    .embeds(&vec![embed.into()])
+                                    .username(&format!("{} [{}]", character.name, author.name()))
+                                    .content(&proxy_message)
+                                    .avatar_url(&character_icon)
+                                    .await;
+
+                                if response.is_ok() {
+                                    return Ok(CommandResponse::default());
+                                }
+                            }
+                        }
+                    }
+
+                    let response = self
+                        .twilight_client()
+                        .execute_webhook(webhook.id, &token)
+                        .username(&format!("{} [{}]", character.name, author.name()))
+                        .content(proxy_message_chunked.0)
+                        .avatar_url(&character_icon)
+                        .await;
+
+                    if !proxy_message_chunked.1.is_empty() {
+                        let response = self
+                        .twilight_client()
+                        .execute_webhook(webhook.id, &token)
+                        .username(&format!("{} [{}]", character.name, author.name()))
+                        .content(proxy_message_chunked.1)
+                        .avatar_url(&character_icon)
+                        .await;
+
+                        if response.is_ok() {
+                            return Ok(CommandResponse::default());
+                        }
+                    }
+
+                    if response.is_ok() {
+                        return Ok(CommandResponse::default());
+                    }
+                }
+            }
+
+            // Send as an embed
+            let mut embed = EmbedBuilder::default();
+            embed
+                .author(|a| {
+                    a.name(format!("{} - [{}]", character.nickname.unwrap_or(character.name), author.name()))
+                        .icon_url(&character_icon)
+                })
+                .colour(character.colour.unwrap_or(self.accent_colour()))
+                .description(proxy_message);
+
+            self.twilight_client()
+                .create_message(channel_id)
+                .embeds(&vec![embed.into()])
+                .reply(reply_id)
+                .await?;
+
+            Ok(CommandResponse::default())
+        }
+    }
 }

@@ -112,28 +112,28 @@ impl LuroCommand for Ban {
                 .await;
         }
 
-        // // The lower the number, the higher they are on the heirarchy
-        // if let Some(punished_user_highest_role) = target_highest_role {
-        //     debug!("Punished user position: {}", punished_user_highest_role.position);
-        //     if let Some(moderator_highest_role) = moderator_highest_role {
-        //         debug!("Moderator user position: {}", moderator_highest_role.position);
-        //         if punished_user_highest_role.position <= moderator_highest_role.position {
-        //             return ctx.simple_response(SimpleResponse::UserHeirarchy(&target.name())).await;
-        //         }
-        //     }
+        // The lower the number, the higher they are on the heirarchy
+        if let Some(punished_user_highest_role) = target_highest_role {
+            tracing::debug!("Punished user position: {}", punished_user_highest_role.position);
+            if let Some(moderator_highest_role) = moderator_highest_role {
+                tracing::debug!("Moderator user position: {}", moderator_highest_role.position);
+                if punished_user_highest_role.position <= moderator_highest_role.position {
+                    return ctx.simple_response(SimpleResponse::UserHeirarchy(&target.name())).await;
+                }
+            }
 
-        //     if let Some(luro_highest_role) = luro_highest_role {
-        //         debug!("Luro user position: {}", luro_highest_role.position);
-        //         if punished_user_highest_role.position <= luro_highest_role.position {
-        //             return ctx.simple_response(SimpleResponse::BotHeirarchy(&luro.name())).await;
-        //         }
-        //     }
-        // } else {
-        //     warn!(
-        //         "Could not fetch the highest role for {}! They have no roles in my cache!!",
-        //         target.user_id
-        //     )
-        // }
+            if let Some(luro_highest_role) = luro_highest_role {
+                tracing::debug!("Luro user position: {}", luro_highest_role.position);
+                if punished_user_highest_role.position <= luro_highest_role.position {
+                    return ctx.simple_response(SimpleResponse::BotHeirarchy(&luro.name())).await;
+                }
+            }
+        } else {
+            tracing::warn!(
+                "Could not fetch the highest role for {}! They have no roles in my cache!!",
+                target.user_id
+            )
+        }
 
         // Checks passed, now let's action the user
 

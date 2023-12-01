@@ -30,7 +30,16 @@ impl crate::SQLxDriver {
         let mut nsfw_quotes = vec![];
         let mut query = sqlx::query_file!("queries/quotes/quotes_fetch.sql").fetch(&self.pool);
 
-        while let Ok(Some(quote)) = query.try_next().await {
+        loop {
+            let quote = match query.try_next().await {
+                Ok(Some(quote)) => quote,
+                Ok(None) => return Ok((sfw_quotes, nsfw_quotes)),
+                Err(why) => {
+                    tracing::error!("DB Error during loop: {why:?}");
+                    continue;
+                },
+            };
+
             let quote = Quote {
                 channel_id: Id::new(quote.channel_id as u64),
                 message: Message {
@@ -90,7 +99,5 @@ impl crate::SQLxDriver {
                 false => sfw_quotes.push(quote),
             }
         }
-
-        Ok((sfw_quotes, nsfw_quotes))
     }
 }
