@@ -1,13 +1,13 @@
 use anyhow::Context;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
-use luro_model::{response::SimpleResponse, types::PunishmentType};
+use luro_model::response::{BannedResponse, SimpleResponse};
 use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser};
 
 use crate::commands::moderator::{reason, Reason};
 
 #[derive(CommandModel, CreateCommand, Clone, Debug, PartialEq, Eq)]
-#[command(name = "fakeban", desc = "Ban a user", dm_permission = false)]
-pub struct FakeBan {
+#[command(name = "ban", desc = "Ban a user (not really)", dm_permission = false)]
+pub struct Ban {
     /// The user to ban
     pub user: ResolvedUser,
     /// Message history to purge in seconds. Defaults to 1 day. Max is 604800.
@@ -36,34 +36,53 @@ pub enum TimeToBan {
     SevenDays,
 }
 
-impl LuroCommand for FakeBan {
+impl LuroCommand for Ban {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let guild = ctx.guild.as_ref().context("Expected guild")?;
-        let punished_user = ctx.fetch_user(self.user.resolved.id).await?;
+        let target = ctx.fetch_user(self.user.resolved.id).await?;
         let reason = reason(self.reason, self.details);
 
-        // Checks passed, now let's action the user
-        let embed = SimpleResponse::Punishment(
-            guild,
-            PunishmentType::Banned(reason.as_deref(), self.purge.value()),
-            &ctx.author,
-            &punished_user,
-        );
-
-        let punished_user_dm = match ctx.twilight_client.create_private_channel(punished_user.user_id).await {
+        let target_dm = match ctx.twilight_client.create_private_channel(target.user_id).await {
             Ok(channel) => channel.model().await?,
             Err(_) => return ctx.respond(|r| r.content("Could not create DM with the user!")).await,
         };
 
         let victim_dm = ctx
             .twilight_client
-            .create_message(punished_user_dm.id)
-            .embeds(&[embed.embed().0])
+            .create_message(target_dm.id)
+            .embeds(&[SimpleResponse::BannedUserResponse(
+                BannedResponse {
+                    target: &target,
+                    moderator: &ctx.author,
+                    reason: reason.as_deref(),
+                    purged_messages: self.purge.value(),
+                },
+                &guild.name,
+            )
+            .embed()])
             .await;
 
         let embed = match victim_dm {
-            Ok(_) => embed.dm_sent(true),
-            Err(_) => embed.dm_sent(false),
+            Ok(_) => SimpleResponse::BannedModeratorResponse(
+                BannedResponse {
+                    target: &target,
+                    moderator: &ctx.author,
+                    reason: reason.as_deref(),
+                    purged_messages: self.purge.value(),
+                },
+                true,
+            )
+            .embed(),
+            Err(_) => SimpleResponse::BannedModeratorResponse(
+                BannedResponse {
+                    target: &target,
+                    moderator: &ctx.author,
+                    reason: reason.as_deref(),
+                    purged_messages: self.purge.value(),
+                },
+                false,
+            )
+            .embed(),
         };
 
         ctx.respond(|r| r.add_embed(embed)).await

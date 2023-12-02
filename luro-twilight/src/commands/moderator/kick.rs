@@ -125,7 +125,7 @@ impl LuroCommand for Kick {
                 let victim_dm = ctx
                     .twilight_client
                     .create_message(channel.model().await?.id)
-                    .embeds(&[embed.embed().0])
+                    .embeds(&[embed.builder().0])
                     .await;
 
                 match victim_dm {
@@ -136,7 +136,7 @@ impl LuroCommand for Kick {
             Err(_) => embed.dm_sent(false),
         };
 
-        response.add_embed(embed.embed().0);
+        response.add_embed(embed.builder().0);
         ctx.response_send(response).await?;
 
         ctx.twilight_client.remove_guild_member(guild.guild_id, target.user_id).await?;

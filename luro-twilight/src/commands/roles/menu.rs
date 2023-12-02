@@ -26,7 +26,7 @@ pub struct Menu {
     /// The button's label. Defaults to the role name
     bait_label: Option<String>,
     /// Set a banner to show below the embed
-    banner: Option<String>
+    banner: Option<String>,
 }
 
 impl luro_framework::LuroCommand for Menu {
@@ -87,7 +87,7 @@ impl luro_framework::LuroCommand for Menu {
             response
                 .embed(|embed| {
                     if let Some(banner) = self.banner {
-                        embed.image(|i|i.url(banner));
+                        embed.image(|i| i.url(banner));
                     }
                     match self.description {
                         Some(description) => embed.description(description),

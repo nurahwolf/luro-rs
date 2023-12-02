@@ -5,6 +5,6 @@ mod image;
 mod interaction;
 mod member;
 mod message;
+mod quote;
 mod role;
 mod user;
-mod quote;

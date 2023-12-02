@@ -1,4 +1,3 @@
-
 impl From<crate::cornucopia::types::public::UserPermissions> for luro_model::types::UserPermissions {
     fn from(permissions: crate::cornucopia::types::public::UserPermissions) -> Self {
         match permissions {

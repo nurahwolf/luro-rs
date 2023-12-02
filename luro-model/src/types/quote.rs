@@ -1,4 +1,4 @@
-use twilight_model::id::{Id, marker::ChannelMarker};
+use twilight_model::id::{marker::ChannelMarker, Id};
 
 use super::Message;
 

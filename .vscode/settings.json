@@ -11,5 +11,6 @@
             "username": "nurah",
             "password": ""
         }
-    ]
+    ],
+    "discord.enabled": false
 }

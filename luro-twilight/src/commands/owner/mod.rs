@@ -16,8 +16,8 @@ mod commands;
 mod guilds;
 mod log;
 pub mod mass_assign;
-mod modify_role;
 mod message;
+mod modify_role;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "owner", desc = "Bot owner commands, for those with special privileges!")]
@@ -42,8 +42,8 @@ pub enum Owner {
     Guilds(guilds::Guilds),
     #[command(name = "message")]
     Message(message::Message),
-    #[command(name = "fakeban")]
-    FakeBan(fakeban::FakeBan),
+    #[command(name = "ban")]
+    Ban(fakeban::Ban),
     #[command(name = "log")]
     Log(log::Log),
 }
@@ -65,14 +65,14 @@ impl std::fmt::Display for Owner {
             Self::Commands(_) => "owner_commands",
             Self::ClearMarriage(_) => "clear_marriage",
             // Self::Config(_) => "owner_config",
-            Self::FakeBan(_) => "owner_fakeban",
+            Self::Ban(_) => "owner_fakeban",
             Self::Flush(_) => "owner_flush",
             Self::Guilds(_) => "owner_guilds",
             // Self::LoadUsers(_) => "owner_loadusers",
             Self::Log(_) => "owner_log",
             Self::MassAssign(_) => "mass_assign",
             Self::ModifyRole(_) => "owner_modify",
-            Self::Message(_) => "message"
+            Self::Message(_) => "message",
         };
 
         write!(f, "{}", name)
@@ -101,7 +101,7 @@ impl CreateLuroCommand for Owner {
             Self::Commands(command) => command.interaction_command(ctx).await,
             Self::ClearMarriage(command) => command.interaction_command(ctx).await,
             // Self::Config(_) => "owner_config",
-            Self::FakeBan(cmd) => cmd.interaction_command(ctx).await,
+            Self::Ban(cmd) => cmd.interaction_command(ctx).await,
             Self::Flush(cmd) => cmd.interaction_command(ctx).await,
             Self::Guilds(command) => command.interaction_command(ctx).await,
             // Self::LoadUsers(_) => "owner_loadusers",

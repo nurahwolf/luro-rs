@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use twilight_model::id::{
-    marker::{GuildMarker, UserMarker, RoleMarker},
+    marker::{GuildMarker, RoleMarker, UserMarker},
     Id,
 };
 

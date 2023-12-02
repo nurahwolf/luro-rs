@@ -1,4 +1,4 @@
-use luro_framework::{CreateLuroCommand, CommandInteraction, LuroCommand};
+use luro_framework::{CommandInteraction, CreateLuroCommand, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
 mod add;

@@ -1,8 +1,8 @@
 use anyhow::Context;
 use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use luro_model::{
-    response::SimpleResponse,
-    types::{CommandResponse, PunishmentType},
+    response::{BannedResponse, SimpleResponse},
+    types::CommandResponse,
 };
 use tracing::debug;
 use twilight_http::request::AuditLogReason;
@@ -137,26 +137,56 @@ impl LuroCommand for Ban {
 
         // Checks passed, now let's action the user
 
-        let embed = SimpleResponse::Punishment(
-            guild,
-            PunishmentType::Banned(reason.as_deref(), self.purge.value()),
-            &ctx.author,
-            &target,
-        );
         let embed = match ctx.twilight_client.create_private_channel(target.user_id).await {
             Ok(channel) => {
                 let victim_dm = ctx
                     .twilight_client
                     .create_message(channel.model().await?.id)
-                    .embeds(&[embed.embed().0])
+                    .embeds(&[SimpleResponse::BannedUserResponse(
+                        BannedResponse {
+                            target: &target,
+                            moderator,
+                            reason: reason.as_deref(),
+                            purged_messages: self.purge.value(),
+                        },
+                        &guild.name,
+                    )
+                    .embed()])
                     .await;
 
                 match victim_dm {
-                    Ok(_) => embed.dm_sent(true),
-                    Err(_) => embed.dm_sent(false),
+                    Ok(_) => SimpleResponse::BannedModeratorResponse(
+                        BannedResponse {
+                            target: &target,
+                            moderator,
+                            reason: reason.as_deref(),
+                            purged_messages: self.purge.value(),
+                        },
+                        true,
+                    )
+                    .embed(),
+                    Err(_) => SimpleResponse::BannedModeratorResponse(
+                        BannedResponse {
+                            target: &target,
+                            moderator,
+                            reason: reason.as_deref(),
+                            purged_messages: self.purge.value(),
+                        },
+                        false,
+                    )
+                    .embed(),
                 }
             }
-            Err(_) => embed.dm_sent(false),
+            Err(_) => SimpleResponse::BannedModeratorResponse(
+                BannedResponse {
+                    target: &target,
+                    moderator,
+                    reason: reason.as_deref(),
+                    purged_messages: self.purge.value(),
+                },
+                false,
+            )
+            .embed(),
         };
 
         response.add_embed(embed);

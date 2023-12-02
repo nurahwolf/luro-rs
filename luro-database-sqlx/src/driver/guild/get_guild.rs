@@ -28,7 +28,12 @@ impl crate::SQLxDriver {
                     accent_colour: guild.accent_colour.map(|x| x as u32),
                     accent_colour_custom: guild.accent_colour_custom.map(|x| x as u32),
                     guild_id: Id::new(guild.guild_id as u64),
-                    role_blacklist: guild.role_blacklist.unwrap_or_default().into_iter().map(|x|Id::new(x as u64)).collect(),
+                    role_blacklist: guild
+                        .role_blacklist
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|x| Id::new(x as u64))
+                        .collect(),
                     moderator_actions_log_channel: guild.moderator_actions_log_channel.map(|x| Id::new(x as u64)),
                 }),
                 afk_channel_id: guild.afk_channel_id.map(|x| Id::new(x as u64)),
@@ -106,7 +111,12 @@ impl crate::SQLxDriver {
                     accent_colour: guild.accent_colour.map(|x| x as u32),
                     accent_colour_custom: guild.accent_colour_custom.map(|x| x as u32),
                     guild_id: Id::new(guild.guild_id as u64),
-                    role_blacklist: guild.role_blacklist.unwrap_or_default().into_iter().map(|x|Id::new(x as u64)).collect(),
+                    role_blacklist: guild
+                        .role_blacklist
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|x| Id::new(x as u64))
+                        .collect(),
                     moderator_actions_log_channel: guild.moderator_actions_log_channel.map(|x| Id::new(x as u64)),
                 }),
                 afk_channel_id: guild.afk_channel_id.map(|x| Id::new(x as u64)),

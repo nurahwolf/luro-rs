@@ -17,7 +17,11 @@ impl luro_framework::LuroCommand for Get {
             Some(quote_id) => ctx.database.quote_fetch(quote_id).await?,
             None => {
                 let (sfw_quotes, nsfw_quotes) = ctx.database.driver.quotes_fetch().await?;
-                tracing::info!("Total quotes returned: {} and {} (SFW and NSFW)", sfw_quotes.len(), nsfw_quotes.len());
+                tracing::info!(
+                    "Total quotes returned: {} and {} (SFW and NSFW)",
+                    sfw_quotes.len(),
+                    nsfw_quotes.len()
+                );
                 match ctx.channel.nsfw.unwrap_or_default() {
                     true => nsfw_quotes.choose(&mut rand::thread_rng()).cloned(),
                     false => sfw_quotes.choose(&mut rand::thread_rng()).cloned(),

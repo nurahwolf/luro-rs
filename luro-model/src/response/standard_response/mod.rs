@@ -1,10 +1,12 @@
 use twilight_model::{
+    channel::message::Embed,
     guild::Permissions,
     id::{marker::UserMarker, Id},
 };
 
 use crate::{
     builders::EmbedBuilder,
+    embeds::{ban_logged, ban_user},
     types::{Guild, PunishmentType, User},
 };
 
@@ -20,6 +22,13 @@ mod unknown_command;
 mod user_action;
 mod user_heirarchy;
 
+pub struct BannedResponse<'a> {
+    pub target: &'a User,
+    pub moderator: &'a User,
+    pub reason: Option<&'a str>,
+    pub purged_messages: i64,
+}
+
 pub enum SimpleResponse<'a> {
     InternalError(&'a anyhow::Error),
     PermissionNotBotStaff,
@@ -32,12 +41,16 @@ pub enum SimpleResponse<'a> {
     MissingPermission(&'a Permissions),
     NotOwner(&'a Id<UserMarker>, &'a str),
     /// A punishment applied to a user, such as a ban or kick. First user paramater is the moderator, second is the target
-    Punishment(&'a Guild, PunishmentType<'a>, &'a User, &'a User),
+    Punishment(&'a Guild, PunishmentType, &'a User, &'a User),
+    /// A ban response sent to the user banned. String parameter is the guild name.
+    BannedUserResponse(BannedResponse<'a>, &'a str),
+    /// A ban response sent to the moderator, or log channel. bool is if the user was DMed successfully.
+    BannedModeratorResponse(BannedResponse<'a>, bool),
 }
 
 impl<'a> SimpleResponse<'a> {
-    /// Convert the response to an embed
-    pub fn embed(&self) -> EmbedBuilder {
+    /// Convert the response to an [EmbedBuilder]
+    pub fn builder(&self) -> EmbedBuilder {
         match self {
             Self::InternalError(error) => internal_error::internal_error(error),
             Self::PermissionNotBotStaff => permission_not_bot_staff::permission_not_bot_staff(),
@@ -49,15 +62,22 @@ impl<'a> SimpleResponse<'a> {
             Self::BotHeirarchy(username) => bot_heirarchy::bot_hierarchy_embed(username),
             Self::MissingPermission(permission) => missing_permissions::missing_permission_embed(permission),
             Self::NotOwner(user_id, command_name) => not_owner::not_owner_embed(user_id, command_name),
+            Self::BannedUserResponse(data, guild_name) => ban_user(data, guild_name),
+            Self::BannedModeratorResponse(data, dm_success) => ban_logged(data, dm_success),
             Self::Punishment(guild, kind, moderator, target) => {
                 user_action::new_punishment_embed(guild, kind, moderator, target).unwrap()
             }
         }
     }
 
+    /// Convert the response to a twilight [Embed]
+    pub fn embed(&self) -> Embed {
+        self.builder().into()
+    }
+
     /// Append a field to state if the response was successfully sent in a DM
     pub fn dm_sent(&self, success: bool) -> EmbedBuilder {
-        let mut embed = self.embed();
+        let mut embed = self.builder();
         let success = match success {
             true => "<:mail:1175136204648349756> **Direct Message:** `Success!` <:join:1175114514216259615>",
             false => "<:mail:1175136204648349756> **Direct Message:** `Failed!` <:leave:1175114521652756641>",
@@ -68,6 +88,13 @@ impl<'a> SimpleResponse<'a> {
             None => embed.0.description = Some(success.to_owned()),
         };
 
+        embed
+    }
+
+    /// Append the guild information as the footer
+    pub fn guild_info(&self, guild: &Guild) -> EmbedBuilder {
+        let mut embed = self.builder();
+        embed.footer(|footer| footer.text(format!("Guild: {}", guild.name)));
         embed
     }
 }

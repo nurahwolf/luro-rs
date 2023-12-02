@@ -3,6 +3,7 @@ mod interaction_response;
 mod standard_response;
 
 pub use interaction_response::InteractionResponse; // A response btype used for responding to interactions
+pub use standard_response::BannedResponse;
 #[cfg(feature = "builders")]
 pub use standard_response::SimpleResponse; // A response type that wraps common responses, such as complaining we are not in a guild.
 

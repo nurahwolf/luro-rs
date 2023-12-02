@@ -41,7 +41,11 @@ impl luro_framework::LuroCommand for Add {
                 .await;
         };
 
-        let quote_id = ctx.database.driver.quote_add(ctx.author.user_id, &message, ctx.channel.nsfw.unwrap_or_default()).await?;
+        let quote_id = ctx
+            .database
+            .driver
+            .quote_add(ctx.author.user_id, &message, ctx.channel.nsfw.unwrap_or_default())
+            .await?;
 
         ctx.respond(|response| {
             response.embed(|embed| {

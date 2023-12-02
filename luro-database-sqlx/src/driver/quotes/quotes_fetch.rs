@@ -1,25 +1,25 @@
-use luro_model::types::{Quote, Message, MessageData, MessageSource};
-use sqlx::types::Json;
 use futures_util::TryStreamExt;
-use twilight_model::{id::Id, util::Timestamp};
+use luro_model::types::{Message, MessageData, MessageSource, Quote};
+use sqlx::types::Json;
+use twilight_model::channel::message::sticker::MessageSticker;
+use twilight_model::channel::message::Component;
+use twilight_model::channel::message::Embed;
+use twilight_model::channel::message::Mention;
 use twilight_model::channel::message::MessageActivity;
 use twilight_model::channel::message::MessageApplication;
-use twilight_model::channel::Attachment;
-use twilight_model::channel::message::Component;
-use twilight_model::user::User;
-use twilight_model::channel::message::Embed;
 use twilight_model::channel::message::MessageFlags;
 use twilight_model::channel::message::MessageInteraction;
-use twilight_model::channel::message::MessageType;
-use twilight_model::channel::ChannelMention;
-use twilight_model::channel::message::Mention;
-use twilight_model::channel::message::Reaction;
 use twilight_model::channel::message::MessageReference;
+use twilight_model::channel::message::MessageType;
+use twilight_model::channel::message::Reaction;
 use twilight_model::channel::message::RoleSubscriptionData;
-use twilight_model::channel::message::sticker::MessageSticker;
+use twilight_model::channel::Attachment;
 use twilight_model::channel::Channel;
-use twilight_model::guild::PartialMember;
+use twilight_model::channel::ChannelMention;
 use twilight_model::gateway::payload::incoming::MessageUpdate;
+use twilight_model::guild::PartialMember;
+use twilight_model::user::User;
+use twilight_model::{id::Id, util::Timestamp};
 
 use crate::types::DbMessageSource;
 
@@ -37,7 +37,7 @@ impl crate::SQLxDriver {
                 Err(why) => {
                     tracing::error!("DB Error during loop: {why:?}");
                     continue;
-                },
+                }
             };
 
             let quote = Quote {

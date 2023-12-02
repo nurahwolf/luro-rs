@@ -19,8 +19,8 @@ mod respond_create;
 mod respond_message;
 mod response_send;
 mod response_update;
-mod simple_response;
 mod send_message;
+mod simple_response;
 
 #[derive(Debug, Clone)]
 pub struct ComponentInteraction {

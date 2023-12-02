@@ -1,7 +1,7 @@
 use luro_model::sync::ChannelSync;
 use twilight_model::{
     channel::Channel,
-    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelUpdate, ChannelPinsUpdate},
+    gateway::payload::incoming::{ChannelCreate, ChannelDelete, ChannelPinsUpdate, ChannelUpdate},
     id::{marker::ChannelMarker, Id},
 };
 

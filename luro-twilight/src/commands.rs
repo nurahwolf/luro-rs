@@ -48,6 +48,7 @@ mod roles;
 mod say;
 // #[cfg(feature = "command-story")]
 // mod story;
+mod embed;
 #[cfg(feature = "command-user")]
 mod user;
 #[cfg(feature = "command-uwu")]
@@ -95,6 +96,7 @@ pub fn default_commands() -> Vec<Command> {
         // story::Story::setup_command(),
         #[cfg(feature = "command-quote")]
         quote::Quote::setup_command(),
+        embed::Embed::setup_command(),
         #[cfg(feature = "command-wordcount")]
         words::Words::setup_command(),
     ]
@@ -113,9 +115,11 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "about" => about::About::handle_interaction(ctx).await,
         "base64" => base64::Base64::handle_interaction(ctx).await,
         #[cfg(feature = "command-moderator")]
-        "moderator" | "moderator-warn" | "modify-embed"=> moderator::Moderator::handle_interaction(ctx).await,
+        "moderator" | "moderator-warn" | "modify-embed" => moderator::Moderator::handle_interaction(ctx).await,
         "boop" => boop::Boop::handle_interaction(ctx).await,
-        "roles" | "roles-button-rules" | "roles-button-adult" | "roles-button-bait" | "role-menu" => roles::RoleCommands::handle_interaction(ctx).await,
+        "roles" | "roles-button-rules" | "roles-button-adult" | "roles-button-bait" | "role-menu" => {
+            roles::RoleCommands::handle_interaction(ctx).await
+        }
         #[cfg(feature = "command-character")]
         "character"
         | "character-add-fetish"
@@ -137,6 +141,7 @@ pub async fn handle_interaction(ctx: InteractionContext) -> anyhow::Result<()> {
         "hello" => hello::Hello::handle_interaction(ctx).await,
         "images" => images::Images::handle_interaction(ctx).await,
         "quote" => quote::Quote::handle_interaction(ctx).await,
+        "embed" | "embed-modal" => embed::Embed::handle_interaction(ctx).await,
         "user" => user::User::handle_interaction(ctx).await,
         #[cfg(feature = "command-info")]
         "info"

@@ -2,6 +2,7 @@
 
 #[cfg(feature = "builders")]
 pub mod builders; // Builders can be used to craft other types in this crate in an erganmic fashion
+pub mod embeds;
 pub mod extras;
 pub mod response; // Types used for crafting a response to interactions or commands
 pub mod sync; // Types that are similar to multipe types, that can by synced to a single luro type.

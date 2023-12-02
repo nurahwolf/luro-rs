@@ -1,6 +1,6 @@
-use std::fmt::Write;
 use anyhow::Context;
-use luro_framework::{CommandInteraction, LuroCommand, Luro};
+use luro_framework::{CommandInteraction, Luro, LuroCommand};
+use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::ChannelMarker, Id};
 
@@ -28,17 +28,25 @@ pub struct Settings {
 impl LuroCommand for Settings {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
         let mut guild = ctx.guild.clone().context("Expected this to be a guild")?;
-        let mut guild_data = guild.data.clone().context("Sorry, can't get your guild from the database at this time!")?;
+        let mut guild_data = guild
+            .data
+            .clone()
+            .context("Sorry, can't get your guild from the database at this time!")?;
 
         let mut embed = ctx.default_embed().await;
         embed.title(format!("Guild Setting - {}", guild.name));
-        if let Some(clear_settings) = self.clear_settings && clear_settings {
+        if let Some(clear_settings) = self.clear_settings
+            && clear_settings
+        {
             guild_data.accent_colour_custom = Default::default();
             // guild_data.catchall_log_channel = Default::default();
             // guild_data.message_events_log_channel = Default::default();
             guild_data.moderator_actions_log_channel = Default::default();
             // guild_data.thread_events_log_channel = Default::default();
-            guild_data.accent_colour_custom = self.accent_colour.clone().map(|c|parse_string_to_u32(c.as_ref()).unwrap_or_default());
+            guild_data.accent_colour_custom = self
+                .accent_colour
+                .clone()
+                .map(|c| parse_string_to_u32(c.as_ref()).unwrap_or_default());
         };
 
         if let Some(accent_colour) = &self.accent_colour {

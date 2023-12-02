@@ -30,7 +30,7 @@ impl crate::Database {
             }
         };
 
-       let message =  match self.api_client.message(channel_id, message_id).await {
+        let message = match self.api_client.message(channel_id, message_id).await {
             Ok(response) => response.model().await?,
             Err(why) => return Err(anyhow::anyhow!("Failed to find the message: {why}")),
         };

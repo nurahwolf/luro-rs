@@ -1,6 +1,6 @@
 use luro_model::types::{User, UserData};
 use twilight_model::{
-    id::{Id, marker::UserMarker},
+    id::{marker::UserMarker, Id},
     user::{PremiumType, UserFlags},
 };
 

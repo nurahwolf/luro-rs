@@ -1,7 +1,7 @@
 use luro_database::Database;
 use luro_model::{
     builders::EmbedBuilder,
-    response::{InteractionResponse, safe_split},
+    response::{safe_split, InteractionResponse},
     types::{Channel, CommandResponse, Guild, Role, User},
     ACCENT_COLOUR,
 };
@@ -283,12 +283,12 @@ pub trait Luro {
 
                     if !proxy_message_chunked.1.is_empty() {
                         let response = self
-                        .twilight_client()
-                        .execute_webhook(webhook.id, &token)
-                        .username(&format!("{} [{}]", character.name, author.name()))
-                        .content(proxy_message_chunked.1)
-                        .avatar_url(&character_icon)
-                        .await;
+                            .twilight_client()
+                            .execute_webhook(webhook.id, &token)
+                            .username(&format!("{} [{}]", character.name, author.name()))
+                            .content(proxy_message_chunked.1)
+                            .avatar_url(&character_icon)
+                            .await;
 
                         if response.is_ok() {
                             return Ok(CommandResponse::default());

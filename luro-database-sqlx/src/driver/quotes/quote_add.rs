@@ -11,7 +11,11 @@ impl crate::SQLxDriver {
         message: &luro_model::types::Message,
         nsfw: bool,
     ) -> anyhow::Result<Id<MessageMarker>> {
-        tracing::info!("Attempting to add message_id: {} - channel_id: {} to quotes", message.id, message.channel_id);
+        tracing::info!(
+            "Attempting to add message_id: {} - channel_id: {} to quotes",
+            message.id,
+            message.channel_id
+        );
 
         Ok(Id::new(
             sqlx::query!(

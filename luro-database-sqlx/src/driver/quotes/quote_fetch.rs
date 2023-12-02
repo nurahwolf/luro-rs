@@ -1,32 +1,34 @@
-use luro_model::types::{Quote, Message, MessageData, MessageSource};
+use luro_model::types::{Message, MessageData, MessageSource, Quote};
 use sqlx::types::Json;
-use twilight_model::{id::Id, util::Timestamp};
+use twilight_model::channel::message::sticker::MessageSticker;
+use twilight_model::channel::message::Component;
+use twilight_model::channel::message::Embed;
+use twilight_model::channel::message::Mention;
 use twilight_model::channel::message::MessageActivity;
 use twilight_model::channel::message::MessageApplication;
-use twilight_model::channel::Attachment;
-use twilight_model::channel::message::Component;
-use twilight_model::user::User;
-use twilight_model::channel::message::Embed;
 use twilight_model::channel::message::MessageFlags;
 use twilight_model::channel::message::MessageInteraction;
-use twilight_model::channel::message::MessageType;
-use twilight_model::channel::ChannelMention;
-use twilight_model::channel::message::Mention;
-use twilight_model::channel::message::Reaction;
 use twilight_model::channel::message::MessageReference;
+use twilight_model::channel::message::MessageType;
+use twilight_model::channel::message::Reaction;
 use twilight_model::channel::message::RoleSubscriptionData;
-use twilight_model::channel::message::sticker::MessageSticker;
+use twilight_model::channel::Attachment;
 use twilight_model::channel::Channel;
-use twilight_model::guild::PartialMember;
+use twilight_model::channel::ChannelMention;
 use twilight_model::gateway::payload::incoming::MessageUpdate;
+use twilight_model::guild::PartialMember;
+use twilight_model::user::User;
+use twilight_model::{id::Id, util::Timestamp};
 
 use crate::types::DbMessageSource;
 
 impl crate::SQLxDriver {
     /// Add a quote to the database, returning the added quote ID
     pub async fn quote_fetch(&self, quote_id: i64) -> anyhow::Result<Option<Quote>> {
-        let query = sqlx::query_file!("queries/quotes/quote_fetch.sql", quote_id).fetch_optional(&self.pool).await?;
-        let quote = query.map(|quote|Quote {
+        let query = sqlx::query_file!("queries/quotes/quote_fetch.sql", quote_id)
+            .fetch_optional(&self.pool)
+            .await?;
+        let quote = query.map(|quote| Quote {
             channel_id: Id::new(quote.channel_id as u64),
             message: Message {
                 data: Some(MessageData {

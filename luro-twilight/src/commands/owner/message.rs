@@ -42,7 +42,12 @@ impl LuroCommand for Message {
         };
 
         ctx.respond(|response| {
-            response.embed(|embed| embed.title(message.source.to_string()).description(message.content).colour(ctx.accent_colour()))
+            response.embed(|embed| {
+                embed
+                    .title(message.source.to_string())
+                    .description(message.content)
+                    .colour(ctx.accent_colour())
+            })
         })
         .await
     }

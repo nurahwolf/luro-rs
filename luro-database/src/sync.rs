@@ -8,9 +8,9 @@ mod message;
 mod presence;
 mod ready;
 mod role;
-mod user;
 #[cfg(feature = "database-cache-twilight")]
 mod twilight_cache;
+mod user;
 
 impl crate::Database {
     /// Syncronise data from the passed event into the database context. This automatically updates the cache, and database if the data is new.

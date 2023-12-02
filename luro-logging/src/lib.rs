@@ -1,8 +1,12 @@
 use tracing_appender::non_blocking::{NonBlocking, WorkerGuard};
-use tracing_subscriber::{fmt::{
+use tracing_subscriber::{
+    fmt::{
         format::{DefaultFields, Format},
         writer::{MakeWriterExt, WithMaxLevel},
-    }, layer::SubscriberExt, util::SubscriberInitExt};
+    },
+    layer::SubscriberExt,
+    util::SubscriberInitExt,
+};
 
 pub type ConsoleHandler = tracing_subscriber::reload::Handle<
     tracing_subscriber::fmt::Layer<tracing_subscriber::Registry, DefaultFields, Format, WithMaxLevel<NonBlocking>>,

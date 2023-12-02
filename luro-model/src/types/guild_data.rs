@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
-use twilight_model::id::{marker::{GuildMarker, RoleMarker, ChannelMarker}, Id};
+use twilight_model::id::{
+    marker::{ChannelMarker, GuildMarker, RoleMarker},
+    Id,
+};
 
 /// Data that is only present when fetched from the database
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -9,5 +12,5 @@ pub struct GuildData {
     pub guild_id: Id<GuildMarker>,
     /// Roles blacklistex from self assign
     pub role_blacklist: Vec<Id<RoleMarker>>,
-    pub moderator_actions_log_channel: Option<Id<ChannelMarker>>
+    pub moderator_actions_log_channel: Option<Id<ChannelMarker>>,
 }
