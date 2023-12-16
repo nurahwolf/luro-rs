@@ -21,7 +21,6 @@ luro-logging.path = "../luro-logging"   # framework
 rand = { workspace = true, optional = true }                    # response/permission_not_bot_staff
 tracing-subscriber.workspace = true                             # framework
 tracing.workspace = true                                        # Detailed error information
-twilight-cache-inmemory = { workspace = true, optional = true } # framework
 twilight-gateway.workspace = true                               # framework
 twilight-http.workspace = true                                  # framework
 twilight-interactions.path = "../twilight-interactions"         # command
@@ -32,14 +31,12 @@ twilight-util.workspace = true                                  # framework
 [features]
 # Default Features
 default = [
-    "cache-memory",
     "http-client-hyper",
     # "lavalink", # Broken on twilight-lavalink
     "random-responses", # Disable this feature to get a fixed response,
 ]
 
 ## Misc
-cache-memory = ["dep:twilight-cache-inmemory"]
 http-client-hyper = ["dep:hyper"]
 lavalink = ["dep:twilight-lavalink"]
 luro-builder = []

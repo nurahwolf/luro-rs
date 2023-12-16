@@ -18,16 +18,18 @@ pub fn ban_user(data: &BannedResponse<'_>, guild_name: &str) -> EmbedBuilder {
         num => format!("Deleted {num} seconds worth of messages"),
     };
 
-    let longest_word_length = target_name.len().max(
-        purged_messages
-            .len()
-            .max(guild_name.len().max(target_id.get().try_into().unwrap_or_default())),
-    );
+    let target_id_usize = usize::try_from(target_id.get()).unwrap_or_default();
+    let longest_word_length = target_name.len()
+        .max(target_id_usize)
+        .max(purged_messages.len()
+        .max(guild_name.len()
+    ));
 
     let mut description =
         format!("<@{target_id}>\n<:member:1175114506465198171>`{target_name:^longest_word_length$}` `{target_id:^longest_word_length$}`");
-    // description.push_str(&format!("<:private:1175114613172473987>`{purged_messages:^longest_word_length$}` `{guild_name:^longest_word_length$}`<:guide:1175114529701625977>"));
-    // description.push_str(&format!("<:ticket:1175114633506455704>{reason}"));
+
+    description.push_str(&format!("<:private:1175114613172473987>`{purged_messages:^longest_word_length$}` `{guild_name:^longest_word_length$}`<:guide:1175114529701625977>"));
+    description.push_str(&format!("<:ticket:1175114633506455704>{reason}"));
 
     embed
         .colour(crate::COLOUR_DANGER)
@@ -62,9 +64,13 @@ pub fn ban_logged(data: &BannedResponse<'_>, dm_success: &bool) -> EmbedBuilder 
         num => format!("Deleted {num} seconds worth of messages"),
     };
 
-    let longest_word_length = target_name
-        .len()
-        .max((target_id.get() as usize).max(purged_messages.len().max(DM_SUCCESS.len().max(DM_FAILED.len()))));
+    let target_id_usize = usize::try_from(target_id.into_nonzero().get()).unwrap_or_default();
+    let longest_word_length = target_name.len()
+        .max(target_id_usize)
+        .max(purged_messages.len()
+        .max(DM_SUCCESS.len()
+        .max(DM_FAILED.len()
+    )));
 
     let mut description = format!(
         "<@{target_id}>\n<:member:1175114506465198171>`{target_name:^longest_word_length$}` `{target_id:^longest_word_length$}`\n"

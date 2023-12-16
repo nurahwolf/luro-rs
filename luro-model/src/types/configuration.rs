@@ -11,6 +11,14 @@ use twilight_model::{
     user::CurrentUser,
 };
 
+#[cfg(feature = "toml-configuration")]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+/// A structure representing an on-disk configuration file.
+/// All parameters are optional, and if required, fall back to environment variables.
+pub struct ConfigurationFile {
+    pub token: Option<String>
+}
+
 #[derive(Debug)]
 pub struct Configuration {
     /// The token used for interacting with the Discord API

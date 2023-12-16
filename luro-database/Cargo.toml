@@ -15,23 +15,21 @@ version.workspace = true
 twilight-http.workspace = true    # Used for fetching data if not present in the selected database driver
 twilight-util.workspace = true    # Used for fetching data if not present in the selected database driver
 twilight-gateway.workspace = true # Used for syncronising state with an event stream from a Twilight gateway
-anyhow.workspace = true # The error type used by Luro
-futures-util.workspace = true # Used for iterating
+anyhow.workspace = true           # The error type used by Luro
+futures-util.workspace = true     # Used for iterating
 luro-model.path = "../luro-model" # Models returned by the database
-twilight-model.workspace = true # Interim models
-tracing.workspace = true # Extra information for when its fucked
+twilight-model.workspace = true   # Interim models
+tracing.workspace = true          # Extra information for when its fucked
 
 # Cache
-twilight-cache-inmemory = { workspace = true, optional = true } # Caching layer using Twilight's built in cache
+twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", optional = true } # Caching layer using Twilight's built in cache
 
 # Database Drivers
-luro-database-sqlx = { path = "../luro-database-sqlx", optional = true } # SQLx database driver
-luro-database-cornucopia = { path = "../luro-database-cornucopia", optional = true } # Cornucopia database driver
+luro-database-sqlx = { path = "../luro-database-sqlx", optional = true }             # SQLx database driver
 
 [features]
-default = ["database-cache-twilight", "database-driver-sqlx"]
+default = ["database-driver-sqlx"]
 
 ## Database Options
 database-cache-twilight = ["dep:twilight-cache-inmemory"]
 database-driver-sqlx = ["dep:luro-database-sqlx"]
-database-driver-cornucopia = ["dep:luro-database-cornucopia"]

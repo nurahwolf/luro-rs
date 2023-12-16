@@ -118,14 +118,14 @@ impl LuroCommand for Ban {
             if let Some(moderator_highest_role) = moderator_highest_role {
                 tracing::debug!("Moderator user position: {}", moderator_highest_role.position);
                 if punished_user_highest_role.position <= moderator_highest_role.position {
-                    return ctx.simple_response(SimpleResponse::UserHeirarchy(&target.name())).await;
+                    return ctx.simple_response(SimpleResponse::UserHeirarchy(&ctx.author, &target)).await;
                 }
             }
 
             if let Some(luro_highest_role) = luro_highest_role {
                 tracing::debug!("Luro user position: {}", luro_highest_role.position);
                 if punished_user_highest_role.position <= luro_highest_role.position {
-                    return ctx.simple_response(SimpleResponse::BotHeirarchy(&luro.name())).await;
+                    return ctx.simple_response(SimpleResponse::BotHeirarchy(&ctx.author, &luro)).await;
                 }
             }
         } else {

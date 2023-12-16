@@ -11,6 +11,10 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
+# Optional Dependencies
+twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", optional = true } # Support twilight-cache-inmemory
+toml = { version = "*", optional = true } # Allow loading configuration from a config file
+
 anyhow.workspace = true
 luro-logging.path = "../luro-logging"
 
@@ -30,14 +34,14 @@ twilight-model.workspace = true
 twilight-util.workspace = true
 
 ## Sorted Dependencies
-twilight-cache-inmemory = { workspace = true, optional = true } # Additional functionality build around twilight's caching crate
 time.workspace = true # member_data
 serde_json = { version = "*", optional = true } # Character Import - TupperBot
 
 [features]
 # Default Features
-default = ["dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders", "dotenvy", "extra"]
+default = ["dice-roller", "luro-command", "lavalink", "auto-trim", "cache-memory", "builders", "dotenvy", "extra", "toml-configuration"]
 
+toml-configuration = ["dep:toml"] # Enable to load configuration from file
 twilight_cache = ["dep:twilight-cache-inmemory"] # Additional functionality build around twilight's caching crate
 
 ## Model Features

@@ -38,6 +38,7 @@ pub enum TimeToBan {
 
 impl LuroCommand for Ban {
     async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+        ctx.acknowledge_interaction(false).await?;
         let guild = ctx.guild.as_ref().context("Expected guild")?;
         let target = ctx.fetch_user(self.user.resolved.id).await?;
         let reason = reason(self.reason, self.details);
@@ -85,6 +86,10 @@ impl LuroCommand for Ban {
             .embed(),
         };
 
-        ctx.respond(|r| r.add_embed(embed)).await
+        ctx.respond(|r| {
+            r.add_embed(embed)
+                .response_type(twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource)
+        })
+        .await
     }
 }

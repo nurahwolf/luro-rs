@@ -96,7 +96,7 @@ impl LuroCommand for Kick {
                     punished_user_highest_role.cmp(moderator_highest_role)
                 );
                 if punished_user_highest_role <= moderator_highest_role {
-                    return ctx.simple_response(SimpleResponse::UserHeirarchy(&target.name())).await;
+                    return ctx.simple_response(SimpleResponse::UserHeirarchy(&ctx.author, &target)).await;
                 }
             }
 
@@ -108,7 +108,7 @@ impl LuroCommand for Kick {
                     punished_user_highest_role.cmp(luro_highest_role)
                 );
                 if punished_user_highest_role <= luro_highest_role {
-                    return ctx.simple_response(SimpleResponse::BotHeirarchy(&luro.name())).await;
+                    return ctx.simple_response(SimpleResponse::BotHeirarchy(&ctx.author, &luro)).await;
                 }
             }
         } else {

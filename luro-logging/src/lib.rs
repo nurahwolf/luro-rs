@@ -27,7 +27,7 @@ pub const LOG_PATH: &str = "log/";
 
 /// Setup logging. The passed parameter is used for the name of the log, such as `luro.log`.
 pub fn init(file_name: &str) -> Logging {
-    let console_layer = console_subscriber::spawn();
+    // let console_layer = console_subscriber::spawn();
     let file_appender = tracing_appender::rolling::hourly(LOG_PATH, format!("{file_name}.log"));
     let (file_appender_layer, file_appender_guard) = tracing_appender::non_blocking(file_appender);
     let (console_logging_layer, console_logging_guard) = tracing_appender::non_blocking(std::io::stdout());
@@ -37,7 +37,7 @@ pub fn init(file_name: &str) -> Logging {
 
     tracing_subscriber::registry()
         .with(console_logging_layer)
-        .with(console_layer)
+        // .with(console_layer)
         .with(tracing_subscriber::fmt::Layer::new().with_writer(file_appender_layer.with_max_level(DEFAULT_TRACING_LEVEL)))
         .init();
 
