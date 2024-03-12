@@ -49,11 +49,15 @@ impl ParseAttribute for CommandName {
 
         for char in value.chars() {
             if !char.is_alphanumeric() && char != '-' && char != '_' {
-                return Err(spanned.error(format!("name must only contain word characters, found invalid character `{char}`")));
+                return Err(spanned.error(format!(
+                    "name must only contain word characters, found invalid character `{char}`"
+                )));
             }
 
             if char.to_lowercase().to_string() != char.to_string() {
-                return Err(spanned.error(format!("name must be in lowercase, found invalid character `{char}`")));
+                return Err(spanned.error(format!(
+                    "name must be in lowercase, found invalid character `{char}`"
+                )));
             }
         }
 

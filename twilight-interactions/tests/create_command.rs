@@ -1,6 +1,8 @@
 use std::{borrow::Cow, collections::HashMap};
 
-use twilight_interactions::command::{ApplicationCommandData, CreateCommand, CreateOption, ResolvedUser};
+use twilight_interactions::command::{
+    ApplicationCommandData, CreateCommand, CreateOption, ResolvedUser,
+};
 use twilight_model::{
     application::{
         command::{CommandOption, CommandOptionType, CommandOptionValue},

@@ -26,14 +26,27 @@ pub fn impl_create_command(input: DeriveInput, fields: Option<FieldsNamed>) -> R
     let capacity = fields.len();
     let (attributes, attr_span) = match find_attr(&input.attrs, "command") {
         Some(attr) => (TypeAttribute::parse(attr)?, attr.span()),
-        None => return Err(Error::new_spanned(input, "missing required #[command(...)] attribute")),
+        None => {
+            return Err(Error::new_spanned(
+                input,
+                "missing required #[command(...)] attribute",
+            ))
+        }
     };
 
     if attributes.autocomplete == Some(true) {
-        return Err(Error::new(attr_span, "cannot implement `CreateCommand` on partial model"));
+        return Err(Error::new(
+            attr_span,
+            "cannot implement `CreateCommand` on partial model",
+        ));
     }
 
-    let desc = get_description(&attributes.desc_localizations, &attributes.desc, input.span(), &input.attrs)?;
+    let desc = get_description(
+        &attributes.desc_localizations,
+        &attributes.desc,
+        input.span(),
+        &input.attrs,
+    )?;
 
     let name = match &attributes.name {
         Some(name) => name,
@@ -47,7 +60,10 @@ pub fn impl_create_command(input: DeriveInput, fields: Option<FieldsNamed>) -> R
     let dm_permission = optional(attributes.dm_permission);
     let nsfw = optional(attributes.nsfw);
 
-    let field_options = fields.iter().map(field_option).collect::<Result<Vec<_>>>()?;
+    let field_options = fields
+        .iter()
+        .map(field_option)
+        .collect::<Result<Vec<_>>>()?;
 
     Ok(quote! {
         impl #generics ::twilight_interactions::command::CreateCommand for #ident #generics #where_clause {
@@ -148,7 +164,10 @@ fn check_fields_order(fields: &[StructField]) -> Result<()> {
         }
 
         if optional_option_added && field.kind.required() {
-            return Err(Error::new(field.span, "required options should be added before optional"));
+            return Err(Error::new(
+                field.span,
+                "required options should be added before optional",
+            ));
         }
     }
 

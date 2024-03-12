@@ -1,0 +1,8 @@
+# NOTE: You can simply not have one of the items listed below at ALL, the bot will be fine.
+
+bot_name = "Sira" # The name that the bot should use in reference to itself
+accent_colour = 0xDABEEF # The colour that should be used for embeds by default, when not using guild or user accent colour.
+prefix = "s:" # A prefix that needs to be present to invoke a text command. You can always mention the bot or reply to the bot to invoke a command.
+
+commands_enabled = ["hi, owo"] # If set, only the commands in this array will be anabled. If not set, all commands are enabled, unless explicitly disabled.
+commands_disabled = ["heck"] # An empty array means all commands are enabled. Commands added will be disabled

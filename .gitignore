@@ -1,13 +1,11 @@
 # Secrets
 .env
+config/*
+!config/example.toml
 
 # Build Artifacts
-/target
+target
 
 # Luro Specific
-/log*
-
-# Lavalink
-!/lavalink/application.yml
-!/lavalink/Lavalink.jar
-/lavalink/*
+logs
+.sira_v2

@@ -5,7 +5,10 @@ use syn::{spanned::Spanned, DeriveInput, Result, Variant};
 use super::parse::ParsedVariant;
 
 /// Implementation of `CommandModel` derive macro
-pub fn impl_command_model(input: DeriveInput, variants: impl IntoIterator<Item = Variant>) -> Result<TokenStream> {
+pub fn impl_command_model(
+    input: DeriveInput,
+    variants: impl IntoIterator<Item = Variant>,
+) -> Result<TokenStream> {
     let ident = &input.ident;
     let generics = &input.generics;
     let where_clause = &generics.where_clause;

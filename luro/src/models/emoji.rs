@@ -1,0 +1,11 @@
+pub const MEMBER_EMOJI: &str = "<:member:1175114506465198171>";
+pub const PRIVATE_EMOJI: &str = "<:private:1175114613172473987>";
+pub const TICKET_EMOJI: &str = "<:ticket:1175114633506455704>";
+pub const MAIL: &str = "<:mail:1175136204648349756>";
+pub const JOIN: &str = "<:join:1175114514216259615>";
+pub const LEAVE: &str = "<:leave:1175114521652756641>";
+pub const GUIDE_EMOJI: &str = "<:guide:1175114529701625977>";
+// pub const MEMBER: &str = "<:member:1175114506465198171>";
+// pub const MEMBER: &str = "<:member:1175114506465198171>";
+// pub const MEMBER: &str = "<:member:1175114506465198171>";
+// pub const MEMBER: &str = "<:member:1175114506465198171>";

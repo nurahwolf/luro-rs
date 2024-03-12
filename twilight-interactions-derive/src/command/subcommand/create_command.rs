@@ -12,7 +12,10 @@ use crate::{
 };
 
 /// Implementation of `CreateCommand` derive macro
-pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item = Variant>) -> Result<TokenStream> {
+pub fn impl_create_command(
+    input: DeriveInput,
+    variants: impl IntoIterator<Item = Variant>,
+) -> Result<TokenStream> {
     let ident = &input.ident;
     let generics = &input.generics;
     let where_clause = &generics.where_clause;
@@ -20,10 +23,20 @@ pub fn impl_create_command(input: DeriveInput, variants: impl IntoIterator<Item 
     let variants = ParsedVariant::from_variants(variants, input.span())?;
     let attribute = match find_attr(&input.attrs, "command") {
         Some(attr) => TypeAttribute::parse(attr)?,
-        None => return Err(Error::new_spanned(input, "missing required #[command(...)] attribute")),
+        None => {
+            return Err(Error::new_spanned(
+                input,
+                "missing required #[command(...)] attribute",
+            ))
+        }
     };
 
-    let desc = get_description(&attribute.desc_localizations, &attribute.desc, input.span(), &input.attrs)?;
+    let desc = get_description(
+        &attribute.desc_localizations,
+        &attribute.desc,
+        input.span(),
+        &input.attrs,
+    )?;
 
     let capacity = variants.len();
     let name = &attribute.name;

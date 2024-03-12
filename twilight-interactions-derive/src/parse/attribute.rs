@@ -70,7 +70,10 @@ impl NamedAttrs {
     /// If the attribute is not found, an error is returned.
     pub fn required<T: ParseAttribute>(&mut self, name: &str) -> Result<T> {
         let Some(parsed) = self.optional::<T>(name)? else {
-            return Err(Error::new(self.attr_span, format!("missing required `{name}` argument")));
+            return Err(Error::new(
+                self.attr_span,
+                format!("missing required `{name}` argument"),
+            ));
         };
 
         Ok(parsed)

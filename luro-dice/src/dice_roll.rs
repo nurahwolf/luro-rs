@@ -1,6 +1,6 @@
 use std::{collections::HashMap, num::NonZeroU64};
 
-use rand::RngCore;
+use fastrand::Rng;
 
 use crate::{DiceRoll, FilterModifier, RollAst, RollParser, RollResult};
 
@@ -18,11 +18,16 @@ const DIR: &[&str] = &[
 ];
 
 impl DiceRoll {
-    pub fn roll_die(times: u64, sides: NonZeroU64, fm: FilterModifier<u64>, mut rng: impl RngCore) -> DiceRoll {
+    pub fn roll_die(
+        times: u64,
+        sides: NonZeroU64,
+        fm: FilterModifier<u64>,
+        rng: &mut Rng,
+    ) -> DiceRoll {
         let mut rolls = Vec::new();
         let range = sides.get();
         for _ in 0..times {
-            let roll = (rng.next_u64() % range) + 1;
+            let roll = (rng.u64(..) % range) + 1;
             rolls.push(roll);
         }
 
@@ -50,8 +55,8 @@ impl DiceRoll {
         if !rolls.is_empty() {
             let range = rolls.len() as u64;
             for _ in 0..=rolls.len() {
-                let a = rng.next_u64() % range + 1;
-                let b = rng.next_u64() % range + 1;
+                let a = rng.u64(..) % range + 1;
+                let b = rng.u64(..) % range + 1;
                 rolls.swap(a as usize - 1, b as usize - 1);
             }
         }
@@ -68,14 +73,18 @@ impl DiceRoll {
             1,
             NonZeroU64::new(DIR.len() as u64).unwrap(),
             FilterModifier::None,
-            rand::thread_rng(),
+            &mut fastrand::Rng::new(),
         );
         DIR[value.total as usize - 1].to_string()
     }
     pub fn roll_stats() -> String {
         fn roll_stat() -> DiceRoll {
             let mut rolls = Vec::new();
-            RollParser::new(STAT_ROLL).parse().unwrap().interp(&mut rolls).unwrap();
+            RollParser::new(STAT_ROLL)
+                .parse()
+                .unwrap()
+                .interp(&mut rolls)
+                .unwrap();
             rolls.remove(0).1
         }
         let mut res = String::new();
@@ -111,7 +120,11 @@ impl DiceRoll {
         Ok(result)
     }
 
-    fn replace_rolls(ast: RollAst, lookup: &HashMap<u64, DiceRoll>, func: fn(&DiceRoll) -> String) -> RollAst {
+    fn replace_rolls(
+        ast: RollAst,
+        lookup: &HashMap<u64, DiceRoll>,
+        func: fn(&DiceRoll) -> String,
+    ) -> RollAst {
         return match ast {
             RollAst::Add(l, r) => RollAst::Add(
                 Box::from(Self::replace_rolls(*l, lookup, func)),

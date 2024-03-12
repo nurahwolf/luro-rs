@@ -1,15 +1,9 @@
 [workspace]
 members = [
-    "luro-database-sqlx",           # SQLx database driver, currently configured just for Postgres
-    "luro-database",                # Core database driver, where shared functionality lives. Can be configured with several options, such as what drivers to use, caching and more.
+    "luro",
     "luro-dice",
-    "luro-logging",
-    "luro-framework",
-    "luro-model",
-    "luro-twilight",
     "twilight-interactions-derive",
     "twilight-interactions",
-    "luro-logging",
 ]
 resolver = "2"
 
@@ -25,15 +19,7 @@ repository = "https://github.com/nurahwolf/luro-rs"
 version = "0.0.1"
 
 [workspace.dependencies]
-anyhow = "1" # Error Context
-futures-util = "0.3" # Used for iterating over futures
-hyper = "0.14.0" # HTTP client
-rand = "0.8.0" # Used for luro-twilight, luro-model
-serde = "1" # Parsing and serialising
-time = "0.3" # Time handling library
-tracing = "0.1" # Logs
-tracing-subscriber = "0.3.0" # Streaming logs
-tokio = { version = "1", features = ["full"] }
+# Twilight
 twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
 twilight-lavalink = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
 twilight-model = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
