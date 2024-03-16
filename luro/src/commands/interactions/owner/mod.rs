@@ -17,10 +17,7 @@ mod fakeban;
 // mod modify_role;
 
 #[derive(CommandModel, CreateCommand)]
-#[command(
-    name = "owner",
-    desc = "Bot owner commands, for those with special privileges!"
-)]
+#[command(name = "owner", desc = "Bot owner commands, for those with special privileges!")]
 pub enum Owner {
     // #[command(name = "abuse")]
     // Abuse(abuse::Abuse),
@@ -81,13 +78,7 @@ impl std::fmt::Display for Owner {
 
 impl crate::models::CreateCommand for Owner {
     async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
-        if ctx
-            .gateway
-            .database
-            .check_staff(ctx.author_id()?)
-            .await?
-            .is_none()
-        {
+        if ctx.gateway.database.check_staff(ctx.author_id()?).await?.is_none() {
             return Err(InteractionError::NotOwner);
         }
 

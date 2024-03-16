@@ -3,7 +3,7 @@ use std::fmt::Write as FmtWrite;
 use crate::{
     builders::EmbedBuilder,
     models::{
-        emoji::{JOIN, LEAVE, MAIL, MEMBER_EMOJI, PRIVATE_EMOJI, TICKET_EMOJI},
+        emoji::{MAIL, MEMBER_EMOJI, PRIVATE_EMOJI, TICKET_EMOJI},
         MemberContext, User,
     },
 };

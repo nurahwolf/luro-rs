@@ -4,6 +4,7 @@ members = [
     "luro-dice",
     "twilight-interactions-derive",
     "twilight-interactions",
+    "luro-model", "luro-derive",
 ]
 resolver = "2"
 

@@ -5,9 +5,7 @@ use crate::models::interaction::{InteractionContext, InteractionResult};
 mod decode;
 mod encode;
 
-#[derive(
-    twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand,
-)]
+#[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
 #[command(name = "base64", desc = "Convert to and from base64")]
 pub enum Base64 {
     #[command(name = "decode")]
@@ -72,43 +70,25 @@ async fn response(
     Ok(response)
 }
 
-pub fn decode_response(
-    accent_colour: u32,
-    input: &str,
-) -> anyhow::Result<crate::builders::InteractionResponseBuilder> {
+pub fn decode_response(accent_colour: u32, input: &str) -> anyhow::Result<crate::builders::InteractionResponseBuilder> {
     let mut response = crate::builders::InteractionResponseBuilder::default();
 
-    response.components(|c| {
-        c.action_row(|a| a.button(|button| button.custom_id("base64-encode").label("Encode")))
-    });
+    response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("base64-encode").label("Encode"))));
 
     match input.len() > 2000 {
-        true => response.embed(|embed| {
-            embed
-                .colour(accent_colour)
-                .description(format!("```\n{input}\n```"))
-        }),
+        true => response.embed(|embed| embed.colour(accent_colour).description(format!("```\n{input}\n```"))),
         false => response.content(format!("```\n{input}\n```")),
     };
     Ok(response)
 }
 
-pub fn encode_response(
-    accent_colour: u32,
-    input: &str,
-) -> anyhow::Result<crate::builders::InteractionResponseBuilder> {
+pub fn encode_response(accent_colour: u32, input: &str) -> anyhow::Result<crate::builders::InteractionResponseBuilder> {
     let mut response = crate::builders::InteractionResponseBuilder::default();
 
-    response.components(|c| {
-        c.action_row(|a| a.button(|button| button.custom_id("base64-decode").label("Decode")))
-    });
+    response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("base64-decode").label("Decode"))));
 
     match input.len() > 2000 {
-        true => response.embed(|embed| {
-            embed
-                .colour(accent_colour)
-                .description(format!("```\n{input}\n```"))
-        }),
+        true => response.embed(|embed| embed.colour(accent_colour).description(format!("```\n{input}\n```"))),
         false => response.content(format!("```\n{input}\n```")),
     };
     Ok(response)
@@ -120,13 +100,9 @@ pub fn decode(input: &str) -> anyhow::Result<String> {
     let result = match base64::engine::general_purpose::STANDARD.decode(input) {
         Ok(decoded) => match String::from_utf8(decoded) {
             Ok(decoded_string) => Ok(decoded_string),
-            Err(why) => Err(anyhow::anyhow!(
-                "Failed to convert bytes into string - {why}"
-            )),
+            Err(why) => Err(anyhow::anyhow!("Failed to convert bytes into string - {why}")),
         },
-        Err(_) => Ok(format!(
-            "Don't be a cunt, I know that this is not base64 you bitch\n\n{input}"
-        )),
+        Err(_) => Ok(format!("Don't be a cunt, I know that this is not base64 you bitch\n\n{input}")),
     };
     tracing::debug!("Result - `{:?}`", result);
     result

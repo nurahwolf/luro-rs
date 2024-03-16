@@ -14,13 +14,9 @@ impl crate::models::CreateCommand for ClearMarriage {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         ctx.database
             .sqlx
-            .delete_marriage((
-                self.user_1.resolved.id.get() as i64,
-                self.user_2.resolved.id.get() as i64,
-            ))
+            .delete_marriage((self.user_1.resolved.id.get() as i64, self.user_2.resolved.id.get() as i64))
             .await?;
 
-        ctx.respond(|r| r.content("Looks like they are single now...").ephemeral())
-            .await
+        ctx.respond(|r| r.content("Looks like they are single now...").ephemeral()).await
     }
 }

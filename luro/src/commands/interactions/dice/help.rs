@@ -1,8 +1,6 @@
 use crate::models::interaction::{InteractionContext, InteractionResult};
 
-#[derive(
-    twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand,
-)]
+#[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
 #[command(name = "help", desc = "Information for how to roll your dice")]
 pub struct Help {
     /// Set your message to ephemeral, useful for if you don't want someone to see your rolls.
@@ -69,22 +67,23 @@ The keep modifier allows you to roll multiple dice but drop the highest or lowes
         ];
 
         let accent_colour = framework.accent_colour().await;
-        framework.respond(|r| {
-            if self.ephemeral.unwrap_or_default() {
-                r.ephemeral();
-            }
-            r.embed(|embed| {
-                embed
-                    .colour(accent_colour)
-                    .title("Dice Helper")
-                    .description(description)
-                    .create_field(shortmode_help[0], shortmode_help[1], false)
-                    .create_field(standard_help[0], standard_help[1], false)
-                    .create_field(percentile_help[0], percentile_help[1], false)
-                    .create_field(keep_help[0], keep_help[1], false)
-                    .create_field(drop_help[0], drop_help[1], false)
+        framework
+            .respond(|r| {
+                if self.ephemeral.unwrap_or_default() {
+                    r.ephemeral();
+                }
+                r.embed(|embed| {
+                    embed
+                        .colour(accent_colour)
+                        .title("Dice Helper")
+                        .description(description)
+                        .create_field(shortmode_help[0], shortmode_help[1], false)
+                        .create_field(standard_help[0], standard_help[1], false)
+                        .create_field(percentile_help[0], percentile_help[1], false)
+                        .create_field(keep_help[0], keep_help[1], false)
+                        .create_field(drop_help[0], drop_help[1], false)
+                })
             })
-        })
-        .await
+            .await
     }
 }

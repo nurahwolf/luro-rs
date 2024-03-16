@@ -2,13 +2,8 @@ use std::fmt::Write;
 
 use crate::models::interaction::{InteractionContext, InteractionResult};
 
-#[derive(
-    twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand,
-)]
-#[command(
-    name = "simple",
-    desc = "A simpler version, for those not wanting to deal with foruma"
-)]
+#[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
+#[command(name = "simple", desc = "A simpler version, for those not wanting to deal with foruma")]
 pub struct Simple {
     /// Total number of dice, for example two dice
     #[command(min_value = 1, max_value = 10000)]
@@ -101,10 +96,7 @@ impl crate::models::CreateCommand for Simple {
                 result.dice_total
             )
         } else {
-            format!(
-                "**Result:** `{}`\n**Total:** `{}`",
-                result.string_result, result.dice_total
-            )
+            format!("**Result:** `{}`\n**Total:** `{}`", result.string_result, result.dice_total)
         };
 
         if result.dice_total == luro_dice::RollValue::Int(20) {
@@ -115,12 +107,13 @@ impl crate::models::CreateCommand for Simple {
             result_string.push_str("\n-----\n*You failed. This is known as a skill issue.*")
         }
 
-        framework.respond(|r| {
-            if self.ephemeral.unwrap_or_default() {
-                r.ephemeral();
-            }
-            r.content(result_string)
-        })
-        .await
+        framework
+            .respond(|r| {
+                if self.ephemeral.unwrap_or_default() {
+                    r.ephemeral();
+                }
+                r.content(result_string)
+            })
+            .await
     }
 }

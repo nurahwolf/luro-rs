@@ -6,9 +6,7 @@ mod roll_direction;
 mod simple;
 mod stats;
 
-#[derive(
-    twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand,
-)]
+#[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
 #[command(name = "dice", desc = "Roll those freaking dice!!!")]
 pub enum Dice {
     #[command(name = "direction")]

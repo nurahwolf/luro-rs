@@ -33,12 +33,9 @@ impl super::Luro {
         let application = twilight.current_user_application().await?.model().await?;
 
         // Create each shard in a set, based on Discord's recommendations
-        let shards = twilight_gateway::create_recommended(
-            &twilight,
-            twilight_gateway::Config::new(discord_token, intents),
-            |_, c| c.build(),
-        )
-        .await?;
+        let shards =
+            twilight_gateway::create_recommended(&twilight, twilight_gateway::Config::new(discord_token, intents), |_, c| c.build())
+                .await?;
 
         tracing::info!("GATEWAY: Finished setting up! Now kicking off the shards...");
 

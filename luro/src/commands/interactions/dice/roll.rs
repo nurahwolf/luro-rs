@@ -1,8 +1,6 @@
 use crate::models::interaction::{InteractionContext, InteractionResult};
 
-#[derive(
-    twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand,
-)]
+#[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
 #[command(name = "roll", desc = "Roll those freaking dice!!!")]
 pub struct Roll {
     /// Standard Dice Notation: 6d20dl2-10 (6x d20 dice, drop lowest 2, take away 10 from result)
@@ -34,10 +32,7 @@ impl crate::models::CreateCommand for Roll {
                 result.dice_total
             )
         } else {
-            format!(
-                "**Result:** `{}`\n**Total:** `{}`",
-                result.string_result, result.dice_total
-            )
+            format!("**Result:** `{}`\n**Total:** `{}`", result.string_result, result.dice_total)
         };
 
         if result.dice_total == luro_dice::RollValue::Int(20) {
@@ -48,12 +43,13 @@ impl crate::models::CreateCommand for Roll {
             result_string.push_str("\n-----\n*You failed. This is known as a skill issue.*")
         }
 
-        framework.respond(|r| {
-            if self.ephemeral.unwrap_or_default() {
-                r.ephemeral();
-            }
-            r.content(result_string)
-        })
-        .await
+        framework
+            .respond(|r| {
+                if self.ephemeral.unwrap_or_default() {
+                    r.ephemeral();
+                }
+                r.content(result_string)
+            })
+            .await
     }
 }

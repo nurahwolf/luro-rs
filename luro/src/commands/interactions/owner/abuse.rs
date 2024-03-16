@@ -3,11 +3,7 @@ use luro_model::builders::EmbedBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
-#[command(
-    name = "abuse",
-    desc = "Use a webhook to pretend to be a user",
-    dm_permission = false
-)]
+#[command(name = "abuse", desc = "Use a webhook to pretend to be a user", dm_permission = false)]
 pub struct Abuse {
     /// The user to bully
     user: ResolvedUser,
@@ -22,22 +18,13 @@ impl crate::models::CreateCommand for Abuse {
         let webhook = ctx.get_webhook(ctx.channel.id).await?;
         let webhook_token = match webhook.token {
             Some(token) => token,
-            None => match ctx
-                .twilight_client
-                .webhook(webhook.id)
-                .await?
-                .model()
-                .await?
-                .token
-            {
+            None => match ctx.twilight_client.webhook(webhook.id).await?.model().await?.token {
                 Some(token) => token,
                 None => {
                     return ctx
                         .respond(|r| {
-                            r.content(
-                                "Sorry, I can't setup a webhook here. Probably missing perms.",
-                            )
-                            .ephemeral()
+                            r.content("Sorry, I can't setup a webhook here. Probably missing perms.")
+                                .ephemeral()
                         })
                         .await
                 }
@@ -50,11 +37,7 @@ impl crate::models::CreateCommand for Abuse {
         embed
             .colour(ctx.accent_colour())
             .description(&self.message)
-            .author(|author| {
-                author
-                    .name(&luro_user.name())
-                    .icon_url(&luro_user.avatar_url())
-            });
+            .author(|author| author.name(&luro_user.name()).icon_url(&luro_user.avatar_url()));
 
         let avatar = luro_user.avatar_url();
         let name = luro_user.name();
@@ -69,7 +52,6 @@ impl crate::models::CreateCommand for Abuse {
             false => webhook_message.content(&self.message).await?,
         };
 
-        ctx.respond(|response| response.add_embed(embed).ephemeral())
-            .await
+        ctx.respond(|response| response.add_embed(embed).ephemeral()).await
     }
 }

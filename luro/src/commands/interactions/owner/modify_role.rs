@@ -139,9 +139,7 @@ impl crate::models::CreateCommand for ModifyRole {
         //     ctx.respond(|r| r.add_embed(embed).ephemeral()).await
         // } else {
         // TODO: Make this a response type
-        framework
-            .respond(|r| r.content("No role found").ephemeral())
-            .await
+        framework.respond(|r| r.content("No role found").ephemeral()).await
         // }
     }
 }

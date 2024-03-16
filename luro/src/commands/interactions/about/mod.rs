@@ -22,14 +22,12 @@ impl crate::models::CreateCommand for About {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         let mut description = match &framework.gateway.config.description {
             Some(description) => format!("{description}\n"),
-            None => "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n".to_owned(),
+            None => {
+                "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n".to_owned()
+            }
         };
         let mut embed = crate::builders::EmbedBuilder::default();
-        let slash_author = framework
-            .gateway
-            .database
-            .fetch_user(framework.gateway.current_user.id)
-            .await?;
+        let slash_author = framework.gateway.database.fetch_user(framework.gateway.current_user.id).await?;
 
         // Configuration
         embed.colour(framework.accent_colour().await);
@@ -106,14 +104,8 @@ impl crate::models::CreateCommand for About {
         {
             let mut memory = String::new();
             let mut description_builder = vec![];
-            description_builder.push((
-                "- Physical memory usage:",
-                format!("`{} MB`", usage.physical_mem / 1024 / 1024),
-            ));
-            description_builder.push((
-                "- Virtual memory usage:",
-                format!("`{} MB`", usage.virtual_mem / 1024 / 1024),
-            ));
+            description_builder.push(("- Physical memory usage:", format!("`{} MB`", usage.physical_mem / 1024 / 1024)));
+            description_builder.push(("- Virtual memory usage:", format!("`{} MB`", usage.virtual_mem / 1024 / 1024)));
             let word_sizes: Vec<(usize, usize)> = description_builder
                 .iter()
                 .map(|(prefix, suffix)| (prefix.len(), suffix.len()))
@@ -125,7 +117,8 @@ impl crate::models::CreateCommand for About {
             embed.field(|field| field.field("Memory Stats", &memory, true));
         }
 
-        if let Some(application_owner) = &framework.gateway
+        if let Some(application_owner) = &framework
+            .gateway
             .twilight_client
             .current_user_application()
             .await?
@@ -134,16 +127,8 @@ impl crate::models::CreateCommand for About {
             .owner
         {
             embed.field(|field| match &self.show_username.unwrap_or_default() {
-                true => field.field(
-                    "My Creator!",
-                    &format!("- {}", application_owner.name),
-                    true,
-                ),
-                false => field.field(
-                    "My Creator!",
-                    &format!("- <@{}>", application_owner.id),
-                    true,
-                ),
+                true => field.field("My Creator!", &format!("- {}", application_owner.name), true),
+                false => field.field("My Creator!", &format!("- <@{}>", application_owner.id), true),
             });
         }
 
@@ -164,9 +149,7 @@ impl crate::models::CreateCommand for About {
 fn get_current_branch(repo: &Repository) -> String {
     let head = match repo.head() {
         Ok(head) => Some(head),
-        Err(ref e) if e.code() == ErrorCode::UnbornBranch || e.code() == ErrorCode::NotFound => {
-            None
-        }
+        Err(ref e) if e.code() == ErrorCode::UnbornBranch || e.code() == ErrorCode::NotFound => None,
         Err(e) => return format!("An error occured: {e:?}"),
     };
 

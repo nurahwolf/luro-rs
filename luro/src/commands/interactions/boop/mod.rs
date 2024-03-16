@@ -1,20 +1,17 @@
 use crate::models::interaction::{InteractionContext, InteractionResult};
 
-#[derive(
-    twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand,
-)]
+#[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
 #[command(name = "boop", desc = "Boop the Bot!")]
 pub struct Boop {}
 
 impl crate::models::CreateCommand for Boop {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
-        framework.respond(|r| {
-            r.components(|c| {
-                c.action_row(|a_r| a_r.button(|btn| btn.custom_id("boop").label("Boop Me!")))
+        framework
+            .respond(|r| {
+                r.components(|c| c.action_row(|a_r| a_r.button(|btn| btn.custom_id("boop").label("Boop Me!"))))
+                    .content("Boop Count: 0")
             })
-            .content("Boop Count: 0")
-        })
-        .await
+            .await
     }
 
     async fn handle_component(framework: &mut InteractionContext) -> InteractionResult<()> {

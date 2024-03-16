@@ -40,18 +40,12 @@ impl crate::models::CreateCommand for Assign {
             {
                 Ok(_) => {
                     ctx.respond(|r| {
-                        r.content(format!(
-                            "Role <@&{}> removed from <@{}>!",
-                            self.role, user.user_id
-                        ))
-                        .ephemeral()
+                        r.content(format!("Role <@&{}> removed from <@{}>!", self.role, user.user_id))
+                            .ephemeral()
                     })
                     .await
                 }
-                Err(why) => {
-                    ctx.simple_response(SimpleResponse::InternalError(&why.into()))
-                        .await
-                }
+                Err(why) => ctx.simple_response(SimpleResponse::InternalError(&why.into())).await,
             }
         } else {
             // Otherwise we just assign a role as expected
@@ -62,18 +56,12 @@ impl crate::models::CreateCommand for Assign {
             {
                 Ok(_) => {
                     ctx.respond(|r| {
-                        r.content(format!(
-                            "Role <@&{}> assigned to <@{}>!",
-                            self.role, user.user_id
-                        ))
-                        .ephemeral()
+                        r.content(format!("Role <@&{}> assigned to <@{}>!", self.role, user.user_id))
+                            .ephemeral()
                     })
                     .await
                 }
-                Err(why) => {
-                    ctx.simple_response(SimpleResponse::InternalError(&why.into()))
-                        .await
-                }
+                Err(why) => ctx.simple_response(SimpleResponse::InternalError(&why.into())).await,
             }
         }
     }

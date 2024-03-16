@@ -1,8 +1,6 @@
 use crate::models::interaction::{InteractionContext, InteractionResult};
 
-#[derive(
-    twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand,
-)]
+#[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
 #[command(name = "encode", desc = "Convert a string to base64")]
 pub struct Encode {
     /// Encode this string to base64
@@ -13,8 +11,7 @@ pub struct Encode {
 
 impl crate::models::CreateCommand for Encode {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
-        let response =
-            super::encode_response(framework.accent_colour().await, &super::encode(&self.string))?;
+        let response = super::encode_response(framework.accent_colour().await, &super::encode(&self.string))?;
         framework.response_send(&response).await
     }
 }
