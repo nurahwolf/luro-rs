@@ -42,14 +42,8 @@ impl<'a> Punishment<'a> {
         let mut description = String::new();
         writeln!(description, "{MEMBER_EMOJI}<@{target_id}> | `{target_id}`")?;
         match self.dm_success {
-            Some(false) => writeln!(
-                description,
-                "{PRIVATE_EMOJI}`{purged_messages}` | {MAIL}`Failed to notify user`{LEAVE}"
-            )?,
-            Some(true) => writeln!(
-                description,
-                "{PRIVATE_EMOJI}`{purged_messages}` | {MAIL}`User has been notified`{JOIN}"
-            )?,
+            Some(false) => writeln!(description, "{PRIVATE_EMOJI}`{purged_messages}` | `Failed to notify user`{MAIL}")?,
+            Some(true) => writeln!(description, "{PRIVATE_EMOJI}`{purged_messages}` | `User has been notified`{MAIL}")?,
             None => writeln!(description, "{PRIVATE_EMOJI}`{purged_messages}`")?,
         }
 
