@@ -2,7 +2,7 @@ use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand,
 use twilight_model::id::{marker::UserMarker, Id};
 
 use crate::{
-    embeds::{dm_sent, user_banned},
+    embeds::Punishment,
     models::interaction::{InteractionContext, InteractionResult},
 };
 
@@ -27,24 +27,15 @@ pub enum Reason {
     Troll,
 
     /// Someone who joined just to be a little bitch
-    #[option(
-        name = "Raider - Someone who joined just to be a little bitch",
-        value = "raider"
-    )]
+    #[option(name = "Raider - Someone who joined just to be a little bitch", value = "raider")]
     Raider,
 
     /// Racist, Sexist and other such things.
-    #[option(
-        name = "Vile - Racist, Sexist and other such plesent things.",
-        value = ""
-    )]
+    #[option(name = "Vile - Racist, Sexist and other such plesent things.", value = "")]
     Vile,
 
     /// A completely custom reason if the others do not fit
-    #[option(
-        name = "Custom Reason - A completely custom reason if the others do not fit",
-        value = "custom"
-    )]
+    #[option(name = "Custom Reason - A completely custom reason if the others do not fit", value = "custom")]
     Custom,
 }
 
@@ -67,11 +58,7 @@ pub enum TimeToBan {
 }
 
 #[derive(CommandModel, CreateCommand)]
-#[command(
-    name = "fakeban",
-    desc = "Ban a user (not really)",
-    dm_permission = false
-)]
+#[command(name = "fakeban", desc = "Ban a user (not really)", dm_permission = false)]
 pub struct Fakeban {
     /// The user to ban
     pub user_id: Id<UserMarker>,
@@ -94,34 +81,31 @@ impl crate::models::CreateCommand for Fakeban {
 
         let reason = reason(self.reason, self.details);
 
-        let mut embed = user_banned(
-            &target,
-            &author,
-            reason.as_deref(),
-            self.purge.value(),
-            &guild.twilight_guild.name,
-        )?;
+        let mut punishment = Punishment {
+            punishment_type: crate::embeds::PunishmentType::Banned,
+            moderator: &author,
+            target: &target,
+            reason: reason.as_deref(),
+            purged_messages: self.purge.value(),
+            guild_name: &guild.twilight_guild.name,
+            dm_success: None,
+        };
 
-        let target_dm = twilight_client
-            .create_private_channel(target.user_id())
-            .await;
-
-        let dm_success = match target_dm {
+        let target_dm = twilight_client.create_private_channel(target.user_id()).await;
+        punishment.dm_success = Some(match target_dm {
             Ok(channel) => {
                 let target_dm = channel.model().await?;
                 twilight_client
                     .create_message(target_dm.id)
-                    .embeds(&[embed.0.clone()])
+                    .embeds(&[punishment.embed()?.into()])
                     .await
                     .is_ok()
             }
             Err(_) => false,
-        };
+        });
 
-        // Modify the original embed
-        dm_sent(&mut embed, dm_success);
-
-        ctx.respond(|r| r.add_embed(embed)).await
+        // TODO: Fix this
+        ctx.respond(|r| r.add_embed(punishment.embed().unwrap())).await
     }
 }
 

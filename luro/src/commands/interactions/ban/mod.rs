@@ -1,5 +1,5 @@
 use crate::{
-    embeds::{dm_sent, user_banned},
+    embeds::Punishment,
     models::{MemberContext, Role, User},
 };
 use twilight_http::request::AuditLogReason;
@@ -9,13 +9,9 @@ use twilight_model::{
     id::{marker::UserMarker, Id},
 };
 
-use crate::models::interaction::{
-    InteractionContext, InteractionError as Error, InteractionResult,
-};
+use crate::models::interaction::{InteractionContext, InteractionError as Error, InteractionResult};
 
-#[derive(
-    twilight_interactions::command::CommandOption, twilight_interactions::command::CreateOption,
-)]
+#[derive(twilight_interactions::command::CommandOption, twilight_interactions::command::CreateOption)]
 pub enum TimeToBan {
     #[option(name = "Don't Delete Any", value = 0)]
     None,
@@ -33,12 +29,7 @@ pub enum TimeToBan {
     SevenDays,
 }
 
-#[derive(
-    twilight_interactions::command::CommandOption,
-    twilight_interactions::command::CreateOption,
-    Debug,
-    PartialEq,
-)]
+#[derive(twilight_interactions::command::CommandOption, twilight_interactions::command::CreateOption, Debug, PartialEq)]
 pub enum Reason {
     /// Someone who attempts to steal your money by offering fake commissions
     #[option(
@@ -59,24 +50,15 @@ pub enum Reason {
     Troll,
 
     /// Someone who joined just to be a little bitch
-    #[option(
-        name = "Raider - Someone who joined just to be a little bitch",
-        value = "raider"
-    )]
+    #[option(name = "Raider - Someone who joined just to be a little bitch", value = "raider")]
     Raider,
 
     /// Racist, Sexist and other such things.
-    #[option(
-        name = "Vile - Racist, Sexist and other such plesent things.",
-        value = ""
-    )]
+    #[option(name = "Vile - Racist, Sexist and other such plesent things.", value = "")]
     Vile,
 
     /// A completely custom reason if the others do not fit
-    #[option(
-        name = "Custom Reason - A completely custom reason if the others do not fit",
-        value = "custom"
-    )]
+    #[option(name = "Custom Reason - A completely custom reason if the others do not fit", value = "custom")]
     Custom,
 }
 
@@ -98,9 +80,7 @@ pub struct Ban {
 impl crate::models::CreateCommand for Ban {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         tracing::info!("acknowledge ineraction");
-        framework
-            .ack_interaction(self.ephemeral.unwrap_or_default())
-            .await?;
+        framework.ack_interaction(self.ephemeral.unwrap_or_default()).await?;
 
         let twilight_client = &framework.gateway.twilight_client;
         let guild = framework.guild().await?;
@@ -132,38 +112,32 @@ impl crate::models::CreateCommand for Ban {
         let reason = reason(self.reason, self.details);
         tracing::info!("created reason");
 
-        let mut embed = user_banned(
-            &target,
-            &author,
-            reason.as_deref(),
-            self.purge.value(),
-            &guild.twilight_guild.name,
-        )?;
+        let mut punishment = Punishment {
+            punishment_type: crate::embeds::PunishmentType::Banned,
+            moderator: &author,
+            target: &target,
+            reason: reason.as_deref(),
+            purged_messages: self.purge.value(),
+            guild_name: &guild.twilight_guild.name,
+            dm_success: None,
+        };
         tracing::info!("created ban embed");
 
-        let target_dm = twilight_client
-            .create_private_channel(target.user_id())
-            .await;
-        tracing::info!("created dm");
-
-        let dm_success = match target_dm {
+        let target_dm = twilight_client.create_private_channel(target.user_id()).await;
+        punishment.dm_success = Some(match target_dm {
             Ok(channel) => {
                 let target_dm = channel.model().await?;
                 twilight_client
                     .create_message(target_dm.id)
-                    .embeds(&[embed.0.clone()])
+                    .embeds(&[punishment.embed()?.into()])
                     .await
                     .is_ok()
             }
             Err(_) => false,
-        };
-        tracing::info!("dm attempt made");
+        });
 
-        // Modify the original embed
-        dm_sent(&mut embed, dm_success);
-        tracing::info!("modified embed");
-
-        framework.respond(|r| r.add_embed(embed)).await?;
+        // TODO: Fix this
+        framework.respond(|r| r.add_embed(punishment.embed().unwrap())).await?;
         tracing::info!("responded to author");
 
         let ban = twilight_client.create_ban(guild.twilight_guild.id, target.user_id());
