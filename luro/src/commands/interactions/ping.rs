@@ -1,28 +1,21 @@
 use std::fmt::Write;
 use std::time::Instant;
 
-use async_trait::async_trait;
-use luro_builder::embed::EmbedBuilder;
-use luro_framework::{
-    command::LuroCommandTrait, LuroInteraction, CommandInteraction,
+use crate::{
+    builders::{EmbedBuilder, InteractionResponseBuilder},
+    models::interaction::{InteractionContext, InteractionResult},
 };
-use luro_model::response::LuroResponse;
-use twilight_interactions::command::{CommandModel, CreateCommand};
 
-use luro_model::database_driver::LuroDatabaseDriver;
-
-#[derive(CommandModel, CreateCommand)]
+#[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
 #[command(name = "ping", desc = "See my ping!")]
 pub struct Ping {}
 
-#[async_trait]
-impl LuroCommandTrait for Ping {
-    async fn handle_interaction(
-        ctx: CommandInteraction<Self>,
-    ) -> anyhow::Result<luro_model::types::CommandResponse> {
+impl crate::models::CreateCommand for Ping {
+    async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         let mut embed = EmbedBuilder::default();
-        embed.colour(ctx.accent_colour()).description("🏓 Pinging!");
-        if let Some(average) = ctx.latency.average() {
+        embed.colour(framework.accent_colour().await).description("🏓 Pinging!");
+
+        if let Some(average) = framework.latency.average() {
             embed.create_field(
                 "Average Latency",
                 &format!("`{}` milliseconds", average.as_millis().to_string()),
@@ -30,7 +23,7 @@ impl LuroCommandTrait for Ping {
             );
         }
 
-        if let Some(average) = ctx.latency.received() {
+        if let Some(average) = framework.latency.received() {
             embed.create_field(
                 "Last Acknowledgement",
                 &format!("{} milliseconds ago", average.elapsed().as_millis()),
@@ -38,7 +31,7 @@ impl LuroCommandTrait for Ping {
             );
         }
 
-        if let Some(average) = ctx.latency.sent() {
+        if let Some(average) = framework.latency.sent() {
             embed.create_field(
                 "Hearbeat Sent",
                 &format!("{} milliseconds ago", average.elapsed().as_millis()),
@@ -48,7 +41,7 @@ impl LuroCommandTrait for Ping {
 
         let mut num = 0;
         let mut heartbeats = String::new();
-        for heartbeat in ctx.latency.recent() {
+        for heartbeat in framework.latency.recent() {
             num += 1;
             writeln!(heartbeats, "{num} - {} milliseconds", heartbeat.as_millis())?
         }
@@ -57,35 +50,39 @@ impl LuroCommandTrait for Ping {
                 "Hearbeats",
                 &format!(
                     "**Total Heartbeats Recorded:** `{}`\n```{heartbeats}```",
-                    ctx.latency.periods().to_string()
+                    framework.latency.periods().to_string()
                 ),
                 false,
             );
         }
 
         let start = Instant::now();
-        let mut response = LuroResponse::default();
+        let mut response = InteractionResponseBuilder::default();
         response.add_embed(embed);
-        ctx.send_response(response.clone()).await?;
+        framework.response_send(&response).await?;
         let sent = format!(
             "Pong!\n`Send MESSAGE` API request achnowledged and received in `{}` milliseconds!",
             start.elapsed().as_millis()
         );
         response.content(sent.clone());
 
-        ctx.send_response(response.clone()).await?;
+        framework.response_update(&response).await?;
 
         // A random command to check latency time
         let start = Instant::now();
-        let _ = ctx.twilight_client.user(ctx.author.user_id).await?.model().await?;
-        let user = format!(
+        let _ = framework
+            .gateway
+            .twilight_client
+            .user(framework.author_id()?)
+            .await?
+            .model()
+            .await?;
+        let content = format!(
             "{}\n`Get USER` API request achnowledged and received in `{}` milliseconds!",
             sent,
             start.elapsed().as_millis()
         );
-        response.content(user);
-        ctx.send_response(response).await?;
-
-        Ok(())
+        response.content(content);
+        framework.response_update(&response).await
     }
 }

@@ -9,9 +9,8 @@ use twilight_gateway::{
 use crate::SHUTDOWN;
 
 use self::{
-    guild_create::guild_create_handler, guild_delete::guild_delete_handler,
-    interaction_create::interaction_create, message_create::message_create_handler,
-    no_handler::no_handler, ready::ready_listener,
+    guild_create::guild_create_handler, guild_delete::guild_delete_handler, interaction_create::interaction_create,
+    message_create::message_create_handler, no_handler::no_handler, ready::ready_listener,
 };
 
 use super::{GatewayArc, GatewayResult};
@@ -31,16 +30,13 @@ pub async fn shard_runner(gateway: GatewayArc, mut shard: Shard) {
         };
 
         let shrd_sndr = shard.sender();
+        let latency = shard.latency().clone();
         match event {
             Event::Ready(event) => spawn(ready_listener(gateway.clone(), shrd_sndr, event)),
             Event::GuildCreate(event) => guild_create_handler(gateway.clone(), shrd_sndr, event),
             Event::GuildDelete(event) => guild_delete_handler(gateway.clone(), shrd_sndr, event),
-            Event::MessageCreate(event) => {
-                spawn(message_create_handler(gateway.clone(), shrd_sndr, event))
-            }
-            Event::InteractionCreate(event) => {
-                spawn(interaction_create(gateway.clone(), shrd_sndr, event))
-            }
+            Event::MessageCreate(event) => spawn(message_create_handler(gateway.clone(), shrd_sndr, event)),
+            Event::InteractionCreate(event) => spawn(interaction_create(gateway.clone(), shrd_sndr, latency, event)),
             event => no_handler(event),
         };
     }
@@ -59,23 +55,15 @@ fn spawn(fut: impl Future<Output = GatewayResult> + Send + 'static) {
 fn handle_close(event: Option<CloseFrame<'_>>, shard: Shard) {
     tracing::info!("GATEWAY: Gateway closed for shard `{}`.", shard.id());
     if let Some(event) = event {
-        tracing::info!(
-            "GATEWAY: CODE `{}` - Shutdown reason: {}",
-            event.code,
-            event.reason
-        );
+        tracing::info!("GATEWAY: CODE `{}` - Shutdown reason: {}", event.code, event.reason);
     }
 }
 
 /// Handles errors raised in the shard runner. Returns true if the user explicitly requested a shutdown.
 fn handle_error(error: ReceiveMessageError, shard: &Shard) -> bool {
-    tracing::error!(
-        "GATEWAY: Shard `{}` raised the following error:",
-        shard.id()
-    );
+    tracing::error!("GATEWAY: Shard `{}` raised the following error:", shard.id());
 
-    let requested_shutdown = SHUTDOWN.load(Ordering::Relaxed)
-        && matches!(error.kind(), ReceiveMessageErrorType::WebSocket);
+    let requested_shutdown = SHUTDOWN.load(Ordering::Relaxed) && matches!(error.kind(), ReceiveMessageErrorType::WebSocket);
 
     match requested_shutdown {
         true => tracing::error!("GATEWAY: Explicit shutdown requested, raised error: {error:#?}"),

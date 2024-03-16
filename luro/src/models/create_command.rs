@@ -7,9 +7,7 @@ use crate::{database::Database, responses::StandardResponse};
 
 use super::interaction::{InteractionContext, InteractionError, InteractionResult};
 
-pub trait CreateCommand:
-    twilight_interactions::command::CommandModel + twilight_interactions::command::CreateCommand
-{
+pub trait CreateCommand: twilight_interactions::command::CommandModel + twilight_interactions::command::CreateCommand {
     fn cmd(interaction: &Interaction) -> Result<Self, InteractionError> {
         let interaction_data = match interaction.data.clone() {
             Some(interaction_data) => interaction_data,
@@ -28,59 +26,72 @@ pub trait CreateCommand:
     }
 
     /// An internal function which parses the command data into the type, then forwards it to handle_interaction
-    async fn interaction_handler(f: &mut InteractionContext) -> InteractionResult<()> {
-        match f.interaction.kind {
-            InteractionType::Ping => no_handler("ping"),
-            InteractionType::ApplicationCommand => {
-                Self::cmd(&f.interaction)?.handle_command(f).await
+    fn interaction_handler(f: &mut InteractionContext) -> impl std::future::Future<Output = InteractionResult<()>> + Send
+    where
+        Self: Send,
+    {
+        async {
+            match f.interaction.kind {
+                InteractionType::Ping => no_handler("ping"),
+                InteractionType::ApplicationCommand => Self::cmd(&f.interaction)?.handle_command(f).await,
+                InteractionType::MessageComponent => Self::handle_component(f).await,
+                InteractionType::ApplicationCommandAutocomplete => no_handler("autocomplete"),
+                InteractionType::ModalSubmit => Self::handle_modal(f).await,
+                unknown_kind => no_handler(unknown_kind.kind()),
             }
-            InteractionType::MessageComponent => Self::handle_component(f).await,
-            InteractionType::ApplicationCommandAutocomplete => no_handler("autocomplete"),
-            InteractionType::ModalSubmit => Self::handle_modal(f).await,
-            unknown_kind => no_handler(unknown_kind.kind()),
         }
     }
 
-    async fn command_from_component(
+    fn command_from_component(
         framework: &InteractionContext,
-    ) -> Result<Self, InteractionError> {
-        let message = framework.compontent_message()?;
-        let interaction_id = match message.interaction.as_ref() {
-            Some(interaction) => interaction.id,
-            None => match message.referenced_message.as_ref() {
-                Some(message) => match message.interaction.as_ref() {
-                    Some(interaction) => interaction.id,
+    ) -> impl std::future::Future<Output = Result<Self, InteractionError>> + Send {
+        async {
+            let message = framework.compontent_message()?;
+            let interaction_id = match message.interaction.as_ref() {
+                Some(interaction) => interaction.id,
+                None => match message.referenced_message.as_ref() {
+                    Some(message) => match message.interaction.as_ref() {
+                        Some(interaction) => interaction.id,
+                        None => return Err(InteractionError::CommandFromComponent),
+                    },
                     None => return Err(InteractionError::CommandFromComponent),
                 },
-                None => return Err(InteractionError::CommandFromComponent),
-            },
-        };
+            };
 
-        Self::from_interaction_id(&framework.gateway.database, interaction_id).await
+            Self::from_interaction_id(&framework.gateway.database, interaction_id).await
+        }
     }
 
     /// Use the database to fetch an interaction
-    async fn from_interaction_id(
+    fn from_interaction_id(
         db: &Database,
         id: Id<InteractionMarker>,
-    ) -> Result<Self, InteractionError> {
-        let interaction = db.fetch_interaction(id).await?;
-        Self::cmd(&interaction)
+    ) -> impl std::future::Future<Output = Result<Self, InteractionError>> + Send {
+        async move {
+            let interaction = db.fetch_interaction(id).await?;
+            Self::cmd(&interaction)
+        }
     }
 
-    async fn handle_component(framework: &mut InteractionContext) -> InteractionResult<()> {
-        let response = StandardResponse::UnknownCommand(framework.command_name());
-        framework.standard_response(response).await
+    fn handle_component(framework: &mut InteractionContext) -> impl std::future::Future<Output = InteractionResult<()>> + Send {
+        async {
+            let response = StandardResponse::UnknownCommand(framework.command_name());
+            framework.standard_response(response).await
+        }
     }
 
-    async fn handle_modal(framework: &mut InteractionContext) -> InteractionResult<()> {
-        let response = StandardResponse::UnknownCommand(framework.command_name());
-        framework.standard_response(response).await
+    fn handle_modal(framework: &mut InteractionContext) -> impl std::future::Future<Output = InteractionResult<()>> + Send {
+        async {
+            let response = StandardResponse::UnknownCommand(framework.command_name());
+            framework.standard_response(response).await
+        }
     }
 
-    async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
-        let response = StandardResponse::UnknownCommand(framework.command_name());
-        framework.standard_response(response).await
+    fn handle_command(self, framework: &mut InteractionContext) -> impl std::future::Future<Output = InteractionResult<()>> + Send {
+        async {
+            let response = StandardResponse::UnknownCommand(framework.command_name());
+            framework.standard_response(response).await
+        }
     }
 
     fn setup_command() -> twilight_model::application::command::Command {

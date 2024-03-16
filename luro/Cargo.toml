@@ -15,6 +15,8 @@ tokio = { version = "1", features = [
     "signal",
 ] }
 tracing = "0.1"
+luro-model.path = "../luro-model"
+luro-derive.path = "../luro-derive"
 tracing-subscriber = "0.3"
 twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
 twilight-lavalink = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", optional = true }
@@ -75,6 +77,7 @@ command-hello = []
 command-character = []
 command-dice = ["dep:luro-dice"]
 command-uwu = ["dep:uwuify"]
+command-ping = []
 command-owner = []
 
 # Database drivers
@@ -98,6 +101,7 @@ module-interactions = [
     "command-dice",
     "command-uwu",
     "command-hello",
+    "command-ping",
     "command-owner",
 ]
 module-keywords = []
