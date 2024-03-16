@@ -1,0 +1,20 @@
+[package]
+name = "luro-derive"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["fold"] }
+quote = "1"
+proc-macro2 = "1"
+darling = "0.20"
