@@ -44,11 +44,11 @@ impl<'a> Punishment<'a> {
         match self.dm_success {
             Some(false) => writeln!(
                 description,
-                "{PRIVATE_EMOJI}`{purged_messages} | {MAIL}`Failed to notify user`{LEAVE}"
+                "{PRIVATE_EMOJI}`{purged_messages}` | {MAIL}`Failed to notify user`{LEAVE}"
             )?,
             Some(true) => writeln!(
                 description,
-                "{PRIVATE_EMOJI}`{purged_messages} | {MAIL}`User has been notified`{JOIN}`"
+                "{PRIVATE_EMOJI}`{purged_messages}` | {MAIL}`User has been notified`{JOIN}"
             )?,
             None => writeln!(description, "{PRIVATE_EMOJI}`{purged_messages}`")?,
         }
