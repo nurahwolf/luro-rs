@@ -1,0 +1,19 @@
+[package]
+name = "luro-model"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+thiserror = "1.0.58"
+twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
+twilight-model = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
+
+
+# Optional Dependencies
