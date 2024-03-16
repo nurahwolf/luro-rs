@@ -40,7 +40,7 @@ impl<'a> Punishment<'a> {
         };
 
         let mut description = String::new();
-        writeln!(description, "{MEMBER_EMOJI}<@{target_id}> - `{target_id}`")?;
+        writeln!(description, "{MEMBER_EMOJI}<@{target_id}> | `{target_id}`")?;
         match self.dm_success {
             Some(false) => writeln!(
                 description,
@@ -66,7 +66,7 @@ impl<'a> Punishment<'a> {
             .description(description)
             .author(|a| {
                 a.icon_url(self.moderator.avatar_url())
-                    .name(format!("BANNED from {guild_name} by {author_name}!"))
+                    .name(format!("BANNED by {author_name}! [{guild_name}]"))
             });
 
         Ok(embed)
