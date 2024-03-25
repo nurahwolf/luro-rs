@@ -25,6 +25,10 @@ mod test;
 #[cfg(feature = "command-uwu")]
 mod uwu;
 
+mod kick;
+mod unban;
+mod warn;
+
 pub fn default_commands() -> Vec<twilight_model::application::command::Command> {
     vec![
         #[cfg(feature = "command-about")]
@@ -43,6 +47,9 @@ pub fn default_commands() -> Vec<twilight_model::application::command::Command> 
         ping::Ping::setup_command(),
         #[cfg(feature = "command-owner")]
         owner::Owner::setup_command(),
+        kick::Command::setup_command(),
+        warn::Command::setup_command(),
+        unban::Command::setup_command(),
         // test::test_command_v2().twilight_command(),
     ]
 }
@@ -60,6 +67,9 @@ pub async fn interaction_handler(mut framework: InteractionContext) {
         "uwu" => uwu::UwU::interaction_handler(&mut framework).await,
         "ping" => ping::Ping::interaction_handler(&mut framework).await,
         "owner" => owner::Owner::interaction_handler(&mut framework).await,
+        "unban" => unban::Command::interaction_handler(&mut framework).await,
+        "kick" => kick::Command::interaction_handler(&mut framework).await,
+        "warn" => warn::Command::interaction_handler(&mut framework).await,
 
         name => framework.standard_response(StandardResponse::UnknownCommand(name)).await,
     };
@@ -95,6 +105,8 @@ pub enum PunishmentReason {
     Raider,
     #[option(name = "[Vile] - Gross misconduct and other more extreme infractions", value = "[Vile]")]
     Vile,
+    #[option(name = "[Inactive] - User is inactive / never messaged in the server", value = "[Inactive]")]
+    Inactive,
 }
 
 impl PunishmentReason {

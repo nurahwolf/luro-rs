@@ -59,9 +59,9 @@ impl<'a> Punishment<'a> {
     pub fn embed(&self) -> EmbedBuilder {
         match self {
             Punishment::Banned(data, purged_message_seconds) => ban_embed(data, purged_message_seconds),
-            Punishment::Unbanned(_) => todo!(),
-            Punishment::Warned(_) => todo!(),
-            Punishment::Kicked(_) => todo!(),
+            Punishment::Unbanned(data) => unban_embed(data),
+            Punishment::Warned(data) => warn_embed(data),
+            Punishment::Kicked(data) => kick_embed(data),
         }
     }
 }
@@ -118,7 +118,166 @@ fn ban_embed(data: &PunishmentData, purged_message_second: &i64) -> EmbedBuilder
     embed
         .author(|author| {
             author.icon_url(data.author.avatar_url()).name(format!(
-                "{} was BANNED by {}!",
+                "{} has been BANNED by {}!",
+                data.target.username(),
+                data.author.username()
+            ))
+        })
+        .colour(crate::COLOUR_DANGER)
+        .footer(|footer| footer.icon_url(data.guild.icon_url()).text(&data.guild.twilight_guild.name))
+        .thumbnail(|thumbnail| thumbnail.url(data.target.avatar_url()));
+    embed
+}
+
+/// Creates a banned embed
+fn unban_embed(data: &PunishmentData) -> EmbedBuilder {
+    let mut embed = EmbedBuilder::default();
+
+    embed.create_field(
+        "User Details",
+        format!(
+            "{MEMBER_EMOJI} <@{0}>\n{MEMBER_EMOJI} <@{1}>\n",
+            data.target.user_id(),
+            data.author.user_id()
+        ),
+        true,
+    );
+
+    let mut stats = match data.dm_successful {
+        Some(true) => format!("{JOIN_EMOJI} User has been notified\n"),
+        Some(false) => format!("{LEAVE_EMOJI} User was not notified\n"),
+        None => format!(""),
+    };
+
+    match data.reason.contains('`') {
+        true => {
+            embed.description(format!("{}", data.reason));
+        }
+        false => {
+            if !data.reason.is_empty() {
+                stats.push_str(&format!("{TICKET_EMOJI} {}", data.reason));
+            }
+        }
+    };
+
+    embed.create_field("Reason", stats, true);
+
+    if let Ok(timestamp) = SystemTime::now().duration_since(UNIX_EPOCH) {
+        if let Ok(timestamp) = Timestamp::from_secs(timestamp.as_secs() as i64) {
+            embed.set_timestamp(timestamp);
+        }
+    };
+
+    embed
+        .author(|author| {
+            author.icon_url(data.author.avatar_url()).name(format!(
+                "{} has been UNBANNED by {}!",
+                data.target.username(),
+                data.author.username()
+            ))
+        })
+        .colour(crate::COLOUR_SUCCESS)
+        .footer(|footer| footer.icon_url(data.guild.icon_url()).text(&data.guild.twilight_guild.name))
+        .thumbnail(|thumbnail| thumbnail.url(data.target.avatar_url()));
+    embed
+}
+
+/// Creates a banned embed
+fn kick_embed(data: &PunishmentData) -> EmbedBuilder {
+    let mut embed = EmbedBuilder::default();
+
+    embed.create_field(
+        "User Details",
+        format!(
+            "{MEMBER_EMOJI} <@{0}>\n{MEMBER_EMOJI} <@{1}>\n",
+            data.target.user_id(),
+            data.author.user_id()
+        ),
+        true,
+    );
+
+    let mut stats = match data.dm_successful {
+        Some(true) => format!("{JOIN_EMOJI} User has been notified\n"),
+        Some(false) => format!("{LEAVE_EMOJI} User was not notified\n"),
+        None => format!(""),
+    };
+
+    match data.reason.contains('`') {
+        true => {
+            embed.description(format!("{}", data.reason));
+        }
+        false => {
+            if !data.reason.is_empty() {
+                stats.push_str(&format!("{TICKET_EMOJI} {}", data.reason));
+            }
+        }
+    };
+
+    embed.create_field("Reason", stats, true);
+
+    if let Ok(timestamp) = SystemTime::now().duration_since(UNIX_EPOCH) {
+        if let Ok(timestamp) = Timestamp::from_secs(timestamp.as_secs() as i64) {
+            embed.set_timestamp(timestamp);
+        }
+    };
+
+    embed
+        .author(|author| {
+            author.icon_url(data.author.avatar_url()).name(format!(
+                "{} has been KICKED by {}!",
+                data.target.username(),
+                data.author.username()
+            ))
+        })
+        .colour(crate::COLOUR_DANGER)
+        .footer(|footer| footer.icon_url(data.guild.icon_url()).text(&data.guild.twilight_guild.name))
+        .thumbnail(|thumbnail| thumbnail.url(data.target.avatar_url()));
+    embed
+}
+
+/// Creates a banned embed
+fn warn_embed(data: &PunishmentData) -> EmbedBuilder {
+    let mut embed = EmbedBuilder::default();
+
+    embed.create_field(
+        "User Details",
+        format!(
+            "{MEMBER_EMOJI} <@{0}>\n{MEMBER_EMOJI} <@{1}>\n",
+            data.target.user_id(),
+            data.author.user_id()
+        ),
+        true,
+    );
+
+    let mut stats = match data.dm_successful {
+        Some(true) => format!("{JOIN_EMOJI} User has been notified\n"),
+        Some(false) => format!("{LEAVE_EMOJI} User was not notified\n"),
+        None => format!(""),
+    };
+
+    match data.reason.contains('`') {
+        true => {
+            embed.description(format!("{}", data.reason));
+        }
+        false => {
+            if !data.reason.is_empty() {
+                stats.push_str(&format!("{TICKET_EMOJI} {}", data.reason));
+            }
+        }
+    };
+
+    embed.create_field("Reason", stats, true);
+
+    if let Ok(timestamp) = SystemTime::now().duration_since(UNIX_EPOCH) {
+        if let Ok(timestamp) = Timestamp::from_secs(timestamp.as_secs() as i64) {
+            embed.set_timestamp(timestamp);
+        }
+    };
+
+    embed
+        .author(|author| {
+            author.icon_url(data.author.avatar_url()).name(format!(
+                "{} has been WARNED by {}!",
                 data.target.username(),
                 data.author.username()
             ))
