@@ -1,3 +1,5 @@
+use twilight_interactions::command::{CommandOption, CreateOption};
+
 use crate::{
     models::{interaction::InteractionContext, CreateCommand},
     responses::StandardResponse,
@@ -41,6 +43,7 @@ pub fn default_commands() -> Vec<twilight_model::application::command::Command> 
         ping::Ping::setup_command(),
         #[cfg(feature = "command-owner")]
         owner::Owner::setup_command(),
+        // test::test_command_v2().twilight_command(),
     ]
 }
 
@@ -71,4 +74,58 @@ pub async fn interaction_handler(mut framework: InteractionContext) {
         // The error handler... Had an error. Might want to log that.
         tracing::warn!(?why, "The error handler had an error itself");
     }
+}
+
+// =====
+// Shared Structs Below
+// =====
+
+#[derive(CommandOption, CreateOption)]
+pub enum PunishmentReason {
+    #[option(name = "[Artist Scam] - Offers fake commissions", value = "[Artist Scam]")]
+    ArtistScam,
+    #[option(
+        name = "[Compromised Account] - An account that has been compromised",
+        value = "[Compromised Account]"
+    )]
+    CompormisedAccount,
+    #[option(name = "[Custom] - Write your own reason", value = "")]
+    Custom,
+    #[option(name = "[Raider] - Someone who joined just to cause trouble", value = "[Raider]")]
+    Raider,
+    #[option(name = "[Vile] - Gross misconduct and other more extreme infractions", value = "[Vile]")]
+    Vile,
+}
+
+impl PunishmentReason {
+    pub fn fmt(&self, details: Option<String>) -> String {
+        let mut reason = self.value().to_string();
+
+        if let Some(details) = details {
+            match reason.is_empty() {
+                true => reason.push_str(&details.to_string()),
+                false => reason.push_str(&format!(" - {details}")),
+            }
+        }
+
+        reason
+    }
+}
+
+#[derive(CommandOption, CreateOption)]
+pub enum PunishmentPurgeAmount {
+    #[option(name = "Don't Delete Any", value = 0)]
+    None,
+    #[option(name = "Previous Hour", value = 3_600)]
+    Hour,
+    #[option(name = "Previous 6 Hours", value = 21_600)]
+    SixHours,
+    #[option(name = "Previous 12 Hours", value = 43_200)]
+    TwelveHours,
+    #[option(name = "Previous 24 Hours", value = 86_400)]
+    TwentyFourHours,
+    #[option(name = "Previous 3 Days", value = 259_200)]
+    ThreeDays,
+    #[option(name = "Previous 7 Days", value = 604_800)]
+    SevenDays,
 }

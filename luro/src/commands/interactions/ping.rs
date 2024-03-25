@@ -1,10 +1,9 @@
 use std::fmt::Write;
 use std::time::Instant;
 
-use crate::{
-    builders::{EmbedBuilder, InteractionResponseBuilder},
-    models::interaction::{InteractionContext, InteractionResult},
-};
+use luro_model::builders::{EmbedBuilder, InteractionResponseBuilder};
+
+use crate::models::interaction::{InteractionContext, InteractionResult};
 
 #[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
 #[command(name = "ping", desc = "See my ping!")]
@@ -70,13 +69,7 @@ impl crate::models::CreateCommand for Ping {
 
         // A random command to check latency time
         let start = Instant::now();
-        let _ = framework
-            .gateway
-            .twilight_client
-            .user(framework.author_id()?)
-            .await?
-            .model()
-            .await?;
+        let _ = framework.gateway.twilight_client.user(framework.author_id()).await?.model().await?;
         let content = format!(
             "{}\n`Get USER` API request achnowledged and received in `{}` milliseconds!",
             sent,

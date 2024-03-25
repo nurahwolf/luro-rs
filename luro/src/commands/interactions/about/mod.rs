@@ -26,7 +26,7 @@ impl crate::models::CreateCommand for About {
                 "Hiya! I'm a general purpose Discord bot that can do a good amount of things, complete with a furry twist.\n\n".to_owned()
             }
         };
-        let mut embed = crate::builders::EmbedBuilder::default();
+        let mut embed = luro_model::builders::EmbedBuilder::default();
         let slash_author = framework.gateway.database.fetch_user(framework.gateway.current_user.id).await?;
 
         // Configuration

@@ -11,9 +11,41 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-thiserror = "1.0.58"
-twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-model = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-
+tracing = "0.1"                 # Logs
+thiserror = "1"                 # Better crafted errors
+time = "0.3"                    # Used for time related functionality
+twilight-model.workspace = true # Interface with Twilight models
+serde = "1.0.197"
+futures-util.workspace = true
+twilight-util.workspace = true
 
 # Optional Dependencies
+tokio = { workspace = true, optional = true }
+toml = { version = "0.8", optional = true }                                                               # Used for instancing the configuration
+twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", optional = true } # Twilight database driver
+sqlx = { version = "0.7", optional = true }                                                               # SQLx database driver
+
+[features]
+# Default and primary features
+default = [
+    "database-sqlx",
+    "database-twilight",
+    "builders",
+    "responses",
+    "config",
+]
+
+builders = []         # Utilities for building objects
+config = ["dep:toml"]
+responses = []        # Standard responses to common errors and situations
+
+# Database drivers
+database-twilight = ["dep:twilight-http", "dep:tokio"]
+database-sqlx = [
+    "dep:sqlx",
+    "sqlx/runtime-tokio",
+    "sqlx/postgres",
+    "sqlx/json",
+    "sqlx/time",
+    "sqlx/uuid",
+]

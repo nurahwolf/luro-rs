@@ -52,34 +52,8 @@ pub fn ban_logged(data: &BannedResponse<'_>, dm_success: &bool) -> EmbedBuilder 
     let reason = reason_formatter(data.reason);
     let target_name = data.target.username();
     let target_id = data.target.user_id;
-    let purged_messages = match data.purged_messages {
-        0 => "No messages deleted".to_owned(),
-        3_600 => "Previous Hour".to_owned(),
-        21_600 => "Previous 6 Hours".to_owned(),
-        43_200 => "Previous 12 Hours".to_owned(),
-        86_400 => "Previous 24 Hours".to_owned(),
-        259_200 => "Previous 3 Days".to_owned(),
-        604_800 => "Previous 7 Days".to_owned(),
-        num => format!("Deleted {num} seconds worth of messages"),
-    };
 
-    let target_id_usize = usize::try_from(target_id.into_nonzero().get()).unwrap_or_default();
-    let longest_word_length = target_name
-        .len()
-        .max(target_id_usize)
-        .max(purged_messages.len().max(DM_SUCCESS.len().max(DM_FAILED.len())));
-
-    let mut description = format!(
-        "<@{target_id}>\n{MEMBER}`{target_name:^longest_word_length$}` `{target_id:^longest_word_length$}`\n"
-    );
-
-    match dm_success {
-        true => description.push_str(&format!("{PRIVATE}{purged_messages:^longest_word_length$}` `{DM_SUCCESS:^longest_word_length$}`{MAIL}\n")),
-        false => description.push_str(&format!("{PRIVATE}`{purged_messages:^longest_word_length$}` `{DM_FAILED:^longest_word_length$}`{MAIL}\n")),
-    };
-
-    description.push_str(&format!("{TICKET}{reason}"));
-    tracing::info!(description);
+    let mut description = format!("<@{target_id}>\n{MEMBER}`{target_name:^longest_word_length$}` `{target_id:^longest_word_length$}`\n");
 
     embed
         .colour(crate::COLOUR_DANGER)

@@ -4,7 +4,8 @@ members = [
     "luro-dice",
     "twilight-interactions-derive",
     "twilight-interactions",
-    "luro-model", "luro-derive",
+    "luro-model",
+    # "luro-derive",
 ]
 resolver = "2"
 
@@ -30,3 +31,13 @@ twilight-util = { git = "https://github.com/twilight-rs/twilight.git", branch = 
     "permission-calculator",
     "snowflake",
 ] }
+
+# Others
+tokio = { version = "1", features = [
+    "sync",
+    "rt",
+    "rt-multi-thread",
+    "fs",
+    "signal",
+] }
+futures-util = "0.3"

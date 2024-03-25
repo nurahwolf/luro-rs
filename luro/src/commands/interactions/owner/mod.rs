@@ -78,7 +78,7 @@ impl std::fmt::Display for Owner {
 
 impl crate::models::CreateCommand for Owner {
     async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
-        if ctx.gateway.database.check_staff(ctx.author_id()?).await?.is_none() {
+        if ctx.gateway.database.check_staff(ctx.author_id()).await?.is_none() {
             return Err(InteractionError::NotOwner);
         }
 

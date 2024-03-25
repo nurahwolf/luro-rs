@@ -1,9 +1,10 @@
+use luro_model::database::Database;
 use twilight_model::{
     application::interaction::{Interaction, InteractionData, InteractionType},
     id::{marker::InteractionMarker, Id},
 };
 
-use crate::{database::Database, responses::StandardResponse};
+use crate::responses::StandardResponse;
 
 use super::interaction::{InteractionContext, InteractionError, InteractionResult};
 

@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
+use luro_model::{config::Config, database::Database};
 use twilight_gateway::Shard;
-
-use crate::{database::Database, models::Config};
 
 use super::GatewayError;
 

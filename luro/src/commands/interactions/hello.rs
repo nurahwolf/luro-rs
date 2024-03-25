@@ -14,7 +14,7 @@ impl crate::models::CreateCommand for Hello {
                 r.content(format!(
                     "Hello World! I am **{}**. It's nice to meet you, <@{}>!",
                     current_user,
-                    framework.author_id().unwrap()
+                    framework.author_id()
                 ))
             })
             .await

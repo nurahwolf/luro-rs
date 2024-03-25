@@ -1,4 +1,6 @@
-use crate::{builders::EmbedBuilder, models::interaction::InteractionError};
+use luro_model::builders::EmbedBuilder;
+
+use crate::models::interaction::InteractionError;
 
 pub fn internal_error(error: &InteractionError) -> EmbedBuilder {
     let mut embed = EmbedBuilder::default();

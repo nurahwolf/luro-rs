@@ -1,7 +1,9 @@
+use luro_model::builders::EmbedBuilder;
+
 /// A response for if the command is not known
-pub fn unknown_command(name: &str) -> crate::builders::EmbedBuilder {
+pub fn unknown_command(name: &str) -> EmbedBuilder {
     tracing::warn!("The command {name} is not known, or the command is disabled");
-    let mut embed = crate::builders::EmbedBuilder::default();
+    let mut embed = EmbedBuilder::default();
     embed
         .title("Unknown Command Received")
         .colour(crate::COLOUR_DANGER)

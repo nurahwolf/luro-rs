@@ -7,31 +7,21 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
-tokio = { version = "1", features = [
-    "sync",
-    "rt",
-    "rt-multi-thread",
-    "fs",
-    "signal",
-] }
+tokio.workspace = true
 tracing = "0.1"
 luro-model.path = "../luro-model"
-luro-derive.path = "../luro-derive"
+# luro-derive.path = "../luro-derive"
 tracing-subscriber = "0.3"
 twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
 twilight-lavalink = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", optional = true }
 twilight-model = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
 twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
-twilight-util = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", features = [
-    "builder",
-    "permission-calculator",
-    "snowflake",
-] }
+twilight-util.workspace = true
 futures-util = "0.3"
 fastrand = "*"
 toml = "0.8"
 serde = "1"
-reqwest = { version = "0.11", features = ["json", "stream"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
 serde_json = "1"
 
 # Optional dependencies

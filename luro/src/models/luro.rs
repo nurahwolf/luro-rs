@@ -1,11 +1,8 @@
 use std::sync::Arc;
 
+use luro_model::{config::Config, database::Database};
 use twilight_gateway::MessageSender;
 use twilight_model::user::CurrentUser;
-
-use crate::database::{Database, DatabaseError};
-
-use super::config::GatewayConfigError;
 
 mod bot_name;
 mod create_shards;
@@ -21,11 +18,11 @@ pub enum GatewayError {
     #[error("Twilight failed to convert a response into an item")]
     TwilightSerialization(#[from] twilight_http::response::DeserializeBodyError),
     #[error("The configuration had an error")]
-    ConfigurationError(#[from] GatewayConfigError),
+    ConfigurationError(#[from] luro_model::config::Error),
     #[error("The embedded HTTP client had an error")]
     HTTPClientError(#[from] reqwest::Error),
     #[error("The database had an error")]
-    DatebaseError(#[from] DatabaseError),
+    DatebaseError(#[from] luro_model::database::Error),
     #[error("Failed to setup the correct number of shards")]
     ShardError(#[from] twilight_gateway::error::StartRecommendedError),
     // #[error("the data for key `{0}` is not available")]
@@ -36,12 +33,12 @@ pub enum GatewayError {
     // Unknown,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Luro {
     pub application: twilight_model::oauth::Application,
     pub database: Database,
     pub shard: Option<MessageSender>,
-    pub config: super::Config,
+    pub config: Config,
     pub twilight_client: Arc<twilight_http::Client>,
     pub current_user: Arc<CurrentUser>,
     pub http_client: reqwest::Client,

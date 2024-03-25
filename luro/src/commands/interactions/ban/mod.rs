@@ -1,6 +1,8 @@
-use crate::{
-    embeds::Punishment,
-    models::{MemberContext, Role, User},
+use luro_model::{
+    database::Database,
+    guild::Guild,
+    response::{Punishment, PunishmentData},
+    user::{MemberContext, User},
 };
 use twilight_http::request::AuditLogReason;
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -11,56 +13,7 @@ use twilight_model::{
 
 use crate::models::interaction::{InteractionContext, InteractionError as Error, InteractionResult};
 
-#[derive(twilight_interactions::command::CommandOption, twilight_interactions::command::CreateOption)]
-pub enum TimeToBan {
-    #[option(name = "Don't Delete Any", value = 0)]
-    None,
-    #[option(name = "Previous Hour", value = 3_600)]
-    Hour,
-    #[option(name = "Previous 6 Hours", value = 21_600)]
-    SixHours,
-    #[option(name = "Previous 12 Hours", value = 43_200)]
-    TwelveHours,
-    #[option(name = "Previous 24 Hours", value = 86_400)]
-    TwentyFourHours,
-    #[option(name = "Previous 3 Days", value = 259_200)]
-    ThreeDays,
-    #[option(name = "Previous 7 Days", value = 604_800)]
-    SevenDays,
-}
-
-#[derive(twilight_interactions::command::CommandOption, twilight_interactions::command::CreateOption, Debug, PartialEq)]
-pub enum Reason {
-    /// Someone who attempts to steal your money by offering fake commissions
-    #[option(
-        name = "Art Scam - Someone who attempts to steal your money by offering fake commissions",
-        value = "art-scam"
-    )]
-    ArtScam,
-
-    /// Compromised Account
-    #[option(
-        name = "Compromised Account - An account that has been token logged, or is spreading malware",
-        value = "compromised"
-    )]
-    Compromised,
-
-    /// Someone who is being a little bitch
-    #[option(name = "Troll - Someone who is being a little bitch", value = "troll")]
-    Troll,
-
-    /// Someone who joined just to be a little bitch
-    #[option(name = "Raider - Someone who joined just to be a little bitch", value = "raider")]
-    Raider,
-
-    /// Racist, Sexist and other such things.
-    #[option(name = "Vile - Racist, Sexist and other such plesent things.", value = "")]
-    Vile,
-
-    /// A completely custom reason if the others do not fit
-    #[option(name = "Custom Reason - A completely custom reason if the others do not fit", value = "custom")]
-    Custom,
-}
+use super::{PunishmentPurgeAmount, PunishmentReason};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "ban", desc = "Ban a user", dm_permission = false)]
@@ -68,9 +21,9 @@ pub struct Ban {
     /// The user to ban
     pub user_id: Id<UserMarker>,
     /// Message history to purge in seconds. Defaults to 1 day. Max is 604800.
-    pub purge: TimeToBan,
+    pub purge: PunishmentPurgeAmount,
     /// The reason they should be banned.
-    pub reason: Reason,
+    pub reason: PunishmentReason,
     /// Some added description to why they should be banned
     pub details: Option<String>,
     /// Hide the banned message from chat, useful for discreet bans
@@ -79,77 +32,50 @@ pub struct Ban {
 
 impl crate::models::CreateCommand for Ban {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
-        tracing::info!("acknowledge ineraction");
         framework.ack_interaction(self.ephemeral.unwrap_or_default()).await?;
 
         let twilight_client = &framework.gateway.twilight_client;
         let guild = framework.guild().await?;
-        let author = framework.author_member(guild.id()).await?;
-        let bot = framework.bot_member(guild.id()).await?;
-        let target = framework.fetch_user(self.user_id).await?;
-        tracing::info!("fetched data");
+        let mut author = framework.author_member(guild.twilight_guild.id).await?;
+        let mut bot = framework.bot_member(guild.twilight_guild.id).await?;
+        let mut target = framework.fetch_user(self.user_id).await?;
 
-        let (author_highest_role, author_permissions) = author.permission_matrix();
-        let (bot_highest_role, bot_permissions) = bot.permission_matrix();
-        tracing::info!("fetched permissions");
+        permission_check(&mut author, &mut bot, &framework.gateway.database, &guild, &mut target).await?;
 
-        if !bot_permissions.contains(Permissions::BAN_MEMBERS) {
-            return Err(Error::BotMissingPermission(Permissions::BAN_MEMBERS));
-        }
-
-        if !author_permissions.contains(Permissions::BAN_MEMBERS) {
-            return Err(Error::MissingPermission(Permissions::BAN_MEMBERS));
-        }
-
-        if target.user_id() == author.guild_owner_id {
-            return Err(Error::ModifyServerOwner);
-        }
-
-        permission_check(&author, &target, bot_highest_role, author_highest_role)?;
-        tracing::info!("permissions checked");
-
-        // Checks passed, now let's action the user
-        let reason = reason(self.reason, self.details);
-        tracing::info!("created reason");
-
-        let mut punishment = Punishment {
-            punishment_type: crate::embeds::PunishmentType::Banned,
-            moderator: &author,
-            target: &target,
-            reason: reason.as_deref(),
-            purged_messages: self.purge.value(),
-            guild_name: &guild.twilight_guild.name,
-            dm_success: None,
-        };
-        tracing::info!("created ban embed");
+        let reason = self.reason.fmt(self.details);
+        let mut punishment = Punishment::Banned(
+            PunishmentData {
+                author: &author,
+                target: &target,
+                reason: &reason,
+                guild: &guild,
+                dm_successful: None,
+            },
+            self.purge.value(),
+        );
 
         let target_dm = twilight_client.create_private_channel(target.user_id()).await;
-        punishment.dm_success = Some(match target_dm {
+        match target_dm {
             Ok(channel) => {
-                let target_dm = channel.model().await?;
-                twilight_client
-                    .create_message(target_dm.id)
-                    .embeds(&[punishment.embed()?.into()])
-                    .await
-                    .is_ok()
+                let channel_id = channel.model().await?.id;
+                let success = twilight_client
+                    .create_message(channel_id)
+                    .embeds(&[punishment.embed().into()])
+                    .await;
+                punishment.data().dm_successful = Some(success.is_ok())
             }
-            Err(_) => false,
-        });
+            Err(_) => punishment.data().dm_successful = Some(false),
+        }
 
-        // TODO: Fix this
-        framework.respond(|r| r.add_embed(punishment.embed().unwrap())).await?;
-        tracing::info!("responded to author");
+        framework.respond(|r| r.add_embed(punishment.embed())).await?;
 
         let ban = twilight_client.create_ban(guild.twilight_guild.id, target.user_id());
-        let purge_seconds = self.purge.value() as u32;
-        let ban = ban.delete_message_seconds(purge_seconds);
-        tracing::debug!("Purging {purge_seconds:#?} seconds worth of messages!");
+        let ban = ban.delete_message_seconds(self.purge.value() as u32);
 
-        match reason {
-            None => ban.await,
-            Some(ref reason) => ban.reason(reason).await,
+        match reason.is_empty() {
+            false => ban.await,
+            true => ban.reason(&reason).await,
         }?;
-        tracing::info!("banned user");
 
         // moderator.moderation_actions_performed += 1;
         // ctx.database.modify_user(&moderator.id, &moderator).await?;
@@ -171,53 +97,59 @@ impl crate::models::CreateCommand for Ban {
     }
 }
 
-fn reason(reason: Reason, details: Option<String>) -> Option<String> {
-    let mut reason_string = match reason {
-        Reason::ArtScam => "[Art Scam]".to_owned(),
-        Reason::Compromised => "[Compromised Account]".to_owned(),
-        Reason::Custom => String::new(),
-        Reason::Raider => "[Raider]".to_owned(),
-        Reason::Troll => "[Troll]".to_owned(),
-        Reason::Vile => "[Vile]".to_owned(),
-    };
-
-    if let Some(details) = details {
-        match reason == Reason::Custom {
-            true => reason_string.push_str(&details.to_string()),
-            false => reason_string.push_str(&format!(" - {details}")),
-        }
-    }
-
-    match reason_string.is_empty() {
-        true => None,
-        false => Some(reason_string),
-    }
-}
-
-fn permission_check(
-    author: &MemberContext,
-    target: &User,
-    bot_highest_role: Option<Role>,
-    author_highest_role: Option<Role>,
+async fn permission_check(
+    author: &mut MemberContext,
+    bot: &mut MemberContext,
+    db: &Database,
+    guild: &Guild,
+    target: &mut User,
 ) -> InteractionResult<()> {
-    // Check they are not overriding the role hierarchy, unless they are the server owner
-    if author.guild_owner_id != author.user.user_id {
-        tracing::info!("Bypassing heirarchy checks as user is guild owner");
+    // AUTHOR: Bypass checks if guild owner
+    if author.user_id() != guild.twilight_guild.owner_id {
+        tracing::debug!("Bypassing heirarchy checks as author is guild owner");
         return Ok(());
     }
 
-    if let Some(Some(target_highest_role)) = target.permission_matrix().map(|x| x.0) {
-        // Check bot is higher than the target
-        if let Some(bot_highest_role) = bot_highest_role {
-            if target_highest_role <= bot_highest_role {
-                return Err(Error::UserHeirarchy);
-            }
-        }
+    // Sync roles to ensure we have the most up-to-date data possible
+    author.sync_roles(&db).await?;
+    bot.sync_roles(&db).await?;
+    if let User::Member(target) = target {
+        target.sync_roles(&db).await?;
+    }
 
-        // Check the author is higher than the victim
-        if let Some(author_highest_role) = author_highest_role {
-            if target_highest_role <= author_highest_role {
-                return Err(Error::BotHeirarchy);
+    let (author_highest_role, author_permissions) = author.permission_matrix_highest_role(guild.twilight_guild.owner_id);
+    let (bot_highest_role, bot_permissions) = bot.permission_matrix_highest_role(guild.twilight_guild.owner_id);
+
+    // BOT: Missing permisisons
+    if !bot_permissions.contains(Permissions::BAN_MEMBERS) {
+        return Err(Error::BotMissingPermission(Permissions::BAN_MEMBERS));
+    }
+
+    // AUTHOR: Missing permisisons
+    if !author_permissions.contains(Permissions::BAN_MEMBERS) {
+        return Err(Error::MissingPermission(Permissions::BAN_MEMBERS));
+    }
+
+    // TARGET: Target is the guild owner
+    if target.user_id() == guild.twilight_guild.owner_id {
+        return Err(Error::ModifyServerOwner);
+    }
+
+    // Actual permission check
+    if let User::Member(target) = target {
+        if let Some(target_highest_role) = target.roles.first() {
+            // Check bot is higher than the target
+            if let Some(bot_highest_role) = bot_highest_role {
+                if target_highest_role <= bot_highest_role {
+                    return Err(Error::UserHeirarchy);
+                }
+            }
+
+            // Check the author is higher than the victim
+            if let Some(author_highest_role) = author_highest_role {
+                if target_highest_role <= author_highest_role {
+                    return Err(Error::BotHeirarchy);
+                }
             }
         }
     }

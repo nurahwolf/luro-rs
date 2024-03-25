@@ -1,15 +1,13 @@
+use luro_model::{builders::EmbedBuilder, guild::Guild};
 use twilight_model::{
     guild::Permissions,
     id::{marker::UserMarker, Id},
 };
 
-use crate::models::User;
-
 // mod bot_heirarchy;
 mod bot_missing_permission;
 mod internal_error;
 mod missing_permissions;
-mod not_guild;
 mod not_owner;
 mod permission_modify_server_owner;
 mod permission_not_bot_staff;
@@ -17,13 +15,6 @@ mod unknown_command;
 // mod user_action;
 // mod user_heirarchy;
 // mod punishment;
-
-pub struct BannedResponse<'a> {
-    pub target: &'a User,
-    pub author: &'a User,
-    pub reason: Option<&'a str>,
-    pub purged_messages: i64,
-}
 
 pub enum StandardResponse<'a> {
     InternalError(&'a anyhow::Error),
@@ -46,35 +37,27 @@ pub enum StandardResponse<'a> {
 
 impl<'a> StandardResponse<'a> {
     /// Convert the response to an [EmbedBuilder]
-    pub fn builder(&self) -> crate::builders::EmbedBuilder {
+    pub fn builder(&self) -> EmbedBuilder {
         match self {
             Self::InternalError(error) => internal_error::internal_error(error),
             Self::PermissionNotBotStaff => permission_not_bot_staff::permission_not_bot_staff(),
-            Self::PermissionModifyServerOwner(user_id) => {
-                permission_modify_server_owner::permission_server_owner(user_id)
-            }
+            Self::PermissionModifyServerOwner(user_id) => permission_modify_server_owner::permission_server_owner(user_id),
             Self::UnknownCommand(name) => unknown_command::unknown_command(name),
-            Self::NotGuild => not_guild::not_guild(),
-            Self::BotMissingPermission(permission) => {
-                bot_missing_permission::bot_missing_permission_embed(permission)
-            }
+            Self::NotGuild => luro_model::response::not_guild::not_guild(None, None),
+            Self::BotMissingPermission(permission) => bot_missing_permission::bot_missing_permission_embed(permission),
             // Self::UserHeirarchy(user, target) => user_heirarchy::user_hierarchy_embed(user, target),
             // Self::BotHeirarchy(user, bot) => bot_heirarchy::bot_hierarchy_embed(user, bot),
-            Self::MissingPermission(permission) => {
-                missing_permissions::missing_permission_embed(permission)
-            }
-            Self::NotOwner(user_id, command_name) => {
-                not_owner::not_owner_embed(user_id, command_name)
-            } // Self::BannedUserResponse(data, guild_name) => punishment::ban_user(data, guild_name),
-              // Self::BannedModeratorResponse(data, dm_success) => punishment::ban_logged(data, dm_success),
-              // Self::Punishment(guild, kind, moderator, target) => {
-              //     user_action::new_punishment_embed(guild, kind, moderator, target).unwrap()
-              // }
+            Self::MissingPermission(permission) => missing_permissions::missing_permission_embed(permission),
+            Self::NotOwner(user_id, command_name) => not_owner::not_owner_embed(user_id, command_name), // Self::BannedUserResponse(data, guild_name) => punishment::ban_user(data, guild_name),
+                                                                                                        // Self::BannedModeratorResponse(data, dm_success) => punishment::ban_logged(data, dm_success),
+                                                                                                        // Self::Punishment(guild, kind, moderator, target) => {
+                                                                                                        //     user_action::new_punishment_embed(guild, kind, moderator, target).unwrap()
+                                                                                                        // }
         }
     }
 
     /// Append a field to state if the response was successfully sent in a DM
-    pub fn dm_sent(&self, success: bool) -> crate::builders::EmbedBuilder {
+    pub fn dm_sent(&self, success: bool) -> EmbedBuilder {
         let mut embed = self.builder();
         let success = match success {
             true => "<:mail:1175136204648349756> **Direct Message:** `Success!` <:join:1175114514216259615>",
@@ -90,7 +73,7 @@ impl<'a> StandardResponse<'a> {
     }
 
     /// Append the guild information as the footer
-    pub fn guild_info(&self, guild: &crate::models::Guild) -> crate::builders::EmbedBuilder {
+    pub fn guild_info(&self, guild: &Guild) -> EmbedBuilder {
         let mut embed = self.builder();
         embed.footer(|footer| footer.text(format!("Guild: {}", guild.twilight_guild.name)));
         embed

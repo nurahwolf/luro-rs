@@ -1,3 +1,5 @@
+use luro_model::builders::EmbedBuilder;
+
 const INSULTS: [&str; 50] = [
     "Great job motherfucker, you are not the bot owner and do not have permission to use that command.\n\n**THE COMMAND IS LITERALLY NAMED OWNER ONLY! WHAT THE HECK DID YOU THINK WOULD HAPPEN!?**",
     "Dork, this is literally an owner only command. Did you READ what the command was named?",
@@ -52,12 +54,9 @@ const INSULTS: [&str; 50] = [
 ];
 
 /// Returns an embed containing a standardised error message that we were unable to get the channel that an interaction took place in.
-pub fn not_owner_embed(
-    user_id: &twilight_model::id::Id<twilight_model::id::marker::UserMarker>,
-    command_name: &str,
-) -> crate::builders::EmbedBuilder {
+pub fn not_owner_embed(user_id: &twilight_model::id::Id<twilight_model::id::marker::UserMarker>, command_name: &str) -> EmbedBuilder {
     tracing::warn!("User {user_id} attempted to run the command {command_name} without being in my list of authorised users...");
-    let mut embed = crate::builders::EmbedBuilder::default();
+    let mut embed = EmbedBuilder::default();
     let insult = fastrand::Rng::new().choice(INSULTS).unwrap_or(&INSULTS[0]);
 
     embed

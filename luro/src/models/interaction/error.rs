@@ -1,6 +1,5 @@
+use luro_model::builders::EmbedBuilder;
 use twilight_model::guild::Permissions;
-
-use crate::{builders::EmbedBuilder, embeds::internal_error};
 
 use super::{InteractionContext, InteractionResult};
 
@@ -12,9 +11,8 @@ pub enum InteractionError {
     NotComponent,
     #[error("PING interactions do not have author data")]
     NoAuthor,
-    #[cfg(feature = "database-sqlx")]
     #[error("The database returned an error")]
-    DatabaseError(#[from] sqlx::Error),
+    DatabaseError(#[from] luro_model::database::Error),
     #[error("No application data to create a command with!")]
     NoApplicationData,
     #[error("Interaction is not in a guild")]
@@ -51,7 +49,7 @@ impl InteractionError {
     pub fn embed(&self) -> EmbedBuilder {
         match self {
             Self::BotHeirarchy => todo!(),
-            error => internal_error(error),
+            error => crate::embeds::internal_error(error),
         }
     }
 

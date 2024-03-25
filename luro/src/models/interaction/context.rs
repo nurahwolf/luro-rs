@@ -23,5 +23,5 @@ pub struct InteractionContext {
     pub shard: twilight_gateway::MessageSender,
     pub latency: Latency,
     pub interaction: twilight_model::application::interaction::Interaction,
-    pub response: crate::builders::InteractionResponseBuilder,
+    pub response: luro_model::builders::InteractionResponseBuilder,
 }

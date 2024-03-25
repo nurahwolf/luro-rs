@@ -1,8 +1,8 @@
+use luro_model::builders::InteractionResponseBuilder;
 use twilight_gateway::{Latency, MessageSender};
 use twilight_model::gateway::payload::incoming::InteractionCreate;
 
 use crate::{
-    builders::InteractionResponseBuilder,
     gateway::{GatewayArc, GatewayResult},
     models::interaction::InteractionContext,
 };
@@ -12,7 +12,7 @@ pub async fn interaction_create(gw: GatewayArc, sh: MessageSender, latency: Late
     let framework = InteractionContext {
         gateway: gw,
         shard: sh,
-        latency: latency,
+        latency,
         interaction: int.0,
         response: InteractionResponseBuilder::default(),
     };

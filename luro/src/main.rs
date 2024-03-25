@@ -1,17 +1,11 @@
 #![feature(string_remove_matches)]
 #![feature(let_chains)]
 
-pub mod builders;
 pub mod commands;
-pub mod database;
 pub mod embeds;
 mod error_handler;
 mod gateway;
-#[cfg(any(
-    feature = "logs-stdout",
-    feature = "logs-file",
-    feature = "logs-tokio-console"
-))]
+#[cfg(any(feature = "logs-stdout", feature = "logs-file", feature = "logs-tokio-console"))]
 mod logging;
 pub mod models;
 pub mod responses;
@@ -43,15 +37,9 @@ pub static SHUTDOWN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBo
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
-    #[cfg(any(
-        feature = "logs-stdout",
-        feature = "logs-file",
-        feature = "logs-tokio-console"
-    ))]
+    #[cfg(any(feature = "logs-stdout", feature = "logs-file", feature = "logs-tokio-console"))]
     let _guards = logging::init_logging(); // Start the logging service first, for understandable reasons
-    let (gateway, shards) =
-        gateway::Gateway::create_shards(INTENTS - twilight_gateway::Intents::GUILD_PRESENCES)
-            .await?;
+    let (gateway, shards) = gateway::Gateway::create_shards(INTENTS - twilight_gateway::Intents::GUILD_PRESENCES).await?;
     let mut senders = Vec::with_capacity(shards.len()); // A collection of senders, used to communicate with the shards
     let mut tasks = Vec::with_capacity(shards.len()); // A collection of tasks, which is used to gracefully close the bot
 

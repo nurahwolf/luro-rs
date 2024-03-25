@@ -1,4 +1,6 @@
-use crate::{builders::InteractionResponseBuilder, models::interaction::InteractionResult};
+use luro_model::builders::InteractionResponseBuilder;
+
+use crate::models::interaction::InteractionResult;
 
 impl super::InteractionContext {
     /// Send an existing response against an interaction.

@@ -1,4 +1,5 @@
 use base64::Engine;
+use luro_model::builders::InteractionResponseBuilder;
 
 use crate::models::interaction::{InteractionContext, InteractionResult};
 
@@ -41,7 +42,7 @@ impl crate::models::CreateCommand for Base64 {
 
         match bait.unwrap_or_default() {
             true => {
-                let author_id = framework.author_id()?;
+                let author_id = framework.author_id();
                 framework.response_send(&response).await?;
                 framework
                     .respond(|response| {
@@ -57,11 +58,7 @@ impl crate::models::CreateCommand for Base64 {
 }
 
 /// Simply send a response with a few checks.
-async fn response(
-    framework: &InteractionContext,
-    input: &str,
-    decode_operation: bool,
-) -> anyhow::Result<crate::builders::InteractionResponseBuilder> {
+async fn response(framework: &InteractionContext, input: &str, decode_operation: bool) -> anyhow::Result<InteractionResponseBuilder> {
     let mut response = match decode_operation {
         true => decode_response(framework.accent_colour().await, input)?,
         false => encode_response(framework.accent_colour().await, &encode(input))?,
@@ -70,8 +67,8 @@ async fn response(
     Ok(response)
 }
 
-pub fn decode_response(accent_colour: u32, input: &str) -> anyhow::Result<crate::builders::InteractionResponseBuilder> {
-    let mut response = crate::builders::InteractionResponseBuilder::default();
+pub fn decode_response(accent_colour: u32, input: &str) -> anyhow::Result<InteractionResponseBuilder> {
+    let mut response = InteractionResponseBuilder::default();
 
     response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("base64-encode").label("Encode"))));
 
@@ -82,8 +79,8 @@ pub fn decode_response(accent_colour: u32, input: &str) -> anyhow::Result<crate:
     Ok(response)
 }
 
-pub fn encode_response(accent_colour: u32, input: &str) -> anyhow::Result<crate::builders::InteractionResponseBuilder> {
-    let mut response = crate::builders::InteractionResponseBuilder::default();
+pub fn encode_response(accent_colour: u32, input: &str) -> anyhow::Result<InteractionResponseBuilder> {
+    let mut response = InteractionResponseBuilder::default();
 
     response.components(|c| c.action_row(|a| a.button(|button| button.custom_id("base64-decode").label("Decode"))));
 

@@ -1,3 +1,5 @@
+use luro_model::builders::EmbedBuilder;
+
 const INSULTS: [&str; 50] = [
     "Great job motherfucker, you are not the bot owner and do not have permission to use that command.\n\n**THE COMMAND IS LITERALLY NAMED OWNER ONLY! WHAT THE HECK DID YOU THINK WOULD HAPPEN!?**",
     "Dork, this is literally an owner only command. Did you READ what the command was named?",
@@ -52,8 +54,8 @@ const INSULTS: [&str; 50] = [
 ];
 
 /// An embed for when someone runs a privileged command that they do not have permission for.
-pub fn permission_not_bot_staff() -> crate::builders::EmbedBuilder {
-    let mut embed = crate::builders::EmbedBuilder::default();
+pub fn permission_not_bot_staff() -> EmbedBuilder {
+    let mut embed = EmbedBuilder::default();
     embed
         .title("You are not the bot owner!")
         .colour(crate::COLOUR_DANGER)

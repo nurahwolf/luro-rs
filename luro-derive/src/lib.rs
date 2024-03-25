@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 
-mod slash_command;
 mod functions;
+mod slash_command;
 
 #[proc_macro_attribute]
 pub fn slash_command(args: TokenStream, function: TokenStream) -> TokenStream {
@@ -18,7 +18,7 @@ pub fn slash_command(args: TokenStream, function: TokenStream) -> TokenStream {
     let function = syn::parse_macro_input!(function as syn::ItemFn);
 
     match slash_command::slash_command(args, function) {
-        Ok(x) => x,
+        Ok(slash_command) => slash_command,
         Err(e) => e.write_errors().into(),
     }
 }

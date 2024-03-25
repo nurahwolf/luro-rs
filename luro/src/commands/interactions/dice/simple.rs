@@ -91,7 +91,7 @@ impl crate::models::CreateCommand for Simple {
 
             format!(
                 "<@{}> is rolling for the reason:\n{reason}\n**Result:** `{}`\n**Total:** `{}`",
-                framework.author_id()?,
+                framework.author_id(),
                 result.string_result,
                 result.dice_total
             )
