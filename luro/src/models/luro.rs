@@ -11,6 +11,8 @@ mod register_commands;
 
 #[derive(thiserror::Error, Debug)]
 pub enum GatewayError {
+    #[error("The database had an error.")]
+    DatabaseError(#[from] luro_model::database::Error),
     #[error("The DISCORD_TOKEN environment variable was not present! You MUST pass this in order for me to start!")]
     NoToken,
     #[error("Twilight had an error while performing a HTTP request")]
@@ -21,8 +23,6 @@ pub enum GatewayError {
     ConfigurationError(#[from] luro_model::config::Error),
     #[error("The embedded HTTP client had an error")]
     HTTPClientError(#[from] reqwest::Error),
-    #[error("The database had an error")]
-    DatebaseError(#[from] luro_model::database::Error),
     #[error("Failed to setup the correct number of shards")]
     ShardError(#[from] twilight_gateway::error::StartRecommendedError),
     // #[error("the data for key `{0}` is not available")]

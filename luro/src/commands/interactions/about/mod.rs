@@ -27,12 +27,12 @@ impl crate::models::CreateCommand for About {
             }
         };
         let mut embed = luro_model::builders::EmbedBuilder::default();
-        let slash_author = framework.gateway.database.fetch_user(framework.gateway.current_user.id).await?;
+        let bot_user = framework.fetch_user(framework.gateway.current_user.id).await?;
 
         // Configuration
         embed.colour(framework.accent_colour().await);
-        embed.title(&slash_author.name());
-        embed.thumbnail(|thumbnail| thumbnail.url(slash_author.avatar_url()));
+        embed.title(&bot_user.name());
+        embed.thumbnail(|thumbnail| thumbnail.url(bot_user.avatar_url()));
         embed.footer(|footer| footer.text("Written in twilight.rs!"));
 
         // Build our line processor for calculating padding
@@ -136,7 +136,7 @@ impl crate::models::CreateCommand for About {
         for staff in framework.gateway.database.fetch_staff().await? {
             match self.show_username.unwrap_or_default() {
                 true => writeln!(staff_list, "- {}", &staff.name())?,
-                false => writeln!(staff_list, "- <@{}>", staff.user_id())?,
+                false => writeln!(staff_list, "- <@{}>", staff.twilight_user.id)?,
             }
         }
         embed.field(|field| field.field("Those with 'Administrator' access!", &staff_list, false));

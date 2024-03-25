@@ -1,17 +1,33 @@
 use twilight_model::id::{
-    marker::{ChannelMarker, GuildMarker, RoleMarker},
+    marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
     Id,
 };
 
-pub struct Guild {
+use crate::{
+    database::{Database, Error},
+    user::{MemberContext, User},
+};
+
+pub struct Guild<'a> {
     pub accent_colour_custom: Option<u32>,
     pub accent_colour: Option<u32>,
+    pub database: &'a Database,
     pub moderator_actions_log_channel: Option<Id<ChannelMarker>>,
     pub role_blacklist: Vec<Id<RoleMarker>>,
     pub twilight_guild: twilight_model::guild::Guild,
 }
 
-impl Guild {
+impl<'a> Guild<'a> {
+    /// Attempts to fetch a member, but returns a user if it fails.
+    pub async fn user(&self, user_id: Id<UserMarker>) -> Result<User, Error> {
+        self.database.fetch_member_or_user(Some(self.twilight_guild.id), user_id).await
+    }
+
+    /// Attempts to fetch a member, fails if the member is not found
+    pub async fn member(&self, user_id: Id<UserMarker>) -> Result<MemberContext, Error> {
+        self.database.fetch_member(self.twilight_guild.id, user_id).await
+    }
+
     pub fn id(&self) -> Id<GuildMarker> {
         self.twilight_guild.id
     }
@@ -30,11 +46,12 @@ impl Guild {
     }
 }
 
-impl From<twilight_model::guild::Guild> for Guild {
-    fn from(twilight_guild: twilight_model::guild::Guild) -> Self {
+impl<'a> From<(&'a Database, twilight_model::guild::Guild)> for Guild<'a> {
+    fn from((database, twilight_guild): (&'a Database, twilight_model::guild::Guild)) -> Self {
         Self {
             accent_colour_custom: None,
             accent_colour: None,
+            database,
             moderator_actions_log_channel: None,
             role_blacklist: Default::default(),
             twilight_guild,

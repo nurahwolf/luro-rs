@@ -15,6 +15,18 @@ pub struct UserContext {
 }
 
 impl UserContext {
+    /// Get's the user's preferred / pretty name
+    ///
+    /// Returns the first match
+    /// Member Nickname -> Global Name -> Username -> Legacy Username
+    pub fn name(&self) -> String {
+        self.twilight_user
+            .global_name
+            .as_ref()
+            .map(|x| x.to_owned())
+            .unwrap_or_else(|| self.username())
+    }
+
     /// Get's the user's username name
     ///
     /// Returns the first match

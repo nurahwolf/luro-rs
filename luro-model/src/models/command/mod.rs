@@ -31,11 +31,12 @@ pub enum InteractionError {
     NotComponent,
     #[error("PING interactions do not have author data")]
     NoAuthor,
-    #[cfg(feature = "database-sqlx")]
     #[error("The database returned an error")]
-    DatabaseError(#[from] sqlx::Error),
+    DatabaseError(#[from] crate::database::Error),
     #[error("No application data to create a command with!")]
     NoApplicationData,
+    #[error("A command requires member data, but there is no member data present")]
+    NoMemberData,
     #[error("Interaction is not in a guild")]
     NotGuild,
     // #[error("Twilight failed to parse")]

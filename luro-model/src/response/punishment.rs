@@ -30,7 +30,7 @@ pub struct PunishmentData<'a> {
     /// The reason the action was performed
     pub reason: &'a str,
     /// Information relating to the guild in which they were actioned from
-    pub guild: &'a Guild,
+    pub guild: &'a Guild<'a>,
     /// Has the user been informed about their punishment. This is not set when the punishment is made, and set when we attempt to inform them.
     pub dm_successful: Option<bool>,
 }

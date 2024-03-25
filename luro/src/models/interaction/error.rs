@@ -5,6 +5,8 @@ use super::{InteractionContext, InteractionResult};
 
 #[derive(Debug, thiserror::Error)]
 pub enum InteractionError {
+    #[error("A command requires member data, but there is no member data present")]
+    NoMemberData,
     #[error("This command cannot be used as it REQUIRES a database backend in order to function.")]
     RequiresDatabase,
     #[error("Only Component Interactions have this data")]

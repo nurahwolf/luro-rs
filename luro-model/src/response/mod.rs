@@ -18,7 +18,7 @@ use crate::context::SlashContext;
 /// This is an enum that wraps the different types of 'Contexts' the responses could be called from.
 pub enum Response<'a> {
     /// A response crafted in a slash command context.
-    SlashCommand(&'a SlashContext),
+    SlashCommand(&'a SlashContext<'a>),
 }
 
 impl<'a> Response<'a> {

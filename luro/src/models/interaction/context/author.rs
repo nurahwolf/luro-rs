@@ -1,15 +1,10 @@
-use luro_model::{
-    database::Error,
-    user::{MemberContext, User},
-};
-use twilight_model::id::{marker::GuildMarker, Id};
+use luro_model::{database::Error, user::User};
 
 impl super::InteractionContext {
     pub async fn author(&self) -> Result<User, Error> {
-        self.gateway.database.fetch_user(self.author_id()).await
-    }
-
-    pub async fn author_member(&self, guild_id: Id<GuildMarker>) -> Result<MemberContext, Error> {
-        self.gateway.database.fetch_member(guild_id, self.author_id()).await
+        self.gateway
+            .database
+            .fetch_member_or_user(self.interaction.guild_id, self.author_id())
+            .await
     }
 }

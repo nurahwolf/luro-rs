@@ -32,11 +32,12 @@ impl crate::models::CreateCommand for Command {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         framework.ack_interaction(self.ephemeral.unwrap_or_default()).await?;
 
-        let twilight_client = &framework.gateway.twilight_client;
         let guild = framework.guild().await?;
-        let mut author = framework.author_member(guild.twilight_guild.id).await?;
-        let mut bot = framework.bot_member(guild.twilight_guild.id).await?;
-        let mut target = framework.fetch_user(self.user_id).await?;
+        let twilight_client = &framework.gateway.twilight_client;
+
+        let mut author = guild.member(framework.author_id()).await?;
+        let mut bot = guild.member(framework.gateway.current_user.id).await?;
+        let mut target = guild.user(self.user_id).await?;
 
         permission_check(&mut author, &mut bot, &framework.gateway.database, &guild, &mut target).await?;
 
@@ -79,7 +80,7 @@ async fn permission_check(
     author: &mut MemberContext,
     bot: &mut MemberContext,
     db: &Database,
-    guild: &Guild,
+    guild: &Guild<'_>,
     target: &mut User,
 ) -> InteractionResult<()> {
     // AUTHOR: Bypass checks if guild owner

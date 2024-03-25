@@ -24,10 +24,11 @@ impl crate::models::CreateCommand for Fakeban {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         framework.ack_interaction(false).await?;
 
-        let twilight_client = &framework.gateway.twilight_client;
         let guild = framework.guild().await?;
-        let author = framework.author_member(guild.twilight_guild.id).await?;
-        let target = framework.fetch_user(self.user_id).await?;
+        let twilight_client = &framework.gateway.twilight_client;
+
+        let author = guild.member(framework.author_id()).await?;
+        let target = guild.user(self.user_id).await?;
 
         let reason = self.reason.fmt(self.details);
         let mut punishment = Punishment::Banned(

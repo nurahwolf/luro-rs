@@ -1,6 +1,9 @@
 use twilight_model::{
     guild::{Permissions, Role},
-    id::{marker::UserMarker, Id},
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
 };
 
 mod member_context;
@@ -10,6 +13,8 @@ mod user_permissions;
 pub use member_context::MemberContext;
 pub use user_context::UserContext;
 pub use user_permissions::UserPermissions;
+
+use crate::database::{Database, Error};
 
 /// Luro's user object. This is an enum for two primary states:
 ///
@@ -25,13 +30,28 @@ pub enum User {
 }
 
 impl User {
-    // /// Using the contained database, update this object with information from the passed guild.
-    // ///
-    // /// This changes the type to a [MemberContext], and returns a reference to it for convenience.
-    // pub async fn member_context(&mut self, db: &Database, guild_id: Id<GuildMarker>) -> Result<&MemberContext, Error> {
-    //     let member = todo!();
-    //     member
-    // }
+    ///Returns a reference to the contained [MemberContext], if present.
+    pub fn member_context_optional(&self) -> Option<&MemberContext> {
+        match self {
+            User::Member(member) => Some(member),
+            User::User(_) => None,
+        }
+    }
+
+    /// Using the database, update this object with information from the passed guild.
+    ///
+    /// This changes the type to a [MemberContext], and returns a reference to it for convenience.
+    pub async fn member_context(&mut self, db: &Database, guild_id: Id<GuildMarker>) -> Result<&MemberContext, Error> {
+        if let Self::Member(ref member) = self {
+            return Ok(member);
+        }
+
+        *self = User::Member(db.fetch_member(guild_id, self.user_id()).await?);
+        match self {
+            User::Member(ref member) => Ok(member),
+            _ => unreachable!(),
+        }
+    }
 
     /// Return the contained user context for this instance.
     pub fn user_context(&self) -> &UserContext {
