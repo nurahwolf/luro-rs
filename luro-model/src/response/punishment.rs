@@ -69,11 +69,6 @@ impl<'a> Punishment<'a> {
 /// Creates a banned embed
 fn ban_embed(data: &PunishmentData, purged_message_second: &i64) -> EmbedBuilder {
     let mut embed = EmbedBuilder::default();
-    let mut description = format!(
-        "{MEMBER_EMOJI} <@{0}> - {0}\n{MEMBER_EMOJI} <@{1}> - {1}\n",
-        data.target.user_id(),
-        data.author.user_id()
-    );
     let purged_messages = match purged_message_second {
         0 => "No messages deleted".to_owned(),
         3_600 => "Previous Hour".to_owned(),
@@ -85,26 +80,34 @@ fn ban_embed(data: &PunishmentData, purged_message_second: &i64) -> EmbedBuilder
         num => format!("Deleted {num} seconds worth of messages"),
     };
 
-    // Second Line - Purged message length and if the target has been notified
-    match data.dm_successful {
-        Some(true) => description.push_str(&format!(
-            "{PRIVATE_EMOJI} {purged_messages}    {JOIN_EMOJI} User has been notified\n"
-        )),
-        Some(false) => description.push_str(&format!(
-            "{PRIVATE_EMOJI} {purged_messages}    {LEAVE_EMOJI} User was not notified\n"
-        )),
-        None => description.push_str(&format!("{PRIVATE_EMOJI} {purged_messages}\n")),
+    embed.create_field(
+        "User Details",
+        format!(
+            "{MEMBER_EMOJI} <@{0}>\n{MEMBER_EMOJI} <@{1}>\n",
+            data.target.user_id(),
+            data.author.user_id()
+        ),
+        true,
+    );
+
+    let mut stats = match data.dm_successful {
+        Some(true) => format!("{PRIVATE_EMOJI} {purged_messages}\n{JOIN_EMOJI} User has been notified\n"),
+        Some(false) => format!("{PRIVATE_EMOJI} {purged_messages}\n{LEAVE_EMOJI} User was not notified\n"),
+        None => format!("{PRIVATE_EMOJI} {purged_messages}\n"),
     };
 
-    // Final Line - The reason they were banned
     match data.reason.contains('`') {
-        true => description.push_str(&format!("{}", data.reason)),
+        true => {
+            embed.description(format!("{}", data.reason));
+        }
         false => {
             if !data.reason.is_empty() {
-                description.push_str(&format!("{TICKET_EMOJI} {}", data.reason))
+                stats.push_str(&format!("{TICKET_EMOJI} {}", data.reason));
             }
         }
     };
+
+    embed.create_field("Reason & Punishment", stats, true);
 
     if let Ok(timestamp) = SystemTime::now().duration_since(UNIX_EPOCH) {
         if let Ok(timestamp) = Timestamp::from_secs(timestamp.as_secs() as i64) {
@@ -121,7 +124,6 @@ fn ban_embed(data: &PunishmentData, purged_message_second: &i64) -> EmbedBuilder
             ))
         })
         .colour(crate::COLOUR_DANGER)
-        .description(description)
         .footer(|footer| footer.icon_url(data.guild.icon_url()).text(&data.guild.twilight_guild.name))
         .thumbnail(|thumbnail| thumbnail.url(data.target.avatar_url()));
     embed

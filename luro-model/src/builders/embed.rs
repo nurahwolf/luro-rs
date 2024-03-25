@@ -7,9 +7,8 @@ use twilight_model::{
 };
 
 use self::{
-    author::EmbedAuthorBuilder, field::EmbedFieldBuilder, footer::EmbedFooterBuilder,
-    image::EmbedImageBuilder, provider::EmbedProviderBuilder, thumbnail::EmbedThumbnailBuilder,
-    video::EmbedVideoBuilder,
+    author::EmbedAuthorBuilder, field::EmbedFieldBuilder, footer::EmbedFooterBuilder, image::EmbedImageBuilder,
+    provider::EmbedProviderBuilder, thumbnail::EmbedThumbnailBuilder, video::EmbedVideoBuilder,
 };
 
 pub mod author;
@@ -122,7 +121,7 @@ impl EmbedBuilder {
     /// Simply a shorthand to the field function, just directly sets all three fields. Generally the most commonly used one
     /// NOTE: If the resulting embed is being sent by Luro, it is checked to make sure we are not over 25 fields.
     /// There is NO check for this in the builder itself!
-    pub fn create_field<S: ToString>(&mut self, name: S, value: S, inline: bool) -> &mut Self {
+    pub fn create_field<S1: ToString, S2: ToString>(&mut self, name: S1, value: S2, inline: bool) -> &mut Self {
         let field = EmbedField {
             inline,
             name: name.to_string(),
