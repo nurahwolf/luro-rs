@@ -11,6 +11,6 @@ impl crate::database::Database {
             Err(why) => tracing::error!(?why, "Database failed to fetch user `{user_id}`, falling back to Twilight."),
         };
 
-        self.twilight_driver.fetch_user(user_id).await
+        Ok(self.twilight_client.user(user_id).await?.model().await.map(|x| x.into())?)
     }
 }

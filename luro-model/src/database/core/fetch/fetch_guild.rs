@@ -10,7 +10,12 @@ impl crate::database::Database {
         //     Ok(None) => tracing::warn!("The user `{user_id}` was requested from the database, but the user was not present."),
         //     Err(why) => tracing::error!(?why, "Database failed to fetch user `{user_id}`, falling back to Twilight."),
         // };
-        let twilight_guild = self.twilight_client.guild(guild_id).await?.model().await?;
-        Ok((self, twilight_guild).into())
+        Ok(self
+            .twilight_client
+            .guild(guild_id)
+            .await?
+            .model()
+            .await
+            .map(|x| (self, x).into())?)
     }
 }

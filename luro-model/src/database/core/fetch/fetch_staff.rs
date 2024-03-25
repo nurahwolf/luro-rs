@@ -11,6 +11,11 @@ impl crate::database::Database {
             Err(why) => tracing::error!(?why, "Error raised while trying to find staff"),
         };
 
-        self.twilight_driver.fetch_staff().await
+        let mut staff = vec![];
+        for staff_id in crate::BOT_OWNERS {
+            staff.push(self.fetch_user(staff_id).await?);
+        }
+
+        Ok(staff)
     }
 }

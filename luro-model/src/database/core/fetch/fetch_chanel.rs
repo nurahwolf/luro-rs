@@ -14,6 +14,6 @@ impl crate::database::Database {
             Err(why) => tracing::error!(?why, "Error raised while trying to find channel `{channel_id}`"),
         };
 
-        Ok(self.twilight_driver.fetch_channel(channel_id).await?)
+        Ok(self.twilight_client.channel(channel_id).await?.model().await.map(|x| x.into())?)
     }
 }

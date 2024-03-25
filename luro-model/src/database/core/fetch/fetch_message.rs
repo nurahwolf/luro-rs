@@ -14,6 +14,12 @@ impl crate::database::Database {
             Err(why) => tracing::error!("Error raised while trying to find message: {why}"),
         };
 
-        self.twilight_driver.fetch_message(channel_id, message_id).await
+        Ok(self
+            .twilight_client
+            .message(channel_id, message_id)
+            .await?
+            .model()
+            .await
+            .map(|x| x.into())?)
     }
 }

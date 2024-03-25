@@ -4,13 +4,11 @@ use twilight_http::Client;
 
 use crate::config::Config;
 
-/// Core module, used to passing down requests to the drivers.
+/// Core module that uses twilight, preferring any configured drivers first
 mod core;
 #[cfg(feature = "database-sqlx")]
 /// A module for fetching data using the SQLx driver.
 pub mod sqlx;
-/// A module for fetching data using the twilight HTTP client.
-pub mod twilight;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -28,7 +26,6 @@ pub enum Error {
 pub struct Database {
     #[cfg(feature = "database-sqlx")]
     pub sqlx_driver: crate::database::sqlx::Database,
-    pub twilight_driver: crate::database::twilight::Database,
     pub twilight_client: Arc<Client>,
 }
 
@@ -43,7 +40,6 @@ impl Database {
                     return Err(Error::DriverFailure);
                 }
             },
-            twilight_driver: crate::database::twilight::Database::new(twilight_client.clone()),
             twilight_client,
         })
     }

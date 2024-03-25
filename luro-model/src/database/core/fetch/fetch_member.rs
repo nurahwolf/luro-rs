@@ -20,6 +20,12 @@ impl crate::database::Database {
             ),
         };
 
-        self.twilight_driver.fetch_member(guild_id, user_id).await
+        Ok(self
+            .twilight_client
+            .guild_member(guild_id, user_id)
+            .await?
+            .model()
+            .await
+            .map(|x| (guild_id, x).into())?)
     }
 }
