@@ -1,10 +1,11 @@
-use luro_framework::{CommandInteraction, LuroCommand};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
+use crate::models::interaction::{InteractionContext, InteractionResult};
+
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "icon", desc = "Set the primary icon for this character")]
-pub struct Icon {
+pub struct Command {
     #[command(desc = "The character that should be modified", autocomplete = true)]
     pub name: String,
     /// The URL the icon should be set to
@@ -13,14 +14,14 @@ pub struct Icon {
     nsfw_icon: Option<String>,
 }
 
-impl LuroCommand for Icon {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let mut character = match ctx.database.user_fetch_character(ctx.author.user_id, &self.name).await? {
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
+        let mut character = match ctx.database().fetch_character(ctx.author_id(), &self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for character in ctx.database.user_fetch_characters(ctx.author.user_id).await? {
+                for character in ctx.database().fetch_characters(ctx.author_id()).await? {
                     writeln!(characters, "- {}: {}", character.name, character.sfw_summary)?
                 }
 
@@ -31,7 +32,7 @@ impl LuroCommand for Icon {
 
         character.sfw_icon = self.icon;
         character.nsfw_icon = self.nsfw_icon;
-        ctx.database.sqlx.character_update(&character, ctx.author.user_id).await?;
+        ctx.database().update_character(&character, ctx.author_id()).await?;
 
         ctx.respond(|r| r.content("Updated!").ephemeral()).await
     }

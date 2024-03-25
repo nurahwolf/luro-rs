@@ -1,15 +1,12 @@
-use anyhow::Context;
-use luro_framework::CommandInteraction;
-
-use luro_framework::{Luro, LuroCommand};
-use luro_model::types::{FetishCategory, CharacterFetish, CharacterFetishCategory};
 use std::fmt::Write;
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
+use crate::models::interaction::{InteractionContext, InteractionResult};
+
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "create", desc = "Create a fetish and add it to a character profile")]
-pub struct Create {
+pub struct Command {
     #[command(desc = "The character that should be modified", autocomplete = true)]
     character: String,
     /// The fetish category to add
@@ -20,8 +17,8 @@ pub struct Create {
     description: String,
 }
 
-impl LuroCommand for Create {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
         let mut embed = ctx.default_embed().await;
         embed.title(format!("Character Profile - {}", self.name));
         embed.author(|a| {

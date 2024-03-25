@@ -1,13 +1,14 @@
-use luro_framework::{CommandInteraction, LuroCommand};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::id::{marker::UserMarker, Id};
+
+use crate::models::interaction::{InteractionContext, InteractionResult};
 
 use super::character_response;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "profile", desc = "Fetch a user's character profile")]
-pub struct Profile {
+pub struct Command {
     /// The fursona to get
     pub name: String,
     /// The type of profile to fetch. Defaults to the channel type.
@@ -16,12 +17,12 @@ pub struct Profile {
     user: Option<Id<UserMarker>>,
 }
 
-impl LuroCommand for Profile {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let user = ctx.get_specified_user_or_author(self.user).await?;
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
+        let user = ctx.author_or_user(self.user).await?;
 
         let nsfw = match self.nsfw {
-            Some(nsfw) => match ctx.channel.nsfw {
+            Some(nsfw) => match ctx.channel().nsfw {
                 Some(channel_nsfw) => match !channel_nsfw && nsfw {
                     true => {
                         return ctx
@@ -32,15 +33,15 @@ impl LuroCommand for Profile {
                 },
                 None => nsfw,
             },
-            None => ctx.channel.nsfw.unwrap_or_default(),
+            None => ctx.channel().nsfw.unwrap_or_default(),
         };
 
-        let character = match ctx.database.user_fetch_character(user.user_id, &self.name).await? {
+        let character = match ctx.database().fetch_character(user.user_id(), &self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for character in ctx.database.user_fetch_characters(user.user_id).await? {
+                for character in ctx.database().fetch_characters(user.user_id()).await? {
                     writeln!(characters, "- {}: {}", character.name, character.sfw_summary)?
                 }
 

@@ -21,7 +21,7 @@ use crate::{
 
 impl Database {
     pub async fn fetch_message(&self, message_id: Id<MessageMarker>) -> Result<Option<Message>, Error> {
-        let message = sqlx::query_file!("src/database/sqlx/queries/message_fetch.sql", message_id.get() as i64)
+        let message = sqlx::query_file!("queries/message_fetch.sql", message_id.get() as i64)
             .fetch_optional(&self.pool)
             .await?;
 

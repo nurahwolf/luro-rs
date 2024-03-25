@@ -1,22 +1,23 @@
-use luro_framework::{CommandInteraction, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
-// mod add;
+use crate::models::interaction::{InteractionContext, InteractionResult};
+
+mod add;
 mod get;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "img", desc = "Get or modify your character's images")]
-pub enum Image {
-    // #[command(name = "add")]
-    // Add(add::Add),
+pub enum Command {
+    #[command(name = "add")]
+    Add(add::Command),
     #[command(name = "get")]
-    Get(get::Get),
+    Get(get::Command),
 }
-impl LuroCommand for Image {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
         match self {
-            // Self::Add(command) => command.interaction_command(ctx).await,
-            Self::Get(command) => command.interaction_command(ctx).await,
+            // Self::Add(cmd) => command.interaction_command(ctx).await,
+            Self::Get(cmd) => command.interaction_command(ctx).await,
         }
     }
 }

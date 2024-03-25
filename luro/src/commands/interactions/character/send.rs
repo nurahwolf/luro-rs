@@ -1,23 +1,23 @@
-use luro_framework::Luro;
-use luro_framework::{CommandInteraction, LuroCommand};
 use std::fmt::Write;
 
 use twilight_interactions::command::CommandModel;
 use twilight_interactions::command::CreateCommand;
 
+use crate::models::interaction::{InteractionContext, InteractionResult};
+
 const DELAY_TIME: u64 = 10;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "send", desc = "Send a message as a character!")]
-pub struct CharacterSend {
+pub struct Command {
     #[command(desc = "The character that should be proxied")]
     pub name: String,
     /// The message to send
     message: String,
 }
 
-impl LuroCommand for CharacterSend {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
         let character = match ctx.database.user_fetch_character(ctx.author.user_id, &self.name).await? {
             Some(character) => character,
             None => {

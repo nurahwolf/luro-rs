@@ -18,12 +18,7 @@ const DIR: &[&str] = &[
 ];
 
 impl DiceRoll {
-    pub fn roll_die(
-        times: u64,
-        sides: NonZeroU64,
-        fm: FilterModifier<u64>,
-        rng: &mut Rng,
-    ) -> DiceRoll {
+    pub fn roll_die(times: u64, sides: NonZeroU64, fm: FilterModifier<u64>, rng: &mut Rng) -> DiceRoll {
         let mut rolls = Vec::new();
         let range = sides.get();
         for _ in 0..times {
@@ -80,11 +75,7 @@ impl DiceRoll {
     pub fn roll_stats() -> String {
         fn roll_stat() -> DiceRoll {
             let mut rolls = Vec::new();
-            RollParser::new(STAT_ROLL)
-                .parse()
-                .unwrap()
-                .interp(&mut rolls)
-                .unwrap();
+            RollParser::new(STAT_ROLL).parse().unwrap().interp(&mut rolls).unwrap();
             rolls.remove(0).1
         }
         let mut res = String::new();
@@ -120,11 +111,7 @@ impl DiceRoll {
         Ok(result)
     }
 
-    fn replace_rolls(
-        ast: RollAst,
-        lookup: &HashMap<u64, DiceRoll>,
-        func: fn(&DiceRoll) -> String,
-    ) -> RollAst {
+    fn replace_rolls(ast: RollAst, lookup: &HashMap<u64, DiceRoll>, func: fn(&DiceRoll) -> String) -> RollAst {
         return match ast {
             RollAst::Add(l, r) => RollAst::Add(
                 Box::from(Self::replace_rolls(*l, lookup, func)),

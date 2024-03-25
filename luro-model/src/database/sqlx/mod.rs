@@ -2,7 +2,9 @@ use twilight_model::util::{datetime::TimestampParseError, image_hash::ImageHashP
 
 use crate::config::Config;
 
+mod create;
 mod fetch;
+mod update;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

@@ -8,10 +8,7 @@ impl super::Luro {
         let client = self.interaction_client();
 
         if let Ok(commands) = client.set_global_commands(commands).await?.model().await {
-            tracing::info!(
-                "Successfully registered {} global commands!",
-                commands.len()
-            )
+            tracing::info!("Successfully registered {} global commands!", commands.len())
         }
 
         Ok(())

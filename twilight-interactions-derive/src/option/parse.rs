@@ -19,21 +19,13 @@ impl ParsedVariant {
     /// Parse an iterator of syn [`Variant`].
     ///
     /// The inferred [`OptionKind`] is also returned.
-    pub fn from_variants(
-        variants: impl IntoIterator<Item = Variant>,
-        input_span: Span,
-    ) -> Result<(Vec<Self>, ChoiceKind)> {
+    pub fn from_variants(variants: impl IntoIterator<Item = Variant>, input_span: Span) -> Result<(Vec<Self>, ChoiceKind)> {
         let mut iter = variants.into_iter();
 
         // Parse the fist variant to infer the type
         let first = match iter.next() {
             Some(variant) => Self::from_variant(variant, None)?,
-            None => {
-                return Err(Error::new(
-                    input_span,
-                    "enum must have at least one variant",
-                ))
-            }
+            None => return Err(Error::new(input_span, "enum must have at least one variant")),
         };
         let choice_kind = first.kind;
 
@@ -51,20 +43,12 @@ impl ParsedVariant {
     /// If no [`ChoiceKind`] is provided, the type is inferred from value.
     fn from_variant(variant: Variant, kind: Option<ChoiceKind>) -> Result<Self> {
         if !matches!(variant.fields, Fields::Unit) {
-            return Err(Error::new_spanned(
-                variant,
-                "variant must be a unit variant",
-            ));
+            return Err(Error::new_spanned(variant, "variant must be a unit variant"));
         }
 
         let attribute = match find_attr(&variant.attrs, "option") {
             Some(attr) => VariantAttribute::parse(attr, kind)?,
-            None => {
-                return Err(Error::new(
-                    variant.span(),
-                    "missing required #[option(...)] attribute",
-                ))
-            }
+            None => return Err(Error::new(variant.span(), "missing required #[option(...)] attribute")),
         };
 
         Ok(Self {
@@ -97,10 +81,7 @@ impl VariantAttribute {
         let value: ParseSpanned<ChoiceValue> = parser.required("value")?;
         if let Some(kind) = kind {
             if value.inner.kind() != kind {
-                return Err(Error::new(
-                    value.span,
-                    format!("invalid attribute type, expected {}", kind.name()),
-                ));
+                return Err(Error::new(value.span, format!("invalid attribute type, expected {}", kind.name())));
             }
         }
 
@@ -137,12 +118,7 @@ impl ParseAttribute for ChoiceValue {
             Lit::Str(inner) => Self::String(inner.value()),
             Lit::Int(inner) => Self::Int(inner.base10_parse()?),
             Lit::Float(inner) => Self::Number(inner.base10_parse()?),
-            _ => {
-                return Err(Error::new_spanned(
-                    input,
-                    "expected string, integer or float point literal",
-                ))
-            }
+            _ => return Err(Error::new_spanned(input, "expected string, integer or float point literal")),
         };
 
         Ok(parsed)

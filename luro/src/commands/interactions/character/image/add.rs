@@ -1,11 +1,11 @@
 use std::fmt::Write;
-use luro_framework::{CommandInteraction, Luro, LuroCommand};
-use luro_model::types::CharacterImage;
 use twilight_interactions::command::{CommandModel, CreateCommand};
+
+use crate::models::interaction::{InteractionContext, InteractionResult};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "add", desc = "Set the primary image for this character")]
-pub struct Add {
+pub struct Command {
     #[command(desc = "The character to get", autocomplete = true)]
     pub character: String,
     /// The name of the image
@@ -22,8 +22,8 @@ pub struct Add {
     source: Option<String>,
 }
 
-impl LuroCommand for Add {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
         let character = match ctx.database.user_fetch_character(ctx.author.user_id, &self.name).await? {
             Some(character) => character,
             None => {
@@ -48,7 +48,6 @@ impl LuroCommand for Add {
             character_name: self.character,
             favourite: self.fav,
         };
-
 
         match self.overwrite {
             Some(_) => character.update_image(&img).await?,

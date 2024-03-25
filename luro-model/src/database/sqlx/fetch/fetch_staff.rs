@@ -9,7 +9,7 @@ use crate::{
 impl Database {
     pub async fn fetch_staff(&self) -> Result<Vec<UserContext>, Error> {
         let mut users = vec![];
-        let mut query = sqlx::query_file!("src/database/sqlx/queries/user/user_fetch_staff.sql").fetch(&self.pool);
+        let mut query = sqlx::query_file!("queries/user/user_fetch_staff.sql").fetch(&self.pool);
 
         while let Some(query) = query.next().await {
             let user = match query {

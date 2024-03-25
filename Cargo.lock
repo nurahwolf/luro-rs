@@ -1447,6 +1447,7 @@ dependencies = [
  "toml 0.8.12",
  "tracing",
  "twilight-http",
+ "twilight-interactions",
  "twilight-model",
  "twilight-util",
 ]

@@ -9,7 +9,7 @@ use crate::models::interaction::{InteractionContext, InteractionResult};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "about", desc = "Information about me!")]
-pub struct About {
+pub struct Command {
     /// Show memory stats
     memory: Option<bool>,
     /// Show cache stats,
@@ -18,7 +18,7 @@ pub struct About {
     show_username: Option<bool>,
 }
 
-impl crate::models::CreateCommand for About {
+impl crate::models::CreateCommand for Command {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         let mut description = match &framework.gateway.config.description {
             Some(description) => format!("{description}\n"),

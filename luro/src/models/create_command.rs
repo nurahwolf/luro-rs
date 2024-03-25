@@ -88,6 +88,13 @@ pub trait CreateCommand: twilight_interactions::command::CommandModel + twilight
         }
     }
 
+    fn handle_autocomplete(framework: &mut InteractionContext) -> impl std::future::Future<Output = InteractionResult<()>> + Send {
+        async {
+            let response = StandardResponse::UnknownCommand(framework.command_name());
+            framework.standard_response(response).await
+        }
+    }
+
     fn handle_command(self, framework: &mut InteractionContext) -> impl std::future::Future<Output = InteractionResult<()>> + Send {
         async {
             let response = StandardResponse::UnknownCommand(framework.command_name());

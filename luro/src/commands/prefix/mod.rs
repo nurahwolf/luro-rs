@@ -66,9 +66,7 @@ async fn disabled_command(framework: &MessageContext, cmd: &str) {
         .reply(framework.ctx.id);
 
     if let Err(why) = message_client
-        .content(&format!(
-            "The command `{cmd}` is currently DISABLED! Sorry about that."
-        ))
+        .content(&format!("The command `{cmd}` is currently DISABLED! Sorry about that."))
         .await
     {
         tracing::error!(?why, "prefix_command - Failed to send message");

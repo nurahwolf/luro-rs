@@ -1,8 +1,6 @@
 use std::{borrow::Cow, collections::HashMap};
 
-use twilight_interactions::command::{
-    CommandInputData, CommandModel, CommandOption, ResolvedMentionable, ResolvedUser,
-};
+use twilight_interactions::command::{CommandInputData, CommandModel, CommandOption, ResolvedMentionable, ResolvedUser};
 use twilight_model::{
     application::interaction::{
         application_command::{CommandDataOption, CommandOptionValue},

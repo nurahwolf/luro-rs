@@ -3,10 +3,7 @@ use twilight_model::{
     channel::message::{AllowedMentions, Component, Embed, MentionType, MessageFlags},
     http::{
         attachment::Attachment,
-        interaction::{
-            InteractionResponse as TwilightInteractionResponse, InteractionResponseData,
-            InteractionResponseType,
-        },
+        interaction::{InteractionResponse as TwilightInteractionResponse, InteractionResponseData, InteractionResponseType},
     },
     id::{
         marker::{MessageMarker, StickerMarker},
@@ -69,11 +66,7 @@ impl Default for InteractionResponseBuilder {
             embeds: Default::default(),
             interaction_response_type: InteractionResponseType::ChannelMessageWithSource,
             allowed_mentions: Some(AllowedMentions {
-                parse: vec![
-                    MentionType::Everyone,
-                    MentionType::Roles,
-                    MentionType::Users,
-                ],
+                parse: vec![MentionType::Everyone, MentionType::Roles, MentionType::Users],
                 replied_user: false,
                 ..Default::default()
             }),

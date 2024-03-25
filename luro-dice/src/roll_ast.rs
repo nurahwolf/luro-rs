@@ -85,28 +85,17 @@ impl RollAst {
                 } else if dots == 1 {
                     RollValue::Float(val.parse::<f64>().map_err(|e| e.to_string())?)
                 } else {
-                    return Err(format!(
-                        "{val} couldn't be parsed as number (too many dots)"
-                    ));
+                    return Err(format!("{val} couldn't be parsed as number (too many dots)"));
                 }
             }
 
-            RollAst::Dice(None, r, fm, dp) => {
-                RollAst::Dice(Some(Box::new(RollAst::Const("1".to_string()))), r, fm, dp)
-                    .interp(rolls)?
+            RollAst::Dice(None, r, fm, dp) => RollAst::Dice(Some(Box::new(RollAst::Const("1".to_string()))), r, fm, dp).interp(rolls)?,
+            RollAst::Dice(l, None, fm, dp) => {
+                RollAst::Dice(l, Some(Box::new(RollAst::Const(DEFAULT_SIDES.to_string()))), fm, dp).interp(rolls)?
             }
-            RollAst::Dice(l, None, fm, dp) => RollAst::Dice(
-                l,
-                Some(Box::new(RollAst::Const(DEFAULT_SIDES.to_string()))),
-                fm,
-                dp,
-            )
-            .interp(rolls)?,
 
             RollAst::Dice(Some(l), Some(r), fm, dp) => {
-                if let (RollValue::Int(lv), RollValue::Int(rv)) =
-                    (l.interp(rolls)?, r.interp(rolls)?)
-                {
+                if let (RollValue::Int(lv), RollValue::Int(rv)) = (l.interp(rolls)?, r.interp(rolls)?) {
                     let fm_value: FilterModifier<RollValue> = fm.map(|i| i.interp(rolls)).swap()?;
 
                     let fm_int = fm_value

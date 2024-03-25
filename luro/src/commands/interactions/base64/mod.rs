@@ -8,14 +8,14 @@ mod encode;
 
 #[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
 #[command(name = "base64", desc = "Convert to and from base64")]
-pub enum Base64 {
+pub enum Command {
     #[command(name = "decode")]
     Decode(decode::Decode),
     #[command(name = "encode")]
     Encode(encode::Encode),
 }
 
-impl crate::models::CreateCommand for Base64 {
+impl crate::models::CreateCommand for Command {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         // Call the appropriate subcommand
         match self {

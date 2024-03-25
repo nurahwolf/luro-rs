@@ -11,13 +11,14 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-tracing = "0.1"                 # Logs
-thiserror = "1"                 # Better crafted errors
-time = "0.3"                    # Used for time related functionality
-twilight-model.workspace = true # Interface with Twilight models
+tracing = "0.1"                                               # Logs
+thiserror = "1"                                               # Better crafted errors
+time = "0.3"                                                  # Used for time related functionality
+twilight-model.workspace = true                               # Interface with Twilight models
 serde = "1.0.197"
 futures-util.workspace = true
 twilight-util.workspace = true
+twilight-interactions = { path = "../twilight-interactions" }
 
 # Optional Dependencies
 tokio = { workspace = true, optional = true }

@@ -1,17 +1,17 @@
-use luro_framework::{CommandInteraction, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{channel::message::component::TextInputStyle, http::interaction::InteractionResponseType};
 
+use crate::models::interaction::{InteractionContext, InteractionResult};
+
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "create", desc = "Create a character profile.")]
-pub struct Create {
+pub struct Command {
     #[command(desc = "The character to create or modify", autocomplete = true)]
     pub name: String,
 }
-
-impl LuroCommand for Create {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let character = ctx.database.user_fetch_character(ctx.author.user_id, &self.name).await?;
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
+        let character = ctx.gateway.database.fetch_character(ctx.author_id(), &self.name).await?;
 
         // Create a model
         ctx.respond(|r| {

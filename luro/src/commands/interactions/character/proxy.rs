@@ -1,10 +1,11 @@
-use luro_framework::{CommandInteraction, Luro, LuroCommand};
 use std::fmt::Write;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
+use crate::models::interaction::{InteractionContext, InteractionResult};
+
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "proxy", desc = "Configure a prefix for proxying messages")]
-pub struct Proxy {
+pub struct Command {
     #[command(desc = "The character that should be modified", autocomplete = true)]
     pub name: String,
     /// The prefix to cause the proxy. e.g. "+n" so that "+n hi!" appears as the character
@@ -13,25 +14,25 @@ pub struct Proxy {
     remove: Option<bool>,
 }
 
-impl LuroCommand for Proxy {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let mut character = match ctx.database.user_fetch_character(ctx.author.user_id, &self.name).await? {
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
+        let mut character = match ctx.database().fetch_character(ctx.author_id(), &self.name).await? {
             Some(character) => character,
             None => {
                 let mut characters = String::new();
 
-                for character in ctx.database.user_fetch_characters(ctx.author.user_id).await? {
+                for character in ctx.database().fetch_characters(ctx.author_id()).await? {
                     writeln!(characters, "- {}: {}", character.name, character.sfw_summary)?
                 }
 
-                let response = format!("I'm afraid that user <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",ctx.author.user_id, self.name, characters);
+                let response = format!("I'm afraid that <@{}> has no characters with the name `{}`! They do however, have the following profiles configured...\n{}",ctx.author.user_id, self.name, characters);
                 return ctx.respond(|r| r.content(response).ephemeral()).await;
             }
         };
 
         if self.remove.unwrap_or_default() {
             character.prefix = None;
-            ctx.database.sqlx.character_update(&character, ctx.author.user_id).await?;
+            ctx.database().update_character(&character, ctx.author_id()).await?;
             return ctx
                 .respond(|r| {
                     r.content(format!("Prefix `{}` removed from character {}!", self.prefix, self.name))

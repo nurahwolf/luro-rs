@@ -1,11 +1,11 @@
-use luro_framework::{CommandInteraction, Luro, LuroCommand};
-use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::channel::message::component::ButtonStyle;
 
+use crate::models::interaction::{InteractionContext, InteractionResult};
+
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "get", desc = "Get an image relating to a character")]
-pub struct Get {
+pub struct Command {
     #[command(desc = "The character to get", autocomplete = true)]
     pub character: String,
     /// The image ID to get
@@ -16,14 +16,10 @@ pub struct Get {
     fav: Option<bool>,
 }
 
-impl LuroCommand for Get {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
-        let nsfw = self.nsfw.unwrap_or(ctx.channel.nsfw.unwrap_or_default());
-        let character_images = ctx
-            .database
-            .sqlx
-            .character_fetch_images(&self.character, ctx.author.user_id)
-            .await?;
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
+        let nsfw = self.nsfw.unwrap_or(ctx.channel().nsfw.unwrap_or_default());
+        let character_images = ctx.database().fetch_character_images(&self.character, ctx.author_id()).await?;
 
         let mut nsfw_images = vec![];
         let mut sfw_images = vec![];
@@ -45,9 +41,8 @@ impl LuroCommand for Get {
 
         let selected_image = match self.id {
             Some(image_id) => {
-                ctx.database
-                    .sqlx
-                    .character_fetch_image(&self.character, ctx.author.user_id, image_id)
+                ctx.database()
+                    .fetch_character_image(&self.character, ctx.author_id(), image_id)
                     .await?
             }
             None => match nsfw {

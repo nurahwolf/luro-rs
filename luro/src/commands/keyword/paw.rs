@@ -11,7 +11,5 @@ const PAW_INSULTS: [&str; 7] = [
 ];
 
 pub fn choose_insult() -> &'static str {
-    PAW_INSULTS
-        .choose(&mut rand::thread_rng())
-        .unwrap_or(&PAW_INSULTS[0])
+    PAW_INSULTS.choose(&mut rand::thread_rng()).unwrap_or(&PAW_INSULTS[0])
 }

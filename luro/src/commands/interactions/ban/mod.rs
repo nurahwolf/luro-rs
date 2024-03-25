@@ -17,7 +17,7 @@ use super::{PunishmentPurgeAmount, PunishmentReason};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "ban", desc = "Ban a user", dm_permission = false)]
-pub struct Ban {
+pub struct Command {
     /// The user to ban
     pub user_id: Id<UserMarker>,
     /// Message history to purge in seconds. Defaults to 1 day. Max is 604800.
@@ -30,7 +30,7 @@ pub struct Ban {
     pub ephemeral: Option<bool>,
 }
 
-impl crate::models::CreateCommand for Ban {
+impl crate::models::CreateCommand for Command {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         framework.ack_interaction(self.ephemeral.unwrap_or_default()).await?;
 

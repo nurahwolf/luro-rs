@@ -9,7 +9,7 @@ use crate::{
 impl Database {
     pub async fn fetch_user(&self, user_id: Id<UserMarker>) -> Result<Option<UserContext>, Error> {
         // Query the database and attempt to fetch the user, returning if an error is raised.
-        let user = sqlx::query_file!("src/database/sqlx/queries/luro_user/get_luro_user.sql", user_id.get() as i64)
+        let user = sqlx::query_file!("queries/luro_user/get_luro_user.sql", user_id.get() as i64)
             .fetch_optional(&self.pool)
             .await?;
 

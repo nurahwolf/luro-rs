@@ -12,10 +12,7 @@ impl super::InteractionResponseBuilder {
         self
     }
 
-    pub fn add_components(
-        &mut self,
-        components: impl Into<Vec<twilight_model::channel::message::Component>>,
-    ) -> &mut Self {
+    pub fn add_components(&mut self, components: impl Into<Vec<twilight_model::channel::message::Component>>) -> &mut Self {
         match &mut self.components {
             Some(existing) => existing.append(&mut components.into()),
             None => self.components = Some(components.into()),

@@ -1,6 +1,4 @@
-use twilight_interactions::command::{
-    AutocompleteValue, CommandInputData, CommandModel, ResolvedUser,
-};
+use twilight_interactions::command::{AutocompleteValue, CommandInputData, CommandModel, ResolvedUser};
 use twilight_model::application::{
     command::CommandOptionType,
     interaction::application_command::{CommandDataOption, CommandOptionValue},
@@ -27,10 +25,7 @@ fn test_autocomplete_model() {
         },
     ];
 
-    let data = CommandInputData {
-        options,
-        resolved: None,
-    };
+    let data = CommandInputData { options, resolved: None };
 
     let result = DemoCommand::from_interaction(data).unwrap();
 

@@ -1,18 +1,19 @@
-use luro_framework::{CommandInteraction, LuroCommand};
 use twilight_interactions::command::{CommandModel, CreateCommand};
+
+use crate::models::interaction::{InteractionContext, InteractionResult};
 
 mod create;
 
 #[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
 #[command(name = "fetish", desc = "Add or remove some fetishes to your profile")]
-pub enum Fetish {
+pub enum Command {
     #[command(name = "create")]
-    Create(create::Create),
+    Create(create::Command),
 }
-impl LuroCommand for Fetish {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
         match self {
-            Self::Create(command) => command.interaction_command(ctx).await,
+            Self::Create(cmd) => cmd.handle_command(ctx).await,
         }
     }
 }

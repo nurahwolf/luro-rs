@@ -16,7 +16,7 @@ impl Database {
         let u_id = user_id.get() as i64;
 
         // Fetch the member from the database
-        let member = sqlx::query_file!("src/database/sqlx/queries/member/member_fetch.sql", g_id, u_id).fetch_optional(&self.pool);
+        let member = sqlx::query_file!("queries/member/member_fetch.sql", g_id, u_id).fetch_optional(&self.pool);
         let member = match member.await {
             Ok(Some(member)) => member,
             Ok(None) => return Ok(None),

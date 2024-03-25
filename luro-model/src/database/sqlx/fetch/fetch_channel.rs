@@ -7,7 +7,7 @@ use crate::database::sqlx::{Database, Error};
 
 impl Database {
     pub async fn fetch_channel(&self, channel_id: Id<ChannelMarker>) -> Result<Option<Channel>, Error> {
-        let query = sqlx::query_file!("src/database/sqlx/queries/channel/channel_fetch.sql", channel_id.get() as i64)
+        let query = sqlx::query_file!("queries/channel/channel_fetch.sql", channel_id.get() as i64)
             .fetch_optional(&self.pool)
             .await?;
 

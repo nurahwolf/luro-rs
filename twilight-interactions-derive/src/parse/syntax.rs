@@ -18,20 +18,15 @@ pub fn find_attr<'a>(attrs: &'a [Attribute], name: &str) -> Option<&'a Attribute
 /// Paths with multiple segments, e.g. `std::option::Option<T>`, are not
 /// supported and will be ignored.
 pub fn extract_generic(ty: &syn::Type, name: &str) -> Option<syn::Type> {
-    let check_name = |path: &syn::Path| {
-        path.leading_colon.is_none()
-            && path.segments.len() == 1
-            && path.segments.first().unwrap().ident == name
-    };
+    let check_name =
+        |path: &syn::Path| path.leading_colon.is_none() && path.segments.len() == 1 && path.segments.first().unwrap().ident == name;
 
     match ty {
         syn::Type::Path(path) if path.qself.is_none() && check_name(&path.path) => {
             let arguments = &path.path.segments.first().unwrap().arguments;
             // Should be one angle-bracketed param
             let arg = match arguments {
-                PathArguments::AngleBracketed(params) if params.args.len() == 1 => {
-                    params.args.first().unwrap()
-                }
+                PathArguments::AngleBracketed(params) if params.args.len() == 1 => params.args.first().unwrap(),
                 _ => return None,
             };
             // The argument should be a type
@@ -71,10 +66,7 @@ pub fn parse_doc(attrs: &[Attribute], span: Span) -> Result<String> {
 
     match doc.chars().count() {
         1..=100 => Ok(doc),
-        _ => Err(Error::new_spanned(
-            lit,
-            "description must be between 1 and 100 characters",
-        )),
+        _ => Err(Error::new_spanned(lit, "description must be between 1 and 100 characters")),
     }
 }
 

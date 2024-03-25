@@ -1,10 +1,12 @@
+use twilight_interactions::command::{CommandModel, CreateCommand};
+
 use crate::models::interaction::{InteractionContext, InteractionResult};
 
-#[derive(twilight_interactions::command::CommandModel, twilight_interactions::command::CreateCommand)]
+#[derive(CommandModel, CreateCommand)]
 #[command(name = "boop", desc = "Boop the Bot!")]
-pub struct Boop {}
+pub struct Command {}
 
-impl crate::models::CreateCommand for Boop {
+impl crate::models::CreateCommand for Command {
     async fn handle_command(self, framework: &mut InteractionContext) -> InteractionResult<()> {
         framework
             .respond(|r| {

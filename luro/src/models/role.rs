@@ -1,8 +1,4 @@
-
-use twilight_model::id::{
-    marker::GuildMarker,
-    Id,
-};
+use twilight_model::id::{marker::GuildMarker, Id};
 
 pub type Roles = Vec<Role>;
 

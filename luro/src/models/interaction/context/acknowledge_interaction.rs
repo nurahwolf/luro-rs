@@ -5,7 +5,8 @@ impl super::InteractionContext {
     ///
     /// Use this for operations that take a long time. Generally its best to send this as soon as the interaction has been received.
     pub async fn ack_interaction(&mut self, ephemeral: bool) -> InteractionResult<()> {
-        self.response.interaction_response_type = twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource;
+        self.response.interaction_response_type =
+            twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource;
         self.response.flags = if ephemeral {
             Some(twilight_model::channel::message::MessageFlags::EPHEMERAL)
         } else {

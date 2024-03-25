@@ -1,19 +1,10 @@
-use anyhow::Context;
-use luro_framework::{ComponentInteraction, Luro};
-use luro_model::types::CommandResponse;
 use twilight_model::{application::interaction::Interaction, http::interaction::InteractionResponseType};
 
-use crate::commands::character::character_response;
+use crate::models::interaction::{InteractionContext, InteractionResult};
 
-impl crate::commands::character::Character {
-    pub async fn character_cycle_image_button(
-        &self,
-        ctx: ComponentInteraction,
-        invoking_interaction: Interaction,
-    ) -> anyhow::Result<CommandResponse> {
-        let original_author_id = invoking_interaction
-            .author_id()
-            .context("Expected to get user ID from interaction")?;
+impl crate::commands::interactions::character::Command {
+    pub async fn character_cycle_image_button(ctx: &mut InteractionContext) -> InteractionResult<()> {
+        let original_author_id = ctx.author_id();
         let original_author = ctx.fetch_user(original_author_id).await?;
         let character_name = self.character_name();
         let character = match ctx.database.user_fetch_character(original_author_id, character_name).await? {

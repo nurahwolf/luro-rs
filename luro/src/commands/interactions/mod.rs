@@ -32,13 +32,13 @@ mod warn;
 pub fn default_commands() -> Vec<twilight_model::application::command::Command> {
     vec![
         #[cfg(feature = "command-about")]
-        about::About::setup_command(),
+        about::Command::setup_command(),
         #[cfg(feature = "command-ban")]
-        ban::Ban::setup_command(),
+        ban::Command::setup_command(),
         #[cfg(feature = "command-base64")]
-        base64::Base64::setup_command(),
+        base64::Command::setup_command(),
         #[cfg(feature = "command-boop")]
-        boop::Boop::setup_command(),
+        boop::Command::setup_command(),
         #[cfg(feature = "command-dice")]
         dice::Dice::setup_command(),
         #[cfg(feature = "command-uwu")]
@@ -59,10 +59,10 @@ pub async fn interaction_handler(mut framework: InteractionContext) {
     tracing::info!("Handling interaction `{}`", framework.command_name());
 
     let response = match framework.command_name() {
-        "about" => about::About::interaction_handler(&mut framework).await,
-        "ban" => ban::Ban::interaction_handler(&mut framework).await,
-        "base64" | "base64-encode" | "base64-decode" => base64::Base64::interaction_handler(&mut framework).await,
-        "boop" => boop::Boop::interaction_handler(&mut framework).await,
+        "about" => about::Command::interaction_handler(&mut framework).await,
+        "ban" => ban::Command::interaction_handler(&mut framework).await,
+        "base64" | "base64-encode" | "base64-decode" => base64::Command::interaction_handler(&mut framework).await,
+        "boop" => boop::Command::interaction_handler(&mut framework).await,
         "dice" => dice::Dice::interaction_handler(&mut framework).await,
         "uwu" => uwu::UwU::interaction_handler(&mut framework).await,
         "ping" => ping::Ping::interaction_handler(&mut framework).await,

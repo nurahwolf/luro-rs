@@ -205,13 +205,9 @@ impl From<ApplicationCommandData> for CommandOption {
         };
 
         if item.group {
-            data.builder(CommandOptionType::SubCommandGroup)
-                .options(item.options)
-                .build()
+            data.builder(CommandOptionType::SubCommandGroup).options(item.options).build()
         } else {
-            data.builder(CommandOptionType::SubCommand)
-                .options(item.options)
-                .build()
+            data.builder(CommandOptionType::SubCommand).options(item.options).build()
         }
     }
 }

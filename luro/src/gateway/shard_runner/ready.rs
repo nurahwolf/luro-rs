@@ -3,11 +3,7 @@ use twilight_model::gateway::payload::incoming::Ready;
 
 use crate::gateway::{GatewayArc, GatewayResult};
 
-pub async fn ready_listener(
-    gateway: GatewayArc,
-    shard: MessageSender,
-    event: Box<Ready>,
-) -> GatewayResult {
+pub async fn ready_listener(gateway: GatewayArc, shard: MessageSender, event: Box<Ready>) -> GatewayResult {
     tracing::info!("Luro is now ready!");
     tracing::info!("==================");
 
@@ -69,9 +65,7 @@ pub async fn ready_listener(
     pretty_output(&framework, &event, staff).await;
 
     #[cfg(feature = "module-interactions")]
-    gateway
-        .register_commands(&crate::commands::default_commands())
-        .await
+    gateway.register_commands(&crate::commands::default_commands()).await
 }
 
 #[cfg(not(feature = "pretty-tables"))]
@@ -124,10 +118,7 @@ async fn pretty_output(framework: &LuroContext, event: &Ready, staff: Vec<User>)
         }
         None => info!(
             "-- Bot Information -- \n{}",
-            builder
-                .build()
-                .with(tabled::settings::Style::sharp())
-                .to_string()
+            builder.build().with(tabled::settings::Style::sharp()).to_string()
         ),
     }
 
@@ -146,10 +137,7 @@ async fn pretty_output(framework: &LuroContext, event: &Ready, staff: Vec<User>)
                     true => administrators.push_str(&staff.name()),
                     false => administrators.push_str(format!("\n{}", &staff.name()).as_str()),
                 },
-                _ => warn!(
-                    "User {:#?} is tagged as a regular user in the database!",
-                    &staff
-                ),
+                _ => warn!("User {:#?} is tagged as a regular user in the database!", &staff),
             }
         }
     }
@@ -185,10 +173,7 @@ async fn pretty_output(framework: &LuroContext, event: &Ready, staff: Vec<User>)
             Err(_) => "Unknown".to_owned(),
         },
         match framework.database.sqlx.count_messages().await {
-            Ok(data) => data
-                .total_messages
-                .unwrap_or_default()
-                .separate_with_commas(),
+            Ok(data) => data.total_messages.unwrap_or_default().separate_with_commas(),
             Err(_) => "Unknown".to_owned(),
         },
         match framework.database.sqlx.count_guilds().await {
@@ -216,11 +201,6 @@ async fn pretty_output(framework: &LuroContext, event: &Ready, staff: Vec<User>)
             Err(_) => "Unknown".to_owned(),
         },
     ]);
-    database_information.push_str(
-        &builder
-            .build()
-            .with(tabled::settings::Style::sharp())
-            .to_string(),
-    );
+    database_information.push_str(&builder.build().with(tabled::settings::Style::sharp()).to_string());
     info!("-- Database Information -- \n{}", database_information)
 }

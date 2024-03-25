@@ -35,13 +35,8 @@ impl InteractionResponseBuilder {
                 content.truncate(0);
                 content.push_str("Response is a lil too big! How about an embed, instead?");
             } else if content.len() > 4096 {
-                let mut attachment = Attachment::from_bytes(
-                    "message-content.txt".to_owned(),
-                    content.as_bytes().to_vec(),
-                    1,
-                );
-                attachment
-                    .description("The message content was too long and truncated.".to_owned());
+                let mut attachment = Attachment::from_bytes("message-content.txt".to_owned(), content.as_bytes().to_vec(), 1);
+                attachment.description("The message content was too long and truncated.".to_owned());
 
                 match &mut self.attachments {
                     Some(attachments) => attachments.push(attachment),

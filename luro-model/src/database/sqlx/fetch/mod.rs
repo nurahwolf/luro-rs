@@ -1,4 +1,11 @@
 mod fetch_channel;
+mod fetch_character;
+mod fetch_character_fetishes;
+mod fetch_character_image;
+mod fetch_character_images;
+mod fetch_character_prefix;
+mod fetch_characters;
+mod fetch_fetishes;
 mod fetch_guild;
 mod fetch_interaction;
 mod fetch_member;

@@ -1,4 +1,4 @@
-SELECT category as "category: DbCharacterFetishCategory",
+SELECT category as "category: CharacterFetishCategory",
     character_name,
     character_fetish.fetish_id,
     user_id,

@@ -16,12 +16,7 @@ pub async fn ai_command_handler(framework: &MessageContext) {
             }
         }
         None => {
-            if framework
-                .ctx
-                .mentions
-                .iter()
-                .any(|x| x.id == framework.gateway.current_user.id)
-            {
+            if framework.ctx.mentions.iter().any(|x| x.id == framework.gateway.current_user.id) {
                 ai_handler_root(framework).await;
             }
         }
@@ -73,10 +68,7 @@ pub async fn ai_handler_root(framework: &MessageContext) {
             }
         },
         Err(why) => {
-            tracing::error!(
-                ?why,
-                "ai_handler - Failed to send generating response message to an AI request"
-            );
+            tracing::error!(?why, "ai_handler - Failed to send generating response message to an AI request");
             return;
         }
     };
@@ -98,10 +90,7 @@ pub async fn ai_handler_root(framework: &MessageContext) {
                 .await
             {
                 if let Ok(message) = message.model().await {
-                    messages.push((
-                        message.content.clone(),
-                        message.author.id == framework.gateway.current_user.id,
-                    ));
+                    messages.push((message.content.clone(), message.author.id == framework.gateway.current_user.id));
 
                     message_reference = message.reference;
                 }
@@ -196,12 +185,8 @@ pub async fn ai_handler(
         };
 
         // If the last twilight message was more than a second ago... Send an update to Discord.
-        let twilight_time = twilight_message
-            .edited_timestamp
-            .unwrap_or(twilight_message.timestamp)
-            .as_secs();
-        let time_difference = SystemTime::now()
-            .duration_since(UNIX_EPOCH + std::time::Duration::from_secs(twilight_time as u64))?;
+        let twilight_time = twilight_message.edited_timestamp.unwrap_or(twilight_message.timestamp).as_secs();
+        let time_difference = SystemTime::now().duration_since(UNIX_EPOCH + std::time::Duration::from_secs(twilight_time as u64))?;
 
         if time_difference > Duration::from_secs(3) {
             let content = response
@@ -225,11 +210,7 @@ pub async fn ai_handler(
 }
 
 /// Attempt to send a message update when some generation has been performed
-async fn update_message(
-    framework: &MessageContext,
-    twilight_message: &mut twilight_model::channel::Message,
-    mut message_update: &str,
-) {
+async fn update_message(framework: &MessageContext, twilight_message: &mut twilight_model::channel::Message, mut message_update: &str) {
     if message_update.len() < 2 {
         message_update = "Still generating response...";
     }
@@ -240,16 +221,26 @@ async fn update_message(
         .update_message(twilight_message.channel_id, twilight_message.id);
     let result = match message_update.len() {
         x if x < 2000 => message_client.content(Some(message_update)).await,
-        x if x < 4096 => message_client.content(None).embeds(Some(&vec![EmbedBuilder::new().description(message_update).build()])).await,
-        x => message_client
-            .attachments(&[Attachment {
-                description: None,
-                file: message_update.as_bytes().to_vec(),
-                filename: "result.txt".to_string(),
-                id: 0
-            }])
-            .embeds(None)
-            .content(Some(&format!("Wow, I created a response with `{x}` characters! You can find the response in the attached file."))).await,
+        x if x < 4096 => {
+            message_client
+                .content(None)
+                .embeds(Some(&vec![EmbedBuilder::new().description(message_update).build()]))
+                .await
+        }
+        x => {
+            message_client
+                .attachments(&[Attachment {
+                    description: None,
+                    file: message_update.as_bytes().to_vec(),
+                    filename: "result.txt".to_string(),
+                    id: 0,
+                }])
+                .embeds(None)
+                .content(Some(&format!(
+                    "Wow, I created a response with `{x}` characters! You can find the response in the attached file."
+                )))
+                .await
+        }
     };
 
     // Check update was successful, if not try and send as a new message
@@ -260,27 +251,30 @@ async fn update_message(
             };
         }
         Err(why) => {
-            tracing::warn!(
-                ?why,
-                "update_message - failed to update message, attempting to send new message"
-            );
+            tracing::warn!(?why, "update_message - failed to update message, attempting to send new message");
 
-            let message_client = framework
-                .gateway
-                .twilight_client
-                .create_message(twilight_message.channel_id);
+            let message_client = framework.gateway.twilight_client.create_message(twilight_message.channel_id);
             let result = match message_update.len() {
                 x if x < 2000 => message_client.content(message_update).await,
-                x if x < 4096 => message_client.embeds(&vec![EmbedBuilder::new().description(message_update).build()]).await,
-                x => message_client
-                    .attachments(&[Attachment {
-                        description: None,
-                        file: message_update.as_bytes().to_vec(),
-                        filename: "result.txt".to_string(),
-                        id: 0
-                    }])
-                    .embeds(&vec![])
-                    .content(&format!("Wow, I created a response with `{x}` characters! You can find th response in the attached file.")).await,
+                x if x < 4096 => {
+                    message_client
+                        .embeds(&vec![EmbedBuilder::new().description(message_update).build()])
+                        .await
+                }
+                x => {
+                    message_client
+                        .attachments(&[Attachment {
+                            description: None,
+                            file: message_update.as_bytes().to_vec(),
+                            filename: "result.txt".to_string(),
+                            id: 0,
+                        }])
+                        .embeds(&vec![])
+                        .content(&format!(
+                            "Wow, I created a response with `{x}` characters! You can find th response in the attached file."
+                        ))
+                        .await
+                }
             };
 
             match result {

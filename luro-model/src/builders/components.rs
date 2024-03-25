@@ -1,8 +1,6 @@
 use twilight_model::channel::message::Component;
 
-use self::{
-    action_row::ActionRowBuilder, select_menu::SelectMenuBuilder, text_input::TextInputBuilder,
-};
+use self::{action_row::ActionRowBuilder, select_menu::SelectMenuBuilder, text_input::TextInputBuilder};
 
 #[derive(Default)]
 pub struct ComponentBuilder(Vec<twilight_model::channel::message::Component>);

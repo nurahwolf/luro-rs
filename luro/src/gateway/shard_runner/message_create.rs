@@ -6,11 +6,7 @@ use crate::{
     models::message_context::MessageContext,
 };
 
-pub async fn message_create_handler(
-    gateway: GatewayArc,
-    shard: MessageSender,
-    event: Box<MessageCreate>,
-) -> GatewayResult {
+pub async fn message_create_handler(gateway: GatewayArc, shard: MessageSender, event: Box<MessageCreate>) -> GatewayResult {
     let mut framework = MessageContext {
         gateway,
         shard,

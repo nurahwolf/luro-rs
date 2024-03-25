@@ -10,7 +10,7 @@ impl Database {
         let g_id = member.guild_id.get() as i64;
         let u_id = member.user_id().get() as i64;
         let mut roles_found = false;
-        let mut roles_query = sqlx::query_file!("src/database/sqlx/queries/member/member_fetch_roles.sql", g_id, u_id).fetch(&self.pool);
+        let mut roles_query = sqlx::query_file!("queries/member/member_fetch_roles.sql", g_id, u_id).fetch(&self.pool);
 
         while let Some(role) = roles_query.next().await {
             let role = match role {

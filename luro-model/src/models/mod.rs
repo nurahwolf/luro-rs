@@ -1,3 +1,4 @@
+pub mod character;
 pub mod command;
 pub mod config;
 pub mod context;

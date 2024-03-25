@@ -10,12 +10,9 @@ use crate::database::sqlx::{Database, Error};
 impl Database {
     // Fetch a member from the database. Note that due to the need to query the database twice, this does not get roles automatically.
     pub async fn fetch_interaction(&self, interaction_id: Id<InteractionMarker>) -> Result<Interaction, Error> {
-        let interaction = sqlx::query_file!(
-            "src/database/sqlx/queries/interaction/interaction_fetch.sql",
-            interaction_id.get() as i64
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let interaction = sqlx::query_file!("queries/interaction/interaction_fetch.sql", interaction_id.get() as i64)
+            .fetch_one(&self.pool)
+            .await?;
 
         #[allow(deprecated)]
         Ok(Interaction {

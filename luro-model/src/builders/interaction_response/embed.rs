@@ -27,10 +27,7 @@ impl super::InteractionResponseBuilder {
     /// Add an embed without modifying the existing embeds, if present.
     ///
     /// NOTE: This WILL fail to send if more than 10 embeds are present!
-    pub fn add_embed(
-        &mut self,
-        embed: impl Into<twilight_model::channel::message::Embed>,
-    ) -> &mut Self {
+    pub fn add_embed(&mut self, embed: impl Into<twilight_model::channel::message::Embed>) -> &mut Self {
         match &mut self.embeds {
             Some(embeds) => embeds.push(embed.into()),
             None => self.embeds = Some(vec![embed.into()]),
@@ -47,10 +44,7 @@ impl super::InteractionResponseBuilder {
     /// Modify the nested embeds field for more advanced controls.
     ///
     /// NOTE: This WILL fail to send if more than 10 are present!
-    pub fn set_embeds(
-        &mut self,
-        embeds: Vec<twilight_model::channel::message::Embed>,
-    ) -> &mut Self {
+    pub fn set_embeds(&mut self, embeds: Vec<twilight_model::channel::message::Embed>) -> &mut Self {
         self.embeds = Some(embeds);
 
         #[cfg(feature = "auto-trim")]
@@ -62,10 +56,7 @@ impl super::InteractionResponseBuilder {
 
     /// Explicitly set and overwrite all currently set embeds.
     /// Modify the nested embeds field for more advanced controls.
-    pub fn set_embed(
-        &mut self,
-        embeds: impl Into<twilight_model::channel::message::Embed>,
-    ) -> &mut Self {
+    pub fn set_embed(&mut self, embeds: impl Into<twilight_model::channel::message::Embed>) -> &mut Self {
         self.embeds = Some(vec![embeds.into()]);
 
         #[cfg(feature = "auto-trim")]

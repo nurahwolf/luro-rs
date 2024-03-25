@@ -16,7 +16,5 @@ const LURO_INSULTS: [&str; 12] = [
 ];
 
 pub fn choose_insult() -> &'static str {
-    LURO_INSULTS
-        .choose(&mut rand::thread_rng())
-        .unwrap_or(&LURO_INSULTS[0])
+    LURO_INSULTS.choose(&mut rand::thread_rng()).unwrap_or(&LURO_INSULTS[0])
 }

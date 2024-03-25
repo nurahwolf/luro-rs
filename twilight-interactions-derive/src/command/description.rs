@@ -14,10 +14,7 @@ pub fn get_description(
     attrs: &[Attribute],
 ) -> Result<TokenStream> {
     if desc.is_some() && desc_localizations.is_some() {
-        return Err(syn::Error::new(
-            span,
-            "You can't specify `desc` and `desc_localizations`.",
-        ));
+        return Err(syn::Error::new(span, "You can't specify `desc` and `desc_localizations`."));
     }
 
     let desc = match desc_localizations {

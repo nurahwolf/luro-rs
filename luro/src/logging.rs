@@ -11,16 +11,13 @@ pub fn init_logging() {
     // Must enable 'tokio_unstable' cfg to use this feature.
     // For example: `RUSTFLAGS="--cfg tokio_unstable" cargo run -F common-telemetry/console -- standalone start`
     #[cfg(feature = "logs-tokio-console")]
-    let tokio_console_layer = console_subscriber::ConsoleLayer::builder()
-        .with_default_env()
-        .spawn();
+    let tokio_console_layer = console_subscriber::ConsoleLayer::builder().with_default_env().spawn();
 
     let subscriber = Registry::default();
     #[cfg(feature = "logs-tokio-console")]
     let subscriber = subscriber.with(tokio_console_layer.with_filter(logging_level));
 
-    tracing::subscriber::set_global_default(subscriber)
-        .expect("error setting global tracing subscriber");
+    tracing::subscriber::set_global_default(subscriber).expect("error setting global tracing subscriber");
 
     tracing::info!("LOGGING: Logging has started!");
 }
@@ -51,8 +48,7 @@ pub fn init_logging() -> Vec<tracing_appender::non_blocking::WorkerGuard> {
             logging_directory.clone(),
             filename_prefix.clone(),
         );
-        let (rolling_writer, rolling_writer_guard) =
-            tracing_appender::non_blocking(rolling_appender);
+        let (rolling_writer, rolling_writer_guard) = tracing_appender::non_blocking(rolling_appender);
         let file_logging_layer = Layer::new().with_writer(rolling_writer);
         logging_guards.push(rolling_writer_guard);
 
@@ -62,8 +58,7 @@ pub fn init_logging() -> Vec<tracing_appender::non_blocking::WorkerGuard> {
             error_directory,
             format!("{filename_prefix}-err"),
         );
-        let (err_rolling_writer, err_rolling_writer_guard) =
-            tracing_appender::non_blocking(err_rolling_appender);
+        let (err_rolling_writer, err_rolling_writer_guard) = tracing_appender::non_blocking(err_rolling_appender);
         let err_file_logging_layer = Layer::new().with_writer(err_rolling_writer);
         logging_guards.push(err_rolling_writer_guard);
 
@@ -73,9 +68,7 @@ pub fn init_logging() -> Vec<tracing_appender::non_blocking::WorkerGuard> {
     // Must enable 'tokio_unstable' cfg to use this feature.
     // For example: `RUSTFLAGS="--cfg tokio_unstable" cargo run -F common-telemetry/console -- standalone start`
     #[cfg(feature = "logs-tokio-console")]
-    let tokio_console_layer = console_subscriber::ConsoleLayer::builder()
-        .with_default_env()
-        .spawn();
+    let tokio_console_layer = console_subscriber::ConsoleLayer::builder().with_default_env().spawn();
 
     let subscriber = Registry::default();
     #[cfg(feature = "logs-tokio-console")]
@@ -88,8 +81,7 @@ pub fn init_logging() -> Vec<tracing_appender::non_blocking::WorkerGuard> {
         subscriber.with(err_file_logging_layer.with_filter(LevelFilter::ERROR))
     };
 
-    tracing::subscriber::set_global_default(subscriber)
-        .expect("error setting global tracing subscriber");
+    tracing::subscriber::set_global_default(subscriber).expect("error setting global tracing subscriber");
 
     tracing::info!("Logging has started!");
     logging_guards

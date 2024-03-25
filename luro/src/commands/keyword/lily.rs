@@ -11,7 +11,5 @@ const LILY_INSULTS: [&str; 7] = [
 ];
 
 pub fn choose_insult() -> &'static str {
-    LILY_INSULTS
-        .choose(&mut rand::thread_rng())
-        .unwrap_or(&LILY_INSULTS[0])
+    LILY_INSULTS.choose(&mut rand::thread_rng()).unwrap_or(&LILY_INSULTS[0])
 }

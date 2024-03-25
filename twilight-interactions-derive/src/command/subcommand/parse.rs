@@ -17,17 +17,11 @@ pub struct ParsedVariant {
 
 impl ParsedVariant {
     /// Parse an iterator of syn [`Variant`].
-    pub fn from_variants(
-        variants: impl IntoIterator<Item = Variant>,
-        input_span: Span,
-    ) -> Result<Vec<Self>> {
+    pub fn from_variants(variants: impl IntoIterator<Item = Variant>, input_span: Span) -> Result<Vec<Self>> {
         let variants: Vec<_> = variants.into_iter().collect();
 
         if variants.is_empty() {
-            return Err(Error::new(
-                input_span,
-                "enum must have at least one variant",
-            ));
+            return Err(Error::new(input_span, "enum must have at least one variant"));
         }
 
         variants.into_iter().map(Self::from_variant).collect()
@@ -41,31 +35,18 @@ impl ParsedVariant {
         };
 
         if fields.unnamed.len() != 1 {
-            return Err(Error::new(
-                span,
-                "variant must have exactly one unnamed field",
-            ));
+            return Err(Error::new(span, "variant must have exactly one unnamed field"));
         }
 
         let inner = match &fields.unnamed[0].ty {
             // Safety: len is checked above
             Type::Path(ty) => ty.clone(),
-            other => {
-                return Err(Error::new(
-                    other.span(),
-                    "unsupported type, expected a type path",
-                ))
-            }
+            other => return Err(Error::new(other.span(), "unsupported type, expected a type path")),
         };
 
         let attribute = match find_attr(&variant.attrs, "command") {
             Some(attr) => VariantAttribute::parse(attr)?,
-            None => {
-                return Err(Error::new(
-                    span,
-                    "missing required #[command(..)] attribute",
-                ))
-            }
+            None => return Err(Error::new(span, "missing required #[command(..)] attribute")),
         };
 
         Ok(Self {

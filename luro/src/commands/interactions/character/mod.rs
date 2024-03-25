@@ -1,67 +1,59 @@
-use luro_framework::{
-    CommandInteraction, ComponentInteraction, Luro, ModalInteraction, {CreateLuroCommand, LuroCommand},
-};
 use luro_model::{
-    builders::ComponentBuilder,
-    response::{InteractionResponse, SimpleResponse},
-    types::{CharacterProfile, CommandResponse, User},
+    builders::{ComponentBuilder, InteractionResponseBuilder},
+    character::CharacterProfile,
 };
-use rand::{seq::SliceRandom, thread_rng};
 use twilight_interactions::command::{AutocompleteValue, CommandModel, CreateCommand};
 use twilight_model::{
-    application::{
-        command::{CommandOptionChoice, CommandOptionChoiceValue},
-        interaction::Interaction,
-    },
+    application::command::{CommandOptionChoice, CommandOptionChoiceValue},
     channel::message::component::ButtonStyle,
     http::interaction::InteractionResponseType,
 };
 
-use self::components::character_menu;
+use crate::models::interaction::{InteractionContext, InteractionError, InteractionResult};
 
-mod create;
+// mod components;
+// mod create;
 // mod fetish;
-mod components;
-mod icon;
-mod image;
+// mod icon;
+// mod image;
 mod profile;
-mod proxy;
-mod send;
+// mod proxy;
+// mod send;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "character", desc = "Show off your character!")]
-pub enum Character {
+pub enum Command {
     #[command(name = "profile")]
-    Profile(profile::Profile),
-    #[command(name = "create")]
-    Create(create::Create),
+    Profile(profile::Command),
+    // #[command(name = "create")]
+    // Create(create::Command),
     // #[command(name = "fetish")]
-    // Fetish(fetish::Fetish),
-    #[command(name = "proxy")]
-    Proxy(proxy::Proxy),
-    #[command(name = "icon")]
-    Icon(icon::Icon),
-    #[command(name = "img")]
-    Img(image::Image),
-    #[command(name = "send")]
-    Send(send::CharacterSend),
+    // Fetish(fetish::Command),
+    // #[command(name = "proxy")]
+    // Proxy(proxy::Command),
+    // #[command(name = "icon")]
+    // Icon(icon::Command),
+    // #[command(name = "img")]
+    // Img(image::Command),
+    // #[command(name = "send")]
+    // Send(send::Command),
 }
 
-impl CreateLuroCommand for Character {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<CommandResponse> {
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
         match self {
-            Self::Create(command) => command.interaction_command(ctx).await,
-            // Self::Fetish(command) => command.interaction_command(ctx).await,
-            Self::Icon(command) => command.interaction_command(ctx).await,
-            Self::Img(command) => command.interaction_command(ctx).await,
-            Self::Profile(command) => command.interaction_command(ctx).await,
-            Self::Proxy(command) => command.interaction_command(ctx).await,
-            Self::Send(command) => command.interaction_command(ctx).await,
+            // Self::Create(cmd) => cmd.handle_command(ctx).await,
+            // Self::Fetish(cmd) => cmd.handle_command(ctx).await,
+            // Self::Icon(cmd) => cmd.handle_command(ctx).await,
+            // Self::Img(cmd) => cmd.handle_command(ctx).await,
+            Self::Profile(cmd) => cmd.handle_command(ctx).await,
+            // Self::Proxy(cmd) => cmd.handle_command(ctx).await,
+            // Self::Send(cmd) => cmd.handle_command(ctx).await,
         }
     }
 
-    async fn interaction_modal(ctx: ModalInteraction) -> anyhow::Result<CommandResponse> {
-        let nsfw: bool = ctx.channel.nsfw.unwrap_or_default();
+    async fn handle_modal(ctx: &mut InteractionContext) -> InteractionResult<()> {
+        let nsfw = ctx.interaction.channel.map(|x| x.nsfw).flatten().unwrap_or_default();
 
         // Modal
         let character_name = ctx.parse_field_required("character-name")?;
@@ -71,7 +63,7 @@ impl CreateLuroCommand for Character {
         let sfw_description = ctx.parse_field_required("character-sfw-description")?;
         let nsfw_description = ctx.parse_field("character-nsfw-description")?;
 
-        let character = ctx.database.user_fetch_character(ctx.author.user_id, character_name).await?;
+        let character = ctx.database().fetch_character(ctx.author_id(), character_name).await?;
         let character = match character {
             Some(mut character) => {
                 character.sfw_description = sfw_description.to_owned();
@@ -88,6 +80,7 @@ impl CreateLuroCommand for Character {
                 character
             }
             None => CharacterProfile {
+                user_id: ctx.author_id(),
                 colour: None,
                 nickname: None,
                 name: character_name.to_owned(),
@@ -101,33 +94,28 @@ impl CreateLuroCommand for Character {
             },
         };
 
-        ctx.database.sqlx.character_update(&character, ctx.author.user_id).await?;
-        let response = character_response(ctx.clone(), &character, &ctx.author, nsfw).await;
-        ctx.response_send(response).await
+        ctx.database().update_character(&character).await?;
+        ctx.response_send(&character_response(ctx, &character, nsfw).await).await
     }
 
-    async fn interaction_component(
-        self,
-        ctx: ComponentInteraction,
-        invoking_interaction: Interaction,
-    ) -> anyhow::Result<CommandResponse> {
+    async fn handle_component(ctx: &mut InteractionContext) -> InteractionResult<()> {
         match ctx.command_name() {
-            "character-menu-open" => character_menu(ctx, invoking_interaction, true).await,
-            "character-menu-close" => character_menu(ctx, invoking_interaction, false).await,
-            "character-description" => self.character_description_button(ctx, invoking_interaction).await,
-            "character-edit" => self.character_edit_button(ctx, invoking_interaction).await,
-            "character-image" => self.character_cycle_image_button(ctx, invoking_interaction).await,
-            "character-image-nsfw" => self.character_image_button(ctx, invoking_interaction, true).await,
-            "character-image-sfw" => self.character_image_button(ctx, invoking_interaction, false).await,
-            "character-fetish" => self.character_fetish_button(ctx, invoking_interaction).await,
-            name => ctx.simple_response(SimpleResponse::UnknownCommand(name)).await,
+            // "character-menu-open" => character_menu(ctx, true).await,
+            // "character-menu-close" => character_menu(ctx, false).await,
+            // "character-description" => self.character_description_button(ctx).await,
+            // "character-edit" => self.character_edit_button(ctx).await,
+            // "character-image" => self.character_cycle_image_button(ctx).await,
+            // "character-image-nsfw" => self.character_image_button(ctx, true).await,
+            // "character-image-sfw" => self.character_image_button(ctx, false).await,
+            // "character-fetish" => self.character_fetish_button(ctx).await,
+            name => Err(InteractionError::NotComponent),
         }
     }
 
-    async fn interaction_autocomplete(ctx: CommandInteraction) -> anyhow::Result<CommandResponse> {
-        let characters = ctx.database.user_fetch_characters(ctx.author.user_id).await?;
+    async fn handle_autocomplete(ctx: &mut InteractionContext) -> InteractionResult<()> {
+        let characters = ctx.database().fetch_characters(ctx.author_id()).await?;
 
-        let choices = match CharacterNameAutocomplete::from_interaction((*ctx.data.clone()).into())?.name {
+        let choices = match CharacterNameAutocomplete::from_interaction((ctx.interaction).into())?.name {
             AutocompleteValue::None => characters
                 .into_iter()
                 .map(|character| CommandOptionChoice {
@@ -165,12 +153,11 @@ pub struct CharacterNameAutocomplete {
     name: AutocompleteValue<String>,
 }
 
-pub async fn character_response<T: Luro + Sync>(ctx: T, character: &CharacterProfile, user: &User, nsfw: bool) -> InteractionResponse {
-    let mut response = InteractionResponse::default();
+pub async fn character_response(ctx: &InteractionContext, character: &CharacterProfile, nsfw: bool) -> InteractionResponseBuilder {
+    let mut response = InteractionResponseBuilder::default();
     let character_images = ctx
         .database()
-        .sqlx
-        .character_fetch_images(&character.name, user.user_id)
+        .fetch_character_images(&character.name, ctx.author_id())
         .await
         .unwrap_or_default();
     let character_icon = match nsfw {
@@ -334,18 +321,18 @@ fn components(edit_menu: bool, nsfw: bool) -> ComponentBuilder {
     components
 }
 
-impl Character {
+impl Command {
     pub fn character_name(&self) -> &str {
         match self {
-            crate::commands::character::Character::Img(img) => match img {
-                // crate::commands::character::image::Image::Add(cmd) => cmd.character,
-                crate::commands::character::image::Image::Get(cmd) => &cmd.character,
-            },
-            crate::commands::character::Character::Profile(cmd) => &cmd.name,
-            crate::commands::character::Character::Create(cmd) => &cmd.name,
-            crate::commands::character::Character::Proxy(cmd) => &cmd.name,
-            crate::commands::character::Character::Icon(cmd) => &cmd.name,
-            crate::commands::character::Character::Send(cmd) => &cmd.name,
+            // Self::Img(img) => match img {
+            //     // crate::commands::character::image::Image::Add(cmd) => cmd.character,
+            //     crate::commands::character::image::Image::Get(cmd) => &cmd.character,
+            // },
+            Self::Profile(cmd) => &cmd.name,
+            // Self::Create(cmd) => &cmd.name,
+            // Self::Proxy(cmd) => &cmd.name,
+            // Self::Icon(cmd) => &cmd.name,
+            // Self::Send(cmd) => &cmd.name,
         }
     }
 }

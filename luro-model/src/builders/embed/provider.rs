@@ -17,10 +17,7 @@ impl EmbedProviderBuilder {
 
 impl Default for EmbedProviderBuilder {
     fn default() -> Self {
-        Self(EmbedProvider {
-            name: None,
-            url: None,
-        })
+        Self(EmbedProvider { name: None, url: None })
     }
 }
 
