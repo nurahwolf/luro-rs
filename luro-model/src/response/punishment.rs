@@ -70,7 +70,7 @@ impl<'a> Punishment<'a> {
 fn ban_embed(data: &PunishmentData, purged_message_second: &i64) -> EmbedBuilder {
     let mut embed = EmbedBuilder::default();
     let mut description = format!(
-        "{MEMBER_EMOJI} {0} - {0}\n{MEMBER_EMOJI} {1} - {1}",
+        "{MEMBER_EMOJI} <@{0}> - {0}\n{MEMBER_EMOJI} <@{1}> - {1}\n",
         data.target.user_id(),
         data.author.user_id()
     );
