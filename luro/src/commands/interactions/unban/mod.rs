@@ -16,7 +16,7 @@ use crate::models::interaction::{InteractionContext, InteractionError as Error, 
 use super::PunishmentReason;
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "kick", desc = "Kick a user", dm_permission = false)]
+#[command(name = "unban", desc = "Unban a user", dm_permission = false)]
 pub struct Command {
     /// The user to ban
     pub user_id: Id<UserMarker>,
