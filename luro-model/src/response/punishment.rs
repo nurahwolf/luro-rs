@@ -98,7 +98,7 @@ fn ban_embed(data: &PunishmentData, purged_message_second: &i64) -> EmbedBuilder
 
     // Final Line - The reason they were banned
     match data.reason.contains('`') {
-        true => description.push_str(&format!("{TICKET_EMOJI}\n{}", data.reason)),
+        true => description.push_str(&format!("{}", data.reason)),
         false => {
             if !data.reason.is_empty() {
                 description.push_str(&format!("{TICKET_EMOJI} {}", data.reason))

@@ -102,9 +102,12 @@ impl PunishmentReason {
         let mut reason = self.value().to_string();
 
         if let Some(details) = details {
-            match reason.is_empty() {
-                true => reason.push_str(&details.to_string()),
-                false => reason.push_str(&format!(" - {details}")),
+            match details.contains('`') {
+                true => reason = details,
+                false => match reason.is_empty() {
+                    true => reason.push_str(&details.to_string()),
+                    false => reason.push_str(&format!(" - {details}")),
+                },
             }
         }
 
