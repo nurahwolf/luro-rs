@@ -2,10 +2,7 @@ use sqlx::{postgres::PgQueryResult, types::Json};
 use time::OffsetDateTime;
 use twilight_model::gateway::payload::incoming::{MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate};
 
-use crate::{
-    database::sqlx::{Database, Error},
-    sync::MessageSync,
-};
+use crate::database::sqlx::{Database, Error};
 
 impl Database {
     pub async fn update_message(&self, message: impl Into<MessageSync<'_>>) -> Result<u64, Error> {
@@ -223,4 +220,31 @@ async fn message_delete(db: &Database, message: &MessageDelete) -> Result<PgQuer
     )
     .execute(&db.pool)
     .await
+}
+
+pub enum MessageSync<'a> {
+    /// Created from an existing message
+    Message(&'a twilight_model::channel::Message),
+    /// Added / crafted manually
+    Custom(&'a Message),
+    /// Created from a message update event
+    MessageUpdate(&'a MessageUpdate),
+    /// Created from a message delete event
+    MessageDelete(&'a MessageDelete),
+    /// Created from a message delete bulk event
+    MessageDeleteBulk(&'a MessageDeleteBulk),
+    /// Created from a message create event
+    MessageCreate(&'a MessageCreate),
+}
+
+impl<'a> From<&'a Message> for MessageSync<'a> {
+    fn from(luro_message: &'a Message) -> Self {
+        Self::Custom(luro_message)
+    }
+}
+
+impl<'a> From<&'a twilight_model::channel::Message> for MessageSync<'a> {
+    fn from(twilight_message: &'a twilight_model::channel::Message) -> Self {
+        Self::Message(twilight_message)
+    }
 }

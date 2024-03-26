@@ -7,5 +7,4 @@ pub mod gender;
 pub mod guild;
 pub mod interaction;
 pub mod message;
-pub mod sync;
 pub mod user;
