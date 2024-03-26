@@ -4,18 +4,21 @@ use twilight_model::{
     id::{marker::ChannelMarker, Id},
 };
 
-use crate::{database::sqlx::Database, sync::ChannelSync};
+use crate::{
+    database::sqlx::{Database, Error},
+    sync::ChannelSync,
+};
 
 impl Database {
-    pub async fn update_channel(&self, channel: impl Into<ChannelSync<'_>>) -> Result<u64, sqlx::Error> {
-        match channel.into() {
+    pub async fn update_channel(&self, channel: impl Into<ChannelSync<'_>>) -> Result<u64, Error> {
+        Ok(match channel.into() {
             ChannelSync::ChannelID(channel) => handle_channel_id(self, channel).await,
             ChannelSync::Channel(channel) => handle_channel(self, channel).await,
             ChannelSync::ChannelCreate(channel) => handle_channel_create(self, channel).await,
             ChannelSync::ChannelDelete(channel) => handle_channel_delete(self, channel).await,
             ChannelSync::ChannelUpdate(channel) => handle_channel_update(self, channel).await,
             ChannelSync::ChannelPinsUpdate(channel) => handle_channel_pins(self, channel).await,
-        }
+        }?)
     }
 }
 

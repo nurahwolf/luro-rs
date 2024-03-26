@@ -114,7 +114,12 @@ async fn handle_guild_update(db: &Database, guild: &GuildUpdate) -> Result<PgQue
 }
 
 async fn handle_guild_create(db: &Database, guild: &GuildCreate) -> Result<u64, Error> {
-    Ok(sqlx::query_file!(
+    let mut updated_rows = 0;
+    for channel in &guild.channels {
+        updated_rows += db.update_channel(channel.id).await?;
+    }
+
+    updated_rows += sqlx::query_file!(
         "queries/guild/guild_update.sql",
         guild.afk_channel_id.map(|x| x.get() as i64),
         guild.afk_timeout.get() as i16,
@@ -158,5 +163,22 @@ async fn handle_guild_create(db: &Database, guild: &GuildCreate) -> Result<u64, 
     )
     .execute(&db.pool)
     .await?
-    .rows_affected())
+    .rows_affected();
+
+    for channel in &guild.channels {
+        updated_rows += db.update_channel(channel).await?;
+    }
+
+    for role in &guild.roles {
+        updated_rows += db.update_role((guild.id, role)).await?;
+    }
+
+    for member in &guild.members {
+        match db.update_user((guild.id, member)).await {
+            Ok(rows) => updated_rows += rows,
+            Err(why) => tracing::warn!(why = ?why, "guild_create - Failed to sync member {}", member.user.id),
+        }
+    }
+
+    Ok(updated_rows)
 }

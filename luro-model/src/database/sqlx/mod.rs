@@ -6,8 +6,6 @@ use crate::config::Config;
 mod create;
 mod delete;
 mod fetch;
-#[cfg(feature = "database-sync")]
-mod sync;
 mod update;
 
 #[derive(thiserror::Error, Debug)]
@@ -43,42 +41,83 @@ impl Database {
                 .await?,
         })
     }
+}
 
-    #[cfg(feature = "database-sync")]
-    /// Sync data from the gateway to the database driver.
-    /// Useful for keeping things like roles, channels, and messages in sync.
-    /// This task should be spawned in the event loop of your bot.
-    pub async fn sync_gateway(&self, event: &twilight_gateway::Event) {
-        use sync::{channel, guild, interaction, member, presence, ready, user};
-        use twilight_gateway::Event;
+#[cfg(feature = "database-sync")]
+mod sync {
+    use twilight_gateway::Event;
+    use twilight_model::gateway::payload::incoming::{PresenceUpdate, Ready};
 
-        let callback = match event {
-            Event::ChannelCreate(event) => channel::create(self, event).await,
-            Event::ChannelDelete(event) => channel::delete(self, event).await,
-            Event::ChannelPinsUpdate(event) => channel::pins_update(self, event).await,
-            Event::ChannelUpdate(event) => channel::update(self, event).await,
-            Event::GuildCreate(event) => guild::create(self, event).await,
-            Event::GuildUpdate(event) => guild::update(self, event).await,
-            Event::InteractionCreate(event) => interaction::create(self, event).await,
-            Event::MemberAdd(event) => member::add(self, event).await,
-            Event::MemberChunk(event) => member::chunk(self, event).await,
-            Event::MemberRemove(event) => member::delete(self, event).await,
-            Event::MemberUpdate(event) => member::update(self, event).await,
-            // Event::MessageCreate(event) => message::create(self, event).await,
-            // Event::MessageDelete(event) => message::delete(self, event).await,
-            // Event::MessageDeleteBulk(event) => message::delete_bulk(self, event).await,
-            // Event::MessageUpdate(event) => message::update(self, event).await,
-            Event::PresenceUpdate(event) => presence::update(self, event).await,
-            Event::Ready(event) => ready::ready(self, event).await,
-            Event::RoleCreate(event) => self.update_role(event).await.map(|_| ()),
-            Event::RoleDelete(event) => self.update_role(event).await.map(|_| ()),
-            Event::RoleUpdate(event) => self.update_role(event).await.map(|_| ()),
-            Event::UserUpdate(event) => user::update(self, event).await,
-            _ => Ok(()),
-        };
+    use super::{Database, Error};
 
-        if let Err(why) = callback {
-            tracing::warn!(why = ?why, "DATABASE: Failed to sync incoming data")
+    impl Database {
+        /// Sync data from the gateway to the database driver.
+        /// Useful for keeping things like roles, channels, and messages in sync.
+        /// This task should be spawned in the event loop of your bot.
+        pub async fn sync_gateway(&self, event: &twilight_gateway::Event) {
+            let callback = match event {
+                Event::ChannelCreate(event) => self.update_channel(event.as_ref()).await,
+                Event::ChannelDelete(event) => self.update_channel(event.as_ref()).await,
+                Event::ChannelPinsUpdate(event) => self.update_channel(event).await,
+                Event::ChannelUpdate(event) => self.update_channel(event.as_ref()).await,
+                Event::GuildCreate(event) => self.update_guild(event.as_ref()).await,
+                Event::GuildUpdate(event) => self.update_guild(event.as_ref()).await,
+                Event::InteractionCreate(event) => self.update_interaction(&event.0).await,
+                Event::MemberAdd(event) => self.update_user(event.as_ref()).await,
+                Event::MemberChunk(event) => self.update_user(event).await,
+                Event::MemberRemove(event) => self.update_user(event).await,
+                Event::MemberUpdate(event) => self.update_user(event.as_ref()).await,
+                // Event::MessageCreate(event) => message::create(self, event).await,
+                // Event::MessageDelete(event) => message::delete(self, event).await,
+                // Event::MessageDeleteBulk(event) => message::delete_bulk(self, event).await,
+                // Event::MessageUpdate(event) => message::update(self, event).await,
+                Event::PresenceUpdate(event) => presence(self, event).await,
+                Event::Ready(event) => ready(self, event).await,
+                Event::RoleCreate(event) => self.update_role(event).await,
+                Event::RoleDelete(event) => self.update_role(event).await,
+                Event::RoleUpdate(event) => self.update_role(event).await,
+                Event::UserUpdate(event) => self.update_user(event).await,
+                _ => Ok(0),
+            };
+
+            match callback {
+                Ok(rows_updated) => tracing::debug!("DATABASE: Updated {rows_updated} rows of data"),
+                Err(why) => tracing::warn!(why = ?why, "DATABASE: Failed to sync incoming data"),
+            }
         }
+    }
+
+    pub async fn presence(db: &Database, event: &PresenceUpdate) -> Result<u64, Error> {
+        if let twilight_model::gateway::presence::UserOrId::User(user) = &event.user {
+            match db.update_user(user).await {
+                Ok(rows_updated) => return Ok(rows_updated),
+                Err(why) => tracing::warn!(why = ?why, "PRESENCE: Failed to sync user {}", user.id),
+            }
+        }
+
+        Ok(0)
+    }
+
+    async fn ready(db: &Database, event: &Ready) -> Result<u64, Error> {
+        let mut rows_updated = 0;
+
+        match db.update_application(&event.application).await {
+            Ok(rows) => rows_updated += rows,
+            Err(why) => tracing::warn!(why = ?why, "READY: Failed to sync application data {:?}", event.application),
+        }
+
+        for guild in &event.guilds {
+            match db.update_guild(guild).await {
+                Ok(rows) => rows_updated += rows,
+                Err(why) => tracing::warn!(why = ?why, "READY: Failed to sync guild {}", guild.id),
+            }
+        }
+
+        match db.update_user(&event.user).await {
+            Ok(rows) => rows_updated += rows,
+            Err(why) => tracing::warn!(why = ?why, "READY: Failed to sync current user {}", event.user.name),
+        }
+
+        Ok(rows_updated)
     }
 }
