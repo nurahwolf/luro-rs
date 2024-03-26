@@ -3,6 +3,7 @@ use twilight_model::util::{datetime::TimestampParseError, image_hash::ImageHashP
 
 use crate::config::Config;
 
+mod count;
 mod create;
 mod delete;
 mod fetch;
