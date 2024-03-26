@@ -9,10 +9,12 @@ use twilight_model::{
 mod member_context;
 mod user_context;
 mod user_permissions;
+mod word_count;
 
 pub use member_context::MemberContext;
 pub use user_context::UserContext;
 pub use user_permissions::UserPermissions;
+pub use word_count::WordCount;
 
 use crate::database::{Database, Error};
 

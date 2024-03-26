@@ -5,6 +5,7 @@ pub mod context;
 pub mod emoji;
 pub mod gender;
 pub mod guild;
+pub mod image;
 pub mod interaction;
 pub mod message;
 pub mod user;

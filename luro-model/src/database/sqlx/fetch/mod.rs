@@ -7,6 +7,7 @@ mod fetch_character_prefix;
 mod fetch_characters;
 mod fetch_fetishes;
 mod fetch_guild;
+mod fetch_images;
 mod fetch_interaction;
 mod fetch_member;
 mod fetch_member_roles;
