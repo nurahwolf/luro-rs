@@ -3,7 +3,7 @@ use twilight_model::id::Id;
 use crate::character::{CharacterFetish, CharacterFetishCategory};
 
 impl crate::database::sqlx::Database {
-    pub async fn update_character_fetish(&self, character: CharacterFetish) -> Result<CharacterFetish, sqlx::Error> {
+    pub async fn update_character_fetish(&self, character: &CharacterFetish) -> Result<CharacterFetish, sqlx::Error> {
         sqlx::query!(
             "
             WITH insert_1 AS (

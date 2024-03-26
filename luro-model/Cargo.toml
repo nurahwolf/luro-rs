@@ -22,13 +22,15 @@ twilight-interactions = { path = "../twilight-interactions" }
 
 # Optional Dependencies
 tokio = { workspace = true, optional = true }
-toml = { version = "0.8", optional = true }                                                               # Used for instancing the configuration
-twilight-http = { git = "https://github.com/twilight-rs/twilight.git", branch = "next", optional = true } # Twilight database driver
-sqlx = { version = "0.7", optional = true }                                                               # SQLx database driver
+twilight-gateway = { workspace = true, optional = true }
+toml = { version = "0.8", optional = true }              # Used for instancing the configuration
+twilight-http = { workspace = true, optional = true }    # Twilight database driver
+sqlx = { version = "0.7", optional = true }              # SQLx database driver
 
 [features]
 # Default and primary features
 default = [
+    "database-sync",
     "database-sqlx",
     "database-twilight",
     "builders",
@@ -36,9 +38,12 @@ default = [
     "config",
 ]
 
-builders = []         # Utilities for building objects
+builders = [] # Utilities for building objects
 config = ["dep:toml"]
-responses = []        # Standard responses to common errors and situations
+responses = [] # Standard responses to common errors and situations
+database-sync = [
+    "dep:twilight-gateway",
+] # Sync data from the gateway to the database driver
 
 # Database drivers
 database-twilight = ["dep:twilight-http", "dep:tokio"]

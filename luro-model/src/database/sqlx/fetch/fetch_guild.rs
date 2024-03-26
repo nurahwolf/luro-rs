@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl Database {
-    pub async fn fetch_guild(&self, guild_id: Id<GuildMarker>) -> Result<Option<Guild>, Error> {
+    pub async fn fetch_guild(&self, _guild_id: Id<GuildMarker>) -> Result<Option<Guild>, Error> {
         todo!()
     }
 }

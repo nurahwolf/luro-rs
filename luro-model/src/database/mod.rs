@@ -43,4 +43,12 @@ impl Database {
             twilight_client,
         })
     }
+
+    #[cfg(feature = "database-sync")]
+    /// Sync data from the gateway to the database driver.
+    /// Useful for keeping things like roles, channels, and messages in sync.
+    /// This task should be spawned in the event loop of your bot.
+    pub async fn sync_gateway(&self, event: &twilight_gateway::Event) {
+        self.sqlx_driver.sync_gateway(event).await
+    }
 }

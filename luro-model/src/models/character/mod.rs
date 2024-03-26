@@ -46,8 +46,8 @@ impl<'a> Character<'a> {
         self.db.update_character_image(img).await
     }
 
-    pub async fn update_fetish(&self, fetish: CharacterFetish) -> Result<CharacterFetish, Error> {
-        self.db.update_character_fetish(fetish.into()).await.map(|x| x.into())
+    pub async fn update_fetish(&self, fetish: &CharacterFetish) -> Result<CharacterFetish, Error> {
+        self.db.update_character_fetish(fetish).await
     }
 
     pub async fn fetch_images(&self) -> Result<Vec<CharacterImage>, Error> {
@@ -59,18 +59,10 @@ impl<'a> Character<'a> {
     }
 
     pub async fn fetch_fetishes(&self) -> Result<Vec<CharacterFetish>, Error> {
-        let character = self.clone().into();
-        Ok(self
-            .db
-            .get_character_fetishes(&character)
-            .await?
-            .into_iter()
-            .map(|x| x.into())
-            .collect::<Vec<_>>())
+        self.db.fetch_character_fetishes(self.user_id, &self.name).await
     }
 
-    pub async fn fetch_fetish(&self, fetish_id: i64) -> Result<Option<LuroCharacterFetish>, Error> {
-        let character = self.clone().into();
-        Ok(self.db.get_character_fetish(&character, fetish_id).await?.map(|x| x.into()))
+    pub async fn fetch_fetish(&self, fetish_id: i64) -> Result<Option<CharacterFetish>, Error> {
+        self.db.fetch_character_fetish(self.user_id, &self.name, fetish_id).await
     }
 }

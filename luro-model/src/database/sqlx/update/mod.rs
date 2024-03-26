@@ -1,3 +1,11 @@
+mod update_application;
+mod update_channel;
 mod update_character;
 mod update_character_fetish;
 mod update_character_image;
+mod update_guild;
+mod update_interaction;
+mod update_member_role;
+// mod update_message;
+mod update_role;
+mod update_user;
