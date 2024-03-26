@@ -9,6 +9,8 @@ mod fetch_fetishes;
 mod fetch_guild;
 mod fetch_images;
 mod fetch_interaction;
+mod fetch_marriage;
+mod fetch_marriages;
 mod fetch_member;
 mod fetch_member_roles;
 mod fetch_message;

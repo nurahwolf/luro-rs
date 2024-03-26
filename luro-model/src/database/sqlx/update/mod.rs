@@ -7,5 +7,6 @@ mod update_guild;
 mod update_interaction;
 mod update_member_role;
 // mod update_message;
+mod update_marriage;
 mod update_role;
 mod update_user;
