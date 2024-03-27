@@ -26,6 +26,7 @@ mod test;
 mod uwu;
 
 mod kick;
+mod luro;
 mod unban;
 mod warn;
 
@@ -50,6 +51,7 @@ pub fn default_commands() -> Vec<twilight_model::application::command::Command> 
         kick::Command::setup_command(),
         warn::Command::setup_command(),
         unban::Command::setup_command(),
+        luro::Command::setup_command(),
         // test::test_command_v2().twilight_command(),
     ]
 }
@@ -70,7 +72,7 @@ pub async fn interaction_handler(mut framework: InteractionContext) {
         "unban" => unban::Command::interaction_handler(&mut framework).await,
         "kick" => kick::Command::interaction_handler(&mut framework).await,
         "warn" => warn::Command::interaction_handler(&mut framework).await,
-
+        "luro" => luro::Command::interaction_handler(&mut framework).await,
         name => framework.standard_response(StandardResponse::UnknownCommand(name)).await,
     };
 
