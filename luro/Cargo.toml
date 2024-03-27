@@ -18,13 +18,13 @@ twilight-model = { git = "https://github.com/twilight-rs/twilight.git", branch =
 twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", branch = "next" }
 twilight-util.workspace = true
 futures-util = "0.3"
-fastrand = "*"
 toml = "0.8"
 serde = "1"
 reqwest = { version = "0.12", features = ["json", "stream"] }
 serde_json = "1"
 
 # Optional dependencies
+fastrand = { version = "*", optional = true }
 base64 = { version = "0.22", optional = true }
 console-subscriber = { version = "0.2", optional = true }
 git2 = { version = "0.18", optional = true }
@@ -63,6 +63,8 @@ command-about = ["dep:git2", "dep:memory-stats"]
 command-ban = []
 command-base64 = ["dep:base64"]
 command-boop = []
+command-lewd = ["dep:fastrand"]
+command-luro = []
 command-hello = []
 command-character = []
 command-dice = ["dep:luro-dice"]

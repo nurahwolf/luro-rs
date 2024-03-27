@@ -1,16 +1,17 @@
-use luro_framework::{CommandInteraction, CreateLuroCommand};
-use rand::Rng;
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
+use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::id::{marker::UserMarker, Id};
 
-#[derive(CommandModel, CreateCommand, Debug, PartialEq, Eq)]
+use crate::models::interaction::{InteractionContext, InteractionResult};
+
+#[derive(CommandModel, CreateCommand)]
 #[command(name = "muzzle", desc = "Put a muzzle on a user")]
-pub struct Muzzle {
+pub struct Command {
     /// The user to muzzle.
-    user: ResolvedUser,
+    user: Id<UserMarker>,
 }
 
-impl CreateLuroCommand for Muzzle {
-    async fn interaction_command(self, ctx: CommandInteraction) -> anyhow::Result<luro_model::types::CommandResponse> {
+impl crate::models::CreateCommand for Command {
+    async fn handle_command(self, ctx: &mut InteractionContext) -> InteractionResult<()> {
         // TODO: Load these from a text file
         let responses = [
             "<user> just got muzzled for a few seconds!!",
@@ -175,13 +176,14 @@ impl CreateLuroCommand for Muzzle {
             "A sly fox just swiped <user>'s words away with a swish of its tail.",
         ];
 
-        let choice = rand::thread_rng().gen_range(0..responses.len());
-        let content = responses
-            .get(choice)
-            .unwrap()
-            .replace("<user>", format!("<@{}>", self.user.resolved.id).as_str())
-            .replace("<author>", format!("<@{}>", ctx.author.user_id).as_str());
-
-        ctx.respond(|r| r.content(content)).await
+        ctx.respond(|r| {
+            r.content(
+                fastrand::choice(responses)
+                    .expect("The array is hardcoded, this should not error.")
+                    .replace("<user>", format!("<@{}>", self.user).as_str())
+                    .replace("<author>", format!("<@{}>", ctx.author_id()).as_str()),
+            )
+        })
+        .await
     }
 }

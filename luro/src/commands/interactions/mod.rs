@@ -26,6 +26,8 @@ mod test;
 mod uwu;
 
 mod kick;
+#[cfg(feature = "command-lewd")]
+mod lewd;
 mod luro;
 mod unban;
 mod warn;
@@ -46,7 +48,8 @@ pub fn default_commands() -> Vec<twilight_model::application::command::Command> 
         uwu::UwU::setup_command(),
         #[cfg(feature = "command-ping")]
         ping::Ping::setup_command(),
-        #[cfg(feature = "command-owner")]
+        #[cfg(feature = "command-lewd")]
+        lewd::Command::setup_command(),
         owner::Owner::setup_command(),
         kick::Command::setup_command(),
         warn::Command::setup_command(),
@@ -73,6 +76,7 @@ pub async fn interaction_handler(mut framework: InteractionContext) {
         "kick" => kick::Command::interaction_handler(&mut framework).await,
         "warn" => warn::Command::interaction_handler(&mut framework).await,
         "luro" => luro::Command::interaction_handler(&mut framework).await,
+        "lewd" => lewd::Command::interaction_handler(&mut framework).await,
         name => framework.standard_response(StandardResponse::UnknownCommand(name)).await,
     };
 
